@@ -23,7 +23,6 @@ fn main() {
     let bindings = Builder::default()
         .header(format!("{out_dir}/include/main.h"))
         .clang_arg(format!("-I{out_dir}/include"))
-        .clang_arg(format!("-I{}", std::env::var("LIBCLANG_INCLUDE").unwrap())) // set in flake. used to fix link errors in nixos.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("could not generate bindings");
@@ -34,6 +33,6 @@ fn main() {
 
     println!("cargo:rustc-link-arg=-T{out_dir}/v5.ld");
     println!("cargo:rustc-link-search=native={out_dir}/firmware");
-    println!("cargo:rustc-link-lib=static=libpros.a");
+    println!("cargo:rustc-link-lib=static=pros");
     println!("cargo:rerun-if-changed=build.rs");
 }

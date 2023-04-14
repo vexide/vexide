@@ -1,2 +1,5 @@
 [build]
 target = "armv7a-none-eabi"
+
+[unstable]
+build-std = ["core", "std"]

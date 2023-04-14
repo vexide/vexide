@@ -1,5 +1,5 @@
-#[test]
-fn it_works() {
-    println!("It Works");
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
+#![feature(restricted_std)]
+
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+pub mod motor;

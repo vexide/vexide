@@ -5,7 +5,9 @@
         unzip
         openssl
         pkgconfig
+        clang
         libclang
+        glibc_multi
       ];
 
       LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
