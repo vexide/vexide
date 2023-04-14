@@ -6,8 +6,9 @@
         openssl
         pkgconfig
         libclang
-        clangStdenv
       ];
+
+      LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
     };
   };
 }
