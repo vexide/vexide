@@ -604,8 +604,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "pros-rs"
-version = "0.1.0"
+name = "pros"
+version = "0.0.1"
 dependencies = [
  "bindgen",
  "reqwest",

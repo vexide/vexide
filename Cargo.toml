@@ -1,7 +1,9 @@
 [package]
-name = "pros-rs"
-version = "0.1.0"
+name = "pros"
+version = "0.0.1"
 edition = "2021"
+description = "Rust bindings for PROS"
+keywords = [ "PROS", "Robotics", "bindings" ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
