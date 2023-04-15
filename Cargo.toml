@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 
 [build-dependencies]
-bindgen = "0.65.1"
+bindgen = "0.64.0"
 reqwest = { version = "0.11", features = ["blocking"] }
