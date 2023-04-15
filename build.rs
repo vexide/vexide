@@ -11,18 +11,19 @@ fn main() {
     .bytes()
     .unwrap();
     let pros_bytes: Vec<_> = pros_bytes.into_iter().collect();
-    // let mut pros_file = std::fs::File::create("{out_dir}/pros.zip").unwrap();
-    // pros_file.write_all(&pros_bytes);
-    std::fs::write("deps/pros.zip", pros_bytes).unwrap();
+
+    std::fs::write(format!("{out_dir}/pros.zip"), pros_bytes).unwrap();
 
     Command::new("unzip")
-        .args([&format!("deps/pros.zip"), "-d", &out_dir])
+        .args([&format!("{out_dir}/pros.zip"), "-d", &out_dir])
         .spawn()
         .expect("could not unzip pros library. is unzip installed?");
 
     let bindings = Builder::default()
         .header(format!("{out_dir}/include/main.h"))
+        .use_core()
         .clang_arg(format!("-I{out_dir}/include"))
+        .blocklist_item("FP_.*")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("could not generate bindings");

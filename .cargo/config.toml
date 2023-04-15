@@ -2,4 +2,4 @@
 target = "armv7a-none-eabi"
 
 [unstable]
-build-std = ["core", "std"]
+build-std = ["core", "compiler_builtins"]
