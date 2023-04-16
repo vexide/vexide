@@ -5,6 +5,7 @@ edition = "2021"
 description = "Rust bindings for PROS"
 keywords = [ "PROS", "Robotics", "bindings" ]
 license = "MIT"
+repository = "https://github.com/gavin-niederman/pros-rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

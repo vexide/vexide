@@ -1,4 +1,4 @@
-use crate::bindings;
+use crate::{bindings, errno::ERRNO};
 
 /// The basic motor struct.
 pub struct Motor {
@@ -6,24 +6,27 @@ pub struct Motor {
 }
 
 impl Motor {
-    pub fn new(port: u8, brake_mode: BrakeMode) -> Self {
+    pub fn new(port: u8, brake_mode: BrakeMode) -> Result<Self, MotorError> {
         unsafe {
-            bindings::motor_set_encoder_units(port, bindings::motor_encoder_units_e_E_MOTOR_ENCODER_DEGREES);
+            bindings::motor_set_encoder_units(
+                port,
+                bindings::motor_encoder_units_e_E_MOTOR_ENCODER_DEGREES,
+            );
             bindings::motor_set_brake_mode(port, brake_mode.into());
-        }
-        crate::println!(1, "hi");
 
-        Self { port }
+            if let Ok(error) = (ERRNO.lock().get() as u32).try_into() {
+                return Err(error);
+            }
+        }
+
+        Ok(Self { port })
     }
 
     /// Takes in and i8 between -127 and 127 which is scaled to -12 to 12 Volts.
     /// Useful for driving motors with controllers.
-    pub fn set_raw_output(&self, raw_output: i8) -> Result<(), MotorError> {
+    pub fn set_raw_output(&self, raw_output: i8) {
         unsafe {
-            match bindings::motor_move(self.port, raw_output as i32) as u32 {
-                1 => Ok(()),
-                err => Err(MotorError::from(err)),
-            }
+            bindings::motor_move(self.port, raw_output as i32);
         }
     }
 
@@ -33,11 +36,10 @@ impl Motor {
             return Err(MotorError::VoltageOutOfRange);
         }
         unsafe {
-            match bindings::motor_move_voltage(self.port, (voltage * 1000.0) as i32) as u32 {
-                1 => Ok(()),
-                err => Err(MotorError::from(err)),
-            }
+            bindings::motor_move_voltage(self.port, (voltage * 1000.0) as i32);
         }
+
+        Ok(())
     }
 
     /// Moves the motor to an absolute position, based off of the last motor zeroing.
@@ -46,65 +48,38 @@ impl Motor {
         &self,
         position: Position,
         velocity: i32,
-    ) -> Result<(), MotorError> {
+    ) {
         unsafe {
-            match bindings::motor_move_absolute(self.port, position.into(), velocity) as u32 {
-                1 => Ok(()),
-                err => Err(MotorError::from(err)),
-            }
+            bindings::motor_move_absolute(self.port, position.into(), velocity);
         }
     }
 
     /// Moves the motor to a position relative to the current position.
     /// units for velocity is RPM.
-    pub fn set_position_relative(
-        &self,
-        position: Position,
-        velocity: i32,
-    ) -> Result<(), MotorError> {
+    pub fn set_position_relative(&self, position: Position, velocity: i32) {
         unsafe {
-            match bindings::motor_move_relative(self.port, position.into(), velocity) as u32 {
-                1 => Ok(()),
-                err => Err(MotorError::from(err)),
-            }
+            bindings::motor_move_relative(self.port, position.into(), velocity);
         }
     }
 
     /// Stops the motor based on the current [`BrakeMode`]
-    pub fn brake(&self) -> Result<(), MotorError> {
+    pub fn brake(&self) {
         unsafe {
-            match bindings::motor_brake(self.port) as u32 {
-                1 => Ok(()),
-                err => Err(MotorError::from(err)),
-            }
+            bindings::motor_brake(self.port);
         }
     }
 
-    pub fn set_brake_mode(&self, brake_mode: BrakeMode) -> Result<(), MotorError> {
+    /// Sets how the motor should act when stopping.
+    pub fn set_brake_mode(&self, brake_mode: BrakeMode) {
         unsafe {
-            match bindings::motor_set_brake_mode(self.port, brake_mode.into()) as u32 {
-                1 => Ok(()),
-                err => Err(MotorError::from(err)),
-            }
+            bindings::motor_set_brake_mode(self.port, brake_mode.into());
         }
     }
 
     //TODO: Test this, as im not entirely sure of the actuall implementation
-    pub fn get_state(&self) -> Result<MotorState, MotorError> {
-        unsafe {
-            match bindings::motor_get_flags(self.port) as u32 {
-                bindings::PROS_ERR => Err(MotorError::Unknown),
-                bindings::ENXIO => Err(MotorError::PortOutOfRange),
-                bindings::ENODEV => Err(MotorError::PortCannotBeConfigured),
-                state => {
-                    if let Ok(state) = state.try_into() {
-                        Ok(state)
-                    } else {
-                        Err(MotorError::Unknown)
-                    }
-                }
-            }
-        }
+    /// Get the current state of the motor.
+    pub fn get_state(&self) -> MotorState {
+        unsafe { (bindings::motor_get_flags(self.port) as u32).into() }
     }
 }
 
@@ -146,26 +121,20 @@ impl Into<f64> for Position {
 }
 
 /// Represents what the physical motor is currently doing.
-#[repr(i32)]
-pub enum MotorState {
-    None = 0,
-    Busy = 1,
-    Stopped = 2,
+pub struct MotorState {
+    pub busy: bool,
+    pub stopped: bool,
     /// the motor is at zero encoder units of rotation.
-    Zeroed = 4,
+    pub zeroed: bool,
 }
 
 //TODO: Test this, like mentioned above
-impl TryFrom<u32> for MotorState {
-    type Error = MotorError;
-
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Self::None),
-            1 => Ok(Self::Busy),
-            2 => Ok(Self::Stopped),
-            4 => Ok(Self::Zeroed),
-            _ => Err(MotorError::Unknown),
+impl From<u32> for MotorState {
+    fn from(value: u32) -> Self {
+        Self {
+            busy: (value & 0b001) == 0b001,
+            stopped: (value & 0b010) == 0b010,
+            zeroed: (value & 0b100) == 0b100,
         }
     }
 }
@@ -174,16 +143,16 @@ pub enum MotorError {
     PortOutOfRange,
     PortCannotBeConfigured,
     VoltageOutOfRange,
-    Unknown,
 }
 
-impl From<u32> for MotorError {
-    fn from(value: u32) -> Self {
+impl TryFrom<u32> for MotorError {
+    type Error = &'static str;
+
+    fn try_from(value: u32) -> Result<MotorError, &'static str> {
         match value {
-            bindings::PROS_ERR => MotorError::Unknown,
-            bindings::ENXIO => MotorError::PortOutOfRange,
-            bindings::ENODEV => MotorError::PortCannotBeConfigured,
-            _ => MotorError::Unknown,
+            bindings::ENXIO => Ok(MotorError::PortOutOfRange),
+            bindings::ENODEV => Ok(MotorError::PortCannotBeConfigured),
+            _ => Err("Value does not match any error types"),
         }
     }
 }

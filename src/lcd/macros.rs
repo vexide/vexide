@@ -1,23 +1,24 @@
-use core::{fmt, ffi::c_char};
-use crate::bindings;
+use core::fmt::{self, Write};
 
-pub fn _print(args: fmt::Arguments, line: u16) {
-    unsafe { bindings::lcd_print(line as i16, args.as_str().unwrap().as_ptr() as *const c_char); }
+use super::WRITER;
+
+pub fn _print(args: fmt::Arguments) {
+    WRITER.lock().write_fmt(args).unwrap();
 }
 
 #[macro_export]
 macro_rules! print {
-    ($line:literal, $($arg:tt)*) => {
-        $crate::lcd::macros::_print(core::format_args!($($arg)*), $line);
+    ($($arg:tt)*) => {
+        $crate::lcd::macros::_print(core::format_args!($($arg)*));
     };
 }
 
 #[macro_export]
 macro_rules! println {
     ($line:literal) => {
-        $crate::print!($line, "\n");
+        $crate::print!("\n");
     };
-    ($line:literal, $($arg:tt)*) => {
-        $crate::print!($line, "{}\n", core::format_args!($($arg)*));
+    ($($arg:tt)*) => {
+        $crate::print!("{}\n", core::format_args!($($arg)*));
     };
 }
