@@ -14,10 +14,10 @@ fn main() {
 
     std::fs::write(format!("{out_dir}/pros.zip"), pros_bytes).unwrap();
 
-    Command::new("unzip")
-        .args([&format!("{out_dir}/pros.zip"), "-d", &out_dir])
-        .spawn()
-        .expect("could not unzip pros library. is unzip installed?");
+    zip::ZipArchive::new(std::fs::File::open(format!("{out_dir}/pros.zip")).unwrap())
+        .unwrap()
+        .extract(format!("{out_dir}"))
+        .unwrap();
 
     let mut bindings = Builder::default()
         .header(format!("{out_dir}/include/api.h"))
@@ -53,9 +53,7 @@ fn get_gcc_arm_include_dirs() -> Vec<String> {
         .expect("Could not run 'arm-none-eabi-gcc'. Is it installed?")
         .stderr
         .lines()
-        .filter_map(|line| {
-            line.ok()
-        })
+        .filter_map(|line| line.ok())
         .filter(|line| {
             let result = is_include_dir;
             if line == "#include <...> search starts here:" {
