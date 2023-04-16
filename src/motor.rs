@@ -11,6 +11,8 @@ impl Motor {
             bindings::motor_set_encoder_units(port, bindings::motor_encoder_units_e_E_MOTOR_ENCODER_DEGREES);
             bindings::motor_set_brake_mode(port, brake_mode.into());
         }
+        crate::println!(1, "hi");
+
         Self { port }
     }
 
