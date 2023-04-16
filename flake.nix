@@ -8,6 +8,7 @@
         clang
         libclang
         glibc_multi
+        gcc-arm-embedded-9
       ];
 
       LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
