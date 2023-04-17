@@ -1,4 +1,5 @@
-use crate::{bindings, errno::ERRNO};
+use crate::errno::ERRNO;
+use pros_sys;
 
 /// The basic motor struct.
 pub struct Motor {
@@ -8,11 +9,11 @@ pub struct Motor {
 impl Motor {
     pub fn new(port: u8, brake_mode: BrakeMode) -> Result<Self, MotorError> {
         unsafe {
-            bindings::motor_set_encoder_units(
+            pros_sys::motor_set_encoder_units(
                 port,
-                bindings::motor_encoder_units_e_E_MOTOR_ENCODER_DEGREES,
+                pros_sys::motor_encoder_units_e_E_MOTOR_ENCODER_DEGREES,
             );
-            bindings::motor_set_brake_mode(port, brake_mode.into());
+            pros_sys::motor_set_brake_mode(port, brake_mode.into());
 
             if let Ok(error) = (ERRNO.lock().get() as u32).try_into() {
                 return Err(error);
@@ -26,7 +27,7 @@ impl Motor {
     /// Useful for driving motors with controllers.
     pub fn set_raw_output(&self, raw_output: i8) {
         unsafe {
-            bindings::motor_move(self.port, raw_output as i32);
+            pros_sys::motor_move(self.port, raw_output as i32);
         }
     }
 
@@ -36,7 +37,7 @@ impl Motor {
             return Err(MotorError::VoltageOutOfRange);
         }
         unsafe {
-            bindings::motor_move_voltage(self.port, (voltage * 1000.0) as i32);
+            pros_sys::motor_move_voltage(self.port, (voltage * 1000.0) as i32);
         }
 
         Ok(())
@@ -50,7 +51,7 @@ impl Motor {
         velocity: i32,
     ) {
         unsafe {
-            bindings::motor_move_absolute(self.port, position.into(), velocity);
+            pros_sys::motor_move_absolute(self.port, position.into(), velocity);
         }
     }
 
@@ -58,28 +59,28 @@ impl Motor {
     /// units for velocity is RPM.
     pub fn set_position_relative(&self, position: Position, velocity: i32) {
         unsafe {
-            bindings::motor_move_relative(self.port, position.into(), velocity);
+            pros_sys::motor_move_relative(self.port, position.into(), velocity);
         }
     }
 
     /// Stops the motor based on the current [`BrakeMode`]
     pub fn brake(&self) {
         unsafe {
-            bindings::motor_brake(self.port);
+            pros_sys::motor_brake(self.port);
         }
     }
 
     /// Sets how the motor should act when stopping.
     pub fn set_brake_mode(&self, brake_mode: BrakeMode) {
         unsafe {
-            bindings::motor_set_brake_mode(self.port, brake_mode.into());
+            pros_sys::motor_set_brake_mode(self.port, brake_mode.into());
         }
     }
 
     //TODO: Test this, as im not entirely sure of the actuall implementation
     /// Get the current state of the motor.
     pub fn get_state(&self) -> MotorState {
-        unsafe { (bindings::motor_get_flags(self.port) as u32).into() }
+        unsafe { (pros_sys::motor_get_flags(self.port) as u32).into() }
     }
 }
 
@@ -93,12 +94,12 @@ pub enum BrakeMode {
     Hold,
 }
 
-impl Into<bindings::motor_brake_mode_e_t> for BrakeMode {
-    fn into(self) -> bindings::motor_brake_mode_e_t {
+impl Into<pros_sys::motor_brake_mode_e_t> for BrakeMode {
+    fn into(self) -> pros_sys::motor_brake_mode_e_t {
         match self {
-            Self::Brake => bindings::motor_brake_mode_e_E_MOTOR_BRAKE_BRAKE,
-            Self::Hold => bindings::motor_brake_mode_e_E_MOTOR_BRAKE_HOLD,
-            Self::None => bindings::motor_brake_mode_e_E_MOTOR_BRAKE_COAST,
+            Self::Brake => pros_sys::motor_brake_mode_e_E_MOTOR_BRAKE_BRAKE,
+            Self::Hold => pros_sys::motor_brake_mode_e_E_MOTOR_BRAKE_HOLD,
+            Self::None => pros_sys::motor_brake_mode_e_E_MOTOR_BRAKE_COAST,
         }
     }
 }
@@ -150,8 +151,8 @@ impl TryFrom<u32> for MotorError {
 
     fn try_from(value: u32) -> Result<MotorError, &'static str> {
         match value {
-            bindings::ENXIO => Ok(MotorError::PortOutOfRange),
-            bindings::ENODEV => Ok(MotorError::PortCannotBeConfigured),
+            pros_sys::ENXIO => Ok(MotorError::PortOutOfRange),
+            pros_sys::ENODEV => Ok(MotorError::PortCannotBeConfigured),
             _ => Err("Value does not match any error types"),
         }
     }

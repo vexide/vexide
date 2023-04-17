@@ -1,5 +1,5 @@
 use lazy_static::lazy_static;
-use crate::bindings;
+use pros_sys;
 use spin::Mutex;
 
 #[repr(transparent)]
@@ -9,7 +9,7 @@ unsafe impl Send for Errno {}
 
 impl Errno {
     pub unsafe fn new() -> Self {
-        Self(bindings::__errno_location())
+        Self(pros_sys::__errno_location())
     }
 
     pub unsafe fn get(&mut self) -> core::ffi::c_int {

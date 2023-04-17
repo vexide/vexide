@@ -833,10 +833,17 @@ dependencies = [
 name = "pros"
 version = "0.0.1"
 dependencies = [
- "bindgen",
  "lazy_static",
- "reqwest",
+ "pros-sys",
  "spin 0.9.8",
+]
+
+[[package]]
+name = "pros-sys"
+version = "0.0.1"
+dependencies = [
+ "bindgen",
+ "reqwest",
  "zip",
 ]
 
