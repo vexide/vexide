@@ -32,10 +32,85 @@ impl Task {
         }
     }
 
+    /// Pause execution of this task.
+    /// This can have unintended consiquences if you are not carefull,
+    /// for example, if this task is holding a mutex when paused, there is no way to retrieve it untill the task is unpaused.
+    pub fn pause(&self) {
+        unsafe {
+            pros_sys::task_suspend(self.task);
+        }
+    }
+
+    /// Enables the task for execution again.
+    pub fn unpause(&self) {
+        unsafe {
+            pros_sys::task_resume(self.task);
+        }
+    }
+
+    /// Breaks the task out of the current blocking instruction.
+    /// For example if the task is [sleeping](sleep).
+    pub fn cancel_block(&self) {
+        unsafe {
+            pros_sys::task_abort_delay(self.task);
+        }
+    }
+
+    /// Sets the priority.
+    pub fn set_priority(&self, priority: TaskPriority) {
+        unsafe {
+            pros_sys::task_set_priority(self.task, priority as _);
+        }
+    }
+
+    /// Get the state of the task.
+    pub fn get_state(&self) -> TaskState {
+        unsafe {
+            pros_sys::task_get_state(self.task).into()
+        }
+    }
+
+    /// Waits for the task to finish, and then deletes it.
+    pub fn join(self) {
+        unsafe {
+            pros_sys::task_join(self.task);
+        }
+    }
+
     /// Deletes the task and consumes it.
     pub fn delete(self) {
         unsafe {
             pros_sys::task_delete(self.task);
+        }
+    }
+}
+
+/// Represents the current state of a task.
+pub enum TaskState {
+    /// The task is running as normal
+    Running,
+    /// Unknown to me at the moment
+    Ready,
+    /// The task is blocked
+    Blocked,
+    /// The task is suspended
+    Suspended,
+    /// The task has been deleted
+    Deleted,
+    /// The tasks state is invalid somehow
+    Invalid,
+}
+
+impl From<u32> for TaskState {
+    fn from(value: u32) -> Self {
+        match value {
+            pros_sys::task_state_e_t_E_TASK_STATE_RUNNING => Self::Running,
+            pros_sys::task_state_e_t_E_TASK_STATE_READY => Self::Ready,
+            pros_sys::task_state_e_t_E_TASK_STATE_BLOCKED => Self::Blocked,
+            pros_sys::task_state_e_t_E_TASK_STATE_SUSPENDED => Self::Suspended,
+            pros_sys::task_state_e_t_E_TASK_STATE_DELETED => Self::Deleted,
+            pros_sys::task_state_e_t_E_TASK_STATE_INVALID => Self::Invalid,
+            _ => Self::Invalid,
         }
     }
 }

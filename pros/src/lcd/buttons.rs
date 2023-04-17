@@ -11,6 +11,6 @@ pub fn read_buttons() -> Buttons {
     Buttons {
         left_pressed: bit_mask & 0b001 == bit_mask,
         middle_pressed: bit_mask & 0b010 == bit_mask,
-        right_pressed: bit_mask & 0b100 == bit_mask
+        right_pressed: bit_mask & 0b100 == bit_mask,
     }
 }

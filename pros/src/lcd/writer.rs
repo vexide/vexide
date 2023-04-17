@@ -10,11 +10,11 @@ pub(crate) struct Writer {
 
 impl Writer {
     pub fn new() -> Self {
-        unsafe { pros_sys::lcd_initialize(); }
-        
-        Self {
-            lines: [""; 8]
+        unsafe {
+            pros_sys::lcd_initialize();
         }
+
+        Self { lines: [""; 8] }
     }
 }
 
@@ -22,7 +22,10 @@ impl core::fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         for line in 1..self.lines.len() {
             unsafe {
-                pros_sys::lcd_print((line - 1) as i16, self.lines[line].as_ptr() as *const core::ffi::c_char);
+                pros_sys::lcd_print(
+                    (line - 1) as i16,
+                    self.lines[line].as_ptr() as *const core::ffi::c_char,
+                );
                 self.lines[line - 1] = self.lines[line];
             }
         }
