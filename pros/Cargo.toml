@@ -3,7 +3,7 @@ name = "pros"
 version = "0.0.1"
 edition = "2021"
 description = "Rust bindings for PROS"
-keywords = [ "PROS", "Robotics", "bindings" ]
+keywords = ["PROS", "Robotics", "bindings"]
 license = "MIT"
 repository = "https://github.com/gavin-niederman/pros-rs"
 

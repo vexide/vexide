@@ -45,11 +45,7 @@ impl Motor {
 
     /// Moves the motor to an absolute position, based off of the last motor zeroing.
     /// units for the velocity is RPM.
-    pub fn set_position_absolute(
-        &self,
-        position: Position,
-        velocity: i32,
-    ) {
+    pub fn set_position_absolute(&self, position: Position, velocity: i32) {
         unsafe {
             pros_sys::motor_move_absolute(self.port, position.into(), velocity);
         }

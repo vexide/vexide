@@ -48,7 +48,7 @@ fn main() {
 fn get_gcc_arm_include_dirs() -> Vec<String> {
     let mut is_include_dir = false;
     let include_dirs: Vec<String> = Command::new("arm-none-eabi-gcc")
-        .args(["-E", "-xc", "-Wp", "-v", "/dev/null"])
+        .args(["-E", "-xc", "-Wp,-v", "/dev/null"])
         .output()
         .expect("Could not run 'arm-none-eabi-gcc'. Is it installed?")
         .stderr
