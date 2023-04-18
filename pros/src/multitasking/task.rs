@@ -59,6 +59,13 @@ impl Task {
         unsafe { pros_sys::task_get_state(self.task).into() }
     }
 
+    /// Send a notification to the task.
+    pub fn notify(&self) {
+        unsafe {
+            pros_sys::task_notify(self.task);
+        }
+    }
+
     /// Waits for the task to finish, and then deletes it.
     pub fn join(self) {
         unsafe {
@@ -140,4 +147,24 @@ where
 /// Useful for when using loops in tasks.
 pub fn sleep(duration: core::time::Duration) {
     unsafe { pros_sys::delay(duration.as_millis() as u32) }
+}
+
+
+/// Returns the task the function was called from.
+pub fn get_current_task() -> Task {
+    unsafe {
+        Task {
+            task: pros_sys::task_get_current()
+        }
+    }
+}
+
+/// Gets the first notification in the queue.
+/// If there is none, blocks untill a notification is recieved.
+/// I am unsure what happens if the thread is unblocked while waiting.
+/// returns the value of the notification
+pub fn get_notification() -> u32 {
+    unsafe {
+        pros_sys::task_notify_take(false, pros_sys::timeout_max)
+    }
 }
