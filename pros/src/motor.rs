@@ -1,5 +1,4 @@
 use crate::errno::ERRNO;
-use pros_sys;
 
 /// The basic motor struct.
 pub struct Motor {

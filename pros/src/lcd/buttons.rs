@@ -1,5 +1,3 @@
-use pros_sys;
-
 pub struct Buttons {
     pub left_pressed: bool,
     pub middle_pressed: bool,

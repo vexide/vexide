@@ -1,5 +1,4 @@
 use core::ffi::c_void;
-use pros_sys;
 
 /// Represents a task
 pub struct Task {
@@ -11,7 +10,7 @@ impl Task {
     /// Takes in a closure that can move variables if needed.
     /// If your task has a loop it is advised to use [`sleep(duration)`](sleep) so that the task does not take up necessary system resources.
     /// Tasks should be long-living; starting many tasks can be slow and is usually not necessary.
-    pub fn spawn<F: FnOnce()>(
+    pub fn spawn<F: FnOnce() + Send>(
         function: F,
         priority: TaskPriority,
         stack_depth: TaskStackDepth,
@@ -65,9 +64,7 @@ impl Task {
 
     /// Get the state of the task.
     pub fn get_state(&self) -> TaskState {
-        unsafe {
-            pros_sys::task_get_state(self.task).into()
-        }
+        unsafe { pros_sys::task_get_state(self.task).into() }
     }
 
     /// Waits for the task to finish, and then deletes it.

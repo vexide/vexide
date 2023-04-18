@@ -1,15 +1,15 @@
 use lazy_static::lazy_static;
-use pros_sys;
+
 use spin::Mutex;
 
 #[repr(transparent)]
-pub struct Errno(*mut core::ffi::c_int);
+pub(crate) struct Errno(*mut core::ffi::c_int);
 
 unsafe impl Send for Errno {}
 
 impl Errno {
     pub unsafe fn new() -> Self {
-        Self(pros_sys::__errno_location())
+        Self(pros_sys::errno_location())
     }
 
     pub unsafe fn get(&mut self) -> core::ffi::c_int {
@@ -20,5 +20,5 @@ impl Errno {
 }
 
 lazy_static! {
-    pub static ref ERRNO: Mutex<Errno> = unsafe { Mutex::new(Errno::new()) };
+    pub(crate) static ref ERRNO: Mutex<Errno> = unsafe { Mutex::new(Errno::new()) };
 }
