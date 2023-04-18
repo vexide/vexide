@@ -5,11 +5,25 @@
   * [ ] write and writeln macros
   * [ ] Buffers
 * [ ] Buttons
-* [ ] LVGL bindings (Might be out of scope)
 * [ ] Multitasking
   * [X] Mutexs
   * [X] Tasks
-  * [ ] Semaphores
   * [ ] Queues
   * [ ] Notifications
 * [ ] Motors (mostly done)
+* [ ] sensors
+  * [ ] ADI sensors
+  * [ ] Ext. ADI
+  * [ ] Distance
+  * [ ] GPS
+  * [ ] Inertial
+  * [ ] Optical
+  * [ ] Rotational
+  * [ ] Vision
+* [ ] Screen
+* [ ] Link
+
+## Non essential
+
+* [ ] Drivetrain
+* [ ] LVGL bindings

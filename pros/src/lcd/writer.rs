@@ -2,7 +2,6 @@ extern crate alloc;
 
 use alloc::{borrow::ToOwned, boxed::Box};
 
-
 pub(crate) struct Writer {
     lines: [&'static str; 8],
 }

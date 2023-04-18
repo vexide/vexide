@@ -47,14 +47,6 @@ impl Task {
         }
     }
 
-    /// Breaks the task out of the current blocking instruction.
-    /// For example if the task is [sleeping](sleep).
-    pub fn cancel_block(&self) {
-        unsafe {
-            pros_sys::task_abort_delay(self.task);
-        }
-    }
-
     /// Sets the priority.
     pub fn set_priority(&self, priority: TaskPriority) {
         unsafe {
@@ -63,7 +55,7 @@ impl Task {
     }
 
     /// Get the state of the task.
-    pub fn get_state(&self) -> TaskState {
+    pub fn state(&self) -> TaskState {
         unsafe { pros_sys::task_get_state(self.task).into() }
     }
 

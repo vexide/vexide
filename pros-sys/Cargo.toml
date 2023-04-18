@@ -16,3 +16,6 @@ zip = "0.6.4"
 
 [lib]
 doctest = false
+
+[features]
+lvgl = []

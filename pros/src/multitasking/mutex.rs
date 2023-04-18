@@ -1,13 +1,13 @@
 /// The basic mutex type.
 /// Mutexes are used to share variables between tasks safely.
-pub struct Mutex<T: Send> {
+pub struct Mutex<T> {
     pros_mutex: pros_sys::mutex_t,
     data: core::cell::UnsafeCell<T>,
 }
 unsafe impl<T: Send> Send for Mutex<T> {}
-unsafe impl<T: Send> Sync for Mutex<T> {}
+unsafe impl<T> Sync for Mutex<T> {}
 
-impl<T: Send> Mutex<T> {
+impl<T> Mutex<T> {
     /// Creates a new mutex.
     pub fn new(data: T) -> Self {
         let pros_mutex = unsafe { pros_sys::mutex_create() };
@@ -30,24 +30,24 @@ impl<T: Send> Mutex<T> {
 
 /// Allows the user to access the data from a locked mutex.
 /// Dereference to get the inner data.
-pub struct MutexGuard<'a, T: Send> {
+pub struct MutexGuard<'a, T> {
     mutex: &'a Mutex<T>,
 }
 
-impl<T: Send> core::ops::Deref for MutexGuard<'_, T> {
+impl<T> core::ops::Deref for MutexGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { &*self.mutex.data.get() }
     }
 }
 
-impl<T: Send> core::ops::DerefMut for MutexGuard<'_, T> {
+impl<T> core::ops::DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
         unsafe { &mut *self.mutex.data.get() }
     }
 }
 
-impl<T: Send> Drop for MutexGuard<'_, T> {
+impl<T> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
         unsafe {
             pros_sys::mutex_give(self.mutex.pros_mutex);

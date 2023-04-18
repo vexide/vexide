@@ -19,13 +19,17 @@ fn main() {
         .extract(format!("{out_dir}"))
         .unwrap();
 
+    #[cfg_attr(feature = "lvgl", allow(unused_mut))]
     let mut bindings = Builder::default()
-        .header(format!("src/pros_entrypoint.h"))
+        .header("src/pros_entrypoint.h")
         .use_core()
         .clang_arg(format!("-I{out_dir}/include"))
         .clang_args(&["-target", "arm-none-eabi"])
         .blocklist_item("FP_.*")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks));
+
+    #[cfg(feature = "lvgl")]
+    let mut bindings = bindings.header(format!("{out_dir}/include/pros/apix.h"));
 
     for dir in get_gcc_arm_include_dirs() {
         bindings = bindings.clang_arg(format!("-I{}", dir));
