@@ -20,8 +20,7 @@ fn main() {
         .unwrap();
 
     let mut bindings = Builder::default()
-        .header(format!("{out_dir}/include/api.h"))
-        .header(format!("{out_dir}/include/pros/apix.h"))
+        .header(format!("src/pros_entrypoint.h"))
         .use_core()
         .clang_arg(format!("-I{out_dir}/include"))
         .clang_args(&["-target", "arm-none-eabi"])
