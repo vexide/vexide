@@ -5,6 +5,8 @@
   * [ ] write and writeln macros
   * [ ] Buffers
 * [ ] Buttons
+  * [X] Pressed buttons
+  * [ ] Button press callback functions
 * [ ] Multitasking
   * [X] Mutexs
   * [X] Tasks
@@ -20,6 +22,7 @@
   * [ ] Optical
   * [ ] Rotational
   * [ ] Vision
+* [X] Controllers
 * [ ] Screen
 * [ ] Link
 

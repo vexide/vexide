@@ -22,7 +22,7 @@ impl<T> Mutex<T> {
     /// Blocks the current task untill the lock is acquired.
     pub fn lock(&self) -> MutexGuard<T> {
         unsafe {
-            pros_sys::mutex_take(self.pros_mutex, pros_sys::timeout_max);
+            pros_sys::mutex_take(self.pros_mutex, pros_sys::MAX_TIMEOUT);
         }
         MutexGuard { mutex: self }
     }

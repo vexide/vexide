@@ -1,7 +1,9 @@
 #![no_std]
 
+pub mod controller;
 pub mod motor;
 pub mod multitasking;
+pub mod sensors;
 
 #[cfg(not(feature = "lvgl"))]
 #[macro_use]

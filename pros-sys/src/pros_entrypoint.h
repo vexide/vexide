@@ -1,7 +1,5 @@
 #include "api.h"
 
-const uint32_t timeout_max = TIMEOUT_MAX;
+const uint32_t MAX_TIMEOUT = TIMEOUT_MAX;
 
-int* errno_location() {
-    return &errno;
-}
+int *errno_location() { return &errno; }

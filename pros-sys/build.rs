@@ -41,10 +41,10 @@ fn main() {
         .write_to_file(PathBuf::from(out_dir.clone()).join("bindings.rs"))
         .expect("could not write bindings");
 
-    println!("cargo:rustc-link-arg=-T{out_dir}/v5-common.ld");
+    // println!("cargo:rustc-link-arg=-T{out_dir}/v5-common.ld");
     println!("cargo:rustc-link-search=native={out_dir}/firmware");
-    println!("cargo:rustc-link-lib=static=pros");
-    println!("cargo:rerun-if-changed=build.rs");
+    // println!("cargo:rustc-link-lib=static=pros");
+    println!("cargo:rerun-if-changed=src/pros_entrypoint.h");
 }
 
 // Credit goes to the other bindings for pros at https://github.com/serxka/pros-rs for this method of getting the correct headers.

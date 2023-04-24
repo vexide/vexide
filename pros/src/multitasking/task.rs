@@ -165,6 +165,6 @@ pub fn get_current_task() -> Task {
 /// returns the value of the notification
 pub fn get_notification() -> u32 {
     unsafe {
-        pros_sys::task_notify_take(false, pros_sys::timeout_max)
+        pros_sys::task_notify_take(false, pros_sys::MAX_TIMEOUT)
     }
 }
