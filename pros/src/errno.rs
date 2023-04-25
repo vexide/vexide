@@ -10,7 +10,7 @@ impl Errno {
         Self(pros_sys::errno_location())
     }
 
-    pub unsafe fn get(&mut self) -> core::ffi::c_int {
+    pub unsafe fn get(&self) -> core::ffi::c_int {
         let err = self.0;
         *self.0 = 0 as core::ffi::c_int;
         *err
