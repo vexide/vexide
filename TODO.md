@@ -7,11 +7,10 @@
 * [ ] Buttons
   * [X] Pressed buttons
   * [ ] Button press callback functions
-* [ ] Multitasking
+* [X] Multitasking
   * [X] Mutexs
   * [X] Tasks
-  * [ ] Queues
-  * [ ] Notifications
+  * [X] Notifications
 * [ ] Motors (mostly done)
 * [ ] sensors
   * [ ] ADI sensors
