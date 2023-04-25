@@ -14,7 +14,7 @@ impl Motor {
             );
             pros_sys::motor_set_brake_mode(port, brake_mode.into());
 
-            if let Ok(error) = (ERRNO.lock().get() as u32).try_into() {
+            if let Ok(error) = (ERRNO.get() as u32).try_into() {
                 return Err(error);
             }
         }

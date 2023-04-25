@@ -1,11 +1,9 @@
 use lazy_static::lazy_static;
 
-use spin::Mutex;
-
 #[repr(transparent)]
 pub(crate) struct Errno(*mut core::ffi::c_int);
-
 unsafe impl Send for Errno {}
+unsafe impl Sync for Errno {}
 
 impl Errno {
     pub unsafe fn new() -> Self {
@@ -20,5 +18,5 @@ impl Errno {
 }
 
 lazy_static! {
-    pub(crate) static ref ERRNO: Mutex<Errno> = unsafe { Mutex::new(Errno::new()) };
+    pub(crate) static ref ERRNO: Errno = unsafe { Errno::new() };
 }

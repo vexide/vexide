@@ -15,7 +15,7 @@
 * [ ] sensors
   * [ ] ADI sensors
   * [ ] Ext. ADI
-  * [ ] Distance
+  * [X] Distance
   * [ ] GPS
   * [ ] Inertial
   * [ ] Optical

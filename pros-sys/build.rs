@@ -28,7 +28,7 @@ fn main() {
         .blocklist_item("FP_.*")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks));
 
-    #[cfg(feature = "lvgl")]
+    #[cfg(feature = "xapi")]
     let mut bindings = bindings.header(format!("{out_dir}/include/pros/apix.h"));
 
     for dir in get_gcc_arm_include_dirs() {

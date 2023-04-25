@@ -53,6 +53,7 @@ impl Controller {
         Self { id: id as _ }
     }
 
+    /// Gets the state of the controller; the joysticks and buttons.
     pub fn state(&self) -> ControllerState {
         ControllerState {
             joysticks: unsafe {
