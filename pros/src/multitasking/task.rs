@@ -149,12 +149,11 @@ pub fn sleep(duration: core::time::Duration) {
     unsafe { pros_sys::delay(duration.as_millis() as u32) }
 }
 
-
 /// Returns the task the function was called from.
 pub fn get_current_task() -> Task {
     unsafe {
         Task {
-            task: pros_sys::task_get_current()
+            task: pros_sys::task_get_current(),
         }
     }
 }
@@ -164,7 +163,5 @@ pub fn get_current_task() -> Task {
 /// I am unsure what happens if the thread is unblocked while waiting.
 /// returns the value of the notification
 pub fn get_notification() -> u32 {
-    unsafe {
-        pros_sys::task_notify_take(false, pros_sys::MAX_TIMEOUT)
-    }
+    unsafe { pros_sys::task_notify_take(false, pros_sys::MAX_TIMEOUT) }
 }

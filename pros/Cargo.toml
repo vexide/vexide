@@ -15,4 +15,4 @@ spin = "0.9.8"
 pros-sys = { version = "*", path = "../pros-sys" }
 
 [features]
-lvgl = [ "pros-sys/xapi" ]
+lvgl = ["pros-sys/xapi"]

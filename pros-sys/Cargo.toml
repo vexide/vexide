@@ -3,7 +3,7 @@ name = "pros-sys"
 version = "0.1.0"
 edition = "2021"
 description = "EFI for the PROS rust bindings"
-keywords = [ "PROS", "Robotics", "bindings" ]
+keywords = ["PROS", "Robotics", "bindings"]
 license = "MIT"
 repository = "https://github.com/gavin-niederman/pros-rs"
 
