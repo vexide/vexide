@@ -1,4 +1,4 @@
-use crate::errno::ERRNO;
+use crate::error::PortError;
 
 /// The basic motor struct.
 pub struct Motor {
@@ -6,7 +6,7 @@ pub struct Motor {
 }
 
 impl Motor {
-    pub fn new(port: u8, brake_mode: BrakeMode) -> Result<Self, MotorError> {
+    pub fn new(port: u8, brake_mode: BrakeMode) -> Result<Self, PortError> {
         unsafe {
             pros_sys::motor_set_encoder_units(
                 port,
@@ -14,8 +14,8 @@ impl Motor {
             );
             pros_sys::motor_set_brake_mode(port, brake_mode.into());
 
-            if let Ok(error) = (ERRNO.get() as u32).try_into() {
-                return Err(error);
+            if let Some(err) = PortError::from_last_errno() {
+                return Err(err);
             }
         }
 
@@ -136,19 +136,5 @@ impl From<u32> for MotorState {
 }
 
 pub enum MotorError {
-    PortOutOfRange,
-    PortCannotBeConfigured,
     VoltageOutOfRange,
-}
-
-impl TryFrom<u32> for MotorError {
-    type Error = &'static str;
-
-    fn try_from(value: u32) -> Result<MotorError, &'static str> {
-        match value {
-            pros_sys::ENXIO => Ok(MotorError::PortOutOfRange),
-            pros_sys::ENODEV => Ok(MotorError::PortCannotBeConfigured),
-            _ => Err("Value does not match any error types"),
-        }
-    }
 }

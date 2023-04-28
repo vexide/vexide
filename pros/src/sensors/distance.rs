@@ -1,16 +1,16 @@
-use super::SensorError;
+use crate::error::PortError;
 
 pub struct DistanceSensor {
     port: u8,
 }
 
 impl DistanceSensor {
-    pub fn new(port: u8) -> Result<Self, SensorError> {
+    pub fn new(port: u8) -> Result<Self, PortError> {
         unsafe {
             pros_sys::distance_get(port);
 
-            if crate::errno::ERRNO.get() as u32 == pros_sys::ENXIO {
-                return Err(SensorError::PortOutOfRange);
+            if let Some(err) = PortError::from_last_errno() {
+                return Err(err);
             }
         }
 

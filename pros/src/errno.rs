@@ -10,10 +10,10 @@ impl Errno {
         Self(pros_sys::errno_location())
     }
 
-    pub unsafe fn get(&self) -> core::ffi::c_int {
+    pub unsafe fn get(&self) -> u32 {
         let err = self.0;
         *self.0 = 0 as core::ffi::c_int;
-        *err
+        *err as u32
     }
 }
 

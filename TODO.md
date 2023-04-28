@@ -12,7 +12,7 @@
   * [X] Tasks
   * [X] Notifications
 * [ ] Motors (mostly done)
-* [ ] sensors
+* [ ] Sensors
   * [ ] ADI sensors
   * [ ] Ext. ADI
   * [X] Distance
