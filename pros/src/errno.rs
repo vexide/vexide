@@ -7,7 +7,7 @@ unsafe impl Sync for Errno {}
 
 impl Errno {
     pub unsafe fn new() -> Self {
-        Self(pros_sys::__errno_location())
+        Self(pros_sys::__errno())
     }
 
     pub unsafe fn get(&self) -> u32 {

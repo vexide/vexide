@@ -17,8 +17,7 @@ pub mod lcd;
 #[macro_use]
 pub mod lvgl;
 
-//TODO: This currently does not compile. libc does not include the __errno_location function for some reason. FIX THIS.
-// pub(crate) mod errno;
+pub(crate) mod errno;
 
 #[panic_handler]
 pub fn panic(_info: &PanicInfo) -> ! {
