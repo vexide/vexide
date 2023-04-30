@@ -4,4 +4,4 @@
 
 ## This project is still very early in development
 
- Make sure to check out the todo list [(TODO.md)](TODO.md)
+ Make sure to check out the todo list [(TODO.md)](../TODO.md)

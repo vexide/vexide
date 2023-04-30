@@ -24,6 +24,7 @@
 * [X] Controllers
 * [ ] Screen
 * [ ] Link
+* [ ] Fix errno
 
 ## Non essential
 

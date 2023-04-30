@@ -840,7 +840,7 @@ dependencies = [
 
 [[package]]
 name = "pros"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "errno",
  "lazy_static",
