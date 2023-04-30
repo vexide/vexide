@@ -28,7 +28,7 @@ pub fn panic(_info: &PanicInfo) -> ! {
 struct Allocator;
 unsafe impl GlobalAlloc for Allocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-		pros_sys::malloc(layout.size() as core::ffi::c_uint) as *mut u8
+		pros_sys::memalign(layout.align(), layout.size()) as *mut u8
 	}
 	unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
 		pros_sys::free(ptr as *mut core::ffi::c_void)
