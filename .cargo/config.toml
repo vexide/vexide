@@ -1,5 +1,5 @@
 [build]
-target = "armv7a-none-eabi"
+target = "./armv7a-vexos.json"
 
 [unstable]
 build-std = ["core", "compiler_builtins", "alloc"]

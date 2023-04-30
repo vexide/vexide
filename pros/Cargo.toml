@@ -13,6 +13,8 @@ repository = "https://github.com/gavin-niederman/pros-rs"
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 spin = "0.9.8"
 pros-sys = { version = "*", path = "../pros-sys" }
+errno = { version = "0.3.1", default-features = false }
+libc = { version = "0.2.142", default-features = false }
 
 [features]
 lvgl = ["pros-sys/xapi"]

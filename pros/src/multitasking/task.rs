@@ -14,7 +14,7 @@ impl Task {
         function: F,
         priority: TaskPriority,
         stack_depth: TaskStackDepth,
-        name: &str,
+        name: Option<&str>,
     ) -> Self {
         let mut entrypoint = TaskEntrypoint { function };
 
@@ -25,7 +25,7 @@ impl Task {
                     &mut entrypoint as *mut _ as *mut c_void,
                     priority as _,
                     stack_depth as _,
-                    name.as_ptr() as *const i8,
+                    name.unwrap_or("").as_ptr() as *const i8,
                 ),
             }
         }

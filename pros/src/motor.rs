@@ -1,6 +1,7 @@
 use crate::error::PortError;
 
 /// The basic motor struct.
+#[derive(Clone, Copy)]
 pub struct Motor {
     port: u8,
 }
