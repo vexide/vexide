@@ -11,7 +11,8 @@
   * [X] Mutexs
   * [X] Tasks
   * [X] Notifications
-* [ ] Motors (mostly done)
+* [X] Motors
+* [ ] PID controllers
 * [ ] Sensors
   * [ ] ADI sensors
   * [ ] Ext. ADI
@@ -24,7 +25,6 @@
 * [X] Controllers
 * [ ] Screen
 * [ ] Link
-* [ ] Fix errno
 
 ## Non essential
 

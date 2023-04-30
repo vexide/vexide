@@ -9,9 +9,7 @@ impl DistanceSensor {
         unsafe {
             pros_sys::distance_get(port);
 
-            if let Some(err) = PortError::from_last_errno() {
-                return Err(err);
-            }
+            PortError::from_last_errno()?;
         }
 
         Ok(Self { port })

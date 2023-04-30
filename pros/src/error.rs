@@ -5,11 +5,11 @@ pub enum PortError {
 }
 
 impl PortError {
-    pub fn from_last_errno() -> Option<Self> {
+    pub fn from_last_errno() -> Result<(), Self> {
         match unsafe { crate::errno::ERRNO.get() as u32 } {
-            pros_sys::ENXIO => Some(Self::PortOutOfRange),
-            pros_sys::ENODEV => Some(Self::PortCannotBeConfigured),
-            _ => None,
+            pros_sys::ENXIO => Err(Self::PortOutOfRange),
+            pros_sys::ENODEV => Err(Self::PortCannotBeConfigured),
+            _ => Ok(()),
         } 
     }
 }
