@@ -842,7 +842,6 @@ dependencies = [
 name = "pros"
 version = "0.0.4"
 dependencies = [
- "errno",
  "lazy_static",
  "libc",
  "pros-sys",
