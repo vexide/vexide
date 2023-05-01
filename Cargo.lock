@@ -843,7 +843,6 @@ name = "pros"
 version = "0.0.4"
 dependencies = [
  "lazy_static",
- "libc",
  "pros-sys",
  "spin 0.9.8",
 ]
