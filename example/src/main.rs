@@ -1,11 +1,17 @@
 #![no_std]
 #![no_main]
 
-#[macro_use]
-extern crate pros;
+use pros::prelude::*;
 
-#[no_mangle]
-extern "C" fn opcontrol() {
+autonomous!();
+
+on_initialize!();
+
+on_disable!();
+
+comp_init!();
+
+opcontrol! ({
     // Create a new motor plugged into port zero. The motor will brake when not moving.
     let motor = pros::motor::Motor::new(0, pros::motor::BrakeMode::Brake).unwrap();
     // Create a controller, specifically controller 1.
@@ -15,9 +21,9 @@ extern "C" fn opcontrol() {
     let motor_copy = motor.clone();
 
     // Spawn a new task that will print whether or not the motor is stopped constantly.
-    // The priority changes how much time the operating system spends on the task, this can usually be set to default.
-    // The stack depth is how large the stack that is given to the task is, again it can usually be left at default.
-    // The name is usefull for debugging but isn't strictly necessary.
+    // Priority changes how much time the operating system spends on the task, this can usually be set to default.
+    // Stack depth is how large the stack that is given to the task is, again it can usually be left at default.
+    // Name is an optional string usefull for debugging.
     pros::multitasking::Task::spawn(
         move || loop {
             println!("Motor stopped? {}", motor_copy.get_state().stopped);
@@ -39,4 +45,4 @@ extern "C" fn opcontrol() {
         // Once again, sleep.
         pros::multitasking::sleep(core::time::Duration::from_millis(20));
     }
-}
+});

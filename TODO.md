@@ -13,9 +13,9 @@
   * [X] Notifications
 * [X] Motors
 * [ ] PID controllers
+* [ ] ADI
+* [ ] Ext. ADI
 * [ ] Sensors
-  * [ ] ADI sensors
-  * [ ] Ext. ADI
   * [X] Distance
   * [ ] GPS
   * [ ] Inertial

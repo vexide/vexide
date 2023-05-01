@@ -61,38 +61,27 @@ impl Motor {
 
     /// Returns the power drawn by the motor in Watts.
     pub fn power(&self) -> f64 {
-        unsafe {
-            pros_sys::motor_get_power(self.port)
-        }
+        unsafe { pros_sys::motor_get_power(self.port) }
     }
 
     /// Returns the toueque output of the motor in Nm.
     pub fn tourque(&self) -> f64 {
-        unsafe {
-            pros_sys::motor_get_torque(self.port)
-        }
+        unsafe { pros_sys::motor_get_torque(self.port) }
     }
 
     /// Returns the voltage the motor is drawing in volts.
     pub fn voltage(&self) -> f64 {
-        unsafe {
-            pros_sys::motor_get_voltage(self.port) as f64 / 1000.0
-        }
+        unsafe { pros_sys::motor_get_voltage(self.port) as f64 / 1000.0 }
     }
 
     /// Returns the current position of the motor.
-    //NOTE: This only works as intended
     pub fn position(&self) -> Position {
-        unsafe {
-            Position::from_degrees(pros_sys::motor_get_position(self.port))
-        }
+        unsafe { Position::from_degrees(pros_sys::motor_get_position(self.port)) }
     }
 
     /// Returns the current draw of the motor.
     pub fn current_draw(&self) -> i32 {
-        unsafe {
-            pros_sys::motor_get_current_draw(self.port)
-        }
+        unsafe { pros_sys::motor_get_current_draw(self.port) }
     }
 
     /// Sets the current position to zero.
@@ -101,21 +90,21 @@ impl Motor {
             pros_sys::motor_set_zero_position(self.port, self.position().into_degrees());
         }
     }
-    
+
     /// Stops the motor based on the current [`BrakeMode`]
     pub fn brake(&self) {
         unsafe {
             pros_sys::motor_brake(self.port);
         }
     }
-    
+
     /// Sets the current position to the given position.
     pub fn set_zero_position(&self, position: Position) {
         unsafe {
             pros_sys::motor_set_zero_position(self.port, position.into_degrees());
         }
     }
-    
+
     /// Sets how the motor should act when stopping.
     pub fn set_brake_mode(&self, brake_mode: BrakeMode) {
         unsafe {
