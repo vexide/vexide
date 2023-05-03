@@ -3,15 +3,8 @@
 
 use pros::prelude::*;
 
-autonomous!();
-
-on_initialize!();
-
-on_disable!();
-
-comp_init!();
-
-opcontrol! ({
+#[no_mangle]
+pub extern "C" fn opcontrol() {
     // Create a new motor plugged into port zero. The motor will brake when not moving.
     let motor = pros::motor::Motor::new(0, pros::motor::BrakeMode::Brake).unwrap();
     // Create a controller, specifically controller 1.
@@ -45,4 +38,4 @@ opcontrol! ({
         // Once again, sleep.
         pros::multitasking::sleep(core::time::Duration::from_millis(20));
     }
-});
+}

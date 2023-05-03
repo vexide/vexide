@@ -17,8 +17,4 @@ fn main() {
         .unwrap();
 
     println!("cargo:rustc-link-search=native={out_dir}/firmware");
-
-    println!("cargo:rustc-link-lib=static=pros");
-    println!("cargo:rustc-link-lib=static=c");
-    println!("cargo:rustc-link-lib=static=m");
 }
