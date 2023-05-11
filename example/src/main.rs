@@ -10,17 +10,21 @@ pub extern "C" fn opcontrol() {
     // Create a controller, specifically controller 1.
     let controller = pros::controller::Controller::new(pros::controller::ControllerId::Master);
 
-    // Create a copy of the motor to be moved into the print task.
-    let motor_copy = motor.clone();
-
     // Spawn a new task that will print whether or not the motor is stopped constantly.
-    pros::multitasking::TaskBuilder::new(move || loop {
-        println!("Motor stopped? {}", motor_copy.get_state().stopped);
+    pros::multitasking::TaskBuilder::new(
+        {
+            // Clone the motor to be used in the task.
+            let motor = motor.clone();
 
-        // Sleep the task as to not steal processing time from the OS.
-        // This should always be done in any loop, including loops in the main task.
-        pros::multitasking::sleep(core::time::Duration::from_millis(20));
-    })
+            move || loop {
+                println!("Motor stopped? {}", motor.get_state().stopped);
+
+                // Sleep the task as to not steal processing time from the OS.
+                // This should always be done in any loop, including loops in the main task.
+                pros::multitasking::sleep(core::time::Duration::from_millis(20));
+            }
+        }
+    )
     .name("Print Task")
     .build();
 
