@@ -85,6 +85,55 @@ impl Task {
     }
 }
 
+/// An ergonomic builder for tasks. Alternatively you can use [`Task::spawn`](crate::multitasking::Task::spawn).
+pub struct TaskBuilder<'a, F: FnOnce() + Send> {
+    name: Option<&'a str>,
+    priority: Option<TaskPriority>,
+    stack_depth: Option<TaskStackDepth>,
+    function: F,
+}
+
+impl<'a, F: FnOnce() + Send> TaskBuilder<'a, F> {
+    /// Creates a task builder.
+    pub fn new(function: F) -> Self {
+        Self {
+            name: None,
+            priority: None,
+            stack_depth: None,
+            function,
+        }
+    }
+
+    /// Sets the name of the task, this is useful for debugging.
+    pub fn name(mut self, name: &'a str) -> Self {
+        self.name = Some(name);
+        self
+    }
+
+    /// Sets the priority of the task (how much time the scheduler gives to it.).
+    pub fn priority(mut self, priority: TaskPriority) -> Self {
+        self.priority = Some(priority);
+        self
+    }
+
+    /// Sets how large the stack for the task is.
+    /// This can usually be set to defualt
+    pub fn stack_depth(mut self, stack_depth: TaskStackDepth) -> Self {
+        self.stack_depth = Some(stack_depth);
+        self
+    }
+
+    /// Builds and spawns the task
+    pub fn build(self) -> Task {
+        Task::spawn(
+            self.function,
+            self.priority.unwrap_or_default(),
+            self.stack_depth.unwrap_or_default(),
+            self.name,
+        )
+    }
+}
+
 /// Represents the current state of a task.
 pub enum TaskState {
     /// The task is running as normal
@@ -124,12 +173,24 @@ pub enum TaskPriority {
     Low = 1,
 }
 
+impl Default for TaskPriority {
+    fn default() -> Self {
+        Self::Default
+    }
+}
+
 /// Reprsents how large of a stack the task should get.
 /// Tasks that don't have any or many variables and/or don't need floats can use the low stack depth option.
 #[repr(u32)]
 pub enum TaskStackDepth {
     Default = 8192,
     Low = 512,
+}
+
+impl Default for TaskStackDepth {
+    fn default() -> Self {
+        Self::Default
+    }
 }
 
 struct TaskEntrypoint<F> {

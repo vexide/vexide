@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use alloc::{borrow::ToOwned, string::String, ffi::CString};
+use alloc::ffi::CString;
 
 pub(crate) struct Writer {
     lines: [CString; 8],
@@ -12,7 +12,9 @@ impl Writer {
             pros_sys::lcd_initialize();
         }
 
-        Self { lines: Default::default() }
+        Self {
+            lines: Default::default(),
+        }
     }
 }
 
@@ -26,10 +28,7 @@ impl core::fmt::Write for Writer {
             let string_ptr = self.lines[line].as_ptr();
 
             unsafe {
-                pros_sys::lcd_print(
-                    line as i16,
-                    string_ptr,
-                );
+                pros_sys::lcd_print(line as i16, string_ptr);
             }
         }
 

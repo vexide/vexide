@@ -14,21 +14,15 @@ pub extern "C" fn opcontrol() {
     let motor_copy = motor.clone();
 
     // Spawn a new task that will print whether or not the motor is stopped constantly.
-    // Priority changes how much time the operating system spends on the task, this can usually be set to default.
-    // Stack depth is how large the stack that is given to the task is, again it can usually be left at default.
-    // Name is an optional string usefull for debugging.
-    pros::multitasking::Task::spawn(
-        move || loop {
-            println!("Motor stopped? {}", motor_copy.get_state().stopped);
+    pros::multitasking::TaskBuilder::new(move || loop {
+        println!("Motor stopped? {}", motor_copy.get_state().stopped);
 
-            // Sleep the task as to not steal processing time from the OS.
-            // This should always be done in any loop, including loops in the main task.
-            pros::multitasking::sleep(core::time::Duration::from_millis(20));
-        },
-        pros::multitasking::TaskPriority::Default,
-        pros::multitasking::TaskStackDepth::Default,
-        Some("Print Task"),
-    );
+        // Sleep the task as to not steal processing time from the OS.
+        // This should always be done in any loop, including loops in the main task.
+        pros::multitasking::sleep(core::time::Duration::from_millis(20));
+    })
+    .name("Print Task")
+    .build();
 
     loop {
         // Set the motors output with how far up or down the right joystick is pushed.
