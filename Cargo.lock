@@ -840,7 +840,7 @@ dependencies = [
 
 [[package]]
 name = "pros"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "lazy_static",
  "pros-sys",
@@ -849,7 +849,7 @@ dependencies = [
 
 [[package]]
 name = "pros-sys"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bindgen",
  "reqwest",
