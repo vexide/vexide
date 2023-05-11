@@ -1,3 +1,4 @@
+extern crate alloc;
 use core::ffi::c_void;
 
 /// Represents a task
@@ -17,17 +18,20 @@ impl Task {
         name: Option<&str>,
     ) -> Self {
         let mut entrypoint = TaskEntrypoint { function };
-
+        let name = alloc::ffi::CString::new(name.unwrap_or(""))
+            .unwrap()
+            .into_raw();
         unsafe {
-            Self {
-                task: pros_sys::task_create(
-                    Some(TaskEntrypoint::<F>::cast_and_call_external),
-                    &mut entrypoint as *mut _ as *mut c_void,
-                    priority as _,
-                    stack_depth as _,
-                    name.unwrap_or("").as_ptr() as *const i8,
-                ),
-            }
+            let task = pros_sys::task_create(
+                Some(TaskEntrypoint::<F>::cast_and_call_external),
+                &mut entrypoint as *mut _ as *mut c_void,
+                priority as _,
+                stack_depth as _,
+                name,
+            );
+
+            _ = alloc::ffi::CString::from_raw(name);
+            Self { task }
         }
     }
 

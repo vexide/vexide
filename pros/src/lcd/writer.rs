@@ -1,9 +1,9 @@
 extern crate alloc;
 
-use alloc::{borrow::ToOwned, boxed::Box};
+use alloc::{borrow::ToOwned, string::String, ffi::CString};
 
 pub(crate) struct Writer {
-    lines: [&'static str; 8],
+    lines: [CString; 8],
 }
 
 impl Writer {
@@ -12,31 +12,27 @@ impl Writer {
             pros_sys::lcd_initialize();
         }
 
-        Self { lines: [""; 8] }
+        Self { lines: Default::default() }
     }
 }
 
 impl core::fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        for line in 1..self.lines.len() {
+        let mut new_line = CString::new(s).unwrap();
+
+        for line in (0..self.lines.len()).rev() {
+            core::mem::swap(&mut self.lines[line], &mut new_line);
+
+            let string_ptr = self.lines[line].as_ptr();
+
             unsafe {
                 pros_sys::lcd_print(
-                    (line - 1) as i16,
-                    self.lines[line].as_ptr() as *const core::ffi::c_char,
+                    line as i16,
+                    string_ptr,
                 );
-                self.lines[line - 1] = self.lines[line];
             }
-        }
-
-        unsafe {
-            pros_sys::lcd_print(7, s.as_ptr() as *const core::ffi::c_char);
-            let s_copy = s.clone().to_owned();
-            self.lines[7] = Box::leak(Box::new(s_copy));
         }
 
         Ok(())
     }
 }
-
-// pub struct WriteError;
-// impl core::error::Error for WriteError {};
