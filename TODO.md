@@ -25,7 +25,6 @@
   * [ ] Rotational
   * [ ] Vision
 * [X] Controllers
-* [ ] Screen
 * [ ] Link
 
 ## API

@@ -30,8 +30,8 @@ pub extern "C" fn opcontrol() {
 
     loop {
         // Set the motors output with how far up or down the right joystick is pushed.
-        // Set raw takes in an i8 which is scaled to -12 to 12 volts.
-        motor.set_raw_output(controller.state().joysticks.right.y);
+        // Set output takes a float from -1 to 1 that is scaled to -12 to 12 volts.
+        motor.set_output(controller.state().joysticks.right.y);
 
         // Once again, sleep.
         pros::multitasking::sleep(core::time::Duration::from_millis(20));

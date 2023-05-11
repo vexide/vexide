@@ -20,12 +20,12 @@ pub struct Buttons {
     pub right_trigger_2: bool,
 }
 
-/// Stores how far the joystick is away from the center (at *(0, 0)*) from -127 to 127.
+/// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
 /// On the x axis left is negative, and right is positive.
 /// On the y axis down is negative, and up is positive.
 pub struct Joystick {
-    pub x: i8,
-    pub y: i8,
+    pub x: f32,
+    pub y: f32,
 }
 
 /// Stores both joysticks on the controller.
@@ -62,21 +62,21 @@ impl Controller {
                         x: pros_sys::controller_get_analog(
                             self.id,
                             pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_LEFT_X,
-                        ) as i8,
+                        ) as f32 / 127.0,
                         y: pros_sys::controller_get_analog(
                             self.id,
                             pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_LEFT_Y,
-                        ) as i8,
+                        ) as f32 / 127.0,
                     },
                     right: Joystick {
                         x: pros_sys::controller_get_analog(
                             self.id,
                             pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_RIGHT_X,
-                        ) as i8,
+                        ) as f32 / 127.0,
                         y: pros_sys::controller_get_analog(
                             self.id,
                             pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_RIGHT_Y,
-                        ) as i8,
+                        ) as f32 / 127.0,
                     },
                 }
             },

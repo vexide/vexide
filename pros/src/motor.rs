@@ -23,8 +23,15 @@ impl Motor {
         Ok(Self { port })
     }
 
-    /// Takes in and i8 between -127 and 127 which is scaled to -12 to 12 Volts.
+    /// Takes in a f32 from -1 to 1 that is scaled to -12 to 12 volts.
     /// Useful for driving motors with controllers.
+    pub fn set_output(&self, output: f32) {
+        unsafe {
+            pros_sys::motor_move(self.port, (output * 127.0) as i32);
+        }
+    }
+
+    /// Takes in and i8 between -127 and 127 which is scaled to -12 to 12 Volts.
     pub fn set_raw_output(&self, raw_output: i8) {
         unsafe {
             pros_sys::motor_move(self.port, raw_output as i32);
