@@ -21,7 +21,9 @@ fn main() {
         .extract(format!("{out_dir}"))
         .unwrap();
 
-    #[cfg_attr(feature = "lvgl", allow(unused_mut))]
+    println!("cargo:rustc-link-search=native={out_dir}/firmware");
+
+    #[cfg_attr(feature = "xapi", allow(unused_mut))]
     let mut bindings = Builder::default()
         .header("src/pros_entrypoint.h")
         .use_core()
