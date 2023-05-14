@@ -2,7 +2,8 @@
 target = "./armv7a-vexos.json"
 
 [target.armv7a-vexos]
-runner = "sh ./runner.sh"
+# Change this to runner = "./runner.bat" if in windows.
+runner = "sh runner.sh"
 
 [unstable]
 build-std = ["core", "compiler_builtins", "alloc"]
