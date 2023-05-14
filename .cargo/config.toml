@@ -1,5 +1,8 @@
 [build]
 target = "./armv7a-vexos.json"
 
+[target.armv7a-vexos]
+runner = "sh ./runner.sh"
+
 [unstable]
 build-std = ["core", "compiler_builtins", "alloc"]
