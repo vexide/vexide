@@ -8,6 +8,7 @@
         libclang
         glibc_multi
         gcc-arm-embedded-9
+        python39
       ];
 
       LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
