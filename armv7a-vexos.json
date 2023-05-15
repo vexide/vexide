@@ -15,7 +15,7 @@
     "gcc": [
       "-nostartfiles",
       "-nostdlib",
-      "-Wl,-Tv5-hot.ld,-Tv5-common.ld,--gc-sections",
+      "-Wl,-Tv5.ld,-Tv5-common.ld,--gc-sections",
       "-Wl,--start-group,-lpros,-lc,-lm,-lgcc,-lstdc++,--end-group"
     ]
   },
