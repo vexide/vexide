@@ -3,8 +3,8 @@
 
 use pros::prelude::*;
 
-#[no_mangle]
-pub extern "C" fn opcontrol() {
+#[opcontrol]
+fn opcontrol() {
     // Create a new motor plugged into port zero. The motor will brake when not moving.
     let motor = pros::motor::Motor::new(2, pros::motor::BrakeMode::Brake).unwrap();
     // Create a controller, specifically controller 1.
