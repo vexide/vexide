@@ -32,6 +32,16 @@
 * [ ] Make more ergonomic start functions. (macros?)
 * [ ] Consider hiding task priority and stack depth from task API.
 
+## Docs
+
+* [ ] Guides for building
+  * [X] Windows
+  * [X] Linux
+  * [ ] MacOS
+* [ ] Proc macro docs
+* [ ] Examples in docs and readme
+* [ ] More comprehensive documentation in general
+
 ## Non essential
 
 * [ ] Drivetrain
