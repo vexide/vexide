@@ -7,6 +7,7 @@ pub mod controller;
 pub mod error;
 pub mod motor;
 pub mod multitasking;
+pub mod pid;
 pub mod sensors;
 
 #[cfg(not(feature = "lvgl"))]
