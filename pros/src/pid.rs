@@ -30,11 +30,10 @@ impl PidController {
         let p = self.kp * error;
         let i = self.ki * self.i;
 
-        let mut d = (position - self.last_position) / delta_time;
-
-        if d == f32::NAN {
-            d = 0.0;
-        }
+        let d = match position - self.last_position {
+            0.0 => 0.0,
+            delta_x => delta_x / delta_time,
+        };
         
         let output = p + i + d;
 

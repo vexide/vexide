@@ -33,7 +33,7 @@ fn opcontrol() {
         // Set output takes a float from -1 to 1 that is scaled to -12 to 12 volts.
         motor.set_output(controller.state().joysticks.right.y);
 
-        println!("pid out {}", pid.update(10.0, 5.0));
+        println!("pid out {}", pid.update(10.0, motor.position().into_degrees() as f32));
 
         // Once again, sleep.
         pros::multitasking::sleep(core::time::Duration::from_millis(20));
