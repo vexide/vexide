@@ -20,16 +20,25 @@ impl PidController {
         }
     }
 
-    pub fn update(&mut self, setpoint: f32, postion: f32) -> f32 {
+    pub fn update(&mut self, setpoint: f32, position: f32) -> f32 {
         let time = unsafe { pros_sys::clock() };
         let delta_time = (time - self.last_time) as f32 / pros_sys::CLOCKS_PER_SEC as f32;
-        let error = setpoint - postion;
+        let error = setpoint - position;
 
         self.i += error * delta_time;
 
-        let output = (self.kp * error) + (self.ki * self.i) + (self.kd * ((postion - self.last_position) / delta_time));
+        let p = self.kp * error;
+        let i = self.ki * self.i;
 
-        self.last_position = postion;
+        let mut d = (position - self.last_position) / delta_time;
+
+        if d == f32::NAN {
+            d = 0.0;
+        }
+        
+        let output = p + i + d;
+
+        self.last_position = position;
         self.last_time = time;
 
         output
