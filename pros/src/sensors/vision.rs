@@ -15,9 +15,9 @@ impl VisionSensor {
         Ok(Self { port })
     }
 
-    pub fn nth_largest_object(&self, nth: u32) -> Result<VisionObject, VisionError> {
+    pub fn nth_largest_object(&self, n: u32) -> Result<VisionObject, VisionError> {
         unsafe {
-            let object = pros_sys::vision_get_by_size(self.port, nth).into();
+            let object = pros_sys::vision_get_by_size(self.port, n).into();
 
             VisionError::from_last_errno()?;
 
@@ -50,9 +50,20 @@ impl From<pros_sys::vision_object> for VisionObject {
     }
 }
 
+#[derive(Debug)]
 pub enum VisionError {
     ReadingFailed,
     IndexTooHigh,
+}
+impl core::error::Error for VisionError {}
+
+impl core::fmt::Display for VisionError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        writeln!(f, "{}", match self {
+            Self::IndexTooHigh => "The index specified was higher than the total number of objects seen by the camera!",
+            Self::ReadingFailed => "The camera could not be read!"
+        })
+    }
 }
 
 impl crate::error::FromErrno for VisionError {

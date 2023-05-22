@@ -1,3 +1,4 @@
+#![feature(error_in_core)]
 #![no_std]
 
 use core::alloc::{GlobalAlloc, Layout};

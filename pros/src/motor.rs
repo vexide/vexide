@@ -220,7 +220,16 @@ impl From<u32> for MotorState {
     }
 }
 
+#[derive(Debug)]
 pub enum MotorError {
     VoltageOutOfRange,
-    InvalidEncoderUnits,
+}
+impl core::error::Error for MotorError {}
+
+impl core::fmt::Display for MotorError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        writeln!(f, "{}", match self {
+            Self::VoltageOutOfRange => "The voltage supplied was outside of the allowed range (-12 to 12)!"
+        })
+    }
 }
