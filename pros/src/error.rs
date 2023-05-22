@@ -1,5 +1,5 @@
 pub trait FromErrno {
-    fn from_last_errno() -> Result<(), Self>;
+    fn from_last_errno() -> Result<(), Self> where Self: Sized;
 }
 
 #[derive(Debug)]

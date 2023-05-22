@@ -1,4 +1,4 @@
-use crate::error::PortError;
+use crate::error::{ PortError, FromErrno };
 
 /// The basic motor struct.
 #[derive(Clone, Copy)]

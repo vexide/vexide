@@ -1,5 +1,7 @@
+use crate::error::FromErrno;
+
 pub struct VisionSensor {
-    port: u8,   
+    port: u8,
 }
 
 impl VisionSensor {
@@ -13,28 +15,39 @@ impl VisionSensor {
         Ok(Self { port })
     }
 
-    pub fn nth_largest_object(&self, nth: u32) -> Result<VisionObject> {
+    pub fn nth_largest_object(&self, nth: u32) -> Result<VisionObject, VisionError> {
         unsafe {
-            let object = pros_sys::vision_get_by_size(self.port, nth);
+            let object = pros_sys::vision_get_by_size(self.port, nth).into();
 
             VisionError::from_last_errno()?;
 
-            object
+            Ok(object)
         }
     }
 }
 
 //TODO: figure out how coordinates are done.
 pub struct VisionObject {
-    pub top: u16,
-    pub left: u16,
-    pub middle_x: u16,
-    pub middle_y: u16,
+    pub top: i16,
+    pub left: i16,
+    pub middle_x: i16,
+    pub middle_y: i16,
 
+    pub width: i16,
+    pub height: i16,
+}
 
-    pub width: u16,
-    pub height: u16,
-
+impl From<pros_sys::vision_object> for VisionObject {
+    fn from(value: pros_sys::vision_object) -> Self {
+        Self {
+            top: value.top_coord,
+            left: value.left_coord,
+            middle_x: value.x_middle_coord,
+            middle_y: value.y_middle_coord,
+            width: value.width,
+            height: value.height,
+        }
+    }
 }
 
 pub enum VisionError {
@@ -47,7 +60,7 @@ impl crate::error::FromErrno for VisionError {
         match unsafe { crate::errno::ERRNO.get() } {
             pros_sys::EHOSTDOWN => Err(Self::ReadingFailed),
             pros_sys::EDOM => Err(Self::IndexTooHigh),
-            _ => Ok(())
+            _ => Ok(()),
         }
     }
 }

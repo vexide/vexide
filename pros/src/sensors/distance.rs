@@ -1,4 +1,4 @@
-use crate::error::PortError;
+use crate::error::{PortError, FromErrno};
 
 pub struct DistanceSensor {
     port: u8,
