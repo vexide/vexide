@@ -3,9 +3,6 @@
 ## Bindings
 
 * [X] Basic LCD Printing.
-* [ ] Advanced LCD printing
-  * [ ] write and writeln macros
-  * [ ] Buffers
 * [ ] Buttons
   * [X] Pressed buttons
   * [ ] Button press callback functions
@@ -14,7 +11,8 @@
   * [X] Tasks
   * [X] Notifications
 * [X] Motors
-* [ ] PID controllers
+* [X] PID controllers
+* [ ] Feedforward loops
 * [ ] ADI
 * [ ] Ext. ADI
 * [ ] Sensors
@@ -29,15 +27,15 @@
 
 ## API
 
-* [ ] Make more ergonomic start functions. (macros?)
-* [ ] Consider hiding task priority and stack depth from task API.
+* [X] Make more ergonomic start functions. (macros?)
+* [X] Consider hiding task priority and stack depth from task API.
 
 ## Docs
 
-* [ ] Guides for building
+* [X] Guides for building
   * [X] Windows
   * [X] Linux
-  * [ ] MacOS
+  * [X] MacOS
 * [ ] Proc macro docs
 * [ ] Examples in docs and readme
 * [ ] More comprehensive documentation in general
