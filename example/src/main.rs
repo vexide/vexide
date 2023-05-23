@@ -10,7 +10,12 @@ fn opcontrol() {
     // Create a controller, specifically controller 1.
     let controller = pros::controller::Controller::new(pros::controller::ControllerId::Master);
 
-    let mut pid = pros::pid::PidController::new(0.5, 0.5, 0.5);
+    let mut vision = sensors::vision::VisionSensor::new(9, sensors::vision::VisionZeroPoint::Center).unwrap();
+    vision.set_led(sensors::vision::LedMode::Rgb(sensors::vision::Rgb::new(
+        0,
+        0,
+        255,
+    )));
 
     // Spawn a new task that will print whether or not the motor is stopped constantly.
     pros::multitasking::TaskBuilder::new({
@@ -27,13 +32,14 @@ fn opcontrol() {
     })
     .name("Print Task")
     .build();
-
+    
     loop {
         // Set the motors output with how far up or down the right joystick is pushed.
         // Set output takes a float from -1 to 1 that is scaled to -12 to 12 volts.
         motor.set_output(controller.state().joysticks.right.y);
 
-        println!("pid out {}", pid.update(10.0, motor.position().into_degrees() as f32));
+        // println!("pid out {}", pid.update(10.0, motor.position().into_degrees() as f32));
+        println!("Vision objs {}", vision.nth_largest_object(0).unwrap().middle_x);
 
         // Once again, sleep.
         pros::multitasking::sleep(core::time::Duration::from_millis(20));

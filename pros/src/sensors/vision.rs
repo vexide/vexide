@@ -112,6 +112,7 @@ impl VisionSensor {
 }
 
 //TODO: figure out how coordinates are done.
+#[derive(Debug)]
 pub struct VisionObject {
     pub top: i16,
     pub left: i16,
@@ -139,6 +140,16 @@ pub struct Rgb {
     r: u8,
     g: u8,
     b: u8,
+}
+
+impl Rgb {
+    pub fn new(r: u8, g: u8, b: u8) -> Self {
+        Self {
+            r,
+            g,
+            b
+        }
+    }
 }
 
 impl Into<u32> for Rgb {

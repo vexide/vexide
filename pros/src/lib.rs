@@ -42,6 +42,7 @@ static ALLOCATOR: Allocator = Allocator;
 
 pub mod prelude {
     pub use crate::{print, println};
+    pub use crate::sensors;
 
     #[cfg(feature = "derive")]
     pub use pros_derive::*;
