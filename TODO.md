@@ -21,7 +21,7 @@
   * [ ] Inertial
   * [ ] Optical
   * [ ] Rotational
-  * [ ] Vision
+  * [X] Vision
 * [X] Controllers
 * [ ] Link
 
