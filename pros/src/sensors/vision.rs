@@ -33,7 +33,7 @@ impl VisionSensor {
 
     /// Returns a list of all objects in order of size (largest to smallest).
     pub fn objects(&self) -> Result<Vec<VisionObject>, VisionError> {
-        let mut objects_buf = Vec::new();
+        let mut objects_buf = Vec::with_capacity(self.num_objects());
 
         unsafe {
             pros_sys::vision_read_by_size(
