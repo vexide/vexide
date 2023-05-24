@@ -1,5 +1,7 @@
 # Todo
 
+This is the todo list for the eventuall 0.1.0 release of pros-rs
+
 ## Bindings
 
 * [X] Basic LCD Printing.
@@ -20,7 +22,7 @@
   * [ ] GPS
   * [ ] Inertial
   * [ ] Optical
-  * [ ] Rotational
+  * [X] Rotational
   * [X] Vision
 * [X] Controllers
 * [ ] Link

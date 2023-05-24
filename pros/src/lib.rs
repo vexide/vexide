@@ -10,6 +10,7 @@ pub mod motor;
 pub mod multitasking;
 pub mod pid;
 pub mod sensors;
+pub mod position;
 
 #[cfg(not(feature = "lvgl"))]
 #[macro_use]
