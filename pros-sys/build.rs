@@ -3,6 +3,8 @@ use std::{io::BufRead, path::PathBuf, process::Command};
 
 fn main() {
     println!("cargo:rerun-if-changed=src/pros_entrypoint.h");
+    println!("cargo:rerun-if-env-changed=LIBCLANG_PATH");
+    println!("cargo:rerun-if-env-changed=CPATH");
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
 

@@ -4,10 +4,10 @@ version = "0.1.2"
 edition = "2021"
 description = "EFI for the PROS rust bindings"
 keywords = ["PROS", "Robotics", "bindings"]
+categories = ["os", "api-bindings", "development-tools::ffi", "external-ffi-bindings", "no-std", "science::robotics"]
 license = "MIT"
 repository = "https://github.com/gavin-niederman/pros-rs"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+links = "pros"
 
 [build-dependencies]
 bindgen = "0.65.1"

@@ -4,6 +4,7 @@ version = "0.0.5"
 edition = "2021"
 description = "Rust bindings for PROS"
 keywords = ["PROS", "Robotics", "bindings"]
+categories = ["os", "api-bindings", "no-std", "science::robotics"]
 license = "MIT"
 repository = "https://github.com/gavin-niederman/pros-rs"
 
