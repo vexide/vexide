@@ -2,3 +2,4 @@
 /Cargo.lock
 
 /.direnv
+.DS_Store
