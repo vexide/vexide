@@ -55,8 +55,8 @@ Run ``direnv allow`` and then ``cargo r``. And you should be good!
 
 ### MacOS
 
-MacOS has a few new dependancies, XCode and Command Line Tools.
-Chances are that if you develop on MacOS you have them already, but if not you can install XCode in the app store.
+MacOS also depends on the XCode Command Line Tools.
+Chances are that if you develop on MacOS you have them already, but if not you can install them with `xcode-select --install`.
 
 Most of the other dependancies can easily be installed with brew.
 
@@ -67,7 +67,14 @@ Install pros-cli with
 ``brew install purduesigbots/pros/pros-cli``.
 
 Finally set the CPATH environment variable so that clang knows where your headers are with
-``export CPATH=\"$(xcrun --show-sdk-path):\$PATH\"``.
-To permanently set the environment variable add that line to your shell init script.
+``export CPATH="$(xcrun --show-sdk-path)/usr/include"``.
+To permanently set the environment variable add that line to your shell init script. Also consider adding it to your rust-analyzer configuration:
+
+```json
+"rust-analyzer.cargo.extraEnv": {
+    // set to output of `xcrun --show-sdk-path` with /usr/include appended (example shown below)
+    "CPATH": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include"
+}
+```
 
 And you are done! Compile the project with ``cargo r``.
