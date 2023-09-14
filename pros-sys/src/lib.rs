@@ -4,7 +4,7 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
-const CLOCKS_PER_SEC: u32 = 1000;
+pub const CLOCKS_PER_SEC: u32 = 1000;
 
 
 extern "C" {
