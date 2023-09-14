@@ -1,16 +1,16 @@
 [package]
 name = "pros-sys"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "EFI for the PROS rust bindings"
 keywords = ["PROS", "Robotics", "bindings"]
-categories = ["os", "api-bindings", "development-tools::ffi", "external-ffi-bindings", "no-std", "science::robotics"]
+categories = [ "api-bindings", "development-tools::ffi", "external-ffi-bindings", "no-std", "science::robotics"]
 license = "MIT"
 repository = "https://github.com/gavin-niederman/pros-rs"
 links = "pros"
 
 [build-dependencies]
-bindgen = "0.65.1"
+bindgen = "0.68.1"
 reqwest = { version = "0.11", features = ["blocking"] }
 zip = "0.6.4"
 
