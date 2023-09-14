@@ -43,7 +43,7 @@ impl Motor {
 
     /// Takes in a voltage that must be between -12 and 12 Volts.
     pub fn set_voltage(&self, voltage: f32) -> Result<(), MotorError> {
-        if voltage > 12.0 || voltage < -12.0 || voltage == f32::NAN {
+        if voltage > 12.0 || voltage < -12.0 || voltage.is_nan() {
             return Err(MotorError::VoltageOutOfRange);
         }
         unsafe {
