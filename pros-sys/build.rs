@@ -39,7 +39,7 @@ fn main() {
 
     zip::ZipArchive::new(std::fs::File::open(format!("{out_dir}/pros.zip")).unwrap())
         .unwrap()
-        .extract(format!("{out_dir}"))
+        .extract(&out_dir)
         .unwrap();
 
     println!("cargo:rustc-link-search=native={out_dir}/firmware");
@@ -79,7 +79,7 @@ fn get_gcc_arm_include_dirs() -> Vec<String> {
         .expect("Could not run 'arm-none-eabi-gcc'. Is it installed?")
         .stderr
         .lines()
-        .filter_map(|line| line.ok())
+        .map_while(Result::ok)
         .filter(|line| {
             let result = is_include_dir;
             if line == "#include <...> search starts here:" {
