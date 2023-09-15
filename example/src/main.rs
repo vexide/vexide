@@ -6,9 +6,9 @@ use pros::prelude::*;
 #[opcontrol]
 fn opcontrol() {
     // Create a new motor plugged into port zero. The motor will brake when not moving.
-    let motor = pros::motor::Motor::new(2, pros::motor::BrakeMode::Brake).unwrap();
+    let motor = Motor::new(2, pros::motor::BrakeMode::Brake).unwrap();
     // Create a controller, specifically controller 1.
-    let controller = pros::controller::Controller::new(pros::controller::ControllerId::Master);
+    let controller = Controller::new(pros::controller::ControllerId::Master);
 
     let mut vision = sensors::vision::VisionSensor::new(9, sensors::vision::VisionZeroPoint::Center).unwrap();
     vision.set_led(sensors::vision::LedMode::Rgb(sensors::vision::Rgb::new(
@@ -16,6 +16,8 @@ fn opcontrol() {
         0,
         255,
     )));
+
+    pros::lcd::buttons::register_button_callback(left_button_callback, pros::lcd::buttons::Button::Left).unwrap();
 
     // Spawn a new task that will print whether or not the motor is stopped constantly.
     pros::multitasking::TaskBuilder::new({
@@ -44,4 +46,9 @@ fn opcontrol() {
         // Once again, sleep.
         pros::multitasking::sleep(core::time::Duration::from_millis(20));
     }
+}
+
+
+fn left_button_callback() {
+    println!("Left button pressed!");
 }

@@ -5,9 +5,9 @@ This is the todo list for the eventuall 0.1.0 release of pros-rs
 ## Bindings
 
 * [X] Basic LCD Printing.
-* [ ] Buttons
+* [X] Buttons
   * [X] Pressed buttons
-  * [ ] Button press callback functions
+  * [X] Button press callback functions
 * [X] Multitasking
   * [X] Mutexs
   * [X] Tasks

@@ -17,5 +17,6 @@ pros-sys = { version = "0.1.6", path = "../pros-sys" }
 pros_derive = { path = "./pros_derive", version = "0.1.0", optional = true }
 
 [features]
+default = ["derive"]
 lvgl = ["pros-sys/xapi"]
 derive = ["dep:pros_derive"]

@@ -44,6 +44,8 @@ static ALLOCATOR: Allocator = Allocator;
 pub mod prelude {
     pub use crate::{print, println};
     pub use crate::sensors;
+    pub use crate::motor::{ Motor, BrakeMode };
+    pub use crate::controller::{ Controller, ControllerId };
 
     #[cfg(feature = "derive")]
     pub use pros_derive::*;
