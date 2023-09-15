@@ -1,5 +1,22 @@
-use bindgen::{self, Builder};
+use bindgen::{self, callbacks::ParseCallbacks, Builder};
 use std::{io::BufRead, path::PathBuf, process::Command};
+
+#[derive(Debug)]
+struct Callbacks {
+    out_dir: String,
+}
+impl ParseCallbacks for Callbacks {
+    fn include_file(&self, filename: &str) {
+        if filename.starts_with(&self.out_dir) {
+            return;
+        }
+        println!("cargo:rerun-if-changed={}", filename);
+    }
+
+    fn read_env_var(&self, key: &str) {
+        println!("cargo:rerun-if-env-changed={}", key);
+    }
+}
 
 fn main() {
     println!("cargo:rerun-if-changed=src/pros_entrypoint.h");
@@ -47,11 +64,13 @@ fn main() {
     #[cfg_attr(feature = "xapi", allow(unused_mut))]
     let mut bindings = Builder::default()
         .header("src/pros_entrypoint.h")
+        .parse_callbacks(Box::new(Callbacks {
+            out_dir: out_dir.clone(),
+        }))
         .use_core()
         .clang_arg(format!("-I{out_dir}/include"))
         .clang_args(&["-target", "arm-none-eabi"])
-        .blocklist_item("FP_.*")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks));
+        .blocklist_item("FP_.*");
 
     #[cfg(feature = "xapi")]
     let mut bindings = bindings.header(format!("{out_dir}/include/pros/apix.h"));
