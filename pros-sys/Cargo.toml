@@ -4,7 +4,13 @@ version = "0.1.4"
 edition = "2021"
 description = "EFI for the PROS rust bindings"
 keywords = ["PROS", "Robotics", "bindings"]
-categories = [ "api-bindings", "development-tools::ffi", "external-ffi-bindings", "no-std", "science::robotics"]
+categories = [
+    "api-bindings",
+    "development-tools::ffi",
+    "external-ffi-bindings",
+    "no-std",
+    "science::robotics",
+]
 license = "MIT"
 repository = "https://github.com/gavin-niederman/pros-rs"
 links = "pros"
