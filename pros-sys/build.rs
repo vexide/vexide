@@ -6,6 +6,25 @@ fn main() {
     println!("cargo:rerun-if-env-changed=LIBCLANG_PATH");
     println!("cargo:rerun-if-env-changed=CPATH");
 
+    // macOS only: include system sdk headers for errno.h values, etc.
+    // if we had the (proprietary) vex v5 sdk this probably wouldn't be necessary
+    #[cfg(target_os = "macos")]
+    let macos_arg = {
+        let Ok(sdk_command) = Command::new("xcrun")
+            .args(["--sdk", "macosx", "--show-sdk-path"])
+            .output()
+        else {
+            // prompt user to install xcode command line tools
+            Command::new("xcode-select")
+                .arg("--install")
+                .status()
+                .unwrap();
+            panic!("macosx sdk not installed - please install Xcode Command Line Tools");
+        };
+        let sdk_path = std::str::from_utf8(&sdk_command.stdout).expect("could not parse sdk path");
+        format!("-I{}/usr/include", sdk_path.trim_end())
+    };
+
     let out_dir = std::env::var("OUT_DIR").unwrap();
 
     let pros_bytes = reqwest::blocking::get(
@@ -36,6 +55,9 @@ fn main() {
 
     #[cfg(feature = "xapi")]
     let mut bindings = bindings.header(format!("{out_dir}/include/pros/apix.h"));
+
+    #[cfg(target_os = "macos")]
+    let mut bindings = bindings.clang_arg(macos_arg);
 
     for dir in get_gcc_arm_include_dirs() {
         bindings = bindings.clang_arg(format!("-I{}", dir));
