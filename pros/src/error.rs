@@ -1,5 +1,7 @@
 pub trait FromErrno {
-    fn from_last_errno() -> Result<(), Self> where Self: Sized;
+    fn from_last_errno() -> Result<(), Self>
+    where
+        Self: Sized;
 }
 
 #[derive(Debug)]
@@ -24,6 +26,6 @@ impl FromErrno for PortError {
             pros_sys::ENXIO => Err(Self::PortOutOfRange),
             pros_sys::ENODEV => Err(Self::PortCannotBeConfigured),
             _ => Ok(()),
-        } 
+        }
     }
 }

@@ -62,21 +62,25 @@ impl Controller {
                         x: pros_sys::controller_get_analog(
                             self.id,
                             pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_LEFT_X,
-                        ) as f32 / 127.0,
+                        ) as f32
+                            / 127.0,
                         y: pros_sys::controller_get_analog(
                             self.id,
                             pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_LEFT_Y,
-                        ) as f32 / 127.0,
+                        ) as f32
+                            / 127.0,
                     },
                     right: Joystick {
                         x: pros_sys::controller_get_analog(
                             self.id,
                             pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_RIGHT_X,
-                        ) as f32 / 127.0,
+                        ) as f32
+                            / 127.0,
                         y: pros_sys::controller_get_analog(
                             self.id,
                             pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_RIGHT_Y,
-                        ) as f32 / 127.0,
+                        ) as f32
+                            / 127.0,
                     },
                 }
             },

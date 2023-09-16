@@ -1,8 +1,11 @@
-use crate::{error::{FromErrno, PortError}, position::Position};
+use crate::{
+    error::{FromErrno, PortError},
+    position::Position,
+};
 
 pub struct RotationSensor {
     port: u8,
-    pub reversed: bool
+    pub reversed: bool,
 }
 
 impl RotationSensor {
@@ -43,8 +46,6 @@ impl RotationSensor {
     //TODO: See if this is accurate enough or consider switching to get_position function.
     /// Gets the current position of the sensor.
     pub fn position(&self) -> Position {
-        unsafe {
-            Position::from_degrees(pros_sys::rotation_get_angle(self.port) as _)
-        }
+        unsafe { Position::from_degrees(pros_sys::rotation_get_angle(self.port) as _) }
     }
 }

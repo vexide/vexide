@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use alloc::{ffi::CString, borrow::ToOwned};
+use alloc::{borrow::ToOwned, ffi::CString};
 
 pub(crate) struct Writer {
     lines: [CString; 8],
@@ -21,22 +21,20 @@ impl Writer {
 impl core::fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         let mut owned_line = self.lines[7].to_str().unwrap().to_owned();
-        
+
         for ch in s.chars() {
             match ch {
                 '\n' => {
                     self.new_line();
                     owned_line.clear();
-                },
+                }
                 ch => owned_line.push(ch),
             }
         }
 
         self.lines[7] = CString::new(owned_line).unwrap();
 
-        unsafe {
-            pros_sys::lcd_print(7, self.lines[7].as_ptr())
-        };
+        unsafe { pros_sys::lcd_print(7, self.lines[7].as_ptr()) };
 
         Ok(())
     }

@@ -33,11 +33,11 @@ impl PidController {
         let p = self.kp * error;
         let i = self.ki * self.i;
 
-        let mut d = (position - self.last_position) /delta_time;
+        let mut d = (position - self.last_position) / delta_time;
         if d.is_nan() {
             d = 0.0
         }
-        
+
         let output = p + i + d;
 
         self.last_position = position;

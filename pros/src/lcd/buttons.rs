@@ -25,7 +25,6 @@ pub enum Button {
     Right,
 }
 
-
 pub struct ButtonCallbacks {
     pub left_cb: Option<Box<dyn Fn() -> ()>>,
     pub middle_cb: Option<Box<dyn Fn() -> ()>>,

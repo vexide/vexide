@@ -144,11 +144,7 @@ pub struct Rgb {
 
 impl Rgb {
     pub fn new(r: u8, g: u8, b: u8) -> Self {
-        Self {
-            r,
-            g,
-            b
-        }
+        Self { r, g, b }
     }
 }
 
