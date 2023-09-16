@@ -34,7 +34,7 @@ impl core::fmt::Write for Writer {
 
         self.lines[7] = CString::new(owned_line).unwrap();
 
-        unsafe { pros_sys::lcd_print(7, self.lines[7].as_ptr()) };
+        unsafe { pros_sys::lcd_set_text(7, self.lines[7].as_ptr()) };
 
         Ok(())
     }
@@ -50,7 +50,7 @@ impl Writer {
             let string_ptr = self.lines[line].as_ptr();
 
             unsafe {
-                pros_sys::lcd_print(line as i16, string_ptr);
+                pros_sys::lcd_set_text(line as i16, string_ptr);
             }
         }
     }
