@@ -19,7 +19,7 @@ This is the todo list for the eventuall 0.1.0 release of pros-rs
 * [ ] Ext. ADI
 * [ ] Sensors
   * [X] Distance
-  * [ ] GPS
+  * [X] GPS
   * [ ] Inertial
   * [ ] Optical
   * [X] Rotational
@@ -38,7 +38,6 @@ This is the todo list for the eventuall 0.1.0 release of pros-rs
   * [X] Windows
   * [X] Linux
   * [X] MacOS
-* [ ] Proc macro docs
 * [ ] Examples in docs and readme
 * [ ] More comprehensive documentation in general
 

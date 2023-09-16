@@ -78,7 +78,4 @@ pub mod prelude {
     pub use crate::motor::{BrakeMode, Motor};
     pub use crate::sensors;
     pub use crate::{print, println};
-
-    #[cfg(feature = "derive")]
-    pub use pros_derive::*;
 }

@@ -103,7 +103,7 @@ impl VisionSensor {
         unsafe {
             match mode {
                 LedMode::Off => pros_sys::vision_clear_led(self.port),
-                LedMode::Rgb(rgb) => {
+                LedMode::On(rgb) => {
                     pros_sys::vision_set_led(self.port, <Rgb as Into<u32>>::into(rgb) as i32)
                 }
             };
@@ -178,7 +178,7 @@ pub enum WhiteBalance {
 }
 
 pub enum LedMode {
-    Rgb(Rgb),
+    On(Rgb),
     Off,
 }
 
