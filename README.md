@@ -67,3 +67,7 @@ Install pros-cli with
 `brew install purduesigbots/pros/pros-cli`.
 
 And you are done! Compile the project with `cargo build`.
+
+## Compiling for WASM
+
+To build projects in this repository for WebAssembly, run `cargo build --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort`. The extra build-std argument is neccesary because this repository's `.cargo/config.toml` enables build-std but only for core, alloc, and compiler_builtins. WebAssembly does come with `std` but there is [currently](https://github.com/rust-lang/cargo/issues/8733) no way to conditionally enable build-std.

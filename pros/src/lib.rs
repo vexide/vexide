@@ -1,7 +1,5 @@
 #![feature(error_in_core)]
-#![no_std]
-
-use core::panic::PanicInfo;
+#![cfg_attr(not(target_arch = "wasm32"), no_std)]
 
 pub mod controller;
 pub mod error;
@@ -12,9 +10,9 @@ pub mod position;
 pub mod sensors;
 
 #[cfg(not(target_arch = "wasm32"))]
-pub mod memory;
+mod vexos_env;
 #[cfg(target_arch = "wasm32")]
-pub mod wasm_memory;
+mod wasm_env;
 
 #[cfg(not(feature = "lvgl"))]
 #[macro_use]
@@ -61,18 +59,12 @@ macro_rules! robot {
         extern "C" fn competition_initialize() {
             <$rbt as $crate::Robot>::comp_init();
         }
-    };  
-}
-
-#[panic_handler]
-pub fn panic(_info: &PanicInfo) -> ! {
-    println!("Panicked! {_info}");
-    loop {}
+    };
 }
 
 pub mod prelude {
-    pub use crate::Robot;
     pub use crate::robot;
+    pub use crate::Robot;
 
     pub use crate::controller::{Controller, ControllerId};
     pub use crate::motor::{BrakeMode, Motor};

@@ -1,4 +1,13 @@
-use core::alloc::{GlobalAlloc, Layout};
+use core::{
+    alloc::{GlobalAlloc, Layout},
+    panic::PanicInfo,
+};
+
+#[panic_handler]
+pub fn panic(_info: &PanicInfo) -> ! {
+    println!("Panicked! {_info}");
+    loop {}
+}
 
 struct Allocator;
 unsafe impl GlobalAlloc for Allocator {
