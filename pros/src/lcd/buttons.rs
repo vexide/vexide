@@ -26,11 +26,10 @@ pub enum Button {
 }
 
 pub struct ButtonCallbacks {
-    pub left_cb: Option<Box<dyn Fn() -> ()>>,
-    pub middle_cb: Option<Box<dyn Fn() -> ()>>,
-    pub right_cb: Option<Box<dyn Fn() -> ()>>,
+    pub left_cb: Option<Box<dyn Fn() -> () + Send>>,
+    pub middle_cb: Option<Box<dyn Fn() -> () + Send>>,
+    pub right_cb: Option<Box<dyn Fn() -> () + Send>>,
 }
-unsafe impl Send for ButtonCallbacks {}
 
 lazy_static::lazy_static! {
     pub static ref BUTTON_CALLBACKS: Mutex<ButtonCallbacks> = Mutex::new(ButtonCallbacks {
@@ -40,7 +39,7 @@ lazy_static::lazy_static! {
     });
 }
 
-pub fn register_button_callback(cb: impl Fn() -> () + 'static, button: Button) -> Result<(), ()> {
+pub fn register_button_callback(cb: impl Fn() -> () + 'static + Send, button: Button) -> Result<(), ()> {
     extern "C" fn button_0_cb() {
         if let Some(cb) = &BUTTON_CALLBACKS.lock().left_cb {
             cb();
