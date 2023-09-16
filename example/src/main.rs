@@ -14,7 +14,7 @@ impl Robot for ExampleRobot {
         let mut vision =
             sensors::vision::VisionSensor::new(9, sensors::vision::VisionZeroPoint::Center)
                 .unwrap();
-        vision.set_led(sensors::vision::LedMode::Rgb(sensors::vision::Rgb::new(
+        vision.set_led(sensors::vision::LedMode::On(sensors::vision::Rgb::new(
             0, 0, 255,
         )));
 

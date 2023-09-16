@@ -39,7 +39,10 @@ lazy_static::lazy_static! {
     });
 }
 
-pub fn register_button_callback(cb: impl Fn() -> () + 'static + Send, button: Button) -> Result<(), ()> {
+pub fn register_button_callback(
+    cb: impl Fn() -> () + 'static + Send,
+    button: Button,
+) -> Result<(), ()> {
     extern "C" fn button_0_cb() {
         if let Some(cb) = &BUTTON_CALLBACKS.lock().left_cb {
             cb();

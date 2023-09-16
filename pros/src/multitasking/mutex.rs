@@ -28,6 +28,14 @@ impl<T> Mutex<T> {
     }
 }
 
+impl<T> Drop for Mutex<T> {
+    fn drop(&mut self) {
+        unsafe {
+            pros_sys::mutex_delete(self.pros_mutex);
+        }
+    }
+}
+
 /// Allows the user to access the data from a locked mutex.
 /// Dereference to get the inner data.
 pub struct MutexGuard<'a, T> {
