@@ -61,7 +61,7 @@ fn main() {
 
     println!("cargo:rustc-link-search=native={out_dir}/firmware");
 
-    #[cfg_attr(feature = "xapi", allow(unused_mut))]
+    #[cfg_attr(any(feature = "xapi", target_os = "macos"), allow(unused_mut))]
     let mut bindings = Builder::default()
         .header("src/pros_entrypoint.h")
         .parse_callbacks(Box::new(Callbacks {
