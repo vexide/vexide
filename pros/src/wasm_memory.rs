@@ -1,13 +1,14 @@
 //! WASM host will call these functions to send values to the program
 
-use std::collections::HashMap;
-use std::sync::Mutex;
-use std::{
+extern crate alloc;
+
+use alloc::{
     alloc::{alloc, dealloc, handle_alloc_error, Layout},
-    collections::HashMap,
+    collections::BTreeMap,
 };
 
-static LAYOUTS: Mutex<HashMap<*mut u8, Layout>> = Mutex::new(HashMap::new());
+// no multithreading in wasm
+static mut LAYOUTS: BTreeMap<*mut u8, Layout> = BTreeMap::new();
 
 #[no_mangle]
 extern "C" fn wasm_memalign(alignment: usize, size: usize) -> *mut u8 {
@@ -21,13 +22,10 @@ extern "C" fn wasm_memalign(alignment: usize, size: usize) -> *mut u8 {
     if ptr.is_null() {
         handle_alloc_error(layout);
     }
-    let Ok(mut layouts) = LAYOUTS.lock() else {
-        unsafe { dealloc(ptr, layout) };
-        handle_alloc_error(layout);
-        unreachable!();
-    };
-    layouts.insert(ptr, layout);
-    ptr as *mut core::ffi::c_void
+    unsafe {
+        LAYOUTS.insert(ptr, layout);
+    }
+    ptr
 }
 
 #[no_mangle]
@@ -35,10 +33,7 @@ extern "C" fn wasm_free(ptr: *mut u8) {
     if ptr.is_null() {
         return;
     }
-    let Ok(mut layouts) = LAYOUTS.lock() else {
-        return;
-    };
-    let layout = layouts.remove(&ptr);
+    let layout = unsafe { LAYOUTS.remove(&ptr) };
     if let Some(layout) = layout {
         unsafe { dealloc(ptr, layout) };
     }
