@@ -1,57 +1,70 @@
 extern crate alloc;
 
-use alloc::{borrow::ToOwned, ffi::CString};
+use alloc::ffi::CString;
 
-pub(crate) struct Writer {
-    lines: [CString; 8],
+const V5_SCREEN_HEIGHT: usize = 8;
+
+pub(crate) struct ConsoleLcd {
+    lines: [CString; V5_SCREEN_HEIGHT],
+    bottom_line_index: usize,
+    current_line: String,
 }
 
-impl Writer {
+impl ConsoleLcd {
     pub fn new() -> Self {
         unsafe {
             pros_sys::lcd_initialize();
         }
 
-        Self {
+        let mut writer = Self {
             lines: Default::default(),
-        }
+            bottom_line_index: V5_SCREEN_HEIGHT - 1,
+            current_line: String::new(),
+        };
+
+        writer
     }
 }
 
-impl core::fmt::Write for Writer {
-    fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        let mut owned_line = self.lines[7].to_str().unwrap().to_owned();
+impl core::fmt::Write for ConsoleLcd {
+    fn write_str(&mut self, text: &str) -> core::fmt::Result {
+        let mut should_render = false;
+        for c in text.chars() {
+            if c == '\n' {
+                should_render = true;
+                let line = CString::new(core::mem::take(&mut self.current_line))
+                    .expect("line should not contain null (U+0000) bytes");
 
-        for ch in s.chars() {
-            match ch {
-                '\n' => {
-                    self.new_line();
-                    owned_line.clear();
-                }
-                ch => owned_line.push(ch),
+                self.shift_up_wrapping();
+                self.lines[self.bottom_line_index] = line;
+            } else {
+                self.current_line.push(c);
             }
         }
 
-        self.lines[7] = CString::new(owned_line).unwrap();
-
-        unsafe { pros_sys::lcd_set_text(7, self.lines[7].as_ptr()) };
+        if should_render {
+            self.render()?;
+        }
 
         Ok(())
     }
 }
 
-impl Writer {
-    fn new_line(&mut self) {
-        let mut new_line = CString::default();
-
-        for line in (0..self.lines.len()).rev() {
-            core::mem::swap(&mut self.lines[line], &mut new_line);
-
-            let string_ptr = self.lines[line].as_ptr();
-
-            unsafe {
-                pros_sys::lcd_set_text(line as i16, string_ptr);
+impl ConsoleLcd {
+    fn shift_up_wrapping(&mut self) {
+        self.bottom_line_index = (self.bottom_line_index + 1) % V5_SCREEN_HEIGHT;
+    }
+    fn render(&self) -> core::fmt::Result {
+        for (i, text) in self.lines.iter().enumerate() {
+            const MAX_INDEX: usize = V5_SCREEN_HEIGHT - 1;
+            let index_offset = MAX_INDEX - self.bottom_line_index;
+            let line_num = (i + index_offset) % V5_SCREEN_HEIGHT;
+            let success =
+                unsafe { pros_sys::lcd_set_text(line_num.try_into().unwrap(), text.as_ptr()) };
+            if !success {
+                return Err(core::fmt::Error);
             }
         }
+        Ok(())
     }
 }

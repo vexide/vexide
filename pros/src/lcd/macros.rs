@@ -15,7 +15,7 @@ macro_rules! print {
 
 #[macro_export]
 macro_rules! println {
-    ($line:literal) => {
+    () => {
         $crate::print!("\n");
     };
     ($($arg:tt)*) => {
