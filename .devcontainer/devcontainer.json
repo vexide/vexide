@@ -7,9 +7,9 @@
     "features": {
         "ghcr.io/devcontainers/features/github-cli:1": {},
         "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
-            "packages": "build-essential,gcc-arm-none-eabi"
+            "packages": "build-essential,gcc-arm-none-eabi,clang,gcc-multilib"
         },
-        "ghcr.io/devcontainers/features/python:1": {},
+        "ghcr.io/devcontainers/features/python:1": {}
     },
     "mounts": [
         {
@@ -18,5 +18,5 @@
             "type": "volume"
         }
     ],
-    "postCreateCommand": "pip install --user pros-cli"
+    "postCreateCommand": "pip install --user pros-cli && rustup component add rust-src && cargo install cargo-pros"
 }
