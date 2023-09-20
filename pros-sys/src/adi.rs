@@ -428,7 +428,7 @@ extern "C" {
            The adi_gyro_t object for which the angle will be returned
 
     \return The gyro angle in degrees.*/
-    pub fn adi_gyro_get(gyro: adi_gyro_t) -> f64;
+    pub fn adi_gyro_get(gyro: adi_gyro_t) -> c_double;
     /** Initializes a gyroscope on the given port. If the given port has not
     previously been configured as a gyro, then this function starts a 1300 ms
     calibration period.
@@ -449,7 +449,7 @@ extern "C" {
 
     \return An adi_gyro_t object containing the given port, or PROS_ERR if the
     initialization failed.*/
-    pub fn adi_gyro_init(port: u8, multiplier: f64) -> adi_gyro_t;
+    pub fn adi_gyro_init(port: u8, multiplier: c_double) -> adi_gyro_t;
     /** Resets the gyroscope value to zero.
 
     This function uses the following values of errno when an error state is
@@ -521,7 +521,7 @@ extern "C" {
            The adi_potentiometer_t object for which the angle will be returned
 
     \return The potentiometer angle in degrees.*/
-    pub fn adi_potentiometer_get_angle(potentiometer: adi_potentiometer_t) -> f64;
+    pub fn adi_potentiometer_get_angle(potentiometer: adi_potentiometer_t) -> c_double;
     /** Initializes a led on the given port of the original led.
 
     This function uses the following values of errno when an error state is
