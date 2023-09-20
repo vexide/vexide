@@ -50,8 +50,8 @@ extern "C" {
          Unique link ID in the form of a string, needs to be different from other links in
          the area.
     \param type
-         Indicates whether the radio link on the brain is a transmitter or reciever,
-         with the transmitter having double the transmitting bandwidth as the recieving
+         Indicates whether the radio link on the brain is a transmitter or receiver,
+         with the transmitter having double the transmitting bandwidth as the receiving
          end (1040 bytes/s vs 520 bytes/s).
 
     \return PROS_ERR if initialization fails, 1 if the initialization succeeds.
