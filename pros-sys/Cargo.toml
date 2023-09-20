@@ -16,7 +16,6 @@ repository = "https://github.com/gavin-niederman/pros-rs"
 links = "pros"
 
 [build-dependencies]
-bindgen = "0.68.1"
 reqwest = { version = "0.11", features = ["blocking"] }
 zip = "0.6.4"
 
