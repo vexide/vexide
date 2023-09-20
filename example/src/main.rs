@@ -6,7 +6,7 @@ use pros::prelude::*;
 struct ExampleRobot;
 impl Robot for ExampleRobot {
     fn opcontrol() {
-        // Create a new motor plugged into port zero. The motor will brake when not moving.
+        // Create a new motor plugged into port 2. The motor will brake when not moving.
         let motor = Motor::new(2, pros::motor::BrakeMode::Brake).unwrap();
         // Create a controller, specifically controller 1.
         let controller = Controller::new(pros::controller::ControllerId::Master);

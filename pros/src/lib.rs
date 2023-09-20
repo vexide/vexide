@@ -23,6 +23,7 @@ pub mod lcd;
 pub mod lvgl;
 
 pub(crate) mod errno;
+pub mod adi;
 
 pub trait Robot {
     fn opcontrol() {}

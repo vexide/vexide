@@ -13,7 +13,6 @@ Pros-rs has a few dependancies, namely:
 * Rust (obviously)
 * The Arm Gnu Toolchain (arm-none-eabi-gcc)
 * Clang
-* Python
 * Pros (pros-cli)
 
 Read the installation guide for your OS to see how to install all of them.

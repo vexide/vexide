@@ -1,6 +1,6 @@
 # Todo
 
-This is the todo list for the eventuall 0.1.0 release of pros-rs
+This is the todo list for the eventuall 1.0.0 release of pros-rs
 
 ## Bindings
 
