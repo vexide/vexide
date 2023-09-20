@@ -1,8 +1,8 @@
+use crate::println;
 use core::{
     alloc::{GlobalAlloc, Layout},
     panic::PanicInfo,
 };
-use crate::println;
 
 #[panic_handler]
 pub fn panic(_info: &PanicInfo) -> ! {

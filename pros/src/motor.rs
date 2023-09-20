@@ -16,7 +16,7 @@ impl Motor {
         unsafe {
             pros_sys::motor_set_encoder_units(
                 port,
-                pros_sys::motor_encoder_units_e_E_MOTOR_ENCODER_DEGREES,
+                pros_sys::E_MOTOR_ENCODER_DEGREES,
             );
             pros_sys::motor_set_brake_mode(port, brake_mode.into());
 
@@ -142,9 +142,9 @@ pub enum BrakeMode {
 impl Into<pros_sys::motor_brake_mode_e_t> for BrakeMode {
     fn into(self) -> pros_sys::motor_brake_mode_e_t {
         match self {
-            Self::Brake => pros_sys::motor_brake_mode_e_E_MOTOR_BRAKE_BRAKE,
-            Self::Hold => pros_sys::motor_brake_mode_e_E_MOTOR_BRAKE_HOLD,
-            Self::None => pros_sys::motor_brake_mode_e_E_MOTOR_BRAKE_COAST,
+            Self::Brake => pros_sys::E_MOTOR_BRAKE_BRAKE,
+            Self::Hold => pros_sys::E_MOTOR_BRAKE_HOLD,
+            Self::None => pros_sys::E_MOTOR_BRAKE_COAST,
         }
     }
 }
