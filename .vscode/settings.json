@@ -3,5 +3,9 @@
         "cerrno": "cpp",
         "cmath": "cpp",
         "cstdio": "cpp"
-    }
+    },
+    "cSpell.words": [
+        "errno",
+        "vexlink"
+    ]
 }

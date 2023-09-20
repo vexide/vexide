@@ -1,4 +1,7 @@
+#[docs(hidden)]
 pub const E_LINK_RECIEVER: core::ffi::c_uint = 0;
+// PROS PLS FIX 🥺
+pub use E_LINK_RECIEVER as E_LINK_RECEIVER;
 pub const E_LINK_TRANSMITTER: core::ffi::c_uint = 1;
 pub const E_LINK_RX: core::ffi::c_uint = E_LINK_RECIEVER;
 pub const E_LINK_TX: core::ffi::c_uint = E_LINK_TRANSMITTER;
@@ -22,8 +25,8 @@ extern "C" {
          Unique link ID in the form of a string, needs to be different from other links in
          the area.
     \param type
-         Indicates whether the radio link on the brain is a transmitter or reciever,
-         with the transmitter having double the transmitting bandwidth as the recieving
+         Indicates whether the radio link on the brain is a transmitter or receiver,
+         with the transmitter having double the transmitting bandwidth as the receiving
          end (1040 bytes/s vs 520 bytes/s).
 
     \return PROS_ERR if initialization fails, 1 if the initialization succeeds.
@@ -53,7 +56,7 @@ extern "C" {
 
     \return PROS_ERR if initialization fails, 1 if the initialization succeeds.
     */
-    pub fn link_init_ovveride(
+    pub fn link_init_override(
         port: u8,
         link_id: *const core::ffi::c_char,
         r#type: link_type_e_t,
@@ -88,7 +91,7 @@ extern "C" {
     \return PROS_ERR if port is not a link/radio, else the bytes available to be
     read by the user.
     */
-    pub fn link_raw_reveivable_size(port: u8) -> u32;
+    pub fn link_raw_receivable_size(port: u8) -> u32;
     /**
     Returns the bytes of data available in transmission buffer.
 
@@ -194,7 +197,7 @@ extern "C" {
     \return PROS_ERR if port is not a link or protocol error, and the successfully
     transmitted data size if it succeeded.
     */
-    pub fn link_recieve(port: u8, dest: *mut core::ffi::c_void, data_size: u16) -> u32;
+    pub fn link_receive(port: u8, dest: *mut core::ffi::c_void, data_size: u16) -> u32;
     /**
     Clear the receive buffer of the link, and discarding the data.
 
