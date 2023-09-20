@@ -4,14 +4,28 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
+pub mod adi;
+pub mod colors;
+pub mod distance;
+pub mod error;
+pub mod ext_adi;
+pub mod llemu;
+pub mod rtos;
+
+pub use adi::*;
+pub use colors::*;
+pub use distance::*;
+pub use error::*;
+pub use ext_adi::*;
+pub use llemu::*;
+pub use rtos::*;
+
 pub const CLOCKS_PER_SEC: u32 = 1000;
 
 extern "C" {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn memalign(alignment: usize, size: usize) -> *mut core::ffi::c_void;
-    #[cfg(not(target_os = "windows"))]
+    pub fn free(ptr: *mut core::ffi::c_void);
     pub fn __errno() -> *mut i32;
     pub fn clock() -> i32;
 }
-
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
