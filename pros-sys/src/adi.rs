@@ -1,12 +1,14 @@
 use crate::error::PROS_ERR;
-pub const INTERNAL_ADI_PORT: core::ffi::c_int = 21;
-pub const NUM_ADI_PORTS: core::ffi::c_int = 8;
-pub const HIGH: core::ffi::c_int = 1;
-pub const LOW: core::ffi::c_int = 0;
-pub const INPUT: core::ffi::c_int = 0x00;
-pub const OUTPUT: core::ffi::c_int = 0x01;
-pub const INPUT_ANALOG: core::ffi::c_int = 0x02;
-pub const OUTPUT_ANALOG: core::ffi::c_int = 0x03;
+use core::ffi::*;
+
+pub const INTERNAL_ADI_PORT: c_int = 22;
+pub const NUM_ADI_PORTS: c_int = 8;
+pub const HIGH: c_int = 1;
+pub const LOW: c_int = 0;
+pub const INPUT: c_int = 0x00;
+pub const OUTPUT: c_int = 0x01;
+pub const INPUT_ANALOG: c_int = 0x02;
+pub const OUTPUT_ANALOG: c_int = 0x03;
 /** Reference type for an initialized encoder.
 
 This merely contains the port number for the encoder, unlike its use as an
@@ -32,22 +34,22 @@ pub type adi_potentiometer_t = i32;
 This merely contains the port number for the led, unlike its use as an
 object to store led data in PROS 2.*/
 pub type adi_led_t = i32;
-pub const E_ADI_ANALOG_IN: core::ffi::c_int = 0;
-pub const E_ADI_ANALOG_OUT: core::ffi::c_int = 1;
-pub const E_ADI_DIGITAL_IN: core::ffi::c_int = 2;
-pub const E_ADI_DIGITAL_OUT: core::ffi::c_int = 3;
-pub const E_ADI_LEGACY_SERVO: core::ffi::c_int = 12;
-pub const E_ADI_LEGACY_PWM: core::ffi::c_int = 13;
-pub const E_ADI_LEGACY_ENCODER: core::ffi::c_int = 14;
-pub const E_ADI_LEGACY_ULTRASONIC: core::ffi::c_int = 15;
-pub const E_ADI_TYPE_UNDEFINED: core::ffi::c_int = 255;
-pub const E_ADI_ERR: core::ffi::c_int = PROS_ERR;
+pub const E_ADI_ANALOG_IN: c_int = 0;
+pub const E_ADI_ANALOG_OUT: c_int = 1;
+pub const E_ADI_DIGITAL_IN: c_int = 2;
+pub const E_ADI_DIGITAL_OUT: c_int = 3;
+pub const E_ADI_LEGACY_SERVO: c_int = 12;
+pub const E_ADI_LEGACY_PWM: c_int = 13;
+pub const E_ADI_LEGACY_ENCODER: c_int = 14;
+pub const E_ADI_LEGACY_ULTRASONIC: c_int = 15;
+pub const E_ADI_TYPE_UNDEFINED: c_int = 255;
+pub const E_ADI_ERR: c_int = PROS_ERR;
 /// Represents the port type for an ADI port.
-pub type adi_port_config_e_t = core::ffi::c_int;
-pub const E_ADI_POT_EDR: core::ffi::c_int = 0;
-pub const E_ADI_POT_V2: core::ffi::c_int = 1;
+pub type adi_port_config_e_t = c_int;
+pub const E_ADI_POT_EDR: c_int = 0;
+pub const E_ADI_POT_V2: c_int = 1;
 /// Represents the potentiometer version type.
-pub type adi_potentiometer_type_e_t = core::ffi::c_int;
+pub type adi_potentiometer_type_e_t = c_int;
 extern "C" {
     /** Gets the configuration for the given ADI port.
 
