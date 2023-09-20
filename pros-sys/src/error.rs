@@ -40,3 +40,4 @@ pub const EMLINK: c_uint = 31;
 pub const EPIPE: c_uint = 32;
 pub const EDOM: c_uint = 33;
 pub const ERANGE: c_uint = 34;
+pub const EHOSTDOWN: c_uint = 112;

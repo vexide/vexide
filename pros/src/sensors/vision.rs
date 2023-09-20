@@ -123,8 +123,8 @@ pub struct VisionObject {
     pub height: i16,
 }
 
-impl From<pros_sys::vision_object> for VisionObject {
-    fn from(value: pros_sys::vision_object) -> Self {
+impl From<pros_sys::vision_object_s_t> for VisionObject {
+    fn from(value: pros_sys::vision_object_s_t) -> Self {
         Self {
             top: value.top_coord,
             left: value.left_coord,

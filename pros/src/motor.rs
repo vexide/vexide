@@ -14,10 +14,7 @@ pub struct Motor {
 impl Motor {
     pub fn new(port: u8, brake_mode: BrakeMode) -> Result<Self, PortError> {
         unsafe {
-            pros_sys::motor_set_encoder_units(
-                port,
-                pros_sys::E_MOTOR_ENCODER_DEGREES,
-            );
+            pros_sys::motor_set_encoder_units(port, pros_sys::E_MOTOR_ENCODER_DEGREES);
             pros_sys::motor_set_brake_mode(port, brake_mode.into());
 
             PortError::from_last_errno()?;

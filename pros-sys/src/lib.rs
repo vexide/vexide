@@ -9,22 +9,24 @@ pub mod colors;
 pub mod distance;
 pub mod error;
 pub mod ext_adi;
+pub mod link;
 pub mod llemu;
 pub mod misc;
-pub mod rtos;
 pub mod motor;
-pub mod link;
+pub mod rtos;
+pub mod vision;
 
 pub use adi::*;
 pub use colors::*;
 pub use distance::*;
 pub use error::*;
 pub use ext_adi::*;
+pub use link::*;
 pub use llemu::*;
 pub use misc::*;
-pub use rtos::*;
 pub use motor::*;
-pub use link::*;
+pub use rtos::*;
+pub use vision::*;
 
 pub const CLOCKS_PER_SEC: u32 = 1000;
 
