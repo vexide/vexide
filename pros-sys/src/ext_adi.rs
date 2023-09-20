@@ -575,7 +575,7 @@ extern "C" {
     The adi_potentiometer_t object for which the angle will be returned
 
     \return The potentiometer angle in degrees.*/
-    pub fn ext_adi_potentiometer_get_angle(pot: ext_adi_potentiometer_t) -> c_double;
+    pub fn ext_adi_potentiometer_get_angle(potentiometer: ext_adi_potentiometer_t) -> c_double;
     /** Initializes a led on the given port.
 
     This function uses the following values of errno when an error state is
@@ -655,8 +655,8 @@ extern "C" {
         led: ext_adi_led_t,
         buffer: *mut u32,
         buffer_length: u32,
-        pixel_position: u32,
         color: u32,
+        pixel_position: u32,
     ) -> i32;
     /** @brief Clear one pixel on the led strip
 
