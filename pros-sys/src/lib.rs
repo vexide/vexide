@@ -11,6 +11,7 @@ pub mod error;
 pub mod ext_adi;
 pub mod llemu;
 pub mod rtos;
+pub mod misc;
 
 pub use adi::*;
 pub use colors::*;
@@ -19,6 +20,7 @@ pub use error::*;
 pub use ext_adi::*;
 pub use llemu::*;
 pub use rtos::*;
+pub use misc::*;
 
 pub const CLOCKS_PER_SEC: u32 = 1000;
 

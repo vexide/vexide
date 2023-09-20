@@ -1,25 +1,25 @@
 pub const TASK_PRIORITY_MAX: u32 = 16;
 pub const TASK_PRIORITY_MIN: u32 = 1;
 pub const TASK_PRIORITY_DEFAULT: u32 = 8;
-pub const TASK_STACK_DEPTH_DEFAULT: core::ffi::c_int = 0x2000;
-pub const TASK_STACK_DEPTH_MIN: core::ffi::c_int = 0x200;
-pub const TASK_NAME_MAX_LEN: core::ffi::c_int = 32;
+pub const TASK_STACK_DEPTH_DEFAULT: core::ffi::c_uint = 0x2000;
+pub const TASK_STACK_DEPTH_MIN: core::ffi::c_uint = 0x200;
+pub const TASK_NAME_MAX_LEN: core::ffi::c_uint = 32;
 pub const TIMEOUT_MAX: u32 = u32::MAX;
 
-pub const E_TASK_STATE_RUNNING: core::ffi::c_int = 0;
-pub const E_TASK_STATE_READY: core::ffi::c_int = 1;
-pub const E_TASK_STATE_BLOCKED: core::ffi::c_int = 2;
-pub const E_TASK_STATE_SUSPENDED: core::ffi::c_int = 3;
-pub const E_TASK_STATE_DELETED: core::ffi::c_int = 4;
-pub const E_TASK_STATE_INVALID: core::ffi::c_int = 5;
-pub type tast_state_e_t = core::ffi::c_int;
+pub const E_TASK_STATE_RUNNING: core::ffi::c_uint = 0;
+pub const E_TASK_STATE_READY: core::ffi::c_uint = 1;
+pub const E_TASK_STATE_BLOCKED: core::ffi::c_uint = 2;
+pub const E_TASK_STATE_SUSPENDED: core::ffi::c_uint = 3;
+pub const E_TASK_STATE_DELETED: core::ffi::c_uint = 4;
+pub const E_TASK_STATE_INVALID: core::ffi::c_uint = 5;
+pub type tast_state_e_t = core::ffi::c_uint;
 
-pub const E_NOTIFY_ACTION_NONE: core::ffi::c_int = 0;
-pub const E_NOTIFY_ACTION_BITS: core::ffi::c_int = 1;
-pub const E_NOTIFY_ACTION_INCR: core::ffi::c_int = 2;
-pub const E_NOTIFY_ACTION_OWRITE: core::ffi::c_int = 3;
-pub const E_NOTIFY_ACTION_NO_OWRITE: core::ffi::c_int = 4;
-pub type notify_action_e_t = core::ffi::c_int;
+pub const E_NOTIFY_ACTION_NONE: core::ffi::c_uint = 0;
+pub const E_NOTIFY_ACTION_BITS: core::ffi::c_uint = 1;
+pub const E_NOTIFY_ACTION_INCR: core::ffi::c_uint = 2;
+pub const E_NOTIFY_ACTION_OWRITE: core::ffi::c_uint = 3;
+pub const E_NOTIFY_ACTION_NO_OWRITE: core::ffi::c_uint = 4;
+pub type notify_action_e_t = core::ffi::c_uint;
 
 pub type task_t = *const core::ffi::c_void;
 pub type task_fn_t = Option<unsafe extern "C" fn(arg1: *mut ::core::ffi::c_void)>;

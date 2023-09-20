@@ -153,12 +153,12 @@ pub enum TaskState {
 impl From<u32> for TaskState {
     fn from(value: u32) -> Self {
         match value {
-            pros_sys::task_state_e_t_E_TASK_STATE_RUNNING => Self::Running,
-            pros_sys::task_state_e_t_E_TASK_STATE_READY => Self::Ready,
-            pros_sys::task_state_e_t_E_TASK_STATE_BLOCKED => Self::Blocked,
-            pros_sys::task_state_e_t_E_TASK_STATE_SUSPENDED => Self::Suspended,
-            pros_sys::task_state_e_t_E_TASK_STATE_DELETED => Self::Deleted,
-            pros_sys::task_state_e_t_E_TASK_STATE_INVALID => Self::Invalid,
+            pros_sys::E_TASK_STATE_RUNNING => Self::Running,
+            pros_sys::E_TASK_STATE_READY => Self::Ready,
+            pros_sys::E_TASK_STATE_BLOCKED => Self::Blocked,
+            pros_sys::E_TASK_STATE_SUSPENDED => Self::Suspended,
+            pros_sys::E_TASK_STATE_DELETED => Self::Deleted,
+            pros_sys::E_TASK_STATE_INVALID => Self::Invalid,
             _ => Self::Invalid,
         }
     }
@@ -228,5 +228,5 @@ pub fn get_current_task() -> Task {
 /// I am unsure what happens if the thread is unblocked while waiting.
 /// returns the value of the notification
 pub fn get_notification() -> u32 {
-    unsafe { pros_sys::task_notify_take(false, pros_sys::TIMEOUT_MAX_CONST) }
+    unsafe { pros_sys::task_notify_take(false, pros_sys::TIMEOUT_MAX) }
 }
