@@ -1,3 +1,5 @@
+use std::ffi::*;
+
 pub const NUM_V5_PORTS: usize = 21;
 // v5 comp
 pub const COMPETITION_DISABLED: i32 = 0b001;
@@ -7,27 +9,27 @@ extern "C" {
     pub fn competition_get_status() -> u8;
 }
 // controller
-pub const E_CONTROLLER_MASTER: core::ffi::c_uint = 0;
-pub const E_CONTROLLER_PARTNER: core::ffi::c_uint = 1;
-pub type controller_id_e_t = core::ffi::c_uint;
-pub const E_CONTROLLER_ANALOG_LEFT_X: core::ffi::c_uint = 0;
-pub const E_CONTROLLER_ANALOG_LEFT_Y: core::ffi::c_uint = 1;
-pub const E_CONTROLLER_ANALOG_RIGHT_X: core::ffi::c_uint = 2;
-pub const E_CONTROLLER_ANALOG_RIGHT_Y: core::ffi::c_uint = 3;
-pub type controller_analog_e_t = core::ffi::c_uint;
-pub const E_CONTROLLER_DIGITAL_L1: core::ffi::c_uint = 6;
-pub const E_CONTROLLER_DIGITAL_L2: core::ffi::c_uint = 7;
-pub const E_CONTROLLER_DIGITAL_R1: core::ffi::c_uint = 8;
-pub const E_CONTROLLER_DIGITAL_R2: core::ffi::c_uint = 9;
-pub const E_CONTROLLER_DIGITAL_UP: core::ffi::c_uint = 10;
-pub const E_CONTROLLER_DIGITAL_DOWN: core::ffi::c_uint = 11;
-pub const E_CONTROLLER_DIGITAL_LEFT: core::ffi::c_uint = 12;
-pub const E_CONTROLLER_DIGITAL_RIGHT: core::ffi::c_uint = 13;
-pub const E_CONTROLLER_DIGITAL_X: core::ffi::c_uint = 14;
-pub const E_CONTROLLER_DIGITAL_B: core::ffi::c_uint = 15;
-pub const E_CONTROLLER_DIGITAL_Y: core::ffi::c_uint = 16;
-pub const E_CONTROLLER_DIGITAL_A: core::ffi::c_uint = 17;
-pub type controller_digital_e_t = core::ffi::c_uint;
+pub const E_CONTROLLER_MASTER: c_uint = 0;
+pub const E_CONTROLLER_PARTNER: c_uint = 1;
+pub type controller_id_e_t = c_uint;
+pub const E_CONTROLLER_ANALOG_LEFT_X: c_uint = 0;
+pub const E_CONTROLLER_ANALOG_LEFT_Y: c_uint = 1;
+pub const E_CONTROLLER_ANALOG_RIGHT_X: c_uint = 2;
+pub const E_CONTROLLER_ANALOG_RIGHT_Y: c_uint = 3;
+pub type controller_analog_e_t = c_uint;
+pub const E_CONTROLLER_DIGITAL_L1: c_uint = 6;
+pub const E_CONTROLLER_DIGITAL_L2: c_uint = 7;
+pub const E_CONTROLLER_DIGITAL_R1: c_uint = 8;
+pub const E_CONTROLLER_DIGITAL_R2: c_uint = 9;
+pub const E_CONTROLLER_DIGITAL_UP: c_uint = 10;
+pub const E_CONTROLLER_DIGITAL_DOWN: c_uint = 11;
+pub const E_CONTROLLER_DIGITAL_LEFT: c_uint = 12;
+pub const E_CONTROLLER_DIGITAL_RIGHT: c_uint = 13;
+pub const E_CONTROLLER_DIGITAL_X: c_uint = 14;
+pub const E_CONTROLLER_DIGITAL_B: c_uint = 15;
+pub const E_CONTROLLER_DIGITAL_Y: c_uint = 16;
+pub const E_CONTROLLER_DIGITAL_A: c_uint = 17;
+pub type controller_digital_e_t = c_uint;
 
 extern "C" {
     /**
@@ -181,7 +183,7 @@ extern "C" {
         id: controller_id_e_t,
         line: u8,
         col: u8,
-        fmt: *const core::ffi::c_char,
+        fmt: *const c_char,
         ...
     ) -> i32;
     /**
@@ -213,7 +215,7 @@ extern "C" {
         id: controller_id_e_t,
         line: u8,
         col: u8,
-        string: *const core::ffi::c_char,
+        string: *const c_char,
     ) -> i32;
     /**
     Clears an individual line of the controller screen.
@@ -281,13 +283,13 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn controller_rumble(id: controller_id_e_t, rumble: *const core::ffi::c_char) -> i32;
+    pub fn controller_rumble(id: controller_id_e_t, rumble: *const c_char) -> i32;
 }
 
 // date and time
 extern "C" {
-    pub static mut baked_date: *const core::ffi::c_char;
-    pub static mut baked_time: *const core::ffi::c_char;
+    pub static mut baked_date: *const c_char;
+    pub static mut baked_time: *const c_char;
 }
 #[repr(C)]
 pub struct date_s_t {
@@ -302,7 +304,7 @@ pub struct time_s_t {
     pub hour: u8,
     pub minute: u8,
     pub sec: u8,
-    /// hundreths of a second
+    /// hundredths of a second
     pub sec_hund: u8,
 }
 
