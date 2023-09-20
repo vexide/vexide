@@ -1,3 +1,5 @@
+use core::ffi::*;
+
 extern "C" {
     /** Get the currently measured distance from the sensor in mm
 
@@ -54,5 +56,5 @@ extern "C" {
     \param  port The V5 Distance Sensor port number from 1-21
     \return The size value or PROS_ERR if the operation failed, setting
     errno.*/
-    pub fn distance_get_object_velocity(port: u8) -> f64;
+    pub fn distance_get_object_velocity(port: u8) -> c_double;
 }
