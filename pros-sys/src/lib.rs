@@ -13,6 +13,7 @@ pub mod llemu;
 pub mod misc;
 pub mod rtos;
 pub mod motor;
+pub mod link;
 
 pub use adi::*;
 pub use colors::*;
@@ -23,6 +24,7 @@ pub use llemu::*;
 pub use misc::*;
 pub use rtos::*;
 pub use motor::*;
+pub use link::*;
 
 pub const CLOCKS_PER_SEC: u32 = 1000;
 
