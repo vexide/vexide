@@ -1,5 +1,42 @@
+use core::ffi::c_uint;
+
 pub const PROS_ERR_BYTE: u8 = u8::MAX;
 pub const PROS_ERR_2_BYTE: u16 = u16::MAX;
 pub const PROS_ERR: i32 = i32::MAX;
 pub const PROS_ERR_F: f32 = f32::INFINITY;
-pub const PROS_SUCCESS: core::ffi::c_int = 1;
+pub const PROS_SUCCESS: c_uint = 1;
+
+pub const EPERM: c_uint = 1; /* Operation not permitted */
+pub const ENOENT: c_uint = 2; /* No such file or directory */
+pub const ESRCH: c_uint = 3; /* No such process */
+pub const EINTR: c_uint = 4; /* Interrupted system call */
+pub const EIO: c_uint = 5; /* I/O error */
+pub const ENXIO: c_uint = 6; /* No such device or address */
+pub const E2BIG: c_uint = 7; /* Argument list too long */
+pub const ENOEXEC: c_uint = 8; /* Exec format error */
+pub const EBADF: c_uint = 9; /* Bad file number */
+pub const ECHILD: c_uint = 10; /* No child processes */
+pub const EAGAIN: c_uint = 11; /* Try again */
+pub const ENOMEM: c_uint = 12; /* Out of memory */
+pub const EACCES: c_uint = 13; /* Permission denied */
+pub const EFAULT: c_uint = 14; /* Bad address */
+pub const ENOTBLK: c_uint = 15; /* Block device required */
+pub const EBUSY: c_uint = 16; /* Device or resource busy */
+pub const EEXIST: c_uint = 17; /* File exists */
+pub const EXDEV: c_uint = 18; /* Cross-device link */
+pub const ENODEV: c_uint = 19; /* No such device */
+pub const ENOTDIR: c_uint = 20; /* Not a directory */
+pub const EISDIR: c_uint = 21; /* Is a directory */
+pub const EINVAL: c_uint = 22; /* Invalid argument */
+pub const ENFILE: c_uint = 23; /* File table overflow */
+pub const EMFILE: c_uint = 24; /* Too many open files */
+pub const ENOTTY: c_uint = 25; /* Not a typewriter */
+pub const ETXTBSY: c_uint = 26; /* Text file busy */
+pub const EFBIG: c_uint = 27; /* File too large */
+pub const ENOSPC: c_uint = 28; /* No space left on device */
+pub const ESPIPE: c_uint = 29; /* Illegal seek */
+pub const EROFS: c_uint = 30; /* Read-only file system */
+pub const EMLINK: c_uint = 31; /* Too many links */
+pub const EPIPE: c_uint = 32; /* Broken pipe */
+pub const EDOM: c_uint = 33; /* Math argument out of domain of func */
+pub const ERANGE: c_uint = 34; /* Math result not representable */
