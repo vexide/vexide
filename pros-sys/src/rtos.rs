@@ -12,7 +12,7 @@ pub const E_TASK_STATE_BLOCKED: core::ffi::c_uint = 2;
 pub const E_TASK_STATE_SUSPENDED: core::ffi::c_uint = 3;
 pub const E_TASK_STATE_DELETED: core::ffi::c_uint = 4;
 pub const E_TASK_STATE_INVALID: core::ffi::c_uint = 5;
-pub type tast_state_e_t = core::ffi::c_uint;
+pub type task_state_e_t = core::ffi::c_uint;
 
 pub const E_NOTIFY_ACTION_NONE: core::ffi::c_uint = 0;
 pub const E_NOTIFY_ACTION_BITS: core::ffi::c_uint = 1;
@@ -132,7 +132,7 @@ extern "C" {
     The task to check
 
     \return The state of the task*/
-    pub fn task_get_state(task: task_t) -> tast_state_e_t;
+    pub fn task_get_state(task: task_t) -> task_state_e_t;
     /** Suspends the specified task, making it ineligible to be scheduled.
 
     \param task

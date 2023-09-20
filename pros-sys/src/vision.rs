@@ -60,7 +60,7 @@ pub type vision_zero_e_t = c_uint;
 
 extern "C" {
     /**
-    Clears the vision sensor LED color, reseting it back to its default behavior,
+    Clears the vision sensor LED color, resetting it back to its default behavior,
     displaying the most prominent object signature color.
 
     This function uses the following values of errno when an error state is
@@ -263,7 +263,7 @@ extern "C" {
     \param sig
            The signature for which the contents will be printed
 
-    \return 1 if no errors occured, PROS_ERR otherwise
+    \return 1 if no errors occurred, PROS_ERR otherwise
     */
     pub fn vision_print_signature(sig: vision_signature_s_t) -> i32;
     /**
@@ -391,7 +391,7 @@ extern "C" {
     \param[in] signature_ptr
                A pointer to the signature to save
 
-    \return 1 if no errors occured, PROS_ERR otherwise
+    \return 1 if no errors occurred, PROS_ERR otherwise
     */
     pub fn vision_set_signature(
         port: u8,
@@ -419,7 +419,7 @@ extern "C" {
     /**
     Sets the exposure parameter of the Vision Sensor. See
     https://pros.cs.purdue.edu/v5/tutorials/topical/vision.html#exposure-setting
-    for more detials.
+    for more details.
 
     This function uses the following values of errno when an error state is
     reached:
@@ -496,7 +496,7 @@ extern "C" {
     This functions uses the following values of errno when an error state is
     reached:
     ENXIO - The given port is not within the range of V5 ports (1-21)
-    EACCESS - Anothe resources is currently trying to access the port
+    EACCESS - Another resource is currently trying to access the port
 
     \param port
            The V5 port number from 1-21
