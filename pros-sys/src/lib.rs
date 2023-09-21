@@ -41,6 +41,7 @@ pub const CLOCKS_PER_SEC: u32 = 1000;
 extern "C" {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn memalign(alignment: usize, size: usize) -> *mut core::ffi::c_void;
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn free(ptr: *mut core::ffi::c_void);
     pub fn __errno() -> *mut i32;
     pub fn clock() -> i32;
