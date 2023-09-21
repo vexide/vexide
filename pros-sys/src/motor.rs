@@ -1,4 +1,4 @@
-use std::ffi::*;
+use core::ffi::*;
 
 pub const E_MOTOR_FAULT_NO_FAULTS: u32 = 0x00;
 /// Analogous to motor_is_over_temp()
@@ -663,7 +663,12 @@ extern "C" {
     #[deprecated(
         note = "Changing these values is not supported by VEX and may lead to permanent motor damage."
     )]
-    pub fn motor_convert_pid(kf: c_double, kp: c_double, ki: c_double, kd: c_double) -> motor_pid_s_t;
+    pub fn motor_convert_pid(
+        kf: c_double,
+        kp: c_double,
+        ki: c_double,
+        kd: c_double,
+    ) -> motor_pid_s_t;
     /**
     Takes in floating point values and returns a properly formatted pid struct.
     The motor_pid_s_t struct is in 4.4 format, i.e. 0x20 is 2.0, 0x21 is 2.0625,

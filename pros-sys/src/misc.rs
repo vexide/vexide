@@ -1,4 +1,4 @@
-use std::ffi::*;
+use core::ffi::*;
 
 pub const NUM_V5_PORTS: usize = 21;
 // v5 comp

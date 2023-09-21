@@ -1,4 +1,4 @@
-#[docs(hidden)]
+#[doc(hidden)]
 pub const E_LINK_RECIEVER: core::ffi::c_uint = 0;
 // PROS PLS FIX 🥺
 pub use E_LINK_RECIEVER as E_LINK_RECEIVER;
