@@ -1,7 +1,11 @@
+use std::env;
+
 fn main() {
-    println!("cargo:rerun-if-changed=src/pros_entrypoint.h");
-    println!("cargo:rerun-if-env-changed=LIBCLANG_PATH");
-    println!("cargo:rerun-if-env-changed=CPATH");
+    if let Some(docs_rs) = env::var_os("DOCS_RS") {
+        if docs_rs == "1" {
+            return;
+        }
+    }
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
 
