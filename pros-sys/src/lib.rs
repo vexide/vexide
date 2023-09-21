@@ -17,6 +17,7 @@ pub mod rtos;
 pub mod vision;
 pub mod imu;
 pub mod gps;
+pub mod rotation;
 
 pub use adi::*;
 pub use colors::*;
@@ -31,6 +32,7 @@ pub use rtos::*;
 pub use vision::*;
 pub use imu::*;
 pub use gps::*;
+pub use rotation::*;
 
 pub const CLOCKS_PER_SEC: u32 = 1000;
 

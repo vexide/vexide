@@ -1,5 +1,5 @@
-PROS 3.0 contains modified or linked source code from the following packages:
-    - FreeRTOS (src/rtos/LICENSE)
+pros-sys contains modified or linked source code from the following packages:
+    - Pros
 
 Unless otherwise specified, PROS 3.0 is distributed under the Mozilla Public
 License Version 2.0, reproduced below:
