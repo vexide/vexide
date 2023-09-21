@@ -5,6 +5,7 @@
         "cstdio": "cpp"
     },
     "cSpell.words": [
+        "baudrate",
         "errno",
         "vexlink"
     ]
