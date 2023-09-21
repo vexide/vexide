@@ -77,7 +77,7 @@ extern "C" {
      \param port
             The V5 port number from 1-21
 
-     \return The number of bytes avaliable to be read or PROS_ERR if the operation
+     \return The number of bytes available to be read or PROS_ERR if the operation
      failed, setting errno.
     */
     pub fn serial_get_read_avail(port: u8) -> i32;
@@ -100,7 +100,7 @@ extern "C" {
     */
     pub fn serial_get_write_free(port: u8) -> i32;
     /**
-     Reads the next byte avaliable in the port's input buffer without removing it.
+     Reads the next byte available in the port's input buffer without removing it.
 
      This function uses the following values of errno when an error state is
      reached:
@@ -110,12 +110,12 @@ extern "C" {
      \param port
             The V5 port number from 1-21
 
-     \return The next byte avaliable to be read, -1 if none are available, or
+     \return The next byte available to be read, -1 if none are available, or
      PROS_ERR if the operation failed, setting errno.
     */
     pub fn serial_peek_byte(port: u8) -> i32;
     /**
-    Reads the next byte avaliable in the port's input buffer.
+    Reads the next byte available in the port's input buffer.
 
     This function uses the following values of errno when an error state is
     reached:
@@ -125,7 +125,7 @@ extern "C" {
     \param port
            The V5 port number from 1-21
 
-    \return The next byte avaliable to be read, -1 if none are available, or
+    \return The next byte available to be read, -1 if none are available, or
     PROS_ERR if the operation failed, setting errno.
     */
     pub fn serial_read_byte(port: u8) -> i32;
@@ -133,7 +133,7 @@ extern "C" {
      Reads up to the next length bytes from the port's input buffer and places
      them in the user supplied buffer.
 
-     \note This function will only return bytes that are currently avaliable to be
+     \note This function will only return bytes that are currently available to be
      read and will not block waiting for any to arrive.
 
      This function uses the following values of errno when an error state is

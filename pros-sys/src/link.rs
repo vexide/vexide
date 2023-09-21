@@ -3,7 +3,7 @@ pub const E_LINK_RECIEVER: core::ffi::c_uint = 0;
 // PROS PLS FIX 🥺
 pub use E_LINK_RECIEVER as E_LINK_RECEIVER;
 pub const E_LINK_TRANSMITTER: core::ffi::c_uint = 1;
-pub const E_LINK_RX: core::ffi::c_uint = E_LINK_RECIEVER;
+pub const E_LINK_RX: core::ffi::c_uint = E_LINK_RECEIVER;
 pub const E_LINK_TX: core::ffi::c_uint = E_LINK_TRANSMITTER;
 pub type link_type_e_t = core::ffi::c_uint;
 

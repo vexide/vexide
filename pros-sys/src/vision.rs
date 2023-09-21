@@ -214,7 +214,7 @@ extern "C" {
     /**
     Gets the exposure parameter of the Vision Sensor. See
     https://pros.cs.purdue.edu/v5/tutorials/topical/vision.html#exposure-setting
-    for more detials.
+    for more details.
 
     This function uses the following values of errno when an error state is
     reached:

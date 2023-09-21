@@ -228,7 +228,7 @@ extern "C" {
     */
     pub fn imu_get_gyro_rate(port: u8) -> imu_gyro_s_t;
     /**
-    Get the Inertial Sensor's raw acceleroneter values
+    Get the Inertial Sensor's raw accelerometer values
 
     This function uses the following values of errno when an error state is
     reached:

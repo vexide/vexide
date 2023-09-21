@@ -38,7 +38,7 @@ object to store gyro data in PROS 2.
 pub type ext_adi_potentiometer_t = i32;
 
 /**
-Reference type for an initialized addressable led, which stores its smart and adiport.
+Reference type for an initialized addressable led, which stores its smart and adi port.
 */
 pub type ext_adi_led_t = i32;
 
