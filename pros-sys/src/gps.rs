@@ -185,33 +185,34 @@ extern "C" {
     */
     pub fn gps_get_heading(port: u8) -> f64;
     /**
-    Get the heading in the max double value and min double value scale.
+        Get the heading in the max double value and min double value scale.
 
-    This function uses the following values of errno when an error state is
-    reached:
-    ENXIO - The given value is not within the range of V5 ports (1-21).
-    ENODEV - The port cannot be configured as a GPS
-    EAGAIN - The sensor is still calibrating
+        This function uses the following values of errno when an error state is
+        reached:
+        ENXIO - The given value is not within the range of V5 ports (1-21).
+        ENODEV - The port cannot be configured as a GPS
+        EAGAIN - The sensor is still calibrating
 
-    \param  port
-                     The V5 GPS port number from 1-21
+        \param  port
+                         The V5 GPS port number from 1-21
 
-    \return The heading in [DOUBLE_MIN, DOUBLE_MAX] values. If the operation
-    fails, returns PROS_ERR_F and errno is set.
-    *//**
- * Get the GPS's raw accelerometer values
- *
- * This function uses the following values of errno when an error state is
- * reached:
- * ENXIO - The given value is not within the range of V5 ports (1-21).
- * ENODEV - The port cannot be configured as an GPS
- * EAGAIN - The sensor is still calibrating
- *
- * \param  port
- * 				 The V5 GPS's port number from 1-21
- * \return The raw accelerometer values. If the operation failed, all the
- * structure's members are filled with PROS_ERR_F and errno is set.
- */
+        \return The heading in [DOUBLE_MIN, DOUBLE_MAX] values. If the operation
+        fails, returns PROS_ERR_F and errno is set.
+        */
+    /**
+     * Get the GPS's raw accelerometer values
+     *
+     * This function uses the following values of errno when an error state is
+     * reached:
+     * ENXIO - The given value is not within the range of V5 ports (1-21).
+     * ENODEV - The port cannot be configured as an GPS
+     * EAGAIN - The sensor is still calibrating
+     *
+     * \param  port
+     * 				 The V5 GPS's port number from 1-21
+     * \return The raw accelerometer values. If the operation failed, all the
+     * structure's members are filled with PROS_ERR_F and errno is set.
+     */
     pub fn gps_get_heading_raw(port: u8) -> f64;
     /**
     Gets the GPS sensor's elapsed rotation value
