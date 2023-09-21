@@ -2,5 +2,5 @@
 
 - [x] serial.h
 - [ ] screen.h
-- [ ] llemu.h
+- [ ] lvgl bindings
 - [ ] Review motors.rs for mistakes
