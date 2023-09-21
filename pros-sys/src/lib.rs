@@ -15,6 +15,7 @@ pub mod misc;
 pub mod motor;
 pub mod rtos;
 pub mod vision;
+pub mod imu;
 
 pub use adi::*;
 pub use colors::*;
@@ -27,6 +28,7 @@ pub use misc::*;
 pub use motor::*;
 pub use rtos::*;
 pub use vision::*;
+pub use imu::*;
 
 pub const CLOCKS_PER_SEC: u32 = 1000;
 
