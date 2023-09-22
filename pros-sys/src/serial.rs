@@ -1,7 +1,5 @@
 //! Contains prototypes for the V5 Generic Serial related functions.
 
-use core::ffi::*;
-
 extern "C" {
     /**
     Enables generic serial on the given port.
