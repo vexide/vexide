@@ -3,4 +3,4 @@
 - [x] serial.h
 - [ ] lvgl bindings
   - [ ] screen.h
-- [ ] Review motor.rs for mistakes
+- [x] Review motor.rs for mistakes
