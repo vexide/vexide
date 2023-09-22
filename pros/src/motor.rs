@@ -124,6 +124,18 @@ impl Motor {
     pub fn get_state(&self) -> MotorState {
         unsafe { (pros_sys::motor_get_flags(self.port) as u32).into() }
     }
+
+    /// Reverse this motor by multiplying all input by -1.
+    pub fn set_reversed(&self, reversed: bool) {
+        unsafe {
+            pros_sys::motor_set_reversed(self.port, reversed);
+        }
+    }
+
+    /// Check if this motor has been reversed.
+    pub fn reversed(&self) -> bool {
+        unsafe { pros_sys::motor_is_reversed(self.port) == 1 }
+    }
 }
 
 /// Determines how a motor should act when braking.
