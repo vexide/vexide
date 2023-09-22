@@ -9,7 +9,7 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
   * [X] Pressed buttons
   * [X] Button press callback functions
 * [X] Multitasking
-  * [X] Mutexs
+  * [X] Mutexes
   * [X] Tasks
   * [X] Notifications
 * [X] Motors
@@ -26,6 +26,7 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
   * [X] Vision
 * [X] Controllers
 * [ ] Link
+* [ ] Serial
 
 ## API
 
@@ -44,4 +45,4 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
 ## Non essential
 
 * [ ] Drivetrain
-* [ ] LVGL bindings
+* [ ] LVGL bindings (pros-sys)
