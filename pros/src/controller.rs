@@ -61,24 +61,24 @@ impl Controller {
                     left: Joystick {
                         x: pros_sys::controller_get_analog(
                             self.id,
-                            pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_LEFT_X,
+                            pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
                         ) as f32
                             / 127.0,
                         y: pros_sys::controller_get_analog(
                             self.id,
-                            pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_LEFT_Y,
+                            pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
                         ) as f32
                             / 127.0,
                     },
                     right: Joystick {
                         x: pros_sys::controller_get_analog(
                             self.id,
-                            pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_RIGHT_X,
+                            pros_sys::E_CONTROLLER_ANALOG_RIGHT_X,
                         ) as f32
                             / 127.0,
                         y: pros_sys::controller_get_analog(
                             self.id,
-                            pros_sys::controller_analog_e_t_E_CONTROLLER_ANALOG_RIGHT_Y,
+                            pros_sys::E_CONTROLLER_ANALOG_RIGHT_Y,
                         ) as f32
                             / 127.0,
                     },
@@ -88,7 +88,7 @@ impl Controller {
                 Buttons {
                     a: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_A,
+                        pros_sys::E_CONTROLLER_DIGITAL_A,
                     ) == 1
                     {
                         true
@@ -97,7 +97,7 @@ impl Controller {
                     },
                     b: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_B,
+                        pros_sys::E_CONTROLLER_DIGITAL_B,
                     ) == 1
                     {
                         true
@@ -106,7 +106,7 @@ impl Controller {
                     },
                     x: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_X,
+                        pros_sys::E_CONTROLLER_DIGITAL_X,
                     ) == 1
                     {
                         true
@@ -115,7 +115,7 @@ impl Controller {
                     },
                     y: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_Y,
+                        pros_sys::E_CONTROLLER_DIGITAL_Y,
                     ) == 1
                     {
                         true
@@ -124,7 +124,7 @@ impl Controller {
                     },
                     up: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_UP,
+                        pros_sys::E_CONTROLLER_DIGITAL_UP,
                     ) == 1
                     {
                         true
@@ -133,7 +133,7 @@ impl Controller {
                     },
                     down: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_DOWN,
+                        pros_sys::E_CONTROLLER_DIGITAL_DOWN,
                     ) == 1
                     {
                         true
@@ -142,7 +142,7 @@ impl Controller {
                     },
                     left: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_LEFT,
+                        pros_sys::E_CONTROLLER_DIGITAL_LEFT,
                     ) == 1
                     {
                         true
@@ -151,7 +151,7 @@ impl Controller {
                     },
                     right: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_RIGHT,
+                        pros_sys::E_CONTROLLER_DIGITAL_RIGHT,
                     ) == 1
                     {
                         true
@@ -160,7 +160,7 @@ impl Controller {
                     },
                     left_trigger_1: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_L1,
+                        pros_sys::E_CONTROLLER_DIGITAL_L1,
                     ) == 1
                     {
                         true
@@ -169,7 +169,7 @@ impl Controller {
                     },
                     left_trigger_2: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_L2,
+                        pros_sys::E_CONTROLLER_DIGITAL_L2,
                     ) == 1
                     {
                         true
@@ -178,7 +178,7 @@ impl Controller {
                     },
                     right_trigger_1: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_R1,
+                        pros_sys::E_CONTROLLER_DIGITAL_R1,
                     ) == 1
                     {
                         true
@@ -187,7 +187,7 @@ impl Controller {
                     },
                     right_trigger_2: if pros_sys::controller_get_digital(
                         self.id,
-                        pros_sys::controller_digital_e_t_E_CONTROLLER_DIGITAL_R2,
+                        pros_sys::E_CONTROLLER_DIGITAL_R2,
                     ) == 1
                     {
                         true

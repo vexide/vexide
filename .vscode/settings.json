@@ -1,0 +1,18 @@
+{
+    "files.associations": {
+        "cerrno": "cpp",
+        "cmath": "cpp",
+        "cstdio": "cpp"
+    },
+    "cSpell.words": [
+        "baudrate",
+        "bitfield",
+        "centidegrees",
+        "errno",
+        "feedforward",
+        "gearset",
+        "loopspeed",
+        "opcontrol",
+        "vexlink"
+    ]
+}

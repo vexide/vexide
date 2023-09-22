@@ -1,5 +1,5 @@
 pub struct Adi {
-    ports: [AdiPort; pros_sys::NUM_ADI_PORTS as usize]
+    ports: [AdiPort; pros_sys::NUM_ADI_PORTS as usize],
 }
 
 enum AdiType {

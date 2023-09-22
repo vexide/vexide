@@ -13,7 +13,7 @@ repository = "https://github.com/pros-rs/pros-rs"
 [dependencies]
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 spin = "0.9.8"
-pros-sys = { version = "0.1.6", path = "../pros-sys" }
+pros-sys = { version = "0.2.0", path = "../pros-sys" }
 
 [features]
 lvgl = ["pros-sys/xapi"]
