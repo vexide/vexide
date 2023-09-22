@@ -1,7 +1,7 @@
 extern crate alloc;
 use alloc::vec::Vec;
 
-use crate::error::FromErrno;
+use crate::{errno, error::FromErrno};
 
 /// Represents a vision sensor plugged into the vex.
 pub struct VisionSensor {
@@ -200,7 +200,7 @@ impl core::fmt::Display for VisionError {
 
 impl crate::error::FromErrno for VisionError {
     fn from_last_errno() -> Result<(), Self> {
-        match unsafe { crate::errno::ERRNO.get() } {
+        match errno::take_err() {
             pros_sys::EHOSTDOWN => Err(Self::ReadingFailed),
             pros_sys::EDOM => Err(Self::IndexTooHigh),
             _ => Ok(()),

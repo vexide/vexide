@@ -1,3 +1,5 @@
+use crate::errno;
+
 pub trait FromErrno {
     fn from_last_errno() -> Result<(), Self>
     where
@@ -22,7 +24,7 @@ impl core::fmt::Display for PortError {
 
 impl FromErrno for PortError {
     fn from_last_errno() -> Result<(), Self> {
-        match unsafe { crate::errno::ERRNO.get() as u32 } {
+        match errno::take_err() {
             pros_sys::ENXIO => Err(Self::PortOutOfRange),
             pros_sys::ENODEV => Err(Self::PortCannotBeConfigured),
             _ => Ok(()),
