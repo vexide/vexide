@@ -345,7 +345,7 @@ extern "C" {
     \return The motor's efficiency in percent or PROS_ERR_F if the operation
     failed, setting errno.
     */
-    pub fn motor_get_efficiency(port: u8) -> i32;
+    pub fn motor_get_efficiency(port: u8) -> c_double;
     /**
     Checks if the motor is drawing over its current limit.
 
