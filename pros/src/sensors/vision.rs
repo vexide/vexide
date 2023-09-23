@@ -1,7 +1,9 @@
 extern crate alloc;
 use alloc::vec::Vec;
+use pros_sys::{PROS_ERR, VISION_OBJECT_ERR_SIG};
+use snafu::Snafu;
 
-use crate::{errno, error::FromErrno};
+use crate::error::{bail_errno, bail_on, map_errno, PortError};
 
 /// Represents a vision sensor plugged into the vex.
 pub struct VisionSensor {
@@ -12,49 +14,43 @@ impl VisionSensor {
     /// Creates a new vision sensor.
     pub fn new(port: u8, zero: VisionZeroPoint) -> Result<Self, crate::error::PortError> {
         unsafe {
-            pros_sys::vision_set_zero_point(port, zero as _);
-
-            crate::error::PortError::from_last_errno()?;
+            bail_on!(PROS_ERR, pros_sys::vision_set_zero_point(port, zero as _));
         }
 
         Ok(Self { port })
     }
 
-    /// Returns the nth largest object seen bye the camera.
+    /// Returns the nth largest object seen by the camera.
     pub fn nth_largest_object(&self, n: u32) -> Result<VisionObject, VisionError> {
-        unsafe {
-            let object = pros_sys::vision_get_by_size(self.port, n).into();
-
-            VisionError::from_last_errno()?;
-
-            Ok(object)
-        }
+        unsafe { pros_sys::vision_get_by_size(self.port, n).try_into() }
     }
 
     /// Returns a list of all objects in order of size (largest to smallest).
     pub fn objects(&self) -> Result<Vec<VisionObject>, VisionError> {
-        let mut objects_buf = Vec::with_capacity(self.num_objects());
+        let obj_count = self.num_objects()?;
+        let mut objects_buf = Vec::with_capacity(obj_count);
 
         unsafe {
-            pros_sys::vision_read_by_size(
-                self.port,
-                0,
-                self.num_objects() as _,
-                objects_buf.as_mut_ptr(),
-            );
+            pros_sys::vision_read_by_size(self.port, 0, obj_count as _, objects_buf.as_mut_ptr());
         }
 
-        VisionError::from_last_errno()?;
+        bail_errno!();
 
         Ok(objects_buf
             .into_iter()
-            .map(|object| object.into())
+            .filter_map(|object| object.try_into().ok())
             .collect())
     }
 
-    /// Returns the number of objects seen bye the camera.
-    pub fn num_objects(&self) -> usize {
-        unsafe { pros_sys::vision_get_object_count(self.port) as _ }
+    /// Returns the number of objects seen by the camera.
+    pub fn num_objects(&self) -> Result<usize, PortError> {
+        unsafe {
+            Ok(
+                bail_on!(PROS_ERR, pros_sys::vision_get_object_count(self.port))
+                    .try_into()
+                    .unwrap(),
+            )
+        }
     }
 
     /// Get the current exposure percentage of the vision sensor. The returned result should be within 0.0 to 1.5.
@@ -67,7 +63,7 @@ impl VisionSensor {
         unsafe { (pros_sys::vision_get_white_balance(self.port) as u32).into() }
     }
 
-    /// Sets the exposure percentage of the vision sensor. Shoul be between 0.0 and 1.5.
+    /// Sets the exposure percentage of the vision sensor. Should be between 0.0 and 1.5.
     pub fn set_exposure(&mut self, exposure: f32) {
         unsafe {
             pros_sys::vision_set_exposure(self.port, (exposure * 150.0 / 1.5) as u8);
@@ -123,16 +119,22 @@ pub struct VisionObject {
     pub height: i16,
 }
 
-impl From<pros_sys::vision_object_s_t> for VisionObject {
-    fn from(value: pros_sys::vision_object_s_t) -> Self {
-        Self {
+impl TryFrom<pros_sys::vision_object_s_t> for VisionObject {
+    type Error = VisionError;
+    fn try_from(value: pros_sys::vision_object_s_t) -> Result<VisionObject, VisionError> {
+        if value.signature == VISION_OBJECT_ERR_SIG {
+            bail_errno!();
+            unreachable!("Errno should be non-zero")
+        }
+
+        Ok(Self {
             top: value.top_coord,
             left: value.left_coord,
             middle_x: value.x_middle_coord,
             middle_y: value.y_middle_coord,
             width: value.width,
             height: value.height,
-        }
+        })
     }
 }
 
@@ -148,9 +150,9 @@ impl Rgb {
     }
 }
 
-impl Into<u32> for Rgb {
-    fn into(self) -> u32 {
-        ((self.r as u32) << 16) + ((self.g as u32) << 8) + self.b as u32
+impl From<Rgb> for u32 {
+    fn from(other: Rgb) -> u32 {
+        ((other.r as u32) << 16) + ((other.g as u32) << 8) + other.b as u32
     }
 }
 
@@ -182,28 +184,25 @@ pub enum LedMode {
     Off,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Snafu)]
 pub enum VisionError {
+    #[snafu(display(
+        "The index specified was higher than the total number of objects seen by the camera."
+    ))]
     ReadingFailed,
+    #[snafu(display("The camera could not be read."))]
     IndexTooHigh,
-}
-impl core::error::Error for VisionError {}
-
-impl core::fmt::Display for VisionError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        writeln!(f, "{}", match self {
-            Self::IndexTooHigh => "The index specified was higher than the total number of objects seen by the camera!",
-            Self::ReadingFailed => "The camera could not be read!"
-        })
-    }
+    #[snafu(display("Port already taken."))]
+    PortTaken,
+    #[snafu(display("{source}"), context(false))]
+    Port { source: PortError },
 }
 
-impl crate::error::FromErrno for VisionError {
-    fn from_last_errno() -> Result<(), Self> {
-        match errno::take_err() {
-            pros_sys::EHOSTDOWN => Err(Self::ReadingFailed),
-            pros_sys::EDOM => Err(Self::IndexTooHigh),
-            _ => Ok(()),
-        }
+map_errno! {
+    VisionError {
+        EHOSTDOWN => Self::ReadingFailed,
+        EDOM => Self::IndexTooHigh,
+        EACCES => Self::PortTaken,
     }
+    inherit PortError;
 }

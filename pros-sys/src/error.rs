@@ -3,7 +3,7 @@ use core::ffi::{c_int, c_uint};
 pub const PROS_ERR_BYTE: u8 = u8::MAX;
 pub const PROS_ERR_2_BYTE: u16 = u16::MAX;
 pub const PROS_ERR: i32 = i32::MAX;
-pub const PROS_ERR_F: f32 = f32::INFINITY;
+pub const PROS_ERR_F: f64 = f64::INFINITY;
 pub const PROS_SUCCESS: c_uint = 1;
 
 pub const EPERM: c_int = 1;

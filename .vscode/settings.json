@@ -14,5 +14,6 @@
         "loopspeed",
         "opcontrol",
         "vexlink"
-    ]
+    ],
+    "rust-analyzer.check.allTargets": false,
 }

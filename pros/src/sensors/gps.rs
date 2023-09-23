@@ -1,4 +1,7 @@
-use crate::error::{FromErrno, PortError};
+use pros_sys::PROS_ERR;
+use snafu::Snafu;
+
+use crate::error::{bail_on, map_errno, PortError};
 
 pub struct GpsStatus {
     pub x: f64,
@@ -18,11 +21,13 @@ pub struct GpsSensor {
 }
 
 impl GpsSensor {
-    pub fn new(port: u8) -> Result<Self, PortError> {
+    pub fn new(port: u8) -> Result<Self, GpsError> {
         unsafe {
-            pros_sys::gps_initialize_full(port, 0.0, 0.0, 0.0, 0.0, 0.0);
+            bail_on!(
+                PROS_ERR,
+                pros_sys::gps_initialize_full(port, 0.0, 0.0, 0.0, 0.0, 0.0)
+            );
         }
-        PortError::from_last_errno()?;
 
         Ok(Self { port })
     }
@@ -63,4 +68,19 @@ impl GpsSensor {
             pros_sys::gps_tare_rotation(self.port);
         }
     }
+}
+
+#[derive(Debug, Snafu)]
+pub enum GpsError {
+    #[snafu(display("GPS sensor is still calibrating."))]
+    StillCalibrating,
+    #[snafu(display("{source}"), context(false))]
+    Port { source: PortError },
+}
+
+map_errno! {
+    GpsError {
+        EAGAIN => Self::StillCalibrating,
+    }
+    inherit PortError;
 }

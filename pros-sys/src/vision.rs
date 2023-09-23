@@ -1,6 +1,6 @@
 use core::ffi::c_uint;
 
-pub const VISION_OBJECT_ERR_SIG: c_uint = 255;
+pub const VISION_OBJECT_ERR_SIG: u16 = 255;
 pub const VISION_FOV_WIDTH: c_uint = 316;
 pub const VISION_FOV_HEIGHT: c_uint = 212;
 

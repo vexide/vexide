@@ -5,9 +5,9 @@ use pros::prelude::*;
 
 struct ExampleRobot;
 impl Robot for ExampleRobot {
-    fn opcontrol() {
+    fn opcontrol() -> pros::Result {
         // Create a new motor plugged into port 2. The motor will brake when not moving.
-        let motor = Motor::new(2, pros::motor::BrakeMode::Brake).unwrap();
+        let motor = Motor::new(2, pros::motor::BrakeMode::Brake)?;
         // Create a controller, specifically controller 1.
         let controller = Controller::new(pros::controller::ControllerId::Master);
 
@@ -21,14 +21,10 @@ impl Robot for ExampleRobot {
         pros::lcd::buttons::register_button_callback(
             left_button_callback,
             pros::lcd::buttons::Button::Left,
-        )
-        .unwrap();
+        );
 
         // Spawn a new task that will print whether or not the motor is stopped constantly.
         pros::multitasking::TaskBuilder::new({
-            // Clone the motor to be used in the task.
-            let motor = motor.clone();
-
             move || loop {
                 println!("Motor stopped? {}", motor.get_state().stopped);
 
@@ -43,7 +39,7 @@ impl Robot for ExampleRobot {
         loop {
             // Set the motors output with how far up or down the right joystick is pushed.
             // Set output takes a float from -1 to 1 that is scaled to -12 to 12 volts.
-            motor.set_output(controller.state().joysticks.right.y);
+            motor.set_output(controller.state().joysticks.right.y)?;
 
             // println!("pid out {}", pid.update(10.0, motor.position().into_degrees() as f32));
             println!(
