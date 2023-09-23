@@ -17,13 +17,11 @@ impl ConsoleLcd {
             pros_sys::lcd_initialize();
         }
 
-        let mut writer = Self {
+        Self {
             lines: Default::default(),
             bottom_line_index: V5_SCREEN_HEIGHT - 1,
             current_line: String::new(),
-        };
-
-        writer
+        }
     }
 }
 

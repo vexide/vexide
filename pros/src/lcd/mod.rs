@@ -1,3 +1,5 @@
+use snafu::Snafu;
+
 use crate::multitasking::mutex::Mutex;
 
 #[macro_use]
@@ -12,3 +14,10 @@ lazy_static::lazy_static! {
         Mutex::new(writer::ConsoleLcd::new())
     };
 }
+
+#[derive(Debug, Snafu)]
+pub enum LcdError {
+    #[snafu(display("LCD not initialized"))]
+    NotInitialized,
+}
+impl core::error::Error for LcdError {}

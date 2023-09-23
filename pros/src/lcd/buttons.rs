@@ -26,9 +26,9 @@ pub enum Button {
 }
 
 pub struct ButtonCallbacks {
-    pub left_cb: Option<Box<dyn Fn() -> () + Send>>,
-    pub middle_cb: Option<Box<dyn Fn() -> () + Send>>,
-    pub right_cb: Option<Box<dyn Fn() -> () + Send>>,
+    pub left_cb: Option<Box<dyn Fn() + Send>>,
+    pub middle_cb: Option<Box<dyn Fn() + Send>>,
+    pub right_cb: Option<Box<dyn Fn() + Send>>,
 }
 
 lazy_static::lazy_static! {
@@ -39,10 +39,12 @@ lazy_static::lazy_static! {
     });
 }
 
-pub fn register_button_callback(
-    cb: impl Fn() -> () + 'static + Send,
-    button: Button,
-) -> Result<(), ()> {
+// this needs to return errors
+pub fn register_button_callback(cb: impl Fn() + 'static + Send, button: Button) {
+    unsafe {
+        pros_sys::lcd_initialize();
+    }
+
     extern "C" fn button_0_cb() {
         if let Some(cb) = &BUTTON_CALLBACKS.lock().left_cb {
             cb();
@@ -61,26 +63,20 @@ pub fn register_button_callback(
         }
     }
 
-    match button {
+    if !match button {
         Button::Left => {
             BUTTON_CALLBACKS.lock().left_cb = Some(Box::new(cb));
-            unsafe {
-                pros_sys::lcd_register_btn0_cb(Some(button_0_cb));
-            }
+            unsafe { pros_sys::lcd_register_btn0_cb(Some(button_0_cb)) }
         }
         Button::Middle => {
             BUTTON_CALLBACKS.lock().middle_cb = Some(Box::new(cb));
-            unsafe {
-                pros_sys::lcd_register_btn1_cb(Some(button_1_cb));
-            }
+            unsafe { pros_sys::lcd_register_btn1_cb(Some(button_1_cb)) }
         }
         Button::Right => {
             BUTTON_CALLBACKS.lock().right_cb = Some(Box::new(cb));
-            unsafe {
-                pros_sys::lcd_register_btn2_cb(Some(button_2_cb));
-            }
+            unsafe { pros_sys::lcd_register_btn2_cb(Some(button_2_cb)) }
         }
+    } {
+        panic!("Setting button callback failed, even though lcd initialization was attempted.");
     }
-
-    Ok(())
 }

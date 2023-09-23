@@ -1,5 +1,7 @@
+use pros_sys::PROS_ERR;
+
 use crate::{
-    error::{FromErrno, PortError},
+    error::{bail_on, PortError},
     position::Position,
 };
 
@@ -11,11 +13,9 @@ pub struct RotationSensor {
 impl RotationSensor {
     pub fn new(port: u8, reversed: bool) -> Result<Self, PortError> {
         unsafe {
-            pros_sys::rotation_reset_position(port);
-
-            pros_sys::rotation_set_reversed(port, reversed);
+            bail_on!(PROS_ERR, pros_sys::rotation_reset_position(port));
+            bail_on!(PROS_ERR, pros_sys::rotation_set_reversed(port, reversed));
         }
-        PortError::from_last_errno()?;
 
         Ok(Self { port, reversed })
     }

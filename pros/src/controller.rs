@@ -86,114 +86,46 @@ impl Controller {
             },
             buttons: unsafe {
                 Buttons {
-                    a: if pros_sys::controller_get_digital(
-                        self.id,
-                        pros_sys::E_CONTROLLER_DIGITAL_A,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    b: if pros_sys::controller_get_digital(
-                        self.id,
-                        pros_sys::E_CONTROLLER_DIGITAL_B,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    x: if pros_sys::controller_get_digital(
-                        self.id,
-                        pros_sys::E_CONTROLLER_DIGITAL_X,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    y: if pros_sys::controller_get_digital(
-                        self.id,
-                        pros_sys::E_CONTROLLER_DIGITAL_Y,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    up: if pros_sys::controller_get_digital(
+                    a: pros_sys::controller_get_digital(self.id, pros_sys::E_CONTROLLER_DIGITAL_A)
+                        == 1,
+                    b: pros_sys::controller_get_digital(self.id, pros_sys::E_CONTROLLER_DIGITAL_B)
+                        == 1,
+                    x: pros_sys::controller_get_digital(self.id, pros_sys::E_CONTROLLER_DIGITAL_X)
+                        == 1,
+                    y: pros_sys::controller_get_digital(self.id, pros_sys::E_CONTROLLER_DIGITAL_Y)
+                        == 1,
+                    up: pros_sys::controller_get_digital(
                         self.id,
                         pros_sys::E_CONTROLLER_DIGITAL_UP,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    down: if pros_sys::controller_get_digital(
+                    ) == 1,
+                    down: pros_sys::controller_get_digital(
                         self.id,
                         pros_sys::E_CONTROLLER_DIGITAL_DOWN,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    left: if pros_sys::controller_get_digital(
+                    ) == 1,
+                    left: pros_sys::controller_get_digital(
                         self.id,
                         pros_sys::E_CONTROLLER_DIGITAL_LEFT,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    right: if pros_sys::controller_get_digital(
+                    ) == 1,
+                    right: pros_sys::controller_get_digital(
                         self.id,
                         pros_sys::E_CONTROLLER_DIGITAL_RIGHT,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    left_trigger_1: if pros_sys::controller_get_digital(
+                    ) == 1,
+                    left_trigger_1: pros_sys::controller_get_digital(
                         self.id,
                         pros_sys::E_CONTROLLER_DIGITAL_L1,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    left_trigger_2: if pros_sys::controller_get_digital(
+                    ) == 1,
+                    left_trigger_2: pros_sys::controller_get_digital(
                         self.id,
                         pros_sys::E_CONTROLLER_DIGITAL_L2,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    right_trigger_1: if pros_sys::controller_get_digital(
+                    ) == 1,
+                    right_trigger_1: pros_sys::controller_get_digital(
                         self.id,
                         pros_sys::E_CONTROLLER_DIGITAL_R1,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
-                    right_trigger_2: if pros_sys::controller_get_digital(
+                    ) == 1,
+                    right_trigger_2: pros_sys::controller_get_digital(
                         self.id,
                         pros_sys::E_CONTROLLER_DIGITAL_R2,
-                    ) == 1
-                    {
-                        true
-                    } else {
-                        false
-                    },
+                    ) == 1,
                 }
             },
         }

@@ -1,6 +1,8 @@
 #![feature(error_in_core)]
 #![cfg_attr(not(target_arch = "wasm32"), no_std)]
 
+extern crate alloc;
+
 pub mod controller;
 pub mod error;
 pub mod motor;
@@ -23,14 +25,25 @@ pub mod lcd;
 pub mod lvgl;
 
 pub mod adi;
-pub(crate) mod errno;
+
+pub type Result = core::result::Result<(), alloc::boxed::Box<dyn core::error::Error>>;
 
 pub trait Robot {
-    fn opcontrol() {}
-    fn auto() {}
-    fn init() {}
-    fn disabled() {}
-    fn comp_init() {}
+    fn opcontrol() -> Result {
+        Ok(())
+    }
+    fn auto() -> Result {
+        Ok(())
+    }
+    fn init() -> Result {
+        Ok(())
+    }
+    fn disabled() -> Result {
+        Ok(())
+    }
+    fn comp_init() -> Result {
+        Ok(())
+    }
 }
 
 #[macro_export]
@@ -38,27 +51,27 @@ macro_rules! robot {
     ($rbt:ty) => {
         #[no_mangle]
         extern "C" fn opcontrol() {
-            <$rbt as $crate::Robot>::opcontrol();
+            <$rbt as $crate::Robot>::opcontrol().unwrap();
         }
 
         #[no_mangle]
         extern "C" fn autonomous() {
-            <$rbt as $crate::Robot>::auto();
+            <$rbt as $crate::Robot>::auto().unwrap();
         }
 
         #[no_mangle]
         extern "C" fn initialize() {
-            <$rbt as $crate::Robot>::init();
+            <$rbt as $crate::Robot>::init().unwrap();
         }
 
         #[no_mangle]
         extern "C" fn disabled() {
-            <$rbt as $crate::Robot>::disabled();
+            <$rbt as $crate::Robot>::disabled().unwrap();
         }
 
         #[no_mangle]
         extern "C" fn competition_initialize() {
-            <$rbt as $crate::Robot>::comp_init();
+            <$rbt as $crate::Robot>::comp_init().unwrap();
         }
     };
 }
