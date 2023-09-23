@@ -77,6 +77,7 @@ pub enum GpsError {
     #[snafu(display("{source}"), context(false))]
     Port { source: PortError },
 }
+impl core::error::Error for GpsError {}
 
 map_errno! {
     GpsError {

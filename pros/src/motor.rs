@@ -223,6 +223,7 @@ pub enum MotorError {
     #[snafu(display("{source}"), context(false))]
     Port { source: PortError },
 }
+impl core::error::Error for MotorError {}
 
 map_errno! {
     MotorError {}

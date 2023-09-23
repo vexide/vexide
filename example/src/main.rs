@@ -12,8 +12,7 @@ impl Robot for ExampleRobot {
         let controller = Controller::new(pros::controller::ControllerId::Master);
 
         let mut vision =
-            sensors::vision::VisionSensor::new(9, sensors::vision::VisionZeroPoint::Center)
-                .unwrap();
+            sensors::vision::VisionSensor::new(9, sensors::vision::VisionZeroPoint::Center)?;
         vision.set_led(sensors::vision::LedMode::On(sensors::vision::Rgb::new(
             0, 0, 255,
         )));
@@ -44,7 +43,7 @@ impl Robot for ExampleRobot {
             // println!("pid out {}", pid.update(10.0, motor.position().into_degrees() as f32));
             println!(
                 "Vision objs {}",
-                vision.nth_largest_object(0).unwrap().middle_x
+                vision.nth_largest_object(0)?.middle_x
             );
 
             // Once again, sleep.

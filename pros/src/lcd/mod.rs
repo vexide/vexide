@@ -20,3 +20,4 @@ pub enum LcdError {
     #[snafu(display("LCD not initialized"))]
     NotInitialized,
 }
+impl core::error::Error for LcdError {}
