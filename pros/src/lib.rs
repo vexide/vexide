@@ -78,7 +78,6 @@ macro_rules! robot {
 
 pub mod prelude {
     pub use crate::robot;
-    pub use crate::Result;
     pub use crate::Robot;
 
     pub use crate::controller::{Controller, ControllerId};
