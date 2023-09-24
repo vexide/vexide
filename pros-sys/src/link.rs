@@ -129,7 +129,7 @@ extern "C" {
     \return PROS_ERR if port is not a link, and the successfully transmitted
     data size if it succeeded.
     */
-    pub fn link_transmit_raw(port: u8, data: *mut core::ffi::c_void, data_size: u16) -> u32;
+    pub fn link_transmit_raw(port: u8, data: *const core::ffi::c_void, data_size: u16) -> u32;
     /**
     Receive raw serial data through vexlink.
 
@@ -174,7 +174,7 @@ extern "C" {
     \return PROS_ERR if port is not a link, and the successfully transmitted
     data size if it succeeded.
     */
-    pub fn link_transmit(port: u8, data: *mut core::ffi::c_void, data_size: u16) -> u32;
+    pub fn link_transmit(port: u8, data: *const core::ffi::c_void, data_size: u16) -> u32;
     /**
     Receive packeted message through vexlink, with a checksum and start byte.
 

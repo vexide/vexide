@@ -25,6 +25,7 @@ pub mod lcd;
 pub mod lvgl;
 
 pub mod adi;
+pub mod link;
 
 pub type Result = core::result::Result<(), alloc::boxed::Box<dyn core::error::Error>>;
 

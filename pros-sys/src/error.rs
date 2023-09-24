@@ -41,3 +41,4 @@ pub const EPIPE: c_int = 32;
 pub const EDOM: c_int = 33;
 pub const ERANGE: c_int = 34;
 pub const EHOSTDOWN: c_int = 112;
+pub const EBADMSG: c_int = 74;

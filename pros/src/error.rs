@@ -84,7 +84,8 @@ pub enum PortError {
     #[snafu(display("The port you specified is outside of the allowed range!"))]
     PortOutOfRange,
     #[snafu(display(
-        "The port you specified couldn't be configured as what you specified.\n Is something else plugged in?"
+        // used to have "Is something else plugged in?" But the vex radio (link) uses the same errno, so that's not always applicable.
+        "The port you specified couldn't be configured as what you specified." 
     ))]
     PortCannotBeConfigured,
 }
