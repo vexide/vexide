@@ -25,8 +25,7 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
   * [X] Rotational
   * [X] Vision
 * [X] Controllers
-* [ ] Link
-* [ ] Serial
+* [X] Link
 
 ## API
 
@@ -45,4 +44,6 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
 ## Non essential
 
 * [ ] Drivetrain
-* [ ] LVGL bindings (pros-sys)
+* [ ] Xapi bindings
+  * [ ] LVGL bindings
+  * [X] Serial bindings (pros-sys)
