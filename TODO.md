@@ -24,7 +24,9 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
   * [ ] Optical
   * [X] Rotational
   * [X] Vision
-* [X] Controllers
+* [ ] Controllers
+  * [X] Controller data 
+  * [ ] Controller printing
 * [X] Link
 
 ## API
