@@ -23,17 +23,13 @@ impl Robot for ExampleRobot {
         );
 
         // Spawn a new task that will print whether or not the motor is stopped constantly.
-        pros::multitasking::TaskBuilder::new({
-            move || loop {
-                println!("Motor stopped? {}", motor.get_state().stopped);
+        pros::task::spawn(move || loop {
+            println!("Motor stopped? {}", motor.get_state().stopped);
 
-                // Sleep the task as to not steal processing time from the OS.
-                // This should always be done in any loop, including loops in the main task.
-                pros::multitasking::sleep(core::time::Duration::from_millis(20));
-            }
-        })
-        .name("Print Task")
-        .build();
+            // Sleep the task as to not steal processing time from the OS.
+            // This should always be done in any loop, including loops in the main task.
+            pros::task::sleep(core::time::Duration::from_millis(20));
+        });
 
         loop {
             // Set the motors output with how far up or down the right joystick is pushed.
@@ -41,13 +37,10 @@ impl Robot for ExampleRobot {
             motor.set_output(controller.state().joysticks.right.y)?;
 
             // println!("pid out {}", pid.update(10.0, motor.position().into_degrees() as f32));
-            println!(
-                "Vision objs {}",
-                vision.nth_largest_object(0)?.middle_x
-            );
+            println!("Vision objs {}", vision.nth_largest_object(0)?.middle_x);
 
             // Once again, sleep.
-            pros::multitasking::sleep(core::time::Duration::from_millis(20));
+            pros::task::sleep(core::time::Duration::from_millis(20));
         }
     }
 }

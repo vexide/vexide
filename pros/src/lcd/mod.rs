@@ -1,6 +1,6 @@
 use snafu::Snafu;
 
-use crate::multitasking::mutex::Mutex;
+use crate::sync::Mutex;
 
 #[macro_use]
 pub mod macros;

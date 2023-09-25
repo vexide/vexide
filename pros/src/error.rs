@@ -60,6 +60,7 @@ pub(crate) use bail_errno;
 macro_rules! bail_on {
     ($err_state:expr, $val:expr) => {{
         let val = $val;
+        #[allow(clippy::cmp_null)]
         if val == $err_state {
             let errno = $crate::error::take_errno();
             let err = $crate::error::FromErrno::from_errno(errno)
@@ -85,7 +86,7 @@ pub enum PortError {
     PortOutOfRange,
     #[snafu(display(
         // used to have "Is something else plugged in?" But the vex radio (link) uses the same errno, so that's not always applicable.
-        "The port you specified couldn't be configured as what you specified." 
+        "The port you specified couldn't be configured as what you specified."
     ))]
     PortCannotBeConfigured,
 }

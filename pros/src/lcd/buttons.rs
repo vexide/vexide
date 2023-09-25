@@ -2,7 +2,7 @@ extern crate alloc;
 
 use alloc::boxed::Box;
 
-use crate::multitasking::mutex::Mutex;
+use crate::sync::Mutex;
 
 pub struct ButtonsState {
     pub left_pressed: bool,
