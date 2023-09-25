@@ -6,10 +6,11 @@ extern crate alloc;
 pub mod controller;
 pub mod error;
 pub mod motor;
-pub mod multitasking;
 pub mod pid;
 pub mod position;
 pub mod sensors;
+pub mod sync;
+pub mod task;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod vexos_env;

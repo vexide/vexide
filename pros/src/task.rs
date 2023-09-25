@@ -1,60 +1,76 @@
 extern crate alloc;
 use core::ffi::c_void;
 
-/// Represents a task
-pub struct Task {
-    task: pros_sys::task_t,
+use snafu::Snafu;
+
+use crate::error::{bail_on, map_errno};
+
+/// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
+/// Takes in a closure that can move variables if needed.
+/// If your task has a loop it is advised to use [`sleep(duration)`](sleep) so that the task does not take up necessary system resources.
+/// Tasks should be long-living; starting many tasks can be slow and is usually not necessary.
+pub fn spawn<F>(f: F) -> TaskHandle
+where
+    F: FnOnce() + Send + 'static,
+{
+    Builder::new().spawn(f).expect("Failed to spawn task")
 }
 
-impl Task {
-    /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
-    /// Takes in a closure that can move variables if needed.
-    /// If your task has a loop it is advised to use [`sleep(duration)`](sleep) so that the task does not take up necessary system resources.
-    /// Tasks should be long-living; starting many tasks can be slow and is usually not necessary.
-    pub fn spawn<F: FnOnce() + Send>(
-        function: F,
-        priority: TaskPriority,
-        stack_depth: TaskStackDepth,
-        name: Option<&str>,
-    ) -> Self {
-        let mut entrypoint = TaskEntrypoint { function };
-        let name = alloc::ffi::CString::new(name.unwrap_or(""))
-            .unwrap()
-            .into_raw();
-        unsafe {
-            let task = pros_sys::task_create(
+fn spawn_inner<F: FnOnce() + Send + 'static>(
+    function: F,
+    priority: TaskPriority,
+    stack_depth: TaskStackDepth,
+    name: Option<&str>,
+) -> Result<TaskHandle, SpawnError> {
+    let mut entrypoint = TaskEntrypoint { function };
+    let name = alloc::ffi::CString::new(name.unwrap_or("<unnamed>"))
+        .unwrap()
+        .into_raw();
+    unsafe {
+        let task = bail_on!(
+            core::ptr::null(),
+            pros_sys::task_create(
                 Some(TaskEntrypoint::<F>::cast_and_call_external),
                 &mut entrypoint as *mut _ as *mut c_void,
                 priority as _,
                 stack_depth as _,
                 name,
-            );
+            )
+        );
 
-            _ = alloc::ffi::CString::from_raw(name);
-            Self { task }
-        }
+        _ = alloc::ffi::CString::from_raw(name);
+        Ok(TaskHandle { task })
     }
+}
 
-    /// Pause execution of this task.
-    /// This can have unintended consiquences if you are not carefull,
-    /// for example, if this task is holding a mutex when paused, there is no way to retrieve it untill the task is unpaused.
+/// An owned permission to perform actions on a task.
+#[derive(Clone, PartialEq, Eq)]
+pub struct TaskHandle {
+    task: pros_sys::task_t,
+}
+unsafe impl Send for TaskHandle {}
+
+impl TaskHandle {
+    /// Pause execution of the task.
+    /// This can have unintended consequences if you are not careful,
+    /// for example, if this task is holding a mutex when paused, there is no way to retrieve it until the task is unpaused.
     pub fn pause(&self) {
         unsafe {
             pros_sys::task_suspend(self.task);
         }
     }
 
-    /// Enables the task for execution again.
+    /// Resumes execution of the task.
     pub fn unpause(&self) {
         unsafe {
             pros_sys::task_resume(self.task);
         }
     }
 
-    /// Sets the priority.
-    pub fn set_priority(&self, priority: TaskPriority) {
+    /// Sets the task's priority, allowing you to control how much cpu time is allocated to it.
+    pub fn set_priority(&self, priority: impl Into<u32>) {
         unsafe {
-            pros_sys::task_set_priority(self.task, priority as _);
+            pros_sys::task_set_priority(self.task, priority.into());
         }
     }
 
@@ -77,31 +93,26 @@ impl Task {
         }
     }
 
-    /// Deletes the task and consumes it.
-    pub fn delete(self) {
+    /// Aborts the task and consumes it. Memory allocated by the task will not be freed.
+    pub fn abort(self) {
         unsafe {
             pros_sys::task_delete(self.task);
         }
     }
 }
 
-/// An ergonomic builder for tasks. Alternatively you can use [`Task::spawn`](crate::multitasking::Task::spawn).
-pub struct TaskBuilder<'a, F: FnOnce() + Send> {
+/// An ergonomic builder for tasks. Alternatively you can use [`spawn`].
+#[derive(Default)]
+pub struct Builder<'a> {
     name: Option<&'a str>,
     priority: Option<TaskPriority>,
     stack_depth: Option<TaskStackDepth>,
-    function: F,
 }
 
-impl<'a, F: FnOnce() + Send> TaskBuilder<'a, F> {
+impl<'a> Builder<'a> {
     /// Creates a task builder.
-    pub fn new(function: F) -> Self {
-        Self {
-            name: None,
-            priority: None,
-            stack_depth: None,
-            function,
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Sets the name of the task, this is useful for debugging.
@@ -117,16 +128,19 @@ impl<'a, F: FnOnce() + Send> TaskBuilder<'a, F> {
     }
 
     /// Sets how large the stack for the task is.
-    /// This can usually be set to defualt
+    /// This can usually be set to default
     pub fn stack_depth(mut self, stack_depth: TaskStackDepth) -> Self {
         self.stack_depth = Some(stack_depth);
         self
     }
 
     /// Builds and spawns the task
-    pub fn build(self) -> Task {
-        Task::spawn(
-            self.function,
+    pub fn spawn<F>(self, function: F) -> Result<TaskHandle, SpawnError>
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        spawn_inner(
+            function,
             self.priority.unwrap_or_default(),
             self.stack_depth.unwrap_or_default(),
             self.name,
@@ -136,17 +150,18 @@ impl<'a, F: FnOnce() + Send> TaskBuilder<'a, F> {
 
 /// Represents the current state of a task.
 pub enum TaskState {
-    /// The task is running as normal
+    /// The task is currently utilizing the processor
     Running,
-    /// Unknown to me at the moment
+    /// The task is currently yielding but may run in the future
     Ready,
-    /// The task is blocked
+    /// The task is blocked. For example, it may be [`sleep`]ing or waiting on a mutex.
+    /// Tasks that are in this state will usually return to the task queue after a set timeout.
     Blocked,
-    /// The task is suspended
+    /// The task is suspended. For example, it may be waiting on a mutex or semaphore.
     Suspended,
-    /// The task has been deleted
+    /// The task has been deleted using [`TaskHandle::abort`].
     Deleted,
-    /// The tasks state is invalid somehow
+    /// The task's state is invalid somehow
     Invalid,
 }
 
@@ -179,7 +194,13 @@ impl Default for TaskPriority {
     }
 }
 
-/// Reprsents how large of a stack the task should get.
+impl From<TaskPriority> for u32 {
+    fn from(val: TaskPriority) -> Self {
+        val as u32
+    }
+}
+
+/// Represents how large of a stack the task should get.
 /// Tasks that don't have any or many variables and/or don't need floats can use the low stack depth option.
 #[repr(u32)]
 pub enum TaskStackDepth {
@@ -208,23 +229,35 @@ where
     }
 }
 
+#[derive(Debug, Snafu)]
+pub enum SpawnError {
+    #[snafu(display("The stack cannot be used as the TCB was not created."))]
+    TCBNotCreated,
+}
+
+map_errno! {
+    SpawnError {
+        ENOMEM => SpawnError::TCBNotCreated,
+    }
+}
+
 /// Sleeps the current task for the given amount of time.
-/// Useful for when using loops in tasks.
+/// This is especially useful in loops to provide a chance for other tasks to run.
 pub fn sleep(duration: core::time::Duration) {
     unsafe { pros_sys::delay(duration.as_millis() as u32) }
 }
 
 /// Returns the task the function was called from.
-pub fn get_current_task() -> Task {
+pub fn current() -> TaskHandle {
     unsafe {
-        Task {
+        TaskHandle {
             task: pros_sys::task_get_current(),
         }
     }
 }
 
 /// Gets the first notification in the queue.
-/// If there is none, blocks untill a notification is recieved.
+/// If there is none, blocks until a notification is received.
 /// I am unsure what happens if the thread is unblocked while waiting.
 /// returns the value of the notification
 pub fn get_notification() -> u32 {
