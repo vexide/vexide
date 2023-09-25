@@ -80,6 +80,8 @@ impl Link<true> {
 }
 
 impl Link<false> {
+    // I have literally no idea what the purpose of this is,
+    // there is no way to push to the transmission buffer without transmitting it.
     pub fn num_outgoing_bytes(&self) -> Result<u32, LinkError> {
         let num = unsafe {
             bail_on!(

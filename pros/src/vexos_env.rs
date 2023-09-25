@@ -7,7 +7,15 @@ use core::{
 #[panic_handler]
 pub fn panic(_info: &PanicInfo) -> ! {
     println!("Panicked! {_info}");
-    loop {}
+    let panicking_task = crate::task::current();
+    // Make sure we eat up every cycle to stop execution
+    panicking_task.set_priority(crate::task::TaskPriority::High);
+    loop {
+        core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+        unsafe {
+            core::arch::arm::__nop();
+        }
+    }
 }
 
 struct Allocator;

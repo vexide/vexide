@@ -20,7 +20,7 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
 * [ ] Sensors
   * [X] Distance
   * [X] GPS
-  * [ ] Inertial
+  * [ ] Inertial (IMU)
   * [ ] Optical
   * [X] Rotational
   * [X] Vision
