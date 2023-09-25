@@ -5,6 +5,8 @@
 #![allow(dead_code)]
 
 pub mod adi;
+#[cfg(feature = "xapi")]
+pub mod apix;
 pub mod colors;
 pub mod distance;
 pub mod error;
