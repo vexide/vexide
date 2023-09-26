@@ -2,11 +2,15 @@
 
 use core::ffi::CStr;
 
-use alloc::{ffi::CString, string::String};
+use alloc::{
+    ffi::CString,
+    string::{String, ToString},
+};
+use no_std_io::io;
 use pros_sys::{link::E_LINK_RECEIVER, link_receive, link_transmit, E_LINK_TRANSMITTER};
 use snafu::Snafu;
 
-use crate::error::{bail_on, map_errno, FromErrno, PortError};
+use crate::error::{bail_errno, bail_on, map_errno, FromErrno, PortError};
 
 pub trait Link {
     fn port(&self) -> u8;
@@ -52,9 +56,8 @@ impl RxLink {
 
         match unsafe { link_receive(self.port, buf.as_mut_ptr().cast(), buf.len() as _) } {
             PROS_ERR_U32 => {
-                let errno = crate::error::take_errno();
-                Err(FromErrno::from_errno(errno)
-                    .unwrap_or_else(|| panic!("Unknown errno code {errno}")))
+                bail_errno!();
+                unreachable!("Expected errno to be set");
             }
             0 => Err(LinkError::Busy),
             n => Ok(n),
@@ -82,6 +85,15 @@ impl Link for RxLink {
             )
         };
         Ok(Self { port, id })
+    }
+}
+
+impl io::Read for RxLink {
+    fn read(&mut self, dst: &mut [u8]) -> io::Result<usize> {
+        let bytes_read = self
+            .receive(dst)
+            .map_err(|_| io::Error::new(io::ErrorKind::Other, "failed to read from link"))?;
+        Ok(bytes_read as _)
     }
 }
 
@@ -116,6 +128,18 @@ impl TxLink {
             0 => Err(LinkError::Busy),
             n => Ok(n),
         }
+    }
+}
+
+impl io::Write for TxLink {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let bytes_written = self
+            .transmit(buf)
+            .map_err(|_| io::Error::new(io::ErrorKind::Other, "failed to write to link"))?;
+        Ok(bytes_written as _)
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
     }
 }
 

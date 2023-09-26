@@ -17,6 +17,7 @@ pros-sys = { version = "0.2.1", path = "../pros-sys" }
 snafu = { version = "0.7.5", default-features = false, features = [
     "rust_1_61",
 ] }
+no_std_io = { version = "0.6.0", features = ["alloc"] }
 
 [features]
 lvgl = ["pros-sys/xapi"]
