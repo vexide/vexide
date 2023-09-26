@@ -1,47 +1,30 @@
-use alloc::string::String;
-use pros_sys::{link_receive, link_transmit};
+//! Connect to VEXLink for robot-to-robot communication.
+
+use core::ffi::CStr;
+
+use alloc::{ffi::CString, string::String};
+use pros_sys::{link::E_LINK_RECEIVER, link_receive, link_transmit, E_LINK_TRANSMITTER};
 use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, FromErrno, PortError};
 
-#[derive(Clone, Copy)]
-#[repr(u32)]
-enum LinkType {
-    Receiver = pros_sys::E_LINK_RECEIVER,
-    Transmitter = pros_sys::E_LINK_TRANSMITTER,
-}
-
-pub struct Link<const RECEIVER: bool> {
-    pub port: u8,
-    pub id: String,
-}
-
-impl<const RECEIVER: bool> Link<{ RECEIVER }> {
-    pub fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
-        let link_type = match RECEIVER {
-            true => LinkType::Receiver,
-            false => LinkType::Transmitter,
-        };
-
-        unsafe {
-            bail_on!(
-                pros_sys::PROS_ERR as _,
-                if vexlink_override {
-                    pros_sys::link_init(port, id.as_ptr().cast(), link_type as _)
-                } else {
-                    pros_sys::link_init_override(port, id.as_ptr().cast(), link_type as _)
-                }
-            )
-        };
-        Ok(Self { port, id })
+pub trait Link {
+    fn port(&self) -> u8;
+    fn id(&self) -> &CStr;
+    fn connected(&self) -> bool {
+        unsafe { pros_sys::link_connected(self.port()) }
     }
-
-    pub fn connected(&self) -> bool {
-        unsafe { pros_sys::link_connected(self.port) }
-    }
+    fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError>
+    where
+        Self: Sized;
 }
 
-impl Link<true> {
+pub struct RxLink {
+    port: u8,
+    id: CString,
+}
+
+impl RxLink {
     pub fn num_incoming_bytes(&self) -> Result<u32, LinkError> {
         let num = unsafe {
             bail_on!(
@@ -79,7 +62,35 @@ impl Link<true> {
     }
 }
 
-impl Link<false> {
+impl Link for RxLink {
+    fn id(&self) -> &CStr {
+        &self.id
+    }
+    fn port(&self) -> u8 {
+        self.port
+    }
+    fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
+        let id = CString::new(id).unwrap();
+        unsafe {
+            bail_on!(
+                pros_sys::PROS_ERR as _,
+                if vexlink_override {
+                    pros_sys::link_init(port, id.as_ptr().cast(), E_LINK_RECEIVER)
+                } else {
+                    pros_sys::link_init_override(port, id.as_ptr().cast(), E_LINK_RECEIVER)
+                }
+            )
+        };
+        Ok(Self { port, id })
+    }
+}
+
+pub struct TxLink {
+    port: u8,
+    id: CString,
+}
+
+impl TxLink {
     // I have literally no idea what the purpose of this is,
     // there is no way to push to the transmission buffer without transmitting it.
     pub fn num_outgoing_bytes(&self) -> Result<u32, LinkError> {
@@ -105,6 +116,29 @@ impl Link<false> {
             0 => Err(LinkError::Busy),
             n => Ok(n),
         }
+    }
+}
+
+impl Link for TxLink {
+    fn id(&self) -> &CStr {
+        &self.id
+    }
+    fn port(&self) -> u8 {
+        self.port
+    }
+    fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
+        let id = CString::new(id).unwrap();
+        unsafe {
+            bail_on!(
+                pros_sys::PROS_ERR as _,
+                if vexlink_override {
+                    pros_sys::link_init(port, id.as_ptr().cast(), E_LINK_TRANSMITTER)
+                } else {
+                    pros_sys::link_init_override(port, id.as_ptr().cast(), E_LINK_TRANSMITTER)
+                }
+            )
+        };
+        Ok(Self { port, id })
     }
 }
 
