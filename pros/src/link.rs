@@ -7,19 +7,19 @@ use crate::error::{bail_on, map_errno, FromErrno, PortError};
 #[derive(Clone, Copy)]
 #[repr(u32)]
 enum LinkType {
-    Reciever = pros_sys::E_LINK_RECEIVER,
+    Receiver = pros_sys::E_LINK_RECEIVER,
     Transmitter = pros_sys::E_LINK_TRANSMITTER,
 }
 
-pub struct Link<const RECIEVER: bool> {
+pub struct Link<const RECEIVER: bool> {
     pub port: u8,
     pub id: String,
 }
 
-impl<const RECIEVER: bool> Link<{ RECIEVER }> {
+impl<const RECEIVER: bool> Link<{ RECEIVER }> {
     pub fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
-        let link_type = match RECIEVER {
-            true => LinkType::Reciever,
+        let link_type = match RECEIVER {
+            true => LinkType::Receiver,
             false => LinkType::Transmitter,
         };
 
@@ -64,7 +64,7 @@ impl Link<true> {
         Ok(())
     }
 
-    pub fn recieve(&self, buf: &mut [u8]) -> Result<u32, LinkError> {
+    pub fn receive(&self, buf: &mut [u8]) -> Result<u32, LinkError> {
         const PROS_ERR_U32: u32 = pros_sys::PROS_ERR as _;
 
         match unsafe { link_receive(self.port, buf.as_mut_ptr().cast(), buf.len() as _) } {
