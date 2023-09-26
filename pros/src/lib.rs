@@ -1,5 +1,4 @@
-#![feature(error_in_core)]
-#![cfg_attr(not(target_arch = "wasm32"), feature(stdsimd))]
+#![feature(error_in_core, stdsimd)]
 #![cfg_attr(not(target_arch = "wasm32"), no_std)]
 
 extern crate alloc;
