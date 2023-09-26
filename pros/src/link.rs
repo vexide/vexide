@@ -2,10 +2,7 @@
 
 use core::ffi::CStr;
 
-use alloc::{
-    ffi::CString,
-    string::{String, ToString},
-};
+use alloc::{ffi::CString, string::String};
 use no_std_io::io;
 use pros_sys::{link::E_LINK_RECEIVER, link_receive, link_transmit, E_LINK_TRANSMITTER};
 use snafu::Snafu;
