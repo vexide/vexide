@@ -1,4 +1,4 @@
-use core::task::Poll;
+use core::{cell::UnsafeCell, fmt::Debug, mem};
 
 use crate::error::take_errno;
 
@@ -6,7 +6,7 @@ use crate::error::take_errno;
 /// Mutexes are used to share variables between tasks safely.
 pub struct Mutex<T> {
     pros_mutex: pros_sys::mutex_t,
-    data: core::cell::UnsafeCell<T>,
+    data: Option<UnsafeCell<T>>,
 }
 unsafe impl<T: Send> Send for Mutex<T> {}
 unsafe impl<T> Sync for Mutex<T> {}
@@ -18,7 +18,7 @@ impl<T> Mutex<T> {
 
         Self {
             pros_mutex,
-            data: core::cell::UnsafeCell::new(data),
+            data: Some(UnsafeCell::new(data)),
         }
     }
 
@@ -32,12 +32,19 @@ impl<T> Mutex<T> {
         MutexGuard { mutex: self }
     }
 
-    pub fn lock_poll(&self) -> Poll<MutexGuard<T>> {
-        if unsafe { pros_sys::mutex_take(self.pros_mutex, 0) } {
-            Poll::Ready(MutexGuard { mutex: self })
-        } else {
-            Poll::Pending
-        }
+    /// Attempts to acquire this lock. This function does not block.
+    pub fn try_lock(&self) -> Option<MutexGuard<T>> {
+        let success = unsafe { pros_sys::mutex_take(self.pros_mutex, 0) };
+        success.then(|| MutexGuard::new(self))
+    }
+
+    pub fn into_inner(mut self) -> T {
+        let data = mem::take(&mut self.data).unwrap();
+        data.into_inner()
+    }
+
+    pub fn get_mut(&mut self) -> &mut T {
+        self.data.as_mut().unwrap().get_mut()
     }
 }
 
@@ -49,22 +56,64 @@ impl<T> Drop for Mutex<T> {
     }
 }
 
+impl<T> Debug for Mutex<T>
+where
+    T: Debug,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        struct Placeholder;
+        impl Debug for Placeholder {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.write_str("<locked>")
+            }
+        }
+
+        let mut d = f.debug_struct("Mutex");
+        match self.try_lock() {
+            Some(guard) => d.field("data", &&*guard),
+            None => d.field("data", &Placeholder),
+        };
+        d.finish_non_exhaustive()
+    }
+}
+
+impl<T> Default for Mutex<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        Self::new(T::default())
+    }
+}
+
+impl<T> From<T> for Mutex<T> {
+    fn from(value: T) -> Self {
+        Self::new(value)
+    }
+}
+
 /// Allows the user to access the data from a locked mutex.
 /// Dereference to get the inner data.
 pub struct MutexGuard<'a, T> {
     mutex: &'a Mutex<T>,
 }
 
+impl<'a, T> MutexGuard<'a, T> {
+    fn new(mutex: &'a Mutex<T>) -> Self {
+        Self { mutex }
+    }
+}
+
 impl<T> core::ops::Deref for MutexGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
-        unsafe { &*self.mutex.data.get() }
+        unsafe { &*self.mutex.data.as_ref().unwrap().get() }
     }
 }
 
 impl<T> core::ops::DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.mutex.data.get() }
+        unsafe { &mut *self.mutex.data.as_ref().unwrap().get() }
     }
 }
 
