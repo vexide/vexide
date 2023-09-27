@@ -1,3 +1,5 @@
+use core::task::Poll;
+
 use crate::error::take_errno;
 
 /// The basic mutex type.
@@ -22,10 +24,20 @@ impl<T> Mutex<T> {
 
     /// Locks the mutex so that it cannot be locked in another task at the same time.
     /// Blocks the current task until the lock is acquired.
-    pub fn lock(&self) -> Option<MutexGuard<T>> {
-        let success = unsafe { pros_sys::mutex_take(self.pros_mutex, pros_sys::TIMEOUT_MAX) };
-        _ = take_errno();
-        success.then(|| MutexGuard { mutex: self })
+    pub fn lock(&self) -> MutexGuard<T> {
+        if !unsafe { pros_sys::mutex_take(self.pros_mutex, pros_sys::TIMEOUT_MAX) } {
+            panic!("Mutex lock failed: {}", take_errno());
+        }
+
+        MutexGuard { mutex: self }
+    }
+
+    pub fn lock_poll(&self) -> Poll<MutexGuard<T>> {
+        if unsafe { pros_sys::mutex_take(self.pros_mutex, 0) } {
+            Poll::Ready(MutexGuard { mutex: self })
+        } else {
+            Poll::Pending
+        }
     }
 }
 
