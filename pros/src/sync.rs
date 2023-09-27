@@ -1,3 +1,5 @@
+use crate::error::take_errno;
+
 /// The basic mutex type.
 /// Mutexes are used to share variables between tasks safely.
 pub struct Mutex<T> {
@@ -19,12 +21,11 @@ impl<T> Mutex<T> {
     }
 
     /// Locks the mutex so that it cannot be locked in another task at the same time.
-    /// Blocks the current task untill the lock is acquired.
-    pub fn lock(&self) -> MutexGuard<T> {
-        unsafe {
-            pros_sys::mutex_take(self.pros_mutex, pros_sys::TIMEOUT_MAX);
-        }
-        MutexGuard { mutex: self }
+    /// Blocks the current task until the lock is acquired.
+    pub fn lock(&self) -> Option<MutexGuard<T>> {
+        let success = unsafe { pros_sys::mutex_take(self.pros_mutex, pros_sys::TIMEOUT_MAX) };
+        _ = take_errno();
+        success.then(|| MutexGuard { mutex: self })
     }
 }
 
