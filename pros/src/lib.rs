@@ -12,6 +12,8 @@ pub mod sensors;
 pub mod sync;
 pub mod task;
 
+pub use pros_sys as __pros_sys;
+
 #[cfg(not(target_arch = "wasm32"))]
 mod vexos_env;
 #[cfg(target_arch = "wasm32")]
@@ -63,6 +65,9 @@ macro_rules! robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
+            unsafe {
+                ::pros::__pros_sys::lcd_initialize();
+            }
             <$rbt as $crate::Robot>::init().unwrap();
         }
 

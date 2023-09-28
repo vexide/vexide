@@ -10,7 +10,6 @@ pub(crate) mod writer;
 
 lazy_static::lazy_static! {
     pub(crate) static ref WRITER: Mutex<writer::ConsoleLcd> = {
-        unsafe { pros_sys::lcd_initialize() };
         Mutex::new(writer::ConsoleLcd::new())
     };
 }
