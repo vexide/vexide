@@ -30,22 +30,20 @@ pub mod lvgl;
 pub mod adi;
 pub mod link;
 
-pub type Result = core::result::Result<(), alloc::boxed::Box<dyn core::error::Error>>;
+pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
 pub trait Robot {
-    fn opcontrol() -> Result {
+    fn opcontrol(&mut self) -> Result {
         Ok(())
     }
-    fn auto() -> Result {
+    fn auto(&mut self) -> Result {
         Ok(())
     }
-    fn init() -> Result {
+    fn init() -> Result<Self> where Self: Sized;
+    fn disabled(&mut self) -> Result {
         Ok(())
     }
-    fn disabled() -> Result {
-        Ok(())
-    }
-    fn comp_init() -> Result {
+    fn comp_init(&mut self) -> Result {
         Ok(())
     }
 }
@@ -53,14 +51,16 @@ pub trait Robot {
 #[macro_export]
 macro_rules! robot {
     ($rbt:ty) => {
+        pub static mut ROBOT: Option<$rbt> = None;
+
         #[no_mangle]
         extern "C" fn opcontrol() {
-            <$rbt as $crate::Robot>::opcontrol().unwrap();
+            <$rbt as $crate::Robot>::opcontrol(unsafe { ROBOT.as_mut().expect("Expected initialize to run before opcontrol") }).unwrap();
         }
 
         #[no_mangle]
         extern "C" fn autonomous() {
-            <$rbt as $crate::Robot>::auto().unwrap();
+            <$rbt as $crate::Robot>::auto(unsafe { ROBOT.as_mut().expect("Expected initialize to run before auto") }).unwrap();
         }
 
         #[no_mangle]
@@ -68,17 +68,17 @@ macro_rules! robot {
             unsafe {
                 ::pros::__pros_sys::lcd_initialize();
             }
-            <$rbt as $crate::Robot>::init().unwrap();
+            unsafe { ROBOT = Some(<$rbt as $crate::Robot>::init().unwrap()); }
         }
 
         #[no_mangle]
         extern "C" fn disabled() {
-            <$rbt as $crate::Robot>::disabled().unwrap();
+            <$rbt as $crate::Robot>::disabled(unsafe { ROBOT.as_mut().expect("Expected initialize to run before disabled") }).unwrap();
         }
 
         #[no_mangle]
         extern "C" fn competition_initialize() {
-            <$rbt as $crate::Robot>::comp_init().unwrap();
+            <$rbt as $crate::Robot>::comp_init(unsafe { ROBOT.as_mut().expect("Expected initialize to run before comp_init") }).unwrap();
         }
     };
 }
