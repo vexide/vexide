@@ -12,7 +12,10 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
   * [X] Mutexes
   * [X] Tasks
   * [X] Notifications
-* [X] Motors
+* [ ] Motors
+  * [ ] (Custom) Gear Ratios
+* [ ] Async Runtime (ditch tasks)
+* [ ] Make Robot Functions Take Self
 * [X] PID controllers
 * [ ] Feedforward loops
 * [ ] ADI
