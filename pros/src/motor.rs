@@ -209,9 +209,9 @@ pub struct MotorState {
 impl From<u32> for MotorState {
     fn from(value: u32) -> Self {
         Self {
-            busy: (value & 0b001) == 0b001,
-            stopped: (value & 0b010) == 0b010,
-            zeroed: (value & 0b100) == 0b100,
+            busy: (value & pros_sys::E_MOTOR_FLAGS_BUSY) == 0b001,
+            stopped: (value & pros_sys::E_MOTOR_FLAGS_ZERO_VELOCITY) == 0b010,
+            zeroed: (value & pros_sys::E_MOTOR_FLAGS_ZERO_POSITION) == 0b100,
         }
     }
 }
