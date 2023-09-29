@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// The basic motor struct.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Motor {
     port: u8,
 }
@@ -125,8 +125,10 @@ impl Motor {
     }
 
     /// Returns the current draw of the motor.
-    pub fn current_draw(&self) -> i32 {
-        unsafe { pros_sys::motor_get_current_draw(self.port) }
+    pub fn current_draw(&self) -> Result<i32, MotorError> {
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_get_current_draw(self.port)
+        }))
     }
 
     /// Sets the current position to zero.
@@ -138,37 +140,42 @@ impl Motor {
     }
 
     /// Stops the motor based on the current [`BrakeMode`]
-    pub fn brake(&self) {
-        unsafe {
-            pros_sys::motor_brake(self.port);
-        }
+    pub fn brake(&self) -> Result<(), MotorError> {
+        bail_on!(PROS_ERR, unsafe { pros_sys::motor_brake(self.port) });
+        Ok(())
     }
 
     /// Sets the current position to the given position.
-    pub fn set_zero_position(&self, position: Position) {
-        unsafe {
-            pros_sys::motor_set_zero_position(self.port, position.into_degrees());
-        }
+    pub fn set_zero_position(&self, position: Position) -> Result<(), MotorError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_set_zero_position(self.port, position.into_degrees())
+        });
+        Ok(())
     }
 
     /// Sets how the motor should act when stopping.
-    pub fn set_brake_mode(&self, brake_mode: BrakeMode) {
-        unsafe {
-            pros_sys::motor_set_brake_mode(self.port, brake_mode.into());
-        }
+    pub fn set_brake_mode(&self, brake_mode: BrakeMode) -> Result<(), MotorError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_set_brake_mode(self.port, brake_mode.into())
+        });
+        Ok(())
     }
 
     //TODO: Test this, as im not entirely sure of the actual implementation
     /// Get the current state of the motor.
-    pub fn get_state(&self) -> MotorState {
-        unsafe { (pros_sys::motor_get_flags(self.port) as u32).into() }
+    pub fn get_state(&self) -> Result<MotorState, MotorError> {
+        let bit_flags = bail_on!(PROS_ERR as _, unsafe {
+            pros_sys::motor_get_flags(self.port)
+        });
+        Ok(bit_flags.into())
     }
 
     /// Reverse this motor by multiplying all input by -1.
-    pub fn set_reversed(&self, reversed: bool) {
-        unsafe {
-            pros_sys::motor_set_reversed(self.port, reversed);
-        }
+    pub fn set_reversed(&self, reversed: bool) -> Result<(), MotorError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_set_reversed(self.port, reversed)
+        });
+        Ok(())
     }
 
     /// Check if this motor has been reversed.
@@ -181,7 +188,7 @@ impl Motor {
 pub enum BrakeMode {
     /// Motor never brakes.
     None,
-    /// Motor brakes when stopped.
+    /// Motor uses regenerative braking to slow down faster.
     Brake,
     /// Motor exerts force to hold the same position.
     Hold,
@@ -198,6 +205,7 @@ impl From<BrakeMode> for pros_sys::motor_brake_mode_e_t {
 }
 
 /// Represents what the physical motor is currently doing.
+#[derive(Debug, Clone, Default)]
 pub struct MotorState {
     pub busy: bool,
     pub stopped: bool,
