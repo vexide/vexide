@@ -5,7 +5,10 @@ use pros::prelude::*;
 
 struct ExampleRobot;
 impl Robot for ExampleRobot {
-    fn init() -> pros::Result<Self> where Self: Sized {
+    fn init() -> pros::Result<Self>
+    where
+        Self: Sized,
+    {
         Ok(Self)
     }
     fn opcontrol(&mut self) -> pros::Result {
@@ -27,7 +30,10 @@ impl Robot for ExampleRobot {
 
         // Spawn a new task that will print whether or not the motor is stopped constantly.
         pros::task::spawn(move || loop {
-            println!("Motor stopped? {}", motor.get_state().stopped);
+            println!(
+                "Motor stopped? {}",
+                motor.get_state().unwrap_or_default().stopped
+            );
 
             // Sleep the task as to not steal processing time from the OS.
             // This should always be done in any loop, including loops in the main task.
