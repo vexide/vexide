@@ -14,7 +14,9 @@ impl RotationSensor {
     pub fn new(port: u8, reversed: bool) -> Result<Self, PortError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::rotation_reset_position(port));
-            bail_on!(PROS_ERR, pros_sys::rotation_set_reversed(port, reversed));
+            if reversed {
+                bail_on!(PROS_ERR, pros_sys::rotation_set_reversed(port, true));
+            }
         }
 
         Ok(Self { port, reversed })
