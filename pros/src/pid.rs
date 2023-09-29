@@ -1,6 +1,17 @@
+/// A proportional–integral–derivative controller.
+///
+/// This controller is used to smoothly move motors to a certain point,
+/// and allows for feedback-based power adjustments. This is desirable
+/// over just setting the motor power, as it can be tuned to make the
+/// motor stop in exactly the right position without overshooting.
 pub struct PidController {
+    /// Proportional constant. This is multiplied by the error to get the
+    /// proportional component of the output.
     pub kp: f32,
+    /// Integral constant. This accounts for the past values of the error.
     pub ki: f32,
+    /// Derivative constant. This allows you to change the motor behavior
+    /// based on the rate of change of the error (predicting future values).
     pub kd: f32,
 
     last_time: i32,
