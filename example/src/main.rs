@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+use core::time::Duration;
 use pros::prelude::*;
 
 struct ExampleRobot;
@@ -13,23 +14,17 @@ impl Robot for ExampleRobot {
     }
     fn opcontrol(&mut self) -> pros::Result {
         // Create a new motor plugged into port 2. The motor will brake when not moving.
-        let motor = Motor::new(2, pros::motor::BrakeMode::Brake)?;
+        let motor = Motor::new(2, BrakeMode::Brake)?;
         // Create a controller, specifically controller 1.
-        let controller = Controller::new(pros::controller::ControllerId::Master);
+        let controller = Controller::new(ControllerId::Master);
 
-        let mut vision =
-            sensors::vision::VisionSensor::new(9, sensors::vision::VisionZeroPoint::Center)?;
-        vision.set_led(sensors::vision::LedMode::On(sensors::vision::Rgb::new(
-            0, 0, 255,
-        )));
+        let mut vision = VisionSensor::new(9, VisionZeroPoint::Center)?;
+        vision.set_led(LedMode::On(Rgb::new(0, 0, 255)));
 
-        pros::lcd::buttons::register_button_callback(
-            left_button_callback,
-            pros::lcd::buttons::Button::Left,
-        );
+        pros::lcd::buttons::register(left_button_callback, Button::Left);
 
         // Spawn a new task that will print whether or not the motor is stopped constantly.
-        pros::task::spawn(move || loop {
+        spawn(move || loop {
             println!(
                 "Motor stopped? {}",
                 motor.get_state().unwrap_or_default().stopped
@@ -37,7 +32,7 @@ impl Robot for ExampleRobot {
 
             // Sleep the task as to not steal processing time from the OS.
             // This should always be done in any loop, including loops in the main task.
-            pros::task::sleep(core::time::Duration::from_millis(20));
+            sleep(Duration::from_millis(20));
         });
 
         loop {
@@ -49,7 +44,7 @@ impl Robot for ExampleRobot {
             println!("Vision objs {}", vision.nth_largest_object(0)?.middle_x);
 
             // Once again, sleep.
-            pros::task::sleep(core::time::Duration::from_millis(20));
+            sleep(Duration::from_millis(20));
         }
     }
 }

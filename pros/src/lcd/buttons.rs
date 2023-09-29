@@ -40,7 +40,7 @@ lazy_static::lazy_static! {
 }
 
 // this needs to return errors
-pub fn register_button_callback(cb: impl Fn() + 'static + Send, button: Button) {
+pub fn register(cb: impl Fn() + 'static + Send, button: Button) {
     unsafe {
         pros_sys::lcd_initialize();
     }

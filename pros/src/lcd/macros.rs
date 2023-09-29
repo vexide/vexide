@@ -2,6 +2,7 @@ use core::fmt::{self, Write};
 
 use super::WRITER;
 
+#[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
