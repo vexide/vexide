@@ -1,3 +1,3 @@
 [workspace]
-members = ["pros", "pros-sys", "example"]
+members = ["pros", "pros-sys", "pros-macros", "example"]
 resolver = "2"
