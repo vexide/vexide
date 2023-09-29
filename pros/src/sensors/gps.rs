@@ -1,4 +1,4 @@
-use pros_sys::PROS_ERR;
+use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
@@ -38,17 +38,19 @@ impl GpsSensor {
         }
     }
 
-    pub fn error(&self) -> f64 {
-        unsafe { pros_sys::gps_get_error(self.port) }
+    pub fn rms_error(&self) -> Result<f64, GpsError> {
+        Ok(unsafe { bail_on!(PROS_ERR_F, pros_sys::gps_get_error(self.port)) })
     }
 
-    pub fn status(&self) -> GpsStatus {
+    pub fn status(&self) -> Result<GpsStatus, GpsError> {
         unsafe {
             let status = pros_sys::gps_get_status(self.port);
+            bail_on!(PROS_ERR_F, status.x);
             let accel = pros_sys::gps_get_accel(self.port);
-            let heading = pros_sys::gps_get_heading(self.port);
+            bail_on!(PROS_ERR_F, accel.x);
+            let heading = bail_on!(PROS_ERR_F, pros_sys::gps_get_heading(self.port));
 
-            GpsStatus {
+            Ok(GpsStatus {
                 x: status.x,
                 y: status.y,
                 pitch: status.pitch,
@@ -59,14 +61,15 @@ impl GpsSensor {
                 accel_x: accel.x,
                 accel_y: accel.y,
                 accel_z: accel.z,
-            }
+            })
         }
     }
 
-    pub fn zero_rotation(&self) {
+    pub fn zero_rotation(&self) -> Result<(), GpsError> {
         unsafe {
-            pros_sys::gps_tare_rotation(self.port);
+            bail_on!(PROS_ERR, pros_sys::gps_tare_rotation(self.port));
         }
+        Ok(())
     }
 }
 

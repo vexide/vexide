@@ -21,31 +21,42 @@ impl RotationSensor {
     }
 
     /// Sets the position to zero.
-    pub fn zero(&mut self) {
+    pub fn zero(&mut self) -> Result<(), PortError> {
         unsafe {
-            pros_sys::rotation_reset_position(self.port);
+            bail_on!(PROS_ERR, pros_sys::rotation_reset_position(self.port));
         }
+        Ok(())
     }
 
     /// Sets the position.
-    pub fn set_position(&mut self, position: Position) {
+    pub fn set_position(&mut self, position: Position) -> Result<(), PortError> {
         unsafe {
-            pros_sys::rotation_set_position(self.port, (position.into_counts() * 100) as _);
+            bail_on!(
+                PROS_ERR,
+                pros_sys::rotation_set_position(self.port, (position.into_counts() * 100) as _)
+            );
         }
+        Ok(())
     }
 
     /// Sets whether or not the rotation sensor should be reversed.
-    pub fn set_reversed(&mut self, reversed: bool) {
+    pub fn set_reversed(&mut self, reversed: bool) -> Result<(), PortError> {
         self.reversed = reversed;
 
         unsafe {
-            pros_sys::rotation_set_reversed(self.port, reversed);
+            bail_on!(
+                PROS_ERR,
+                pros_sys::rotation_set_reversed(self.port, reversed)
+            );
         }
+        Ok(())
     }
 
     //TODO: See if this is accurate enough or consider switching to get_position function.
     /// Gets the current position of the sensor.
-    pub fn position(&self) -> Position {
-        unsafe { Position::from_degrees(pros_sys::rotation_get_angle(self.port) as _) }
+    pub fn position(&self) -> Result<Position, PortError> {
+        Ok(unsafe {
+            Position::from_degrees(bail_on!(PROS_ERR, pros_sys::rotation_get_angle(self.port)) as _)
+        })
     }
 }
