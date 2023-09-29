@@ -54,6 +54,11 @@ impl RotationSensor {
         Ok(())
     }
 
+    /// Reverses the rotation sensor.
+    pub fn reverse(&mut self) -> Result<(), PortError> {
+        self.set_reversed(!self.reversed)
+    }
+
     //TODO: See if this is accurate enough or consider switching to get_position function.
     /// Gets the current position of the sensor.
     pub fn position(&self) -> Result<Position, PortError> {
