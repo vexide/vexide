@@ -51,66 +51,10 @@ pub trait Robot {
     }
 }
 
-#[macro_export]
-macro_rules! robot {
-    ($rbt:ty) => {
-        pub static mut ROBOT: Option<$rbt> = None;
-
-        #[no_mangle]
-        extern "C" fn opcontrol() {
-            <$rbt as $crate::Robot>::opcontrol(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before opcontrol")
-            })
-            .unwrap();
-        }
-
-        #[no_mangle]
-        extern "C" fn autonomous() {
-            <$rbt as $crate::Robot>::auto(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before auto")
-            })
-            .unwrap();
-        }
-
-        #[no_mangle]
-        extern "C" fn initialize() {
-            unsafe {
-                ::pros::__pros_sys::lcd_initialize();
-            }
-            unsafe {
-                ROBOT = Some(<$rbt as $crate::Robot>::init().unwrap());
-            }
-        }
-
-        #[no_mangle]
-        extern "C" fn disabled() {
-            <$rbt as $crate::Robot>::disabled(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before disabled")
-            })
-            .unwrap();
-        }
-
-        #[no_mangle]
-        extern "C" fn competition_initialize() {
-            <$rbt as $crate::Robot>::comp_init(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before comp_init")
-            })
-            .unwrap();
-        }
-    };
-}
-
 pub mod prelude {
     pub use crate::Robot;
-    pub use crate::{print, println, robot};
+    pub use crate::{print, println};
+    pub use pros_macros::robot;
 
     pub use crate::controller::*;
     pub use crate::error::PortError;

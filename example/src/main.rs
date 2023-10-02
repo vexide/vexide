@@ -4,14 +4,11 @@
 use core::time::Duration;
 use pros::prelude::*;
 
+#[derive(Debug, Default)]
 struct ExampleRobot;
+
+#[robot]
 impl Robot for ExampleRobot {
-    fn init() -> pros::Result<Self>
-    where
-        Self: Sized,
-    {
-        Ok(Self)
-    }
     fn opcontrol(&mut self) -> pros::Result {
         // Create a new motor plugged into port 2. The motor will brake when not moving.
         let motor = Motor::new(2, BrakeMode::Brake)?;
@@ -48,7 +45,6 @@ impl Robot for ExampleRobot {
         }
     }
 }
-robot!(ExampleRobot);
 
 fn left_button_callback() {
     println!("Left button pressed!");
