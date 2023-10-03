@@ -10,6 +10,12 @@ pub(crate) struct Executor {
     pub task_queue: Arc<ConcurrentQueue<Arc<Task>>>,
 }
 impl Executor {
+    pub fn new() -> Self {
+        Self {
+            task_queue: Arc::new(ConcurrentQueue::unbounded()),
+        }
+    }
+
     pub fn run(&self) {
         while let Ok(task) = self.task_queue.pop() {
             let mut future_slot = task.future.lock();
@@ -31,6 +37,11 @@ impl Executor {
         });
         // Task queue is never closed, so this should only panic if we needed to anyway.
         self.task_queue.push(task).unwrap();
+    }
+}
+impl Default for Executor {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
