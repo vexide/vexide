@@ -15,7 +15,7 @@ pub mod task;
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(target_os = "vexos")]
 mod vexos_env;
 #[cfg(target_arch = "wasm32")]
 mod wasm_env;

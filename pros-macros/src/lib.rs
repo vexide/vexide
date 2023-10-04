@@ -2,6 +2,40 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, ItemImpl};
 
+/// Configure a struct implementing [`pros::Robot`] to receive calls
+/// from the PROS kernel, such as `opcontrol` and `autonomous`.
+/// There can only be one `#[robot]` usage per program.
+///
+/// ```
+/// # use pros::prelude::*;
+/// pub struct ClawBot {
+///     claw_motor: Motor,
+/// }
+///
+/// #[robot]
+/// impl Robot for ClawBot {
+///    /// Runs immediately after the program starts.
+///    fn init() -> pros::Result<Self> {
+///        Ok(Self {
+///           claw_motor: Motor::new(1, BrakeMode::Brake)?,
+///       })
+///    }
+///
+///   /// Runs when the robot is enabled (or immediately
+///   /// if you aren't in a competition).
+///   fn opcontrol(&mut self) -> pros::Result {
+///      todo!()
+///   }
+/// }
+/// ```
+///
+/// # Initialization
+///
+/// The `init` function must return an instance of the struct implementing
+/// the Robot trait. If you do not want to implement the `init` function,
+/// you can implement or derive [`Default`] on your struct, which will be
+/// used instead. Later in the program, you can access the robot instance
+/// through the `&mut self` parameter of the Robot methods.
 #[proc_macro_attribute]
 pub fn robot(_args: TokenStream, input: TokenStream) -> TokenStream {
     let mut robot_impl = parse_macro_input!(input as ItemImpl);
@@ -29,59 +63,63 @@ pub fn robot(_args: TokenStream, input: TokenStream) -> TokenStream {
     let expanded = quote::quote! {
         #robot_impl
 
-        mod __pros_internals {
-        use super::*;
-        static mut ROBOT: Option<#rbt> = None;
+        #[doc(hidden)]
+        static mut __PROS_ROBOT: Option<#rbt> = None;
 
-        #[no_mangle]
-        extern "C" fn opcontrol() {
-        #rbt::opcontrol(unsafe {
-                ROBOT
+        #[doc(hidden)]
+        #[link(name = "opcontrol")]
+        extern "C" fn __pros_opcontrol() {
+            ::pros::Robot::opcontrol(unsafe {
+                __PROS_ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before opcontrol")
             })
             .unwrap();
         }
 
-        #[no_mangle]
-        extern "C" fn autonomous() {
-            #rbt::auto(unsafe {
-                ROBOT
+        #[doc(hidden)]
+        #[link(name = "autonomous")]
+        extern "C" fn __pros__autonomous() {
+            ::pros::Robot::auto(unsafe {
+                __PROS_ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before auto")
             })
             .unwrap();
         }
 
-        #[no_mangle]
-        extern "C" fn initialize() {
+        #[doc(hidden)]
+        #[link(name = "initialize")]
+        extern "C" fn __pros_initialize() {
             unsafe {
                 ::pros::__pros_sys::lcd_initialize();
             }
             unsafe {
-                ROBOT = Some(#rbt::init().unwrap());
+                __PROS_ROBOT = Some(::pros::Robot::init().unwrap());
             }
         }
 
-        #[no_mangle]
-        extern "C" fn disabled() {
-            #rbt::disabled(unsafe {
-                ROBOT
+        #[doc(hidden)]
+        #[link(name = "disabled")]
+        extern "C" fn __pros_disabled() {
+            ::pros::Robot::disabled(unsafe {
+                __PROS_ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before disabled")
             })
             .unwrap();
         }
 
-        #[no_mangle]
-        extern "C" fn competition_initialize() {
-            #rbt::comp_init(unsafe {
-                ROBOT
+
+        #[doc(hidden)]
+        #[link(name = "competition_initialize")]
+        extern "C" fn __pros_competition_initialize() {
+            ::pros::Robot::comp_init(unsafe {
+                __PROS_ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before comp_init")
             })
             .unwrap();
-        }
         }
     };
 
