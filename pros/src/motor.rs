@@ -30,6 +30,20 @@ impl Motor {
         Ok(Self { port })
     }
 
+    pub fn set_gearset(&self, gearset: Gearset) -> Result<(), MotorError> {
+        unsafe {
+            bail_on!(
+                PROS_ERR,
+                pros_sys::motor_set_gearing(self.port, gearset as i32)
+            );
+        }
+        Ok(())
+    }
+
+    pub fn gearset(&self) -> Result<Gearset, MotorError> {
+        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::motor_get_gearing(self.port)) }.into())
+    }
+
     /// Takes in a f32 from -1 to 1 that is scaled to -12 to 12 volts.
     /// Useful for driving motors with controllers.
     pub fn set_output(&self, output: f32) -> Result<(), MotorError> {
@@ -220,6 +234,42 @@ impl From<u32> for MotorState {
             busy: (value & pros_sys::E_MOTOR_FLAGS_BUSY) == 0b001,
             stopped: (value & pros_sys::E_MOTOR_FLAGS_ZERO_VELOCITY) == 0b010,
             zeroed: (value & pros_sys::E_MOTOR_FLAGS_ZERO_POSITION) == 0b100,
+        }
+    }
+}
+
+/// Internal gearset used by VEX smart motors.
+#[derive(Debug)]
+#[repr(i32)]
+pub enum Gearset {
+    Red = pros_sys::E_MOTOR_GEAR_RED,
+    Green = pros_sys::E_MOTOR_GEAR_GREEN,
+    Blue = pros_sys::E_MOTOR_GEAR_BLUE,
+}
+
+impl Gearset {
+    /// 36:1 gear ratio
+    pub const RATIO_36: Gearset = Gearset::Red;
+    /// 18:1 gear ratio
+    pub const RATIO_18: Gearset = Gearset::Green;
+    /// 6:1 gear ratio
+    pub const RATIO_6: Gearset = Gearset::Blue;
+
+    /// 100 rpm
+    pub const RPM_100: Gearset = Gearset::Red;
+    /// 200 rpm
+    pub const RPM_200: Gearset = Gearset::Green;
+    /// 600 rpm
+    pub const RPM_600: Gearset = Gearset::Blue;
+}
+
+impl From<i32> for Gearset {
+    fn from(value: i32) -> Self {
+        match value {
+            pros_sys::E_MOTOR_GEAR_RED => Gearset::Red,
+            pros_sys::E_MOTOR_GEAR_GREEN => Gearset::Green,
+            pros_sys::E_MOTOR_GEAR_BLUE => Gearset::Blue,
+            _ => unreachable!(),
         }
     }
 }

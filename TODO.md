@@ -1,6 +1,6 @@
 # Todo
 
-This is the todo list for the eventuall 1.0.0 release of pros-rs
+This is the todo list for the eventual 1.0.0 release of pros-rs
 
 ## Bindings
 
@@ -13,6 +13,7 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
   * [X] Tasks
   * [X] Notifications
 * [ ] Motors
+  * [x] Internal gearsets
   * [ ] (Custom) Gear Ratios
 * [ ] Async Runtime (ditch tasks)
 * [X] Make Robot Functions Take Self
@@ -28,7 +29,7 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
   * [X] Rotational
   * [X] Vision
 * [ ] Controllers
-  * [X] Controller data 
+  * [X] Controller data
   * [ ] Controller printing
 * [X] Link
 
