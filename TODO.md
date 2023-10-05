@@ -30,7 +30,7 @@ This is the todo list for the eventual 1.0.0 release of pros-rs
   * [X] Vision
 * [ ] Controllers
   * [X] Controller data
-  * [ ] Controller printing
+  * [x] Controller printing
 * [X] Link
 
 ## API
