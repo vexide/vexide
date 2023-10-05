@@ -19,7 +19,7 @@ This is the todo list for the eventual 1.0.0 release of pros-rs
 * [X] Make Robot Functions Take Self
 * [X] PID controllers
 * [ ] Feedforward loops
-* [ ] ADI
+* [ ] ADI (3 wire ports)
 * [ ] Ext. ADI
 * [ ] Sensors
   * [X] Distance
