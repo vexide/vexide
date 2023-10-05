@@ -31,6 +31,12 @@ This is the todo list for the eventuall 1.0.0 release of pros-rs
   * [X] Controller data 
   * [ ] Controller printing
 * [X] Link
+* [ ] Async
+  * [ ] Returning top level futures
+  * [ ] Future impls for everything
+  * [ ] Reactor
+  * [ ] User API (block_on, join!, etc.)
+* [ ] MPSC
 
 ## API
 
