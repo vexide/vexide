@@ -3,6 +3,7 @@
 
 extern crate alloc;
 
+pub mod async_runtime;
 pub mod controller;
 pub mod error;
 pub mod motor;
@@ -11,7 +12,6 @@ pub mod position;
 pub mod sensors;
 pub mod sync;
 pub mod task;
-pub mod async_runtime;
 
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
