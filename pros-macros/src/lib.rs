@@ -67,7 +67,7 @@ pub fn robot(_args: TokenStream, input: TokenStream) -> TokenStream {
         static mut __PROS_ROBOT: Option<#rbt> = None;
 
         #[doc(hidden)]
-        #[link(name = "opcontrol")]
+        #[export_name = "opcontrol"]
         extern "C" fn __pros_opcontrol() {
             ::pros::Robot::opcontrol(unsafe {
                 __PROS_ROBOT
@@ -78,7 +78,7 @@ pub fn robot(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         #[doc(hidden)]
-        #[link(name = "autonomous")]
+        #[export_name = "autonomous"]
         extern "C" fn __pros__autonomous() {
             ::pros::Robot::auto(unsafe {
                 __PROS_ROBOT
@@ -89,7 +89,7 @@ pub fn robot(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         #[doc(hidden)]
-        #[link(name = "initialize")]
+        #[export_name = "initialize"]
         extern "C" fn __pros_initialize() {
             unsafe {
                 ::pros::__pros_sys::lcd_initialize();
@@ -100,7 +100,7 @@ pub fn robot(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         #[doc(hidden)]
-        #[link(name = "disabled")]
+        #[export_name = "disabled"]
         extern "C" fn __pros_disabled() {
             ::pros::Robot::disabled(unsafe {
                 __PROS_ROBOT
@@ -112,7 +112,7 @@ pub fn robot(_args: TokenStream, input: TokenStream) -> TokenStream {
 
 
         #[doc(hidden)]
-        #[link(name = "competition_initialize")]
+        #[export_name = "competition_initialize"]
         extern "C" fn __pros_competition_initialize() {
             ::pros::Robot::comp_init(unsafe {
                 __PROS_ROBOT
