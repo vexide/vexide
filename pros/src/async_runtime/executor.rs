@@ -74,7 +74,6 @@ impl Executor {
 }
 
 struct TaskInternal {
-    // Raw ptr to a BoxFuture, which is a trait object.
     future: UnsafeCell<BoxFuture<'static, AtomicPtr<()>>>,
 
     queue: Arc<ConcurrentQueue<Arc<TaskInternal>>>,
