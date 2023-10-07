@@ -1,4 +1,4 @@
-use core::ptr::NonNull;
+use core::sync::atomic::AtomicPtr;
 
 use alloc::sync::Arc;
 use slab::Slab;
@@ -7,7 +7,7 @@ use spin::Once;
 use crate::sync::Mutex;
 
 pub struct Task<T: Send> {
-    pub returns: Arc<Mutex<Slab<Once<NonNull<()>>>>>,
+    pub returns: Arc<Mutex<Slab<Once<AtomicPtr<()>>>>>,
     pub return_key: usize,
 
     pub _marker: core::marker::PhantomData<T>,

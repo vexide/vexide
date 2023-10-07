@@ -1,8 +1,8 @@
-use core::ptr::NonNull;
+use core::{cell::UnsafeCell, sync::atomic::AtomicPtr};
 
-use alloc::sync::Arc;
+use alloc::{boxed::Box, sync::Arc};
 use concurrent_queue::ConcurrentQueue;
-use futures::{task::ArcWake, Future};
+use futures::{future::BoxFuture, task::ArcWake, Future, FutureExt};
 use slab::Slab;
 use spin::Once;
 
@@ -13,7 +13,7 @@ use super::task::Task;
 pub struct Executor {
     queue: Arc<ConcurrentQueue<Arc<TaskInternal>>>,
 
-    returns: Arc<Mutex<Slab<Once<NonNull<()>>>>>,
+    returns: Arc<Mutex<Slab<Once<AtomicPtr<()>>>>>,
 }
 impl !Sync for Executor {}
 
@@ -25,10 +25,15 @@ impl Executor {
         }
     }
 
-    pub fn spawn<T: Send>(&self, future: impl Future<Output = T> + core::marker::Send) -> Task<T> {
+    pub fn spawn<T: Send>(&self, future: impl Future<Output = T> + core::marker::Send + 'static) -> Task<T> {
         let return_key = self.returns.lock().insert(Once::new());
+        let future: BoxFuture<'static, AtomicPtr<()>> = Box::pin(future.map(|val| {
+            let ptr = Box::into_raw(Box::new(val));
+            AtomicPtr::new(ptr as _)
+        }));
+        
         let task = Arc::new(TaskInternal {
-            future: &future as *const _ as _,
+            future: UnsafeCell::new(future),
 
             queue: self.queue.clone(),
             return_key,
@@ -53,18 +58,16 @@ impl Executor {
 
 struct TaskInternal {
     // Raw ptr to a BoxFuture, which is a trait object.
-    future: *const (),
+    future: UnsafeCell<BoxFuture<'static, AtomicPtr<()>>>,
 
     queue: Arc<ConcurrentQueue<Arc<TaskInternal>>>,
     pub return_key: usize,
 }
-unsafe impl Send for TaskInternal {}
 // TaskInternal can implement Sync because it is only modified by the executor, which isn't Sync.
 unsafe impl Sync for TaskInternal {}
 impl core::fmt::Debug for TaskInternal {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("TaskInternal")
-            .field("future", &self.future)
             .field("queue", &self.queue)
             .field("return_key", &self.return_key)
             .finish()
