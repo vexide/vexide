@@ -25,13 +25,16 @@ impl Executor {
         }
     }
 
-    pub fn spawn<T: Send>(&self, future: impl Future<Output = T> + core::marker::Send + 'static) -> Task<T> {
+    pub fn spawn<T: Send>(
+        &self,
+        future: impl Future<Output = T> + core::marker::Send + 'static,
+    ) -> Task<T> {
         let return_key = self.returns.lock().insert(Once::new());
         let future: BoxFuture<'static, AtomicPtr<()>> = Box::pin(future.map(|val| {
             let ptr = Box::into_raw(Box::new(val));
             AtomicPtr::new(ptr as _)
         }));
-        
+
         let task = Arc::new(TaskInternal {
             future: UnsafeCell::new(future),
 
@@ -47,12 +50,26 @@ impl Executor {
         }
     }
 
-    pub fn tick(&self) {
-        todo!()
+    /// Returns None if there are no tasks to run.
+    pub fn tick(&self) -> Option<()> {
+        if let Ok(task) = self.queue.pop() {
+            let waker = futures::task::waker_ref(&task);
+            let mut context = futures::task::Context::from_waker(&waker);
+            if let core::task::Poll::Ready(ptr) = unsafe { task.future.get().as_mut() }
+                // We can unwrap because UnsafeCells should always return a non-null pointer.
+                .unwrap()
+                .poll_unpin(&mut context)
+            {
+                self.returns.lock()[task.return_key].call_once(|| ptr);
+            }
+        } else {
+            return None;
+        }
+        Some(())
     }
 
     pub fn run(&self) {
-        todo!()
+        while self.tick().is_some() {}
     }
 }
 
