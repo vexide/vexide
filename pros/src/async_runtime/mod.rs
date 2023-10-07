@@ -31,3 +31,13 @@ where
         }
     }
 }
+
+#[macro_export]
+macro_rules! ready {
+    ($e:expr) => {
+        match $e {
+            core::task::Poll::Ready(val) => val,
+            core::task::Poll::Pending => return core::task::Poll::Pending,
+        }
+    };
+}
