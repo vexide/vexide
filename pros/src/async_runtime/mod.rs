@@ -13,12 +13,12 @@ pub trait FutureExt: Future {
 impl<F> FutureExt for F where F: Future + Send + 'static {}
 
 pub fn spawn(future: impl Future<Output = ()> + Send + 'static) {
-    executor::EXECUTOR.with(|e| e.get().unwrap().spawn(future));
+    executor::EXECUTOR.with(|e| e.spawn(future));
 }
 
-pub fn block_on<F: Future>(future: F) -> F::Output
+pub fn block_on<F: Future + 'static>(future: F) -> F::Output
 {
-    todo!()
+    executor::EXECUTOR.with(|e| e.block_on(future))
 }
 
 #[macro_export]

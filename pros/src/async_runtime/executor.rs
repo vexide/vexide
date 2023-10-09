@@ -5,7 +5,7 @@ use alloc::{boxed::Box, rc::Rc, collections::VecDeque};
 use crate::task_local;
 
 task_local! {
-    pub(crate) static EXECUTOR: Rc<Executor> = Rc::new(Executor::new());
+    pub(crate) static EXECUTOR: Rc<Executor> = Rc::new(Executor::new())
 }
 
 type ExecutableFuture = Pin<Box<dyn Future<Output = ()>>>;
@@ -24,7 +24,7 @@ impl Executor {
         self.queue.borrow_mut().push_back(Box::pin(future));
     }
 
-    pub fn block_on<F: Future>(&self, future: F) -> F::Output {
+    pub fn block_on<F: Future + 'static>(&self, future: F) -> F::Output {
         let output = Rc::new(RefCell::new(None));
 
         let _ = self.queue.borrow_mut().push_back(Box::pin({
