@@ -2,7 +2,7 @@ use core::future::Future;
 
 pub(crate) mod executor;
 
-pub trait FutureExt: Future {
+pub trait FutureExt: Future + 'static {
     fn block_on(self) -> Self::Output
     where
         Self: Sized,

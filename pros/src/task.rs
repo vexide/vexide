@@ -7,6 +7,8 @@ use spin::Once;
 
 use crate::{error::{bail_on, map_errno}, sync::Mutex};
 
+const NEXT_LOCAL_INDEX: u32 = 0;
+
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
 /// Takes in a closure that can move variables if needed.
 /// If your task has a loop it is advised to use [`sleep(duration)`](sleep) so that the task does not take up necessary system resources.
@@ -46,7 +48,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
         
         // This task local is used by the thread_local macro to store the next empty thread local index.
         // This needs to be in task local storage so that the task returns from current has the correct value.
-        task_local_storage_set::<UnsafeCell<u32>>(task, handle.next_free_tls_index, 0);
+        task_local_storage_set::<UnsafeCell<u32>>(task, handle.next_free_tls_index, NEXT_LOCAL_INDEX);
         
         Ok(handle)
     }
@@ -273,7 +275,7 @@ pub fn sleep(duration: core::time::Duration) {
 pub fn current() -> TaskHandle {
     unsafe {
         let task = pros_sys::task_get_current();
-        let next = task_local_storage_get::<UnsafeCell<u32>>(task, 0).unwrap();
+        let next = task_local_storage_get::<UnsafeCell<u32>>(task, NEXT_LOCAL_INDEX).unwrap();
         TaskHandle {
             task,
             next_free_tls_index: next,
@@ -324,7 +326,7 @@ impl<T: 'static> LocalKey<T> {
             f(val)
         } else {
             // Get the next empty index in thread_local storage. 
-            let next_empty: &u32 = unsafe { task_local_storage_get(current.task, 0).unwrap() };
+            let next_empty: &u32 = unsafe { task_local_storage_get(current.task, NEXT_LOCAL_INDEX).unwrap() };
             let val = Box::leak(Box::new((self.init)()));
             unsafe { task_local_storage_set(current.task, val, *next_empty) }
             self.index_map.get().unwrap().lock().insert(current.clone(), *next_empty);
