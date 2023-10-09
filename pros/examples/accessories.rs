@@ -11,6 +11,7 @@ impl Robot for ExampleRobot {
     async fn opcontrol(&mut self) -> pros::Result {
         // Create a new motor plugged into port 2. The motor will brake when not moving.
         let motor = Motor::new(2, BrakeMode::Brake)?;
+        motor.wait_until_stopped().await?;
         // Create a controller, specifically controller 1.
         let controller = Controller::Master;
 
