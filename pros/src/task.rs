@@ -341,11 +341,11 @@ impl<T: 'static> LocalKey<T> {
 macro_rules! task_local {
     ($(#[$attr:meta])* $vis:vis static $name:ident: $t:ty = $init:expr; $($rest:tt)*) => {
         $(#[$attr])*
-        static $name: LocalKey<$t> = LocalKey::new(|| $init);
+        $vis static $name: LocalKey<$t> = $crate::task::LocalKey::new(|| $init);
         task_local!($($rest)*);
     };
     ($(#[$attr:meta])* $vis:vis static $name:ident: $t:ty = $init:expr) => {
         $(#[$attr])*
-        static $name: LocalKey<$t> = LocalKey::new(|| $init);
+        $vis static $name: $crate::task::LocalKey<$t> = $crate::task::LocalKey::new(|| $init);
     };
 }

@@ -1,97 +1,53 @@
-use core::{cell::UnsafeCell, sync::atomic::AtomicPtr};
+use core::{cell::{RefCell, OnceCell}, future::Future, pin::Pin, task::Context};
 
-use alloc::{boxed::Box, sync::Arc};
-use concurrent_queue::ConcurrentQueue;
-use futures::{future::BoxFuture, task::ArcWake, Future, FutureExt};
-use slab::Slab;
-use spin::Once;
+use alloc::{boxed::Box, rc::Rc, collections::VecDeque};
 
-use crate::sync::Mutex;
+use crate::task_local;
 
-use super::task::Task;
+task_local! {
+    pub(crate) static EXECUTOR: Rc<Executor> = Rc::new(Executor::new());
+}
+
+type ExecutableFuture = Pin<Box<dyn Future<Output = ()>>>;
 
 pub struct Executor {
-    queue: Arc<ConcurrentQueue<Arc<TaskInternal>>>,
-
-    returns: Arc<Mutex<Slab<Once<AtomicPtr<()>>>>>,
+    queue: RefCell<VecDeque<ExecutableFuture>>,
 }
-impl !Sync for Executor {}
-
 impl Executor {
     pub fn new() -> Self {
         Self {
-            queue: Arc::new(ConcurrentQueue::unbounded()),
-            returns: Arc::new(Mutex::new(Slab::new())),
+            queue: RefCell::new(VecDeque::new()),
         }
     }
 
-    pub fn spawn<T: Send>(
-        &self,
-        future: impl Future<Output = T> + core::marker::Send + 'static,
-    ) -> Task<T> {
-        let return_key = self.returns.lock().insert(Once::new());
-        let future: BoxFuture<'static, AtomicPtr<()>> = Box::pin(future.map(|val| {
-            let ptr = Box::into_raw(Box::new(val));
-            AtomicPtr::new(ptr as _)
-        }));
-
-        let task = Arc::new(TaskInternal {
-            future: UnsafeCell::new(future),
-
-            queue: self.queue.clone(),
-            return_key,
-        });
-        self.queue.push(task).unwrap();
-
-        Task {
-            returns: self.returns.clone(),
-            return_key,
-            _marker: core::marker::PhantomData,
-        }
+    pub fn spawn(&self, future: impl Future<Output = ()> + Send + 'static) {
+        self.queue.borrow_mut().push_back(Box::pin(future));
     }
 
-    /// Returns None if there are no tasks to run.
-    pub fn tick(&self) -> Option<()> {
-        if let Ok(task) = self.queue.pop() {
-            let waker = futures::task::waker_ref(&task);
-            let mut context = futures::task::Context::from_waker(&waker);
-            if let core::task::Poll::Ready(ptr) = unsafe { task.future.get().as_mut() }
-                // We can unwrap because UnsafeCells should always return a non-null pointer.
-                .unwrap()
-                .poll_unpin(&mut context)
-            {
-                self.returns.lock()[task.return_key].call_once(|| ptr);
+    pub fn block_on<F: Future>(&self, future: F) -> F::Output {
+        let output = Rc::new(RefCell::new(None));
+
+        let _ = self.queue.borrow_mut().push_back(Box::pin({
+            let output = output.clone();
+
+            async move {
+                let future_output = future.await;
+                *output.borrow_mut() = Some(future_output);
             }
-        } else {
-            return None;
+        }));
+        
+        loop {
+            // we unwrap here because the queue should only be empty after our output value is set
+            let mut task = self.queue.borrow_mut().pop_front().unwrap();
+
+            let cx = &mut Context::from_waker(futures::task::noop_waker_ref());
+            if task.as_mut().poll(cx).is_pending() {
+                let _ = self.queue.borrow_mut().push_back(task);
+            }
+
+            if let Some(output) = output.borrow_mut().take() {
+                break output;
+            }
         }
-        Some(())
-    }
-
-    pub fn run(&self) {
-        while self.tick().is_some() {}
-    }
-}
-
-struct TaskInternal {
-    future: UnsafeCell<BoxFuture<'static, AtomicPtr<()>>>,
-
-    queue: Arc<ConcurrentQueue<Arc<TaskInternal>>>,
-    pub return_key: usize,
-}
-// TaskInternal can implement Sync because it is only modified by the executor, which isn't Sync.
-unsafe impl Sync for TaskInternal {}
-impl core::fmt::Debug for TaskInternal {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("TaskInternal")
-            .field("queue", &self.queue)
-            .field("return_key", &self.return_key)
-            .finish()
-    }
-}
-
-impl ArcWake for TaskInternal {
-    fn wake_by_ref(arc_self: &Arc<Self>) {
-        arc_self.queue.push(arc_self.clone()).unwrap();
     }
 }
