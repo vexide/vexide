@@ -6,14 +6,12 @@ use pros::prelude::*;
 
 #[derive(Debug, Default)]
 struct ExampleRobot;
-
-#[robot]
 impl Robot for ExampleRobot {
     fn opcontrol(&mut self) -> pros::Result {
         // Create a new motor plugged into port 2. The motor will brake when not moving.
         let motor = Motor::new(2, BrakeMode::Brake)?;
         // Create a controller, specifically controller 1.
-        let controller = Controller::new(ControllerId::Master);
+        let controller = Controller::Master;
 
         let mut vision = VisionSensor::new(9, VisionZeroPoint::Center)?;
         vision.set_led(LedMode::On(Rgb::new(0, 0, 255)));
@@ -45,6 +43,7 @@ impl Robot for ExampleRobot {
         }
     }
 }
+robot!(ExampleRobot);
 
 fn left_button_callback() {
     println!("Left button pressed!");

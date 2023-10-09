@@ -1,8 +1,8 @@
-#[repr(i32)]
-pub enum ControllerId {
-    Master = 0,
-    Partner = 1,
-}
+use alloc::{ffi::CString, vec::Vec};
+use pros_sys::{controller_id_e_t, PROS_ERR};
+use snafu::Snafu;
+
+use crate::error::{bail_on, map_errno};
 
 /// Holds whether or not the buttons on the controller are pressed or not
 pub struct Buttons {
@@ -40,17 +40,58 @@ pub struct ControllerState {
     pub buttons: Buttons,
 }
 
+pub struct ControllerLine {
+    controller: Controller,
+    line: u8,
+}
+
+impl ControllerLine {
+    pub const MAX_TEXT_LEN: usize = 14;
+    pub const MAX_LINE_NUM: u8 = 2;
+    pub fn try_print(&self, text: impl Into<Vec<u8>>) -> Result<(), ControllerError> {
+        let text = text.into();
+        let text_len = text.len();
+        assert!(
+            text_len > ControllerLine::MAX_TEXT_LEN,
+            "Printed text is too long to fit on controller display ({text_len} > {})",
+            Self::MAX_TEXT_LEN
+        );
+        let c_text = CString::new(text).expect("parameter `text` should not contain null bytes");
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::controller_set_text(self.controller.id(), self.line, 0, c_text.as_ptr())
+        });
+        Ok(())
+    }
+    pub fn print(&self, text: impl Into<Vec<u8>>) {
+        self.try_print(text).unwrap();
+    }
+}
+
 /// The basic type for a controller.
 /// Used to get the state of its joysticks and controllers.
-pub struct Controller {
-    id: u32,
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum Controller {
+    Master = pros_sys::E_CONTROLLER_MASTER,
+    Partner = pros_sys::E_CONTROLLER_PARTNER,
 }
 
 impl Controller {
-    /// Creates a new controller using an id.
-    /// Use [`MASTER_CONTROLLER_ID`] if you are unsure what id means.
-    pub fn new(id: ControllerId) -> Self {
-        Self { id: id as _ }
+    fn id(&self) -> controller_id_e_t {
+        *self as controller_id_e_t
+    }
+
+    pub fn line(&self, line_num: u8) -> ControllerLine {
+        assert!(
+            line_num > ControllerLine::MAX_LINE_NUM,
+            "Line number is too large for controller display ({line_num} > {})",
+            ControllerLine::MAX_LINE_NUM
+        );
+
+        ControllerLine {
+            controller: *self,
+            line: line_num,
+        }
     }
 
     /// Gets the state of the controller; the joysticks and buttons.
@@ -60,24 +101,24 @@ impl Controller {
                 Joysticks {
                     left: Joystick {
                         x: pros_sys::controller_get_analog(
-                            self.id,
+                            self.id(),
                             pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
                         ) as f32
                             / 127.0,
                         y: pros_sys::controller_get_analog(
-                            self.id,
+                            self.id(),
                             pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
                         ) as f32
                             / 127.0,
                     },
                     right: Joystick {
                         x: pros_sys::controller_get_analog(
-                            self.id,
+                            self.id(),
                             pros_sys::E_CONTROLLER_ANALOG_RIGHT_X,
                         ) as f32
                             / 127.0,
                         y: pros_sys::controller_get_analog(
-                            self.id,
+                            self.id(),
                             pros_sys::E_CONTROLLER_ANALOG_RIGHT_Y,
                         ) as f32
                             / 127.0,
@@ -86,48 +127,68 @@ impl Controller {
             },
             buttons: unsafe {
                 Buttons {
-                    a: pros_sys::controller_get_digital(self.id, pros_sys::E_CONTROLLER_DIGITAL_A)
-                        == 1,
-                    b: pros_sys::controller_get_digital(self.id, pros_sys::E_CONTROLLER_DIGITAL_B)
-                        == 1,
-                    x: pros_sys::controller_get_digital(self.id, pros_sys::E_CONTROLLER_DIGITAL_X)
-                        == 1,
-                    y: pros_sys::controller_get_digital(self.id, pros_sys::E_CONTROLLER_DIGITAL_Y)
-                        == 1,
+                    a: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_A,
+                    ) == 1,
+                    b: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_B,
+                    ) == 1,
+                    x: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_X,
+                    ) == 1,
+                    y: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_Y,
+                    ) == 1,
                     up: pros_sys::controller_get_digital(
-                        self.id,
+                        self.id(),
                         pros_sys::E_CONTROLLER_DIGITAL_UP,
                     ) == 1,
                     down: pros_sys::controller_get_digital(
-                        self.id,
+                        self.id(),
                         pros_sys::E_CONTROLLER_DIGITAL_DOWN,
                     ) == 1,
                     left: pros_sys::controller_get_digital(
-                        self.id,
+                        self.id(),
                         pros_sys::E_CONTROLLER_DIGITAL_LEFT,
                     ) == 1,
                     right: pros_sys::controller_get_digital(
-                        self.id,
+                        self.id(),
                         pros_sys::E_CONTROLLER_DIGITAL_RIGHT,
                     ) == 1,
                     left_trigger_1: pros_sys::controller_get_digital(
-                        self.id,
+                        self.id(),
                         pros_sys::E_CONTROLLER_DIGITAL_L1,
                     ) == 1,
                     left_trigger_2: pros_sys::controller_get_digital(
-                        self.id,
+                        self.id(),
                         pros_sys::E_CONTROLLER_DIGITAL_L2,
                     ) == 1,
                     right_trigger_1: pros_sys::controller_get_digital(
-                        self.id,
+                        self.id(),
                         pros_sys::E_CONTROLLER_DIGITAL_R1,
                     ) == 1,
                     right_trigger_2: pros_sys::controller_get_digital(
-                        self.id,
+                        self.id(),
                         pros_sys::E_CONTROLLER_DIGITAL_R2,
                     ) == 1,
                 }
             },
         }
+    }
+}
+
+#[derive(Debug, Snafu)]
+pub enum ControllerError {
+    #[snafu(display("Another resource is already using the controller"))]
+    ConcurrentAccess,
+}
+
+map_errno! {
+    ControllerError {
+        EACCES => Self::ConcurrentAccess,
     }
 }

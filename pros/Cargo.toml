@@ -7,18 +7,18 @@ keywords = ["PROS", "Robotics", "bindings"]
 categories = ["os", "api-bindings", "no-std", "science::robotics"]
 license = "MIT"
 repository = "https://github.com/pros-rs/pros-rs"
+readme = "../README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 spin = "0.9.8"
-pros-sys = { version = "0.2.1", path = "../pros-sys" }
+pros-sys = { version = "0.3.0", path = "../pros-sys" }
 snafu = { version = "0.7.5", default-features = false, features = [
     "rust_1_61",
 ] }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
-pros-macros = { version = "0.1.0", path = "../pros-macros" }
 futures = { version = "0.3.28", default-features = false, features = ["alloc"] }
 slab = { version = "0.4.9", default-features = false }
 hashbrown = { version = "0.14.1", default-features = true }
