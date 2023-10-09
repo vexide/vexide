@@ -1,9 +1,4 @@
-use core::{
-    cell::{OnceCell, RefCell},
-    future::Future,
-    pin::Pin,
-    task::Context,
-};
+use core::{cell::RefCell, future::Future, pin::Pin, task::Context};
 
 use alloc::{boxed::Box, collections::VecDeque, rc::Rc};
 
@@ -32,7 +27,7 @@ impl Executor {
     pub fn block_on<F: Future + 'static>(&self, future: F) -> F::Output {
         let output = Rc::new(RefCell::new(None));
 
-        let _ = self.queue.borrow_mut().push_back(Box::pin({
+        self.queue.borrow_mut().push_back(Box::pin({
             let output = output.clone();
 
             async move {
@@ -47,7 +42,7 @@ impl Executor {
 
             let cx = &mut Context::from_waker(futures::task::noop_waker_ref());
             if task.as_mut().poll(cx).is_pending() {
-                let _ = self.queue.borrow_mut().push_back(task);
+                self.queue.borrow_mut().push_back(task);
             }
 
             if let Some(output) = output.borrow_mut().take() {

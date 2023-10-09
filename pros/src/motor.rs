@@ -284,13 +284,16 @@ pub struct MotorStoppedFuture {
 }
 impl core::future::Future for MotorStoppedFuture {
     type Output = crate::Result;
-    fn poll(self: core::pin::Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> core::task::Poll<Self::Output> {
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
         match self.motor.get_state()?.stopped {
             true => core::task::Poll::Ready(Ok(())),
             false => {
                 cx.waker().wake_by_ref();
                 core::task::Poll::Pending
-            },
+            }
         }
     }
 }
