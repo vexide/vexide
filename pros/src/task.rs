@@ -5,7 +5,10 @@ use hashbrown::HashMap;
 use snafu::Snafu;
 use spin::Once;
 
-use crate::{error::{bail_on, map_errno}, sync::Mutex};
+use crate::{
+    error::{bail_on, map_errno},
+    sync::Mutex,
+};
 
 const NEXT_LOCAL_INDEX: u32 = 0;
 
@@ -44,12 +47,19 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
 
         _ = alloc::ffi::CString::from_raw(name);
 
-        let handle = TaskHandle { task, next_free_tls_index: Box::leak(Box::new(UnsafeCell::new(0))) };
-        
+        let handle = TaskHandle {
+            task,
+            next_free_tls_index: Box::leak(Box::new(UnsafeCell::new(0))),
+        };
+
         // This task local is used by the thread_local macro to store the next empty thread local index.
         // This needs to be in task local storage so that the task returns from current has the correct value.
-        task_local_storage_set::<UnsafeCell<u32>>(task, handle.next_free_tls_index, NEXT_LOCAL_INDEX);
-        
+        task_local_storage_set::<UnsafeCell<u32>>(
+            task,
+            handle.next_free_tls_index,
+            NEXT_LOCAL_INDEX,
+        );
+
         Ok(handle)
     }
 }
@@ -305,7 +315,7 @@ unsafe fn task_local_storage_get<T>(task: pros_sys::task_t, index: u32) -> Optio
 }
 
 pub struct LocalKey<T: 'static> {
-    index_map: Once<Mutex<HashMap<TaskHandle, u32>>>, 
+    index_map: Once<Mutex<HashMap<TaskHandle, u32>>>,
     init: fn() -> T,
 }
 
@@ -317,7 +327,10 @@ impl<T: 'static> LocalKey<T> {
         }
     }
 
-    pub fn with<F, R>(&'static self, f: F) -> R where F: FnOnce(&T) -> R {
+    pub fn with<F, R>(&'static self, f: F) -> R
+    where
+        F: FnOnce(&T) -> R,
+    {
         self.index_map.call_once(|| Mutex::new(HashMap::new()));
 
         let current = current();
@@ -325,13 +338,20 @@ impl<T: 'static> LocalKey<T> {
             let val = unsafe { task_local_storage_get::<T>(current.task, *index).unwrap() };
             f(val)
         } else {
-            // Get the next empty index in thread_local storage. 
-            let next_empty: &u32 = unsafe { task_local_storage_get(current.task, NEXT_LOCAL_INDEX).unwrap() };
+            // Get the next empty index in thread_local storage.
+            let next_empty: &u32 =
+                unsafe { task_local_storage_get(current.task, NEXT_LOCAL_INDEX).unwrap() };
             let val = Box::leak(Box::new((self.init)()));
             unsafe { task_local_storage_set(current.task, val, *next_empty) }
-            self.index_map.get().unwrap().lock().insert(current.clone(), *next_empty);
+            self.index_map
+                .get()
+                .unwrap()
+                .lock()
+                .insert(current.clone(), *next_empty);
 
-            unsafe { *current.next_free_tls_index.get() += 1; }
+            unsafe {
+                *current.next_free_tls_index.get() += 1;
+            }
 
             let val = unsafe { task_local_storage_get::<T>(current.task, *next_empty).unwrap() };
             f(val)

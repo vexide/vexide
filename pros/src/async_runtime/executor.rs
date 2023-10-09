@@ -1,6 +1,11 @@
-use core::{cell::{RefCell, OnceCell}, future::Future, pin::Pin, task::Context};
+use core::{
+    cell::{OnceCell, RefCell},
+    future::Future,
+    pin::Pin,
+    task::Context,
+};
 
-use alloc::{boxed::Box, rc::Rc, collections::VecDeque};
+use alloc::{boxed::Box, collections::VecDeque, rc::Rc};
 
 use crate::task_local;
 
@@ -35,7 +40,7 @@ impl Executor {
                 *output.borrow_mut() = Some(future_output);
             }
         }));
-        
+
         loop {
             // we unwrap here because the queue should only be empty after our output value is set
             let mut task = self.queue.borrow_mut().pop_front().unwrap();

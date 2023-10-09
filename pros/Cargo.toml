@@ -22,6 +22,7 @@ no_std_io = { version = "0.6.0", features = ["alloc"] }
 futures = { version = "0.3.28", default-features = false, features = ["alloc"] }
 slab = { version = "0.4.9", default-features = false }
 hashbrown = { version = "0.14.1", default-features = true }
+async-trait = "0.1.73"
 
 [features]
 lvgl = ["pros-sys/xapi"]

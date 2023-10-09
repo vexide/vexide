@@ -33,19 +33,23 @@ pub mod lvgl;
 pub mod adi;
 pub mod link;
 
+pub use async_trait::async_trait;
+
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
+use alloc::boxed::Box;
+#[async_trait::async_trait]
 pub trait Robot {
-    fn opcontrol(&mut self) -> Result {
+    async fn opcontrol(&mut self) -> Result {
         Ok(())
     }
-    fn auto(&mut self) -> Result {
+    async fn auto(&mut self) -> Result {
         Ok(())
     }
-    fn disabled(&mut self) -> Result {
+    async fn disabled(&mut self) -> Result {
         Ok(())
     }
-    fn comp_init(&mut self) -> Result {
+    async fn comp_init(&mut self) -> Result {
         Ok(())
     }
 }
@@ -64,6 +68,7 @@ macro_rules! __gen_exports {
                     .as_mut()
                     .expect("Expected initialize to run before opcontrol")
             })
+            .block_on()
             .unwrap();
         }
 
@@ -75,6 +80,7 @@ macro_rules! __gen_exports {
                     .as_mut()
                     .expect("Expected initialize to run before auto")
             })
+            .block_on()
             .unwrap();
         }
 
@@ -86,6 +92,7 @@ macro_rules! __gen_exports {
                     .as_mut()
                     .expect("Expected initialize to run before disabled")
             })
+            .block_on()
             .unwrap();
         }
 
@@ -97,6 +104,7 @@ macro_rules! __gen_exports {
                     .as_mut()
                     .expect("Expected initialize to run before comp_init")
             })
+            .block_on()
             .unwrap();
         }
     };
@@ -171,8 +179,12 @@ macro_rules! robot {
 pub mod prelude {
     pub use crate::robot;
     pub use crate::Robot;
-    pub use crate::{print, println, task_local};
 
+    // Import Box from alloc so that it can be used in async_trait!
+    pub use crate::{async_trait, print, println, task_local};
+    pub use alloc::boxed::Box;
+
+    pub use crate::async_runtime::*;
     pub use crate::controller::*;
     pub use crate::error::PortError;
     pub use crate::lcd::{buttons::Button, LcdError};

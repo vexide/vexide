@@ -16,8 +16,7 @@ pub fn spawn(future: impl Future<Output = ()> + Send + 'static) {
     executor::EXECUTOR.with(|e| e.spawn(future));
 }
 
-pub fn block_on<F: Future + 'static>(future: F) -> F::Output
-{
+pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
     executor::EXECUTOR.with(|e| e.block_on(future))
 }
 

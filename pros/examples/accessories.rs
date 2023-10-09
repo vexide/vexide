@@ -6,8 +6,9 @@ use pros::prelude::*;
 
 #[derive(Debug, Default)]
 struct ExampleRobot;
+#[async_trait]
 impl Robot for ExampleRobot {
-    fn opcontrol(&mut self) -> pros::Result {
+    async fn opcontrol(&mut self) -> pros::Result {
         // Create a new motor plugged into port 2. The motor will brake when not moving.
         let motor = Motor::new(2, BrakeMode::Brake)?;
         // Create a controller, specifically controller 1.
