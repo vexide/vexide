@@ -22,6 +22,7 @@ pros-macros = { version = "0.1.0", path = "../pros-macros" }
 futures = { version = "0.3.28", default-features = false, features = ["alloc"] }
 concurrent-queue = { version = "2.3.0", default-features = false }
 slab = { version = "0.4.9", default-features = false }
+hashbrown = { version = "0.14.1", default-features = true }
 
 [features]
 lvgl = ["pros-sys/xapi"]

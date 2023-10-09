@@ -11,6 +11,7 @@ pub mod pid;
 pub mod position;
 pub mod sensors;
 pub mod sync;
+#[macro_use]
 pub mod task;
 
 #[doc(hidden)]
@@ -54,7 +55,7 @@ pub trait Robot {
 
 pub mod prelude {
     pub use crate::Robot;
-    pub use crate::{print, println};
+    pub use crate::{print, println, task_local};
     pub use pros_macros::robot;
 
     pub use crate::controller::*;

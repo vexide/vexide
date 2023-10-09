@@ -1,9 +1,11 @@
-extern crate alloc;
-use core::ffi::c_void;
+use core::{cell::UnsafeCell, hash::Hash};
 
+use alloc::boxed::Box;
+use hashbrown::HashMap;
 use snafu::Snafu;
+use spin::Once;
 
-use crate::error::{bail_on, map_errno};
+use crate::{error::{bail_on, map_errno}, sync::Mutex};
 
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
 /// Takes in a closure that can move variables if needed.
@@ -31,7 +33,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
             core::ptr::null(),
             pros_sys::task_create(
                 Some(TaskEntrypoint::<F>::cast_and_call_external),
-                &mut entrypoint as *mut _ as *mut c_void,
+                &mut entrypoint as *mut _ as *mut core::ffi::c_void,
                 priority as _,
                 stack_depth as _,
                 name,
@@ -39,16 +41,36 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
         );
 
         _ = alloc::ffi::CString::from_raw(name);
-        Ok(TaskHandle { task })
+
+        let handle = TaskHandle { task, next_free_tls_index: Box::leak(Box::new(UnsafeCell::new(0))) };
+        
+        // This task local is used by the thread_local macro to store the next empty thread local index.
+        // This needs to be in task local storage so that the task returns from current has the correct value.
+        task_local_storage_set::<UnsafeCell<u32>>(task, handle.next_free_tls_index, 0);
+        
+        Ok(handle)
     }
 }
 
 /// An owned permission to perform actions on a task.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone)]
 pub struct TaskHandle {
     task: pros_sys::task_t,
+    next_free_tls_index: &'static UnsafeCell<u32>,
 }
 unsafe impl Send for TaskHandle {}
+impl Hash for TaskHandle {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.task.hash(state)
+    }
+}
+
+impl PartialEq for TaskHandle {
+    fn eq(&self, other: &Self) -> bool {
+        self.task == other.task
+    }
+}
+impl Eq for TaskHandle {}
 
 impl TaskHandle {
     /// Pause execution of the task.
@@ -222,7 +244,7 @@ impl<F> TaskEntrypoint<F>
 where
     F: FnOnce(),
 {
-    unsafe extern "C" fn cast_and_call_external(this: *mut c_void) {
+    unsafe extern "C" fn cast_and_call_external(this: *mut core::ffi::c_void) {
         let this = this.cast::<Self>().read();
 
         (this.function)()
@@ -250,8 +272,11 @@ pub fn sleep(duration: core::time::Duration) {
 /// Returns the task the function was called from.
 pub fn current() -> TaskHandle {
     unsafe {
+        let task = pros_sys::task_get_current();
+        let next = task_local_storage_get::<UnsafeCell<u32>>(task, 0).unwrap();
         TaskHandle {
-            task: pros_sys::task_get_current(),
+            task,
+            next_free_tls_index: next,
         }
     }
 }
@@ -262,4 +287,65 @@ pub fn current() -> TaskHandle {
 /// returns the value of the notification
 pub fn get_notification() -> u32 {
     unsafe { pros_sys::task_notify_take(false, pros_sys::TIMEOUT_MAX) }
+}
+
+// Unsafe because you can change the thread local storage while it is being read.
+// This requires you to leak val so that you can be sure it lives the entire task.
+unsafe fn task_local_storage_set<T>(task: pros_sys::task_t, val: &'static T, index: u32) {
+    // Yes, we transmute val. This is the intended use of this function.
+    pros_sys::vTaskSetThreadLocalStoragePointer(task, index as _, (val as *const T).cast());
+}
+
+// Unsafe because we can't check if the type is the same as the one that was set.
+unsafe fn task_local_storage_get<T>(task: pros_sys::task_t, index: u32) -> Option<&'static T> {
+    let val = pros_sys::pvTaskGetThreadLocalStoragePointer(task, index as _);
+    val.cast::<T>().as_ref()
+}
+
+pub struct LocalKey<T: 'static> {
+    index_map: Once<Mutex<HashMap<TaskHandle, u32>>>, 
+    init: fn() -> T,
+}
+
+impl<T: 'static> LocalKey<T> {
+    pub const fn new(init: fn() -> T) -> Self {
+        Self {
+            index_map: Once::new(),
+            init,
+        }
+    }
+
+    pub fn with<F, R>(&'static self, f: F) -> R where F: FnOnce(&T) -> R {
+        self.index_map.call_once(|| Mutex::new(HashMap::new()));
+
+        let current = current();
+        if let Some(index) = self.index_map.get().unwrap().lock().get(&current) {
+            let val = unsafe { task_local_storage_get::<T>(current.task, *index).unwrap() };
+            f(val)
+        } else {
+            // Get the next empty index in thread_local storage. 
+            let next_empty: &u32 = unsafe { task_local_storage_get(current.task, 0).unwrap() };
+            let val = Box::leak(Box::new((self.init)()));
+            unsafe { task_local_storage_set(current.task, val, *next_empty) }
+            self.index_map.get().unwrap().lock().insert(current.clone(), *next_empty);
+
+            unsafe { *current.next_free_tls_index.get() += 1; }
+
+            let val = unsafe { task_local_storage_get::<T>(current.task, *next_empty).unwrap() };
+            f(val)
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! task_local {
+    ($(#[$attr:meta])* $vis:vis static $name:ident: $t:ty = $init:expr; $($rest:tt)*) => {
+        $(#[$attr])*
+        static $name: LocalKey<$t> = LocalKey::new(|| $init);
+        task_local!($($rest)*);
+    };
+    ($(#[$attr:meta])* $vis:vis static $name:ident: $t:ty = $init:expr) => {
+        $(#[$attr])*
+        static $name: LocalKey<$t> = LocalKey::new(|| $init);
+    };
 }

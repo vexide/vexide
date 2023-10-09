@@ -25,7 +25,7 @@ pub type task_t = *const core::ffi::c_void;
 pub type task_fn_t = Option<unsafe extern "C" fn(arg1: *mut ::core::ffi::c_void)>;
 pub type mutex_t = *const core::ffi::c_void;
 
-const CURRENT_TASK: task_t = 0 as task_t;
+const CURRENT_TASK: task_t = core::ptr::null();
 
 extern "C" {
     /** Gets the number of milliseconds since PROS initialized.
@@ -280,4 +280,45 @@ extern "C" {
     \param mutex
     Mutex to unlock.*/
     pub fn mutex_delete(mutex: mutex_t);
+
+    /** Sets a value in a task's thread local storage array.
+
+    This function is intended for advanced users only.
+
+    Parameters:
+        xTaskToSet  The handle of the task to which the thread local data is being written. A task can write to its own thread local data by using NULL as the parameter value.
+        xIndex  The index into the thread local storage array to which data is being written.
+
+        The number of available array indexes is set by the configNUM_THREAD_LOCAL_STORAGE_POINTERS compile time configuration constant in FreeRTOSConfig.h.
+        pvValue  The value to write into the index specified by the xIndex parameter.
+
+    Example usage:
+
+    See the examples provided on the thread local storage array documentation page. */
+    pub fn vTaskSetThreadLocalStoragePointer(
+        xTaskToSet: task_t,
+        xIndex: i32,
+        pvValue: *const core::ffi::c_void,
+    );
+
+    /** Retrieves a value from a task's thread local storage array.
+
+    This function is intended for advanced users only.
+
+    Parameters:
+        xTaskToQuery  The handle of the task from which the thread local data is being read. A task can read its own thread local data by using NULL as the parameter value.
+        xIndex  The index into the thread local storage array from which data is being read.
+
+        The number of available array indexes is set by the configNUM_THREAD_LOCAL_STORAGE_POINTERS compile time configuration constant in FreeRTOSConfig.h.
+
+    Returns:
+        The values stored in index position xIndex of the thread local storage array of task xTaskToQuery.
+
+    Example usage:
+
+        See the examples provided on the thread local storage array documentation page. */
+    pub fn pvTaskGetThreadLocalStoragePointer(
+        xTaskToQuery: task_t,
+        xIndex: i32,
+    ) -> *const core::ffi::c_void;
 }
