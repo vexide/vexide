@@ -1,4 +1,4 @@
-use core::{cell::UnsafeCell, hash::Hash};
+use core::{cell::UnsafeCell, hash::Hash, future::Future, task::Poll};
 
 use alloc::boxed::Box;
 use hashbrown::HashMap;
@@ -275,10 +275,35 @@ map_errno! {
     }
 }
 
-/// Sleeps the current task for the given amount of time.
-/// This is especially useful in loops to provide a chance for other tasks to run.
-pub fn sleep(duration: core::time::Duration) {
+/// Blocks the current task for the given amount of time, if you are in an async function, **you probably don't want to use this**.
+/// This function will block the entire task, including the async executor!
+/// Instead, you should use [`sleep`].
+pub fn delay(duration: core::time::Duration) {
     unsafe { pros_sys::delay(duration.as_millis() as u32) }
+}
+
+pub struct SleepFuture {
+    target_millis: u32,
+}
+impl Future for SleepFuture {
+    type Output = ();
+
+    fn poll(self: core::pin::Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> core::task::Poll<Self::Output> {
+        if self.target_millis < unsafe {
+             pros_sys::millis()
+        } {
+            Poll::Ready(())
+        } else {
+            cx.waker().wake_by_ref();
+            Poll::Pending
+        }
+    }
+}
+
+pub fn sleep(duration: core::time::Duration) -> SleepFuture {
+    SleepFuture {
+        target_millis: unsafe { pros_sys::millis() + duration.as_millis() as u32 },
+    }
 }
 
 /// Returns the task the function was called from.

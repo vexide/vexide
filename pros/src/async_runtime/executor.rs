@@ -1,6 +1,11 @@
-use core::{cell::RefCell, future::Future, pin::Pin, task::Context};
+use core::{
+    cell::RefCell,
+    future::Future,
+    pin::Pin,
+    task::{Context, Waker},
+};
 
-use alloc::{boxed::Box, collections::VecDeque, rc::Rc};
+use alloc::{boxed::Box, collections::VecDeque, rc::Rc, task::Wake};
 
 use crate::task_local;
 
@@ -8,10 +13,10 @@ task_local! {
     pub(crate) static EXECUTOR: Rc<Executor> = Rc::new(Executor::new())
 }
 
-type ExecutableFuture = Pin<Box<dyn Future<Output = ()>>>;
+type Task = Pin<Box<dyn Future<Output = ()>>>;
 
 pub struct Executor {
-    queue: RefCell<VecDeque<ExecutableFuture>>,
+    queue: RefCell<VecDeque<Task>>,
 }
 impl Executor {
     pub fn new() -> Self {
@@ -37,17 +42,40 @@ impl Executor {
         }));
 
         loop {
-            // we unwrap here because the queue should only be empty after our output value is set
-            let mut task = self.queue.borrow_mut().pop_front().unwrap();
+            let mut task = match self.queue.borrow_mut().pop_front() {
+                Some(task) => task,
+                None => continue,
+            };
 
-            let cx = &mut Context::from_waker(futures::task::noop_waker_ref());
+            let task_waker = alloc::sync::Arc::new(TaskWaker {
+                task: RefCell::new(None),
+            });
+            let waker = Waker::from(task_waker.clone());
+
+            let cx = &mut Context::from_waker(&waker);
             if task.as_mut().poll(cx).is_pending() {
-                self.queue.borrow_mut().push_back(task);
+                task_waker.task.borrow_mut().replace(task);
             }
 
             if let Some(output) = output.borrow_mut().take() {
                 break output;
             }
+        }
+    }
+}
+
+pub struct TaskWaker {
+    task: RefCell<Option<Task>>,
+}
+// These are here to apease the waker struct.
+// The executor is single threaded and this waker will never be passed around threads or shared between threads.
+unsafe impl Send for TaskWaker {}
+unsafe impl Sync for TaskWaker {}
+
+impl Wake for TaskWaker {
+    fn wake(self: alloc::sync::Arc<Self>) {
+        if let Some(task) = self.task.borrow_mut().take() {
+            EXECUTOR.with(|e| e.queue.borrow_mut().push_back(task))
         }
     }
 }
