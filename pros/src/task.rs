@@ -396,3 +396,12 @@ macro_rules! task_local {
         $vis static $name: $crate::task::LocalKey<$t> = $crate::task::LocalKey::new(|| $init);
     };
 }
+
+#[doc(hidden)]
+pub fn __init_main() {
+    unsafe {
+        pros_sys::lcd_initialize();
+        let next = Box::leak(Box::new(1));
+        task_local_storage_set(pros_sys::task_get_current(), next, NEXT_LOCAL_INDEX);
+    }
+}
