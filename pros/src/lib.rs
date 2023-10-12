@@ -153,9 +153,7 @@ macro_rules! robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            unsafe {
-                ::pros::__pros_sys::lcd_initialize();
-            }
+            ::pros::task::__init_main();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -166,9 +164,7 @@ macro_rules! robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            unsafe {
-                ::pros::__pros_sys::lcd_initialize();
-            }
+            ::pros::task::__init_main();
             unsafe {
                 ROBOT = Some($init);
             }
