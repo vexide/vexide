@@ -9,24 +9,49 @@ use alloc::{boxed::Box, collections::VecDeque, rc::Rc, task::Wake};
 
 use crate::task_local;
 
+use super::reactor::Reactor;
+
 task_local! {
     pub(crate) static EXECUTOR: Rc<Executor> = Rc::new(Executor::new())
 }
 
 type Task = Pin<Box<dyn Future<Output = ()>>>;
 
-pub struct Executor {
+pub(crate) struct Executor {
     queue: RefCell<VecDeque<Task>>,
+    pub(crate) reactor: Reactor,
 }
 impl Executor {
     pub fn new() -> Self {
         Self {
             queue: RefCell::new(VecDeque::new()),
+            reactor: Reactor::new(),
         }
     }
 
     pub fn spawn(&self, future: impl Future<Output = ()> + Send + 'static) {
         self.queue.borrow_mut().push_back(Box::pin(future));
+    }
+
+    fn tick(&self) -> bool {
+        self.reactor.tick();
+
+        let mut task = match self.queue.borrow_mut().pop_front() {
+            Some(task) => task,
+            None => return false,
+        };
+
+        let task_waker = alloc::sync::Arc::new(TaskWaker {
+            task: RefCell::new(None),
+        });
+        let waker = Waker::from(task_waker.clone());
+
+        let cx = &mut Context::from_waker(&waker);
+        if task.as_mut().poll(cx).is_pending() {
+            task_waker.task.borrow_mut().replace(task);
+        }
+
+        true
     }
 
     pub fn block_on<F: Future + 'static>(&self, future: F) -> F::Output {
@@ -42,25 +67,16 @@ impl Executor {
         }));
 
         loop {
-            let mut task = match self.queue.borrow_mut().pop_front() {
-                Some(task) => task,
-                None => continue,
-            };
-
-            let task_waker = alloc::sync::Arc::new(TaskWaker {
-                task: RefCell::new(None),
-            });
-            let waker = Waker::from(task_waker.clone());
-
-            let cx = &mut Context::from_waker(&waker);
-            if task.as_mut().poll(cx).is_pending() {
-                task_waker.task.borrow_mut().replace(task);
-            }
+            self.tick();
 
             if let Some(output) = output.borrow_mut().take() {
                 break output;
             }
         }
+    }
+
+    pub fn run(&self) {
+        while self.tick() {}
     }
 }
 

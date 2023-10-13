@@ -1,6 +1,7 @@
 use core::future::Future;
 
 pub(crate) mod executor;
+pub(crate) mod reactor;
 
 pub trait FutureExt: Future + 'static {
     fn block_on(self) -> Self::Output

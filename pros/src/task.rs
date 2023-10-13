@@ -7,6 +7,7 @@ use snafu::Snafu;
 use spin::Once;
 
 use crate::{
+    async_runtime::executor::EXECUTOR,
     error::{bail_on, map_errno},
     sync::Mutex,
 };
@@ -281,7 +282,12 @@ impl Future for SleepFuture {
         if self.target_millis < unsafe { pros_sys::millis() } {
             Poll::Ready(())
         } else {
-            cx.waker().wake_by_ref();
+            EXECUTOR.with(|e| {
+                e.reactor
+                    .sleepers
+                    .borrow_mut()
+                    .push(cx.waker().clone(), self.target_millis)
+            });
             Poll::Pending
         }
     }
