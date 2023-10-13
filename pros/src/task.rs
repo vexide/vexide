@@ -1,7 +1,8 @@
-use core::{cell::UnsafeCell, hash::Hash, future::Future, task::Poll};
+use core::{cell::RefCell, future::Future, hash::Hash, ptr::NonNull, task::Poll};
 
 use alloc::boxed::Box;
 use hashbrown::HashMap;
+use slab::Slab;
 use snafu::Snafu;
 use spin::Once;
 
@@ -9,8 +10,6 @@ use crate::{
     error::{bail_on, map_errno},
     sync::Mutex,
 };
-
-const NEXT_LOCAL_INDEX: u32 = 0;
 
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
 /// Takes in a closure that can move variables if needed.
@@ -47,20 +46,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
 
         _ = alloc::ffi::CString::from_raw(name);
 
-        let handle = TaskHandle {
-            task,
-            next_free_tls_index: Box::leak(Box::new(UnsafeCell::new(0))),
-        };
-
-        // This task local is used by the thread_local macro to store the next empty thread local index.
-        // This needs to be in task local storage so that the task returns from current has the correct value.
-        task_local_storage_set::<UnsafeCell<u32>>(
-            task,
-            handle.next_free_tls_index,
-            NEXT_LOCAL_INDEX,
-        );
-
-        Ok(handle)
+        Ok(TaskHandle { task })
     }
 }
 
@@ -68,7 +54,6 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
 #[derive(Clone)]
 pub struct TaskHandle {
     task: pros_sys::task_t,
-    next_free_tls_index: &'static UnsafeCell<u32>,
 }
 unsafe impl Send for TaskHandle {}
 impl Hash for TaskHandle {
@@ -275,7 +260,8 @@ map_errno! {
     }
 }
 
-/// Blocks the current task for the given amount of time, if you are in an async function, **you probably don't want to use this**.
+/// Blocks the current task for the given amount of time, if you are in an async function.
+/// ## you probably don't want to use this.
 /// This function will block the entire task, including the async executor!
 /// Instead, you should use [`sleep`].
 pub fn delay(duration: core::time::Duration) {
@@ -288,10 +274,11 @@ pub struct SleepFuture {
 impl Future for SleepFuture {
     type Output = ();
 
-    fn poll(self: core::pin::Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> core::task::Poll<Self::Output> {
-        if self.target_millis < unsafe {
-             pros_sys::millis()
-        } {
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        if self.target_millis < unsafe { pros_sys::millis() } {
             Poll::Ready(())
         } else {
             cx.waker().wake_by_ref();
@@ -310,11 +297,7 @@ pub fn sleep(duration: core::time::Duration) -> SleepFuture {
 pub fn current() -> TaskHandle {
     unsafe {
         let task = pros_sys::task_get_current();
-        let next = task_local_storage_get::<UnsafeCell<u32>>(task, NEXT_LOCAL_INDEX).unwrap();
-        TaskHandle {
-            task,
-            next_free_tls_index: next,
-        }
+        TaskHandle { task }
     }
 }
 
@@ -339,8 +322,12 @@ unsafe fn task_local_storage_get<T>(task: pros_sys::task_t, index: u32) -> Optio
     val.cast::<T>().as_ref()
 }
 
+struct ThreadLocalStorage {
+    pub data: Slab<NonNull<()>>,
+}
+
 pub struct LocalKey<T: 'static> {
-    index_map: Once<Mutex<HashMap<TaskHandle, u32>>>,
+    index_map: Once<Mutex<HashMap<TaskHandle, usize>>>,
     init: fn() -> T,
 }
 
@@ -359,27 +346,33 @@ impl<T: 'static> LocalKey<T> {
         self.index_map.call_once(|| Mutex::new(HashMap::new()));
 
         let current = current();
+
+        // Get the thread local storage for this task.
+        // Creating it if it doesn't exist.
+        let storage = unsafe {
+            task_local_storage_get(current.task, 0).unwrap_or_else(|| {
+                let storage = Box::leak(Box::new(RefCell::new(ThreadLocalStorage {
+                    data: Slab::new(),
+                })));
+                task_local_storage_set(current.task, storage, 0);
+                storage
+            })
+        };
+
         if let Some(index) = self.index_map.get().unwrap().lock().get(&current) {
-            let val = unsafe { task_local_storage_get::<T>(current.task, *index).unwrap() };
-            f(val)
+            let val = unsafe { storage.borrow().data[*index].cast::<T>().as_ptr().read() };
+            f(&val)
         } else {
-            // Get the next empty index in thread_local storage.
-            let next_empty: &u32 =
-                unsafe { task_local_storage_get(current.task, NEXT_LOCAL_INDEX).unwrap() };
             let val = Box::leak(Box::new((self.init)()));
-            unsafe { task_local_storage_set(current.task, val, *next_empty) }
+            let ptr = NonNull::from(val).cast();
+            let index = storage.borrow_mut().data.insert(ptr);
             self.index_map
                 .get()
                 .unwrap()
                 .lock()
-                .insert(current.clone(), *next_empty);
+                .insert(current.clone(), index);
 
-            unsafe {
-                *current.next_free_tls_index.get() += 1;
-            }
-
-            let val = unsafe { task_local_storage_get::<T>(current.task, *next_empty).unwrap() };
-            f(val)
+            f(unsafe { ptr.cast().as_ref() })
         }
     }
 }
@@ -401,7 +394,5 @@ macro_rules! task_local {
 pub fn __init_main() {
     unsafe {
         pros_sys::lcd_initialize();
-        let next = Box::leak(Box::new(1));
-        task_local_storage_set(pros_sys::task_get_current(), next, NEXT_LOCAL_INDEX);
     }
 }
