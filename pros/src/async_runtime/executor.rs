@@ -75,7 +75,7 @@ impl Executor {
         }
     }
 
-    pub fn run(&self) {
+    pub fn complete(&self) {
         while self.tick() {}
     }
 }

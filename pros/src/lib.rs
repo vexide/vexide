@@ -70,6 +70,8 @@ macro_rules! __gen_exports {
             })
             .block_on()
             .unwrap();
+
+            $crate::async_runtime::complete();
         }
 
         #[doc(hidden)]
@@ -82,6 +84,8 @@ macro_rules! __gen_exports {
             })
             .block_on()
             .unwrap();
+
+            $crate::async_runtime::complete();
         }
 
         #[doc(hidden)]
@@ -94,6 +98,8 @@ macro_rules! __gen_exports {
             })
             .block_on()
             .unwrap();
+
+            $crate::async_runtime::complete();
         }
 
         #[doc(hidden)]
@@ -106,6 +112,8 @@ macro_rules! __gen_exports {
             })
             .block_on()
             .unwrap();
+
+            $crate::async_runtime::complete();
         }
     };
 }

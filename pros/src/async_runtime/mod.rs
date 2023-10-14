@@ -21,6 +21,10 @@ pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
     executor::EXECUTOR.with(|e| e.block_on(future))
 }
 
+pub fn complete() {
+    executor::EXECUTOR.with(|e| e.complete());
+}
+
 #[macro_export]
 macro_rules! ready {
     ($e:expr) => {
