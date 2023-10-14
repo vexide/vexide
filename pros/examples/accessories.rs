@@ -9,6 +9,15 @@ struct ExampleRobot;
 #[async_trait]
 impl Robot for ExampleRobot {
     async fn opcontrol(&mut self) -> pros::Result {
+        let handle = pros::async_runtime::spawn(async {
+            for _ in 0..5 {
+                println!("Hello from async!");
+                sleep(Duration::from_millis(1000));
+            }
+        });
+
+        handle.join();
+
         // Create a new motor plugged into port 2. The motor will brake when not moving.
         let motor = Motor::new(2, BrakeMode::Brake)?;
         motor.wait_until_stopped().await?;

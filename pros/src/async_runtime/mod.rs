@@ -1,20 +1,35 @@
-use core::future::Future;
+use core::{cell::RefCell, future::Future};
+
+use alloc::rc::Rc;
 
 pub(crate) mod executor;
 pub(crate) mod reactor;
 
-pub trait FutureExt: Future + 'static {
-    fn block_on(self) -> Self::Output
-    where
-        Self: Sized,
-    {
+pub struct JoinHandle<T> {
+    output: Rc<RefCell<Option<T>>>,
+    _marker: core::marker::PhantomData<T>,
+}
+impl<T> JoinHandle<T> {
+    pub fn join(self) -> T {
+        loop {
+            if let Some(output) = self.output.borrow_mut().take() {
+                break output;
+            }
+
+            executor::EXECUTOR.with(|e| (*e).tick());
+        }
+    }
+}
+
+pub trait FutureExt: Future + 'static + Sized {
+    fn block_on(self) -> Self::Output {
         block_on(self)
     }
 }
 impl<F> FutureExt for F where F: Future + Send + 'static {}
 
-pub fn spawn(future: impl Future<Output = ()> + Send + 'static) {
-    executor::EXECUTOR.with(|e| e.spawn(future));
+pub fn spawn<T>(future: impl Future<Output = T> + Send + 'static) -> JoinHandle<T> {
+    executor::EXECUTOR.with(|e| e.spawn(future))
 }
 
 pub fn block_on<F: Future + 'static>(future: F) -> F::Output {

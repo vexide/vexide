@@ -9,13 +9,34 @@ use alloc::{boxed::Box, collections::VecDeque, rc::Rc, task::Wake};
 
 use crate::task_local;
 
-use super::reactor::Reactor;
+use super::{reactor::Reactor, JoinHandle};
 
 task_local! {
     pub(crate) static EXECUTOR: Rc<Executor> = Rc::new(Executor::new())
 }
 
-type Task = Pin<Box<dyn Future<Output = ()>>>;
+pub struct Task {
+    future: Pin<Box<dyn Future<Output = ()>>>,
+}
+
+impl Task {
+    pub(crate) fn wrap<F: Future + 'static>(
+        future: F,
+        output: Rc<RefCell<Option<F::Output>>>,
+    ) -> Self {
+        Self {
+            future: Box::pin({
+                let output = output.clone();
+
+                async move {
+                    let future_output = future.await;
+                    *core::cell::RefCell::<_>::borrow_mut(&output) =
+                        Some(future_output);
+                }
+            }),
+        }
+    }
+}
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Task>>,
@@ -29,11 +50,19 @@ impl Executor {
         }
     }
 
-    pub fn spawn(&self, future: impl Future<Output = ()> + Send + 'static) {
-        self.queue.borrow_mut().push_back(Box::pin(future));
+    pub fn spawn<T>(&self, future: impl Future<Output = T> + Send + 'static) -> JoinHandle<T> {
+        let output = Rc::new(RefCell::new(None));
+        self.queue
+            .borrow_mut()
+            .push_back(Task::wrap(future, output.clone()));
+
+        JoinHandle {
+            output,
+            _marker: core::marker::PhantomData,
+        }
     }
 
-    fn tick(&self) -> bool {
+    pub(crate) fn tick(&self) -> bool {
         self.reactor.tick();
 
         let mut task = match self.queue.borrow_mut().pop_front() {
@@ -47,7 +76,7 @@ impl Executor {
         let waker = Waker::from(task_waker.clone());
 
         let cx = &mut Context::from_waker(&waker);
-        if task.as_mut().poll(cx).is_pending() {
+        if task.future.as_mut().poll(cx).is_pending() {
             task_waker.task.borrow_mut().replace(task);
         }
 
@@ -57,19 +86,14 @@ impl Executor {
     pub fn block_on<F: Future + 'static>(&self, future: F) -> F::Output {
         let output = Rc::new(RefCell::new(None));
 
-        self.queue.borrow_mut().push_back(Box::pin({
-            let output = output.clone();
-
-            async move {
-                let future_output = future.await;
-                *output.borrow_mut() = Some(future_output);
-            }
-        }));
+        self.queue
+            .borrow_mut()
+            .push_back(Task::wrap(future, output.clone()));
 
         loop {
             self.tick();
 
-            if let Some(output) = output.borrow_mut().take() {
+            if let Some(output) = (*output).borrow_mut().take() {
                 break output;
             }
         }
