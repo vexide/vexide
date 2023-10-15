@@ -1,6 +1,6 @@
 [package]
 name = "pros"
-version = "0.0.10-rc.1"
+version = "0.0.10"
 edition = "2021"
 description = "Rust bindings for PROS"
 keywords = ["PROS", "Robotics", "bindings"]
