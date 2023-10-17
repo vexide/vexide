@@ -1,10 +1,11 @@
 use core::{cell::RefCell, future::Future, hash::Hash, ptr::NonNull, task::Poll};
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, format, ffi::CString};
 use hashbrown::HashMap;
 use slab::Slab;
 use snafu::Snafu;
 use spin::Once;
+use cfg_if::cfg_if;
 
 use crate::{
     async_runtime::executor::EXECUTOR,
@@ -398,6 +399,17 @@ macro_rules! task_local {
 
 #[doc(hidden)]
 pub fn __init_main() {
+    cfg_if! {
+        if #[cfg(target_arch="wasm")] {
+            std::panic::set_hook(Box::new(|msg| {
+                extern "C" fn sim_abort(msg: *const c_char) -> !;
+                
+                let msg_str = format!("{msg}");
+                let msg_c_str = CString::new(msg_str).unwrap();
+                sim_abort(msg_c_str.as_ref());
+            }));
+        }
+    }
     unsafe {
         pros_sys::lcd_initialize();
     }
