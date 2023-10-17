@@ -31,7 +31,7 @@ pub trait FutureExt: Future + 'static + Sized {
 }
 impl<F> FutureExt for F where F: Future + Send + 'static {}
 
-/// Spawns a future to be run asynchronously.
+/// Runs a future to completion asynchronously without having to await it.
 /// To get the the return value you can call [`JoinHandle.join`](JoinHandle::join).
 pub fn spawn<T>(future: impl Future<Output = T> + Send + 'static) -> JoinHandle<T> {
     executor::EXECUTOR.with(|e| e.spawn(future))
