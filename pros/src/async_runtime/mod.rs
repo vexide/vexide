@@ -7,7 +7,6 @@ pub(crate) mod reactor;
 
 pub struct JoinHandle<T> {
     output: Rc<RefCell<Option<T>>>,
-    _marker: core::marker::PhantomData<T>,
 }
 impl<T> JoinHandle<T> {
     /// Blocks the current task untill a return value can be extracted from your future.

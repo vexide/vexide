@@ -58,7 +58,6 @@ impl Executor {
 
         JoinHandle {
             output,
-            _marker: core::marker::PhantomData,
         }
     }
 
