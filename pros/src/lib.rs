@@ -185,7 +185,7 @@ pub mod prelude {
     pub use crate::Robot;
 
     // Import Box from alloc so that it can be used in async_trait!
-    pub use crate::{async_trait, print, println, task_local};
+    pub use crate::{async_trait, print, println, os_task_local};
     pub use alloc::boxed::Box;
 
     pub use crate::async_runtime::*;

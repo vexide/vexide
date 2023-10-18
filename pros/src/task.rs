@@ -385,7 +385,7 @@ impl<T: 'static> LocalKey<T> {
 }
 
 #[macro_export]
-macro_rules! task_local {
+macro_rules! os_task_local {
     ($(#[$attr:meta])* $vis:vis static $name:ident: $t:ty = $init:expr; $($rest:tt)*) => {
         $(#[$attr])*
         $vis static $name: LocalKey<$t> = $crate::task::LocalKey::new(|| $init);

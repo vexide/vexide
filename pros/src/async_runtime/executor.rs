@@ -7,11 +7,11 @@ use core::{
 
 use alloc::{boxed::Box, collections::VecDeque, rc::Rc, task::Wake};
 
-use crate::task_local;
+use crate::os_task_local;
 
 use super::{reactor::Reactor, JoinHandle};
 
-task_local! {
+os_task_local! {
     pub(crate) static EXECUTOR: Rc<Executor> = Rc::new(Executor::new())
 }
 
