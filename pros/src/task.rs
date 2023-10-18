@@ -1,6 +1,6 @@
 use core::{cell::RefCell, future::Future, hash::Hash, ptr::NonNull, task::Poll};
 
-use alloc::{boxed::Box, format, ffi::CString};
+use alloc::boxed::Box;
 use hashbrown::HashMap;
 use slab::Slab;
 use snafu::Snafu;

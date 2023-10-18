@@ -21,6 +21,16 @@ impl<T> JoinHandle<T> {
             executor::EXECUTOR.with(|e| (*e).tick());
         }
     }
+
+    /// Polls if the future has completed.
+    /// If the future has completed, returns `Poll::Ready(output)`.
+    pub fn poll(&self) -> core::task::Poll<T> {
+        if let Some(output) = self.output.borrow_mut().take() {
+            core::task::Poll::Ready(output)
+        } else {
+            core::task::Poll::Pending
+        }
+    }
 }
 
 pub trait FutureExt: Future + 'static + Sized {
@@ -47,6 +57,21 @@ pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
 /// Blocks the current task and polls all futures to completion.
 pub fn complete() {
     executor::EXECUTOR.with(|e| e.complete());
+}
+
+/// Same as [`complete`] but returns None if the executor can not complete all tasks before the given timeout.
+pub fn complete_timeout(timeout: core::time::Duration) -> Option<()> {
+    let sleep_handle = spawn(crate::task::sleep(timeout));
+
+    loop {
+        executor::EXECUTOR.with(|e| e.tick());
+
+        if executor::EXECUTOR.with(|e| e.is_completed()) {
+            return Some(());
+        } else if sleep_handle.poll().is_ready() {
+            return None;
+        }
+    }
 }
 
 #[macro_export]

@@ -101,6 +101,10 @@ impl Executor {
     pub fn complete(&self) {
         while self.tick() {}
     }
+
+    pub(crate) fn is_completed(&self) -> bool {
+        self.queue.borrow().is_empty()
+    }
 }
 
 pub struct TaskWaker {
