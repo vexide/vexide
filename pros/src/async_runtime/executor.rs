@@ -62,7 +62,7 @@ impl Executor {
     }
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
-        let woken = Arc::new(AtomicBool::new(false));
+        let woken = Arc::new(AtomicBool::new(true));
 
         let waker = waker_fn({
             let woken = woken.clone();
@@ -71,8 +71,10 @@ impl Executor {
         let mut cx = Context::from_waker(&waker);
 
         loop {
-            if let Poll::Ready(output) = Pin::new(&mut task).poll(&mut cx) {
-                return output;
+            if woken.swap(false, Ordering::Relaxed) {
+                if let Poll::Ready(output) = Pin::new(&mut task).poll(&mut cx) {
+                    return output;
+                }
             }
 
             self.tick();
