@@ -396,19 +396,6 @@ macro_rules! os_task_local {
 
 #[doc(hidden)]
 pub fn __init_main() {
-    cfg_if! {
-        if #[cfg(target_arch="wasm32")] {
-            std::panic::set_hook(Box::new(|msg| {
-                extern "C" { fn sim_abort(msg: *const std::ffi::c_char) -> !; }
-
-                let msg_str = format!("{msg}");
-                let msg_c_str = CString::new(msg_str).unwrap();
-                unsafe {
-                    sim_abort(msg_c_str.as_ptr());
-                }
-            }));
-        }
-    }
     unsafe {
         pros_sys::lcd_initialize();
     }
