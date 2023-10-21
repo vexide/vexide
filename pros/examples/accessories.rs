@@ -16,7 +16,7 @@ impl Robot for ExampleRobot {
             }
         });
 
-        handle.join();
+        pros::async_runtime::block_on(handle);
 
         // Create a new motor plugged into port 2. The motor will brake when not moving.
         let motor = Motor::new(2, BrakeMode::Brake)?;
