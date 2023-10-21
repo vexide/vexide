@@ -1,11 +1,11 @@
 use core::{cell::RefCell, future::Future, hash::Hash, ptr::NonNull, task::Poll};
 
 use alloc::boxed::Box;
+use cfg_if::cfg_if;
 use hashbrown::HashMap;
 use slab::Slab;
 use snafu::Snafu;
 use spin::Once;
-use cfg_if::cfg_if;
 
 use crate::{
     async_runtime::executor::EXECUTOR,
@@ -397,7 +397,6 @@ macro_rules! os_task_local {
     };
 }
 
-
 #[doc(hidden)]
 pub fn __init_main() {
     cfg_if! {
@@ -406,7 +405,7 @@ pub fn __init_main() {
                 extern "C" { fn sim_abort(msg: *const std::ffi::c_char) -> !; }
 
                 let msg_str = format!("{msg}");
-                let msg_c_str = CString::new(msg_str).unwrap();
+                let msg_c_str = alloc::ffi::CString::new(msg_str).unwrap();
                 unsafe {
                     sim_abort(msg_c_str.as_ptr());
                 }
