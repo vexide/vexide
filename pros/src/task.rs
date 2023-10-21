@@ -1,4 +1,4 @@
-use core::{cell::RefCell, future::Future, hash::Hash, ptr::NonNull, task::Poll};
+use core::{cell::RefCell, future::Future, hash::Hash, panic, ptr::NonNull, task::Poll};
 
 use alloc::boxed::Box;
 use cfg_if::cfg_if;
@@ -285,8 +285,8 @@ impl Future for SleepFuture {
         } else {
             EXECUTOR.with(|e| {
                 e.reactor
-                    .sleepers
                     .borrow_mut()
+                    .sleepers
                     .push(cx.waker().clone(), self.target_millis)
             });
             Poll::Pending
@@ -348,7 +348,7 @@ impl<T: 'static> LocalKey<T> {
 
     pub fn with<F, R>(&'static self, f: F) -> R
     where
-        F: FnOnce(&T) -> R,
+        F: FnOnce(&'static T) -> R,
     {
         self.index_map.call_once(|| Mutex::new(HashMap::new()));
 
@@ -367,8 +367,8 @@ impl<T: 'static> LocalKey<T> {
         };
 
         if let Some(index) = self.index_map.get().unwrap().lock().get(&current) {
-            let val = unsafe { storage.borrow().data[*index].cast::<T>().as_ptr().read() };
-            f(&val)
+            let val = unsafe { storage.borrow().data[*index].cast::<T>().as_ref() };
+            f(val)
         } else {
             let val = Box::leak(Box::new((self.init)()));
             let ptr = NonNull::from(val).cast();
@@ -386,32 +386,16 @@ impl<T: 'static> LocalKey<T> {
 
 #[macro_export]
 macro_rules! os_task_local {
-    ($(#[$attr:meta])* $vis:vis static $name:ident: $t:ty = $init:expr; $($rest:tt)*) => {
-        $(#[$attr])*
-        $vis static $name: LocalKey<$t> = $crate::task::LocalKey::new(|| $init);
-        task_local!($($rest)*);
-    };
-    ($(#[$attr:meta])* $vis:vis static $name:ident: $t:ty = $init:expr) => {
+    ($($(#[$attr:meta])* $vis:vis static $name:ident: $t:ty = $init:expr;)*) => {
+        $(
         $(#[$attr])*
         $vis static $name: $crate::task::LocalKey<$t> = $crate::task::LocalKey::new(|| $init);
+        )*
     };
 }
 
 #[doc(hidden)]
 pub fn __init_main() {
-    cfg_if! {
-        if #[cfg(target_arch="wasm32")] {
-            std::panic::set_hook(Box::new(|msg| {
-                extern "C" { fn sim_abort(msg: *const std::ffi::c_char) -> !; }
-
-                let msg_str = format!("{msg}");
-                let msg_c_str = alloc::ffi::CString::new(msg_str).unwrap();
-                unsafe {
-                    sim_abort(msg_c_str.as_ptr());
-                }
-            }));
-        }
-    }
     unsafe {
         pros_sys::lcd_initialize();
     }

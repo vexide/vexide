@@ -1,38 +1,36 @@
 use core::{cell::RefCell, cmp::Reverse, task::Waker};
 
-use alloc::vec::Vec;
+use alloc::{collections::BTreeMap, vec::Vec};
 
 pub struct Sleepers {
-    sleepers: Vec<(Waker, u32)>,
+    sleepers: BTreeMap<u32, Waker>,
 }
 
 impl Sleepers {
     pub fn push(&mut self, waker: Waker, target: u32) {
-        self.sleepers.push((waker, target));
-
-        self.sleepers.sort_by_key(|(_, target)| Reverse(*target));
+        self.sleepers.insert(target, waker);
     }
 
     pub fn pop(&mut self) -> Option<Waker> {
-        self.sleepers.pop().map(|(waker, _)| waker)
+        self.sleepers.pop_first().map(|(_, waker)| waker)
     }
 }
 
 pub struct Reactor {
-    pub(crate) sleepers: RefCell<Sleepers>,
+    pub(crate) sleepers: Sleepers,
 }
 
 impl Reactor {
     pub fn new() -> Self {
         Self {
-            sleepers: RefCell::new(Sleepers {
-                sleepers: Vec::new(),
-            }),
+            sleepers: Sleepers {
+                sleepers: BTreeMap::new(),
+            },
         }
     }
 
-    pub fn tick(&self) {
-        if let Some(sleeper) = self.sleepers.borrow_mut().pop() {
+    pub fn tick(&mut self) {
+        if let Some(sleeper) = self.sleepers.pop() {
             sleeper.wake()
         }
     }

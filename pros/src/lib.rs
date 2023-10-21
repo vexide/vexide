@@ -63,57 +63,45 @@ macro_rules! __gen_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn opcontrol() {
-            <$rbt as $crate::Robot>::opcontrol(unsafe {
+            $crate::async_runtime::block_on(<$rbt as $crate::Robot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before opcontrol")
-            })
-            .block_on()
+            }))
             .unwrap();
-
-            $crate::async_runtime::complete();
         }
 
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn autonomous() {
-            <$rbt as $crate::Robot>::auto(unsafe {
+            $crate::async_runtime::block_on(<$rbt as $crate::Robot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before auto")
-            })
-            .block_on()
+            }))
             .unwrap();
-
-            $crate::async_runtime::complete();
         }
 
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn disabled() {
-            <$rbt as $crate::Robot>::disabled(unsafe {
+            $crate::async_runtime::block_on(<$rbt as $crate::Robot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before disabled")
-            })
-            .block_on()
+            }))
             .unwrap();
-
-            $crate::async_runtime::complete();
         }
 
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn competition_initialize() {
-            <$rbt as $crate::Robot>::comp_init(unsafe {
+            $crate::async_runtime::block_on(<$rbt as $crate::Robot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before comp_init")
-            })
-            .block_on()
+            }))
             .unwrap();
-
-            $crate::async_runtime::complete();
         }
     };
 }
@@ -185,7 +173,7 @@ pub mod prelude {
     pub use crate::Robot;
 
     // Import Box from alloc so that it can be used in async_trait!
-    pub use crate::{async_trait, print, println, os_task_local};
+    pub use crate::{async_trait, os_task_local, print, println};
     pub use alloc::boxed::Box;
 
     pub use crate::async_runtime::*;
