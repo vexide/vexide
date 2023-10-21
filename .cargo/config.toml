@@ -4,5 +4,11 @@ target = "./armv7a-vexos-eabi.json"
 [target.armv7a-vexos]
 runner = "python runner.py"
 
+[target.wasm32-unknown-unknown]
+rustflags = [
+    "-Ctarget-feature=+atomics,+bulk-memory,+mutable-globals",
+    "-Clink-arg=--shared-memory",
+]
+
 [unstable]
 build-std = ["core", "compiler_builtins", "alloc"]
