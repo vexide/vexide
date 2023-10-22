@@ -1,9 +1,9 @@
 use core::{
-    cell::{Cell, RefCell},
+    cell::RefCell,
     future::Future,
-    pin::{pin, Pin},
+    pin::Pin,
     sync::atomic::{AtomicBool, Ordering},
-    task::{Context, Poll, Waker},
+    task::{Context, Poll},
 };
 
 use alloc::{collections::VecDeque, sync::Arc};

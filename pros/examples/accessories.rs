@@ -7,7 +7,7 @@ use pros::prelude::*;
 #[derive(Debug, Default)]
 struct ExampleRobot;
 #[async_trait]
-impl Robot for ExampleRobot {
+impl AsyncRobot for ExampleRobot {
     async fn opcontrol(&mut self) -> pros::Result {
         let handle = pros::async_runtime::spawn(async {
             for _ in 0..5 {
@@ -54,7 +54,7 @@ impl Robot for ExampleRobot {
         }
     }
 }
-robot!(ExampleRobot);
+async_robot!(ExampleRobot);
 
 fn left_button_callback() {
     println!("Left button pressed!");

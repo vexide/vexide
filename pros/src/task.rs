@@ -1,7 +1,6 @@
 use core::{cell::RefCell, future::Future, hash::Hash, panic, ptr::NonNull, task::Poll};
 
 use alloc::boxed::Box;
-use cfg_if::cfg_if;
 use hashbrown::HashMap;
 use slab::Slab;
 use snafu::Snafu;

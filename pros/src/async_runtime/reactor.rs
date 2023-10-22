@@ -1,6 +1,6 @@
-use core::{cell::RefCell, cmp::Reverse, task::Waker};
+use core::task::Waker;
 
-use alloc::{collections::BTreeMap, vec::Vec};
+use alloc::collections::BTreeMap;
 
 pub struct Sleepers {
     sleepers: BTreeMap<u32, Waker>,
