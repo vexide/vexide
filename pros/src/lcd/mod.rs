@@ -5,6 +5,7 @@ use crate::sync::Mutex;
 #[macro_use]
 pub mod macros;
 pub mod buttons;
+pub mod colors;
 
 pub(crate) mod writer;
 
