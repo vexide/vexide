@@ -3,7 +3,10 @@ use alloc::vec::Vec;
 use pros_sys::{PROS_ERR, VISION_OBJECT_ERR_SIG};
 use snafu::Snafu;
 
-use crate::{error::{bail_errno, bail_on, map_errno, PortError}, lvgl::colors::LcdColor};
+use crate::{
+    error::{bail_errno, bail_on, map_errno, PortError},
+    lvgl::colors::LcdColor,
+};
 
 /// Represents a vision sensor plugged into the vex.
 pub struct VisionSensor {
