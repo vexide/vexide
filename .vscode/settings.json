@@ -11,4 +11,11 @@
         "vexlink"
     ],
     "rust-analyzer.check.allTargets": false,
+    "rust-analyzer.cargo.features": [
+        "xapi"
+    ],
+    "rust-analyzer.check.targets": [
+        "${workspaceFolder}/armv7a-vexos-eabi.json",
+        "wasm32-unknown-unknown",
+    ]
 }

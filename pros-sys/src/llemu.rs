@@ -1,5 +1,7 @@
-#[cfg(feature = "xapi")]
-compile_error!("LVGL bindings (xapi) are a todo for now");
+// #[cfg(feature = "xapi")]
+// compile_error!("LVGL bindings (xapi) are a todo for now");
+
+use cfg_if::cfg_if;
 
 pub const LCD_BTN_LEFT: core::ffi::c_int = 4;
 pub const LCD_BTN_CENTER: core::ffi::c_int = 2;
@@ -7,10 +9,42 @@ pub const LCD_BTN_RIGHT: core::ffi::c_int = 1;
 
 pub type lcd_button_cb_fn_t = Option<unsafe extern "C" fn()>;
 
-#[cfg(feature = "xapi")]
-#[repr(C)]
-pub struct lcd_s_t {
-    //TODO
+cfg_if! {
+    if #[cfg(feature = "xapi")] {
+        // #[repr(C)]
+        // pub struct lcd_s_t {
+        //     //TODO
+        // }
+
+        #[repr(C)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        pub struct lv_color_t {
+            pub blue: u8,
+            pub green: u8,
+            pub red: u8,
+            pub alpha: u8,
+        }
+
+        impl From<u32> for lv_color_t {
+            fn from(color: u32) -> Self {
+                Self {
+                    blue: (color & 0xFF) as u8,
+                    green: ((color >> 8) & 0xFF) as u8,
+                    red: ((color >> 16) & 0xFF) as u8,
+                    alpha: ((color >> 24) & 0xFF) as u8,
+                }
+            }
+        }
+
+        impl From<lv_color_t> for u32 {
+            fn from(color: lv_color_t) -> Self {
+                (color.blue as u32)
+                    | ((color.green as u32) << 8)
+                    | ((color.red as u32) << 16)
+                    | ((color.alpha as u32) << 24)
+            }
+        }
+    }
 }
 
 extern "C" {
@@ -149,8 +183,26 @@ extern "C" {
     \return The buttons pressed as a bit mask*/
     pub fn lcd_read_buttons() -> u8;
 
-    #[cfg(feature = "xapi")]
-    pub fn lcd_set_background_color(); //TODO
-    #[cfg(feature = "xapi")]
-    pub fn lcd_set_text_color(); //TODO
+    cfg_if! {
+        if #[cfg(feature = "xapi")] {
+            /** Changes the color of the LCD background to a provided color expressed in
+            type lv_color_t.
+
+            \param color
+                   A color of type lv_color_t
+
+            \return void
+            */
+            pub fn lcd_set_background_color(color: lv_color_t);
+            /** Changes the text color of the LCD to a provided color expressed in
+            type lv_color_t.
+
+            \param color
+                   A color of type lv_color_t
+
+            \return void
+            */
+            pub fn lcd_set_text_color(color: lv_color_t);
+        }
+    }
 }
