@@ -4,6 +4,7 @@ use core::ops::{Deref, DerefMut};
 use pros_sys::lv_color_t;
 
 /// A color that can be used on the LCD.
+/// The color space is dependent on the LCD driver.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LcdColor(pub lv_color_t);
 
