@@ -11,25 +11,17 @@ pub mod position;
 pub mod sensors;
 pub mod sync;
 pub mod task;
-
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
-
 #[cfg(target_os = "vexos")]
 mod vexos_env;
 #[cfg(target_arch = "wasm32")]
 mod wasm_env;
-
-#[cfg(not(feature = "lvgl"))]
 #[macro_use]
 pub mod lcd;
-
-#[cfg(feature = "lvgl")]
-#[macro_use]
-pub mod lvgl;
-
 pub mod adi;
 pub mod link;
+pub mod lvgl;
 
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 

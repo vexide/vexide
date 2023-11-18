@@ -1,13 +1,27 @@
 use snafu::Snafu;
 
+use crate::lvgl::colors::LcdColor;
 use crate::sync::Mutex;
 
 #[macro_use]
 pub mod macros;
 pub mod buttons;
-pub mod colors;
 
 pub(crate) mod writer;
+
+pub fn set_background_color(color: LcdColor) {
+    unsafe {
+        pros_sys::lcd_initialize();
+        pros_sys::lcd_set_background_color(*color);
+    }
+}
+
+pub fn set_text_color(color: LcdColor) {
+    unsafe {
+        pros_sys::lcd_initialize();
+        pros_sys::lcd_set_background_color(*color);
+    }
+}
 
 lazy_static::lazy_static! {
     pub(crate) static ref WRITER: Mutex<writer::ConsoleLcd> = {

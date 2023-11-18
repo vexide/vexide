@@ -1,12 +1,9 @@
 extern crate alloc;
 use alloc::vec::Vec;
-use pros_sys::{lv_color_t, PROS_ERR, VISION_OBJECT_ERR_SIG};
+use pros_sys::{PROS_ERR, VISION_OBJECT_ERR_SIG};
 use snafu::Snafu;
 
-use crate::{
-    error::{bail_errno, bail_on, map_errno, PortError},
-    lcd::colors::LcdColor,
-};
+use crate::error::{bail_errno, bail_on, map_errno, PortError};
 
 /// Represents a vision sensor plugged into the vex.
 pub struct VisionSensor {
@@ -171,26 +168,26 @@ impl From<u32> for Rgb {
     }
 }
 
-impl From<Rgb> for LcdColor {
-    fn from(other: Rgb) -> Self {
-        Self(lv_color_t {
-            red: other.r,
-            green: other.g,
-            blue: other.b,
-            alpha: 0xFF,
-        })
-    }
-}
+// impl From<Rgb> for LcdColor {
+//     fn from(other: Rgb) -> Self {
+//         Self(lv_color_t {
+//             red: other.r,
+//             green: other.g,
+//             blue: other.b,
+//             alpha: 0xFF,
+//         })
+//     }
+// }
 
-impl From<LcdColor> for Rgb {
-    fn from(other: LcdColor) -> Self {
-        Self {
-            r: other.red,
-            g: other.green,
-            b: other.blue,
-        }
-    }
-}
+// impl From<LcdColor> for Rgb {
+//     fn from(other: LcdColor) -> Self {
+//         Self {
+//             r: other.red,
+//             g: other.green,
+//             b: other.blue,
+//         }
+//     }
+// }
 
 #[repr(u32)]
 pub enum VisionZeroPoint {
