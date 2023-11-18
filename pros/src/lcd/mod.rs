@@ -1,3 +1,4 @@
+//! Print to and handle button presses on the V5 touchscreen.
 use snafu::Snafu;
 
 use crate::lvgl::colors::LcdColor;
@@ -9,6 +10,7 @@ pub mod buttons;
 
 pub(crate) mod writer;
 
+/// Sets the background color of the LCD.
 pub fn set_background_color(color: LcdColor) {
     unsafe {
         pros_sys::lcd_initialize();
@@ -16,6 +18,7 @@ pub fn set_background_color(color: LcdColor) {
     }
 }
 
+/// Sets the text color of the LCD.
 pub fn set_text_color(color: LcdColor) {
     unsafe {
         pros_sys::lcd_initialize();

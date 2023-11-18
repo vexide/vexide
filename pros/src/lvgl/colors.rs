@@ -1,10 +1,14 @@
+//! LVGL colors and presets.
+
 use core::ops::{Deref, DerefMut};
 use pros_sys::lv_color_t;
 
+/// A color that can be used on the LCD.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LcdColor(pub lv_color_t);
 
 impl LcdColor {
+    /// Create an RGB color without any transparency.
     pub const fn new_rgb(red: u8, green: u8, blue: u8) -> Self {
         Self(lv_color_t {
             red,
@@ -13,6 +17,7 @@ impl LcdColor {
             alpha: 0xFF,
         })
     }
+    /// Create an RGBA color with a certain opacity.
     pub const fn new_rgba(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
         Self(lv_color_t {
             red,
