@@ -300,8 +300,8 @@ macro_rules! sync_robot {
 }
 
 pub mod prelude {
-    pub use crate::{ async_robot, sync_robot };
-    pub use crate::{ AsyncRobot, SyncRobot };
+    pub use crate::{async_robot, sync_robot};
+    pub use crate::{AsyncRobot, SyncRobot};
 
     // Import Box from alloc so that it can be used in async_trait!
     pub use crate::{async_trait, os_task_local, print, println};
