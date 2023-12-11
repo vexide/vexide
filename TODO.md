@@ -15,7 +15,6 @@ This is the todo list for the eventual 1.0.0 release of pros-rs
 * [ ] Motors
   * [x] Internal gearsets
   * [ ] (Custom) Gear Ratios
-* [ ] Async Runtime (ditch tasks)
 * [X] Make Robot Functions Take Self
 * [X] PID controllers
 * [ ] Feedforward loops
@@ -32,11 +31,10 @@ This is the todo list for the eventual 1.0.0 release of pros-rs
   * [X] Controller data
   * [x] Controller printing
 * [X] Link
-* [ ] Async
+* [X] Async runtime
   * [X] Returning top level futures
-  * [ ] Future impls for everything
-  * [ ] Reactor
-  * [ ] User API (block_on, join!, etc.)
+  * [X] Reactor
+* [ ] More asynchronous APIs 
 * [ ] MPSC
 * [X] Task Locals 
 
