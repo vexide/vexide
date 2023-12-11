@@ -49,19 +49,12 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Setup | Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup | Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          components: clippy
-          override: true
-
-      - name: Clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: clippy
+    - uses: giraffate/clippy-action@v1
+      with:
+        reporter: 'github-pr-check'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        clippy_flags: --all-targets --all-features
