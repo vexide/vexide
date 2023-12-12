@@ -8,7 +8,6 @@ use crate::error::{bail_on, map_errno};
 
 use snafu::Snafu;
 
-
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
 /// Takes in a closure that can move variables if needed.
 /// If your task has a loop it is advised to use [`sleep(duration)`](sleep) so that the task does not take up necessary system resources.

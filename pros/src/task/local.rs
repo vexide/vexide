@@ -56,7 +56,8 @@ impl<T: 'static> LocalKey<T> {
     }
 
     fn index(&'static self) -> &usize {
-        self.index.call_once(|| INDEX.fetch_add(1, core::sync::atomic::Ordering::Relaxed) as _)
+        self.index
+            .call_once(|| INDEX.fetch_add(1, core::sync::atomic::Ordering::Relaxed) as _)
     }
 
     pub fn set(&'static self, val: T) {
@@ -65,7 +66,10 @@ impl<T: 'static> LocalKey<T> {
 
         let val = Box::leak(Box::new(val));
 
-        storage.borrow_mut().data.insert(index, NonNull::new((val as *mut T).cast()).unwrap());
+        storage
+            .borrow_mut()
+            .data
+            .insert(index, NonNull::new((val as *mut T).cast()).unwrap());
     }
 
     pub fn with<F, R>(&'static self, f: F) -> R

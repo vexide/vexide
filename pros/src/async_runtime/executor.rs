@@ -52,7 +52,11 @@ impl Executor {
     pub(crate) fn tick(&self) -> bool {
         self.reactor.borrow_mut().tick();
 
-        match self.queue.borrow_mut().pop_front() {
+        let runnable = {
+            let mut queue = self.queue.borrow_mut();
+            queue.pop_front()
+        };
+        match runnable {
             Some(runnable) => {
                 runnable.run();
                 true
