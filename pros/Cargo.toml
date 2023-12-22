@@ -19,6 +19,12 @@ snafu = { version = "0.7.5", default-features = false, features = [
     "rust_1_61",
 ] }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
+futures = { version = "0.3.28", default-features = false, features = ["alloc"] }
+slab = { version = "0.4.9", default-features = false }
+hashbrown = { version = "0.14.1", default-features = true }
+async-trait = "0.1.73"
+async-task = { version = "4.5.0", default-features = false }
+waker-fn = "1.1.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 dlmalloc = { version = "0.2.4", features = ["global"] }

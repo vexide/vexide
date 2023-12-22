@@ -1,9 +1,12 @@
-extern crate alloc;
-use core::ffi::c_void;
+pub mod local;
+
+use core::hash::Hash;
+use core::{future::Future, task::Poll};
+
+use crate::async_runtime::executor::EXECUTOR;
+use crate::error::{bail_on, map_errno};
 
 use snafu::Snafu;
-
-use crate::error::{bail_on, map_errno};
 
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
 /// Takes in a closure that can move variables if needed.
@@ -31,7 +34,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
             core::ptr::null(),
             pros_sys::task_create(
                 Some(TaskEntrypoint::<F>::cast_and_call_external),
-                &mut entrypoint as *mut _ as *mut c_void,
+                &mut entrypoint as *mut _ as *mut core::ffi::c_void,
                 priority as _,
                 stack_depth as _,
                 name,
@@ -39,16 +42,29 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
         );
 
         _ = alloc::ffi::CString::from_raw(name);
+
         Ok(TaskHandle { task })
     }
 }
 
 /// An owned permission to perform actions on a task.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone)]
 pub struct TaskHandle {
-    task: pros_sys::task_t,
+    pub(crate) task: pros_sys::task_t,
 }
 unsafe impl Send for TaskHandle {}
+impl Hash for TaskHandle {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.task.hash(state)
+    }
+}
+
+impl PartialEq for TaskHandle {
+    fn eq(&self, other: &Self) -> bool {
+        self.task == other.task
+    }
+}
+impl Eq for TaskHandle {}
 
 impl TaskHandle {
     /// Pause execution of the task.
@@ -222,7 +238,7 @@ impl<F> TaskEntrypoint<F>
 where
     F: FnOnce(),
 {
-    unsafe extern "C" fn cast_and_call_external(this: *mut c_void) {
+    unsafe extern "C" fn cast_and_call_external(this: *mut core::ffi::c_void) {
         let this = this.cast::<Self>().read();
 
         (this.function)()
@@ -241,18 +257,49 @@ map_errno! {
     }
 }
 
-/// Sleeps the current task for the given amount of time.
-/// This is especially useful in loops to provide a chance for other tasks to run.
-pub fn sleep(duration: core::time::Duration) {
+/// Blocks the current task for the given amount of time, if you are in an async function.
+/// ## you probably don't want to use this.
+/// This function will block the entire task, including the async executor!
+/// Instead, you should use [`sleep`].
+pub fn delay(duration: core::time::Duration) {
     unsafe { pros_sys::delay(duration.as_millis() as u32) }
+}
+
+pub struct SleepFuture {
+    target_millis: u32,
+}
+impl Future for SleepFuture {
+    type Output = ();
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        if self.target_millis < unsafe { pros_sys::millis() } {
+            Poll::Ready(())
+        } else {
+            EXECUTOR.with(|e| {
+                e.reactor
+                    .borrow_mut()
+                    .sleepers
+                    .push(cx.waker().clone(), self.target_millis)
+            });
+            Poll::Pending
+        }
+    }
+}
+
+pub fn sleep(duration: core::time::Duration) -> SleepFuture {
+    SleepFuture {
+        target_millis: unsafe { pros_sys::millis() + duration.as_millis() as u32 },
+    }
 }
 
 /// Returns the task the function was called from.
 pub fn current() -> TaskHandle {
     unsafe {
-        TaskHandle {
-            task: pros_sys::task_get_current(),
-        }
+        let task = pros_sys::task_get_current();
+        TaskHandle { task }
     }
 }
 
@@ -262,4 +309,11 @@ pub fn current() -> TaskHandle {
 /// returns the value of the notification
 pub fn get_notification() -> u32 {
     unsafe { pros_sys::task_notify_take(false, pros_sys::TIMEOUT_MAX) }
+}
+
+#[doc(hidden)]
+pub fn __init_main() {
+    unsafe {
+        pros_sys::lcd_initialize();
+    }
 }

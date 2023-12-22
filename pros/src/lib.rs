@@ -1,8 +1,9 @@
-#![feature(error_in_core, stdsimd)]
+#![feature(error_in_core, stdsimd, negative_impls)]
 #![no_std]
 
 extern crate alloc;
 
+pub mod async_runtime;
 pub mod controller;
 pub mod error;
 pub mod motor;
@@ -10,6 +11,7 @@ pub mod pid;
 pub mod position;
 pub mod sensors;
 pub mod sync;
+#[macro_use]
 pub mod task;
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
@@ -23,9 +25,28 @@ pub mod adi;
 pub mod link;
 pub mod lvgl;
 
+pub use async_trait::async_trait;
+
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
-pub trait Robot {
+use alloc::boxed::Box;
+#[async_trait::async_trait]
+pub trait AsyncRobot {
+    async fn opcontrol(&mut self) -> Result {
+        Ok(())
+    }
+    async fn auto(&mut self) -> Result {
+        Ok(())
+    }
+    async fn disabled(&mut self) -> Result {
+        Ok(())
+    }
+    async fn comp_init(&mut self) -> Result {
+        Ok(())
+    }
+}
+
+pub trait SyncRobot {
     fn opcontrol(&mut self) -> Result {
         Ok(())
     }
@@ -42,14 +63,14 @@ pub trait Robot {
 
 #[doc(hidden)]
 #[macro_export]
-macro_rules! __gen_exports {
+macro_rules! __gen_sync_exports {
     ($rbt:ty) => {
         pub static mut ROBOT: Option<$rbt> = None;
 
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn opcontrol() {
-            <$rbt as $crate::Robot>::opcontrol(unsafe {
+            <$rbt as $crate::SyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before opcontrol")
@@ -60,10 +81,10 @@ macro_rules! __gen_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn autonomous() {
-            <$rbt as $crate::Robot>::auto(unsafe {
+            <$rbt as $crate::SyncRobot>::auto(unsafe {
                 ROBOT
                     .as_mut()
-                    .expect("Expected initialize to run before auto")
+                    .expect("Expected initialize to run before opcontrol")
             })
             .unwrap();
         }
@@ -71,10 +92,10 @@ macro_rules! __gen_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn disabled() {
-            <$rbt as $crate::Robot>::disabled(unsafe {
+            <$rbt as $crate::SyncRobot>::disabled(unsafe {
                 ROBOT
                     .as_mut()
-                    .expect("Expected initialize to run before disabled")
+                    .expect("Expected initialize to run before opcontrol")
             })
             .unwrap();
         }
@@ -82,17 +103,73 @@ macro_rules! __gen_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn competition_initialize() {
-            <$rbt as $crate::Robot>::comp_init(unsafe {
+            <$rbt as $crate::SyncRobot>::comp_init(unsafe {
                 ROBOT
                     .as_mut()
-                    .expect("Expected initialize to run before comp_init")
+                    .expect("Expected initialize to run before opcontrol")
             })
             .unwrap();
         }
     };
 }
 
-/// Allows your robot code to be executed by the pros kernel.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __gen_async_exports {
+    ($rbt:ty) => {
+        pub static mut ROBOT: Option<$rbt> = None;
+
+        #[doc(hidden)]
+        #[no_mangle]
+        extern "C" fn opcontrol() {
+            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
+                ROBOT
+                    .as_mut()
+                    .expect("Expected initialize to run before opcontrol")
+            }))
+            .unwrap();
+            $crate::async_runtime::complete_all();
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        extern "C" fn autonomous() {
+            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
+                ROBOT
+                    .as_mut()
+                    .expect("Expected initialize to run before auto")
+            }))
+            .unwrap();
+            $crate::async_runtime::complete_all();
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        extern "C" fn disabled() {
+            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
+                ROBOT
+                    .as_mut()
+                    .expect("Expected initialize to run before disabled")
+            }))
+            .unwrap();
+            $crate::async_runtime::complete_all();
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        extern "C" fn competition_initialize() {
+            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
+                ROBOT
+                    .as_mut()
+                    .expect("Expected initialize to run before comp_init")
+            }))
+            .unwrap();
+            $crate::async_runtime::complete_all();
+        }
+    };
+}
+
+/// Allows your async robot code to be executed by the pros kernel.
 /// If your robot struct implements Default then you can just supply this macro with its type.
 /// If not, you can supply an expression that returns your robot type to initialize your robot struct.
 ///
@@ -101,13 +178,14 @@ macro_rules! __gen_exports {
 /// use pros::prelude::*;
 /// #[derive(Default)]
 /// struct ExampleRobot;
-/// impl Robot for ExampleRobot {
-///    fn opcontrol(&mut self) -> Result {
+/// #[async_trait]
+/// impl AsyncRobot for ExampleRobot {
+///    asnyc fn opcontrol(&mut self) -> pros::Result {
 ///       println!("Hello, world!");
 ///      Ok(())
 ///   }
 /// }
-/// robot!(ExampleRobot);
+/// async_robot!(ExampleRobot);
 /// ```
 ///
 /// Example of using the macro with a struct that does not implement Default:
@@ -116,8 +194,9 @@ macro_rules! __gen_exports {
 /// struct ExampleRobot {
 ///    x: i32,
 /// }
-/// impl Robot for ExampleRobot {
-///     fn opcontrol(&mut self) -> Result {
+/// #[async_trait]
+/// impl AsyncRobot for ExampleRobot {
+///     async fn opcontrol(&mut self) -> pros::Result {
 ///         println!("Hello, world! {}", self.x);
 ///         Ok(())
 ///     }
@@ -127,30 +206,88 @@ macro_rules! __gen_exports {
 ///        Self { x: 5 }
 ///    }
 /// }
-/// robot!(ExampleRobot, ExampleRobot::new());
+/// async_robot!(ExampleRobot, ExampleRobot::new());
 #[macro_export]
-macro_rules! robot {
+macro_rules! async_robot {
     ($rbt:ty) => {
-        $crate::__gen_exports!($rbt);
+        $crate::__gen_async_exports!($rbt);
 
         #[no_mangle]
         extern "C" fn initialize() {
-            unsafe {
-                ::pros::__pros_sys::lcd_initialize();
-            }
+            ::pros::task::__init_main();
             unsafe {
                 ROBOT = Some(Default::default());
             }
         }
     };
     ($rbt:ty, $init:expr) => {
-        $crate::__gen_exports!($rbt);
+        $crate::__gen_async_exports!($rbt);
 
         #[no_mangle]
         extern "C" fn initialize() {
+            ::pros::task::__init_main();
             unsafe {
-                ::pros::__pros_sys::lcd_initialize();
+                ROBOT = Some($init);
             }
+        }
+    };
+}
+
+/// Allows your sync robot code to be executed by the pros kernel.
+/// If your robot struct implements Default then you can just supply this macro with its type.
+/// If not, you can supply an expression that returns your robot type to initialize your robot struct.
+///
+/// Example of using the macro with a struct that implements Default:
+/// ```rust
+/// use pros::prelude::*;
+/// #[derive(Default)]
+/// struct ExampleRobot;
+/// impl SyncRobot for ExampleRobot {
+///    asnyc fn opcontrol(&mut self) -> pros::Result {
+///       println!("Hello, world!");
+///      Ok(())
+///   }
+/// }
+/// sync_robot!(ExampleRobot);
+/// ```
+///
+/// Example of using the macro with a struct that does not implement Default:
+/// ```rust
+/// use pros::prelude::*;
+/// struct ExampleRobot {
+///    x: i32,
+/// }
+/// impl SyncRobot for ExampleRobot {
+///     async fn opcontrol(&mut self) -> pros::Result {
+///         println!("Hello, world! {}", self.x);
+///         Ok(())
+///     }
+/// }
+/// impl ExampleRobot {
+///     pub fn new() -> Self {
+///        Self { x: 5 }
+///    }
+/// }
+/// sync_robot!(ExampleRobot, ExampleRobot::new());
+#[macro_export]
+macro_rules! sync_robot {
+    ($rbt:ty) => {
+        $crate::__gen_sync_exports!($rbt);
+
+        #[no_mangle]
+        extern "C" fn initialize() {
+            ::pros::task::__init_main();
+            unsafe {
+                ROBOT = Some(Default::default());
+            }
+        }
+    };
+    ($rbt:ty, $init:expr) => {
+        $crate::__gen_sync_exports!($rbt);
+
+        #[no_mangle]
+        extern "C" fn initialize() {
+            ::pros::task::__init_main();
             unsafe {
                 ROBOT = Some($init);
             }
@@ -159,10 +296,14 @@ macro_rules! robot {
 }
 
 pub mod prelude {
-    pub use crate::robot;
-    pub use crate::Robot;
-    pub use crate::{print, println};
+    pub use crate::{async_robot, sync_robot};
+    pub use crate::{AsyncRobot, SyncRobot};
 
+    // Import Box from alloc so that it can be used in async_trait!
+    pub use crate::{async_trait, os_task_local, print, println};
+    pub use alloc::boxed::Box;
+
+    pub use crate::async_runtime::*;
     pub use crate::controller::*;
     pub use crate::error::PortError;
     pub use crate::lcd::{buttons::Button, LcdError};

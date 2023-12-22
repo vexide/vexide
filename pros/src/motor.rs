@@ -196,6 +196,11 @@ impl Motor {
     pub fn reversed(&self) -> bool {
         unsafe { pros_sys::motor_is_reversed(self.port) == 1 }
     }
+
+    /// Returns a future that completes when the motor reports that it has stopped.
+    pub fn wait_until_stopped(&self) -> MotorStoppedFuture {
+        MotorStoppedFuture { motor: *self }
+    }
 }
 
 /// Determines how a motor should act when braking.
@@ -270,6 +275,25 @@ impl From<i32> for Gearset {
             pros_sys::E_MOTOR_GEAR_GREEN => Gearset::Green,
             pros_sys::E_MOTOR_GEAR_BLUE => Gearset::Blue,
             _ => unreachable!(),
+        }
+    }
+}
+
+pub struct MotorStoppedFuture {
+    motor: Motor,
+}
+impl core::future::Future for MotorStoppedFuture {
+    type Output = crate::Result;
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        match self.motor.get_state()?.stopped {
+            true => core::task::Poll::Ready(Ok(())),
+            false => {
+                cx.waker().wake_by_ref();
+                core::task::Poll::Pending
+            }
         }
     }
 }

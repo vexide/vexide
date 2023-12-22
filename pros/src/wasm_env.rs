@@ -5,7 +5,7 @@ extern crate alloc;
 use core::panic::PanicInfo;
 
 use alloc::{
-    alloc::{alloc, dealloc, handle_alloc_error, GlobalAlloc, Layout},
+    alloc::{alloc, dealloc, handle_alloc_error, Layout},
     collections::BTreeMap,
     ffi::CString,
     format,
