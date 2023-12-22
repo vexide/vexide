@@ -8,7 +8,7 @@ pub struct Robot;
 #[async_trait]
 impl AsyncRobot for Robot {
     async fn opcontrol(&mut self) -> pros::Result {
-        println!("basic exasmple");
+        println!("basic example");
 
         Ok(())
     }

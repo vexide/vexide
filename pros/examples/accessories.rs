@@ -2,7 +2,7 @@
 #![no_main]
 
 use core::time::Duration;
-use pros::prelude::*;
+use pros::{prelude::*, task::delay};
 
 #[derive(Debug, Default)]
 struct ExampleRobot;
@@ -12,7 +12,7 @@ impl AsyncRobot for ExampleRobot {
         let handle = pros::async_runtime::spawn(async {
             for _ in 0..5 {
                 println!("Hello from async!");
-                sleep(Duration::from_millis(1000));
+                sleep(Duration::from_millis(1000)).await;
             }
         });
 
@@ -38,7 +38,9 @@ impl AsyncRobot for ExampleRobot {
 
             // Sleep the task as to not steal processing time from the OS.
             // This should always be done in any loop, including loops in the main task.
-            sleep(Duration::from_millis(20));
+            // Because this is a real FreeRTOS task this is not the sleep function used elsewhere in this example.
+            // This sleep function will block the entire task, including the async executor! (There isn't one running here, but there is in the main task.)
+            delay(Duration::from_millis(20));
         });
 
         loop {
@@ -50,7 +52,7 @@ impl AsyncRobot for ExampleRobot {
             println!("Vision objs {}", vision.nth_largest_object(0)?.middle_x);
 
             // Once again, sleep.
-            sleep(Duration::from_millis(20));
+            sleep(Duration::from_millis(20)).await;
         }
     }
 }
