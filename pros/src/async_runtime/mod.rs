@@ -18,7 +18,7 @@ pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
     executor::EXECUTOR.with(|e| e.block_on(spawn(future)))
 }
 
-/// Completes all tasks. 
+/// Completes all tasks.
 /// Return values can be extracted from the futures by awaiting any [`Tasks`]s you have not detached.
 pub fn complete_all() {
     executor::EXECUTOR.with(|e| {

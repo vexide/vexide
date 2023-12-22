@@ -84,7 +84,7 @@ impl Executor {
             self.tick();
         }
     }
-    
+
     pub fn complete(&self) {
         loop {
             if !self.tick() {
