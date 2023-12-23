@@ -1,6 +1,6 @@
 [package]
 name = "pros"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Rust bindings for PROS"
 keywords = ["PROS", "Robotics", "bindings"]
@@ -14,7 +14,7 @@ readme = "../README.md"
 [dependencies]
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 spin = "0.9.8"
-pros-sys = { version = "0.3.1", path = "../pros-sys", features = ["xapi"] }
+pros-sys = { version = "0.4", path = "../pros-sys", features = ["xapi"] }
 snafu = { version = "0.7.5", default-features = false, features = [
     "rust_1_61",
 ] }
