@@ -22,8 +22,11 @@ mod wasm_env;
 #[macro_use]
 pub mod lcd;
 pub mod adi;
+pub mod battery;
+pub mod competition;
 pub mod link;
 pub mod lvgl;
+pub mod usd;
 
 pub use async_trait::async_trait;
 
