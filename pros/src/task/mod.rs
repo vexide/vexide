@@ -1,3 +1,18 @@
+//! Functions for creation and management of tasks.
+//! Tasks are the main way to run code asynchronously.
+//! 
+//! Tasks can be created with the [`spawn`] function or, for more control, with a task [`Builder`].
+//! ## Example
+//! ```rust
+//! spawn(|| {
+//!    println!("Hello from a task!");
+//! });
+//! ```
+//! After a task has been spawned you can manage it with the returned [`TaskHandle`].
+//! 
+//! Task locals can be created with the [`os_task_local!`](crate::os_task_local!) macro.
+//! See the [`local`] module for more info.
+
 pub mod local;
 
 use core::hash::Hash;
@@ -19,6 +34,7 @@ where
     Builder::new().spawn(f).expect("Failed to spawn task")
 }
 
+/// Low level task spawning functionality
 fn spawn_inner<F: FnOnce() + Send + 'static>(
     function: F,
     priority: TaskPriority,
@@ -265,6 +281,8 @@ pub fn delay(duration: core::time::Duration) {
     unsafe { pros_sys::delay(duration.as_millis() as u32) }
 }
 
+/// A future that will complete after the given duration.
+/// Sleep futures that are closer to completion are prioritized to improve accuracy.
 pub struct SleepFuture {
     target_millis: u32,
 }
@@ -289,6 +307,7 @@ impl Future for SleepFuture {
     }
 }
 
+/// Returns a future that will complete after the given duration.
 pub fn sleep(duration: core::time::Duration) -> SleepFuture {
     SleepFuture {
         target_millis: unsafe { pros_sys::millis() + duration.as_millis() as u32 },
