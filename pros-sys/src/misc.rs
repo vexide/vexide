@@ -2,11 +2,14 @@ use core::ffi::*;
 
 pub const NUM_V5_PORTS: usize = 21;
 // v5 comp
-pub const COMPETITION_DISABLED: i32 = 0b001;
-pub const COMPETITION_AUTONOMOUS: i32 = 0b010;
-pub const COMPETITION_CONNECTED: i32 = 0b100;
+pub const COMPETITION_AUTONOMOUS: u8 = 1 << 0;
+pub const COMPETITION_DISABLED: u8 = 1 << 1;
+pub const COMPETITION_CONNECTED: u8 = 1 << 2;
 extern "C" {
     pub fn competition_get_status() -> u8;
+    pub fn competition_is_autonomous() -> bool;
+    pub fn competition_is_connected() -> bool;
+    pub fn competition_is_disabled() -> bool;
 }
 // controller
 pub const E_CONTROLLER_MASTER: c_uint = 0;
