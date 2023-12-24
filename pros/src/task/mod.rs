@@ -1,6 +1,7 @@
 pub mod local;
 
 use core::hash::Hash;
+use core::time::Duration;
 use core::{future::Future, task::Poll};
 
 use crate::async_runtime::executor::EXECUTOR;
@@ -257,12 +258,44 @@ map_errno! {
     }
 }
 
-/// Blocks the current task for the given amount of time, if you are in an async function.
-/// ## you probably don't want to use this.
-/// This function will block the entire task, including the async executor!
-/// Instead, you should use [`sleep`].
-pub fn delay(duration: core::time::Duration) {
+/// Blocks the current FreeRTOS task for the given amount of time.
+///
+/// ## Caveats
+///
+/// This function will block the entire task, preventing concurrent
+/// execution of async code. When in an async context, it is recommended
+/// to use [`sleep`] instead.
+pub fn delay(duration: Duration) {
     unsafe { pros_sys::delay(duration.as_millis() as u32) }
+}
+
+/// An interval that can be used to repeatedly run code at a given rate.
+pub struct Interval {
+    last_unblock_time: u32,
+}
+
+impl Interval {
+    /// Creates a new interval. As time passes, the interval's actual delay
+    /// will become smaller so that the average rate is maintained.
+    pub fn start() -> Self {
+        Self {
+            last_unblock_time: unsafe { pros_sys::millis() },
+        }
+    }
+
+    /// Blocks the current FreeRTOS task until the interval has elapsed.
+    ///
+    /// ## Caveats
+    ///
+    /// This function will block the entire task, preventing concurrent
+    /// execution of async code. When in an async context, it is recommended
+    /// to an async-friendly equivalent instead.
+    pub fn delay(&mut self, delta: Duration) {
+        let delta = delta.as_millis() as u32;
+        unsafe {
+            pros_sys::task_delay_until((&mut self.last_unblock_time) as *mut _, delta);
+        }
+    }
 }
 
 pub struct SleepFuture {
