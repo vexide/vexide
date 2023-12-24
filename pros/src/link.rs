@@ -178,7 +178,6 @@ pub enum LinkError {
     #[snafu(display("{source}"), context(false))]
     Port { source: PortError },
 }
-impl core::error::Error for LinkError {}
 
 map_errno! {
     LinkError {
