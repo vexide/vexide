@@ -1,3 +1,6 @@
+//! Helpers for dealing with errno.
+//! Most of the contents of this file are not public.
+
 pub(crate) fn take_errno() -> i32 {
     let err = unsafe { *pros_sys::__errno() };
     if err != 0 {
