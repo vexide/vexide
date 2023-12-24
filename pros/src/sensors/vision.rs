@@ -221,7 +221,6 @@ pub enum VisionError {
     #[snafu(display("{source}"), context(false))]
     Port { source: PortError },
 }
-impl core::error::Error for VisionError {}
 
 map_errno! {
     VisionError {
