@@ -293,6 +293,7 @@ impl Interval {
     pub fn delay(&mut self, delta: Duration) {
         let delta = delta.as_millis() as u32;
         unsafe {
+            // PROS handles loop overruns so there's no need to check for them here
             pros_sys::task_delay_until((&mut self.last_unblock_time) as *mut _, delta);
         }
     }
