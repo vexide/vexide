@@ -1,3 +1,5 @@
+//! Utilities for getting what state of the competition the robot is in.
+
 /// The current status of the robot, allowing checks to be made
 /// for autonomous, disabled, and connected states.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

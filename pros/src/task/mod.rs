@@ -1,6 +1,5 @@
 //! Functions for creation and management of tasks.
-//! Tasks are the main way to run code asynchronously.
-//! 
+//!
 //! Tasks can be created with the [`spawn`] function or, for more control, with a task [`Builder`].
 //! ## Example
 //! ```rust
@@ -9,7 +8,7 @@
 //! });
 //! ```
 //! After a task has been spawned you can manage it with the returned [`TaskHandle`].
-//! 
+//!
 //! Task locals can be created with the [`os_task_local!`](crate::os_task_local!) macro.
 //! See the [`local`] module for more info.
 

@@ -1,3 +1,5 @@
+//! Read from the buttons and joysticks on the controller and write to the controller's display.
+
 use alloc::{ffi::CString, vec::Vec};
 use pros_sys::{controller_id_e_t, PROS_ERR};
 use snafu::Snafu;
@@ -40,6 +42,7 @@ pub struct ControllerState {
     pub buttons: Buttons,
 }
 
+/// Represents one line on the controller console.
 pub struct ControllerLine {
     controller: Controller,
     line: u8,

@@ -6,9 +6,14 @@ pub const COMPETITION_AUTONOMOUS: u8 = 1 << 0;
 pub const COMPETITION_DISABLED: u8 = 1 << 1;
 pub const COMPETITION_CONNECTED: u8 = 1 << 2;
 extern "C" {
+    /// Get the current status of the competition control.
+    /// Returns The competition control status as a mask of bits with COMPETITION_{ENABLED,AUTONOMOUS,CONNECTED}.
     pub fn competition_get_status() -> u8;
+    /// Returns true if the robot is in autonomous mode, false otherwise.
     pub fn competition_is_autonomous() -> bool;
+    /// Returns true if the V5 Brain is connected to competition control, false otherwise.
     pub fn competition_is_connected() -> bool;
+    /// Returns true if the V5 Brain is disabled, false otherwise.
     pub fn competition_is_disabled() -> bool;
 }
 // controller
