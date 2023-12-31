@@ -5,6 +5,7 @@ use crate::error::{bail_on, map_errno, PortError};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InertialStatus {
+    pub raw: pros_sys::imu_status_e_t,
     pub calibrating: bool,
     pub error: bool,
 }
@@ -12,8 +13,9 @@ pub struct InertialStatus {
 impl From<pros_sys::imu_status_e_t> for InertialStatus {
     fn from(value: pros_sys::imu_status_e_t) -> Self {
         Self {
-            calibrating: (value & pros_sys::E_IMU_STATUS_CALIBRATING) == pros_sys::E_IMU_STATUS_CALIBRATING,
-            error: (value & pros_sys::E_IMU_STATUS_ERROR) == pros_sys::E_IMU_STATUS_ERROR,
+            raw: value,
+            calibrating: (value & pros_sys::E_IMU_STATUS_CALIBRATING) != 0,
+            error: (value & pros_sys::E_IMU_STATUS_ERROR) != 0,
         }
     }
 }
@@ -24,14 +26,15 @@ pub struct InertialSensor {
 }
 
 impl InertialSensor {
+    /// Create a new inertial sensor from a smart port index.
     pub fn new(port: u8) -> Result<Self, InertialError> {
         let sensor = Self { port };
         sensor.rotation()?;
         Ok(sensor)
     }
 
-    // Calibrate IMU.
-    // This takes approximately 2 seconds, and is blocking until the IMU status flag is set properly.
+    /// Calibrate IMU.
+    /// This takes approximately 2 seconds, and is blocking until the IMU status flag is set properly.
     pub fn calibrate(&self) -> Result<(), InertialError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::imu_reset(self.port));
@@ -39,6 +42,7 @@ impl InertialSensor {
         Ok(())
     }
 
+    /// Check if the Intertial Sensor is currently calibrating.
     pub fn is_calibrating(&self) -> Result<bool, InertialError> {
         Ok(self.status()?.calibrating)
     }
@@ -95,12 +99,12 @@ impl InertialSensor {
         unsafe { pros_sys::imu_get_euler(self.port).try_into() }
     }
 
-    // // Get the Inertial Sensor’s raw gyroscope values.
+    // /// Get the Inertial Sensor’s raw gyroscope values.
     // pub fn gyro_rate(&self) -> Result<InertialRaw, InertialError> {
     //     unsafe { pros_sys::imu_get_gyro_rate(self.port).try_into() }
     // }
 
-    // // Get the Inertial Sensor’s raw accelerometer values.
+    // /// Get the Inertial Sensor’s raw accelerometer values.
     // pub fn accel(&self) -> Result<InertialRaw, InertialError> {
     //     unsafe { pros_sys::imu_get_accel(self.port).try_into() }
     // }
@@ -161,7 +165,9 @@ impl InertialSensor {
         Ok(())
     }
 
-    // Sets the current reading of the Inertial Sensor’s euler values to target euler values. Will default to +/- 180 if target exceeds +/- 180.
+    /// Sets the current reading of the Inertial Sensor’s euler values to target euler values.
+    /// 
+    /// Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_euler(&self, euler: Euler) -> Result<(), InertialError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::imu_set_euler(self.port, euler.into()));
@@ -169,7 +175,7 @@ impl InertialSensor {
         Ok(())
     }
 
-    // Sets the current reading of the Inertial Sensor’s rotation to target value.
+    /// Sets the current reading of the Inertial Sensor’s rotation to target value.
     pub fn set_rotation(&self, rotation: f64) -> Result<(), InertialError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::imu_set_rotation(self.port, rotation));
@@ -177,7 +183,9 @@ impl InertialSensor {
         Ok(())
     }
 
-    // Sets the current reading of the Inertial Sensor’s heading to target value Target will default to 360 if above 360 and default to 0 if below 0.
+    /// Sets the current reading of the Inertial Sensor’s heading to target value.
+    ///
+    /// Target will default to 360 if above 360 and default to 0 if below 0.
     pub fn set_heading(&self, heading: f64) -> Result<(), InertialError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::imu_set_heading(self.port, heading));
@@ -185,7 +193,9 @@ impl InertialSensor {
         Ok(())
     }
 
-    // Sets the current reading of the Inertial Sensor’s pitch to target value Will default to +/- 180 if target exceeds +/- 180.
+    /// Sets the current reading of the Inertial Sensor’s pitch to target value.
+    /// 
+    /// Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_pitch(&self, pitch: f64) -> Result<(), InertialError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::imu_set_pitch(self.port, pitch));
@@ -193,7 +203,9 @@ impl InertialSensor {
         Ok(())
     }
 
-    // Sets the current reading of the Inertial Sensor’s roll to target value Will default to +/- 180 if target exceeds +/- 180.
+    /// Sets the current reading of the Inertial Sensor’s roll to target value
+    /// 
+    /// Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_roll(&self, roll: f64) -> Result<(), InertialError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::imu_set_roll(self.port, roll));
@@ -201,7 +213,9 @@ impl InertialSensor {
         Ok(())
     }
 
-    // Sets the current reading of the Inertial Sensor’s yaw to target value Will default to +/- 180 if target exceeds +/- 180.
+    /// Sets the current reading of the Inertial Sensor’s yaw to target value. 
+    /// 
+    /// Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_yaw(&self, yaw: f64) -> Result<(), InertialError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::imu_set_yaw(self.port, yaw));
