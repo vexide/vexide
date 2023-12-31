@@ -40,7 +40,7 @@ impl InertialSensor {
     }
 
     /// Get the total number of degrees the Inertial Sensor has spun about the z-axis.
-
+    ///
     /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
     /// while counterclockwise rotations are represented with negative ones.
     pub fn rotation(&self) -> Result<f64, InertialError> {
@@ -48,7 +48,7 @@ impl InertialSensor {
     }
 
     /// Get the Inertial Sensor’s heading relative to the initial direction of its x-axis.
-    /// 
+    ///
     /// This value is bounded by [0, 360) degrees. Clockwise rotations are represented with positive degree values,
     /// while counterclockwise rotations are represented with negative ones.
     pub fn heading(&self) -> Result<f64, InertialError> {
@@ -72,7 +72,13 @@ impl InertialSensor {
 
     /// Get the Inertial Sensor’s yaw angle bounded by (-180, 180) degrees.
     pub fn status(&self) -> Result<InertialStatus, InertialError> {
-        unsafe { Ok(bail_on!(PROS_ERR as _, pros_sys::imu_get_status(self.port) as pros_sys::imu_status_e_t).into()) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR as _,
+                pros_sys::imu_get_status(self.port) as pros_sys::imu_status_e_t
+            )
+            .into())
+        }
     }
 
     /// Get a quaternion representing the Inertial Sensor’s orientation.
@@ -154,10 +160,7 @@ impl InertialSensor {
     // Sets the current reading of the Inertial Sensor’s euler values to target euler values. Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_euler(&self, euler: Euler) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::imu_set_euler(self.port, euler.into())
-            );
+            bail_on!(PROS_ERR, pros_sys::imu_set_euler(self.port, euler.into()));
         }
         Ok(())
     }
@@ -165,21 +168,15 @@ impl InertialSensor {
     // Sets the current reading of the Inertial Sensor’s rotation to target value.
     pub fn set_rotation(&self, rotation: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::imu_set_rotation(self.port, rotation)
-            );
+            bail_on!(PROS_ERR, pros_sys::imu_set_rotation(self.port, rotation));
         }
         Ok(())
     }
-    
+
     // Sets the current reading of the Inertial Sensor’s heading to target value Target will default to 360 if above 360 and default to 0 if below 0.
     pub fn set_heading(&self, heading: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::imu_set_heading(self.port, heading)
-            );
+            bail_on!(PROS_ERR, pros_sys::imu_set_heading(self.port, heading));
         }
         Ok(())
     }
@@ -187,10 +184,7 @@ impl InertialSensor {
     // Sets the current reading of the Inertial Sensor’s pitch to target value Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_pitch(&self, pitch: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::imu_set_pitch(self.port, pitch)
-            );
+            bail_on!(PROS_ERR, pros_sys::imu_set_pitch(self.port, pitch));
         }
         Ok(())
     }
@@ -198,10 +192,7 @@ impl InertialSensor {
     // Sets the current reading of the Inertial Sensor’s roll to target value Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_roll(&self, roll: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::imu_set_roll(self.port, roll)
-            );
+            bail_on!(PROS_ERR, pros_sys::imu_set_roll(self.port, roll));
         }
         Ok(())
     }
@@ -209,10 +200,7 @@ impl InertialSensor {
     // Sets the current reading of the Inertial Sensor’s yaw to target value Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_yaw(&self, yaw: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::imu_set_yaw(self.port, yaw)
-            );
+            bail_on!(PROS_ERR, pros_sys::imu_set_yaw(self.port, yaw));
         }
         Ok(())
     }
@@ -220,9 +208,9 @@ impl InertialSensor {
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Quaternion {
-    pub x: f64, 
-    pub y: f64, 
-    pub z: f64, 
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
     pub w: f64,
 }
 
