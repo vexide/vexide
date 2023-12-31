@@ -5,7 +5,6 @@ use crate::error::{bail_on, map_errno, PortError};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InertialStatus {
-    pub raw: pros_sys::imu_status_e_t,
     pub calibrating: bool,
     pub error: bool,
 }
@@ -13,7 +12,6 @@ pub struct InertialStatus {
 impl From<pros_sys::imu_status_e_t> for InertialStatus {
     fn from(value: pros_sys::imu_status_e_t) -> Self {
         Self {
-            raw: value,
             calibrating: (value & pros_sys::E_IMU_STATUS_CALIBRATING) != 0,
             error: (value & pros_sys::E_IMU_STATUS_ERROR) != 0,
         }
