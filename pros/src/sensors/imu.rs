@@ -39,6 +39,10 @@ impl InertialSensor {
         Ok(())
     }
 
+    pub fn is_calibrating(&self) -> Result<bool, InertialError> {
+        Ok(self.status()?.calibrating)
+    }
+
     /// Get the total number of degrees the Inertial Sensor has spun about the z-axis.
     ///
     /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
