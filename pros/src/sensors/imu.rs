@@ -99,15 +99,15 @@ impl InertialSensor {
         unsafe { pros_sys::imu_get_euler(self.port).try_into() }
     }
 
-    // /// Get the Inertial Sensor’s raw gyroscope values.
-    // pub fn gyro_rate(&self) -> Result<InertialRaw, InertialError> {
-    //     unsafe { pros_sys::imu_get_gyro_rate(self.port).try_into() }
-    // }
+    /// Get the Inertial Sensor’s raw gyroscope values.
+    pub fn gyro_rate(&self) -> Result<InertialRaw, InertialError> {
+        unsafe { pros_sys::imu_get_gyro_rate(self.port).try_into() }
+    }
 
-    // /// Get the Inertial Sensor’s raw accelerometer values.
-    // pub fn accel(&self) -> Result<InertialRaw, InertialError> {
-    //     unsafe { pros_sys::imu_get_accel(self.port).try_into() }
-    // }
+    /// Get the Inertial Sensor’s raw accelerometer values.
+    pub fn accel(&self) -> Result<InertialRaw, InertialError> {
+        unsafe { pros_sys::imu_get_accel(self.port).try_into() }
+    }
 
     /// Resets the current reading of the Inertial Sensor’s heading to zero.
     pub fn zero_heading(&self) -> Result<(), InertialError> {
@@ -289,26 +289,26 @@ impl Into<pros_sys::euler_s_t> for Euler {
     }
 }
 
-// #[derive(Clone, Copy, Debug, PartialEq)]
-// pub struct InertialRaw {
-//     pub x: f64,
-//     pub y: f64,
-//     pub z: f64,
-// }
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct InertialRaw {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+}
 
-// impl TryFrom<pros_sys::imu_raw_s> for InertialRaw {
-//     type Error = InertialError;
+impl TryFrom<pros_sys::imu_raw_s> for InertialRaw {
+    type Error = InertialError;
 
-//     fn try_from(value: pros_sys::imu_raw_s) -> Result<InertialRaw, InertialError> {
-//         bail_on!(value.x, PROS_ERR_F);
+    fn try_from(value: pros_sys::imu_raw_s) -> Result<InertialRaw, InertialError> {
+        bail_on!(value.x, PROS_ERR_F);
 
-//         Ok(Self {
-//             x: value.x,
-//             y: value.y,
-//             z: value.z,
-//         })
-//     }
-// }
+        Ok(Self {
+            x: value.x,
+            y: value.y,
+            z: value.z,
+        })
+    }
+}
 
 #[derive(Debug, Snafu)]
 pub enum InertialError {
