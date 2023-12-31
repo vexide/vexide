@@ -12,8 +12,8 @@ pub struct InertialStatus {
 impl From<pros_sys::imu_status_e_t> for InertialStatus {
     fn from(value: pros_sys::imu_status_e_t) -> Self {
         Self {
-            calibrating: (value & pros_sys::E_IMU_STATUS_CALIBRATING) == 0b001,
-            error: (value & pros_sys::E_IMU_STATUS_ERROR) == 0b010,
+            calibrating: (value & pros_sys::E_IMU_STATUS_CALIBRATING) == pros_sys::E_IMU_STATUS_CALIBRATING,
+            error: (value & pros_sys::E_IMU_STATUS_ERROR) == pros_sys::E_IMU_STATUS_ERROR,
         }
     }
 }
