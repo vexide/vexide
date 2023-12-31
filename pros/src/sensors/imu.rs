@@ -35,7 +35,7 @@ impl InertialSensor {
     /// This takes approximately 2 seconds, and is blocking until the IMU status flag is set properly.
     pub fn calibrate(&self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_reset(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_reset_blocking(self.port));
         }
         Ok(())
     }
