@@ -166,7 +166,7 @@ impl InertialSensor {
     }
 
     /// Sets the current reading of the Inertial Sensor’s euler values to target euler values.
-    /// 
+    ///
     /// Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_euler(&self, euler: Euler) -> Result<(), InertialError> {
         unsafe {
@@ -194,7 +194,7 @@ impl InertialSensor {
     }
 
     /// Sets the current reading of the Inertial Sensor’s pitch to target value.
-    /// 
+    ///
     /// Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_pitch(&self, pitch: f64) -> Result<(), InertialError> {
         unsafe {
@@ -204,7 +204,7 @@ impl InertialSensor {
     }
 
     /// Sets the current reading of the Inertial Sensor’s roll to target value
-    /// 
+    ///
     /// Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_roll(&self, roll: f64) -> Result<(), InertialError> {
         unsafe {
@@ -213,8 +213,8 @@ impl InertialSensor {
         Ok(())
     }
 
-    /// Sets the current reading of the Inertial Sensor’s yaw to target value. 
-    /// 
+    /// Sets the current reading of the Inertial Sensor’s yaw to target value.
+    ///
     /// Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_yaw(&self, yaw: f64) -> Result<(), InertialError> {
         unsafe {
