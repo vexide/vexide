@@ -1,4 +1,5 @@
 //! Helpers for dealing with errno.
+//! 
 //! Most of the contents of this file are not public.
 
 pub(crate) fn take_errno() -> i32 {

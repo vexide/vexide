@@ -1,3 +1,8 @@
+//! A tiny async runtime.
+//! 
+//! This runtime can be used outside of the main task, but it is reccomended to only use either
+//! real FreeRTOS tasks or this async runtime.
+
 use core::future::Future;
 
 use async_task::Task;

@@ -27,9 +27,7 @@ The steps for getting pros-rs compiling are slightly different based on if you u
 
 #### With Nix
 
-The Nix flake contains the Arm Gnu Toolchain and cargo pros.
-Unfortunately pros-cli is not packaged for Nix so you will have to get it from a different package manager.
-Nixos users are, unfortunately, out of luck here.
+The Nix flake contains the Arm Gnu Toolchain, cargo pros, and pros-cli.
 
 There is a ``.envrc`` file included for Nix + Direnv users.
 
