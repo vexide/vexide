@@ -3,18 +3,21 @@ use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct InertialStatus {
-    pub calibrating: bool,
-    pub error: bool,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct InertialStatus(pub u32);
+
+impl InertialStatus {
+    pub const fn calibrating(&self) -> bool {
+        self.0 & pros_sys::E_IMU_STATUS_CALIBRATING != 0
+    }
+    pub const fn error(&self) -> bool {
+        self.0 & pros_sys::E_IMU_STATUS_ERROR != 0
+    }
 }
 
 impl From<pros_sys::imu_status_e_t> for InertialStatus {
     fn from(value: pros_sys::imu_status_e_t) -> Self {
-        Self {
-            calibrating: (value & pros_sys::E_IMU_STATUS_CALIBRATING) != 0,
-            error: (value & pros_sys::E_IMU_STATUS_ERROR) != 0,
-        }
+        Self(value)
     }
 }
 
@@ -27,7 +30,7 @@ impl InertialSensor {
     /// Create a new inertial sensor from a smart port index.
     pub fn new(port: u8) -> Result<Self, InertialError> {
         let sensor = Self { port };
-        sensor.rotation()?;
+        sensor.status()?;
         Ok(sensor)
     }
 
@@ -42,7 +45,7 @@ impl InertialSensor {
 
     /// Check if the Intertial Sensor is currently calibrating.
     pub fn is_calibrating(&self) -> Result<bool, InertialError> {
-        Ok(self.status()?.calibrating)
+        Ok(self.status()?.calibrating())
     }
 
     /// Get the total number of degrees the Inertial Sensor has spun about the z-axis.
