@@ -1,4 +1,8 @@
-//! Motor and gearsets.
+//! Motors and gearsets.
+//! 
+//! The motor API is similar to that of [`sensors`](crate::sensors).
+//! Multiple motors can be created on the same port and they are thread safe.
+//! 
 //! Motors can be created with the [`Motor::new`] function.
 //! Once created they can be controlled with one three functions:
 //! [`Motor::set_output`], [`Motor::set_raw_output`], and [`Motor::set_voltage`].

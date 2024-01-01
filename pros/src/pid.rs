@@ -1,3 +1,8 @@
+//! PID controllers.
+//! 
+//! PID controllers are first created with [`PidController::new`]
+//! and then can be utilized by calling [`PidController::update`] repeatedly.
+
 /// A proportional–integral–derivative controller.
 ///
 /// This controller is used to smoothly move motors to a certain point,

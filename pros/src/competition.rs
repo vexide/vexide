@@ -1,4 +1,7 @@
 //! Utilities for getting what state of the competition the robot is in.
+//! 
+//! You have the option of getting the entire state ([`get_status`]), or checking a specific one ([`is_autonomous`], etc.).
+//! Once a [`CompetitionStatus`] is created by [`get_status`] it will not be updated again.
 
 /// The current status of the robot, allowing checks to be made
 /// for autonomous, disabled, and connected states.
