@@ -1,6 +1,6 @@
 [package]
 name = "pros"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Rust bindings for PROS"
 keywords = ["PROS", "Robotics", "bindings"]
@@ -17,6 +17,7 @@ spin = "0.9.8"
 pros-sys = { version = "0.4", path = "../pros-sys", features = ["xapi"] }
 snafu = { version = "0.7.5", default-features = false, features = [
     "rust_1_61",
+    "unstable-core-error",
 ] }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 futures = { version = "0.3.28", default-features = false, features = ["alloc"] }

@@ -93,7 +93,6 @@ pub enum PortError {
     ))]
     PortCannotBeConfigured,
 }
-impl core::error::Error for PortError {}
 
 map_errno!(PortError {
     ENXIO => Self::PortOutOfRange,

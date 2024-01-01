@@ -30,7 +30,7 @@
 //!```rust
 //! // Sync
 //! use pros::prelude::*;
-//! 
+//!
 //! #[derive(Default)]
 //! struct Robot;
 //! impl SyncRobot for Robot {
@@ -42,7 +42,7 @@
 //! }
 //! sync_robot!(Robot);
 //! ```
-//! 
+//!
 //! You may have noticed the `#[derive(Default)]` attribute on these Robot structs.
 //! If you want to learn why, look at the docs for [`async_robot`] or [`sync_robot`].
 
