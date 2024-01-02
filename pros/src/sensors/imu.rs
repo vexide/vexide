@@ -3,24 +3,7 @@ use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct InertialStatus(pub u32);
-
-impl InertialStatus {
-    pub const fn calibrating(&self) -> bool {
-        self.0 & pros_sys::E_IMU_STATUS_CALIBRATING != 0
-    }
-    pub const fn error(&self) -> bool {
-        self.0 & pros_sys::E_IMU_STATUS_ERROR != 0
-    }
-}
-
-impl From<pros_sys::imu_status_e_t> for InertialStatus {
-    fn from(value: pros_sys::imu_status_e_t) -> Self {
-        Self(value)
-    }
-}
-
+/// Represents a smart port configured as a V5 inertial sensor (IMU)
 #[derive(Debug)]
 pub struct InertialSensor {
     port: u8,
@@ -35,6 +18,7 @@ impl InertialSensor {
     }
 
     /// Calibrate IMU.
+    /// 
     /// This takes approximately 2 seconds, and is blocking until the IMU status flag is set properly.
     pub fn calibrate(&self) -> Result<(), InertialError> {
         unsafe {
@@ -225,11 +209,20 @@ impl InertialSensor {
     }
 }
 
+/// Standard quaternion consisting of a vector defining an axis of rotation
+/// and a rotation value about the axis.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Quaternion {
+    /// The x-component of the axis of rotation.
     pub x: f64,
+
+    /// The y-component of the axis of rotation.
     pub y: f64,
+
+    /// The z-component of the axis of rotation.
     pub z: f64,
+
+    /// The magnitude of rotation about the axis.
     pub w: f64,
 }
 
@@ -257,10 +250,16 @@ impl Into<pros_sys::quaternion_s_t> for Quaternion {
     }
 }
 
+/// A 3-axis set of euler angles.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Euler {
+    /// The angle measured along the pitch axis.
     pub pitch: f64,
+
+    /// The angle measured along the roll axis.
     pub roll: f64,
+
+    /// The angle measured along the yaw axis.
     pub yaw: f64,
 }
 
@@ -286,10 +285,19 @@ impl Into<pros_sys::euler_s_t> for Euler {
     }
 }
 
+/// Represents raw data reported by the IMU.
+/// 
+/// This is effectively a 3D vector containing either angular velocity or
+/// acceleration values depending on the type of data requested..
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct InertialRaw {
+    /// The x component of the raw data.
     pub x: f64,
+
+    /// The y component of the raw data.
     pub y: f64,
+
+    /// The z component of the raw data.
     pub z: f64,
 }
 
@@ -302,6 +310,28 @@ impl TryFrom<pros_sys::imu_raw_s> for InertialRaw {
             y: value.y,
             z: value.z,
         })
+    }
+}
+
+/// Represents a status code returned by the Inertial Sensor.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct InertialStatus(pub u32);
+
+impl InertialStatus {
+    /// Determine if the sensor is currently calibrating.
+    pub const fn calibrating(&self) -> bool {
+        self.0 & pros_sys::E_IMU_STATUS_CALIBRATING != 0
+    }
+
+    /// Determine if an error state was reached when trying to get the IMU's status.
+    pub const fn error(&self) -> bool {
+        self.0 & pros_sys::E_IMU_STATUS_ERROR != 0
+    }
+}
+
+impl From<pros_sys::imu_status_e_t> for InertialStatus {
+    fn from(value: pros_sys::imu_status_e_t) -> Self {
+        Self(value)
     }
 }
 
