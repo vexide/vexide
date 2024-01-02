@@ -1,21 +1,19 @@
 {
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
+    cargo-pros.url = "github:pros-rs/cargo-pros";
+    pros-cli-nix.url = "github:BattleCh1cken/pros-cli-nix";
   };
 
-  outputs = { nixpkgs, flake-utils, ... }: (flake-utils.lib.eachDefaultSystem (system:
-    let pkgs = nixpkgs.legacyPackages.${system}; in {
-      devShell = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          openssl
-          pkgconfig
-          clang
-          libclang
-          gcc-arm-embedded-9
-        ];
-
-        LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
-      };
-    }
-  ));
+  outputs = { nixpkgs, flake-utils, cargo-pros, pros-cli-nix, ... }:
+    (flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        cargo-pros' = cargo-pros.packages.${system}.default;
+        pros-cli = pros-cli-nix.packages.${system}.default;
+      in {
+        devShell = pkgs.mkShell {
+          buildInputs = with pkgs; [ gcc-arm-embedded-9 cargo-pros' pros-cli ];
+        };
+      }));
 }

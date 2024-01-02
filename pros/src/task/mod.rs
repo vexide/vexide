@@ -1,3 +1,20 @@
+//! FreeRTOS task creation and management.
+//!
+//! Any method of creating a task will return a [`TaskHandle`].
+//! This handle can be used to control the task.
+//! A handle to the current task can be obtained with [`current`].
+//!
+//! Tasks can be created with the [`spawn`] function or, for more control, with a task [`Builder`].
+//! ## Example
+//! ```rust
+//! spawn(|| {
+//!    println!("Hello from a task!");
+//! });
+//! ```
+//!
+//! Task locals can be created with the [`os_task_local!`](crate::os_task_local!) macro.
+//! See the [`local`] module for more info on the custom task local implementation used.
+
 pub mod local;
 
 use core::hash::Hash;
@@ -20,6 +37,7 @@ where
     Builder::new().spawn(f).expect("Failed to spawn task")
 }
 
+/// Low level task spawning functionality
 fn spawn_inner<F: FnOnce() + Send + 'static>(
     function: F,
     priority: TaskPriority,
@@ -299,6 +317,8 @@ impl Interval {
     }
 }
 
+/// A future that will complete after the given duration.
+/// Sleep futures that are closer to completion are prioritized to improve accuracy.
 pub struct SleepFuture {
     target_millis: u32,
 }
@@ -323,6 +343,7 @@ impl Future for SleepFuture {
     }
 }
 
+/// Returns a future that will complete after the given duration.
 pub fn sleep(duration: core::time::Duration) -> SleepFuture {
     SleepFuture {
         target_millis: unsafe { pros_sys::millis() + duration.as_millis() as u32 },

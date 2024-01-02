@@ -1,3 +1,7 @@
+//! Vision sensor device.
+//!
+//! Vision sensors take in a zero point at creation.
+
 extern crate alloc;
 use alloc::vec::Vec;
 use pros_sys::{PROS_ERR, VISION_OBJECT_ERR_SIG};

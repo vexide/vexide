@@ -1,3 +1,10 @@
+//! Helpers for dealing with errno.
+//!
+//! Most errors in pros-rs are created by reading the last value of ERRNO.
+//! This includes the very generic [`PortError`], which is used for most hardware that gets plugged into a port on a V5 Brain.
+//!
+//! Most of the contents of this file are not public.
+
 pub(crate) fn take_errno() -> i32 {
     let err = unsafe { *pros_sys::__errno() };
     if err != 0 {
@@ -10,10 +17,12 @@ pub(crate) fn take_errno() -> i32 {
 ///
 /// Example:
 /// ```
-/// map_errno!(GpsError inherits PortError as |x| Self::Port(x) {
-///    ENXIO => PortOutOfRange,
-///   ENODEV => PortCannotBeConfigured,
-/// });
+/// map_errno! {
+///     GpsError {
+///         EAGAIN => Self::StillCalibrating,
+///     }
+///     inherit PortError;
+/// }
 /// ```
 macro_rules! map_errno {
     {

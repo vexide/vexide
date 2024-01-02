@@ -1,4 +1,7 @@
 //! Connect to VEXLink for robot-to-robot communication.
+//!
+//! There are two types of links: [`TxLink`] (transmitter) and [`RxLink`] (receiver).
+//! both implement a shared trait [`Link`] as well as a no std version of `Write` and `Read` from [`no_std_io`] respectively.
 
 use core::ffi::CStr;
 
@@ -9,17 +12,23 @@ use snafu::Snafu;
 
 use crate::error::{bail_errno, bail_on, map_errno, FromErrno, PortError};
 
+/// Types that implement Link can be used to send data to another robot over VEXLink.
 pub trait Link {
+    /// The port that this link is connected to.
     fn port(&self) -> u8;
+    /// The identifier of this link.
     fn id(&self) -> &CStr;
+    /// Check whether this link is connected to another robot.
     fn connected(&self) -> bool {
         unsafe { pros_sys::link_connected(self.port()) }
     }
+    /// Create a new link ready to send or recieve data.
     fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError>
     where
         Self: Sized;
 }
 
+/// A recieving end of a VEXLink connection.
 pub struct RxLink {
     port: u8,
     id: CString,
@@ -94,6 +103,7 @@ impl io::Read for RxLink {
     }
 }
 
+/// A transmitting end of a VEXLink connection.
 pub struct TxLink {
     port: u8,
     id: CString,

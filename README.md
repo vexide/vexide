@@ -2,55 +2,39 @@
 
 Work in progress opinionated Rust bindings for the [PROS](https://github.com/purduesigbots/pros) library and kernel.
 
-## This project is still early in development
-
+This project is still early in development.
 Make sure to check out the todo list [(TODO.md)](TODO.md)
+
+## Usage
 
 ## Compiling
 
-Pros-rs has a few dependancies, namely:
+The only dependency of pros-rs outside of Rust is The Arm Gnu Toolchain (arm-none-eabi-gcc).
 
-* Rust (obviously)
-* The Arm Gnu Toolchain (arm-none-eabi-gcc)
-* Clang
-* Pros (pros-cli)
-
-Read the installation guide for your OS to see how to install all of them.
+Read the installation guide for your OS to see how to get things set up.
 
 ### Windows
+Steps:
+1. Run The Arm Gnu Toolchain [here](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
+2. Install the pros cli, instructions are [here](https://pros.cs.purdue.edu/v5/getting-started/windows.html)
+3. Install cargo pros with ``cargo install cargo-pros``
 
-Windows is always tricky to compile things on, but luckily you won't have to do too much.
-
-First install Clang. To install Clang either [install it manually](https://releases.llvm.org/),
-or if you dont mind it being outdated, run [the installer](https://llvm.org/builds/).
-
-Next install the Arm GNU Toolchain which has an installer [here](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
-
-Next install the pros cli, instructions are [here](https://pros.cs.purdue.edu/v5/getting-started/windows.html)
-
-Finally, find the directory of the Arm GNU Toolchain and navigate to arm-none-eabi/include.
-Copy the new path. What we need to do now is set the CPATH environment variable to that path.
-To set the environment variable temporarily you can run a command in the terminal.
-If you use cmd run ``set CPATH=<paste path here>``, If you use powershell run ``$env:CPATH = <paste path here>``.
-To chage the environment variable permanently search in the task bar for "Edit Environment Variables" and open it.
-Once you are there create a new entry named CPATH and set it to the copied path.
-
-After all that, you are done!
-To compile and the project rust run ``cargo r``.
+To compile and the project rust run ``cargo pros build``.
 
 ### Linux
 
-The easiest way to get things working on linux is to install nix and direnv, or if you are on nixos, just install direnv.
+The steps for getting pros-rs compiling are slightly different based on if you use Nix or not.
 
-Installing nix is easy, just follow [their instructions](https://nixos.org/download.html).
-Installing direnv is also easy, [follow their guide](https://direnv.net/#basic-installation)
+#### With Nix
 
-Your may have to enable some options to get nix and direnv to work together, but once that is done they are completely set up.
+The Nix flake contains the Arm Gnu Toolchain, cargo pros, and pros-cli.
 
-Unfortunately the pros-cli isn't packaged for nixpkgs, which means that you need to install it manually with ``pip install --user pros-cli``.
-On nixos though, you are unfortunately out of luck, at least for now.
+There is a ``.envrc`` file included for Nix + Direnv users.
 
-Run ``direnv allow`` and then ``cargo r``. And you should be good!
+#### Without Nix
+
+install arm-none-eabi-gcc and pros-cli from your package manager of choice. 
+Cargo pros can be installed with ``cargo install cargo-pros``
 
 ### MacOS
 
@@ -69,4 +53,10 @@ And you are done! Compile the project with `cargo build`.
 
 ## Compiling for WASM
 
-To build projects in this repository for WebAssembly, run `cargo build --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort`. The extra build-std argument is neccesary because this repository's `.cargo/config.toml` enables build-std but only for core, alloc, and compiler_builtins. WebAssembly does come with `std` but there is [currently](https://github.com/rust-lang/cargo/issues/8733) no way to conditionally enable build-std.
+To build projects in this repository for WebAssembly, run ``cargo pros build -s``
+This will automatically pass all of the correct arguments to cargo.
+
+If for some reason you want to do it manually, this is the command: 
+`cargo build --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort`.
+
+The extra build-std argument is neccesary because this repository's `.cargo/config.toml` enables build-std but only for core, alloc, and compiler_builtins. WebAssembly does come with `std` but there is [currently](https://github.com/rust-lang/cargo/issues/8733) no way to conditionally enable build-std.
