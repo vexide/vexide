@@ -6,6 +6,11 @@ use crate::error::{bail_on, map_errno, PortError};
 
 pub trait OpticalDetection {}
 
+pub const MIN_INTEGRATION_TIME: Duration = Duration::from_millis(3);
+pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
+
+pub const MAX_LED_PWM: u8 = 100;
+
 pub struct GestureDetection;
 impl OpticalDetection for GestureDetection {}
 
@@ -39,7 +44,7 @@ impl<T: OpticalDetection> OpticalSensor<T> {
 
     /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
     pub fn set_led_pwm(&self, value: u8) -> Result<(), OpticalError> {
-        if value > 100 {
+        if value > MAX_LED_PWM {
             return Err(OpticalError::InvalidLedPwm);
         }
         unsafe {
@@ -54,15 +59,14 @@ impl<T: OpticalDetection> OpticalSensor<T> {
     /// https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for
     /// more information.
     pub fn set_integration_time(&self, time: Duration) -> Result<(), OpticalError> {
-        let time_millis = time.as_millis();
-        if time_millis < 3 || time_millis > 712 {
+        if time < MIN_INTEGRATION_TIME || time > MAX_INTEGRATION_TIME {
             return Err(OpticalError::InvalidIntegrationTime);
         }
 
         unsafe {
             bail_on!(
                 PROS_ERR,
-                pros_sys::optical_set_integration_time(self.port, time_millis as f64)
+                pros_sys::optical_set_integration_time(self.port, time.as_millis() as f64)
             );
         }
 
