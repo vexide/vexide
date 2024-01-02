@@ -73,6 +73,34 @@ impl ControllerLine {
     }
 }
 
+/// A digital channel (button) on the VEX controller.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum ControllerButton {
+    A = pros_sys::E_CONTROLLER_DIGITAL_A,
+    B = pros_sys::E_CONTROLLER_DIGITAL_B,
+    X = pros_sys::E_CONTROLLER_DIGITAL_X,
+    Y = pros_sys::E_CONTROLLER_DIGITAL_Y,
+    Up = pros_sys::E_CONTROLLER_DIGITAL_UP,
+    Down = pros_sys::E_CONTROLLER_DIGITAL_DOWN,
+    Left = pros_sys::E_CONTROLLER_DIGITAL_LEFT,
+    Right = pros_sys::E_CONTROLLER_DIGITAL_RIGHT,
+    LeftTrigger1 = pros_sys::E_CONTROLLER_DIGITAL_L1,
+    LeftTrigger2 = pros_sys::E_CONTROLLER_DIGITAL_L2,
+    RightTrigger1 = pros_sys::E_CONTROLLER_DIGITAL_R1,
+    RightTrigger2 = pros_sys::E_CONTROLLER_DIGITAL_R2,
+}
+
+/// An analog channel (joystick axis) on the VEX controller.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum JoystickAxis {
+    LeftX = pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
+    LeftY = pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
+    RightX = pros_sys::E_CONTROLLER_ANALOG_RIGHT_X,
+    RightY = pros_sys::E_CONTROLLER_ANALOG_RIGHT_Y,
+}
+
 /// The basic type for a controller.
 /// Used to get the state of its joysticks and controllers.
 #[repr(u32)]
@@ -100,7 +128,7 @@ impl Controller {
         }
     }
 
-    /// Gets the state of the controller; the joysticks and buttons.
+    /// Gets the current state of the controller in its entirety.
     pub fn state(&self) -> ControllerState {
         ControllerState {
             joysticks: unsafe {
@@ -184,6 +212,16 @@ impl Controller {
                 }
             },
         }
+    }
+
+    /// Gets the state of a specific button on the controller.
+    pub fn button(&self, button: ControllerButton) -> bool {
+        unsafe { pros_sys::controller_get_digital(self.id(), button as u32) == 1 }
+    }
+
+    /// Gets the state of a specific joystick axis on the controller.
+    pub fn joystick_axis(&self, axis: JoystickAxis) -> f32 {
+        unsafe { pros_sys::controller_get_analog(self.id(), axis as u32) as f32 / 127.0 }
     }
 }
 
