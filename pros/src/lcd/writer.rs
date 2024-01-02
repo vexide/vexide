@@ -1,3 +1,5 @@
+//! Scrolling text writer for the LLEMU.
+
 extern crate alloc;
 
 use alloc::ffi::CString;

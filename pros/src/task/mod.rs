@@ -3,7 +3,7 @@
 //! Any method of creating a task will return a [`TaskHandle`].
 //! This handle can be used to control the task.
 //! A handle to the current task can be obtained with [`current`].
-//! 
+//!
 //! Tasks can be created with the [`spawn`] function or, for more control, with a task [`Builder`].
 //! ## Example
 //! ```rust

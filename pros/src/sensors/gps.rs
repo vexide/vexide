@@ -8,6 +8,7 @@ use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
 
+/// Represents the data output from a GPS sensor.
 pub struct GpsStatus {
     pub x: f64,
     pub y: f64,
@@ -21,11 +22,13 @@ pub struct GpsStatus {
     pub accel_z: f64,
 }
 
+// A physical GPS sensor plugged into a port.
 pub struct GpsSensor {
     port: u8,
 }
 
 impl GpsSensor {
+    /// Creates a new GPS sensor on the given port.
     pub fn new(port: u8) -> Result<Self, GpsError> {
         unsafe {
             bail_on!(
@@ -37,16 +40,19 @@ impl GpsSensor {
         Ok(Self { port })
     }
 
+    /// Sets the offset of the GPS sensor, relative to the sensor of turning, in meters.
     pub fn set_offset(&self, x: f64, y: f64) {
         unsafe {
             pros_sys::gps_set_offset(self.port, x, y);
         }
     }
 
+    /// Gets the possible error of the GPS sensor, in meters.
     pub fn rms_error(&self) -> Result<f64, GpsError> {
         Ok(unsafe { bail_on!(PROS_ERR_F, pros_sys::gps_get_error(self.port)) })
     }
 
+    /// Gets the status of the GPS sensor.
     pub fn status(&self) -> Result<GpsStatus, GpsError> {
         unsafe {
             let status = pros_sys::gps_get_status(self.port);
@@ -70,6 +76,7 @@ impl GpsSensor {
         }
     }
 
+    /// Zeroes the rotation of the GPS sensor.
     pub fn zero_rotation(&self) -> Result<(), GpsError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::gps_tare_rotation(self.port));

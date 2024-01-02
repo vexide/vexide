@@ -354,6 +354,8 @@ macro_rules! sync_robot {
     };
 }
 
+/// Commonly used features of pros-rs.
+/// This module is meant to be glob imported.
 pub mod prelude {
     pub use crate::{async_robot, sync_robot};
     pub use crate::{AsyncRobot, SyncRobot};

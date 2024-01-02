@@ -9,12 +9,15 @@ use crate::{
     position::Position,
 };
 
+/// A physical rotation sensor plugged into a port.
 pub struct RotationSensor {
     port: u8,
     pub reversed: bool,
 }
 
 impl RotationSensor {
+    /// Creates a new rotation sensor on the given port.
+    /// Whether or not the sensor should be reversed on creation can be specified.
     pub fn new(port: u8, reversed: bool) -> Result<Self, PortError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::rotation_reset_position(port));

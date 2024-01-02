@@ -1,3 +1,9 @@
+//! Register LCD button callbacks.
+//!
+//! Use of button callbacks isn't recommended,
+//! instead run code when a button is pressed by checking the state of the buttons in a loop.
+//! Buttons can be checked with [`read_buttons`].
+
 extern crate alloc;
 
 use alloc::boxed::Box;

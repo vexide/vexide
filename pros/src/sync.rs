@@ -1,3 +1,7 @@
+//! Synchronization types for FreeRTOS tasks.
+//!
+//! Types implemented here are specificially designed to mimick the standard library.
+
 use core::{cell::UnsafeCell, fmt::Debug, mem};
 
 use crate::error::take_errno;
