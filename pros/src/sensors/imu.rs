@@ -79,7 +79,7 @@ impl InertialSensor {
         unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::imu_get_yaw(self.port))) }
     }
 
-    /// Get the Inertial Sensor’s yaw angle bounded by (-180, 180) degrees.
+    /// Read the inertial sensor's status code.
     pub fn status(&self) -> Result<InertialStatus, InertialError> {
         unsafe {
             Ok(bail_on!(
@@ -237,10 +237,8 @@ impl TryFrom<pros_sys::quaternion_s_t> for Quaternion {
     type Error = InertialError;
 
     fn try_from(value: pros_sys::quaternion_s_t) -> Result<Quaternion, InertialError> {
-        bail_on!(value.x, PROS_ERR_F);
-
         Ok(Self {
-            x: value.x,
+            x: bail_on!(value.x, PROS_ERR_F),
             y: value.y,
             z: value.z,
             w: value.w,
@@ -270,10 +268,8 @@ impl TryFrom<pros_sys::euler_s_t> for Euler {
     type Error = InertialError;
 
     fn try_from(value: pros_sys::euler_s_t) -> Result<Euler, InertialError> {
-        bail_on!(value.pitch, PROS_ERR_F);
-
         Ok(Self {
-            pitch: value.pitch,
+            pitch: bail_on!(value.pitch, PROS_ERR_F),
             roll: value.roll,
             yaw: value.yaw,
         })
@@ -301,10 +297,8 @@ impl TryFrom<pros_sys::imu_raw_s> for InertialRaw {
     type Error = InertialError;
 
     fn try_from(value: pros_sys::imu_raw_s) -> Result<InertialRaw, InertialError> {
-        bail_on!(value.x, PROS_ERR_F);
-
         Ok(Self {
-            x: value.x,
+            x: bail_on!(value.x, PROS_ERR_F),
             y: value.y,
             z: value.z,
         })
