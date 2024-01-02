@@ -88,7 +88,7 @@ pub enum ControllerButton {
 /// An analog channel (joystick axis) on the VEX controller.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
-pub enum ControllerAxis {
+pub enum JoystickAxis {
     LeftX = pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
     LeftY = pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
     RightX = pros_sys::E_CONTROLLER_ANALOG_RIGHT_X,
@@ -122,7 +122,7 @@ impl Controller {
         }
     }
 
-    /// Gets the current state of the controller in its entirety, including its joysticks and buttons.
+    /// Gets the current state of the controller in its entirety.
     pub fn state(&self) -> ControllerState {
         ControllerState {
             joysticks: unsafe {
@@ -214,7 +214,7 @@ impl Controller {
     }
 
     /// Gets the state of a specific joystick axis on the controller.
-    pub fn joystick_axis(&self, axis: ControllerAxis) -> f32 {
+    pub fn joystick_axis(&self, axis: JoystickAxis) -> f32 {
         unsafe { pros_sys::controller_get_analog(self.id(), axis as u32) as f32 / 127.0 }
     }
 }
