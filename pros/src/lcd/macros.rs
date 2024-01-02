@@ -1,3 +1,7 @@
+//! Macros for printing to the LCD screen.
+//!
+//! These macros are designed to be exactly the same as the standard library's  equivalents.
+
 use core::fmt::{self, Write};
 
 use super::WRITER;
