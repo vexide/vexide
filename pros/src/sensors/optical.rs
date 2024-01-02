@@ -30,6 +30,17 @@ impl<T: OpticalDetection> OpticalSensor<T> {
     pub fn led_pwm(&self) -> Result<i32, OpticalError> {
         unsafe { Ok(bail_on!(PROS_ERR, pros_sys::optical_get_led_pwm(self.port))) }
     }
+    
+    /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
+    pub fn set_led_pwm(&self, value: u8) -> Result<(), OpticalError> {
+        if value > MAX_LED_PWM {
+            return Err(OpticalError::InvalidLedPwm);
+        }
+        unsafe {
+            bail_on!(PROS_ERR, pros_sys::optical_set_led_pwm(self.port, value));
+        }
+        Ok(())
+    }
 
     /// Get integration time (update rate) of the optical sensor in milliseconds, with
     /// minimum time being 3ms and the maximum time being 712ms.
@@ -42,18 +53,7 @@ impl<T: OpticalDetection> OpticalSensor<T> {
         }
     }
 
-    /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
-    pub fn set_led_pwm(&self, value: u8) -> Result<(), OpticalError> {
-        if value > MAX_LED_PWM {
-            return Err(OpticalError::InvalidLedPwm);
-        }
-        unsafe {
-            bail_on!(PROS_ERR, pros_sys::optical_set_led_pwm(self.port, value));
-        }
-        Ok(())
-    }
-
-    /// Set integration time (update rate) of the optical sensor in milliseconds.
+    /// Set integration time (update rate) of the optical sensor.
     ///
     /// Time value must be between 3 and 712 milliseconds. See
     /// https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for
@@ -76,21 +76,27 @@ impl<T: OpticalDetection> OpticalSensor<T> {
 
 impl OpticalSensor<ColorDetection> {
     pub fn new(port: u8) -> Result<Self, OpticalError> {
-        let sensor = Self {
+        bail_on!(
+            PROS_ERR,
+            unsafe { pros_sys::optical_disable_gesture(port) }
+        );
+
+        Ok(Self {
             port,
             mode: ColorDetection,
-        };
-        sensor.hue()?;
-
-        Ok(sensor)
+        })
     }
 
-    /// Get the detected color hue. This is not available if gestures are being detected. Hue has a range of `0` `359.999`.
+    /// Get the detected color hue.
+    /// 
+    /// Hue has a range of `0` to `359.999`.
     pub fn hue(&self) -> Result<f64, OpticalError> {
         unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::optical_get_hue(self.port))) }
     }
 
-    /// Gets the detected color saturation. This is not available if gestures are being detected. Saturation has a range `0` `1.0``.
+    /// Gets the detected color saturation.
+    /// 
+    /// Saturation has a range `0` to `1.0`.
     pub fn saturation(&self) -> Result<f64, OpticalError> {
         unsafe {
             Ok(bail_on!(
@@ -100,7 +106,9 @@ impl OpticalSensor<ColorDetection> {
         }
     }
 
-    /// Get the detected color brightness. This is not available if gestures are being detected. Brightness values are in range `0`` `1.0``.
+    /// Get the detected color brightness.
+    /// 
+    /// Brightness values range from `0` to `1.0`.
     pub fn brightness(&self) -> Result<f64, OpticalError> {
         unsafe {
             Ok(bail_on!(
@@ -112,7 +120,7 @@ impl OpticalSensor<ColorDetection> {
 
     /// Get the detected proximity value
     ///
-    /// Proximity has a range of 0 to 255.
+    /// Proximity has a range of `0` to `255`.
     pub fn proximity(&self) -> Result<i32, OpticalError> {
         unsafe {
             Ok(bail_on!(
@@ -135,19 +143,25 @@ impl OpticalSensor<ColorDetection> {
 
 impl OpticalSensor<GestureDetection> {
     pub fn new(port: u8) -> Result<Self, OpticalError> {
-        let sensor = Self {
+        bail_on!(
+            PROS_ERR,
+            unsafe { pros_sys::optical_enable_gesture(port) }
+        );
+
+        Ok(Self {
             port,
             mode: GestureDetection,
-        };
-        sensor.last_gesture_direction()?;
-
-        Ok(sensor)
+        })
     }
 
+    /// Get the most recent gesture data from the sensor.
+    ///
+    /// Gestures will be cleared after 500mS.
     pub fn last_gesture_direction(&self) -> Result<GestureDirection, OpticalError> {
         unsafe { pros_sys::optical_get_gesture(self.port).try_into() }
     }
 
+    /// Get the most recent raw gesture data from the sensor.
     pub fn last_gesture_raw(&self) -> Result<GestureRaw, OpticalError> {
         unsafe { pros_sys::optical_get_gesture_raw(self.port).try_into() }
     }
