@@ -1,5 +1,5 @@
 //! Generic position type for motors and sensors.
-//! 
+//!
 //! Positions have many conversion functions as well as common operator implementations for ease of use.
 
 use core::{cmp::Ordering, ops::*};

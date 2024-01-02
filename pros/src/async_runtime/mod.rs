@@ -1,5 +1,5 @@
 //! A tiny async runtime.
-//! 
+//!
 //! This runtime can be used outside of the main task, but it is reccomended to only use either
 //! real FreeRTOS tasks or this async runtime.
 
@@ -24,7 +24,7 @@ pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
 }
 
 /// Completes all tasks.
-/// Return values can be extracted from the futures by awaiting any [`Tasks`]s you have not detached.
+/// Return values can be extracted from the futures by awaiting any [`Task`]s you have not detached.
 pub fn complete_all() {
     executor::EXECUTOR.with(|e| {
         e.complete();

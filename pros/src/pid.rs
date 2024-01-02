@@ -1,5 +1,5 @@
 //! PID controllers.
-//! 
+//!
 //! PID controllers are first created with [`PidController::new`]
 //! and then can be utilized by calling [`PidController::update`] repeatedly.
 

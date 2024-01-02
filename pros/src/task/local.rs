@@ -1,4 +1,9 @@
 //! A custom TLS implementation that allows for more than 5 entries in TLS.
+//!
+//! FreeRTOS task locals have a hard limit of entries.
+//! The custom implementation used here stores a pointer to a custom TLS struct inside the first slot of FreeRTOS TLS.
+//! This sacrifices a bit of speed for the ability to have as many entries as memory allows.
+//!
 //! [`LocalKey`]s can be created with the [`os_task_local!`](crate::os_task_local!) macro.
 //! ## Example
 //! ```rust

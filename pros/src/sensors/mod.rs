@@ -8,7 +8,7 @@
 //! the blocking API is used for a synchronous method and the non-blocking API is used to create a future.
 //!
 //! More specific info for each sensor is availible in their respective modules.
-//! 
+//!
 //! Currently supported sensors are:
 //! - [`Rotation`](rotation::RotationSensor)
 //! - [`Distance`](distance::DistanceSensor)

@@ -1,3 +1,8 @@
+//! GPS sensor device.
+//!
+//! A notable differenc between this API and that of PROS
+//! is that [`GpsSensor::status`] returns acceleration along with other status data.
+
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 

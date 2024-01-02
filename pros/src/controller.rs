@@ -1,5 +1,5 @@
 //! Read from the buttons and joysticks on the controller and write to the controller's display.
-//! 
+//!
 //! Controllers are identified by their id, which is either 0 (master) or 1 (partner).
 //! State of a controller can be checked by calling [`Controller::state`] which will return a struct with all of the buttons' and joysticks' state.
 

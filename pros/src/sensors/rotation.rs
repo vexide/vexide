@@ -1,3 +1,7 @@
+//! Rotation sensor device.
+//!
+//! Rotation sensors operate on the same [`Position`] type as motors to measure rotation.
+
 use pros_sys::PROS_ERR;
 
 use crate::{
@@ -63,7 +67,9 @@ impl RotationSensor {
     /// Gets the current position of the sensor.
     pub fn position(&self) -> Result<Position, PortError> {
         Ok(unsafe {
-            Position::from_degrees(bail_on!(PROS_ERR, pros_sys::rotation_get_angle(self.port)) as _)
+            Position::from_degrees(
+                bail_on!(PROS_ERR, pros_sys::rotation_get_angle(self.port)) as f64 / 100.0,
+            )
         })
     }
 }

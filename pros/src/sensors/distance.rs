@@ -1,3 +1,7 @@
+//! Distance sensor device.
+//!
+//! Pretty much one to one with the PROS C and CPP API, except Result is used instead of ERRNO values.
+
 use core::ffi::c_double;
 
 use pros_sys::PROS_ERR;
