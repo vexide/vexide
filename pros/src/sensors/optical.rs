@@ -1,5 +1,5 @@
-use pros_sys::{PROS_ERR, PROS_ERR_F};
 use core::time::Duration;
+use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
@@ -12,11 +12,10 @@ impl OpticalDetection for GestureDetection {}
 pub struct ColorDetection;
 impl OpticalDetection for ColorDetection {}
 
-
 #[derive(Debug)]
 pub struct OpticalSensor<T: OpticalDetection> {
     port: u8,
-    
+
     #[allow(unused)]
     mode: T,
 }
@@ -30,7 +29,12 @@ impl<T: OpticalDetection> OpticalSensor<T> {
     /// Get integration time (update rate) of the optical sensor in milliseconds, with
     /// minimum time being 3ms and the maximum time being 712ms.
     pub fn integration_time(&self) -> Result<Duration, OpticalError> {
-        unsafe { Ok(Duration::from_millis(bail_on!(PROS_ERR_F, pros_sys::optical_get_integration_time(self.port)) as u64)) }
+        unsafe {
+            Ok(Duration::from_millis(bail_on!(
+                PROS_ERR_F,
+                pros_sys::optical_get_integration_time(self.port)
+            ) as u64))
+        }
     }
 
     /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
@@ -45,7 +49,7 @@ impl<T: OpticalDetection> OpticalSensor<T> {
     }
 
     /// Set integration time (update rate) of the optical sensor in milliseconds.
-    /// 
+    ///
     /// Time value must be between 3 and 712 milliseconds. See
     /// https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for
     /// more information.
@@ -54,9 +58,12 @@ impl<T: OpticalDetection> OpticalSensor<T> {
         if time_millis < 3 || time_millis > 712 {
             return Err(OpticalError::InvalidIntegrationTime);
         }
-        
+
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::optical_set_integration_time(self.port, time_millis as f64));
+            bail_on!(
+                PROS_ERR,
+                pros_sys::optical_set_integration_time(self.port, time_millis as f64)
+            );
         }
 
         Ok(())
@@ -65,7 +72,10 @@ impl<T: OpticalDetection> OpticalSensor<T> {
 
 impl OpticalSensor<ColorDetection> {
     pub fn new(port: u8) -> Result<Self, OpticalError> {
-        let sensor = Self { port, mode: ColorDetection };
+        let sensor = Self {
+            port,
+            mode: ColorDetection,
+        };
         sensor.hue()?;
 
         Ok(sensor)
@@ -75,24 +85,39 @@ impl OpticalSensor<ColorDetection> {
     pub fn hue(&self) -> Result<f64, OpticalError> {
         unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::optical_get_hue(self.port))) }
     }
-    
+
     /// Gets the detected color saturation. This is not available if gestures are being detected. Saturation has a range `0` `1.0``.
     pub fn saturation(&self) -> Result<f64, OpticalError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::optical_get_saturation(self.port))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::optical_get_saturation(self.port)
+            ))
+        }
     }
 
     /// Get the detected color brightness. This is not available if gestures are being detected. Brightness values are in range `0`` `1.0``.
     pub fn brightness(&self) -> Result<f64, OpticalError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::optical_get_brightness(self.port))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::optical_get_brightness(self.port)
+            ))
+        }
     }
 
     /// Get the detected proximity value
-    /// 
+    ///
     /// Proximity has a range of 0 to 255.
     pub fn proximity(&self) -> Result<i32, OpticalError> {
-        unsafe { Ok(bail_on!(PROS_ERR, pros_sys::optical_get_proximity(self.port))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR,
+                pros_sys::optical_get_proximity(self.port)
+            ))
+        }
     }
-    
+
     /// Get the processed RGBC data from the sensor
     pub fn rgbc(&self) -> Result<Rgbc, OpticalError> {
         unsafe { pros_sys::optical_get_rgb(self.port).try_into() }
@@ -106,7 +131,10 @@ impl OpticalSensor<ColorDetection> {
 
 impl OpticalSensor<GestureDetection> {
     pub fn new(port: u8) -> Result<Self, OpticalError> {
-        let sensor = Self { port, mode: GestureDetection };
+        let sensor = Self {
+            port,
+            mode: GestureDetection,
+        };
         sensor.last_gesture_direction()?;
 
         Ok(sensor)
@@ -217,7 +245,6 @@ impl TryFrom<pros_sys::optical_raw_s_t> for RgbcRaw {
         })
     }
 }
-
 
 #[derive(Debug, Snafu)]
 pub enum OpticalError {
