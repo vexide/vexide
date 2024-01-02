@@ -1,7 +1,7 @@
 //! Connect to VEXLink for robot-to-robot communication.
 //!
 //! There are two types of links: [`TxLink`] (transmitter) and [`RxLink`] (receiver).
-//! both implement a shared trait [`Link`] as well as a no std version of `Write` and `Read` respectively.
+//! both implement a shared trait [`Link`] as well as a no std version of `Write` and `Read` from [`no_std_io`] respectively.
 
 use core::ffi::CStr;
 
