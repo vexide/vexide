@@ -209,12 +209,12 @@ impl Controller {
     }
 
     /// Gets the state of a specific button on the controller.
-    pub fn get_button(&self, button: ControllerButton) -> bool {
+    pub fn button(&self, button: ControllerButton) -> bool {
         unsafe { pros_sys::controller_get_digital(self.id(), button as u32) == 1 }
     }
 
     /// Gets the state of a specific joystick axis on the controller.
-    pub fn get_axis(&self, axis: ControllerAxis) -> f32 {
+    pub fn joystick_axis(&self, axis: ControllerAxis) -> f32 {
         unsafe { pros_sys::controller_get_analog(self.id(), axis as u32) as f32 / 127.0 }
     }
 }
