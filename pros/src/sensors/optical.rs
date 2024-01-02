@@ -1,0 +1,236 @@
+use pros_sys::{PROS_ERR, PROS_ERR_F};
+use core::time::Duration;
+use snafu::Snafu;
+
+use crate::error::{bail_on, map_errno, PortError};
+
+pub trait OpticalDetection {}
+
+pub struct GestureDetection;
+impl OpticalDetection for GestureDetection {}
+
+pub struct ColorDetection;
+impl OpticalDetection for ColorDetection {}
+
+
+#[derive(Debug)]
+pub struct OpticalSensor<T: OpticalDetection> {
+    port: u8,
+    
+    #[allow(unused)]
+    mode: T,
+}
+
+impl<T: OpticalDetection> OpticalSensor<T> {
+    /// Get the pwm value of the White LED. PWM value ranges from 0 to 100.
+    pub fn led_pwm(&self) -> Result<i32, OpticalError> {
+        unsafe { Ok(bail_on!(PROS_ERR, pros_sys::optical_get_led_pwm(self.port))) }
+    }
+
+    /// Get integration time (update rate) of the optical sensor in milliseconds, with
+    /// minimum time being 3ms and the maximum time being 712ms.
+    pub fn integration_time(&self) -> Result<Duration, OpticalError> {
+        unsafe { Ok(Duration::from_millis(bail_on!(PROS_ERR_F, pros_sys::optical_get_integration_time(self.port)) as u64)) }
+    }
+
+    /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
+    pub fn set_led_pwm(&self, value: u8) -> Result<(), OpticalError> {
+        if value > 100 {
+            return Err(OpticalError::InvalidLedPwm);
+        }
+        unsafe {
+            bail_on!(PROS_ERR, pros_sys::optical_set_led_pwm(self.port, value));
+        }
+        Ok(())
+    }
+
+    /// Set integration time (update rate) of the optical sensor in milliseconds.
+    /// 
+    /// Time value must be between 3 and 712 milliseconds. See
+    /// https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for
+    /// more information.
+    pub fn set_integration_time(&self, time: Duration) -> Result<(), OpticalError> {
+        let time_millis = time.as_millis();
+        if time_millis < 3 || time_millis > 712 {
+            return Err(OpticalError::InvalidIntegrationTime);
+        }
+        
+        unsafe {
+            bail_on!(PROS_ERR, pros_sys::optical_set_integration_time(self.port, time_millis as f64));
+        }
+
+        Ok(())
+    }
+}
+
+impl OpticalSensor<ColorDetection> {
+    pub fn new(port: u8) -> Result<Self, OpticalError> {
+        let sensor = Self { port, mode: ColorDetection };
+        sensor.hue()?;
+
+        Ok(sensor)
+    }
+
+    /// Get the detected color hue. This is not available if gestures are being detected. Hue has a range of `0` `359.999`.
+    pub fn hue(&self) -> Result<f64, OpticalError> {
+        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::optical_get_hue(self.port))) }
+    }
+    
+    /// Gets the detected color saturation. This is not available if gestures are being detected. Saturation has a range `0` `1.0``.
+    pub fn saturation(&self) -> Result<f64, OpticalError> {
+        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::optical_get_saturation(self.port))) }
+    }
+
+    /// Get the detected color brightness. This is not available if gestures are being detected. Brightness values are in range `0`` `1.0``.
+    pub fn brightness(&self) -> Result<f64, OpticalError> {
+        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::optical_get_brightness(self.port))) }
+    }
+
+    /// Get the detected proximity value
+    /// 
+    /// Proximity has a range of 0 to 255.
+    pub fn proximity(&self) -> Result<i32, OpticalError> {
+        unsafe { Ok(bail_on!(PROS_ERR, pros_sys::optical_get_proximity(self.port))) }
+    }
+    
+    /// Get the processed RGBC data from the sensor
+    pub fn rgbc(&self) -> Result<Rgbc, OpticalError> {
+        unsafe { pros_sys::optical_get_rgb(self.port).try_into() }
+    }
+
+    /// Get the raw, unprocessed RGBC data from the sensor
+    pub fn rgbc_raw(&self) -> Result<RgbcRaw, OpticalError> {
+        unsafe { pros_sys::optical_get_raw(self.port).try_into() }
+    }
+}
+
+impl OpticalSensor<GestureDetection> {
+    pub fn new(port: u8) -> Result<Self, OpticalError> {
+        let sensor = Self { port, mode: GestureDetection };
+        sensor.last_gesture_direction()?;
+
+        Ok(sensor)
+    }
+
+    pub fn last_gesture_direction(&self) -> Result<GestureDirection, OpticalError> {
+        unsafe { pros_sys::optical_get_gesture(self.port).try_into() }
+    }
+
+    pub fn last_gesture_raw(&self) -> Result<GestureRaw, OpticalError> {
+        unsafe { pros_sys::optical_get_gesture_raw(self.port).try_into() }
+    }
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+pub enum GestureDirection {
+    Up,
+    Down,
+    Left,
+    Right,
+    Error,
+    #[default]
+    NoGesture,
+}
+
+impl TryFrom<pros_sys::optical_direction_e_t> for GestureDirection {
+    type Error = OpticalError;
+
+    fn try_from(value: pros_sys::optical_direction_e_t) -> Result<GestureDirection, OpticalError> {
+        bail_on!(pros_sys::E_OPTICAL_DIRECTION_ERROR, value);
+
+        Ok(match value {
+            pros_sys::E_OPTICAL_DIRECTION_UP => Self::Up,
+            pros_sys::E_OPTICAL_DIRECTION_DOWN => Self::Down,
+            pros_sys::E_OPTICAL_DIRECTION_LEFT => Self::Left,
+            pros_sys::E_OPTICAL_DIRECTION_RIGHT => Self::Right,
+            pros_sys::E_OPTICAL_DIRECTION_NO_GESTURE => Self::NoGesture,
+            _ => unreachable!("Encountered unknown gesture direction code."),
+        })
+    }
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+pub struct GestureRaw {
+    pub up: u8,
+    pub down: u8,
+    pub left: u8,
+    pub right: u8,
+    pub gesture_type: u8,
+    pub count: u16,
+    pub time: u32,
+}
+
+impl TryFrom<pros_sys::optical_gesture_s_t> for GestureRaw {
+    type Error = OpticalError;
+
+    fn try_from(value: pros_sys::optical_gesture_s_t) -> Result<GestureRaw, OpticalError> {
+        Ok(Self {
+            up: value.udata,
+            down: value.ddata,
+            left: value.ldata,
+            right: value.rdata,
+            gesture_type: value.r#type,
+            count: value.count,
+            time: value.time,
+        })
+    }
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+pub struct Rgbc {
+    pub red: f64,
+    pub green: f64,
+    pub blue: f64,
+    pub brightness: f64,
+}
+
+impl TryFrom<pros_sys::optical_rgb_s_t> for Rgbc {
+    type Error = OpticalError;
+
+    fn try_from(value: pros_sys::optical_rgb_s_t) -> Result<Rgbc, OpticalError> {
+        Ok(Self {
+            red: bail_on!(value.red, PROS_ERR_F), // Docs incorrectly claim this is PROS_ERR
+            green: value.green,
+            blue: value.blue,
+            brightness: value.brightness,
+        })
+    }
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+pub struct RgbcRaw {
+    pub red: u32,
+    pub green: u32,
+    pub blue: u32,
+    pub clear: u32,
+}
+
+impl TryFrom<pros_sys::optical_raw_s_t> for RgbcRaw {
+    type Error = OpticalError;
+
+    fn try_from(value: pros_sys::optical_raw_s_t) -> Result<RgbcRaw, OpticalError> {
+        Ok(Self {
+            clear: bail_on!(value.clear, PROS_ERR_F as u32),
+            red: value.red,
+            green: value.green,
+            blue: value.blue,
+        })
+    }
+}
+
+
+#[derive(Debug, Snafu)]
+pub enum OpticalError {
+    #[snafu(display("LED PWM value must be between 0 and 100."))]
+    InvalidLedPwm,
+
+    #[snafu(display("Integration time must be between 3 and 712 milliseconds. See https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for more information."))]
+    InvalidIntegrationTime,
+
+    #[snafu(display("{source}"), context(false))]
+    Port { source: PortError },
+}
+
+map_errno! {
+    OpticalError {} inherit PortError;
+}
