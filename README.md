@@ -19,7 +19,7 @@ Steps:
 2. Install the pros cli, instructions are [here](https://pros.cs.purdue.edu/v5/getting-started/windows.html)
 3. Install cargo pros with ``cargo install cargo-pros``
 
-To compile and the project rust run ``cargo pros build``.
+To compile the project just run ``cargo pros build``.
 
 ### Linux
 
@@ -27,14 +27,14 @@ The steps for getting pros-rs compiling are slightly different based on if you u
 
 #### With Nix
 
-The Nix flake contains the Arm Gnu Toolchain, cargo pros, and pros-cli.
+The Nix flake contains the Arm GNU Toolchain, cargo pros, and pros-cli.
 
 There is a ``.envrc`` file included for Nix + Direnv users.
 
 #### Without Nix
 
-install arm-none-eabi-gcc and pros-cli from your package manager of choice. 
-Cargo pros can be installed with ``cargo install cargo-pros``
+Install arm-none-eabi-gcc and pros-cli from your package manager of choice. 
+Cargo pros can be installed with ``cargo install cargo-pros``.
 
 ### MacOS
 
