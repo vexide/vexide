@@ -40,5 +40,5 @@ Before releasing:
 
 ### Removed
 
-[unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/olivierlacan/keep-a-changelog/releases/tag/v0.4.0
+[unreleased]: https://github.com/pros-rs/pros-rs/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/pros-rs/pros-rs/releases/tag/v0.4.0
