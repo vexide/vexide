@@ -22,6 +22,8 @@ Before releasing:
 
 ### Changed
 
+- Add contributing information, pull request templates, and changelog.
+
 ### Removed
 
 ## [0.4.0] - 2024-01-02
