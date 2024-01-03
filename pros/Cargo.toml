@@ -8,6 +8,11 @@ categories = ["os", "api-bindings", "no-std", "science::robotics"]
 license = "MIT"
 repository = "https://github.com/pros-rs/pros-rs"
 readme = "../README.md"
+authors = [
+    "pros-rs",
+    "Gavin Niederman <gavinniederman@gmail.com>",
+    "doinkythederp <doinkythederp@icloud.com>",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
