@@ -11,21 +11,28 @@ pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
 pub const MAX_LED_PWM: u8 = 100;
 
-pub struct GestureDetection;
-impl OpticalDetection for GestureDetection {}
-
-pub struct ColorDetection;
-impl OpticalDetection for ColorDetection {}
-
 #[derive(Debug)]
-pub struct OpticalSensor<T: OpticalDetection> {
+pub struct OpticalSensor {
     port: u8,
-
-    #[allow(unused)]
-    mode: T,
+    gesture_detection_enabled: bool,
 }
 
-impl<T: OpticalDetection> OpticalSensor<T> {
+impl OpticalSensor {
+    pub fn new(port: u8, gesture_detection_enabled: bool) -> Result<Self, OpticalError> {
+        let mut sensor = Self {
+            port,
+            gesture_detection_enabled,
+        };
+
+        if gesture_detection_enabled {
+            sensor.enable_gesture_detection()?;
+        } else {
+            sensor.disable_gesture_detection()?;
+        }
+
+        Ok(sensor)
+    }
+
     /// Get the pwm value of the White LED. PWM value ranges from 0 to 100.
     pub fn led_pwm(&self) -> Result<i32, OpticalError> {
         unsafe { Ok(bail_on!(PROS_ERR, pros_sys::optical_get_led_pwm(self.port))) }
@@ -55,7 +62,10 @@ impl<T: OpticalDetection> OpticalSensor<T> {
 
     /// Set integration time (update rate) of the optical sensor.
     ///
-    /// Time value must be between 3 and 712 milliseconds. See
+    /// Lower integration time results in faster update rates with lower accuracy
+    /// due to less available light being read by the sensor.
+    /// 
+    /// Time value must be a [`Duration`] between 3 and 712 milliseconds. See
     /// https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for
     /// more information.
     pub fn set_integration_time(&self, time: Duration) -> Result<(), OpticalError> {
@@ -71,20 +81,6 @@ impl<T: OpticalDetection> OpticalSensor<T> {
         }
 
         Ok(())
-    }
-}
-
-impl OpticalSensor<ColorDetection> {
-    pub fn new(port: u8) -> Result<Self, OpticalError> {
-        bail_on!(
-            PROS_ERR,
-            unsafe { pros_sys::optical_disable_gesture(port) }
-        );
-
-        Ok(Self {
-            port,
-            mode: ColorDetection,
-        })
     }
 
     /// Get the detected color hue.
@@ -139,30 +135,52 @@ impl OpticalSensor<ColorDetection> {
     pub fn rgbc_raw(&self) -> Result<RgbcRaw, OpticalError> {
         unsafe { pros_sys::optical_get_raw(self.port).try_into() }
     }
-}
 
-impl OpticalSensor<GestureDetection> {
-    pub fn new(port: u8) -> Result<Self, OpticalError> {
+    pub fn enable_gesture_detection(&mut self) -> Result<(), OpticalError> {
         bail_on!(
             PROS_ERR,
-            unsafe { pros_sys::optical_enable_gesture(port) }
+            unsafe { pros_sys::optical_enable_gesture(self.port) }
         );
 
-        Ok(Self {
-            port,
-            mode: GestureDetection,
-        })
+        self.gesture_detection_enabled = true;
+        Ok(())
     }
 
-    /// Get the most recent gesture data from the sensor.
-    ///
-    /// Gestures will be cleared after 500mS.
+    pub fn disable_gesture_detection(&mut self) -> Result<(), OpticalError> {
+        bail_on!(
+            PROS_ERR,
+            unsafe { pros_sys::optical_disable_gesture(self.port) }
+        );
+        
+        self.gesture_detection_enabled = false;
+        Ok(())
+    }
+
+    pub fn gesture_detection_enabled(&self) -> bool {
+        self.gesture_detection_enabled
+    }
+
+    /// Get the most recent gesture data from the sensor. Gestures will be cleared after 500mS.
+    /// 
+    /// Will return [`OpticalError::GestureDetectionNotEnabled`] if the sensor is not
+    /// confgured to detect gestures.
     pub fn last_gesture_direction(&self) -> Result<GestureDirection, OpticalError> {
+        if !self.gesture_detection_enabled {
+            return Err(OpticalError::GestureDetectionDisabled);
+        }
+
         unsafe { pros_sys::optical_get_gesture(self.port).try_into() }
     }
 
     /// Get the most recent raw gesture data from the sensor.
+    ///
+    /// Will return [`OpticalError::GestureDetectionNotEnabled`] if the sensor is not
+    /// confgured to detect gestures.
     pub fn last_gesture_raw(&self) -> Result<GestureRaw, OpticalError> {
+        if !self.gesture_detection_enabled {
+            return Err(OpticalError::GestureDetectionDisabled);
+        }
+
         unsafe { pros_sys::optical_get_gesture_raw(self.port).try_into() }
     }
 }
@@ -271,6 +289,9 @@ pub enum OpticalError {
 
     #[snafu(display("Integration time must be between 3 and 712 milliseconds. See https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for more information."))]
     InvalidIntegrationTime,
+
+    #[snafu(display("Gesture detection is not enabled for this sensor."))]
+    GestureDetectionDisabled,
 
     #[snafu(display("{source}"), context(false))]
     Port { source: PortError },
