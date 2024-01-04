@@ -4,13 +4,14 @@ use core::{
     pin::Pin,
     sync::atomic::{AtomicBool, Ordering},
     task::{Context, Poll},
+    time::Duration,
 };
 
 use alloc::{collections::VecDeque, sync::Arc};
 use async_task::{Runnable, Task};
 use waker_fn::waker_fn;
 
-use crate::os_task_local;
+use crate::{os_task_local, task::delay};
 
 use super::reactor::Reactor;
 
@@ -82,6 +83,7 @@ impl Executor {
             }
 
             self.tick();
+            delay(Duration::from_millis(10));
         }
     }
 
@@ -90,6 +92,7 @@ impl Executor {
             if !self.tick() {
                 break;
             }
+            delay(Duration::from_millis(10));
         }
     }
 }
