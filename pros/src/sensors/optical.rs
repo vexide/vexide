@@ -4,8 +4,6 @@ use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
 
-pub trait OpticalDetection {}
-
 pub const MIN_INTEGRATION_TIME: Duration = Duration::from_millis(3);
 pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
@@ -136,6 +134,10 @@ impl OpticalSensor {
         unsafe { pros_sys::optical_get_raw(self.port).try_into() }
     }
 
+    /// Enables gesture detection features on the sensor.
+    /// 
+    /// This allows [`Self::last_gesture_direction()`] and [`Self::last_gesture_direction()`] to be called without error, if
+    /// gesture detection wasn't already enabled.
     pub fn enable_gesture_detection(&mut self) -> Result<(), OpticalError> {
         bail_on!(
             PROS_ERR,
@@ -146,6 +148,7 @@ impl OpticalSensor {
         Ok(())
     }
 
+    /// Disables gesture detection features on the sensor.
     pub fn disable_gesture_detection(&mut self) -> Result<(), OpticalError> {
         bail_on!(
             PROS_ERR,
@@ -156,6 +159,7 @@ impl OpticalSensor {
         Ok(())
     }
 
+    /// Determine if gesture detection is enabled or not on the sensor.
     pub fn gesture_detection_enabled(&self) -> bool {
         self.gesture_detection_enabled
     }
