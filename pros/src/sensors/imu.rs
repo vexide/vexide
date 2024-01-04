@@ -268,7 +268,7 @@ impl TryFrom<pros_sys::euler_s_t> for Euler {
 
     fn try_from(value: pros_sys::euler_s_t) -> Result<Euler, InertialError> {
         Ok(Self {
-            pitch: bail_on!(value.pitch, PROS_ERR_F),
+            pitch: bail_on!(PROS_ERR_F, value.pitch),
             roll: value.roll,
             yaw: value.yaw,
         })
@@ -306,7 +306,7 @@ impl TryFrom<pros_sys::imu_raw_s> for InertialRaw {
 
     fn try_from(value: pros_sys::imu_raw_s) -> Result<InertialRaw, InertialError> {
         Ok(Self {
-            x: bail_on!(value.x, PROS_ERR_F),
+            x: bail_on!(PROS_ERR_F, value.x),
             y: value.y,
             z: value.z,
         })
