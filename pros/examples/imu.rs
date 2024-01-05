@@ -20,8 +20,6 @@ impl SyncRobot for Robot {
 
             pros::task::delay(Duration::from_secs(1));
         }
-
-        Ok(())
     }
 }
 
