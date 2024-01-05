@@ -1,23 +1,43 @@
-use crate::println;
+use alloc::{ffi::CString, format};
+use pros_sys::exit;
+
+use crate::{
+    println,
+    task::{self, suspend_all, PanicBehavior, PANIC_BEHAVIOR},
+};
 use core::{
     alloc::{GlobalAlloc, Layout},
+    mem::forget,
     panic::PanicInfo,
 };
 
 #[panic_handler]
-pub fn panic(_info: &PanicInfo) -> ! {
-    println!("Panicked! {_info}");
-    let panicking_task = crate::task::current();
-    // Make sure we eat up every cycle to stop execution
-    // Because we know that the target hardware is a singlethreaded v5 brain, we are sure that this stops porgram execution.
-    // This would be unsound on other hardware.
-    panicking_task.set_priority(crate::task::TaskPriority::High);
-    loop {
-        core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+pub fn panic(info: &PanicInfo) -> ! {
+    let suspend = unsafe { suspend_all() };
+
+    let current_task = task::current();
+    let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
+    // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
+    // panic message here
+    let panic_msg = format!("task '{task_name}' {info}");
+
+    let c_msg = CString::new(&*panic_msg).unwrap_or_else(|_| CString::new("Panicked!").unwrap());
+    unsafe {
+        pros_sys::puts(c_msg.as_ptr());
+    }
+
+    if PANIC_BEHAVIOR.with(|p| *p == PanicBehavior::Exit) {
         unsafe {
-            core::arch::arm::__nop();
+            exit(1);
         }
     }
+
+    drop(suspend);
+
+    println!("{panic_msg}");
+
+    current_task.abort();
+    unreachable!()
 }
 
 struct Allocator;

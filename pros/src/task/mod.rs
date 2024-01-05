@@ -17,13 +17,20 @@
 
 pub mod local;
 
+use core::ffi::{c_void, CStr};
 use core::hash::Hash;
+use core::str::Utf8Error;
+use core::sync::atomic::AtomicU32;
 use core::time::Duration;
 use core::{future::Future, task::Poll};
 
 use crate::async_runtime::executor::EXECUTOR;
 use crate::error::{bail_on, map_errno};
+use crate::os_task_local;
+use crate::sync::Mutex;
 
+use alloc::ffi::CString;
+use alloc::string::{String, ToString};
 use snafu::Snafu;
 
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
@@ -132,6 +139,14 @@ impl TaskHandle {
     pub fn abort(self) {
         unsafe {
             pros_sys::task_delete(self.task);
+        }
+    }
+
+    pub fn name(&self) -> Result<String, Utf8Error> {
+        unsafe {
+            let name = pros_sys::task_get_name(self.task);
+            let name_str = CStr::from_ptr(name);
+            Ok(name_str.to_str()?.to_string())
         }
     }
 }
@@ -366,8 +381,44 @@ pub fn get_notification() -> u32 {
     unsafe { pros_sys::task_notify_take(false, pros_sys::TIMEOUT_MAX) }
 }
 
+pub struct SchedulerSuspendGuard {
+    _private: (),
+}
+
+impl Drop for SchedulerSuspendGuard {
+    fn drop(&mut self) {
+        unsafe {
+            pros_sys::rtos_resume_all();
+        }
+    }
+}
+
+/// Suspends the scheduler, preventing context switches.
+/// No other tasks will be run until the returned guard is dropped.
+///
+/// # Safety
+///
+/// API functions that have the potential to cause a context switch (e.g. [`delay`], [`get_notification`])
+/// must not be called while the scheduler is suspended.
+#[must_use = "The scheduler will only remain suspended for the lifetime of the returned guard"]
+pub unsafe fn suspend_all() -> SchedulerSuspendGuard {
+    pros_sys::rtos_suspend_all();
+    SchedulerSuspendGuard { _private: () }
+}
+
+#[derive(PartialEq, Eq)]
+pub(crate) enum PanicBehavior {
+    Exit,
+    Ignore,
+}
+
+os_task_local! {
+    pub(crate) static PANIC_BEHAVIOR: PanicBehavior = PanicBehavior::Ignore;
+}
+
 #[doc(hidden)]
-pub fn __init_main() {
+pub fn __init_entrypoint() {
+    PANIC_BEHAVIOR.set(PanicBehavior::Exit);
     unsafe {
         pros_sys::lcd_initialize();
     }

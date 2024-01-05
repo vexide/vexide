@@ -21,6 +21,8 @@ pub mod rotation;
 pub mod rtos;
 pub mod vision;
 
+use core::ffi::c_char;
+
 pub use adi::*;
 pub use colors::*;
 pub use distance::*;
@@ -50,4 +52,6 @@ extern "C" {
     pub fn free(ptr: *mut core::ffi::c_void);
     pub fn __errno() -> *mut i32;
     pub fn clock() -> i32;
+    pub fn puts(s: *const c_char);
+    pub fn exit(code: i32) -> !;
 }
