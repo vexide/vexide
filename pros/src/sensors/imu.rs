@@ -6,7 +6,7 @@ use core::{
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
-use crate::error::{bail_on, map_errno, PortError};
+use crate::error::{bail_on, map_errno, take_errno, FromErrno, PortError};
 
 pub const IMU_RESET_TIMEOUT: Duration = Duration::from_secs(3);
 pub const IMU_MIN_DATA_RATE: Duration = Duration::from_millis(5);
@@ -372,15 +372,25 @@ pub enum InertialCalibrateFuture {
 impl core::future::Future for InertialCalibrateFuture {
     type Output = Result<(), InertialError>;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         loop {
-            match &mut *self {
-                Self::Calibrate(imu) => {
-                    unsafe { bail_on!(PROS_ERR, pros_sys::imu_reset(imu.port)); }
-                    *self = Self::Waiting(*imu, Duration::from_micros(unsafe { pros_sys::rtos::micros() }));
+            match *self {
+                Self::Calibrate(imu) => match unsafe { pros_sys::imu_reset(imu.port) } {
+                    PROS_ERR => {
+                        let errno = take_errno();
+                        return Poll::Ready(Err(InertialError::from_errno(take_errno())
+                            .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
+                    }
+                    _ => {
+                        *self = Self::Waiting(
+                            imu,
+                            Duration::from_micros(unsafe { pros_sys::rtos::micros() }),
+                        );
+                    }
                 },
                 Self::Waiting(imu, timestamp) => {
-                    let elapsed = Duration::from_micros(unsafe { pros_sys::rtos::micros() }) - *timestamp;
+                    let elapsed =
+                        Duration::from_micros(unsafe { pros_sys::rtos::micros() }) - timestamp;
 
                     return if elapsed > IMU_RESET_TIMEOUT {
                         Poll::Ready(Err(InertialError::CalibrationTimedOut))
@@ -389,8 +399,8 @@ impl core::future::Future for InertialCalibrateFuture {
                         Poll::Pending
                     } else {
                         Poll::Ready(Ok(()))
-                    }
-                },
+                    };
+                }
             }
         }
     }
