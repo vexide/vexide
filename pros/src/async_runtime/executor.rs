@@ -80,10 +80,13 @@ impl Executor {
                 if let Poll::Ready(output) = Pin::new(&mut task).poll(&mut cx) {
                     return output;
                 }
+                self.tick();
+                // there might be another future to poll, so we continue without sleeping
+                continue;
             }
 
-            self.tick();
             delay(Duration::from_millis(10));
+            self.tick();
         }
     }
 
