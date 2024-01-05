@@ -67,6 +67,7 @@ pub mod sensors;
 pub mod sync;
 #[macro_use]
 pub mod task;
+
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
 #[cfg(target_os = "vexos")]
@@ -86,7 +87,10 @@ pub use async_trait::async_trait;
 
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, ffi::CString, format};
+
+use crate::task::{suspend_all, PanicBehavior, PANIC_BEHAVIOR};
+
 #[async_trait::async_trait]
 pub trait AsyncRobot {
     async fn opcontrol(&mut self) -> Result {
@@ -352,6 +356,40 @@ macro_rules! sync_robot {
             }
         }
     };
+}
+
+#[panic_handler]
+pub fn panic(info: &core::panic::PanicInfo) -> ! {
+    let suspend = unsafe { suspend_all() };
+    let current_task = task::current();
+
+    {
+        let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
+        // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
+        // panic message here
+        let panic_msg = format!("task '{task_name}' {info}");
+
+        let c_msg =
+            CString::new(&*panic_msg).unwrap_or_else(|_| CString::new("Panicked!").unwrap());
+        unsafe {
+            pros_sys::puts(c_msg.as_ptr());
+            #[cfg(target_arch = "wasm32")]
+            wasm_env::sim_log_backtrace();
+        }
+
+        if PANIC_BEHAVIOR.with(|p| *p == PanicBehavior::Exit) {
+            unsafe {
+                pros_sys::exit(1);
+            }
+        }
+
+        println!("{panic_msg}");
+    }
+
+    drop(suspend);
+
+    current_task.abort();
+    unreachable!()
 }
 
 /// Commonly used features of pros-rs.
