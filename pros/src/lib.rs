@@ -131,6 +131,7 @@ macro_rules! __gen_sync_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn opcontrol() {
+            ::pros::task::__init_entrypoint();
             <$rbt as $crate::SyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -142,6 +143,7 @@ macro_rules! __gen_sync_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn autonomous() {
+            ::pros::task::__init_entrypoint();
             <$rbt as $crate::SyncRobot>::auto(unsafe {
                 ROBOT
                     .as_mut()
@@ -153,6 +155,7 @@ macro_rules! __gen_sync_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn disabled() {
+            ::pros::task::__init_entrypoint();
             <$rbt as $crate::SyncRobot>::disabled(unsafe {
                 ROBOT
                     .as_mut()
@@ -164,6 +167,7 @@ macro_rules! __gen_sync_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn competition_initialize() {
+            ::pros::task::__init_entrypoint();
             <$rbt as $crate::SyncRobot>::comp_init(unsafe {
                 ROBOT
                     .as_mut()
@@ -183,6 +187,7 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn opcontrol() {
+            ::pros::task::__init_entrypoint();
             $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -195,6 +200,7 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn autonomous() {
+            ::pros::task::__init_entrypoint();
             $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -207,6 +213,7 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn disabled() {
+            ::pros::task::__init_entrypoint();
             $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -219,6 +226,7 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn competition_initialize() {
+            ::pros::task::__init_entrypoint();
             $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -276,7 +284,7 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -287,7 +295,7 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
@@ -339,7 +347,7 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -350,7 +358,7 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
