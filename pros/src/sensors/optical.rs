@@ -1,8 +1,8 @@
 use core::time::Duration;
-use pros_sys::{PROS_ERR, PROS_ERR_F};
+use pros_sys::{PROS_ERR, PROS_ERR_F, OPT_GESTURE_ERR};
 use snafu::Snafu;
 
-use crate::error::{bail_on, map_errno, PortError};
+use crate::error::{PortError, bail_on, map_errno};
 
 pub const MIN_INTEGRATION_TIME: Duration = Duration::from_millis(3);
 pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
@@ -233,7 +233,7 @@ impl TryFrom<pros_sys::optical_gesture_s_t> for GestureRaw {
 
     fn try_from(value: pros_sys::optical_gesture_s_t) -> Result<GestureRaw, OpticalError> {
         Ok(Self {
-            up: value.udata,
+            up: bail_on!(OPT_GESTURE_ERR as u8, value.udata),
             down: value.ddata,
             left: value.ldata,
             right: value.rdata,
@@ -257,7 +257,7 @@ impl TryFrom<pros_sys::optical_rgb_s_t> for Rgbc {
 
     fn try_from(value: pros_sys::optical_rgb_s_t) -> Result<Rgbc, OpticalError> {
         Ok(Self {
-            red: bail_on!(value.red, PROS_ERR_F), // Docs incorrectly claim this is PROS_ERR
+            red: bail_on!(PROS_ERR_F, value.red), // Docs incorrectly claim this is PROS_ERR
             green: value.green,
             blue: value.blue,
             brightness: value.brightness,
@@ -278,7 +278,7 @@ impl TryFrom<pros_sys::optical_raw_s_t> for RgbcRaw {
 
     fn try_from(value: pros_sys::optical_raw_s_t) -> Result<RgbcRaw, OpticalError> {
         Ok(Self {
-            clear: bail_on!(value.clear, PROS_ERR_F as u32),
+            clear: bail_on!(PROS_ERR_F as u32, value.clear),
             red: value.red,
             green: value.green,
             blue: value.blue,
