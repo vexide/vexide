@@ -194,7 +194,6 @@ macro_rules! __gen_async_exports {
                     .expect("Expected initialize to run before opcontrol")
             }))
             .unwrap();
-            $crate::async_runtime::complete_all();
         }
 
         #[doc(hidden)]
@@ -207,7 +206,6 @@ macro_rules! __gen_async_exports {
                     .expect("Expected initialize to run before auto")
             }))
             .unwrap();
-            $crate::async_runtime::complete_all();
         }
 
         #[doc(hidden)]
@@ -220,7 +218,6 @@ macro_rules! __gen_async_exports {
                     .expect("Expected initialize to run before disabled")
             }))
             .unwrap();
-            $crate::async_runtime::complete_all();
         }
 
         #[doc(hidden)]
@@ -233,7 +230,6 @@ macro_rules! __gen_async_exports {
                     .expect("Expected initialize to run before comp_init")
             }))
             .unwrap();
-            $crate::async_runtime::complete_all();
         }
     };
 }
