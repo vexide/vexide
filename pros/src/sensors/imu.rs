@@ -1,10 +1,18 @@
+use core::{
+    time::Duration,
+    task::{Poll, Context},
+    pin::Pin,
+};
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
 
+pub const IMU_RESET_TIMEOUT: Duration  = Duration::from_secs(3);
+pub const IMU_MIN_DATA_RATE: Duration  = Duration::from_millis(5);
+
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InertialSensor {
     port: u8,
 }
@@ -22,9 +30,17 @@ impl InertialSensor {
     /// This takes approximately 2 seconds, and is blocking until the IMU status flag is set properly.
     pub fn calibrate(&self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_reset_blocking(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_reset(self.port));
         }
         Ok(())
+    }
+
+    /// Returns a future that completes when the motor reports that it has stopped.
+    pub fn wait_until_calibrated(&self) -> InertialCalibrationFuture {
+        InertialCalibrationFuture {
+            imu: *self,
+            timestamp: Duration::from_micros(unsafe { pros_sys::rtos::micros() }),
+        }
     }
 
     /// Check if the Intertial Sensor is currently calibrating.
@@ -207,6 +223,19 @@ impl InertialSensor {
         }
         Ok(())
     }
+
+    pub fn set_data_rate(&self, data_rate: Duration) -> Result<(), InertialError> {
+        unsafe {
+            let rate_ms = if let Ok(rate) = u32::try_from(data_rate.as_millis()) {
+                rate
+            } else {
+                return Err(InertialError::InvalidDataRate);
+            };
+
+            bail_on!(PROS_ERR, pros_sys::imu_set_data_rate(self.port, rate_ms));
+        }
+        Ok(())
+    }
 }
 
 /// Standard quaternion consisting of a vector defining an axis of rotation
@@ -335,10 +364,37 @@ impl From<pros_sys::imu_status_e_t> for InertialStatus {
     }
 }
 
+pub struct InertialCalibrationFuture {
+    imu: InertialSensor,
+    timestamp: Duration, // TODO: Change this to [`Instant`] if/when that's implemented
+}
+
+impl core::future::Future for InertialCalibrationFuture {
+    type Output = Result<(), InertialError>;
+
+    fn poll(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Self::Output> {
+        let elapsed = Duration::from_micros(unsafe { pros_sys::rtos::micros() }) - self.timestamp;
+
+        if elapsed > IMU_RESET_TIMEOUT {
+            Poll::Ready(Err(InertialError::StillCalibrating))
+        } else if self.imu.is_calibrating()? {
+            cx.waker().wake_by_ref();
+            Poll::Pending
+        } else {
+            Poll::Ready(Ok(()))
+        }
+    }
+}
+
 #[derive(Debug, Snafu)]
 pub enum InertialError {
-    #[snafu(display("Inertial sensor is still calibrating."))]
+    #[snafu(display("Inertial sensor is still calibrating, but exceeded calibration timeout."))]
     StillCalibrating,
+    #[snafu(display("Sensor data rate has a minimum duration of 5 milliseconds."))]
+    InvalidDataRate,
     #[snafu(display("{source}"), context(false))]
     Port { source: PortError },
 }
