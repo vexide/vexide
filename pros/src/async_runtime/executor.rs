@@ -4,13 +4,14 @@ use core::{
     pin::Pin,
     sync::atomic::{AtomicBool, Ordering},
     task::{Context, Poll},
+    time::Duration,
 };
 
 use alloc::{collections::VecDeque, sync::Arc};
 use async_task::{Runnable, Task};
 use waker_fn::waker_fn;
 
-use crate::os_task_local;
+use crate::{os_task_local, task::delay};
 
 use super::reactor::Reactor;
 
@@ -79,17 +80,13 @@ impl Executor {
                 if let Poll::Ready(output) = Pin::new(&mut task).poll(&mut cx) {
                     return output;
                 }
+                self.tick();
+                // there might be another future to poll, so we continue without sleeping
+                continue;
             }
 
+            delay(Duration::from_millis(10));
             self.tick();
-        }
-    }
-
-    pub fn complete(&self) {
-        loop {
-            if !self.tick() {
-                break;
-            }
         }
     }
 }
