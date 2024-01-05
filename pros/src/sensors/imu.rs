@@ -231,7 +231,7 @@ impl TryFrom<pros_sys::quaternion_s_t> for Quaternion {
 
     fn try_from(value: pros_sys::quaternion_s_t) -> Result<Quaternion, InertialError> {
         Ok(Self {
-            x: bail_on!(value.x, PROS_ERR_F),
+            x: bail_on!(PROS_ERR_F, value.x),
             y: value.y,
             z: value.z,
             w: value.w,
