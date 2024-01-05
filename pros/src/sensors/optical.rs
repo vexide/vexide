@@ -1,8 +1,8 @@
 use core::time::Duration;
-use pros_sys::{PROS_ERR, PROS_ERR_F, OPT_GESTURE_ERR};
+use pros_sys::{OPT_GESTURE_ERR, PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
-use crate::error::{PortError, bail_on, map_errno};
+use crate::error::{bail_on, map_errno, PortError};
 
 pub const MIN_INTEGRATION_TIME: Duration = Duration::from_millis(3);
 pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
@@ -16,6 +16,9 @@ pub struct OpticalSensor {
 }
 
 impl OpticalSensor {
+    /// Creates a new inertial sensor from a smart port index.
+    ///
+    /// Gesture detection features can be optionally enabled, allowing the use of [`Self::last_gesture_direction()`] and [`Self::last_gesture_direction()`].
     pub fn new(port: u8, gesture_detection_enabled: bool) -> Result<Self, OpticalError> {
         let mut sensor = Self {
             port,
@@ -35,7 +38,7 @@ impl OpticalSensor {
     pub fn led_pwm(&self) -> Result<i32, OpticalError> {
         unsafe { Ok(bail_on!(PROS_ERR, pros_sys::optical_get_led_pwm(self.port))) }
     }
-    
+
     /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
     pub fn set_led_pwm(&self, value: u8) -> Result<(), OpticalError> {
         if value > MAX_LED_PWM {
@@ -62,7 +65,7 @@ impl OpticalSensor {
     ///
     /// Lower integration time results in faster update rates with lower accuracy
     /// due to less available light being read by the sensor.
-    /// 
+    ///
     /// Time value must be a [`Duration`] between 3 and 712 milliseconds. See
     /// https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for
     /// more information.
@@ -82,14 +85,14 @@ impl OpticalSensor {
     }
 
     /// Get the detected color hue.
-    /// 
+    ///
     /// Hue has a range of `0` to `359.999`.
     pub fn hue(&self) -> Result<f64, OpticalError> {
         unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::optical_get_hue(self.port))) }
     }
 
     /// Gets the detected color saturation.
-    /// 
+    ///
     /// Saturation has a range `0` to `1.0`.
     pub fn saturation(&self) -> Result<f64, OpticalError> {
         unsafe {
@@ -101,7 +104,7 @@ impl OpticalSensor {
     }
 
     /// Get the detected color brightness.
-    /// 
+    ///
     /// Brightness values range from `0` to `1.0`.
     pub fn brightness(&self) -> Result<f64, OpticalError> {
         unsafe {
@@ -135,14 +138,13 @@ impl OpticalSensor {
     }
 
     /// Enables gesture detection features on the sensor.
-    /// 
+    ///
     /// This allows [`Self::last_gesture_direction()`] and [`Self::last_gesture_direction()`] to be called without error, if
     /// gesture detection wasn't already enabled.
     pub fn enable_gesture_detection(&mut self) -> Result<(), OpticalError> {
-        bail_on!(
-            PROS_ERR,
-            unsafe { pros_sys::optical_enable_gesture(self.port) }
-        );
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::optical_enable_gesture(self.port)
+        });
 
         self.gesture_detection_enabled = true;
         Ok(())
@@ -150,11 +152,10 @@ impl OpticalSensor {
 
     /// Disables gesture detection features on the sensor.
     pub fn disable_gesture_detection(&mut self) -> Result<(), OpticalError> {
-        bail_on!(
-            PROS_ERR,
-            unsafe { pros_sys::optical_disable_gesture(self.port) }
-        );
-        
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::optical_disable_gesture(self.port)
+        });
+
         self.gesture_detection_enabled = false;
         Ok(())
     }
@@ -165,7 +166,7 @@ impl OpticalSensor {
     }
 
     /// Get the most recent gesture data from the sensor. Gestures will be cleared after 500mS.
-    /// 
+    ///
     /// Will return [`OpticalError::GestureDetectionNotEnabled`] if the sensor is not
     /// confgured to detect gestures.
     pub fn last_gesture_direction(&self) -> Result<GestureDirection, OpticalError> {
