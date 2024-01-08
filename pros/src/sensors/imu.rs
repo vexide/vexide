@@ -224,10 +224,17 @@ impl InertialSensor {
         Ok(())
     }
 
+    /// Sets the update rate of the IMU.
+    /// 
+    /// This duration must be above [`IMU_MIN_DATA_RATE`] (5 milliseconds).
     pub fn set_data_rate(&self, data_rate: Duration) -> Result<(), InertialError> {
         unsafe {
-            let rate_ms = if let Ok(rate) = u32::try_from(data_rate.as_millis()) {
-                rate
+            let rate_ms = if data_rate > IMU_MIN_DATA_RATE {
+                if let Ok(rate) = u32::try_from(data_rate.as_millis()) {
+                    rate
+                } else {
+                    return Err(InertialError::InvalidDataRate);
+                }
             } else {
                 return Err(InertialError::InvalidDataRate);
             };
