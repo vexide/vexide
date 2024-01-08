@@ -1,3 +1,24 @@
+//! Motors and gearsets.
+//!
+//! The motor API is similar to that of [`sensors`](crate::sensors).
+//! Multiple motors can be created on the same port and they are thread safe.
+//!
+//! Motors can be created with the [`Motor::new`] function.
+//! Once created they can be controlled with one three functions:
+//! [`Motor::set_output`], [`Motor::set_raw_output`], and [`Motor::set_voltage`].
+//! [`Motor::set_output`] takes in a f32 from -1 to 1 for ease of use with [`Controller`](crate::controller::Controller)s.
+//! [`Motor::set_raw_output`] takes in an i8 from -127 to 127.
+//! [`Motor::set_voltage`] takes in an i16 from -12000 to 12000.
+//!
+//! Example of driving a single motor with a controller:
+//! ```rust
+//! let controller = Controller::Master;
+//! loop {
+//!     let output = controller.state().joysticks.left.y;
+//!     motor.set_output(output);
+//! }
+//! ```
+
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 

@@ -1,4 +1,8 @@
-//! Print to and handle button presses on the V5 touchscreen.
+//! Print to and handle button presses on the LLEMU
+//!
+//! Anything this module provides is only availible when not using a custom ui made with LVGL.
+//! This module is specific to the premade interface (LLEMU).
+
 use snafu::Snafu;
 
 use crate::lvgl::colors::LcdColor;

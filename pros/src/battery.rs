@@ -1,3 +1,5 @@
+//! Utilites for getting information about the robot's battery.
+
 /// Get the robot's battery capacity.
 pub fn get_capacity() -> f64 {
     unsafe { pros_sys::misc::battery_get_capacity() }
