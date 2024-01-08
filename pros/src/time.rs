@@ -1,3 +1,5 @@
+//! Temporal quantification.
+
 use core::{
     fmt,
     ops::{Add, AddAssign, Sub, SubAssign},
@@ -7,7 +9,8 @@ use core::{
 /// Represents a timestamp on a monotonically nondecreasing clock relative to the
 /// start of the user program.
 ///
-/// This type has a precision of 1 microsecond.
+/// # Precision
+/// This type has a precision of 1 microsecond, and uses [`pros_sys::micros`] internally.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Instant(u64);
 
@@ -27,12 +30,38 @@ impl Instant {
 
     /// Returns the amount of time elapsed from another instant to this one,
     /// or zero duration if that instant is later than this one.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use core::time::Duration;
+    /// use pros::{time::Instant, task::delay};
+    ///
+    /// let now = Instant::now();
+    /// delay(Duration::new(1, 0));
+    /// let new_now = Instant::now();
+    /// println!("{:?}", new_now.duration_since(now));
+    /// println!("{:?}", now.duration_since(new_now)); // 0ns
+    /// ```
     pub fn duration_since(&self, earlier: Instant) -> Duration {
         self.checked_duration_since(earlier).unwrap_or_default()
     }
 
     /// Returns the amount of time elapsed from another instant to this one,
     /// or None if that instant is later than this one.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use core::time::Duration;
+    /// use pros::{time::Instant, task::delay};
+    ///
+    /// let now = Instant::now();
+    /// delay(Duration::new(1, 0));
+    /// let new_now = Instant::now();
+    /// println!("{:?}", new_now.checked_duration_since(now));
+    /// println!("{:?}", now.checked_duration_since(new_now)); // None
+    /// ```
     pub fn checked_duration_since(&self, earlier: Instant) -> Option<Duration> {
         if earlier.0 < self.0 {
             Some(Duration::from_micros(self.0 - earlier.0))
@@ -43,11 +72,35 @@ impl Instant {
 
     /// Returns the amount of time elapsed from another instant to this one,
     /// or zero duration if that instant is later than this one.
+    /// 
+    /// # Examples
+    /// 
+    /// ```no_run
+    /// use core::time::Duration;
+    /// use pros::{time::Instant, task::delay};
+    ///
+    /// let instant = Instant::now();
+    /// let three_secs = Duration::from_secs(3);
+    /// delay(three_secs);
+    /// assert!(instant.elapsed() >= three_secs);
+    /// ```
     pub fn saturating_duration_since(&self, earlier: Instant) -> Duration {
         self.checked_duration_since(earlier).unwrap_or_default()
     }
 
     /// Returns the amount of time elapsed since this instant.
+    /// 
+    /// # Examples
+    /// 
+    /// ```no_run
+    /// use core::time::Duration;
+    /// use pros::{time::Instant, task::delay};
+    ///
+    /// let instant = Instant::now();
+    /// let three_secs = Duration::from_secs(3);
+    /// delay(three_secs);
+    /// assert!(instant.elapsed() >= three_secs);
+    /// ```
     pub fn elapsed(&self) -> Duration {
         Instant::now() - *self
     }
