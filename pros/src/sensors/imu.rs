@@ -29,7 +29,7 @@ impl InertialSensor {
     ///
     /// This takes approximately 2 seconds, and is blocking until the IMU status flag is set properly.
     /// There is additionally a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
-    pub fn calibrate(&self) -> Result<(), InertialError> {
+    pub fn calibrate_blocking(&self) -> Result<(), InertialError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::imu_reset_blocking(self.port));
         }
@@ -38,8 +38,10 @@ impl InertialSensor {
 
     /// Calibrate IMU asynchronously.
     ///
+    /// Returns an [`InertialCalibrationFuture`] that is be polled until the IMU status flag reports the sensor as
+    /// no longer calibrating.
     /// There a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
-    pub fn calibrate_async(&self) -> InertialCalibrateFuture {
+    pub fn calibrate(&self) -> InertialCalibrateFuture {
         InertialCalibrateFuture::Calibrate(*self)
     }
 
