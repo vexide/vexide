@@ -1,8 +1,8 @@
 #![no_std]
 #![no_main]
 
-use pros::prelude::*;
 use core::time::Duration;
+use pros::prelude::*;
 
 #[derive(Default)]
 pub struct Robot;
@@ -16,7 +16,10 @@ impl SyncRobot for Robot {
         loop {
             let euler = imu.euler()?;
 
-            println!("Pitch: {} Roll: {} Yaw: {}", euler.pitch, euler.roll, euler.yaw);
+            println!(
+                "Pitch: {} Roll: {} Yaw: {}",
+                euler.pitch, euler.roll, euler.yaw
+            );
 
             pros::task::delay(Duration::from_secs(1));
         }

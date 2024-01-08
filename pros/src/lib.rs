@@ -370,8 +370,8 @@ pub mod prelude {
     pub use crate::position::*;
     pub use crate::sensors::distance::*;
     pub use crate::sensors::gps::*;
+    pub use crate::sensors::imu::*;
     pub use crate::sensors::rotation::*;
     pub use crate::sensors::vision::*;
-    pub use crate::sensors::imu::*;
     pub use crate::task::{sleep, spawn};
 }
