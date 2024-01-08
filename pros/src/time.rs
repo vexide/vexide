@@ -1,12 +1,12 @@
 use core::{
-    time::Duration,
     fmt,
-    ops::{Add, AddAssign, Sub, SubAssign}
+    ops::{Add, AddAssign, Sub, SubAssign},
+    time::Duration,
 };
 
 /// Represents a timestamp on a monotonically nondecreasing clock relative to the
 /// start of the user program.
-/// 
+///
 /// This type has a precision of 1 microsecond.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Instant(u64);
@@ -41,9 +41,9 @@ impl Instant {
         }
     }
 
-	/// Returns the amount of time elapsed from another instant to this one,
+    /// Returns the amount of time elapsed from another instant to this one,
     /// or None if that instant is later than this one.
-	pub fn saturating_duration_since(&self, earlier: Instant) -> Duration {
+    pub fn saturating_duration_since(&self, earlier: Instant) -> Duration {
         self.checked_duration_since(earlier).unwrap_or_default()
     }
 
@@ -90,7 +90,8 @@ impl Sub<Duration> for Instant {
     type Output = Instant;
 
     fn sub(self, other: Duration) -> Instant {
-        self.checked_sub(other).expect("overflow when subtracting duration from instant")
+        self.checked_sub(other)
+            .expect("overflow when subtracting duration from instant")
     }
 }
 

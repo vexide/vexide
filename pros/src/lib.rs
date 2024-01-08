@@ -80,8 +80,8 @@ pub mod battery;
 pub mod competition;
 pub mod link;
 pub mod lvgl;
-pub mod usd;
 pub mod time;
+pub mod usd;
 
 pub use async_trait::async_trait;
 
