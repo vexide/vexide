@@ -72,9 +72,9 @@ impl Instant {
 
     /// Returns the amount of time elapsed from another instant to this one,
     /// or zero duration if that instant is later than this one.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```no_run
     /// use core::time::Duration;
     /// use pros::{time::Instant, task::delay};
@@ -89,9 +89,9 @@ impl Instant {
     }
 
     /// Returns the amount of time elapsed since this instant.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```no_run
     /// use core::time::Duration;
     /// use pros::{time::Instant, task::delay};
