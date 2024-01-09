@@ -20,7 +20,7 @@ This is the todo list for the eventual 1.0.0 release of pros-rs
 * [ ] Feedforward loops
 * [ ] ADI (3 wire ports)
 * [ ] Ext. ADI
-* [ ] Sensors
+* [X] Sensors
   * [X] Distance
   * [X] GPS
   * [x] Inertial (IMU)
