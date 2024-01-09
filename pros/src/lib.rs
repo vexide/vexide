@@ -81,6 +81,7 @@ pub mod battery;
 pub mod competition;
 pub mod link;
 pub mod lvgl;
+pub mod time;
 pub mod usd;
 
 pub use async_trait::async_trait;
@@ -416,6 +417,8 @@ pub mod prelude {
     pub use crate::position::*;
     pub use crate::sensors::distance::*;
     pub use crate::sensors::gps::*;
+    pub use crate::sensors::imu::*;
+    pub use crate::sensors::optical::*;
     pub use crate::sensors::rotation::*;
     pub use crate::sensors::vision::*;
     pub use crate::task::{sleep, spawn};
