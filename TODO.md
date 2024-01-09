@@ -24,7 +24,7 @@ This is the todo list for the eventual 1.0.0 release of pros-rs
   * [X] Distance
   * [X] GPS
   * [x] Inertial (IMU)
-  * [ ] Optical
+  * [x] Optical
   * [X] Rotational
   * [X] Vision
 * [X] Controllers
