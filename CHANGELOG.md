@@ -26,19 +26,6 @@ Before releasing:
 
 ### Removed
 
-## [0.4.0] - 2024-01-02
-
-### Added
-
-- Add methods to controller for checking individual buttons and axes.
-
-### Fixed
-
-### Changed
-
-- Write doc comments for previously undocumented modules and functions.
-
-### Removed
 
 ## [0.5.0] - 2024-01-08
 
@@ -58,6 +45,20 @@ Before releasing:
 
 ### Removed
 
-[unreleased]: https://github.com/pros-rs/pros-rs/compare/v0.4.0...HEAD
+## [0.4.0] - 2024-01-02
+
+### Added
+
+- Add methods to controller for checking individual buttons and axes.
+
+### Fixed
+
+### Changed
+
+- Write doc comments for previously undocumented modules and functions.
+
+### Removed
+
+[unreleased]: https://github.com/pros-rs/pros-rs/compare/v0.5.0...HEAD
 [0.4.0]: https://github.com/pros-rs/pros-rs/releases/tag/v0.4.0
-[0.5.0]: https://github.com/pros-rs/pros-rs/releases/tag/v0.5.0
+[0.5.0]: https://github.com/pros-rs/pros-rs/compare/v0.4.0...v0.5.0
