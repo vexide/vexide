@@ -40,5 +40,24 @@ Before releasing:
 
 ### Removed
 
+## [0.5.0] - 2024-01-08
+
+### Added
+
+- Standard library like `Instant`s
+- Optical sensor bindings.
+- IMU sensor bindings.
+
+### Fixed
+
+- The async executor now does not starve the OS of cycles when unnecessary.
+
+### Changed
+
+- Updated readme with fixed grammar.
+
+### Removed
+
 [unreleased]: https://github.com/pros-rs/pros-rs/compare/v0.4.0...HEAD
 [0.4.0]: https://github.com/pros-rs/pros-rs/releases/tag/v0.4.0
+[0.5.0]: https://github.com/pros-rs/pros-rs/releases/tag/v0.5.0
