@@ -366,7 +366,7 @@ pub mod prelude {
     pub use crate::controller::*;
     pub use crate::error::PortError;
     pub use crate::io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write};
-    pub use crate::lcd::{llemu_print, llemu_println, buttons::Button, LcdError};
+    pub use crate::lcd::{buttons::Button, llemu_print, llemu_println, LcdError};
     pub use crate::link::*;
     pub use crate::motor::*;
     pub use crate::pid::*;
