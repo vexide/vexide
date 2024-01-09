@@ -1,4 +1,4 @@
-use crate::println;
+use crate::io::println;
 use core::{
     alloc::{GlobalAlloc, Layout},
     panic::PanicInfo,

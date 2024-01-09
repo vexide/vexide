@@ -78,6 +78,7 @@ pub mod lcd;
 pub mod adi;
 pub mod battery;
 pub mod competition;
+pub mod io;
 pub mod link;
 pub mod lvgl;
 pub mod time;
@@ -358,13 +359,14 @@ pub mod prelude {
     pub use crate::{AsyncRobot, SyncRobot};
 
     // Import Box from alloc so that it can be used in async_trait!
-    pub use crate::{async_trait, os_task_local, print, println};
+    pub use crate::{async_trait, os_task_local};
     pub use alloc::boxed::Box;
 
     pub use crate::async_runtime::*;
     pub use crate::controller::*;
     pub use crate::error::PortError;
-    pub use crate::lcd::{buttons::Button, LcdError};
+    pub use crate::io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write};
+    pub use crate::lcd::{llemu_print, llemu_println, buttons::Button, LcdError};
     pub use crate::link::*;
     pub use crate::motor::*;
     pub use crate::pid::*;
