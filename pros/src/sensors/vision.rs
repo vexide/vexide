@@ -13,6 +13,7 @@ use crate::{
 };
 
 /// Represents a vision sensor plugged into the vex.
+#[derive(Debug, Clone, Copy)]
 pub struct VisionSensor {
     port: u8,
 }
@@ -115,7 +116,7 @@ impl VisionSensor {
 }
 
 //TODO: figure out how coordinates are done.
-#[derive(Debug)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct VisionObject {
     pub top: i16,
     pub left: i16,
@@ -145,6 +146,7 @@ impl TryFrom<pros_sys::vision_object_s_t> for VisionObject {
     }
 }
 
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Rgb {
     r: u8,
     g: u8,
@@ -197,16 +199,19 @@ impl From<LcdColor> for Rgb {
 }
 
 #[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VisionZeroPoint {
     TopLeft,
     Center,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WhiteBalance {
     Rgb(Rgb),
     Auto,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LedMode {
     On(Rgb),
     Off,

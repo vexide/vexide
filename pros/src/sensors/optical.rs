@@ -9,7 +9,8 @@ pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
 pub const MAX_LED_PWM: u8 = 100;
 
-#[derive(Debug)]
+/// Represents a smart port configured as a V5 optical sensor
+#[derive(Debug, Clone, Copy)]
 pub struct OpticalSensor {
     port: u8,
     gesture_detection_enabled: bool,
@@ -40,7 +41,7 @@ impl OpticalSensor {
     }
 
     /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
-    pub fn set_led_pwm(&self, value: u8) -> Result<(), OpticalError> {
+    pub fn set_led_pwm(&mut self, value: u8) -> Result<(), OpticalError> {
         if value > MAX_LED_PWM {
             return Err(OpticalError::InvalidLedPwm);
         }
@@ -69,7 +70,7 @@ impl OpticalSensor {
     /// Time value must be a [`Duration`] between 3 and 712 milliseconds. See
     /// https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for
     /// more information.
-    pub fn set_integration_time(&self, time: Duration) -> Result<(), OpticalError> {
+    pub fn set_integration_time(&mut self, time: Duration) -> Result<(), OpticalError> {
         if time < MIN_INTEGRATION_TIME || time > MAX_INTEGRATION_TIME {
             return Err(OpticalError::InvalidIntegrationTime);
         }

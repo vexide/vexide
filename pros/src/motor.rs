@@ -265,7 +265,7 @@ impl From<u32> for MotorState {
 }
 
 /// Internal gearset used by VEX smart motors.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
 pub enum Gearset {
     Red = pros_sys::E_MOTOR_GEAR_RED,

@@ -10,6 +10,7 @@ use crate::{
 };
 
 /// A physical rotation sensor plugged into a port.
+#[derive(Debug, Clone, Copy)]
 pub struct RotationSensor {
     port: u8,
     pub reversed: bool,

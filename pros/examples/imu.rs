@@ -9,7 +9,7 @@ pub struct Robot;
 
 impl SyncRobot for Robot {
     fn opcontrol(&mut self) -> pros::Result {
-        let imu = InertialSensor::new(1)?;
+        let mut imu = InertialSensor::new(1)?;
 
         imu.calibrate()?;
 

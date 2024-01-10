@@ -10,11 +10,13 @@ use crate::error::{bail_on, PortError};
 
 /// A physical distance sensor plugged into a port.
 /// Distance sensors can only keep track of one object at a time.
+#[derive(Debug, Clone, Copy)]
 pub struct DistanceSensor {
     port: u8,
 }
 
 impl DistanceSensor {
+    /// Create a new distance sensor from a smart port index.
     pub fn new(port: u8) -> Result<Self, PortError> {
         let sensor = Self { port };
         sensor.distance()?;
