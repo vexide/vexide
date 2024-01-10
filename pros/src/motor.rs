@@ -51,7 +51,7 @@ impl Motor {
         Ok(Self { port })
     }
 
-    pub fn set_gearset(&self, gearset: Gearset) -> Result<(), MotorError> {
+    pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
         unsafe {
             bail_on!(
                 PROS_ERR,
@@ -67,7 +67,7 @@ impl Motor {
 
     /// Takes in a f32 from -1 to 1 that is scaled to -12 to 12 volts.
     /// Useful for driving motors with controllers.
-    pub fn set_output(&self, output: f32) -> Result<(), MotorError> {
+    pub fn set_output(&mut self, output: f32) -> Result<(), MotorError> {
         unsafe {
             bail_on!(
                 PROS_ERR,
@@ -78,7 +78,7 @@ impl Motor {
     }
 
     /// Takes in and i8 between -127 and 127 which is scaled to -12 to 12 Volts.
-    pub fn set_raw_output(&self, raw_output: i8) -> Result<(), MotorError> {
+    pub fn set_raw_output(&mut self, raw_output: i8) -> Result<(), MotorError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::motor_move(self.port, raw_output as i32));
         }
@@ -86,7 +86,7 @@ impl Motor {
     }
 
     /// Takes in a voltage that must be between -12 and 12 Volts.
-    pub fn set_voltage(&self, voltage: f32) -> Result<(), MotorError> {
+    pub fn set_voltage(&mut self, voltage: f32) -> Result<(), MotorError> {
         if !(-12.0..=12.0).contains(&voltage) || voltage.is_nan() {
             return Err(MotorError::VoltageOutOfRange);
         }
@@ -103,7 +103,7 @@ impl Motor {
     /// Moves the motor to an absolute position, based off of the last motor zeroing.
     /// units for the velocity is RPM.
     pub fn set_position_absolute(
-        &self,
+        &mut self,
         position: Position,
         velocity: i32,
     ) -> Result<(), MotorError> {
@@ -119,7 +119,7 @@ impl Motor {
     /// Moves the motor to a position relative to the current position.
     /// units for velocity is RPM.
     pub fn set_position_relative(
-        &self,
+        &mut self,
         position: Position,
         velocity: i32,
     ) -> Result<(), MotorError> {
@@ -167,7 +167,7 @@ impl Motor {
     }
 
     /// Sets the current position to zero.
-    pub fn zero(&self) -> Result<(), MotorError> {
+    pub fn zero(&mut self) -> Result<(), MotorError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::motor_tare_position(self.port));
         }
@@ -175,13 +175,13 @@ impl Motor {
     }
 
     /// Stops the motor based on the current [`BrakeMode`]
-    pub fn brake(&self) -> Result<(), MotorError> {
+    pub fn brake(&mut self) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe { pros_sys::motor_brake(self.port) });
         Ok(())
     }
 
     /// Sets the current position to the given position.
-    pub fn set_zero_position(&self, position: Position) -> Result<(), MotorError> {
+    pub fn set_zero_position(&mut self, position: Position) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_zero_position(self.port, position.into_degrees())
         });
@@ -189,7 +189,7 @@ impl Motor {
     }
 
     /// Sets how the motor should act when stopping.
-    pub fn set_brake_mode(&self, brake_mode: BrakeMode) -> Result<(), MotorError> {
+    pub fn set_brake_mode(&mut self, brake_mode: BrakeMode) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_brake_mode(self.port, brake_mode.into())
         });
@@ -206,7 +206,7 @@ impl Motor {
     }
 
     /// Reverse this motor by multiplying all input by -1.
-    pub fn set_reversed(&self, reversed: bool) -> Result<(), MotorError> {
+    pub fn set_reversed(&mut self, reversed: bool) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_reversed(self.port, reversed)
         });
