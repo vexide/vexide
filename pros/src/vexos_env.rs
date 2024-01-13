@@ -1,14 +1,4 @@
-use alloc::{ffi::CString, format};
-use pros_sys::exit;
-
-use crate::{
-    println,
-    task::{self, suspend_all, PanicBehavior, PANIC_BEHAVIOR},
-};
-use core::{
-    alloc::{GlobalAlloc, Layout},
-    panic::PanicInfo,
-};
+use core::alloc::{GlobalAlloc, Layout};
 
 struct Allocator;
 unsafe impl GlobalAlloc for Allocator {

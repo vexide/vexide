@@ -17,19 +17,14 @@
 
 pub mod local;
 
-use core::ffi::{c_void, CStr};
+use core::ffi::CStr;
 use core::hash::Hash;
 use core::str::Utf8Error;
-use core::sync::atomic::AtomicU32;
 use core::time::Duration;
 use core::{future::Future, task::Poll};
 
 use crate::async_runtime::executor::EXECUTOR;
 use crate::error::{bail_on, map_errno};
-use crate::os_task_local;
-use crate::sync::Mutex;
-
-use alloc::ffi::CString;
 use alloc::string::{String, ToString};
 use snafu::Snafu;
 
@@ -406,19 +401,8 @@ pub unsafe fn suspend_all() -> SchedulerSuspendGuard {
     SchedulerSuspendGuard { _private: () }
 }
 
-#[derive(PartialEq, Eq)]
-pub(crate) enum PanicBehavior {
-    Exit,
-    Ignore,
-}
-
-os_task_local! {
-    pub(crate) static PANIC_BEHAVIOR: PanicBehavior = PanicBehavior::Ignore;
-}
-
 #[doc(hidden)]
 pub fn __init_entrypoint() {
-    PANIC_BEHAVIOR.set(PanicBehavior::Exit);
     unsafe {
         pros_sys::lcd_initialize();
     }

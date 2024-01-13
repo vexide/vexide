@@ -90,8 +90,6 @@ pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::er
 
 use alloc::{boxed::Box, ffi::CString, format};
 
-use crate::task::{suspend_all, PanicBehavior, PANIC_BEHAVIOR};
-
 #[async_trait::async_trait]
 pub trait AsyncRobot {
     async fn opcontrol(&mut self) -> Result {
@@ -132,7 +130,6 @@ macro_rules! __gen_sync_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn opcontrol() {
-            ::pros::task::__init_entrypoint();
             <$rbt as $crate::SyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -144,7 +141,6 @@ macro_rules! __gen_sync_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn autonomous() {
-            ::pros::task::__init_entrypoint();
             <$rbt as $crate::SyncRobot>::auto(unsafe {
                 ROBOT
                     .as_mut()
@@ -156,7 +152,6 @@ macro_rules! __gen_sync_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn disabled() {
-            ::pros::task::__init_entrypoint();
             <$rbt as $crate::SyncRobot>::disabled(unsafe {
                 ROBOT
                     .as_mut()
@@ -168,7 +163,6 @@ macro_rules! __gen_sync_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn competition_initialize() {
-            ::pros::task::__init_entrypoint();
             <$rbt as $crate::SyncRobot>::comp_init(unsafe {
                 ROBOT
                     .as_mut()
@@ -188,7 +182,6 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn opcontrol() {
-            ::pros::task::__init_entrypoint();
             $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -200,7 +193,6 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn autonomous() {
-            ::pros::task::__init_entrypoint();
             $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -212,7 +204,6 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn disabled() {
-            ::pros::task::__init_entrypoint();
             $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -224,7 +215,6 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn competition_initialize() {
-            ::pros::task::__init_entrypoint();
             $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
                 ROBOT
                     .as_mut()
@@ -365,36 +355,20 @@ macro_rules! sync_robot {
 
 #[panic_handler]
 pub fn panic(info: &core::panic::PanicInfo) -> ! {
-    let suspend = unsafe { suspend_all() };
     let current_task = task::current();
 
-    {
-        let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
-        // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
-        // panic message here
-        let panic_msg = format!("task '{task_name}' {info}");
+    let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
+    // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
+    // panic message here
+    let panic_msg = format!("task '{task_name}' {info}");
+    let msg = CString::new(panic_msg).unwrap();
 
-        let c_msg =
-            CString::new(&*panic_msg).unwrap_or_else(|_| CString::new("Panicked!").unwrap());
-        unsafe {
-            pros_sys::puts(c_msg.as_ptr());
-            #[cfg(target_arch = "wasm32")]
-            wasm_env::sim_log_backtrace();
-        }
-
-        if PANIC_BEHAVIOR.with(|p| *p == PanicBehavior::Exit) {
-            unsafe {
-                pros_sys::exit(1);
-            }
-        }
-
-        println!("{panic_msg}");
+    unsafe {
+        pros_sys::puts(msg.as_ptr());
+        #[cfg(target_arch = "wasm32")]
+        wasm_env::sim_log_backtrace();
+        pros_sys::exit(1);
     }
-
-    drop(suspend);
-
-    current_task.abort();
-    unreachable!()
 }
 
 /// Commonly used features of pros-rs.
