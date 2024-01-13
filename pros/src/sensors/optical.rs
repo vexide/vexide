@@ -219,7 +219,7 @@ impl TryFrom<pros_sys::optical_direction_e_t> for GestureDirection {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct GestureRaw {
     pub up: u8,
     pub down: u8,
@@ -267,7 +267,7 @@ impl TryFrom<pros_sys::optical_rgb_s_t> for Rgbc {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RgbcRaw {
     pub red: u32,
     pub green: u32,

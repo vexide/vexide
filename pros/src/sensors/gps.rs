@@ -9,7 +9,7 @@ use snafu::Snafu;
 use crate::error::{bail_on, map_errno, PortError};
 
 /// Represents the data output from a GPS sensor.
-#[derive(Debug, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct GpsStatus {
     pub x: f64,
     pub y: f64,
