@@ -10,7 +10,7 @@ pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 pub const MAX_LED_PWM: u8 = 100;
 
 /// Represents a smart port configured as a V5 optical sensor
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct OpticalSensor {
     port: u8,
     gesture_detection_enabled: bool,

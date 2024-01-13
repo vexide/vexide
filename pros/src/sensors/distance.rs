@@ -10,7 +10,7 @@ use crate::error::{bail_on, PortError};
 
 /// A physical distance sensor plugged into a port.
 /// Distance sensors can only keep track of one object at a time.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct DistanceSensor {
     port: u8,
 }

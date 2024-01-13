@@ -28,7 +28,7 @@ use crate::{
 };
 
 /// The basic motor struct.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Motor {
     port: u8,
 }
@@ -220,7 +220,7 @@ impl Motor {
 
     /// Returns a future that completes when the motor reports that it has stopped.
     pub fn wait_until_stopped(&self) -> MotorStoppedFuture {
-        MotorStoppedFuture { motor: *self }
+        MotorStoppedFuture { motor: self }
     }
 }
 
@@ -300,10 +300,11 @@ impl From<i32> for Gearset {
     }
 }
 
-pub struct MotorStoppedFuture {
-    motor: Motor,
+pub struct MotorStoppedFuture<'a> {
+    motor: &'a Motor,
 }
-impl core::future::Future for MotorStoppedFuture {
+
+impl<'a> core::future::Future for MotorStoppedFuture<'a> {
     type Output = crate::Result;
     fn poll(
         self: core::pin::Pin<&mut Self>,

@@ -13,7 +13,7 @@ use crate::{
 };
 
 /// Represents a vision sensor plugged into the vex.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct VisionSensor {
     port: u8,
 }

@@ -12,7 +12,7 @@ pub const IMU_RESET_TIMEOUT: Duration = Duration::from_secs(3);
 pub const IMU_MIN_DATA_RATE: Duration = Duration::from_millis(5);
 
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct InertialSensor {
     port: u8,
 }
@@ -42,7 +42,7 @@ impl InertialSensor {
     /// no longer calibrating.
     /// There a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
     pub fn calibrate(&mut self) -> InertialCalibrateFuture {
-        InertialCalibrateFuture::Calibrate(*self)
+        InertialCalibrateFuture::Calibrate(self)
     }
 
     /// Check if the Intertial Sensor is currently calibrating.
@@ -373,7 +373,7 @@ impl From<pros_sys::imu_status_e_t> for InertialStatus {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub enum InertialCalibrateFuture {
     Calibrate(InertialSensor),
     Waiting(InertialSensor, Duration),
