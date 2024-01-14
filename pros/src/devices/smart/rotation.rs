@@ -9,21 +9,23 @@ use crate::{
     devices::position::Position,
 };
 
+use super::{SmartPort, SmartDeviceType, SmartDevice};
+
 /// A physical rotation sensor plugged into a port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct RotationSensor {
-    port: u8,
+    port: SmartPort,
     pub reversed: bool,
 }
 
 impl RotationSensor {
     /// Creates a new rotation sensor on the given port.
     /// Whether or not the sensor should be reversed on creation can be specified.
-    pub fn new(port: u8, reversed: bool) -> Result<Self, PortError> {
+    pub fn new(port: SmartPort, reversed: bool) -> Result<Self, PortError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::rotation_reset_position(port));
+            bail_on!(PROS_ERR, pros_sys::rotation_reset_position(port.index()));
             if reversed {
-                bail_on!(PROS_ERR, pros_sys::rotation_set_reversed(port, true));
+                bail_on!(PROS_ERR, pros_sys::rotation_set_reversed(port.index(), true));
             }
         }
 
@@ -33,7 +35,7 @@ impl RotationSensor {
     /// Sets the position to zero.
     pub fn zero(&mut self) -> Result<(), PortError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::rotation_reset_position(self.port));
+            bail_on!(PROS_ERR, pros_sys::rotation_reset_position(self.port.index()));
         }
         Ok(())
     }
@@ -43,7 +45,7 @@ impl RotationSensor {
         unsafe {
             bail_on!(
                 PROS_ERR,
-                pros_sys::rotation_set_position(self.port, (position.into_counts() * 100) as _)
+                pros_sys::rotation_set_position(self.port.index(), (position.into_counts() * 100) as _)
             );
         }
         Ok(())
@@ -56,7 +58,7 @@ impl RotationSensor {
         unsafe {
             bail_on!(
                 PROS_ERR,
-                pros_sys::rotation_set_reversed(self.port, reversed)
+                pros_sys::rotation_set_reversed(self.port.index(), reversed)
             );
         }
         Ok(())
@@ -72,8 +74,18 @@ impl RotationSensor {
     pub fn position(&self) -> Result<Position, PortError> {
         Ok(unsafe {
             Position::from_degrees(
-                bail_on!(PROS_ERR, pros_sys::rotation_get_angle(self.port)) as f64 / 100.0,
+                bail_on!(PROS_ERR, pros_sys::rotation_get_angle(self.port.index())) as f64 / 100.0,
             )
         })
+    }
+}
+
+impl SmartDevice for RotationSensor {
+    fn port_index(&self) -> u8 {
+        self.port.index()
+    }
+    
+    fn device_type(&self) -> SmartDeviceType {
+        SmartDeviceType::RotationSensor
     }
 }

@@ -2,7 +2,7 @@
 #![no_main]
 
 use core::time::Duration;
-use pros::{prelude::*, task::delay};
+use pros::{prelude::*, task::delay, devices::smart::SmartPort};
 
 #[derive(Debug, Default)]
 struct ExampleRobot;
@@ -19,12 +19,12 @@ impl AsyncRobot for ExampleRobot {
         pros::async_runtime::block_on(handle);
 
         // Create a new motor plugged into port 2. The motor will brake when not moving.
-        let motor = Motor::new(2, BrakeMode::Brake)?;
+        let motor = Motor::new(unsafe { SmartPort::new(2) }, BrakeMode::Brake)?;
         motor.wait_until_stopped().await?;
         // Create a controller, specifically controller 1.
         let controller = Controller::Master;
 
-        let mut vision = VisionSensor::new(9, VisionZeroPoint::Center)?;
+        let mut vision = VisionSensor::new(unsafe { SmartPort::new(9) }, VisionZeroPoint::Center)?;
         vision.set_led(LedMode::On(Rgb::new(0, 0, 255)));
 
         pros::lcd::buttons::register(left_button_callback, Button::Left);

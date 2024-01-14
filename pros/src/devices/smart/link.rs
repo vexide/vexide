@@ -1,4 +1,4 @@
-//! Connect to VEXLink for robot-to-robot communication.
+//! Connect to VEXLink radios for robot-to-robot communication.
 //!
 //! There are two types of links: [`TxLink`] (transmitter) and [`RxLink`] (receiver).
 //! both implement a shared trait [`Link`] as well as a no std version of `Write` and `Read` from [`no_std_io`] respectively.
@@ -11,26 +11,27 @@ use pros_sys::{link::E_LINK_RECEIVER, link_receive, link_transmit, E_LINK_TRANSM
 use snafu::Snafu;
 
 use crate::error::{bail_errno, bail_on, map_errno, FromErrno, PortError};
+use super::{SmartPort, SmartDevice, SmartDeviceType};
 
 /// Types that implement Link can be used to send data to another robot over VEXLink.
-pub trait Link {
-    /// The port that this link is connected to.
-    fn port(&self) -> u8;
+pub trait Link: SmartDevice {
     /// The identifier of this link.
     fn id(&self) -> &CStr;
+
     /// Check whether this link is connected to another robot.
     fn connected(&self) -> bool {
-        unsafe { pros_sys::link_connected(self.port()) }
+        unsafe { pros_sys::link_connected(self.port_index()) }
     }
+
     /// Create a new link ready to send or recieve data.
-    fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError>
+    fn new(port: SmartPort, id: String, vexlink_override: bool) -> Result<Self, LinkError>
     where
         Self: Sized;
 }
 
 /// A recieving end of a VEXLink connection.
 pub struct RxLink {
-    port: u8,
+    port: SmartPort,
     id: CString,
 }
 
@@ -39,7 +40,7 @@ impl RxLink {
         let num = unsafe {
             bail_on!(
                 pros_sys::PROS_ERR as _,
-                pros_sys::link_raw_receivable_size(self.port)
+                pros_sys::link_raw_receivable_size(self.port.index())
             )
         };
 
@@ -50,7 +51,7 @@ impl RxLink {
         unsafe {
             bail_on!(
                 pros_sys::PROS_ERR as _,
-                pros_sys::link_clear_receive_buf(self.port)
+                pros_sys::link_clear_receive_buf(self.port.index())
             )
         };
 
@@ -60,7 +61,7 @@ impl RxLink {
     pub fn receive(&self, buf: &mut [u8]) -> Result<u32, LinkError> {
         const PROS_ERR_U32: u32 = pros_sys::PROS_ERR as _;
 
-        match unsafe { link_receive(self.port, buf.as_mut_ptr().cast(), buf.len() as _) } {
+        match unsafe { link_receive(self.port.index(), buf.as_mut_ptr().cast(), buf.len() as _) } {
             PROS_ERR_U32 => {
                 bail_errno!();
                 unreachable!("Expected errno to be set");
@@ -75,22 +76,29 @@ impl Link for RxLink {
     fn id(&self) -> &CStr {
         &self.id
     }
-    fn port(&self) -> u8 {
-        self.port
-    }
-    fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
+    fn new(port: SmartPort, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
         let id = CString::new(id).unwrap();
         unsafe {
             bail_on!(
                 pros_sys::PROS_ERR as _,
                 if vexlink_override {
-                    pros_sys::link_init(port, id.as_ptr().cast(), E_LINK_RECEIVER)
+                    pros_sys::link_init(port.index(), id.as_ptr().cast(), E_LINK_RECEIVER)
                 } else {
-                    pros_sys::link_init_override(port, id.as_ptr().cast(), E_LINK_RECEIVER)
+                    pros_sys::link_init_override(port.index(), id.as_ptr().cast(), E_LINK_RECEIVER)
                 }
             )
         };
         Ok(Self { port, id })
+    }
+}
+
+impl SmartDevice for RxLink {
+    fn port_index(&self) -> u8 {
+        self.port.index()
+    }
+    
+    fn device_type(&self) -> SmartDeviceType {
+        SmartDeviceType::Radio
     }
 }
 
@@ -105,7 +113,7 @@ impl io::Read for RxLink {
 
 /// A transmitting end of a VEXLink connection.
 pub struct TxLink {
-    port: u8,
+    port: SmartPort,
     id: CString,
 }
 
@@ -116,7 +124,7 @@ impl TxLink {
         let num = unsafe {
             bail_on!(
                 pros_sys::PROS_ERR as _,
-                pros_sys::link_raw_transmittable_size(self.port)
+                pros_sys::link_raw_transmittable_size(self.port.index())
             )
         };
 
@@ -126,7 +134,7 @@ impl TxLink {
     pub fn transmit(&self, buf: &[u8]) -> Result<u32, LinkError> {
         const PROS_ERR_U32: u32 = pros_sys::PROS_ERR as _;
 
-        match unsafe { link_transmit(self.port, buf.as_ptr().cast(), buf.len() as _) } {
+        match unsafe { link_transmit(self.port.index(), buf.as_ptr().cast(), buf.len() as _) } {
             PROS_ERR_U32 => {
                 let errno = crate::error::take_errno();
                 Err(FromErrno::from_errno(errno)
@@ -154,22 +162,29 @@ impl Link for TxLink {
     fn id(&self) -> &CStr {
         &self.id
     }
-    fn port(&self) -> u8 {
-        self.port
-    }
-    fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
+    fn new(port: SmartPort, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
         let id = CString::new(id).unwrap();
         unsafe {
             bail_on!(
                 pros_sys::PROS_ERR as _,
                 if vexlink_override {
-                    pros_sys::link_init(port, id.as_ptr().cast(), E_LINK_TRANSMITTER)
+                    pros_sys::link_init(port.index(), id.as_ptr().cast(), E_LINK_TRANSMITTER)
                 } else {
-                    pros_sys::link_init_override(port, id.as_ptr().cast(), E_LINK_TRANSMITTER)
+                    pros_sys::link_init_override(port.index(), id.as_ptr().cast(), E_LINK_TRANSMITTER)
                 }
             )
         };
         Ok(Self { port, id })
+    }
+}
+
+impl SmartDevice for TxLink {
+    fn port_index(&self) -> u8 {
+        self.port.index()
+    }
+    
+    fn device_type(&self) -> SmartDeviceType {
+        SmartDeviceType::Radio
     }
 }
 

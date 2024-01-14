@@ -12,17 +12,19 @@ use crate::{
     lvgl::colors::LcdColor,
 };
 
+use super::{SmartDevice, SmartDeviceType, SmartPort};
+
 /// Represents a vision sensor plugged into the vex.
 #[derive(Debug, Eq, PartialEq)]
 pub struct VisionSensor {
-    port: u8,
+    port: SmartPort,
 }
 
 impl VisionSensor {
     /// Creates a new vision sensor.
-    pub fn new(port: u8, zero: VisionZeroPoint) -> Result<Self, crate::error::PortError> {
+    pub fn new(port: SmartPort, zero: VisionZeroPoint) -> Result<Self, crate::error::PortError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::vision_set_zero_point(port, zero as _));
+            bail_on!(PROS_ERR, pros_sys::vision_set_zero_point(port.index(), zero as _));
         }
 
         Ok(Self { port })
@@ -30,7 +32,7 @@ impl VisionSensor {
 
     /// Returns the nth largest object seen by the camera.
     pub fn nth_largest_object(&self, n: u32) -> Result<VisionObject, VisionError> {
-        unsafe { pros_sys::vision_get_by_size(self.port, n).try_into() }
+        unsafe { pros_sys::vision_get_by_size(self.port.index(), n).try_into() }
     }
 
     /// Returns a list of all objects in order of size (largest to smallest).
@@ -39,7 +41,7 @@ impl VisionSensor {
         let mut objects_buf = Vec::with_capacity(obj_count);
 
         unsafe {
-            pros_sys::vision_read_by_size(self.port, 0, obj_count as _, objects_buf.as_mut_ptr());
+            pros_sys::vision_read_by_size(self.port.index(), 0, obj_count as _, objects_buf.as_mut_ptr());
         }
 
         bail_errno!();
@@ -54,7 +56,7 @@ impl VisionSensor {
     pub fn num_objects(&self) -> Result<usize, PortError> {
         unsafe {
             Ok(
-                bail_on!(PROS_ERR, pros_sys::vision_get_object_count(self.port))
+                bail_on!(PROS_ERR, pros_sys::vision_get_object_count(self.port.index()))
                     .try_into()
                     .unwrap(),
             )
@@ -63,18 +65,18 @@ impl VisionSensor {
 
     /// Get the current exposure percentage of the vision sensor. The returned result should be within 0.0 to 1.5.
     pub fn exposure(&self) -> f32 {
-        unsafe { (pros_sys::vision_get_exposure(self.port) as f32) * 1.5 / 150.0 }
+        unsafe { (pros_sys::vision_get_exposure(self.port.index()) as f32) * 1.5 / 150.0 }
     }
 
     /// Get the current white balance of the vision sensor.
     pub fn current_white_balance(&self) -> Rgb {
-        unsafe { (pros_sys::vision_get_white_balance(self.port) as u32).into() }
+        unsafe { (pros_sys::vision_get_white_balance(self.port.index()) as u32).into() }
     }
 
     /// Sets the exposure percentage of the vision sensor. Should be between 0.0 and 1.5.
     pub fn set_exposure(&mut self, exposure: f32) {
         unsafe {
-            pros_sys::vision_set_exposure(self.port, (exposure * 150.0 / 1.5) as u8);
+            pros_sys::vision_set_exposure(self.port.index(), (exposure * 150.0 / 1.5) as u8);
         }
     }
 
@@ -82,12 +84,12 @@ impl VisionSensor {
     pub fn set_white_balance(&mut self, white_balance: WhiteBalance) {
         unsafe {
             match white_balance {
-                WhiteBalance::Auto => pros_sys::vision_set_auto_white_balance(self.port, 1),
+                WhiteBalance::Auto => pros_sys::vision_set_auto_white_balance(self.port.index(), 1),
                 WhiteBalance::Rgb(rgb) => {
                     // Turn off automatic white balance
-                    pros_sys::vision_set_auto_white_balance(self.port, 0);
+                    pros_sys::vision_set_auto_white_balance(self.port.index(), 0);
                     pros_sys::vision_set_white_balance(
-                        self.port,
+                        self.port.index(),
                         <Rgb as Into<u32>>::into(rgb) as i32,
                     )
                 }
@@ -98,7 +100,7 @@ impl VisionSensor {
     /// Sets the point that object positions are relative to, in other words where (0, 0) is or the zero point.
     pub fn set_zero_point(&mut self, zero: VisionZeroPoint) {
         unsafe {
-            pros_sys::vision_set_zero_point(self.port, zero as _);
+            pros_sys::vision_set_zero_point(self.port.index(), zero as _);
         }
     }
 
@@ -106,12 +108,22 @@ impl VisionSensor {
     pub fn set_led(&mut self, mode: LedMode) {
         unsafe {
             match mode {
-                LedMode::Off => pros_sys::vision_clear_led(self.port),
+                LedMode::Off => pros_sys::vision_clear_led(self.port.index()),
                 LedMode::On(rgb) => {
-                    pros_sys::vision_set_led(self.port, <Rgb as Into<u32>>::into(rgb) as i32)
+                    pros_sys::vision_set_led(self.port.index(), <Rgb as Into<u32>>::into(rgb) as i32)
                 }
             };
         }
+    }
+}
+
+impl SmartDevice for VisionSensor {
+    fn port_index(&self) -> u8 {
+        self.port.index()
+    }
+    
+    fn device_type(&self) -> SmartDeviceType {
+        SmartDeviceType::VisionSensor
     }
 }
 

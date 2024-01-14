@@ -73,7 +73,6 @@ mod wasm_env;
 #[macro_use]
 pub mod lcd;
 pub mod competition;
-pub mod link;
 pub mod lvgl;
 pub mod time;
 pub mod usd;
@@ -359,10 +358,11 @@ pub mod prelude {
     pub use crate::async_runtime::*;
     pub use crate::error::PortError;
     pub use crate::lcd::{buttons::Button, LcdError};
-    pub use crate::link::*;
     pub use crate::pid::*;
     pub use crate::devices::position::*;
     pub use crate::devices::controller::*;
+    pub use crate::devices::smart::SmartDevice;
+    pub use crate::devices::smart::link::*;
     pub use crate::devices::smart::motor::*;
     pub use crate::devices::smart::distance::*;
     pub use crate::devices::smart::gps::*;
