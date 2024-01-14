@@ -9,6 +9,7 @@
 pub struct CompetitionStatus(pub u8);
 
 pub enum CompetitionSystem {
+    None,
     FieldController,
     CompetitionSwitch,
 }
@@ -27,10 +28,14 @@ impl CompetitionStatus {
         self.0 & pros_sys::misc::COMPETITION_CONNECTED != 0
     }
     pub fn system(&self) -> CompetitionSystem {
-        if self.0 & COMPETITION_SYSTEM == 0 {
-            CompetitionSystem::FieldController
+        if self.connected() {
+            if self.0 & COMPETITION_SYSTEM == 0 {
+                CompetitionSystem::FieldController
+            } else {
+                CompetitionSystem::CompetitionSwitch
+            }
         } else {
-            CompetitionSystem::CompetitionSwitch
+            CompetitionSystem::None
         }
     }
 }
