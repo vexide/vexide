@@ -11,9 +11,6 @@ pub struct CompetitionStatus(pub u8);
 /// Represents a type of system used to control competition state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompetitionSystem {
-    /// Competition state is not connected to a competition controller.
-    None,
-
     /// Competition state is controlled by a VEX Field Controller.
     FieldControl,
 
@@ -34,15 +31,15 @@ impl CompetitionStatus {
     pub const fn connected(&self) -> bool {
         self.0 & pros_sys::misc::COMPETITION_CONNECTED != 0
     }
-    pub fn system(&self) -> CompetitionSystem {
+    pub fn system(&self) -> Option<CompetitionSystem> {
         if self.connected() {
             if self.0 & COMPETITION_SYSTEM == 0 {
-                CompetitionSystem::FieldControl
+                Some(CompetitionSystem::FieldControl)
             } else {
-                CompetitionSystem::CompetitionSwitch
+                Some(CompetitionSystem::CompetitionSwitch)
             }
         } else {
-            CompetitionSystem::None
+            None
         }
     }
 }
