@@ -57,6 +57,8 @@
 
 extern crate alloc;
 
+use core::future::Future;
+
 pub mod async_runtime;
 pub mod controller;
 pub mod error;
@@ -88,19 +90,18 @@ pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::er
 
 use alloc::{ffi::CString, format};
 
-#[allow(async_fn_in_trait)]
 pub trait AsyncRobot {
-    async fn opcontrol(&mut self) -> Result {
-        Ok(())
+    fn opcontrol(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
-    async fn auto(&mut self) -> Result {
-        Ok(())
+    fn auto(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
-    async fn disabled(&mut self) -> Result {
-        Ok(())
+    fn disabled(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
-    async fn comp_init(&mut self) -> Result {
-        Ok(())
+    fn comp_init(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
 }
 
