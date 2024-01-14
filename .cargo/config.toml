@@ -8,6 +8,7 @@ runner = "python runner.py"
 rustflags = [
     "-Ctarget-feature=+atomics,+bulk-memory,+mutable-globals",
     "-Clink-arg=--shared-memory",
+    "-Clink-arg=--export-table",
 ]
 
 [unstable]
