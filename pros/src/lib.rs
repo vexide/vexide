@@ -57,6 +57,8 @@
 
 extern crate alloc;
 
+use core::future::Future;
+
 pub mod async_runtime;
 pub mod controller;
 pub mod error;
@@ -84,25 +86,22 @@ pub mod lvgl;
 pub mod time;
 pub mod usd;
 
-pub use async_trait::async_trait;
-
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
-use alloc::{boxed::Box, ffi::CString, format};
+use alloc::{ffi::CString, format};
 
-#[async_trait::async_trait]
 pub trait AsyncRobot {
-    async fn opcontrol(&mut self) -> Result {
-        Ok(())
+    fn opcontrol(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
-    async fn auto(&mut self) -> Result {
-        Ok(())
+    fn auto(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
-    async fn disabled(&mut self) -> Result {
-        Ok(())
+    fn disabled(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
-    async fn comp_init(&mut self) -> Result {
-        Ok(())
+    fn comp_init(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
 }
 
@@ -392,5 +391,5 @@ pub mod prelude {
         AsyncRobot, SyncRobot,
     };
     // Import Box from alloc so that it can be used in async_trait!
-    pub use crate::{async_trait, os_task_local, print, println};
+    pub use crate::{os_task_local, print, println};
 }

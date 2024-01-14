@@ -7,7 +7,7 @@ use pros::{prelude::*, task::delay};
 
 #[derive(Debug, Default)]
 struct ExampleRobot;
-#[async_trait]
+
 impl AsyncRobot for ExampleRobot {
     async fn opcontrol(&mut self) -> pros::Result {
         let handle = pros::async_runtime::spawn(async {
