@@ -13,6 +13,7 @@ pub enum CompetitionSystem {
     CompetitionSwitch,
 }
 
+// TODO: Change this to use competition_is_field and competition_is_switch once we support PROS 4
 const COMPETITION_SYSTEM: u8 = 1 << 3;
 
 impl CompetitionStatus {
