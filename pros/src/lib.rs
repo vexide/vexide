@@ -67,6 +67,7 @@ pub mod sensors;
 pub mod sync;
 #[macro_use]
 pub mod task;
+
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
 #[cfg(target_os = "vexos")]
@@ -88,7 +89,8 @@ pub use async_trait::async_trait;
 
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, ffi::CString, format};
+
 #[async_trait::async_trait]
 pub trait AsyncRobot {
     async fn opcontrol(&mut self) -> Result {
@@ -270,7 +272,7 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -281,7 +283,7 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
@@ -333,7 +335,7 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -344,12 +346,30 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
         }
     };
+}
+
+#[panic_handler]
+pub fn panic(info: &core::panic::PanicInfo) -> ! {
+    let current_task = task::current();
+
+    let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
+    // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
+    // panic message here
+    let panic_msg = format!("task '{task_name}' {info}");
+    let msg = CString::new(panic_msg).unwrap();
+
+    unsafe {
+        pros_sys::puts(msg.as_ptr());
+        #[cfg(target_arch = "wasm32")]
+        wasm_env::sim_log_backtrace();
+        pros_sys::exit(1);
+    }
 }
 
 /// Commonly used features of pros-rs.

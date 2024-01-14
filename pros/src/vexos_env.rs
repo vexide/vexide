@@ -1,24 +1,4 @@
-use crate::println;
-use core::{
-    alloc::{GlobalAlloc, Layout},
-    panic::PanicInfo,
-};
-
-#[panic_handler]
-pub fn panic(_info: &PanicInfo) -> ! {
-    println!("Panicked! {_info}");
-    let panicking_task = crate::task::current();
-    // Make sure we eat up every cycle to stop execution
-    // Because we know that the target hardware is a singlethreaded v5 brain, we are sure that this stops porgram execution.
-    // This would be unsound on other hardware.
-    panicking_task.set_priority(crate::task::TaskPriority::High);
-    loop {
-        core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
-        unsafe {
-            core::arch::arm::__nop();
-        }
-    }
-}
+use core::alloc::{GlobalAlloc, Layout};
 
 struct Allocator;
 unsafe impl GlobalAlloc for Allocator {

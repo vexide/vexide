@@ -19,12 +19,15 @@
 
 pub mod local;
 
+use core::ffi::CStr;
 use core::hash::Hash;
+use core::str::Utf8Error;
 use core::time::Duration;
 use core::{future::Future, task::Poll};
 
 use crate::async_runtime::executor::EXECUTOR;
 use crate::error::{bail_on, map_errno};
+use alloc::string::{String, ToString};
 
 use alloc::boxed::Box;
 use snafu::Snafu;
@@ -135,6 +138,14 @@ impl TaskHandle {
     pub fn abort(self) {
         unsafe {
             pros_sys::task_delete(self.task);
+        }
+    }
+
+    pub fn name(&self) -> Result<String, Utf8Error> {
+        unsafe {
+            let name = pros_sys::task_get_name(self.task);
+            let name_str = CStr::from_ptr(name);
+            Ok(name_str.to_str()?.to_string())
         }
     }
 }
@@ -369,8 +380,33 @@ pub fn get_notification() -> u32 {
     unsafe { pros_sys::task_notify_take(false, pros_sys::TIMEOUT_MAX) }
 }
 
+pub struct SchedulerSuspendGuard {
+    _private: (),
+}
+
+impl Drop for SchedulerSuspendGuard {
+    fn drop(&mut self) {
+        unsafe {
+            pros_sys::rtos_resume_all();
+        }
+    }
+}
+
+/// Suspends the scheduler, preventing context switches.
+/// No other tasks will be run until the returned guard is dropped.
+///
+/// # Safety
+///
+/// API functions that have the potential to cause a context switch (e.g. [`delay`], [`get_notification`])
+/// must not be called while the scheduler is suspended.
+#[must_use = "The scheduler will only remain suspended for the lifetime of the returned guard"]
+pub unsafe fn suspend_all() -> SchedulerSuspendGuard {
+    pros_sys::rtos_suspend_all();
+    SchedulerSuspendGuard { _private: () }
+}
+
 #[doc(hidden)]
-pub fn __init_main() {
+pub fn __init_entrypoint() {
     unsafe {
         pros_sys::lcd_initialize();
     }
