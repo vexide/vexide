@@ -3,9 +3,9 @@
 //! There are two types of links: [`TxLink`] (transmitter) and [`RxLink`] (receiver).
 //! both implement a shared trait [`Link`] as well as a no std version of `Write` and `Read` from [`no_std_io`] respectively.
 
+use alloc::{ffi::CString, string::String};
 use core::ffi::CStr;
 
-use alloc::{ffi::CString, string::String};
 use no_std_io::io;
 use pros_sys::{link::E_LINK_RECEIVER, link_receive, link_transmit, E_LINK_TRANSMITTER};
 use snafu::Snafu;

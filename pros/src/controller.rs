@@ -4,6 +4,7 @@
 //! State of a controller can be checked by calling [`Controller::state`] which will return a struct with all of the buttons' and joysticks' state.
 
 use alloc::{ffi::CString, vec::Vec};
+
 use pros_sys::{controller_id_e_t, PROS_ERR};
 use snafu::Snafu;
 

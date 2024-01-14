@@ -2,8 +2,7 @@
 
 extern crate alloc;
 
-use alloc::ffi::CString;
-use alloc::string::String;
+use alloc::{ffi::CString, string::String};
 
 const V5_SCREEN_HEIGHT: usize = 8;
 

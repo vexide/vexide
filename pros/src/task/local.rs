@@ -13,9 +13,8 @@
 //! }
 //! ```
 
-use core::{cell::RefCell, ptr::NonNull, sync::atomic::AtomicU32};
-
 use alloc::{boxed::Box, collections::BTreeMap};
+use core::{cell::RefCell, ptr::NonNull, sync::atomic::AtomicU32};
 
 use spin::Once;
 

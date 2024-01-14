@@ -1,6 +1,5 @@
-use core::task::Waker;
-
 use alloc::collections::BTreeMap;
+use core::task::Waker;
 
 pub struct Sleepers {
     sleepers: BTreeMap<u32, Waker>,

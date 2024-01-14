@@ -17,18 +17,18 @@
 
 pub mod local;
 
-use core::ffi::CStr;
-use core::hash::Hash;
-use core::str::Utf8Error;
-use core::time::Duration;
-use core::{future::Future, task::Poll};
+use alloc::{
+    boxed::Box,
+    string::{String, ToString},
+};
+use core::{ffi::CStr, future::Future, hash::Hash, str::Utf8Error, task::Poll, time::Duration};
 
-use crate::async_runtime::executor::EXECUTOR;
-use crate::error::{bail_on, map_errno};
-use alloc::string::{String, ToString};
-
-use alloc::boxed::Box;
 use snafu::Snafu;
+
+use crate::{
+    async_runtime::executor::EXECUTOR,
+    error::{bail_on, map_errno},
+};
 
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
 /// Takes in a closure that can move variables if needed.

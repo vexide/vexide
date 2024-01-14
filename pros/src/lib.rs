@@ -372,26 +372,23 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
 /// Commonly used features of pros-rs.
 /// This module is meant to be glob imported.
 pub mod prelude {
-    pub use crate::{async_robot, sync_robot};
-    pub use crate::{AsyncRobot, SyncRobot};
-
-    // Import Box from alloc so that it can be used in async_trait!
-    pub use crate::{os_task_local, print, println};
     pub use alloc::boxed::Box;
 
-    pub use crate::async_runtime::*;
-    pub use crate::controller::*;
-    pub use crate::error::PortError;
-    pub use crate::lcd::{buttons::Button, LcdError};
-    pub use crate::link::*;
-    pub use crate::motor::*;
-    pub use crate::pid::*;
-    pub use crate::position::*;
-    pub use crate::sensors::distance::*;
-    pub use crate::sensors::gps::*;
-    pub use crate::sensors::imu::*;
-    pub use crate::sensors::optical::*;
-    pub use crate::sensors::rotation::*;
-    pub use crate::sensors::vision::*;
-    pub use crate::task::{sleep, spawn};
+    pub use crate::{
+        async_robot,
+        async_runtime::*,
+        controller::*,
+        error::PortError,
+        lcd::{buttons::Button, LcdError},
+        link::*,
+        motor::*,
+        pid::*,
+        position::*,
+        sensors::{distance::*, gps::*, imu::*, optical::*, rotation::*, vision::*},
+        sync_robot,
+        task::{sleep, spawn},
+        AsyncRobot, SyncRobot,
+    };
+    // Import Box from alloc so that it can be used in async_trait!
+    pub use crate::{os_task_local, print, println};
 }
