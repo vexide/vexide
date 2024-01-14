@@ -8,9 +8,16 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CompetitionStatus(pub u8);
 
+/// Represents a type of system used to control competition state.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompetitionSystem {
+    /// Competition state is not connected to a competition controller.
     None,
+
+    /// Competition state is controlled by a VEX Field Controller.
     FieldControl,
+
+    // Competition state is controlled by a VEX competition switch.
     CompetitionSwitch,
 }
 
