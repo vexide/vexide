@@ -8,7 +8,7 @@ use pros_sys::PROS_ERR;
 
 use crate::error::{bail_on, PortError};
 
-use super::{SmartPort, SmartDevice, SmartDeviceType};
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 
 /// A physical distance sensor plugged into a port.
 /// Distance sensors can only keep track of one object at a time.
@@ -45,8 +45,12 @@ impl DistanceSensor {
     /// Returns the confidence in the distance measurement from 0% to 100%.
     pub fn distance_confidence(&self) -> Result<f32, PortError> {
         // 0 -> 63
-        let confidence =
-            unsafe { bail_on!(PROS_ERR, pros_sys::distance_get_confidence(self.port.index())) } as f32;
+        let confidence = unsafe {
+            bail_on!(
+                PROS_ERR,
+                pros_sys::distance_get_confidence(self.port.index())
+            )
+        } as f32;
         Ok(confidence * 100.0 / 63.0)
     }
 }
@@ -55,7 +59,7 @@ impl SmartDevice for DistanceSensor {
     fn port_index(&self) -> u8 {
         self.port.index()
     }
-    
+
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::DistanceSensor
     }

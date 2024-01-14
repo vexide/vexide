@@ -58,9 +58,9 @@
 extern crate alloc;
 
 pub mod async_runtime;
+pub mod devices;
 pub mod error;
 pub mod pid;
-pub mod devices;
 pub mod sync;
 #[macro_use]
 pub mod task;
@@ -356,19 +356,19 @@ pub mod prelude {
     pub use alloc::boxed::Box;
 
     pub use crate::async_runtime::*;
-    pub use crate::error::PortError;
-    pub use crate::lcd::{buttons::Button, LcdError};
-    pub use crate::pid::*;
-    pub use crate::devices::position::*;
     pub use crate::devices::controller::*;
-    pub use crate::devices::smart::SmartDevice;
-    pub use crate::devices::smart::link::*;
-    pub use crate::devices::smart::motor::*;
+    pub use crate::devices::position::*;
     pub use crate::devices::smart::distance::*;
     pub use crate::devices::smart::gps::*;
     pub use crate::devices::smart::imu::*;
+    pub use crate::devices::smart::link::*;
+    pub use crate::devices::smart::motor::*;
     pub use crate::devices::smart::optical::*;
     pub use crate::devices::smart::rotation::*;
     pub use crate::devices::smart::vision::*;
+    pub use crate::devices::smart::SmartDevice;
+    pub use crate::error::PortError;
+    pub use crate::lcd::{buttons::Button, LcdError};
+    pub use crate::pid::*;
     pub use crate::task::{sleep, spawn};
 }

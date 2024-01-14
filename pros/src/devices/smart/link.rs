@@ -1,17 +1,17 @@
 //! Connect to VEXLink radios for robot-to-robot communication.
 //!
-//! There are two types of links: [`TxLink`] (transmitter) and [`RxLink`] (receiver).
-//! both implement a shared trait [`Link`] as well as a no std version of `Write` and `Read` from [`no_std_io`] respectively.
+//! There are two types of links: [`TxLink`] (transmitter radio module) and [`RxLink`] (receiver radio module).
+//! both implement a shared trait [`Link`] as well as a no_std version of `Write` and `Read` from [`no_std_io`] respectively.
 
 use core::ffi::CStr;
 
 use alloc::{ffi::CString, string::String};
 use no_std_io::io;
-use pros_sys::{link::E_LINK_RECEIVER, link_receive, link_transmit, E_LINK_TRANSMITTER};
+use pros_sys::{link_receive, link_transmit, E_LINK_RECEIVER, E_LINK_TRANSMITTER};
 use snafu::Snafu;
 
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::error::{bail_errno, bail_on, map_errno, FromErrno, PortError};
-use super::{SmartPort, SmartDevice, SmartDeviceType};
 
 /// Types that implement Link can be used to send data to another robot over VEXLink.
 pub trait Link: SmartDevice {
@@ -96,7 +96,7 @@ impl SmartDevice for RxLink {
     fn port_index(&self) -> u8 {
         self.port.index()
     }
-    
+
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::Radio
     }
@@ -170,7 +170,11 @@ impl Link for TxLink {
                 if vexlink_override {
                     pros_sys::link_init(port.index(), id.as_ptr().cast(), E_LINK_TRANSMITTER)
                 } else {
-                    pros_sys::link_init_override(port.index(), id.as_ptr().cast(), E_LINK_TRANSMITTER)
+                    pros_sys::link_init_override(
+                        port.index(),
+                        id.as_ptr().cast(),
+                        E_LINK_TRANSMITTER,
+                    )
                 }
             )
         };
@@ -182,7 +186,7 @@ impl SmartDevice for TxLink {
     fn port_index(&self) -> u8 {
         self.port.index()
     }
-    
+
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::Radio
     }

@@ -23,11 +23,11 @@ use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
 use crate::{
-    error::{bail_on, map_errno, PortError},
     devices::Position,
+    error::{bail_on, map_errno, PortError},
 };
 
-use super::{SmartPort, SmartDevice, SmartDeviceType};
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 
 /// The basic motor struct.
 #[derive(Debug, Eq, PartialEq)]
@@ -82,7 +82,10 @@ impl Motor {
     /// Takes in and i8 between -127 and 127 which is scaled to -12 to 12 Volts.
     pub fn set_raw_output(&mut self, raw_output: i8) -> Result<(), MotorError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::motor_move(self.port.index(), raw_output as i32));
+            bail_on!(
+                PROS_ERR,
+                pros_sys::motor_move(self.port.index(), raw_output as i32)
+            );
         }
         Ok(())
     }
@@ -136,18 +139,29 @@ impl Motor {
 
     /// Returns the power drawn by the motor in Watts.
     pub fn power(&self) -> Result<f64, MotorError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::motor_get_power(self.port.index()))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::motor_get_power(self.port.index())
+            ))
+        }
     }
 
     /// Returns the torque output of the motor in Nm.
     pub fn torque(&self) -> Result<f64, MotorError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::motor_get_torque(self.port.index()))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::motor_get_torque(self.port.index())
+            ))
+        }
     }
 
     /// Returns the voltage the motor is drawing in volts.
     pub fn voltage(&self) -> Result<f64, MotorError> {
         // docs say this function returns PROS_ERR_F but it actually returns PROS_ERR
-        let millivolts = unsafe { bail_on!(PROS_ERR, pros_sys::motor_get_voltage(self.port.index())) };
+        let millivolts =
+            unsafe { bail_on!(PROS_ERR, pros_sys::motor_get_voltage(self.port.index())) };
         Ok(millivolts as f64 / 1000.0)
     }
 
@@ -178,7 +192,9 @@ impl Motor {
 
     /// Stops the motor based on the current [`BrakeMode`]
     pub fn brake(&mut self) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe { pros_sys::motor_brake(self.port.index()) });
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_brake(self.port.index())
+        });
         Ok(())
     }
 
@@ -230,7 +246,7 @@ impl SmartDevice for Motor {
     fn port_index(&self) -> u8 {
         self.port.index()
     }
-    
+
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::Motor
     }

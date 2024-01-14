@@ -2,9 +2,9 @@
 //!
 //! This module provides abstractions over device access connected through VEX V5 Smart Ports. This
 //! includes motors, many common sensors, vexlink, and raw serial access.
-//! 
+//!
 //! # Overview
-//! 
+//!
 //! Most devices can be created with a `new` function that generally takes a port number along with other
 //! device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
 //! using the [`Peripherals`] API.
@@ -17,44 +17,45 @@
 pub mod distance;
 pub mod gps;
 pub mod imu;
+pub mod link;
+pub mod motor;
 pub mod optical;
 pub mod rotation;
 pub mod vision;
-pub mod motor;
-pub mod link;
 
 pub use distance::DistanceSensor;
 pub use gps::GpsSensor;
 pub use imu::InertialSensor;
+pub use motor::Motor;
 pub use optical::OpticalSensor;
 pub use rotation::RotationSensor;
 pub use vision::VisionSensor;
-pub use motor::Motor;
 
-use crate::prelude::PortError;
 use crate::error::bail_on;
+use crate::prelude::PortError;
 
 /// Common functionality for a smart port device.
 pub trait SmartDevice {
-	/// Get the index of the [`SmartPort`] this device is registered on.
+    /// Get the index of the [`SmartPort`] this device is registered on.
     ///
-	/// Ports are indexed starting from 1.
+    /// Ports are indexed starting from 1.
     fn port_index(&self) -> u8;
 
-	/// Get the variant of [`SmartDeviceType`] that this device is associated with.
-	fn device_type(&self) -> SmartDeviceType;
+    /// Get the variant of [`SmartDeviceType`] that this device is associated with.
+    fn device_type(&self) -> SmartDeviceType;
 
-	/// Determine if this device type is currently connected to the [`SmartPort`]
-	/// that it's registered to.
+    /// Determine if this device type is currently connected to the [`SmartPort`]
+    /// that it's registered to.
     fn device_connected(&self) -> bool {
-		let plugged_type_result: Result<SmartDeviceType, _> = unsafe { pros_sys::apix::registry_get_plugged_type(self.port_index() - 1).try_into() };
-		
-		if let Ok(plugged_type) = plugged_type_result {
-			plugged_type == self.device_type()
-		} else {
-			false
-		}
-	}
+        let plugged_type_result: Result<SmartDeviceType, _> =
+            unsafe { pros_sys::apix::registry_get_plugged_type(self.port_index() - 1).try_into() };
+
+        if let Ok(plugged_type) = plugged_type_result {
+            plugged_type == self.device_type()
+        } else {
+            false
+        }
+    }
 }
 
 /// Represents a smart port on a V5 Brain
@@ -85,15 +86,15 @@ impl SmartPort {
         self.index
     }
 
-	/// Get the type of device currently connected to this port.
-	pub fn connected_type(&self) -> Result<SmartDeviceType, PortError> {
-		unsafe { pros_sys::apix::registry_get_plugged_type(self.index() - 1).try_into() }
-	}
+    /// Get the type of device currently connected to this port.
+    pub fn connected_type(&self) -> Result<SmartDeviceType, PortError> {
+        unsafe { pros_sys::apix::registry_get_plugged_type(self.index() - 1).try_into() }
+    }
 
     /// Get the type of device currently registered to this port.
-	pub fn bound_type(&self) -> Result<SmartDeviceType, PortError> {
-		unsafe { pros_sys::apix::registry_get_bound_type(self.index() - 1).try_into() }
-	}
+    pub fn bound_type(&self) -> Result<SmartDeviceType, PortError> {
+        unsafe { pros_sys::apix::registry_get_bound_type(self.index() - 1).try_into() }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -113,13 +114,13 @@ pub enum SmartDeviceType {
 }
 
 impl TryFrom<pros_sys::apix::v5_device_e_t> for SmartDeviceType {
-	type Error = PortError;
+    type Error = PortError;
 
-	fn try_from(value: pros_sys::apix::v5_device_e_t) -> Result<Self, Self::Error> {
+    fn try_from(value: pros_sys::apix::v5_device_e_t) -> Result<Self, Self::Error> {
         // PROS returns either -1 (WTF?!?!) or 255 which both cast to E_DEVICE_UNDEFINED
         // when setting ERRNO, which can only be ENXIO.
         // https://github.com/purduesigbots/pros/issues/623
-		bail_on!(pros_sys::apix::E_DEVICE_UNDEFINED, value);
+        bail_on!(pros_sys::apix::E_DEVICE_UNDEFINED, value);
 
         Ok(match value {
             pros_sys::apix::E_DEVICE_NONE => Self::None,
@@ -134,5 +135,5 @@ impl TryFrom<pros_sys::apix::v5_device_e_t> for SmartDeviceType {
             pros_sys::apix::E_DEVICE_SERIAL => Self::Serial,
             _ => unreachable!(),
         })
-	}
+    }
 }

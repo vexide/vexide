@@ -39,7 +39,12 @@ impl OpticalSensor {
 
     /// Get the pwm value of the White LED. PWM value ranges from 0 to 100.
     pub fn led_pwm(&self) -> Result<i32, OpticalError> {
-        unsafe { Ok(bail_on!(PROS_ERR, pros_sys::optical_get_led_pwm(self.port.index()))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR,
+                pros_sys::optical_get_led_pwm(self.port.index())
+            ))
+        }
     }
 
     /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
@@ -48,7 +53,10 @@ impl OpticalSensor {
             return Err(OpticalError::InvalidLedPwm);
         }
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::optical_set_led_pwm(self.port.index(), value));
+            bail_on!(
+                PROS_ERR,
+                pros_sys::optical_set_led_pwm(self.port.index(), value)
+            );
         }
         Ok(())
     }
@@ -91,7 +99,12 @@ impl OpticalSensor {
     ///
     /// Hue has a range of `0` to `359.999`.
     pub fn hue(&self) -> Result<f64, OpticalError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::optical_get_hue(self.port.index()))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::optical_get_hue(self.port.index())
+            ))
+        }
     }
 
     /// Gets the detected color saturation.
@@ -197,7 +210,7 @@ impl SmartDevice for OpticalSensor {
     fn port_index(&self) -> u8 {
         self.port.index()
     }
-    
+
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::OpticalSensor
     }

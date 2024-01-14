@@ -2,7 +2,7 @@
 #![no_main]
 
 use core::time::Duration;
-use pros::{prelude::*, task::delay, devices::smart::SmartPort};
+use pros::{devices::smart::SmartPort, prelude::*, task::delay};
 
 #[derive(Debug, Default)]
 struct ExampleRobot;

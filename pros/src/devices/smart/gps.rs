@@ -6,8 +6,8 @@
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::error::{bail_on, map_errno, PortError};
-use super::{SmartPort, SmartDeviceType, SmartDevice};
 
 /// Represents the data output from a GPS sensor.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -92,7 +92,7 @@ impl SmartDevice for GpsSensor {
     fn port_index(&self) -> u8 {
         self.port.index()
     }
-    
+
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::GpsSensor
     }

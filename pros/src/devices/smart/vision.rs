@@ -24,7 +24,10 @@ impl VisionSensor {
     /// Creates a new vision sensor.
     pub fn new(port: SmartPort, zero: VisionZeroPoint) -> Result<Self, crate::error::PortError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::vision_set_zero_point(port.index(), zero as _));
+            bail_on!(
+                PROS_ERR,
+                pros_sys::vision_set_zero_point(port.index(), zero as _)
+            );
         }
 
         Ok(Self { port })
@@ -41,7 +44,12 @@ impl VisionSensor {
         let mut objects_buf = Vec::with_capacity(obj_count);
 
         unsafe {
-            pros_sys::vision_read_by_size(self.port.index(), 0, obj_count as _, objects_buf.as_mut_ptr());
+            pros_sys::vision_read_by_size(
+                self.port.index(),
+                0,
+                obj_count as _,
+                objects_buf.as_mut_ptr(),
+            );
         }
 
         bail_errno!();
@@ -55,11 +63,12 @@ impl VisionSensor {
     /// Returns the number of objects seen by the camera.
     pub fn num_objects(&self) -> Result<usize, PortError> {
         unsafe {
-            Ok(
-                bail_on!(PROS_ERR, pros_sys::vision_get_object_count(self.port.index()))
-                    .try_into()
-                    .unwrap(),
+            Ok(bail_on!(
+                PROS_ERR,
+                pros_sys::vision_get_object_count(self.port.index())
             )
+            .try_into()
+            .unwrap())
         }
     }
 
@@ -109,9 +118,10 @@ impl VisionSensor {
         unsafe {
             match mode {
                 LedMode::Off => pros_sys::vision_clear_led(self.port.index()),
-                LedMode::On(rgb) => {
-                    pros_sys::vision_set_led(self.port.index(), <Rgb as Into<u32>>::into(rgb) as i32)
-                }
+                LedMode::On(rgb) => pros_sys::vision_set_led(
+                    self.port.index(),
+                    <Rgb as Into<u32>>::into(rgb) as i32,
+                ),
             };
         }
     }
@@ -121,7 +131,7 @@ impl SmartDevice for VisionSensor {
     fn port_index(&self) -> u8 {
         self.port.index()
     }
-    
+
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::VisionSensor
     }
