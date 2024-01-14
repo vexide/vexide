@@ -46,7 +46,7 @@ pub trait SmartDevice {
 
     /// Determine if this device type is currently connected to the [`SmartPort`]
     /// that it's registered to.
-    fn device_connected(&self) -> bool {
+    fn port_connected(&self) -> bool {
         let plugged_type_result: Result<SmartDeviceType, _> =
             unsafe { pros_sys::apix::registry_get_plugged_type(self.port_index() - 1).try_into() };
 
