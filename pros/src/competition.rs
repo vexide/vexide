@@ -8,6 +8,13 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CompetitionStatus(pub u8);
 
+pub enum CompetitionSystem {
+    FieldController,
+    CompetitionSwitch,
+}
+
+const COMPETITION_SYSTEM: u8 = 1 << 3;
+
 impl CompetitionStatus {
     pub const fn autonomous(&self) -> bool {
         self.0 & pros_sys::misc::COMPETITION_AUTONOMOUS != 0
@@ -17,6 +24,13 @@ impl CompetitionStatus {
     }
     pub const fn connected(&self) -> bool {
         self.0 & pros_sys::misc::COMPETITION_CONNECTED != 0
+    }
+    pub fn system(&self) -> CompetitionSystem {
+        if self.0 & COMPETITION_SYSTEM == 0 {
+            CompetitionSystem::FieldController
+        } else {
+            CompetitionSystem::CompetitionSwitch
+        }
     }
 }
 
