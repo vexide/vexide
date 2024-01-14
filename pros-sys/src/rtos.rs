@@ -321,4 +321,29 @@ extern "C" {
         xTaskToQuery: task_t,
         xIndex: i32,
     ) -> *const core::ffi::c_void;
+
+    /// Suspends the scheduler.  Suspending the scheduler prevents a context switch from occurring but leaves interrupts enabled.  If an interrupt requests a context switch while the scheduler is suspended, then the request is held pending and is performed only when the scheduler is resumed (un-suspended).
+    ///
+    ///
+    /// Calls to xTaskResumeAll() transition the scheduler out of the Suspended state following a previous call to vTaskSuspendAll().
+    ///
+    ///
+    /// Calls to vTaskSuspendAll() can be nested.  The same number of calls must be made to xTaskResumeAll() as have previously been made to vTaskSuspendAll() before the scheduler will leave the Suspended state and re-enter the Active state.
+    ///
+    ///
+    /// xTaskResumeAll() must only be called from an executing task and therefore must not be called while the scheduler is in the Initialization state (prior to the scheduler being started).
+    ///
+    ///
+    /// Other FreeRTOS API functions must not be called while the scheduler is suspended.
+    ///
+    /// API functions that have the potential to cause a context switch (for example, vTaskDelayUntil(), xQueueSend(), etc.) must not be called while the
+    /// scheduler is suspended.
+    pub fn rtos_suspend_all();
+
+    /// Resumes the scheduler after it was suspended using a call to vTaskSuspendAll().
+    ///
+    ///
+    /// xTaskResumeAll() only resumes the scheduler.  It does not unsuspend tasks
+    /// that were previously suspended by a call to vTaskSuspend().
+    pub fn rtos_resume_all() -> i32;
 }
