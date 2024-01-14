@@ -17,7 +17,7 @@ impl AdiPort {
     ///
     /// # Safety
     ///
-    /// Creating new `ADIPort`s is inherently unsafe due to the possibility of constructing
+    /// Creating new `AdiPort`s is inherently unsafe due to the possibility of constructing
     /// more than one device on the same port index allowing multiple mutable references to
     /// the same hardware device. Prefer using [`Peripherals`] to register devices if possible.
     pub unsafe fn new(index: u8, expander_index: Option<u8>) -> Self {
