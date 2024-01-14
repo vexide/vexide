@@ -24,6 +24,7 @@ use core::{future::Future, task::Poll};
 use crate::async_runtime::executor::EXECUTOR;
 use crate::error::{bail_on, map_errno};
 
+use alloc::boxed::Box;
 use snafu::Snafu;
 
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
@@ -44,7 +45,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
     stack_depth: TaskStackDepth,
     name: Option<&str>,
 ) -> Result<TaskHandle, SpawnError> {
-    let mut entrypoint = TaskEntrypoint { function };
+    let entrypoint = Box::new(TaskEntrypoint { function });
     let name = alloc::ffi::CString::new(name.unwrap_or("<unnamed>"))
         .unwrap()
         .into_raw();
@@ -53,7 +54,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
             core::ptr::null(),
             pros_sys::task_create(
                 Some(TaskEntrypoint::<F>::cast_and_call_external),
-                &mut entrypoint as *mut _ as *mut core::ffi::c_void,
+                Box::into_raw(entrypoint).cast(),
                 priority as _,
                 stack_depth as _,
                 name,
@@ -258,7 +259,7 @@ where
     F: FnOnce(),
 {
     unsafe extern "C" fn cast_and_call_external(this: *mut core::ffi::c_void) {
-        let this = this.cast::<Self>().read();
+        let this = Box::from_raw(this.cast::<Self>());
 
         (this.function)()
     }
