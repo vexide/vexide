@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-## What your the motivation for this feature?
+## What's the motivation for this feature?
 <!--
 For example:
 - I'm frustrated when [...] happens
@@ -18,7 +18,7 @@ For example:
 ## Describe the solution you'd like
 <!-- A clear and specific description of what you want to happen. -->
 
-### Describe any drawbacks, if any
+## Describe the drawbacks, if any
 <!--
 A clear and specific description of any problems your solution could cause, if any.
 Consider:
@@ -27,7 +27,7 @@ Consider:
 - Will it make the library harder to use?
 -->
 
-## Describe alternative solutions, if any
+## Describe the alternative solutions, if any
 <!-- A clear and specific description of any alternative solutions or features that would solve the same problem. -->
 
 ## Additional context
