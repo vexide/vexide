@@ -1,12 +1,12 @@
-//! Generic position type for motors and sensors.
+//! Generic angular position type for motors and sensors.
 //!
 //! Positions have many conversion functions as well as common operator implementations for ease of use.
 
 use core::{cmp::Ordering, ops::*};
+use crate::math::Abs;
 
 //TODO: Add more unit types to this.
-/// Represents a position a motor can travel to.
-/// Positions are relative to the last position the motor was zeroed to.
+/// Represents an angular position.
 #[derive(Clone, Copy, Debug)]
 pub enum Position {
     Degrees(f64),
@@ -55,6 +55,15 @@ impl Position {
             Self::Degrees(num) => (num * 4096.0 / 360.0) as i64,
             Self::Rotations(num) => (num * 4096.0) as i64,
             Self::Counts(num) => num,
+        }
+    }
+
+    /// Gets the absolute value of the position.
+    pub fn abs(self) -> Self {
+        match self {
+            Self::Degrees(num) => Self::Degrees(num.abs()),
+            Self::Rotations(num) => Self::Rotations(num.abs()),
+            Self::Counts(num) => Self::Counts(num.abs()),
         }
     }
 }

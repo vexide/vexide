@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-## What your the motivation for this feature?
+## What is your the motivation for this feature?
 <!--
 For example:
 - I'm frustrated when [...] happens

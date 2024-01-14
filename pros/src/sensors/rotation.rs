@@ -2,6 +2,7 @@
 //!
 //! Rotation sensors operate on the same [`Position`] type as motors to measure rotation.
 
+use deprecate_until::deprecate_until;
 use pros_sys::PROS_ERR;
 
 use crate::{
@@ -30,7 +31,13 @@ impl RotationSensor {
     }
 
     /// Sets the position to zero.
+    #[deprecate_until(remove = "1.x", note = "Please use the `set_zero` method instead.")]
     pub fn zero(&mut self) -> Result<(), PortError> {
+        self.set_zero()
+    }
+
+    /// Sets the position to zero.
+    pub fn set_zero(&mut self) -> Result<(), PortError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::rotation_reset_position(self.port));
         }

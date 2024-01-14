@@ -82,6 +82,7 @@ pub mod link;
 pub mod lvgl;
 pub mod time;
 pub mod usd;
+pub mod math;
 
 pub use async_trait::async_trait;
 
@@ -235,7 +236,7 @@ macro_rules! __gen_async_exports {
 /// struct ExampleRobot;
 /// #[async_trait]
 /// impl AsyncRobot for ExampleRobot {
-///    asnyc fn opcontrol(&mut self) -> pros::Result {
+///    async fn opcontrol(&mut self) -> pros::Result {
 ///       println!("Hello, world!");
 ///      Ok(())
 ///   }
@@ -299,7 +300,7 @@ macro_rules! async_robot {
 /// #[derive(Default)]
 /// struct ExampleRobot;
 /// impl SyncRobot for ExampleRobot {
-///    asnyc fn opcontrol(&mut self) -> pros::Result {
+///    async fn opcontrol(&mut self) -> pros::Result {
 ///       println!("Hello, world!");
 ///      Ok(())
 ///   }
@@ -375,5 +376,6 @@ pub mod prelude {
     pub use crate::sensors::optical::*;
     pub use crate::sensors::rotation::*;
     pub use crate::sensors::vision::*;
-    pub use crate::task::{sleep, spawn};
+    pub use crate::task::{sleep, spawn, delay};
+    pub use crate::math::Abs;
 }
