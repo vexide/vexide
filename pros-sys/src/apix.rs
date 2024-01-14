@@ -1,5 +1,6 @@
-use crate::*;
 use core::ffi::*;
+
+use crate::*;
 
 pub type queue_t = *mut c_void;
 pub type sem_t = *mut c_void;

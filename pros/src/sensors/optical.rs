@@ -1,4 +1,5 @@
 use core::time::Duration;
+
 use pros_sys::{OPT_GESTURE_ERR, PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 

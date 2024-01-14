@@ -38,10 +38,9 @@ pub use motor::*;
 pub use optical::*;
 pub use rotation::*;
 pub use rtos::*;
-pub use vision::*;
-
 #[cfg(feaute = "apix")]
 pub use serial::*;
+pub use vision::*;
 #[cfg(feaute = "apix")]
 pub mod serial;
 
