@@ -84,13 +84,11 @@ pub mod lvgl;
 pub mod time;
 pub mod usd;
 
-pub use async_trait::async_trait;
-
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
-use alloc::{boxed::Box, ffi::CString, format};
+use alloc::{ffi::CString, format};
 
-#[async_trait::async_trait]
+#[allow(async_fn_in_trait)]
 pub trait AsyncRobot {
     async fn opcontrol(&mut self) -> Result {
         Ok(())
@@ -378,7 +376,7 @@ pub mod prelude {
     pub use crate::{AsyncRobot, SyncRobot};
 
     // Import Box from alloc so that it can be used in async_trait!
-    pub use crate::{async_trait, os_task_local, print, println};
+    pub use crate::{os_task_local, print, println};
     pub use alloc::boxed::Box;
 
     pub use crate::async_runtime::*;
