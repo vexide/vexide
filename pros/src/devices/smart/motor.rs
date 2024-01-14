@@ -24,7 +24,7 @@ use snafu::Snafu;
 
 use crate::{
     error::{bail_on, map_errno, PortError},
-    position::Position,
+    devices::Position,
 };
 
 /// The basic motor struct.

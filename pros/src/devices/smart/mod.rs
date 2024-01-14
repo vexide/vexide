@@ -21,3 +21,12 @@ pub mod imu;
 pub mod optical;
 pub mod rotation;
 pub mod vision;
+pub mod motor;
+
+pub use distance::DistanceSensor;
+pub use gps::GpsSensor;
+pub use imu::InertialSensor;
+pub use optical::OpticalSensor;
+pub use rotation::RotationSensor;
+pub use vision::VisionSensor;
+pub use motor::Motor;

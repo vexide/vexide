@@ -6,7 +6,7 @@ use pros_sys::PROS_ERR;
 
 use crate::{
     error::{bail_on, PortError},
-    position::Position,
+    devices::position::Position,
 };
 
 /// A physical rotation sensor plugged into a port.

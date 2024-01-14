@@ -58,12 +58,9 @@
 extern crate alloc;
 
 pub mod async_runtime;
-pub mod controller;
 pub mod error;
-pub mod motor;
 pub mod pid;
-pub mod position;
-pub mod sensors;
+pub mod devices;
 pub mod sync;
 #[macro_use]
 pub mod task;
@@ -75,8 +72,6 @@ mod vexos_env;
 mod wasm_env;
 #[macro_use]
 pub mod lcd;
-pub mod adi;
-pub mod battery;
 pub mod competition;
 pub mod link;
 pub mod lvgl;
@@ -362,18 +357,18 @@ pub mod prelude {
     pub use alloc::boxed::Box;
 
     pub use crate::async_runtime::*;
-    pub use crate::controller::*;
     pub use crate::error::PortError;
     pub use crate::lcd::{buttons::Button, LcdError};
     pub use crate::link::*;
-    pub use crate::motor::*;
     pub use crate::pid::*;
-    pub use crate::position::*;
-    pub use crate::sensors::distance::*;
-    pub use crate::sensors::gps::*;
-    pub use crate::sensors::imu::*;
-    pub use crate::sensors::optical::*;
-    pub use crate::sensors::rotation::*;
-    pub use crate::sensors::vision::*;
+    pub use crate::devices::position::*;
+    pub use crate::devices::controller::*;
+    pub use crate::devices::smart::motor::*;
+    pub use crate::devices::smart::distance::*;
+    pub use crate::devices::smart::gps::*;
+    pub use crate::devices::smart::imu::*;
+    pub use crate::devices::smart::optical::*;
+    pub use crate::devices::smart::rotation::*;
+    pub use crate::devices::smart::vision::*;
     pub use crate::task::{sleep, spawn};
 }
