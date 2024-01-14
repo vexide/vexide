@@ -2,6 +2,7 @@
 #![no_main]
 
 use core::time::Duration;
+use pros::devices::smart::SmartPort;
 use pros::prelude::*;
 
 #[derive(Default)]
@@ -11,7 +12,7 @@ impl SyncRobot for Robot {
     fn opcontrol(&mut self) -> pros::Result {
         let mut imu = InertialSensor::new(unsafe { SmartPort::new(1) })?;
 
-        imu.calibrate()?;
+        imu.calibrate_blocking()?;
 
         loop {
             let euler = imu.euler()?;

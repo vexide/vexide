@@ -2,6 +2,7 @@
 #![no_main]
 
 use core::time::Duration;
+use pros::devices::smart::SmartPort;
 use pros::prelude::*;
 
 #[derive(Default)]
