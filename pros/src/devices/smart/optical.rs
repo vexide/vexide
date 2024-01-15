@@ -3,9 +3,8 @@ use core::time::Duration;
 use pros_sys::{OPT_GESTURE_ERR, PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
-use crate::error::{bail_on, map_errno, PortError};
-
 use super::{SmartDevice, SmartDeviceType, SmartPort};
+use crate::error::{bail_on, map_errno, PortError};
 
 pub const MIN_INTEGRATION_TIME: Duration = Duration::from_millis(3);
 pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);

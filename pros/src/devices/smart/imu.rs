@@ -1,13 +1,13 @@
-use super::{SmartDevice, SmartDeviceType, SmartPort};
 use core::{
     pin::Pin,
     task::{Context, Poll},
     time::Duration,
 };
-use pros_sys::{PROS_ERR, PROS_ERR_F};
 
+use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::error::{bail_on, map_errno, take_errno, FromErrno, PortError};
 
 pub const IMU_RESET_TIMEOUT: Duration = Duration::from_secs(3);

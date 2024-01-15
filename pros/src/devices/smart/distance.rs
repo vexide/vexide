@@ -6,9 +6,8 @@ use core::ffi::c_double;
 
 use pros_sys::PROS_ERR;
 
-use crate::error::{bail_on, PortError};
-
 use super::{SmartDevice, SmartDeviceType, SmartPort};
+use crate::error::{bail_on, PortError};
 
 /// A physical distance sensor plugged into a port.
 /// Distance sensors can only keep track of one object at a time.

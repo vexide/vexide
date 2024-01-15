@@ -31,8 +31,7 @@ pub use optical::OpticalSensor;
 pub use rotation::RotationSensor;
 pub use vision::VisionSensor;
 
-use crate::error::bail_on;
-use crate::prelude::PortError;
+use crate::{error::bail_on, prelude::PortError};
 
 /// Common functionality for a smart port device.
 pub trait SmartDevice {

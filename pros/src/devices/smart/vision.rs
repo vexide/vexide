@@ -8,12 +8,11 @@ use alloc::vec::Vec;
 use pros_sys::{PROS_ERR, VISION_OBJECT_ERR_SIG};
 use snafu::Snafu;
 
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
     error::{bail_errno, bail_on, map_errno, PortError},
     lvgl::colors::LcdColor,
 };
-
-use super::{SmartDevice, SmartDeviceType, SmartPort};
 
 /// Represents a vision sensor plugged into the vex.
 #[derive(Debug, Eq, PartialEq)]

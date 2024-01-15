@@ -22,12 +22,11 @@
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
     devices::Position,
     error::{bail_on, map_errno, PortError},
 };
-
-use super::{SmartDevice, SmartDeviceType, SmartPort};
 
 /// The basic motor struct.
 #[derive(Debug, Eq, PartialEq)]

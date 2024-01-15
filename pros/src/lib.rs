@@ -373,24 +373,16 @@ pub mod prelude {
     pub use crate::{
         async_robot,
         async_runtime::*,
-        error::PortError,
-        lcd::{buttons::Button, LcdError},
-        pid::*,
         devices::smart::{
-            distance::*,
-            gps::*,
-            imu::*,
-            link::*,
-            motor::*,
-            optical::*,
-            rotation::*,
-            vision::*,
+            distance::*, gps::*, imu::*, link::*, motor::*, optical::*, rotation::*, vision::*,
             SmartDevice,
         },
-        sync_robot,
+        error::PortError,
+        lcd::{buttons::Button, LcdError},
+        os_task_local,
+        pid::*,
+        print, println, sync_robot,
         task::{sleep, spawn},
         AsyncRobot, SyncRobot,
     };
-
-    pub use crate::{os_task_local, print, println};
 }

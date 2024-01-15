@@ -4,12 +4,11 @@
 
 use pros_sys::PROS_ERR;
 
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
     devices::position::Position,
     error::{bail_on, PortError},
 };
-
-use super::{SmartDevice, SmartDeviceType, SmartPort};
 
 /// A physical rotation sensor plugged into a port.
 #[derive(Debug, Eq, PartialEq)]
