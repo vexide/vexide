@@ -18,16 +18,21 @@ Before releasing:
 
 ### Added
 
-- `CompetitionStatus::system` method for determining the type of competition control the robot is currently tethered into. (#38)
+- `CompetitionSystem` and `CompetitionMode` structs for better retrieving information about the robot's competition state. (#38)
+- `competition::system` method for retrieving the type of competition control the robot is connected to. (#38)
 
 ### Fixed
+
+- Fixed competition state-related getters in the `pros::competition` module. (#38)
 
 ### Changed
 
 - Add contributing information, pull request templates, and changelog.
+- Overhauled the `competition` module with more straightforward getters for competition state. (#38) (**Breaking Change**)
 
 ### Removed
 
+- Removed several broken bindings in `pros_sys` relating to competition state. (#38) (**Breaking Change**)
 
 ## [0.5.0] - 2024-01-08
 
