@@ -21,10 +21,8 @@ pub struct InertialSensor {
 
 impl InertialSensor {
     /// Create a new inertial sensor from a smart port index.
-    pub fn new(port: SmartPort) -> Result<Self, InertialError> {
-        let sensor = Self { port };
-        sensor.status()?;
-        Ok(sensor)
+    pub fn new(port: SmartPort) -> Self {
+        Self { port }
     }
 
     /// Calibrate IMU.

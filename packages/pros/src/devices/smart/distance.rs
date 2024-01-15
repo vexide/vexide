@@ -18,10 +18,8 @@ pub struct DistanceSensor {
 
 impl DistanceSensor {
     /// Create a new distance sensor from a smart port index.
-    pub fn new(port: SmartPort) -> Result<Self, PortError> {
-        let sensor = Self { port };
-        sensor.distance()?;
-        Ok(sensor)
+    pub fn new(port: SmartPort) -> Self {
+        Self { port }
     }
 
     /// Returns the distance to the object the sensor detects in millimeters.

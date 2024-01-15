@@ -22,7 +22,7 @@ pub struct VisionSensor {
 
 impl VisionSensor {
     /// Creates a new vision sensor.
-    pub fn new(port: SmartPort, zero: VisionZeroPoint) -> Result<Self, crate::error::PortError> {
+    pub fn new(port: SmartPort, zero: VisionZeroPoint) -> Result<Self, VisionError> {
         unsafe {
             bail_on!(
                 PROS_ERR,
