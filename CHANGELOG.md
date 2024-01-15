@@ -23,7 +23,7 @@ Before releasing:
 
 ### Added
 
-- New `From` implementation to convert `Quaternion` and `Euler` to their pros-sys equivalents.
+- New `From` implementation to convert `Quaternion` and `Euler` to their pros-sys equivalents. (#45)
 
 ### Fixed
 
