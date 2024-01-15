@@ -23,11 +23,11 @@ Before releasing:
 
 ### Added
 
+- New `From` implementation to convert `Quaternion` and `Euler` to their pros-sys equivalents.
+
 ### Fixed
 
 ### Changed
-
-- Add contributing information, pull request templates, and changelog.
 
 ### Removed
 
@@ -40,15 +40,15 @@ Before releasing:
 
 - GPS sensor `set_offset` function now returns a result. The relevant PROS C bindings have been fixed as well. (**Breaking change**)
 - FreeRTOS task creation now does not garble data that the provided closure captured.
-- Grammar in the feature request template has been fixed. 
+- Grammar in the feature request template has been fixed.
 - Wasm build flags have been updated and fixed.
 
 ### Changed
 
-- Panicking behavior has been improved so that spawned tasks will not panic the entire program. 
+- Panicking behavior has been improved so that spawned tasks will not panic the entire program.
 - Panic messages are now improved and printed over the serial connection.
 - `AsyncRobot` should now be implemented using the newly stabilized async trait syntax instead of the old `async_trait` attribute macro. (**Breaking change**)
-  
+
 ### Removed
 
 - A nonexistent runner for armv7a-vexos-eabi target has been removed from the cargo config.
