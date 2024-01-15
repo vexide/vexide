@@ -21,7 +21,6 @@
 //! }
 //! ```
 
-use deprecate_until::deprecate_until;
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
@@ -170,15 +169,9 @@ impl Motor {
         }))
     }
 
-    /// DEPRECATED: Sets the current position to zero.
-    #[deprecate_until(remove = ">= 1.x", note = "use `set_zero` instead")]
-    pub fn zero(&self) -> Result<(), MotorError> {
-        self.set_zero()
-    }
-
     /// Sets the current encoder position to zero without moving the motor.
     /// Analogous to taring or resetting the encoder to the current position.
-    pub fn set_zero(&self) -> Result<(), MotorError> {
+    pub fn zero(&self) -> Result<(), MotorError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::motor_tare_position(self.port));
         }
@@ -191,15 +184,9 @@ impl Motor {
         Ok(())
     }
 
-    /// DEPRECATED: Sets the current position to the given position.
-    #[deprecate_until(remove = ">= 1.x", note = "use `set_zero_from_position` instead")]
-    pub fn set_zero_position(&self, position: Position) -> Result<(), MotorError> {
-        self.set_zero_from_position(position)
-    }
-
     /// Sets the current encoder position to the given position without moving the motor.
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
-    pub fn set_zero_from_position(&self, position: Position) -> Result<(), MotorError> {
+    pub fn set_zero_position(&self, position: Position) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_zero_position(self.port, position.into_degrees())
         });
@@ -214,15 +201,9 @@ impl Motor {
         Ok(())
     }
 
-    /// DEPRECATED: Get the current state of the motor.
-    #[deprecate_until(remove = ">= 1.x", note = "use `state` instead")]
-    pub fn get_state(&self) -> Result<MotorState, MotorError> {
-        self.state()
-    }
-
     //TODO: Test this, as im not entirely sure of the actual implementation
     /// Get the current state of the motor.
-    pub fn state(&self) -> Result<MotorState, MotorError> {
+    pub fn get_state(&self) -> Result<MotorState, MotorError> {
         let bit_flags = bail_on!(PROS_ERR as _, unsafe {
             pros_sys::motor_get_flags(self.port)
         });
@@ -335,7 +316,7 @@ impl core::future::Future for MotorStoppedFuture {
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        match self.motor.state()?.stopped {
+        match self.motor.get_state()?.stopped {
             true => core::task::Poll::Ready(Ok(())),
             false => {
                 cx.waker().wake_by_ref();

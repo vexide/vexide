@@ -83,7 +83,6 @@ pub mod link;
 pub mod lvgl;
 pub mod time;
 pub mod usd;
-pub mod math;
 
 pub use async_trait::async_trait;
 
@@ -396,6 +395,5 @@ pub mod prelude {
     pub use crate::sensors::optical::*;
     pub use crate::sensors::rotation::*;
     pub use crate::sensors::vision::*;
-    pub use crate::task::{sleep, spawn, delay};
-    pub use crate::math::Abs;
+    pub use crate::task::{delay, sleep, spawn};
 }

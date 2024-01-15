@@ -3,7 +3,6 @@
 //! Positions have many conversion functions as well as common operator implementations for ease of use.
 
 use core::{cmp::Ordering, ops::*};
-use crate::math::Abs;
 
 //TODO: Add more unit types to this.
 /// Represents an angular position.
@@ -55,15 +54,6 @@ impl Position {
             Self::Degrees(num) => (num * 4096.0 / 360.0) as i64,
             Self::Rotations(num) => (num * 4096.0) as i64,
             Self::Counts(num) => num,
-        }
-    }
-
-    /// Gets the absolute value of the position.
-    pub fn abs(self) -> Self {
-        match self {
-            Self::Degrees(num) => Self::Degrees(num.abs()),
-            Self::Rotations(num) => Self::Rotations(num.abs()),
-            Self::Counts(num) => Self::Counts(num.abs()),
         }
     }
 }
