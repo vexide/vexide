@@ -12,6 +12,11 @@ Before releasing:
 - change Unreleased to the version number
 - create new Unreleased section
 - update links at the end of the document
+- add "New Contributors" section if there were any first-time contributors
+
+### New Contributors
+
+- @new-contributor made their first contribution in #11!
 -->
 
 ## [Unreleased]

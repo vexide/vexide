@@ -19,6 +19,7 @@ helpful and welcome.
       - [Project structure](#project-structure)
       - [Code styleguide](#code-styleguide)
       - [Committing \& commit messages](#committing--commit-messages)
+      - [Changelog](#changelog)
       - [Pull requests](#pull-requests)
   - [Acknowledgements](#acknowledgements)
 
@@ -165,11 +166,37 @@ Here is a list of common commit types:
 TODO
 -->
 
+#### Changelog
+
+After making changes to your code, update the Unreleased section of the changelog with what you changed. Breaking changes should be [painfully clear][ignoring-deprecations], so list all deprecations, removals, and generic breaking changes. Include your pull request's number. See the example below for the recommended format.
+
+```diff
+  ## [Unreleased]
+
+  ### Added
+
+  ### Fixed
+
+  ### Changed
+
++ * All functions in the `foo` module now
++   must be passed a Bar struct. (**Breaking change**) (#30)
+
+  ### Removed
+
++ * Removed the deprecated `bar` module. Use the
++   `foo` module instead. (**Breaking change**) (#28)
+
+  ### Deprecated
+
++ * The `Baz` struct is now deprecated. (#28)
+```
+
 #### Pull requests
 
 When you're ready for your changes to be merged, head over to the [Pull
 Requests][pr-page] page and create a new pull request. Include a description of
-what changed, and [link to an Issue][link-to-issue-guide] if applicable.
+what changed, and [link to an Issue][link-to-issue-guide] if applicable. Pull request names should follow the
 
 If you're not quite done with the changes but are ready to start sharing them, you can
 [mark it as a draft][about-draft-prs] to prevent it from being merged.
@@ -189,6 +216,7 @@ out.][atom-contributing]
 [first-issue-search]:
     https://github.com/pros-rs/pros-rs/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 [conventional-commits-website]: https://conventionalcommits.org
+[ignoring-deprecations]: https://keepachangelog.com/en/1.1.0/#ignoring-deprecations
 [link-to-issue-guide]:
     https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue
 [about-draft-prs]:
