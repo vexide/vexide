@@ -10,8 +10,8 @@ const COMPETITION_SYSTEM: u8 = 1 << 3;
 pub enum CompetitionMode {
     /// The Disabled competition mode.
     /// 
-    /// When in disabled mode, motor voltage commands to motors, as well as ADI output
-    /// commands are disabled. Motors are forcibly locked to the "coast" brake mode.
+    /// When in disabled mode, motor voltage commands to motors are disabled. Motors are
+    /// forcibly locked to the "coast" brake mode.
     /// 
     /// Robots may be placed into disabled mode at any point in the competition after
     /// connecting, but are typically disabled before the autonomous period, between
