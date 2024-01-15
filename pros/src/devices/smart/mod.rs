@@ -96,6 +96,7 @@ impl SmartPort {
     }
 }
 
+/// Represents a possible type of device that can be registered on a [`SmartPort`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum SmartDeviceType {
