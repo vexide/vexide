@@ -38,7 +38,7 @@ Before releasing:
 
 ### Fixed
 
-- GPS sensor `set_offset` function now returns a result. The relevant PROS C bindings have been fixed as well.
+- GPS sensor `set_offset` function now returns a result. The relevant PROS C bindings have been fixed as well. (**Breaking change**)
 - FreeRTOS task creation now does not garble data that the provided closure captured.
 - Grammar in the feature request template has been fixed. 
 - Wasm build flags have been updated and fixed.
@@ -47,7 +47,7 @@ Before releasing:
 
 - Panicking behavior has been improved so that spawned tasks will not panic the entire program. 
 - Panic messages are now improved and printed over the serial connection.
-- `AsyncRobot` should now be implemented using the newly stabilized async trait syntax instead of the old `async_trait` attribute macro.
+- `AsyncRobot` should now be implemented using the newly stabilized async trait syntax instead of the old `async_trait` attribute macro. (**Breaking change**)
   
 ### Removed
 
