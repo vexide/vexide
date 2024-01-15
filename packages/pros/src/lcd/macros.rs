@@ -7,23 +7,26 @@ use core::fmt::{self, Write};
 use super::WRITER;
 
 #[doc(hidden)]
-pub fn _print(args: fmt::Arguments) {
+pub fn _llemu_print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 
 #[macro_export]
-macro_rules! print {
+macro_rules! llemu_print {
     ($($arg:tt)*) => {
-        $crate::lcd::macros::_print(core::format_args!($($arg)*));
+        $crate::lcd::macros::_llemu_print(core::format_args!($($arg)*));
     };
 }
 
 #[macro_export]
-macro_rules! println {
+macro_rules! llemu_println {
     () => {
-        $crate::print!("\n");
+        $crate::llemu_print!("\n");
     };
     ($($arg:tt)*) => {
-        $crate::print!("{}\n", core::format_args!($($arg)*));
+        $crate::llemu_print!("{}\n", core::format_args!($($arg)*));
     };
 }
+
+pub use llemu_print;
+pub use llemu_println;

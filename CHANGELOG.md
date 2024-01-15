@@ -27,16 +27,25 @@ Before releasing:
 - `SmartDevice` trait for common functionality across smart port devices. (#34)
 - Methods to get a device's port number as well as determine if the device is plugged in or not. (#34)
 - Added various missing derives for hardware-related data structures. (#34)
+- `CompetitionSystem` and `CompetitionMode` structs for better retrieving information about the robot's competition state. (#38)
+- `competition::system` method for retrieving the type of competition control the robot is connected to. (#38)
 - New `From` implementation to convert `Quaternion` and `Euler` to their pros-sys equivalents. (#45)
+- `pros::io` module for I/O related operations. (#30)
+- Various types from the `no_std_io` have are re-exported from this module to provide missing functionality from `std`. (#30)
+- Macros for printing to stdout (`println`, `print`, `eprintln`, etc...) (#30)
 
 ### Fixed
 
-- Inertial sensor (`imu.rs`) example now compiles (#34).
+- Fixed competition state-related getters in the `pros::competition` module. (#38)
 
 ### Changed
 
+- Overhauled the `competition` module with more straightforward getters for competition state. (#38) (**Breaking Change**)
+- LLEMU-related macros have been prefixed with `llemu_` (e.g. `llemu_println`). (**Breaking Change**) (#30)
+
 ### Removed
 
+- Removed several broken bindings in `pros_sys` relating to competition state. (#38) (**Breaking Change**)
 
 ## [0.6.0] - 2024-01-14
 
