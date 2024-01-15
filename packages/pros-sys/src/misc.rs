@@ -9,12 +9,6 @@ extern "C" {
     /// Get the current status of the competition control.
     /// Returns The competition control status as a mask of bits with COMPETITION_{ENABLED,AUTONOMOUS,CONNECTED}.
     pub fn competition_get_status() -> u8;
-    /// Returns true if the robot is in autonomous mode, false otherwise.
-    pub fn competition_is_autonomous() -> bool;
-    /// Returns true if the V5 Brain is connected to competition control, false otherwise.
-    pub fn competition_is_connected() -> bool;
-    /// Returns true if the V5 Brain is disabled, false otherwise.
-    pub fn competition_is_disabled() -> bool;
 }
 // controller
 pub const E_CONTROLLER_MASTER: c_uint = 0;

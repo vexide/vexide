@@ -23,6 +23,8 @@ Before releasing:
 
 ### Added
 
+- `CompetitionSystem` and `CompetitionMode` structs for better retrieving information about the robot's competition state. (#38)
+- `competition::system` method for retrieving the type of competition control the robot is connected to. (#38)
 - New `From` implementation to convert `Quaternion` and `Euler` to their pros-sys equivalents. (#45)
 - `pros::io` module for I/O related operations. (#30)
 - Various types from the `no_std_io` have are re-exported from this module to provide missing functionality from `std`. (#30)
@@ -30,12 +32,16 @@ Before releasing:
 
 ### Fixed
 
+- Fixed competition state-related getters in the `pros::competition` module. (#38)
+
 ### Changed
 
+- Overhauled the `competition` module with more straightforward getters for competition state. (#38) (**Breaking Change**)
 - LLEMU-related macros have been prefixed with `llemu_` (e.g. `llemu_println`). (**Breaking Change**) (#30)
 
 ### Removed
 
+- Removed several broken bindings in `pros_sys` relating to competition state. (#38) (**Breaking Change**)
 
 ## [0.6.0] - 2024-01-14
 
