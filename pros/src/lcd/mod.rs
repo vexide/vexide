@@ -5,8 +5,7 @@
 
 use snafu::Snafu;
 
-use crate::lvgl::colors::LcdColor;
-use crate::sync::Mutex;
+use crate::{lvgl::colors::LcdColor, sync::Mutex};
 
 pub mod buttons;
 pub mod macros;

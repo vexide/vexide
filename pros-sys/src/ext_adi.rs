@@ -1,7 +1,8 @@
 //! Contains prototypes for interfacing with the 3-Wire Expander.
 
-use crate::adi::*;
 use core::ffi::*;
+
+use crate::adi::*;
 
 /**
 Reference type for an initialized encoder.

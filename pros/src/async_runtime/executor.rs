@@ -1,3 +1,4 @@
+use alloc::{collections::VecDeque, sync::Arc};
 use core::{
     cell::RefCell,
     future::Future,
@@ -7,13 +8,11 @@ use core::{
     time::Duration,
 };
 
-use alloc::{collections::VecDeque, sync::Arc};
 use async_task::{Runnable, Task};
 use waker_fn::waker_fn;
 
-use crate::{os_task_local, task::delay};
-
 use super::reactor::Reactor;
+use crate::{os_task_local, task::delay};
 
 os_task_local! {
     pub(crate) static EXECUTOR: Executor = Executor::new();

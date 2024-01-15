@@ -41,10 +41,11 @@ impl GpsSensor {
     }
 
     /// Sets the offset of the GPS sensor, relative to the sensor of turning, in meters.
-    pub fn set_offset(&self, x: f64, y: f64) {
+    pub fn set_offset(&mut self, x: f64, y: f64) -> Result<(), GpsError> {
         unsafe {
-            pros_sys::gps_set_offset(self.port, x, y);
+            bail_on!(PROS_ERR, pros_sys::gps_set_offset(self.port, x, y));
         }
+        Ok(())
     }
 
     /// Gets the possible error of the GPS sensor, in meters.

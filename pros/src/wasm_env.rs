@@ -2,13 +2,9 @@
 
 extern crate alloc;
 
-use core::panic::PanicInfo;
-
 use alloc::{
     alloc::{alloc, dealloc, handle_alloc_error, Layout},
     collections::BTreeMap,
-    ffi::CString,
-    format,
 };
 
 use dlmalloc::GlobalDlmalloc;
@@ -16,18 +12,9 @@ use dlmalloc::GlobalDlmalloc;
 // no multithreading in wasm
 static mut LAYOUTS: BTreeMap<*mut u8, Layout> = BTreeMap::new();
 
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    extern "C" {
-        fn sim_abort(msg: *const core::ffi::c_char) -> !;
-    }
-
-    let msg_str = format!("{info}");
-    let msg_c_str = CString::new(msg_str).unwrap();
-
-    unsafe {
-        sim_abort(msg_c_str.as_ptr());
-    }
+extern "C" {
+    /// Prints a backtrace to the debug console
+    pub fn sim_log_backtrace();
 }
 
 #[no_mangle]

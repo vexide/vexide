@@ -17,14 +17,18 @@
 
 pub mod local;
 
-use core::hash::Hash;
-use core::time::Duration;
-use core::{future::Future, task::Poll};
-
-use crate::async_runtime::executor::EXECUTOR;
-use crate::error::{bail_on, map_errno};
+use alloc::{
+    boxed::Box,
+    string::{String, ToString},
+};
+use core::{ffi::CStr, future::Future, hash::Hash, str::Utf8Error, task::Poll, time::Duration};
 
 use snafu::Snafu;
+
+use crate::{
+    async_runtime::executor::EXECUTOR,
+    error::{bail_on, map_errno},
+};
 
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
 /// Takes in a closure that can move variables if needed.
@@ -44,7 +48,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
     stack_depth: TaskStackDepth,
     name: Option<&str>,
 ) -> Result<TaskHandle, SpawnError> {
-    let mut entrypoint = TaskEntrypoint { function };
+    let entrypoint = Box::new(TaskEntrypoint { function });
     let name = alloc::ffi::CString::new(name.unwrap_or("<unnamed>"))
         .unwrap()
         .into_raw();
@@ -53,7 +57,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
             core::ptr::null(),
             pros_sys::task_create(
                 Some(TaskEntrypoint::<F>::cast_and_call_external),
-                &mut entrypoint as *mut _ as *mut core::ffi::c_void,
+                Box::into_raw(entrypoint).cast(),
                 priority as _,
                 stack_depth as _,
                 name,
@@ -132,6 +136,14 @@ impl TaskHandle {
     pub fn abort(self) {
         unsafe {
             pros_sys::task_delete(self.task);
+        }
+    }
+
+    pub fn name(&self) -> Result<String, Utf8Error> {
+        unsafe {
+            let name = pros_sys::task_get_name(self.task);
+            let name_str = CStr::from_ptr(name);
+            Ok(name_str.to_str()?.to_string())
         }
     }
 }
@@ -258,7 +270,7 @@ where
     F: FnOnce(),
 {
     unsafe extern "C" fn cast_and_call_external(this: *mut core::ffi::c_void) {
-        let this = this.cast::<Self>().read();
+        let this = Box::from_raw(this.cast::<Self>());
 
         (this.function)()
     }
@@ -366,8 +378,33 @@ pub fn get_notification() -> u32 {
     unsafe { pros_sys::task_notify_take(false, pros_sys::TIMEOUT_MAX) }
 }
 
+pub struct SchedulerSuspendGuard {
+    _private: (),
+}
+
+impl Drop for SchedulerSuspendGuard {
+    fn drop(&mut self) {
+        unsafe {
+            pros_sys::rtos_resume_all();
+        }
+    }
+}
+
+/// Suspends the scheduler, preventing context switches.
+/// No other tasks will be run until the returned guard is dropped.
+///
+/// # Safety
+///
+/// API functions that have the potential to cause a context switch (e.g. [`delay`], [`get_notification`])
+/// must not be called while the scheduler is suspended.
+#[must_use = "The scheduler will only remain suspended for the lifetime of the returned guard"]
+pub unsafe fn suspend_all() -> SchedulerSuspendGuard {
+    pros_sys::rtos_suspend_all();
+    SchedulerSuspendGuard { _private: () }
+}
+
 #[doc(hidden)]
-pub fn __init_main() {
+pub fn __init_entrypoint() {
     unsafe {
         pros_sys::lcd_initialize();
     }

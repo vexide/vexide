@@ -77,7 +77,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn gps_set_offset(port: u8, xOffset: f64, yOffset: f64);
+    pub fn gps_set_offset(port: u8, xOffset: f64, yOffset: f64) -> i32;
     /**
     Get the GPS's location relative to the center of turning/origin in meters.
 

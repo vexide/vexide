@@ -1,5 +1,6 @@
-use crate::error::PROS_ERR;
 use core::ffi::*;
+
+use crate::error::PROS_ERR;
 
 pub const INTERNAL_ADI_PORT: c_int = 22;
 pub const NUM_ADI_PORTS: c_int = 8;
