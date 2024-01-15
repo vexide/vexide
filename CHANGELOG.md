@@ -18,13 +18,26 @@ Before releasing:
 
 ### Added
 
+- `SmartPort` struct for device access. (#34)
+- `SmartDevice` trait for common functionality across smart port devices. (#34)
+- Methods to get a device's port number as well as determine if the device is plugged in or not. (#34)
+- Added various missing derives for hardware-related data structures. (#34)
+
 ### Fixed
+
+- Inertial sensor (`imu.rs`) example now compiles (#34).
 
 ### Changed
 
-- Add contributing information, pull request templates, and changelog.
+- Add contributing information, pull request templates, and changelog. (#34)
+- `AdiPort` is now structured with ADI expander modules in mind. (**Breaking change**) (#34)
+- Reorganized ADI, Smart Port, and builtin devices into a common `devices` module. (**Breaking change**) (#34)
+- Devices now take `SmartPort`/`AdiPort` rather than a raw port index. (**Breaking change**) (#34)
+- All devices now take `&mut self` for methods modifying hardware state. (**Breaking change**) (#34)
 
 ### Removed
+
+- `Copy`/`Clone` derives for some existing device types. (**Breaking change**) (#34)
 
 
 ## [0.5.0] - 2024-01-08
