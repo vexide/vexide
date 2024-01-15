@@ -49,6 +49,12 @@ pub fn get_status() -> CompetitionStatus {
     CompetitionStatus(unsafe { pros_sys::misc::competition_get_status() })
 }
 
+/// Get the type of system currently controlling the robot's competition state, or none if the robot
+/// is not tethered to a competition controller.
+pub fn get_system() -> Option<CompetitionSystem> {
+    get_status().system()
+}
+
 /// Check if the robot is in autonomous mode.
 pub fn is_autonomous() -> bool {
     unsafe { pros_sys::misc::competition_is_autonomous() }
