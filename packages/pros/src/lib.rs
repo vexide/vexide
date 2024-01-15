@@ -81,6 +81,7 @@ pub mod lcd;
 pub mod adi;
 pub mod battery;
 pub mod competition;
+pub mod io;
 pub mod link;
 pub mod lvgl;
 pub mod time;
@@ -88,7 +89,7 @@ pub mod usd;
 
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
-use alloc::{ffi::CString, format};
+use crate::io::println;
 
 pub trait AsyncRobot {
     fn opcontrol(&mut self) -> impl Future<Output = Result> {
@@ -357,15 +358,15 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
     let current_task = task::current();
 
     let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
+
     // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
     // panic message here
-    let panic_msg = format!("task '{task_name}' {info}");
-    let msg = CString::new(panic_msg).unwrap();
+    println!("task '{task_name}' {info}");
+
+    #[cfg(target_arch = "wasm32")]
+    wasm_env::sim_log_backtrace();
 
     unsafe {
-        pros_sys::puts(msg.as_ptr());
-        #[cfg(target_arch = "wasm32")]
-        wasm_env::sim_log_backtrace();
         pros_sys::exit(1);
     }
 }
@@ -373,6 +374,7 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
 /// Commonly used features of pros-rs.
 /// This module is meant to be glob imported.
 pub mod prelude {
+    // Import Box from alloc so that it can be used in async_trait!
     pub use alloc::boxed::Box;
 
     pub use crate::{
@@ -380,9 +382,11 @@ pub mod prelude {
         async_runtime::*,
         controller::*,
         error::PortError,
-        lcd::{buttons::Button, LcdError},
+        io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write},
+        lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
         link::*,
         motor::*,
+        os_task_local,
         pid::*,
         position::*,
         sensors::{distance::*, gps::*, imu::*, optical::*, rotation::*, vision::*},
@@ -390,6 +394,4 @@ pub mod prelude {
         task::{sleep, spawn},
         AsyncRobot, SyncRobot,
     };
-    // Import Box from alloc so that it can be used in async_trait!
-    pub use crate::{os_task_local, print, println};
 }

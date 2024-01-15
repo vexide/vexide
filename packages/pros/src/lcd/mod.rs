@@ -7,9 +7,10 @@ use snafu::Snafu;
 
 use crate::{lvgl::colors::LcdColor, sync::Mutex};
 
-#[macro_use]
-pub mod macros;
 pub mod buttons;
+pub mod macros;
+
+pub use macros::*;
 
 pub(crate) mod writer;
 
