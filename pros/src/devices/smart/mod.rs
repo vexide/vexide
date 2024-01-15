@@ -63,7 +63,7 @@ pub struct SmartPort {
     /// The index of the port (port number).
     ///
     /// Ports are indexed starting from 1.
-    pub index: u8,
+    index: u8,
 }
 
 impl SmartPort {

@@ -4,12 +4,12 @@ pub struct AdiPort {
     /// The index of the port (port number).
     ///
     /// Ports are indexed starting from 1.
-    pub index: u8,
+    index: u8,
 
     /// The index of this port's associated [`AdiExpander`].
     ///
     /// If this port is not associated with an [`AdiExpander`] it should be set to `None`.
-    pub expander_index: Option<u8>,
+    expander_index: Option<u8>,
 }
 
 impl AdiPort {
