@@ -33,7 +33,7 @@ impl AsyncRobot for ExampleRobot {
         spawn(move || loop {
             println!(
                 "Motor stopped? {}",
-                motor.state().unwrap_or_default().stopped
+                motor.get_state().unwrap_or_default().stopped
             );
 
             // Sleep the task as to not steal processing time from the OS.
