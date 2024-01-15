@@ -10,8 +10,8 @@ const COMPETITION_SYSTEM: u8 = 1 << 3;
 pub enum CompetitionMode {
     /// The Disabled competition mode.
     ///
-    /// When in disabled mode, motor voltage commands to motors are disabled. Motors are
-    /// forcibly locked to the "coast" brake mode.
+    /// When in disabled mode, voltage commands to motors are disabled. Motors are forcibly
+    /// locked to the "coast" brake mode and cannot be moved.
     ///
     /// Robots may be placed into disabled mode at any point in the competition after
     /// connecting, but are typically disabled before the autonomous period, between
@@ -20,7 +20,7 @@ pub enum CompetitionMode {
 
     /// The Autonomous competition mode.
     ///
-    /// When in autonomous mode, all motors and sensors may be controlled, however user
+    /// When in autonomous mode, all motors and sensors may be accessed, however user
     /// input from controller buttons and joysticks is not available to be read.
     ///
     /// Robots may be placed into autonomous mode at any point in the competition after
