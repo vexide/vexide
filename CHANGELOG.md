@@ -18,6 +18,8 @@ Before releasing:
 
 ### Added
 
+- `CompetitionStatus::system` method for determining the type of competition control the robot is currently tethered into. (#38)
+
 ### Fixed
 
 ### Changed
