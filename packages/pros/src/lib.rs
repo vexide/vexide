@@ -381,11 +381,9 @@ pub mod prelude {
         error::PortError,
         io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write},
         lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
-        link::*,
-        motor::*,
         os_task_local,
         pid::*,
-        print, println, sync_robot,
+        sync_robot,
         task::{sleep, spawn},
         AsyncRobot, SyncRobot,
     };
