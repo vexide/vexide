@@ -4,6 +4,7 @@
 
 extern crate alloc;
 use alloc::vec::Vec;
+
 use pros_sys::{PROS_ERR, VISION_OBJECT_ERR_SIG};
 use snafu::Snafu;
 

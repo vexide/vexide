@@ -1,6 +1,7 @@
 //! LVGL colors and presets.
 
 use core::ops::{Deref, DerefMut};
+
 use pros_sys::lv_color_t;
 
 /// A color that can be used on the LCD.

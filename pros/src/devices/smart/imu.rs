@@ -4,7 +4,8 @@ use core::{
     task::{Context, Poll},
     time::Duration,
 };
-use pros_sys::{E_IMU_STATUS_CALIBRATING, PROS_ERR, PROS_ERR_F};
+use pros_sys::{PROS_ERR, PROS_ERR_F};
+
 use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, take_errno, FromErrno, PortError};
@@ -319,13 +320,13 @@ impl TryFrom<pros_sys::quaternion_s_t> for Quaternion {
     }
 }
 
-impl Into<pros_sys::quaternion_s_t> for Quaternion {
-    fn into(self) -> pros_sys::quaternion_s_t {
+impl From<Quaternion> for pros_sys::quaternion_s_t {
+    fn from(val: Quaternion) -> Self {
         pros_sys::quaternion_s_t {
-            x: self.x,
-            y: self.y,
-            z: self.z,
-            w: self.w,
+            x: val.x,
+            y: val.y,
+            z: val.z,
+            w: val.w,
         }
     }
 }
@@ -355,12 +356,12 @@ impl TryFrom<pros_sys::euler_s_t> for Euler {
     }
 }
 
-impl Into<pros_sys::euler_s_t> for Euler {
-    fn into(self) -> pros_sys::euler_s_t {
+impl From<Euler> for pros_sys::euler_s_t {
+    fn from(val: Euler) -> Self {
         pros_sys::euler_s_t {
-            pitch: self.pitch,
-            roll: self.roll,
-            yaw: self.yaw,
+            pitch: val.pitch,
+            roll: val.roll,
+            yaw: val.yaw,
         }
     }
 }
@@ -451,7 +452,7 @@ impl core::future::Future for InertialCalibrateFuture {
                             return Poll::Ready(Err(InertialError::from_errno(take_errno())
                                 .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
                         }
-                        value => (value & E_IMU_STATUS_CALIBRATING) != 0,
+                        value => (value & pros_sys::E_IMU_STATUS_CALIBRATING) != 0,
                     };
 
                     return if elapsed > IMU_RESET_TIMEOUT {

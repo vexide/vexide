@@ -57,6 +57,8 @@
 
 extern crate alloc;
 
+use core::future::Future;
+
 pub mod async_runtime;
 pub mod devices;
 pub mod error;
@@ -64,6 +66,7 @@ pub mod pid;
 pub mod sync;
 #[macro_use]
 pub mod task;
+
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
 #[cfg(target_os = "vexos")]
@@ -77,24 +80,22 @@ pub mod lvgl;
 pub mod time;
 pub mod usd;
 
-pub use async_trait::async_trait;
-
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
-use alloc::boxed::Box;
-#[async_trait::async_trait]
+use alloc::{ffi::CString, format};
+
 pub trait AsyncRobot {
-    async fn opcontrol(&mut self) -> Result {
-        Ok(())
+    fn opcontrol(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
-    async fn auto(&mut self) -> Result {
-        Ok(())
+    fn auto(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
-    async fn disabled(&mut self) -> Result {
-        Ok(())
+    fn disabled(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
-    async fn comp_init(&mut self) -> Result {
-        Ok(())
+    fn comp_init(&mut self) -> impl Future<Output = Result> {
+        async { Ok(()) }
     }
 }
 
@@ -263,7 +264,7 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -274,7 +275,7 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
@@ -326,7 +327,7 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -337,7 +338,7 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_main();
+            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
@@ -345,30 +346,51 @@ macro_rules! sync_robot {
     };
 }
 
+#[panic_handler]
+pub fn panic(info: &core::panic::PanicInfo) -> ! {
+    let current_task = task::current();
+
+    let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
+    // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
+    // panic message here
+    let panic_msg = format!("task '{task_name}' {info}");
+    let msg = CString::new(panic_msg).unwrap();
+
+    unsafe {
+        pros_sys::puts(msg.as_ptr());
+        #[cfg(target_arch = "wasm32")]
+        wasm_env::sim_log_backtrace();
+        pros_sys::exit(1);
+    }
+}
+
 /// Commonly used features of pros-rs.
 /// This module is meant to be glob imported.
 pub mod prelude {
-    pub use crate::{async_robot, sync_robot};
-    pub use crate::{AsyncRobot, SyncRobot};
-
     // Import Box from alloc so that it can be used in async_trait!
-    pub use crate::{async_trait, os_task_local, print, println};
     pub use alloc::boxed::Box;
 
-    pub use crate::async_runtime::*;
-    pub use crate::devices::controller::*;
-    pub use crate::devices::position::*;
-    pub use crate::devices::smart::distance::*;
-    pub use crate::devices::smart::gps::*;
-    pub use crate::devices::smart::imu::*;
-    pub use crate::devices::smart::link::*;
-    pub use crate::devices::smart::motor::*;
-    pub use crate::devices::smart::optical::*;
-    pub use crate::devices::smart::rotation::*;
-    pub use crate::devices::smart::vision::*;
-    pub use crate::devices::smart::SmartDevice;
-    pub use crate::error::PortError;
-    pub use crate::lcd::{buttons::Button, LcdError};
-    pub use crate::pid::*;
-    pub use crate::task::{sleep, spawn};
+    pub use crate::{
+        async_robot,
+        async_runtime::*,
+        error::PortError,
+        lcd::{buttons::Button, LcdError},
+        pid::*,
+        devices::smart::{
+            distance::*,
+            gps::*,
+            imu::*,
+            link::*,
+            motor::*,
+            optical::*,
+            rotation::*,
+            vision::*,
+            SmartDevice,
+        },
+        sync_robot,
+        task::{sleep, spawn},
+        AsyncRobot, SyncRobot,
+    };
+
+    pub use crate::{os_task_local, print, println};
 }
