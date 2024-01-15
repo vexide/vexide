@@ -77,7 +77,6 @@ mod wasm_env;
 pub mod lcd;
 pub mod competition;
 pub mod io;
-pub mod link;
 pub mod lvgl;
 pub mod time;
 pub mod usd;
