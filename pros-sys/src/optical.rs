@@ -1,5 +1,6 @@
-use crate::PROS_ERR;
 use core::ffi::*;
+
+use crate::PROS_ERR;
 
 pub const OPT_GESTURE_ERR: i8 = i8::MAX;
 pub const OPT_COUNT_ERR: i16 = i16::MAX;

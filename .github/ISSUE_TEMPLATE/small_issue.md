@@ -2,7 +2,7 @@
 name: Small issue
 about: Report a small problem (e.g. typo)
 title: ''
-labels: bug, need repro
+labels: type:bug, repro:needed
 assignees: ''
 
 ---
