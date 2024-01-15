@@ -32,6 +32,27 @@ Before releasing:
 ### Removed
 
 
+## [0.6.0] - 2024-01-14
+
+### Added
+
+### Fixed
+
+- GPS sensor `set_offset` function now returns a result. The relevant PROS C bindings have been fixed as well. (**Breaking change**)
+- FreeRTOS task creation now does not garble data that the provided closure captured.
+- Grammar in the feature request template has been fixed. 
+- Wasm build flags have been updated and fixed.
+
+### Changed
+
+- Panicking behavior has been improved so that spawned tasks will not panic the entire program. 
+- Panic messages are now improved and printed over the serial connection.
+- `AsyncRobot` should now be implemented using the newly stabilized async trait syntax instead of the old `async_trait` attribute macro. (**Breaking change**)
+  
+### Removed
+
+- A nonexistent runner for armv7a-vexos-eabi target has been removed from the cargo config.
+
 ## [0.5.0] - 2024-01-08
 
 ### Added
@@ -64,6 +85,7 @@ Before releasing:
 
 ### Removed
 
-[unreleased]: https://github.com/pros-rs/pros-rs/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/pros-rs/pros-rs/compare/v0.6.0...HEAD
 [0.4.0]: https://github.com/pros-rs/pros-rs/releases/tag/v0.4.0
 [0.5.0]: https://github.com/pros-rs/pros-rs/compare/v0.4.0...v0.5.0
+[0.6.0]: https://github.com/pros-rs/pros-rs/compare/v0.5.0...v0.6.0
