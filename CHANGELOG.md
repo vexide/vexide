@@ -24,10 +24,15 @@ Before releasing:
 ### Added
 
 - New `From` implementation to convert `Quaternion` and `Euler` to their pros-sys equivalents. (#45)
+- `pros::io` module for I/O related operations. (#30)
+- Various types from the `no_std_io` have are re-exported from this module to provide missing functionality from `std`. (#30)
+- Macros for printing to stdout (`println`, `print`, `eprintln`, etc...) (#30)
 
 ### Fixed
 
 ### Changed
+
+- LLEMU-related macros have been prefixed with `llemu_` (e.g. `llemu_println`). (**Breaking Change**) (#30)
 
 ### Removed
 
