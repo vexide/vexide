@@ -278,13 +278,13 @@ impl TryFrom<pros_sys::quaternion_s_t> for Quaternion {
     }
 }
 
-impl Into<pros_sys::quaternion_s_t> for Quaternion {
-    fn into(self) -> pros_sys::quaternion_s_t {
+impl From<Quaternion> for pros_sys::quaternion_s_t {
+    fn from(val: Quaternion) -> Self {
         pros_sys::quaternion_s_t {
-            x: self.x,
-            y: self.y,
-            z: self.z,
-            w: self.w,
+            x: val.x,
+            y: val.y,
+            z: val.z,
+            w: val.w,
         }
     }
 }
@@ -314,12 +314,12 @@ impl TryFrom<pros_sys::euler_s_t> for Euler {
     }
 }
 
-impl Into<pros_sys::euler_s_t> for Euler {
-    fn into(self) -> pros_sys::euler_s_t {
+impl From<Euler> for pros_sys::euler_s_t {
+    fn from(val: Euler) -> Self {
         pros_sys::euler_s_t {
-            pitch: self.pitch,
-            roll: self.roll,
-            yaw: self.yaw,
+            pitch: val.pitch,
+            roll: val.roll,
+            yaw: val.yaw,
         }
     }
 }
