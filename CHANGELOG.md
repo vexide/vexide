@@ -33,11 +33,14 @@ Before releasing:
 ### Fixed
 
 - Fixed competition state-related getters in the `pros::competition` module. (#38)
+- Fixed error handling in IMU sensor bindings. (#37)
+- Fixed errors in doctests and examples throughout the crate. (#37)
 
 ### Changed
 
 - Overhauled the `competition` module with more straightforward getters for competition state. (#38) (**Breaking Change**)
 - LLEMU-related macros have been prefixed with `llemu_` (e.g. `llemu_println`). (**Breaking Change**) (#30)
+- Added `Debug`, `Copy`, and `Clone` derives for common structs (#37)
 
 ### Removed
 
