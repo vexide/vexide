@@ -13,6 +13,7 @@ struct ExampleRobot;
 
 impl AsyncRobot for ExampleRobot {
     async fn opcontrol(&mut self) -> pros::Result {
+        let peripherals = Peripherals::take().unwrap();
         let handle = pros::async_runtime::spawn(async {
             for _ in 0..5 {
                 println!("Hello from async!");
@@ -25,7 +26,7 @@ impl AsyncRobot for ExampleRobot {
         // Create a new motor plugged into port 2. The motor will brake when not moving.
         // We'll wrap it in an Arc<Mutex<T>> to allow safe access to the device from multiple tasks.
         let motor = Arc::new(Mutex::new(Motor::new(
-            unsafe { SmartPort::new(2) },
+            peripherals.smart_port_2,
             BrakeMode::Brake,
         )?));
         motor.lock().wait_until_stopped().await?;
@@ -33,7 +34,7 @@ impl AsyncRobot for ExampleRobot {
         // Create a controller, specifically controller 1.
         let controller = Controller::Master;
 
-        let mut vision = VisionSensor::new(unsafe { SmartPort::new(9) }, VisionZeroPoint::Center)?;
+        let mut vision = VisionSensor::new(peripherals.smart_port_9, VisionZeroPoint::Center)?;
         vision.set_led(LedMode::On(Rgb::new(0, 0, 255)));
 
         pros::lcd::buttons::register(left_button_callback, Button::Left);
