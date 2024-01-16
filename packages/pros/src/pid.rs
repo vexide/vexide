@@ -9,6 +9,7 @@
 /// and allows for feedback-based power adjustments. This is desirable
 /// over just setting the motor power, as it can be tuned to make the
 /// motor stop in exactly the right position without overshooting.
+#[derive(Debug, Clone, Copy)]
 pub struct PidController {
     /// Proportional constant. This is multiplied by the error to get the
     /// proportional component of the output.

@@ -391,7 +391,7 @@ pub mod prelude {
         position::*,
         sensors::{distance::*, gps::*, imu::*, optical::*, rotation::*, vision::*},
         sync_robot,
-        task::{sleep, spawn},
+        task::{delay, sleep, spawn},
         AsyncRobot, SyncRobot,
     };
 }

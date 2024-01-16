@@ -72,11 +72,11 @@ impl RxLink {
 }
 
 impl Link for RxLink {
-    fn id(&self) -> &CStr {
-        &self.id
-    }
     fn port(&self) -> u8 {
         self.port
+    }
+    fn id(&self) -> &CStr {
+        &self.id
     }
     fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
         let id = CString::new(id).unwrap();
@@ -151,11 +151,11 @@ impl io::Write for TxLink {
 }
 
 impl Link for TxLink {
-    fn id(&self) -> &CStr {
-        &self.id
-    }
     fn port(&self) -> u8 {
         self.port
+    }
+    fn id(&self) -> &CStr {
+        &self.id
     }
     fn new(port: u8, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
         let id = CString::new(id).unwrap();

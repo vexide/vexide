@@ -12,10 +12,12 @@
 //!
 //! Example of driving a single motor with a controller:
 //! ```rust
+//! # use pros::prelude::*;
+//! let motor = Motor::new(1, BrakeMode::Brake).unwrap();
 //! let controller = Controller::Master;
 //! loop {
 //!     let output = controller.state().joysticks.left.y;
-//!     motor.set_output(output);
+//!     motor.set_output(output).ok();
 //! }
 //! ```
 
@@ -86,6 +88,7 @@ impl Motor {
     }
 
     /// Takes in a voltage that must be between -12 and 12 Volts.
+    /// Units are in Volts.
     pub fn set_voltage(&self, voltage: f32) -> Result<(), MotorError> {
         if !(-12.0..=12.0).contains(&voltage) || voltage.is_nan() {
             return Err(MotorError::VoltageOutOfRange);
@@ -100,7 +103,7 @@ impl Motor {
         Ok(())
     }
 
-    /// Moves the motor to an absolute position, based off of the last motor zeroing.
+    /// Moves the motor to an absolute position, based off of when the motor was zeroed
     /// units for the velocity is RPM.
     pub fn set_position_absolute(
         &self,
@@ -166,7 +169,8 @@ impl Motor {
         }))
     }
 
-    /// Sets the current position to zero.
+    /// Sets the current encoder position to zero without moving the motor.
+    /// Analogous to taring or resetting the encoder to the current position.
     pub fn zero(&self) -> Result<(), MotorError> {
         unsafe {
             bail_on!(PROS_ERR, pros_sys::motor_tare_position(self.port));
@@ -180,7 +184,8 @@ impl Motor {
         Ok(())
     }
 
-    /// Sets the current position to the given position.
+    /// Sets the current encoder position to the given position without moving the motor.
+    /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
     pub fn set_zero_position(&self, position: Position) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_zero_position(self.port, position.into_degrees())
@@ -225,6 +230,7 @@ impl Motor {
 }
 
 /// Determines how a motor should act when braking.
+#[derive(Debug, Clone, Copy)]
 pub enum BrakeMode {
     /// Motor never brakes.
     None,
@@ -300,6 +306,7 @@ impl From<i32> for Gearset {
     }
 }
 
+#[derive(Debug)]
 pub struct MotorStoppedFuture {
     motor: Motor,
 }

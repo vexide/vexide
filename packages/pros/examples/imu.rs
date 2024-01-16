@@ -8,11 +8,12 @@ use pros::prelude::*;
 #[derive(Default)]
 pub struct Robot;
 
-impl SyncRobot for Robot {
-    fn opcontrol(&mut self) -> pros::Result {
+#[async_trait]
+impl AsyncRobot for Robot {
+    async fn opcontrol(&mut self) -> pros::Result {
         let imu = InertialSensor::new(1)?;
 
-        imu.calibrate()?;
+        imu.calibrate().await?;
 
         loop {
             let euler = imu.euler()?;
@@ -27,4 +28,4 @@ impl SyncRobot for Robot {
     }
 }
 
-sync_robot!(Robot);
+async_robot!(Robot);
