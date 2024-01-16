@@ -7,7 +7,6 @@ pub struct SmartPort {
 }
 
 pub struct Peripherals {
-    pub smart_port_0: SmartPort,
     pub smart_port_1: SmartPort,
     pub smart_port_2: SmartPort,
     pub smart_port_3: SmartPort,
@@ -34,7 +33,6 @@ pub struct Peripherals {
 impl Peripherals {
     pub const unsafe fn new() -> Self {
         Self {
-            smart_port_0: SmartPort { port_index: 0 },
             smart_port_1: SmartPort { port_index: 1 },
             smart_port_2: SmartPort { port_index: 2 },
             smart_port_3: SmartPort { port_index: 3 },
