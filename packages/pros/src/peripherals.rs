@@ -31,7 +31,7 @@ pub struct Peripherals {
 }
 
 impl Peripherals {
-    pub const unsafe fn new() -> Self {
+    const unsafe fn new() -> Self {
         Self {
             smart_port_1: SmartPort { port_index: 1 },
             smart_port_2: SmartPort { port_index: 2 },
@@ -63,5 +63,36 @@ impl Peripherals {
         } else {
             Some(unsafe { Self::new() })
         }
+    }
+
+    pub unsafe fn steal() -> Self {
+        PERIPHERALS_TAKEN.store(true, core::sync::atomic::Ordering::Release);
+        Self::new()
+    }
+}
+
+pub struct DynamicPeripherals {
+    smart_ports: [bool; 21],
+}
+impl DynamicPeripherals {
+    pub fn new(_peripherals: Peripherals) -> Self {
+        let smart_ports = [false; 21];
+        Self { smart_ports }
+    }
+
+    pub fn take_smart_port(&mut self, port_index: u8) -> Option<SmartPort> {
+        let port_index = port_index as usize - 1;
+        if self.smart_ports[port_index] {
+            return None;
+        };
+        self.smart_ports[port_index] = true;
+        Some(SmartPort {
+            port_index: port_index as u8 + 1,
+        })
+    }
+}
+impl From<Peripherals> for DynamicPeripherals {
+    fn from(peripherals: Peripherals) -> Self {
+        Self::new(peripherals)
     }
 }
