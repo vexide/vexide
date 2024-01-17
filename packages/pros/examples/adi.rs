@@ -16,15 +16,14 @@ impl AsyncRobot for ExampleRobot {
         let ultrasonic_ping_port = unsafe { AdiPort::new(3, None) };
         let ultrasonic_echo_port = unsafe { AdiPort::new(4, None) };
 
-        let gyro_port = unsafe { AdiPOrt::new(5, None) };
+        let gyro_port = unsafe { AdiPort::new(5, None) };
 
-        let encoder = AdiEncoder::new((encoder_top_port, encoder_bottom_port), false).unwrap();
+        let mut encoder = AdiEncoder::new((encoder_top_port, encoder_bottom_port), false).unwrap();
         let ultrasonic = AdiUltrasonic::new((ultrasonic_ping_port, ultrasonic_echo_port)).unwrap();
-        let gyro = AdiGyro::new(gyro_port, 1.0).unwrap();
+        let mut gyro = AdiGyro::new(gyro_port, 1.0).unwrap();
 
         gyro.zero().unwrap();
         encoder.zero().unwrap();
-        ultrasonic.zero().unwrap();
 
         loop {
             println!("Encoder value: {:?}", encoder.value());
