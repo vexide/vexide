@@ -417,17 +417,16 @@ impl From<pros_sys::imu_status_e_t> for InertialStatus {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum InertialCalibrateFuture {
     Calibrate(u8),
     Waiting(u8, Instant),
-    Finished(Result<(), InertialError>),
 }
 
 impl core::future::Future for InertialCalibrateFuture {
     type Output = Result<(), InertialError>;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         match *self {
             Self::Calibrate(port) => {
                 match unsafe { pros_sys::imu_reset(port) } {
@@ -437,13 +436,12 @@ impl core::future::Future for InertialCalibrateFuture {
                             .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
                     }
                     _ => {
-                        // Store a timestamp at the start of a successful reset call.
                         *self = Self::Waiting(port, Instant::now());
                         cx.waker().wake_by_ref();
                         Poll::Pending
                     }
                 }
-            }
+            },
             Self::Waiting(port, timestamp) => {
                 const PROS_ERR_U32: u32 = PROS_ERR as _;
                 let is_calibrating = match unsafe { pros_sys::imu_get_status(port) } {
@@ -456,15 +454,14 @@ impl core::future::Future for InertialCalibrateFuture {
                 };
 
                 if !is_calibrating {
-                    *self = Self::Finished(Ok(()));
+                    return Poll::Ready(Ok(()));
                 } else if timestamp.elapsed() > IMU_RESET_TIMEOUT {
-                    *self = Self::Finished(Err(InertialError::CalibrationTimedOut));
+                    return Poll::Ready(Err(InertialError::CalibrationTimedOut));
                 }
 
                 cx.waker().wake_by_ref();
                 Poll::Pending
-            }
-            Self::Finished(output) => Poll::Ready(output),
+            },
         }
     }
 }
