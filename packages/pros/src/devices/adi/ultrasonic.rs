@@ -20,7 +20,14 @@ impl AdiUltrasonic {
 
         Ok(Self {
             raw: unsafe {
-                bail_on!(PROS_ERR, pros_sys::ext_adi_ultrasonic_init(port_ping.internal_expander_index(), port_ping.index(), port_echo.index()))
+                bail_on!(
+                    PROS_ERR,
+                    pros_sys::ext_adi_ultrasonic_init(
+                        port_ping.internal_expander_index(),
+                        port_ping.index(),
+                        port_echo.index()
+                    )
+                )
             },
         })
     }

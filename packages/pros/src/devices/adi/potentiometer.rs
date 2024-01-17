@@ -1,4 +1,4 @@
-use pros_sys::{PROS_ERR, ext_adi_potentiometer_t, adi_potentiometer_type_e_t};
+use pros_sys::{adi_potentiometer_type_e_t, ext_adi_potentiometer_t, PROS_ERR};
 
 use super::{AdiError, AdiPort};
 use crate::error::bail_on;
@@ -13,7 +13,11 @@ impl AdiPotentiometer {
     pub fn new(port: AdiPort, potentiometer_type: AdiPotentiometerType) -> Result<Self, AdiError> {
         unsafe {
             Ok(Self {
-                raw: pros_sys::ext_adi_potentiometer_init(port.internal_expander_index(), port.index(), potentiometer_type.into()),
+                raw: pros_sys::ext_adi_potentiometer_init(
+                    port.internal_expander_index(),
+                    port.index(),
+                    potentiometer_type.into(),
+                ),
             })
         }
     }

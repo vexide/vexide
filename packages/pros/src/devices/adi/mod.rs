@@ -1,6 +1,6 @@
 //! ADI (Triport) devices on the Vex V5.
 
-use pros_sys::{PROS_ERR, adi_port_config_e_t};
+use pros_sys::{adi_port_config_e_t, PROS_ERR};
 use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};

@@ -20,8 +20,16 @@ impl AdiEncoder {
 
         Ok(Self {
             raw: unsafe {
-                bail_on!(PROS_ERR, pros_sys::ext_adi_encoder_init(port_top.internal_expander_index(), port_top.index(), port_bottom.index(), reverse))
-            }
+                bail_on!(
+                    PROS_ERR,
+                    pros_sys::ext_adi_encoder_init(
+                        port_top.internal_expander_index(),
+                        port_top.index(),
+                        port_bottom.index(),
+                        reverse
+                    )
+                )
+            },
         })
     }
 

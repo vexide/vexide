@@ -15,7 +15,11 @@ impl AdiGyro {
             raw: unsafe {
                 bail_on!(
                     PROS_ERR.into(),
-                    pros_sys::ext_adi_gyro_init(port.internal_expander_index(), port.index(), multiplier)
+                    pros_sys::ext_adi_gyro_init(
+                        port.internal_expander_index(),
+                        port.index(),
+                        multiplier
+                    )
                 )
             },
         })
