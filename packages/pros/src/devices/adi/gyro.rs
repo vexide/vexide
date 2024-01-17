@@ -35,8 +35,11 @@ impl AdiGyro {
     }
 
     /// Gets the current gyro angle in tenths of a degree. Unless a multiplier is applied to the gyro, the return value will be a whole number representing the number of degrees of rotation times 10.
-    pub fn zero(&mut self) -> Result<i32, AdiError> {
-        Ok(unsafe { bail_on!(PROS_ERR.into(), pros_sys::ext_adi_gyro_reset(self.raw)) })
+    pub fn zero(&mut self) -> Result<(), AdiError> {
+        bail_on!(PROS_ERR.into(), unsafe {
+            pros_sys::ext_adi_gyro_reset(self.raw)
+        });
+        Ok(())
     }
 }
 

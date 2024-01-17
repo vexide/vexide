@@ -15,17 +15,15 @@ impl AdiMotor {
     }
 
     /// Sets the speed of the given motor.
-    pub fn set_value(&mut self, value: i8) -> Result<i32, AdiError> {
-        Ok(unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::ext_adi_motor_set(
-                    self.port.internal_expander_index(),
-                    self.port.index(),
-                    value
-                )
+    pub fn set_value(&mut self, value: i8) -> Result<(), AdiError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_motor_set(
+                self.port.internal_expander_index(),
+                self.port.index(),
+                value,
             )
-        })
+        });
+        Ok(())
     }
 
     /// Returns the last set speed of the motor on the given port.
@@ -39,16 +37,12 @@ impl AdiMotor {
     }
 
     /// Stops the given motor.
-    pub fn stop(&mut self) -> Result<i32, AdiError> {
-        Ok(unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::ext_adi_motor_stop(
-                    self.port.internal_expander_index(),
-                    self.port.index()
-                )
-            )
-        })
+    pub fn stop(&mut self) -> Result<(), AdiError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_motor_stop(self.port.internal_expander_index(), self.port.index())
+        });
+
+        Ok(())
     }
 }
 

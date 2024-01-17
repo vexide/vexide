@@ -38,8 +38,9 @@ impl AdiEncoder {
     }
 
     /// Resets the encoder to zero.
-    pub fn zero(&mut self) -> Result<i32, AdiError> {
-        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_encoder_reset(self.raw)) })
+    pub fn zero(&mut self) -> Result<(), AdiError> {
+        bail_on!(PROS_ERR, unsafe { pros_sys::adi_encoder_reset(self.raw) });
+        Ok(())
     }
 
     /// Gets the number of ticks recorded by the encoder.

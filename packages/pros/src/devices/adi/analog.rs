@@ -25,16 +25,14 @@ impl AdiAnalogIn {
     ///
     /// These functions will return the difference between this value and the current
     /// sensor value when called.
-    pub fn calibrate(&mut self) -> Result<i32, AdiError> {
-        Ok(unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::ext_adi_analog_calibrate(
-                    self.port.internal_expander_index(),
-                    self.port.index()
-                )
+    pub fn calibrate(&mut self) -> Result<(), AdiError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_analog_calibrate(
+                self.port.internal_expander_index(),
+                self.port.index(),
             )
-        })
+        });
+        Ok(())
     }
 
     /// Reads an analog input channel and returns the 12-bit value.
