@@ -23,14 +23,14 @@ pub mod optical;
 pub mod rotation;
 pub mod vision;
 
-pub use motor::Motor;
 pub use distance::DistanceSensor;
 pub use gps::GpsSensor;
 pub use imu::InertialSensor;
+pub use link::{Link, RxLink, TxLink};
+pub use motor::Motor;
 pub use optical::OpticalSensor;
 pub use rotation::RotationSensor;
 pub use vision::VisionSensor;
-pub use link::{Link, TxLink, RxLink};
 
 use crate::{error::bail_on, prelude::PortError};
 
