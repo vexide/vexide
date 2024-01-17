@@ -39,10 +39,12 @@ pub const E_ADI_ANALOG_IN: c_int = 0;
 pub const E_ADI_ANALOG_OUT: c_int = 1;
 pub const E_ADI_DIGITAL_IN: c_int = 2;
 pub const E_ADI_DIGITAL_OUT: c_int = 3;
-pub const E_ADI_LEGACY_SERVO: c_int = 12;
-pub const E_ADI_LEGACY_PWM: c_int = 13;
-pub const E_ADI_LEGACY_ENCODER: c_int = 14;
-pub const E_ADI_LEGACY_ULTRASONIC: c_int = 15;
+pub const E_ADI_LEGACY_GYRO: c_int = 4;
+pub const E_ADI_LEGACY_ACCELEROMETER: c_int = 5;
+pub const E_ADI_LEGACY_SERVO: c_int = 6;
+pub const E_ADI_LEGACY_PWM: c_int = 7;
+pub const E_ADI_LEGACY_ENCODER: c_int = 8;
+pub const E_ADI_LEGACY_ULTRASONIC: c_int = 9;
 pub const E_ADI_TYPE_UNDEFINED: c_int = 255;
 pub const E_ADI_ERR: c_int = PROS_ERR;
 /// Represents the port type for an ADI port.

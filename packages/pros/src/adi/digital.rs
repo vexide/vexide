@@ -1,10 +1,8 @@
-use crate::error::bail_on;
-
 use pros_sys::PROS_ERR;
 
-use crate::adi::{
-    AdiError,
-    AdiSlot
+use crate::{
+    adi::{AdiError, AdiSlot},
+    error::bail_on,
 };
 
 pub struct AdiDigitalIn {
@@ -15,14 +13,11 @@ impl AdiDigitalIn {
     /// Create an AdiDigitalIn, returning err `AdiError::InvalidPort` if the port is invalid.
     pub fn new(slot: AdiSlot) -> Result<Self, AdiError> {
         let port = slot as u8;
-        if port < 1 || port > {pros_sys::NUM_ADI_PORTS as u8} {
-            return Err(AdiError::InvalidPort);
-        }
         Ok(Self { port })
     }
 
     /// Gets the current value of a digital input pin.
-    pub fn new_press(&self) -> Result<bool, AdiError> {
+    pub fn new_press(&mut self) -> Result<bool, AdiError> {
         Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_digital_get_new_press(self.port)) != 0 })
     }
 
@@ -40,9 +35,6 @@ impl AdiDigitalOut {
     /// Create an AdiDigitalOut, returning err `AdiError::InvalidPort` if the port is invalid.
     pub fn new(slot: AdiSlot) -> Result<Self, AdiError> {
         let port = slot as u8;
-        if port < 1 || port > {pros_sys::NUM_ADI_PORTS as u8} {
-            return Err(AdiError::InvalidPort);
-        }
         Ok(Self { port })
     }
 
