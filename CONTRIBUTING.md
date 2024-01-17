@@ -121,6 +121,9 @@ All Rust source code should be formatted with Rustfmt, by running `cargo fmt` af
 
 Use Clippy to lint your changes: `cargo clippy`.
 
+In files not formatted by Rustfmt, there should be no trailing whitespace, the end of line
+sequence should be LF (line feed), and the file should end with one trailing newline.
+
 #### Committing & commit messages
 
 All pros-rs projects use [Conventional Commits][conventional-commits-website]
@@ -196,7 +199,8 @@ After making changes to your code, update the Unreleased section of the changelo
 
 When you're ready for your changes to be merged, head over to the [Pull
 Requests][pr-page] page and create a new pull request. Include a description of
-what changed, and [link to an Issue][link-to-issue-guide] if applicable. Pull request names should follow the
+what changed, and [link to an Issue][link-to-issue-guide] if applicable. Pull request names
+should follow the same conventions as [commit messages](#committing--commit-messages).
 
 If you're not quite done with the changes but are ready to start sharing them, you can
 [mark it as a draft][about-draft-prs] to prevent it from being merged.
