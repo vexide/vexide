@@ -12,19 +12,11 @@ pub struct AdiGyro {
 impl AdiGyro {
     /// Create an AdiGyro, returning err `AdiError::InvalidPort` if the port is invalid.
     pub fn new(port: AdiPort, multiplier: f64) -> Result<Self, AdiError> {
-        Ok(Self {
-            raw: unsafe {
-                bail_on!(
-                    PROS_ERR.into(),
-                    pros_sys::ext_adi_gyro_init(
-                        port.internal_expander_index(),
-                        port.index(),
-                        multiplier
-                    )
-                )
-            },
-            port,
-        })
+        let raw = bail_on!(PROS_ERR.into(), unsafe {
+            pros_sys::ext_adi_gyro_init(port.internal_expander_index(), port.index(), multiplier)
+        });
+        
+        Ok(Self { raw, port })
     }
 
     /// Gets the current gyro angle in tenths of a degree. Unless a multiplier is applied to the gyro, the return value will be a whole number representing the number of degrees of rotation times 10.
