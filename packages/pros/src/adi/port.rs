@@ -2,8 +2,8 @@ use core::ops::{Deref, DerefMut};
 
 use pros_sys::{
     adi_port_config_e_t, E_ADI_ANALOG_IN, E_ADI_ANALOG_OUT, E_ADI_DIGITAL_IN, E_ADI_DIGITAL_OUT,
-    E_ADI_LEGACY_ACCELEROMETER, E_ADI_LEGACY_ENCODER, E_ADI_LEGACY_GYRO, E_ADI_LEGACY_PWM,
-    E_ADI_LEGACY_SERVO, E_ADI_LEGACY_ULTRASONIC, PROS_ERR,
+    E_ADI_LEGACY_ENCODER, E_ADI_LEGACY_GYRO, E_ADI_LEGACY_PWM, E_ADI_LEGACY_SERVO,
+    E_ADI_LEGACY_ULTRASONIC, PROS_ERR,
 };
 
 use crate::{
@@ -19,7 +19,6 @@ pub enum AdiPortType {
     DigitalOut = E_ADI_DIGITAL_OUT,
 
     LegacyGyro = E_ADI_LEGACY_GYRO,
-    LegacyAccelerometer = E_ADI_LEGACY_ACCELEROMETER,
 
     LegacyServo = E_ADI_LEGACY_SERVO,
     LegacyPwm = E_ADI_LEGACY_PWM,
@@ -39,7 +38,6 @@ impl TryFrom<adi_port_config_e_t> for AdiPortType {
             E_ADI_DIGITAL_OUT => Ok(AdiPortType::DigitalOut),
 
             E_ADI_LEGACY_GYRO => Ok(AdiPortType::LegacyGyro),
-            E_ADI_LEGACY_ACCELEROMETER => Ok(AdiPortType::LegacyAccelerometer),
 
             E_ADI_LEGACY_SERVO => Ok(AdiPortType::LegacyServo),
             E_ADI_LEGACY_PWM => Ok(AdiPortType::LegacyPwm),
