@@ -91,12 +91,20 @@ impl Peripherals {
     }
 }
 
+/// Guarentees that ports are only used once **at runtime**
+/// This is useful for when you want to store a peripherals struct for use in multiple functions.
+/// When possible, use [`Peripherals`] instead.
 pub struct DynamicPeripherals {
     smart_ports: [bool; 21],
     adi_slots: [bool; 8],
 }
 impl DynamicPeripherals {
-    pub fn new(_peripherals: Peripherals) -> Self {
+    /// Creates a new dynamic peripherals
+    /// In order to guarentee that no ports created by this struct,
+    /// this function takes a [`Peripherals`].
+    /// This guarentees safety because [`Peripherals`] cannot be passed by value
+    /// after they have been used to create devices.
+    pub const fn new(_peripherals: Peripherals) -> Self {
         let smart_ports = [false; 21];
         let adi_slots = [false; 8];
         Self {
@@ -105,6 +113,12 @@ impl DynamicPeripherals {
         }
     }
 
+    /// Creates a [`SmartPort`] only if one has not been created on the given port before.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the provided port is outside the range 1-21.
+    /// Ports outside of this range are invalid and cannot be created.
     pub fn take_smart_port(&mut self, port_index: u8) -> Option<SmartPort> {
         let port_index = port_index as usize - 1;
         if self.smart_ports[port_index] {
@@ -116,6 +130,12 @@ impl DynamicPeripherals {
         })
     }
 
+    /// Creates an [`AdiSlot`] only if one has not been created on the given slot before.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the provided port is outside the range 1-8.
+    /// Slots outside of this range are invalid and cannot be created.
     pub fn take_adi_slot(&mut self, slot_index: u8) -> Option<AdiSlot> {
         let slot_index = slot_index as usize - 1;
         if self.adi_slots[slot_index] {

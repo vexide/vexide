@@ -403,7 +403,7 @@ pub mod prelude {
         io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write},
         lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
         os_task_local,
-        peripherals::Peripherals,
+        peripherals::{DynamicPeripherals, Peripherals},
         pid::*,
         sync_robot,
         task::{delay, sleep, spawn},
