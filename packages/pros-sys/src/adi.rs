@@ -39,6 +39,7 @@ pub const E_ADI_ANALOG_IN: c_int = 0;
 pub const E_ADI_ANALOG_OUT: c_int = 1;
 pub const E_ADI_DIGITAL_IN: c_int = 2;
 pub const E_ADI_DIGITAL_OUT: c_int = 3;
+pub const E_ADI_LEGACY_GYRO: c_int = 10;
 pub const E_ADI_LEGACY_SERVO: c_int = 12;
 pub const E_ADI_LEGACY_PWM: c_int = 13;
 pub const E_ADI_LEGACY_ENCODER: c_int = 14;

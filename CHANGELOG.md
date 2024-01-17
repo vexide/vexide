@@ -29,12 +29,14 @@ Before releasing:
 - `pros::io` module for I/O related operations. (#30)
 - Various types from the `no_std_io` have are re-exported from this module to provide missing functionality from `std`. (#30)
 - Macros for printing to stdout (`println`, `print`, `eprintln`, etc...) (#30)
+- All ADI device bindings (#55)
 
 ### Fixed
 
 - Fixed competition state-related getters in the `pros::competition` module. (#38)
 - Fixed error handling in IMU sensor bindings. (#37)
 - Fixed errors in doctests and examples throughout the crate. (#37)
+- Fixed Missing ERRNO and ADI config variants in pros-sys (#55)
 
 ### Changed
 

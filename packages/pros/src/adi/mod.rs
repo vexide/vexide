@@ -1,56 +1,64 @@
-use core::{
-    ffi::c_int,
-    ops::{Deref, DerefMut},
-};
+//! ADI (TriPort) devices on the Vex V5.
+//!
+//! Most ADI devices can be created with a `new` function that generally takes a port number.
+//! Devi
+//!
 
-pub struct AdiPort(u8);
+use snafu::Snafu;
 
-impl AdiPort {
-    /// Create an AdiPort without checking if it is valid.
-    ///
-    /// # Safety
-    ///
-    /// The port must be above 0 and below [`pros_sys::NUM_ADI_PORTS`].
-    pub unsafe fn new_unchecked(port: u8) -> Self {
-        Self(port)
-    }
-    /// Create an AdiPort, returning `None` if the port is invalid.
-    pub fn try_new(port: u8) -> Option<Self> {
-        if c_int::from(port) < pros_sys::NUM_ADI_PORTS {
-            Some(Self(port))
-        } else {
-            None
-        }
-    }
-    /// Create an AdiPort.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the port is greater than or equal to [`pros_sys::NUM_ADI_PORTS`].
-    pub fn new(port: u8) -> Self {
-        Self::try_new(port).expect("Invalid ADI port")
-    }
+use crate::error::{map_errno, PortError};
+
+pub mod analog;
+pub mod digital;
+pub mod port;
+
+pub mod encoder;
+pub mod gyro;
+pub mod motor;
+pub mod potentiometer;
+pub mod ultrasonic;
+
+#[derive(Debug, Snafu)]
+pub enum AdiError {
+    #[snafu(display("Another resource is currently trying to access the ADI."))]
+    AlreadyInUse,
+
+    #[snafu(display(
+        "The port specified has been reconfigured or is not configured for digital input."
+    ))]
+    DigitalInputNotConfigured,
+
+    #[snafu(display(
+        "The port type specified is invalid, and cannot be used to configure a port."
+    ))]
+    InvalidConfigType,
+
+    #[snafu(display("The port has already been configured."))]
+    AlreadyConfigured,
+
+    #[snafu(display("The port specified is invalid."))]
+    InvalidPort,
+
+    #[snafu(display("{source}"), context(false))]
+    Port { source: PortError },
 }
 
-impl Deref for AdiPort {
-    type Target = u8;
-    fn deref(&self) -> &Self::Target {
-        &self.0
+map_errno! {
+    AdiError {
+        EACCES => Self::AlreadyInUse,
+        EADDRINUSE => Self::DigitalInputNotConfigured,
     }
+    inherit PortError;
 }
 
-impl DerefMut for AdiPort {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-pub struct AdiAnalogIn {
-    port: AdiPort,
-}
-
-impl AdiAnalogIn {
-    pub fn new(port: AdiPort) -> Self {
-        Self { port }
-    }
+#[derive(Debug, Copy, Clone)]
+pub enum AdiSlot {
+    A = 1,
+    B = 2,
+    C = 3,
+    D = 4,
+    E = 5,
+    F = 6,
+    G = 7,
+    H = 8,
 }
