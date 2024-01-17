@@ -20,7 +20,7 @@ impl AdiPotentiometer {
                 potentiometer_type.into(),
             )
         });
-        
+
         Ok(Self {
             potentiometer_type,
             raw,
@@ -39,12 +39,9 @@ impl AdiPotentiometer {
     /// Potentiometer V2 rotates 330 degrees
     /// thus returning an angle between 0-330 degrees.
     pub fn angle(&self) -> Result<f64, AdiError> {
-        Ok(unsafe {
-            bail_on!(
-                PROS_ERR.into(),
-                pros_sys::ext_adi_potentiometer_get_angle(self.raw)
-            )
-        })
+        Ok(bail_on!(PROS_ERR.into(), unsafe {
+            pros_sys::ext_adi_potentiometer_get_angle(self.raw)
+        }))
     }
 }
 

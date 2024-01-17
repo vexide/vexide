@@ -28,12 +28,9 @@ impl AdiMotor {
 
     /// Returns the last set speed of the motor on the given port.
     pub fn value(&self) -> Result<i32, AdiError> {
-        Ok(unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::ext_adi_motor_get(self.port.internal_expander_index(), self.port.index())
-            )
-        })
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_motor_get(self.port.internal_expander_index(), self.port.index())
+        }))
     }
 
     /// Stops the given motor.

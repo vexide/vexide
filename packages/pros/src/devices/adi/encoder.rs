@@ -44,7 +44,9 @@ impl AdiEncoder {
 
     /// Gets the number of ticks recorded by the encoder.
     pub fn value(&self) -> Result<i32, AdiError> {
-        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_encoder_get(self.raw)) })
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::adi_encoder_get(self.raw)
+        }))
     }
 }
 

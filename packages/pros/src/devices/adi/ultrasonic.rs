@@ -37,7 +37,9 @@ impl AdiUltrasonic {
 
     /// Gets the current ultrasonic sensor value in centimeters.
     pub fn value(&self) -> Result<i32, AdiError> {
-        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::ext_adi_ultrasonic_get(self.raw)) })
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_ultrasonic_get(self.raw)
+        }))
     }
 }
 

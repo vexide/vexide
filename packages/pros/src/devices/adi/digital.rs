@@ -70,16 +70,13 @@ impl AdiDigitalOut {
 
     /// Sets the digital value (1 or 0) of a pin.
     pub fn set_value(&mut self, value: bool) -> Result<i32, AdiError> {
-        Ok(unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::ext_adi_digital_write(
-                    self.port.internal_expander_index(),
-                    self.port.index(),
-                    value
-                )
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_digital_write(
+                self.port.internal_expander_index(),
+                self.port.index(),
+                value,
             )
-        })
+        }))
     }
 }
 
