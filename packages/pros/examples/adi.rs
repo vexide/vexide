@@ -27,8 +27,8 @@ impl AsyncRobot for ExampleRobot {
         ultrasonic.zero().unwrap();
 
         loop {
-            println!("Encoder value: {}", encoder.value());
-            println!("Ultrasonic value: {}", ultrasonic.value());
+            println!("Encoder value: {:?}", encoder.value());
+            println!("Ultrasonic value: {:?}", ultrasonic.value());
 
             pros::task::delay(Duration::from_millis(10));
         }
