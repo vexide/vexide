@@ -16,7 +16,7 @@ pub(crate) fn take_errno() -> i32 {
 /// Generate an implementation of FromErrno for the given type.
 ///
 /// Example:
-/// ```
+/// ```ignore
 /// map_errno! {
 ///     GpsError {
 ///         EAGAIN => Self::StillCalibrating,

@@ -384,7 +384,7 @@ pub mod prelude {
         os_task_local,
         pid::*,
         sync_robot,
-        task::{sleep, spawn},
+        task::{delay, sleep, spawn},
         AsyncRobot, SyncRobot,
     };
 }

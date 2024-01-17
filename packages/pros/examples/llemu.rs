@@ -5,7 +5,6 @@ use pros::prelude::*;
 
 #[derive(Default)]
 pub struct Robot;
-#[async_trait]
 impl AsyncRobot for Robot {
     async fn opcontrol(&mut self) -> pros::Result {
         llemu_println!("basic example");

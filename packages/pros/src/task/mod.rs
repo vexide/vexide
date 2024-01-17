@@ -7,6 +7,8 @@
 //! Tasks can be created with the [`spawn`] function or, for more control, with a task [`Builder`].
 //! ## Example
 //! ```rust
+//! # use pros::prelude::println;
+//! use pros::task::{spawn, TaskPriority};
 //! spawn(|| {
 //!    println!("Hello from a task!");
 //! });

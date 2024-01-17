@@ -82,3 +82,6 @@ $RECYCLE.BIN/
 
 # Direnv
 /.direnv
+
+# RustRover/IDEA support
+.idea

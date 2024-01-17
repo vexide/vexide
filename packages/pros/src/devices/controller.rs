@@ -80,8 +80,8 @@ impl ControllerLine {
 }
 
 /// A digital channel (button) on the VEX controller.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControllerButton {
     A = pros_sys::E_CONTROLLER_DIGITAL_A,
     B = pros_sys::E_CONTROLLER_DIGITAL_B,
@@ -98,8 +98,8 @@ pub enum ControllerButton {
 }
 
 /// An analog channel (joystick axis) on the VEX controller.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum JoystickAxis {
     LeftX = pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
     LeftY = pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
