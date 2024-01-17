@@ -1,23 +1,27 @@
-use pros_sys::{adi_encoder_t, PROS_ERR};
+use pros_sys::{ext_adi_encoder_t, PROS_ERR};
 
-use crate::{
-    adi::{AdiError, AdiSlot},
-    error::bail_on,
-};
+use super::{AdiError, AdiPort};
+use crate::error::bail_on;
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct AdiEncoder {
-    raw: adi_encoder_t,
+    raw: ext_adi_encoder_t,
 }
 
 impl AdiEncoder {
     /// Create an AdiEncoder, returning err `AdiError::InvalidPort` if the port is invalid.
-    pub fn new(ports: (AdiSlot, AdiSlot), reverse: bool) -> Result<Self, AdiError> {
+    pub fn new(ports: (AdiPort, AdiPort), reverse: bool) -> Result<Self, AdiError> {
         let port_top = ports.0;
         let port_bottom = ports.1;
+
+        if port_top.internal_expander_index() != port_bottom.internal_expander_index() {
+            return Err(AdiError::ExpanderPortMismatch);
+        }
+
         Ok(Self {
             raw: unsafe {
-                bail_on! {PROS_ERR, pros_sys::adi_encoder_init(port_top as u8, port_bottom as u8, reverse)}
-            },
+                bail_on!(PROS_ERR, pros_sys::ext_adi_encoder_init(port_top.internal_expander_index(), port_top.index(), port_bottom.index(), reverse))
+            }
         })
     }
 

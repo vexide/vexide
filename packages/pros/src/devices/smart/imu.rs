@@ -319,12 +319,12 @@ impl TryFrom<pros_sys::quaternion_s_t> for Quaternion {
 }
 
 impl From<Quaternion> for pros_sys::quaternion_s_t {
-    fn from(val: Quaternion) -> Self {
+    fn from(value: Quaternion) -> Self {
         pros_sys::quaternion_s_t {
-            x: val.x,
-            y: val.y,
-            z: val.z,
-            w: val.w,
+            x: value.x,
+            y: value.y,
+            z: value.z,
+            w: value.w,
         }
     }
 }

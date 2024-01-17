@@ -91,7 +91,7 @@ impl SmartPort {
     }
 
     /// Get the type of device currently registered to this port.
-    pub fn bound_type(&self) -> Result<SmartDeviceType, PortError> {
+    pub fn registered_type(&self) -> Result<SmartDeviceType, PortError> {
         unsafe { pros_sys::apix::registry_get_bound_type(self.index() - 1).try_into() }
     }
 }
@@ -135,5 +135,11 @@ impl TryFrom<pros_sys::apix::v5_device_e_t> for SmartDeviceType {
             pros_sys::apix::E_DEVICE_SERIAL => Self::Serial,
             _ => unreachable!(),
         })
+    }
+}
+
+impl From<SmartDeviceType> for pros_sys::apix::v5_device_e_t {
+    fn from(value: SmartDeviceType) -> Self {
+        value as _
     }
 }
