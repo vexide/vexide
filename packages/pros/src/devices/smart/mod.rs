@@ -91,8 +91,8 @@ impl SmartPort {
         unsafe { pros_sys::apix::registry_get_plugged_type(self.index() - 1).try_into() }
     }
 
-    /// Get the type of device currently registered to this port.
-    pub fn registered_type(&self) -> Result<SmartDeviceType, PortError> {
+    /// Get the type of device this port is configured as.
+    pub fn configured_type(&self) -> Result<SmartDeviceType, PortError> {
         unsafe { pros_sys::apix::registry_get_bound_type(self.index() - 1).try_into() }
     }
 }

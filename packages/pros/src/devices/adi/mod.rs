@@ -70,8 +70,8 @@ impl AdiPort {
             .unwrap_or(pros_sys::adi::INTERNAL_ADI_PORT as u8)
     }
 
-    /// Get the type of device currently registered to this port.
-    pub fn registered_type(&self) -> Result<AdiDeviceType, AdiError> {
+    /// Get the type of device this port is currently configured as.
+    pub fn configured_type(&self) -> Result<AdiDeviceType, AdiError> {
         Ok(unsafe {
             bail_on!(
                 PROS_ERR,
