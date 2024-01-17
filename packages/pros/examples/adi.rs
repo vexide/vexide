@@ -10,15 +10,19 @@ struct ExampleRobot;
 
 impl AsyncRobot for ExampleRobot {
     async fn opcontrol(&mut self) -> pros::Result {
-        let encoder_top = unsafe { AdiPort::new(1, None) };
-        let encoder_bottom = unsafe { AdiPort::new(2, None) };
+        let encoder_top_port = unsafe { AdiPort::new(1, None) };
+        let encoder_bottom_port = unsafe { AdiPort::new(2, None) };
 
-        let ultrasonic_ping = unsafe { AdiPort::new(3, None) };
-        let ultrasonic_echo = unsafe { AdiPort::new(4, None) };
+        let ultrasonic_ping_port = unsafe { AdiPort::new(3, None) };
+        let ultrasonic_echo_port = unsafe { AdiPort::new(4, None) };
 
-        let encoder = AdiEncoder::new((encoder_top, encoder_bottom), false).unwrap();
-        let ultrasonic = AdiUltrasonic::new((ultrasonic_ping, ultrasonic_echo)).unwrap();
+        let gyro_port = unsafe { AdiPOrt::new(5, None) };
 
+        let encoder = AdiEncoder::new((encoder_top_port, encoder_bottom_port), false).unwrap();
+        let ultrasonic = AdiUltrasonic::new((ultrasonic_ping_port, ultrasonic_echo_port)).unwrap();
+        let gyro = AdiGyro::new(gyro_port, 1.0).unwrap();
+
+        gyro.zero().unwrap();
         encoder.zero().unwrap();
         ultrasonic.zero().unwrap();
 
