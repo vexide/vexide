@@ -11,7 +11,7 @@ use snafu::Snafu;
 use crate::error::{bail_on, map_errno};
 
 /// Holds whether or not the buttons on the controller are pressed or not
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Buttons {
     pub a: bool,
     pub b: bool,
@@ -30,7 +30,7 @@ pub struct Buttons {
 /// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
 /// On the x axis left is negative, and right is positive.
 /// On the y axis down is negative, and up is positive.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Joystick {
     pub x: f32,
     pub y: f32,
@@ -51,6 +51,7 @@ pub struct ControllerState {
 }
 
 /// Represents one line on the controller console.
+#[derive(Debug, Clone, Copy)]
 pub struct ControllerLine {
     controller: Controller,
     line: u8,

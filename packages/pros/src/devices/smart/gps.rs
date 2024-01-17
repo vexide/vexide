@@ -6,9 +6,11 @@
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::error::{bail_on, map_errno, PortError};
 
 /// Represents the data output from a GPS sensor.
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct GpsStatus {
     pub x: f64,
     pub y: f64,
@@ -22,18 +24,19 @@ pub struct GpsStatus {
     pub accel_z: f64,
 }
 
-// A physical GPS sensor plugged into a port.
+/// A physical GPS sensor plugged into a port.
+#[derive(Debug, Eq, PartialEq)]
 pub struct GpsSensor {
-    port: u8,
+    port: SmartPort,
 }
 
 impl GpsSensor {
     /// Creates a new GPS sensor on the given port.
-    pub fn new(port: u8) -> Result<Self, GpsError> {
+    pub fn new(port: SmartPort) -> Result<Self, GpsError> {
         unsafe {
             bail_on!(
                 PROS_ERR,
-                pros_sys::gps_initialize_full(port, 0.0, 0.0, 0.0, 0.0, 0.0)
+                pros_sys::gps_initialize_full(port.index(), 0.0, 0.0, 0.0, 0.0, 0.0)
             );
         }
 
@@ -43,24 +46,24 @@ impl GpsSensor {
     /// Sets the offset of the GPS sensor, relative to the sensor of turning, in meters.
     pub fn set_offset(&mut self, x: f64, y: f64) -> Result<(), GpsError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::gps_set_offset(self.port, x, y));
+            bail_on!(PROS_ERR, pros_sys::gps_set_offset(self.port.index(), x, y));
         }
         Ok(())
     }
 
     /// Gets the possible error of the GPS sensor, in meters.
     pub fn rms_error(&self) -> Result<f64, GpsError> {
-        Ok(unsafe { bail_on!(PROS_ERR_F, pros_sys::gps_get_error(self.port)) })
+        Ok(unsafe { bail_on!(PROS_ERR_F, pros_sys::gps_get_error(self.port.index())) })
     }
 
     /// Gets the status of the GPS sensor.
     pub fn status(&self) -> Result<GpsStatus, GpsError> {
         unsafe {
-            let status = pros_sys::gps_get_status(self.port);
+            let status = pros_sys::gps_get_status(self.port.index());
             bail_on!(PROS_ERR_F, status.x);
-            let accel = pros_sys::gps_get_accel(self.port);
+            let accel = pros_sys::gps_get_accel(self.port.index());
             bail_on!(PROS_ERR_F, accel.x);
-            let heading = bail_on!(PROS_ERR_F, pros_sys::gps_get_heading(self.port));
+            let heading = bail_on!(PROS_ERR_F, pros_sys::gps_get_heading(self.port.index()));
 
             Ok(GpsStatus {
                 x: status.x,
@@ -78,11 +81,21 @@ impl GpsSensor {
     }
 
     /// Zeroes the rotation of the GPS sensor.
-    pub fn zero_rotation(&self) -> Result<(), GpsError> {
+    pub fn zero_rotation(&mut self) -> Result<(), GpsError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::gps_tare_rotation(self.port));
+            bail_on!(PROS_ERR, pros_sys::gps_tare_rotation(self.port.index()));
         }
         Ok(())
+    }
+}
+
+impl SmartDevice for GpsSensor {
+    fn port_index(&self) -> u8 {
+        self.port.index()
+    }
+
+    fn device_type(&self) -> SmartDeviceType {
+        SmartDeviceType::Gps
     }
 }
 

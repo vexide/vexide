@@ -7,32 +7,34 @@ use core::{
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
-use crate::error::{bail_on, map_errno, take_errno, FromErrno, PortError};
+use super::{SmartDevice, SmartDeviceType, SmartPort};
+use crate::{
+    error::{bail_on, map_errno, take_errno, FromErrno, PortError},
+    time::Instant,
+};
 
 pub const IMU_RESET_TIMEOUT: Duration = Duration::from_secs(3);
 pub const IMU_MIN_DATA_RATE: Duration = Duration::from_millis(5);
 
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct InertialSensor {
-    port: u8,
+    port: SmartPort,
 }
 
 impl InertialSensor {
     /// Create a new inertial sensor from a smart port index.
-    pub fn new(port: u8) -> Result<Self, InertialError> {
-        let sensor = Self { port };
-        sensor.status()?;
-        Ok(sensor)
+    pub fn new(port: SmartPort) -> Self {
+        Self { port }
     }
 
     /// Calibrate IMU.
     ///
     /// This takes approximately 2 seconds, and is blocking until the IMU status flag is set properly.
     /// There is additionally a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
-    pub fn calibrate_blocking(&self) -> Result<(), InertialError> {
+    pub fn calibrate_blocking(&mut self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_reset_blocking(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_reset_blocking(self.port.index()));
         }
         Ok(())
     }
@@ -42,12 +44,12 @@ impl InertialSensor {
     /// Returns an [`InertialCalibrationFuture`] that is be polled until the IMU status flag reports the sensor as
     /// no longer calibrating.
     /// There a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
-    pub fn calibrate(&self) -> InertialCalibrateFuture {
-        InertialCalibrateFuture::Calibrate(*self)
+    pub fn calibrate(&mut self) -> InertialCalibrateFuture {
+        InertialCalibrateFuture::Calibrate(self.port.index())
     }
 
     /// Check if the Intertial Sensor is currently calibrating.
-    pub fn is_calibrating(&self) -> Result<bool, InertialError> {
+    pub fn is_calibrating(&mut self) -> Result<bool, InertialError> {
         Ok(self.status()?.calibrating())
     }
 
@@ -56,7 +58,12 @@ impl InertialSensor {
     /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
     /// while counterclockwise rotations are represented with negative ones.
     pub fn rotation(&self) -> Result<f64, InertialError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::imu_get_rotation(self.port))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::imu_get_rotation(self.port.index())
+            ))
+        }
     }
 
     /// Get the Inertial Sensor’s heading relative to the initial direction of its x-axis.
@@ -64,107 +71,121 @@ impl InertialSensor {
     /// This value is bounded by [0, 360) degrees. Clockwise rotations are represented with positive degree values,
     /// while counterclockwise rotations are represented with negative ones.
     pub fn heading(&self) -> Result<f64, InertialError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::imu_get_heading(self.port))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::imu_get_heading(self.port.index())
+            ))
+        }
     }
 
     /// Get the Inertial Sensor’s pitch angle bounded by (-180, 180) degrees.
     pub fn pitch(&self) -> Result<f64, InertialError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::imu_get_pitch(self.port))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::imu_get_pitch(self.port.index())
+            ))
+        }
     }
 
     /// Get the Inertial Sensor’s roll angle bounded by (-180, 180) degrees.
     pub fn roll(&self) -> Result<f64, InertialError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::imu_get_roll(self.port))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::imu_get_roll(self.port.index())
+            ))
+        }
     }
 
     /// Get the Inertial Sensor’s yaw angle bounded by (-180, 180) degrees.
     pub fn yaw(&self) -> Result<f64, InertialError> {
-        unsafe { Ok(bail_on!(PROS_ERR_F, pros_sys::imu_get_yaw(self.port))) }
+        unsafe {
+            Ok(bail_on!(
+                PROS_ERR_F,
+                pros_sys::imu_get_yaw(self.port.index())
+            ))
+        }
     }
 
     /// Read the inertial sensor's status code.
     pub fn status(&self) -> Result<InertialStatus, InertialError> {
-        unsafe {
-            Ok(bail_on!(
-                PROS_ERR as _,
-                pros_sys::imu_get_status(self.port) as pros_sys::imu_status_e_t
-            )
-            .into())
-        }
+        unsafe { Ok(bail_on!(PROS_ERR as _, pros_sys::imu_get_status(self.port.index())).into()) }
     }
 
     /// Get a quaternion representing the Inertial Sensor’s orientation.
     pub fn quaternion(&self) -> Result<Quaternion, InertialError> {
-        unsafe { pros_sys::imu_get_quaternion(self.port).try_into() }
+        unsafe { pros_sys::imu_get_quaternion(self.port.index()).try_into() }
     }
 
     /// Get the Euler angles representing the Inertial Sensor’s orientation.
     pub fn euler(&self) -> Result<Euler, InertialError> {
-        unsafe { pros_sys::imu_get_euler(self.port).try_into() }
+        unsafe { pros_sys::imu_get_euler(self.port.index()).try_into() }
     }
 
     /// Get the Inertial Sensor’s raw gyroscope values.
     pub fn gyro_rate(&self) -> Result<InertialRaw, InertialError> {
-        unsafe { pros_sys::imu_get_gyro_rate(self.port).try_into() }
+        unsafe { pros_sys::imu_get_gyro_rate(self.port.index()).try_into() }
     }
 
     /// Get the Inertial Sensor’s raw accelerometer values.
     pub fn accel(&self) -> Result<InertialRaw, InertialError> {
-        unsafe { pros_sys::imu_get_accel(self.port).try_into() }
+        unsafe { pros_sys::imu_get_accel(self.port.index()).try_into() }
     }
 
     /// Resets the current reading of the Inertial Sensor’s heading to zero.
-    pub fn zero_heading(&self) -> Result<(), InertialError> {
+    pub fn zero_heading(&mut self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_tare_heading(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_tare_heading(self.port.index()));
         }
         Ok(())
     }
 
     /// Resets the current reading of the Inertial Sensor’s rotation to zero.
-    pub fn zero_rotation(&self) -> Result<(), InertialError> {
+    pub fn zero_rotation(&mut self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_tare_rotation(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_tare_rotation(self.port.index()));
         }
         Ok(())
     }
 
     /// Resets the current reading of the Inertial Sensor’s pitch to zero.
-    pub fn zero_pitch(&self) -> Result<(), InertialError> {
+    pub fn zero_pitch(&mut self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_tare_pitch(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_tare_pitch(self.port.index()));
         }
         Ok(())
     }
 
     /// Resets the current reading of the Inertial Sensor’s roll to zero.
-    pub fn zero_roll(&self) -> Result<(), InertialError> {
+    pub fn zero_roll(&mut self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_tare_roll(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_tare_roll(self.port.index()));
         }
         Ok(())
     }
 
     /// Resets the current reading of the Inertial Sensor’s yaw to zero.
-    pub fn zero_yaw(&self) -> Result<(), InertialError> {
+    pub fn zero_yaw(&mut self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_tare_yaw(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_tare_yaw(self.port.index()));
         }
         Ok(())
     }
 
     /// Reset all 3 euler values of the Inertial Sensor to 0.
-    pub fn zero_euler(&self) -> Result<(), InertialError> {
+    pub fn zero_euler(&mut self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_tare_euler(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_tare_euler(self.port.index()));
         }
         Ok(())
     }
 
     /// Resets all 5 values of the Inertial Sensor to 0.
-    pub fn zero(&self) -> Result<(), InertialError> {
+    pub fn zero(&mut self) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_tare(self.port));
+            bail_on!(PROS_ERR, pros_sys::imu_tare(self.port.index()));
         }
         Ok(())
     }
@@ -172,17 +193,23 @@ impl InertialSensor {
     /// Sets the current reading of the Inertial Sensor’s euler values to target euler values.
     ///
     /// Will default to +/- 180 if target exceeds +/- 180.
-    pub fn set_euler(&self, euler: Euler) -> Result<(), InertialError> {
+    pub fn set_euler(&mut self, euler: Euler) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_set_euler(self.port, euler.into()));
+            bail_on!(
+                PROS_ERR,
+                pros_sys::imu_set_euler(self.port.index(), euler.into())
+            );
         }
         Ok(())
     }
 
     /// Sets the current reading of the Inertial Sensor’s rotation to target value.
-    pub fn set_rotation(&self, rotation: f64) -> Result<(), InertialError> {
+    pub fn set_rotation(&mut self, rotation: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_set_rotation(self.port, rotation));
+            bail_on!(
+                PROS_ERR,
+                pros_sys::imu_set_rotation(self.port.index(), rotation)
+            );
         }
         Ok(())
     }
@@ -190,9 +217,12 @@ impl InertialSensor {
     /// Sets the current reading of the Inertial Sensor’s heading to target value.
     ///
     /// Target will default to 360 if above 360 and default to 0 if below 0.
-    pub fn set_heading(&self, heading: f64) -> Result<(), InertialError> {
+    pub fn set_heading(&mut self, heading: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_set_heading(self.port, heading));
+            bail_on!(
+                PROS_ERR,
+                pros_sys::imu_set_heading(self.port.index(), heading)
+            );
         }
         Ok(())
     }
@@ -200,9 +230,9 @@ impl InertialSensor {
     /// Sets the current reading of the Inertial Sensor’s pitch to target value.
     ///
     /// Will default to +/- 180 if target exceeds +/- 180.
-    pub fn set_pitch(&self, pitch: f64) -> Result<(), InertialError> {
+    pub fn set_pitch(&mut self, pitch: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_set_pitch(self.port, pitch));
+            bail_on!(PROS_ERR, pros_sys::imu_set_pitch(self.port.index(), pitch));
         }
         Ok(())
     }
@@ -210,9 +240,9 @@ impl InertialSensor {
     /// Sets the current reading of the Inertial Sensor’s roll to target value
     ///
     /// Will default to +/- 180 if target exceeds +/- 180.
-    pub fn set_roll(&self, roll: f64) -> Result<(), InertialError> {
+    pub fn set_roll(&mut self, roll: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_set_roll(self.port, roll));
+            bail_on!(PROS_ERR, pros_sys::imu_set_roll(self.port.index(), roll));
         }
         Ok(())
     }
@@ -220,9 +250,9 @@ impl InertialSensor {
     /// Sets the current reading of the Inertial Sensor’s yaw to target value.
     ///
     /// Will default to +/- 180 if target exceeds +/- 180.
-    pub fn set_yaw(&self, yaw: f64) -> Result<(), InertialError> {
+    pub fn set_yaw(&mut self, yaw: f64) -> Result<(), InertialError> {
         unsafe {
-            bail_on!(PROS_ERR, pros_sys::imu_set_yaw(self.port, yaw));
+            bail_on!(PROS_ERR, pros_sys::imu_set_yaw(self.port.index(), yaw));
         }
         Ok(())
     }
@@ -230,7 +260,7 @@ impl InertialSensor {
     /// Sets the update rate of the IMU.
     ///
     /// This duration must be above [`IMU_MIN_DATA_RATE`] (5 milliseconds).
-    pub fn set_data_rate(&self, data_rate: Duration) -> Result<(), InertialError> {
+    pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
         unsafe {
             let rate_ms = if data_rate > IMU_MIN_DATA_RATE {
                 if let Ok(rate) = u32::try_from(data_rate.as_millis()) {
@@ -242,9 +272,22 @@ impl InertialSensor {
                 return Err(InertialError::InvalidDataRate);
             };
 
-            bail_on!(PROS_ERR, pros_sys::imu_set_data_rate(self.port, rate_ms));
+            bail_on!(
+                PROS_ERR,
+                pros_sys::imu_set_data_rate(self.port.index(), rate_ms)
+            );
         }
         Ok(())
+    }
+}
+
+impl SmartDevice for InertialSensor {
+    fn port_index(&self) -> u8 {
+        self.port.index()
+    }
+
+    fn device_type(&self) -> SmartDeviceType {
+        SmartDeviceType::Imu
     }
 }
 
@@ -279,12 +322,12 @@ impl TryFrom<pros_sys::quaternion_s_t> for Quaternion {
 }
 
 impl From<Quaternion> for pros_sys::quaternion_s_t {
-    fn from(val: Quaternion) -> Self {
+    fn from(value: Quaternion) -> Self {
         pros_sys::quaternion_s_t {
-            x: val.x,
-            y: val.y,
-            z: val.z,
-            w: val.w,
+            x: value.x,
+            y: value.y,
+            z: value.z,
+            w: value.w,
         }
     }
 }
@@ -328,7 +371,7 @@ impl From<Euler> for pros_sys::euler_s_t {
 ///
 /// This is effectively a 3D vector containing either angular velocity or
 /// acceleration values depending on the type of data requested..
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct InertialRaw {
     /// The x component of the raw data.
     pub x: f64,
@@ -374,43 +417,48 @@ impl From<pros_sys::imu_status_e_t> for InertialStatus {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum InertialCalibrateFuture {
-    Calibrate(InertialSensor),
-    Waiting(InertialSensor, Duration),
+    Calibrate(u8),
+    Waiting(u8, Instant),
 }
 
 impl core::future::Future for InertialCalibrateFuture {
     type Output = Result<(), InertialError>;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        loop {
-            match *self {
-                Self::Calibrate(imu) => match unsafe { pros_sys::imu_reset(imu.port) } {
-                    PROS_ERR => {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+        match *self {
+            Self::Calibrate(port) => match unsafe { pros_sys::imu_reset(port) } {
+                PROS_ERR => {
+                    let errno = take_errno();
+                    return Poll::Ready(Err(InertialError::from_errno(errno)
+                        .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
+                }
+                _ => {
+                    *self = Self::Waiting(port, Instant::now());
+                    cx.waker().wake_by_ref();
+                    Poll::Pending
+                }
+            },
+            Self::Waiting(port, timestamp) => {
+                const PROS_ERR_U32: u32 = PROS_ERR as _;
+                let is_calibrating = match unsafe { pros_sys::imu_get_status(port) } {
+                    PROS_ERR_U32 => {
                         let errno = take_errno();
-                        return Poll::Ready(Err(InertialError::from_errno(errno)
+                        return Poll::Ready(Err(InertialError::from_errno(take_errno())
                             .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
                     }
-                    _ => {
-                        *self = Self::Waiting(
-                            imu,
-                            Duration::from_micros(unsafe { pros_sys::rtos::micros() }),
-                        );
-                    }
-                },
-                Self::Waiting(imu, timestamp) => {
-                    let elapsed =
-                        Duration::from_micros(unsafe { pros_sys::rtos::micros() }) - timestamp;
+                    value => (value & pros_sys::E_IMU_STATUS_CALIBRATING) != 0,
+                };
 
-                    return if elapsed > IMU_RESET_TIMEOUT {
-                        Poll::Ready(Err(InertialError::CalibrationTimedOut))
-                    } else if imu.is_calibrating()? {
-                        cx.waker().wake_by_ref();
-                        Poll::Pending
-                    } else {
-                        Poll::Ready(Ok(()))
-                    };
+                if !is_calibrating {
+                    return Poll::Ready(Ok(()));
+                } else if timestamp.elapsed() > IMU_RESET_TIMEOUT {
+                    return Poll::Ready(Err(InertialError::CalibrationTimedOut));
                 }
+
+                cx.waker().wake_by_ref();
+                Poll::Pending
             }
         }
     }

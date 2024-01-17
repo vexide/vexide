@@ -1,19 +1,17 @@
 use pros_sys::PROS_ERR;
 
-use crate::{
-    adi::{AdiError, AdiSlot},
-    error::bail_on,
-};
+use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
+use crate::error::bail_on;
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct AdiAnalogIn {
-    port: u8,
+    port: AdiPort,
 }
 
 impl AdiAnalogIn {
-    /// Create an AdiAnalogIn, returning err `AdiError::InvalidPort` if the port is invalid.
-    pub fn new(slot: AdiSlot) -> Result<Self, AdiError> {
-        let port = slot as u8;
-        Ok(Self { port })
+    /// Create a analog input from an ADI port.
+    pub fn new(port: AdiPort) -> Self {
+        Self { port }
     }
 
     /// Calibrates the analog sensor on the specified channel.
@@ -27,8 +25,15 @@ impl AdiAnalogIn {
     ///
     /// These functions will return the difference between this value and the current
     /// sensor value when called.
-    pub fn calibrate(&mut self) -> Result<i32, AdiError> {
-        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_analog_calibrate(self.port)) })
+    pub fn calibrate(&mut self) -> Result<(), AdiError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_analog_calibrate(
+                self.port.internal_expander_index(),
+                self.port.index(),
+            )
+        });
+
+        Ok(())
     }
 
     /// Reads an analog input channel and returns the 12-bit value.
@@ -36,7 +41,9 @@ impl AdiAnalogIn {
     /// The value returned is undefined if the analog pin has been switched to a different mode.
     /// The meaning of the returned value varies depending on the sensor attached.
     pub fn value(&self) -> Result<i32, AdiError> {
-        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_analog_read(self.port)) })
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_analog_read(self.port.internal_expander_index(), self.port.index())
+        }))
     }
 
     /// Reads the calibrated value of an analog input channel.
@@ -47,7 +54,12 @@ impl AdiAnalogIn {
     /// as round-off error can accumulate causing drift over time.
     /// Use value_calbrated_hr instead.
     pub fn value_calibrated(&self) -> Result<i32, AdiError> {
-        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_analog_read_calibrated(self.port)) })
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_analog_read_calibrated(
+                self.port.internal_expander_index(),
+                self.port.index(),
+            )
+        }))
     }
 
     /// Reads the calibrated value of an analog input channel 1-8 with enhanced precision.
@@ -65,19 +77,40 @@ impl AdiAnalogIn {
     ///
     /// Think of the value as the true value times 16.
     pub fn value_calibrated_hr(&self) -> Result<i32, AdiError> {
-        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_analog_read_calibrated_HR(self.port)) })
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_analog_read_calibrated_HR(
+                self.port.internal_expander_index(),
+                self.port.index(),
+            )
+        }))
     }
 }
 
+impl AdiDevice for AdiAnalogIn {
+    type PortIndexOutput = u8;
+
+    fn port_index(&self) -> Self::PortIndexOutput {
+        self.port.index()
+    }
+
+    fn expander_port_index(&self) -> Option<u8> {
+        self.port.expander_index()
+    }
+
+    fn device_type(&self) -> AdiDeviceType {
+        AdiDeviceType::AnalogIn
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
 pub struct AdiAnalogOut {
-    port: u8,
+    port: AdiPort,
 }
 
 impl AdiAnalogOut {
-    /// Create an AdiAnalogOut, returning err `AdiError::InvalidPort` if the port is invalid.
-    pub fn new(slot: AdiSlot) -> Result<Self, AdiError> {
-        let port = slot as u8;
-        Ok(Self { port })
+    /// Create a analog output from an [`AdiPort`].
+    pub fn new(port: AdiPort) -> Self {
+        Self { port }
     }
 
     /// Sets the output for the Analog Output from 0 (0V) to 4095 (5V).
@@ -85,8 +118,24 @@ impl AdiAnalogOut {
         Ok(unsafe {
             bail_on! {
                 PROS_ERR,
-                pros_sys::adi_port_set_value(self.port, value)
+                pros_sys::ext_adi_port_set_value(self.port.internal_expander_index(), self.port.index(), value)
             }
         })
+    }
+}
+
+impl AdiDevice for AdiAnalogOut {
+    type PortIndexOutput = u8;
+
+    fn port_index(&self) -> Self::PortIndexOutput {
+        self.port.index()
+    }
+
+    fn expander_port_index(&self) -> Option<u8> {
+        self.port.expander_index()
+    }
+
+    fn device_type(&self) -> AdiDeviceType {
+        AdiDeviceType::AnalogOut
     }
 }

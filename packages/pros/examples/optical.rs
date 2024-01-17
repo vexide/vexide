@@ -10,7 +10,7 @@ pub struct Robot;
 
 impl SyncRobot for Robot {
     fn opcontrol(&mut self) -> pros::Result {
-        let sensor = OpticalSensor::new(1, true)?;
+        let sensor = OpticalSensor::new(unsafe { SmartPort::new(1) }, true)?;
 
         loop {
             println!(
