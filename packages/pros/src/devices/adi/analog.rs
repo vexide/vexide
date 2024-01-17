@@ -9,7 +9,7 @@ pub struct AdiAnalogIn {
 }
 
 impl AdiAnalogIn {
-    /// Create an AdiAnalogIn with an [`AdiPort`].
+    /// Create a analog input from an ADI port.
     pub fn new(port: AdiPort) -> Self {
         Self { port }
     }
@@ -108,7 +108,7 @@ pub struct AdiAnalogOut {
 }
 
 impl AdiAnalogOut {
-    /// Create an AdiAnalogOut, returning err `AdiError::InvalidPort` if the port is invalid.
+    /// Create a analog output from an [`AdiPort`].
     pub fn new(port: AdiPort) -> Self {
         Self { port }
     }
