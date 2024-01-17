@@ -12,7 +12,7 @@ pub struct AdiUltrasonic {
 
 impl AdiUltrasonic {
     /// Create an AdiUltrasonic, returning err `AdiError::InvalidPort` if the port is invalid.
-    pub unsafe fn new(ports: (AdiPort, AdiPort)) -> Result<Self, AdiError> {
+    pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, AdiError> {
         let port_ping = ports.0;
         let port_echo = ports.1;
 
