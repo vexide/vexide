@@ -8,7 +8,10 @@ use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::error::{bail_on, map_errno, take_errno, FromErrno, PortError};
+use crate::{
+    time::Instant,
+    error::{bail_on, map_errno, take_errno, FromErrno, PortError},
+};
 
 pub const IMU_RESET_TIMEOUT: Duration = Duration::from_secs(3);
 pub const IMU_MIN_DATA_RATE: Duration = Duration::from_millis(5);
@@ -42,7 +45,7 @@ impl InertialSensor {
     /// no longer calibrating.
     /// There a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
     pub fn calibrate(&mut self) -> InertialCalibrateFuture {
-        InertialCalibrateFuture::Calibrate(self.port.index())
+        InertialCalibrateFuture::new(self.port.index())
     }
 
     /// Check if the Intertial Sensor is currently calibrating.
@@ -415,54 +418,68 @@ impl From<pros_sys::imu_status_e_t> for InertialStatus {
 }
 
 #[derive(Debug)]
-pub enum InertialCalibrateFuture {
-    Calibrate(u8),
-    Waiting(u8, Duration),
+pub struct InertialCalibrateFuture {
+    counter: u64,
+    port_index: u8,
+    timestamp: Option<Instant>,
+}
+
+impl InertialCalibrateFuture {
+    pub fn new(port_index: u8) -> Self {
+        Self {
+            counter: 0,
+            port_index,
+            timestamp: None,
+        }
+    }
 }
 
 impl core::future::Future for InertialCalibrateFuture {
     type Output = Result<(), InertialError>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        loop {
-            match *self {
-                Self::Calibrate(index) => match unsafe { pros_sys::imu_reset(index) } {
-                    PROS_ERR => {
-                        let errno = take_errno();
-                        return Poll::Ready(Err(InertialError::from_errno(errno)
-                            .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
-                    }
-                    _ => {
-                        *self = Self::Waiting(
-                            index,
-                            Duration::from_micros(unsafe { pros_sys::rtos::micros() }),
-                        );
-                    }
-                },
-                Self::Waiting(index, timestamp) => {
-                    let elapsed =
-                        Duration::from_micros(unsafe { pros_sys::rtos::micros() }) - timestamp;
+        // Increment poll count
+        self.counter += 1;
 
-                    const PROS_ERR_U32: u32 = PROS_ERR as _;
-                    let is_calibrating = match unsafe { pros_sys::imu_get_status(index) } {
-                        PROS_ERR_U32 => {
-                            let errno = take_errno();
-                            return Poll::Ready(Err(InertialError::from_errno(take_errno())
-                                .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
-                        }
-                        value => (value & pros_sys::E_IMU_STATUS_CALIBRATING) != 0,
-                    };
+        // On the first poll, we'll call imu_reset.
+        if self.counter == 1 {
+            match unsafe { pros_sys::imu_reset(self.port_index) } {
+                PROS_ERR => {
+                    let errno = take_errno();
+                    return Poll::Ready(Err(InertialError::from_errno(errno)
+                        .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
+                }
+                _ => {
+                    // Store a timestamp at the start of a successful reset call.
+                    self.timestamp = Some(Instant::now());
 
-                    return if elapsed > IMU_RESET_TIMEOUT {
-                        Poll::Ready(Err(InertialError::CalibrationTimedOut))
-                    } else if is_calibrating {
-                        cx.waker().wake_by_ref();
-                        Poll::Pending
-                    } else {
-                        Poll::Ready(Ok(()))
-                    };
+                    return Poll::Pending;
                 }
             }
+        } else {
+            // Check if the IMU is still calibrating using the status code bitflag.
+            const PROS_ERR_U32: u32 = PROS_ERR as _;
+            let is_calibrating = match unsafe { pros_sys::imu_get_status(self.port_index) } {
+                PROS_ERR_U32 => {
+                    let errno = take_errno();
+                    return Poll::Ready(Err(InertialError::from_errno(take_errno())
+                        .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
+                }
+                value => (value & pros_sys::E_IMU_STATUS_CALIBRATING) != 0,
+            };
+
+            // Evaluate if calibration is done.
+            // - If the IMU stops returning E_IMU_STATUS_CALIBRATING flag, we're done and the sensor is calibrated. 
+            // - If it's been more than IMU_RESET_TIMEOUT, we'll timeout with `InertialError::CalibrationTimedOut`.
+            // - Otherwise, we're still calibrating.
+            return if self.timestamp.expect("Expected IMU calibration timestamp to be set.").elapsed() > IMU_RESET_TIMEOUT {
+                Poll::Ready(Err(InertialError::CalibrationTimedOut))
+            } else if is_calibrating {
+                cx.waker().wake_by_ref();
+                Poll::Pending
+            } else {
+                Poll::Ready(Ok(()))
+            };
         }
     }
 }
