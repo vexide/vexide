@@ -23,6 +23,10 @@ Before releasing:
 
 ### Added
 
+- `SmartPort` struct for device access. (#34)
+- `SmartDevice` trait for common functionality across smart port devices. (#34)
+- Methods to get a device's port number as well as determine if the device is plugged in or not. (#34)
+- Added various missing derives for hardware-related data structures. (#34)
 - `CompetitionSystem` and `CompetitionMode` structs for better retrieving information about the robot's competition state. (#38)
 - `competition::system` method for retrieving the type of competition control the robot is connected to. (#38)
 - New `From` implementation to convert `Quaternion` and `Euler` to their pros-sys equivalents. (#45)
@@ -30,6 +34,7 @@ Before releasing:
 - Various types from the `no_std_io` have are re-exported from this module to provide missing functionality from `std`. (#30)
 - Macros for printing to stdout (`println`, `print`, `eprintln`, etc...) (#30)
 - All ADI device bindings (#55)
+- `LocalKey` now has `Cell`/`RefCell`-specific methods for setting and taking values. (#42)
 
 ### Fixed
 
@@ -47,6 +52,7 @@ Before releasing:
 ### Removed
 
 - Removed several broken bindings in `pros_sys` relating to competition state. (#38) (**Breaking Change**)
+- `LocalKey` no longer implements `set` for non-`Cell`/`RefCell` stored values. (**Breaking change**) (#42)
 
 ## [0.6.0] - 2024-01-14
 
@@ -64,9 +70,15 @@ Before releasing:
 - Panicking behavior has been improved so that spawned tasks will not panic the entire program.
 - Panic messages are now improved and printed over the serial connection.
 - `AsyncRobot` should now be implemented using the newly stabilized async trait syntax instead of the old `async_trait` attribute macro. (**Breaking change**)
+- Add contributing information, pull request templates, and changelog. (#34)
+- `AdiPort` is now structured with ADI expander modules in mind. (**Breaking change**) (#34)
+- Reorganized ADI, Smart Port, and builtin devices into a common `devices` module. (**Breaking change**) (#34)
+- Devices now take `SmartPort`/`AdiPort` rather than a raw port index. (**Breaking change**) (#34)
+- All devices now take `&mut self` for methods modifying hardware state. (**Breaking change**) (#34)
 
 ### Removed
 
+- `Copy`/`Clone` derives for some existing device types. (**Breaking change**) (#34)
 - A nonexistent runner for armv7a-vexos-eabi target has been removed from the cargo config.
 
 ## [0.5.0] - 2024-01-08

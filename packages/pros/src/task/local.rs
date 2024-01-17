@@ -14,7 +14,11 @@
 //! ```
 
 use alloc::{boxed::Box, collections::BTreeMap};
-use core::{cell::RefCell, ptr::NonNull, sync::atomic::AtomicU32};
+use core::{
+    cell::{Cell, RefCell},
+    ptr::NonNull,
+    sync::atomic::AtomicU32,
+};
 
 use spin::Once;
 
@@ -88,43 +92,139 @@ impl<T: 'static> LocalKey<T> {
             .call_once(|| INDEX.fetch_add(1, core::sync::atomic::Ordering::Relaxed) as _)
     }
 
-    /// Sets or initializes the value of this key.
-    /// Does not run the initializer.
-    pub fn set(&'static self, val: T) {
-        let storage = fetch_storage();
-        let index = *self.index();
-
-        let val = Box::leak(Box::new(val));
-
-        storage
-            .borrow_mut()
-            .data
-            .insert(index, NonNull::new((val as *mut T).cast()).unwrap());
-    }
-
     /// Passes a reference to the value of this key to the given closure.
     /// If the value has not been initialized yet, it will be initialized.
     pub fn with<F, R>(&'static self, f: F) -> R
     where
         F: FnOnce(&'static T) -> R,
     {
+        self.initialize_with((self.init)(), |_, val| f(val))
+    }
+
+    /// Acquires a reference to the value in this TLS key, initializing it with
+    /// `init` if it wasn't already initialized on this task.
+    ///
+    /// If `init` was used to initialize the task local variable, `None` is
+    /// passed as the first argument to `f`. If it was already initialized,
+    /// `Some(init)` is passed to `f`.
+    fn initialize_with<F, R>(&'static self, init: T, f: F) -> R
+    where
+        F: FnOnce(Option<T>, &'static T) -> R,
+    {
         let storage = fetch_storage();
         let index = *self.index();
 
-        // Make sure that the borrow is dropped if the if does not execute.
-        // This shouldn't be necessary, but caution is good.
-        {
-            if let Some(val) = storage.borrow_mut().data.get(&index) {
-                return f(unsafe { val.cast().as_ref() });
-            }
+        if let Some(val) = storage.borrow().data.get(&index) {
+            return f(Some(init), unsafe { val.cast().as_ref() });
         }
 
-        let val = Box::leak(Box::new((self.init)()));
+        let val = Box::leak(Box::new(init));
         storage
             .borrow_mut()
             .data
             .insert(index, NonNull::new((val as *mut T).cast::<()>()).unwrap());
-        f(val)
+        f(None, val)
+    }
+}
+
+impl<T: 'static> LocalKey<Cell<T>> {
+    /// Sets or initializes the value of this key.
+    ///
+    /// If the value was already initialized, it is overwritten.
+    /// If the value was not initialized, it is initialized with `value`.
+    pub fn set(&'static self, value: T) {
+        self.initialize_with(Cell::new(value), |value, cell| {
+            if let Some(value) = value {
+                // The cell was already initialized, so `value` wasn't used to
+                // initialize it. So we overwrite the current value with the
+                // new one instead.
+                cell.set(value.into_inner());
+            }
+        });
+    }
+
+    /// Gets a copy of the value in this TLS key.
+    pub fn get(&'static self) -> T
+    where
+        T: Copy,
+    {
+        self.with(|cell| cell.get())
+    }
+
+    /// Takes the value out of this TLS key, replacing it with the [`Default`] value.
+    pub fn take(&'static self) -> T
+    where
+        T: Default,
+    {
+        self.with(|cell| cell.replace(Default::default()))
+    }
+
+    /// Replaces the value in this TLS key with the given one, returning the old value.
+    pub fn replace(&'static self, value: T) -> T {
+        self.with(|cell| cell.replace(value))
+    }
+}
+
+impl<T: 'static> LocalKey<RefCell<T>> {
+    /// Acquires a reference to the contained value, initializing it if required.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently mutably borrowed.
+    pub fn with_borrow<F, R>(&'static self, f: F) -> R
+    where
+        F: FnOnce(&T) -> R,
+    {
+        self.with(|cell| f(&cell.borrow()))
+    }
+
+    /// Acquires a mutable reference to the contained value, initializing it if required.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently borrowed.
+    pub fn with_borrow_mut<F, R>(&'static self, f: F) -> R
+    where
+        F: FnOnce(&mut T) -> R,
+    {
+        self.with(|cell| f(&mut cell.borrow_mut()))
+    }
+
+    /// Sets or initializes the value of this key, without running the initializer.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently borrowed.
+    pub fn set(&'static self, value: T) {
+        self.initialize_with(RefCell::new(value), |value, cell| {
+            if let Some(value) = value {
+                // The cell was already initialized, so `value` wasn't used to
+                // initialize it. So we overwrite the current value with the
+                // new one instead.
+                *cell.borrow_mut() = value.into_inner();
+            }
+        });
+    }
+
+    /// Takes the value out of this TLS key, replacing it with the [`Default`] value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently borrowed.
+    pub fn take(&'static self) -> T
+    where
+        T: Default,
+    {
+        self.with(|cell| cell.take())
+    }
+
+    /// Replaces the value in this TLS key with the given one, returning the old value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently borrowed.
+    pub fn replace(&'static self, value: T) -> T {
+        self.with(|cell| cell.replace(value))
     }
 }
 

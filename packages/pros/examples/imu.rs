@@ -10,7 +10,7 @@ pub struct Robot;
 
 impl AsyncRobot for Robot {
     async fn opcontrol(&mut self) -> pros::Result {
-        let imu = InertialSensor::new(1)?;
+        let imu = InertialSensor::new(unsafe { SmartPort::new(1) })?;
 
         imu.calibrate().await?;
 

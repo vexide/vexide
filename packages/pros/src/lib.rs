@@ -60,12 +60,9 @@ extern crate alloc;
 use core::future::Future;
 
 pub mod async_runtime;
-pub mod controller;
+pub mod devices;
 pub mod error;
-pub mod motor;
 pub mod pid;
-pub mod position;
-pub mod sensors;
 pub mod sync;
 #[macro_use]
 pub mod task;
@@ -78,11 +75,8 @@ mod vexos_env;
 mod wasm_env;
 #[macro_use]
 pub mod lcd;
-pub mod adi;
-pub mod battery;
 pub mod competition;
 pub mod io;
-pub mod link;
 pub mod lvgl;
 pub mod time;
 pub mod usd;
@@ -380,16 +374,35 @@ pub mod prelude {
     pub use crate::{
         async_robot,
         async_runtime::*,
-        controller::*,
+        devices::{
+            adi::{
+                analog::{AdiAnalogIn, AdiAnalogOut},
+                digital::{AdiDigitalIn, AdiDigitalOut},
+                encoder::AdiEncoder,
+                gyro::AdiGyro,
+                motor::AdiMotor,
+                potentiometer::{AdiPotentiometer, AdiPotentiometerType},
+                ultrasonic::AdiUltrasonic,
+                AdiDevice, AdiPort,
+            },
+            position::Position,
+            smart::{
+                distance::DistanceSensor,
+                gps::GpsSensor,
+                imu::InertialSensor,
+                link::{Link, RxLink, TxLink},
+                motor::{BrakeMode, Gearset, Motor},
+                optical::OpticalSensor,
+                rotation::RotationSensor,
+                vision::VisionSensor,
+                SmartDevice, SmartPort,
+            },
+        },
         error::PortError,
         io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write},
         lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
-        link::*,
-        motor::*,
         os_task_local,
         pid::*,
-        position::*,
-        sensors::{distance::*, gps::*, imu::*, optical::*, rotation::*, vision::*},
         sync_robot,
         task::{delay, sleep, spawn},
         AsyncRobot, SyncRobot,
