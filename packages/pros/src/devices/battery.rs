@@ -1,21 +1,46 @@
 //! Utilites for getting information about the robot's battery.
 
-/// Get the robot's battery capacity.
-pub fn get_capacity() -> f64 {
-    unsafe { pros_sys::misc::battery_get_capacity() }
-}
+use pros_sys::{PROS_ERR, PROS_ERR_F};
+use snafu::Snafu;
 
-/// Get the electric current of the robot's battery.
-pub fn get_current() -> i32 {
-    unsafe { pros_sys::misc::battery_get_current() }
+use crate::error::{bail_on, map_errno};
+
+/// Get the robot's battery capacity.
+pub fn capacity() -> Result<f64, BatteryError> {
+    Ok(bail_on!(PROS_ERR_F, unsafe {
+        pros_sys::misc::battery_get_capacity()
+    }))
 }
 
 /// Get the current temperature of the robot's battery.
-pub fn get_temperature() -> f64 {
-    unsafe { pros_sys::misc::battery_get_temperature() }
+pub fn temperature() -> Result<f64, BatteryError> {
+    Ok(bail_on!(PROS_ERR_F, unsafe {
+        pros_sys::misc::battery_get_temperature()
+    }))
+}
+
+/// Get the electric current of the robot's battery.
+pub fn current() -> Result<i32, BatteryError> {
+    Ok(bail_on!(PROS_ERR, unsafe {
+        pros_sys::misc::battery_get_current()
+    }))
 }
 
 /// Get the robot's battery voltage.
-pub fn get_voltage() -> i32 {
-    unsafe { pros_sys::misc::battery_get_voltage() }
+pub fn voltage() -> Result<i32, BatteryError> {
+    Ok(bail_on!(PROS_ERR, unsafe {
+        pros_sys::misc::battery_get_voltage()
+    }))
+}
+
+#[derive(Debug, Snafu)]
+pub enum BatteryError {
+    #[snafu(display("Another resource is already using the controller"))]
+    ConcurrentAccess,
+}
+
+map_errno! {
+    BatteryError {
+        EACCES => Self::ConcurrentAccess,
+    }
 }
