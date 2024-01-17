@@ -12,7 +12,7 @@ pub struct AdiEncoder {
 
 impl AdiEncoder {
     /// Create a new encoder from a top and bottom [`AdiPort`].
-    /// 
+    ///
     /// If using an [`AdiExpander`], both ports must be on the same expander module.
     pub fn new(ports: (AdiPort, AdiPort), reverse: bool) -> Result<Self, AdiError> {
         let port_top = ports.0;
