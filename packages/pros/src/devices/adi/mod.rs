@@ -7,18 +7,23 @@ use crate::error::{bail_on, map_errno, PortError};
 
 pub mod analog;
 pub mod digital;
+
+pub mod addrled;
 pub mod encoder;
 pub mod gyro;
 pub mod motor;
 pub mod potentiometer;
+pub mod solenoid;
 pub mod ultrasonic;
 
+pub use addrled::AdiAddrLed;
 pub use analog::{AdiAnalogIn, AdiAnalogOut};
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
 pub use encoder::AdiEncoder;
 pub use gyro::AdiGyro;
 pub use motor::AdiMotor;
 pub use potentiometer::AdiPotentiometer;
+pub use solenoid::AdiSolenoid;
 pub use ultrasonic::AdiUltrasonic;
 
 /// Represents an ADI (three wire) port on a V5 Brain or V5 Three Wire Expander.

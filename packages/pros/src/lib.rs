@@ -376,12 +376,14 @@ pub mod prelude {
         async_runtime::*,
         devices::{
             adi::{
+                addrled::AdiAddrLed,
                 analog::{AdiAnalogIn, AdiAnalogOut},
                 digital::{AdiDigitalIn, AdiDigitalOut},
                 encoder::AdiEncoder,
                 gyro::AdiGyro,
                 motor::AdiMotor,
                 potentiometer::{AdiPotentiometer, AdiPotentiometerType},
+                solenoid::AdiSolenoid,
                 ultrasonic::AdiUltrasonic,
                 AdiDevice, AdiPort,
             },
