@@ -419,16 +419,16 @@ impl From<pros_sys::imu_status_e_t> for InertialStatus {
 
 #[derive(Debug)]
 pub struct InertialCalibrateFuture {
-    counter: u64,
     port_index: u8,
+    first_poll: bool,
     timestamp: Option<Instant>,
 }
 
 impl InertialCalibrateFuture {
     pub fn new(port_index: u8) -> Self {
         Self {
-            counter: 0,
             port_index,
+            first_poll: true,
             timestamp: None,
         }
     }
@@ -438,11 +438,9 @@ impl core::future::Future for InertialCalibrateFuture {
     type Output = Result<(), InertialError>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        // Increment poll count
-        self.counter += 1;
-
         // On the first poll, we'll call imu_reset.
-        if self.counter == 1 {
+        if self.first_poll {
+            self.first_poll = false;
             match unsafe { pros_sys::imu_reset(self.port_index) } {
                 PROS_ERR => {
                     let errno = take_errno();
