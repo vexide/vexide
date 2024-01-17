@@ -18,7 +18,7 @@ pub use digital::{AdiDigitalIn, AdiDigitalOut};
 pub use encoder::AdiEncoder;
 pub use gyro::AdiGyro;
 pub use motor::AdiMotor;
-pub use potentiometer::{AdiPotentiometer, AdiPotentiometerType};
+pub use potentiometer::AdiPotentiometer;
 pub use ultrasonic::AdiUltrasonic;
 
 /// Represents an ADI (three wire) port on a V5 Brain or V5 Three Wire Expander.

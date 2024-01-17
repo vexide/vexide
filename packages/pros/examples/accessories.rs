@@ -6,7 +6,7 @@ extern crate alloc;
 use alloc::sync::Arc;
 use core::time::Duration;
 
-use pros::{devices::smart::SmartPort, prelude::*, sync::Mutex, task::delay};
+use pros::{prelude::*, sync::Mutex, task::delay};
 
 #[derive(Debug, Default)]
 struct ExampleRobot;

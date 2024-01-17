@@ -374,9 +374,31 @@ pub mod prelude {
     pub use crate::{
         async_robot,
         async_runtime::*,
-        devices::smart::{
-            distance::*, gps::*, imu::*, link::*, motor::*, optical::*, rotation::*, vision::*,
-            SmartDevice,
+        devices::{
+            smart::{
+                SmartDevice,
+                SmartPort,
+                motor::{Motor, Gearset, BrakeMode},
+                distance::DistanceSensor,
+                gps::GpsSensor,
+                imu::InertialSensor,
+                optical::OpticalSensor,
+                rotation::RotationSensor,
+                vision::VisionSensor,
+                link::{Link, TxLink, RxLink},
+            },
+            adi::{
+                AdiDevice,
+                AdiPort,
+                analog::{AdiAnalogIn, AdiAnalogOut},
+                digital::{AdiDigitalIn, AdiDigitalOut},
+                encoder::AdiEncoder,
+                gyro::AdiGyro,
+                motor::AdiMotor,
+                potentiometer::{AdiPotentiometer, AdiPotentiometerType},
+                ultrasonic::AdiUltrasonic
+            },
+            position::Position,
         },
         error::PortError,
         io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write},

@@ -3,7 +3,7 @@
 
 use core::time::Duration;
 
-use pros::{devices::smart::SmartPort, prelude::*};
+use pros::prelude::*;
 
 #[derive(Default)]
 pub struct Robot;
