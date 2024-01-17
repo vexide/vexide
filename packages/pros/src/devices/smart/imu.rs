@@ -9,8 +9,8 @@ use snafu::Snafu;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
-    time::Instant,
     error::{bail_on, map_errno, take_errno, FromErrno, PortError},
+    time::Instant,
 };
 
 pub const IMU_RESET_TIMEOUT: Duration = Duration::from_secs(3);
@@ -469,10 +469,15 @@ impl core::future::Future for InertialCalibrateFuture {
             };
 
             // Evaluate if calibration is done.
-            // - If the IMU stops returning E_IMU_STATUS_CALIBRATING flag, we're done and the sensor is calibrated. 
+            // - If the IMU stops returning E_IMU_STATUS_CALIBRATING flag, we're done and the sensor is calibrated.
             // - If it's been more than IMU_RESET_TIMEOUT, we'll timeout with `InertialError::CalibrationTimedOut`.
             // - Otherwise, we're still calibrating.
-            return if self.timestamp.expect("Expected IMU calibration timestamp to be set.").elapsed() > IMU_RESET_TIMEOUT {
+            return if self
+                .timestamp
+                .expect("Expected IMU calibration timestamp to be set.")
+                .elapsed()
+                > IMU_RESET_TIMEOUT
+            {
                 Poll::Ready(Err(InertialError::CalibrationTimedOut))
             } else if is_calibrating {
                 cx.waker().wake_by_ref();
