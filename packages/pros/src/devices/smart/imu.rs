@@ -428,18 +428,16 @@ impl core::future::Future for InertialCalibrateFuture {
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         match *self {
-            Self::Calibrate(port) => {
-                match unsafe { pros_sys::imu_reset(port) } {
-                    PROS_ERR => {
-                        let errno = take_errno();
-                        return Poll::Ready(Err(InertialError::from_errno(errno)
-                            .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
-                    }
-                    _ => {
-                        *self = Self::Waiting(port, Instant::now());
-                        cx.waker().wake_by_ref();
-                        Poll::Pending
-                    }
+            Self::Calibrate(port) => match unsafe { pros_sys::imu_reset(port) } {
+                PROS_ERR => {
+                    let errno = take_errno();
+                    return Poll::Ready(Err(InertialError::from_errno(errno)
+                        .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
+                }
+                _ => {
+                    *self = Self::Waiting(port, Instant::now());
+                    cx.waker().wake_by_ref();
+                    Poll::Pending
                 }
             },
             Self::Waiting(port, timestamp) => {
@@ -461,7 +459,7 @@ impl core::future::Future for InertialCalibrateFuture {
 
                 cx.waker().wake_by_ref();
                 Poll::Pending
-            },
+            }
         }
     }
 }
