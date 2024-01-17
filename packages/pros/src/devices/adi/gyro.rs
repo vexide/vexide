@@ -1,6 +1,6 @@
 use pros_sys::PROS_ERR;
 
-use super::{AdiError, AdiPort, AdiDevice, AdiDeviceType};
+use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -39,7 +39,6 @@ impl AdiGyro {
         Ok(unsafe { bail_on!(PROS_ERR.into(), pros_sys::ext_adi_gyro_reset(self.raw)) })
     }
 }
-
 
 impl AdiDevice for AdiGyro {
     type PortIndexOutput = u8;

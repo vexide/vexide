@@ -1,6 +1,6 @@
 use pros_sys::{adi_potentiometer_type_e_t, ext_adi_potentiometer_t, PROS_ERR};
 
-use super::{AdiError, AdiPort, AdiDevice, AdiDeviceType};
+use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]

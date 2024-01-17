@@ -1,6 +1,6 @@
 use pros_sys::{ext_adi_ultrasonic_t, PROS_ERR};
 
-use super::{AdiError, AdiPort, AdiDeviceType, AdiDevice};
+use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -32,7 +32,7 @@ impl AdiUltrasonic {
                 )
             },
             port_ping,
-            port_echo
+            port_echo,
         })
     }
 

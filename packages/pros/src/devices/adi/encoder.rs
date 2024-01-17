@@ -1,6 +1,6 @@
 use pros_sys::{ext_adi_encoder_t, PROS_ERR};
 
-use super::{AdiError, AdiPort, AdiDevice, AdiDeviceType};
+use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
