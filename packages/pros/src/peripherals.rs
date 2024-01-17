@@ -1,5 +1,7 @@
 use core::sync::atomic::AtomicBool;
 
+use crate::adi::AdiSlot;
+
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
 pub struct SmartPort {
@@ -28,6 +30,15 @@ pub struct Peripherals {
     pub smart_port_19: SmartPort,
     pub smart_port_20: SmartPort,
     pub smart_port_21: SmartPort,
+
+    pub adi_slot_a: AdiSlot,
+    pub adi_slot_b: AdiSlot,
+    pub adi_slot_c: AdiSlot,
+    pub adi_slot_d: AdiSlot,
+    pub adi_slot_e: AdiSlot,
+    pub adi_slot_f: AdiSlot,
+    pub adi_slot_g: AdiSlot,
+    pub adi_slot_h: AdiSlot,
 }
 
 impl Peripherals {
@@ -54,6 +65,15 @@ impl Peripherals {
             smart_port_19: SmartPort { port_index: 19 },
             smart_port_20: SmartPort { port_index: 20 },
             smart_port_21: SmartPort { port_index: 21 },
+
+            adi_slot_a: AdiSlot { index: 1 },
+            adi_slot_b: AdiSlot { index: 2 },
+            adi_slot_c: AdiSlot { index: 3 },
+            adi_slot_d: AdiSlot { index: 4 },
+            adi_slot_e: AdiSlot { index: 5 },
+            adi_slot_f: AdiSlot { index: 6 },
+            adi_slot_g: AdiSlot { index: 7 },
+            adi_slot_h: AdiSlot { index: 8 },
         }
     }
 
@@ -73,11 +93,16 @@ impl Peripherals {
 
 pub struct DynamicPeripherals {
     smart_ports: [bool; 21],
+    adi_slots: [bool; 8],
 }
 impl DynamicPeripherals {
     pub fn new(_peripherals: Peripherals) -> Self {
         let smart_ports = [false; 21];
-        Self { smart_ports }
+        let adi_slots = [false; 8];
+        Self {
+            smart_ports,
+            adi_slots,
+        }
     }
 
     pub fn take_smart_port(&mut self, port_index: u8) -> Option<SmartPort> {
@@ -89,6 +114,15 @@ impl DynamicPeripherals {
         Some(SmartPort {
             port_index: port_index as u8 + 1,
         })
+    }
+
+    pub fn take_adi_slot(&mut self, slot_index: u8) -> Option<AdiSlot> {
+        let slot_index = slot_index as usize - 1;
+        if self.adi_slots[slot_index] {
+            return None;
+        }
+        self.smart_ports[slot_index] = true;
+        Some(unsafe { AdiSlot::new(slot_index as u8 + 1)? })
     }
 }
 impl From<Peripherals> for DynamicPeripherals {
