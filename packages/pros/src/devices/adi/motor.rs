@@ -1,5 +1,3 @@
-use core::panic;
-
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
