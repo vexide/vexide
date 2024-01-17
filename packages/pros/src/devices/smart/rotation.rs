@@ -94,6 +94,6 @@ impl SmartDevice for RotationSensor {
     }
 
     fn device_type(&self) -> SmartDeviceType {
-        SmartDeviceType::RotationSensor
+        SmartDeviceType::Rotation
     }
 }

@@ -85,7 +85,27 @@ impl AdiPort {
     }
 }
 
+/// Common functionality for a ADI (three-wire) devices.
+pub trait AdiDevice {
+    type PortIndexOutput;
+
+    /// Get the index of the [`AdiPort`] this device is registered on.
+    ///
+    /// Ports are indexed starting from 1.
+    fn port_index(&self) -> Self::PortIndexOutput;
+
+    /// Get the index of the [`AdiPort`] this device is registered on.
+    ///
+    /// Ports are indexed starting from 1.
+    fn expander_port_index(&self) -> Option<u8>;
+
+    /// Get the variant of [`SmartDeviceType`] that this device is associated with.
+    fn device_type(&self) -> AdiDeviceType;
+}
+
+/// Represents a possible type of device that can be registered on a [`AdiPort`].
 #[repr(i32)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum AdiDeviceType {
     AnalogIn = pros_sys::adi::E_ADI_ANALOG_IN,
     AnalogOut = pros_sys::adi::E_ADI_ANALOG_OUT,

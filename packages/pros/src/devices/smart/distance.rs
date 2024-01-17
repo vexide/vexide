@@ -58,6 +58,6 @@ impl SmartDevice for DistanceSensor {
     }
 
     fn device_type(&self) -> SmartDeviceType {
-        SmartDeviceType::DistanceSensor
+        SmartDeviceType::Distance
     }
 }

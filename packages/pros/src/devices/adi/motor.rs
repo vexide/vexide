@@ -2,7 +2,7 @@ use core::panic;
 
 use pros_sys::PROS_ERR;
 
-use super::{AdiError, AdiPort};
+use super::{AdiError, AdiPort, AdiDevice, AdiDeviceType};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -51,5 +51,21 @@ impl AdiMotor {
                 )
             )
         })
+    }
+}
+
+impl AdiDevice for AdiMotor {
+    type PortIndexOutput = u8;
+
+    fn port_index(&self) -> Self::PortIndexOutput {
+        self.port.index()
+    }
+
+    fn expander_port_index(&self) -> Option<u8> {
+        self.port.expander_index()
+    }
+
+    fn device_type(&self) -> AdiDeviceType {
+        AdiDeviceType::LegacyPwm
     }
 }

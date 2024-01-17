@@ -212,7 +212,7 @@ impl SmartDevice for OpticalSensor {
     }
 
     fn device_type(&self) -> SmartDeviceType {
-        SmartDeviceType::OpticalSensor
+        SmartDeviceType::Optical
     }
 }
 

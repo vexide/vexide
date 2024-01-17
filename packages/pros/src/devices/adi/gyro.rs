@@ -1,11 +1,12 @@
 use pros_sys::PROS_ERR;
 
-use super::{AdiError, AdiPort};
+use super::{AdiError, AdiPort, AdiDevice, AdiDeviceType};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiGyro {
     raw: pros_sys::ext_adi_gyro_t,
+    port: AdiPort,
 }
 
 impl AdiGyro {
@@ -22,6 +23,7 @@ impl AdiGyro {
                     )
                 )
             },
+            port,
         })
     }
 
@@ -35,5 +37,22 @@ impl AdiGyro {
     /// Gets the current gyro angle in tenths of a degree. Unless a multiplier is applied to the gyro, the return value will be a whole number representing the number of degrees of rotation times 10.
     pub fn zero(&mut self) -> Result<i32, AdiError> {
         Ok(unsafe { bail_on!(PROS_ERR.into(), pros_sys::ext_adi_gyro_reset(self.raw)) })
+    }
+}
+
+
+impl AdiDevice for AdiGyro {
+    type PortIndexOutput = u8;
+
+    fn port_index(&self) -> Self::PortIndexOutput {
+        self.port.index()
+    }
+
+    fn expander_port_index(&self) -> Option<u8> {
+        self.port.expander_index()
+    }
+
+    fn device_type(&self) -> AdiDeviceType {
+        AdiDeviceType::LegacyGyro
     }
 }

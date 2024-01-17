@@ -95,7 +95,7 @@ impl SmartDevice for GpsSensor {
     }
 
     fn device_type(&self) -> SmartDeviceType {
-        SmartDeviceType::GpsSensor
+        SmartDeviceType::Gps
     }
 }
 

@@ -1,6 +1,6 @@
 use pros_sys::PROS_ERR;
 
-use super::{AdiError, AdiPort};
+use super::{AdiError, AdiPort, AdiDeviceType, AdiDevice};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -41,6 +41,23 @@ impl AdiDigitalIn {
     }
 }
 
+impl AdiDevice for AdiDigitalIn {
+    type PortIndexOutput = u8;
+
+    fn port_index(&self) -> Self::PortIndexOutput {
+        self.port.index()
+    }
+
+    fn expander_port_index(&self) -> Option<u8> {
+        self.port.expander_index()
+    }
+
+    fn device_type(&self) -> AdiDeviceType {
+        AdiDeviceType::DigitalIn
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
 pub struct AdiDigitalOut {
     port: AdiPort,
 }
@@ -63,5 +80,21 @@ impl AdiDigitalOut {
                 )
             )
         })
+    }
+}
+
+impl AdiDevice for AdiDigitalOut {
+    type PortIndexOutput = u8;
+
+    fn port_index(&self) -> Self::PortIndexOutput {
+        self.port.index()
+    }
+
+    fn expander_port_index(&self) -> Option<u8> {
+        self.port.expander_index()
+    }
+
+    fn device_type(&self) -> AdiDeviceType {
+        AdiDeviceType::DigitalOut
     }
 }

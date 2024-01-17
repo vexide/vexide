@@ -284,7 +284,7 @@ impl SmartDevice for InertialSensor {
     }
 
     fn device_type(&self) -> SmartDeviceType {
-        SmartDeviceType::InertialSensor
+        SmartDeviceType::Imu
     }
 }
 

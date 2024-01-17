@@ -1,11 +1,13 @@
 use pros_sys::{ext_adi_encoder_t, PROS_ERR};
 
-use super::{AdiError, AdiPort};
+use super::{AdiError, AdiPort, AdiDevice, AdiDeviceType};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiEncoder {
     raw: ext_adi_encoder_t,
+    port_top: AdiPort,
+    port_bottom: AdiPort,
 }
 
 impl AdiEncoder {
@@ -30,6 +32,8 @@ impl AdiEncoder {
                     )
                 )
             },
+            port_top,
+            port_bottom,
         })
     }
 
@@ -41,5 +45,21 @@ impl AdiEncoder {
     /// Gets the number of ticks recorded by the encoder.
     pub fn value(&self) -> Result<i32, AdiError> {
         Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_encoder_get(self.raw)) })
+    }
+}
+
+impl AdiDevice for AdiEncoder {
+    type PortIndexOutput = (u8, u8);
+
+    fn port_index(&self) -> Self::PortIndexOutput {
+        (self.port_top.index(), self.port_bottom.index())
+    }
+
+    fn expander_port_index(&self) -> Option<u8> {
+        self.port_top.expander_index()
+    }
+
+    fn device_type(&self) -> AdiDeviceType {
+        AdiDeviceType::LegacyEncoder
     }
 }

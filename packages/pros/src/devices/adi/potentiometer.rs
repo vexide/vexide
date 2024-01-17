@@ -1,11 +1,13 @@
 use pros_sys::{adi_potentiometer_type_e_t, ext_adi_potentiometer_t, PROS_ERR};
 
-use super::{AdiError, AdiPort};
+use super::{AdiError, AdiPort, AdiDevice, AdiDeviceType};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiPotentiometer {
+    potentiometer_type: AdiPotentiometerType,
     raw: ext_adi_potentiometer_t,
+    port: AdiPort,
 }
 
 impl AdiPotentiometer {
@@ -13,13 +15,19 @@ impl AdiPotentiometer {
     pub fn new(port: AdiPort, potentiometer_type: AdiPotentiometerType) -> Result<Self, AdiError> {
         unsafe {
             Ok(Self {
+                potentiometer_type,
                 raw: pros_sys::ext_adi_potentiometer_init(
                     port.internal_expander_index(),
                     port.index(),
                     potentiometer_type.into(),
                 ),
+                port,
             })
         }
+    }
+
+    pub fn potentiometer_type(&self) -> AdiPotentiometerType {
+        self.potentiometer_type
     }
 
     /// Gets the current potentiometer angle in tenths of a degree.
@@ -48,5 +56,21 @@ pub enum AdiPotentiometerType {
 impl From<AdiPotentiometerType> for adi_potentiometer_type_e_t {
     fn from(value: AdiPotentiometerType) -> Self {
         value as _
+    }
+}
+
+impl AdiDevice for AdiPotentiometer {
+    type PortIndexOutput = u8;
+
+    fn port_index(&self) -> Self::PortIndexOutput {
+        self.port.index()
+    }
+
+    fn expander_port_index(&self) -> Option<u8> {
+        self.port.expander_index()
+    }
+
+    fn device_type(&self) -> AdiDeviceType {
+        AdiDeviceType::AnalogIn
     }
 }

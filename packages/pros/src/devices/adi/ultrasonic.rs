@@ -1,11 +1,13 @@
 use pros_sys::{ext_adi_ultrasonic_t, PROS_ERR};
 
-use super::{AdiError, AdiPort};
+use super::{AdiError, AdiPort, AdiDeviceType, AdiDevice};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiUltrasonic {
     raw: ext_adi_ultrasonic_t,
+    port_ping: AdiPort,
+    port_echo: AdiPort,
 }
 
 impl AdiUltrasonic {
@@ -29,11 +31,29 @@ impl AdiUltrasonic {
                     )
                 )
             },
+            port_ping,
+            port_echo
         })
     }
 
     /// Gets the current ultrasonic sensor value in centimeters.
     pub fn value(&self) -> Result<i32, AdiError> {
         Ok(unsafe { bail_on!(PROS_ERR, pros_sys::ext_adi_ultrasonic_get(self.raw)) })
+    }
+}
+
+impl AdiDevice for AdiUltrasonic {
+    type PortIndexOutput = (u8, u8);
+
+    fn port_index(&self) -> Self::PortIndexOutput {
+        (self.port_ping.index(), self.port_echo.index())
+    }
+
+    fn expander_port_index(&self) -> Option<u8> {
+        self.port_ping.expander_index()
+    }
+
+    fn device_type(&self) -> AdiDeviceType {
+        AdiDeviceType::LegacyUltrasonic
     }
 }

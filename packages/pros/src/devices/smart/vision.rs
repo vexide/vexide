@@ -133,7 +133,7 @@ impl SmartDevice for VisionSensor {
     }
 
     fn device_type(&self) -> SmartDeviceType {
-        SmartDeviceType::VisionSensor
+        SmartDeviceType::Vision
     }
 }
 
