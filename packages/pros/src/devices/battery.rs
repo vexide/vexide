@@ -35,7 +35,7 @@ pub fn voltage() -> Result<i32, BatteryError> {
 
 #[derive(Debug, Snafu)]
 pub enum BatteryError {
-    #[snafu(display("Another resource is already using the controller"))]
+    #[snafu(display("Another resource is already using the battery"))]
     ConcurrentAccess,
 }
 
