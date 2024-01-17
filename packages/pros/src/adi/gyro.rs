@@ -1,5 +1,3 @@
-use core::ffi::c_double;
-
 use pros_sys::PROS_ERR;
 
 use crate::{
@@ -13,7 +11,7 @@ pub struct AdiGyro {
 
 impl AdiGyro {
     /// Create an AdiGyro, returning err `AdiError::InvalidPort` if the port is invalid.
-    pub fn new(port: AdiSlot, multiplier: c_double) -> Result<Self, AdiError> {
+    pub fn new(port: AdiSlot, multiplier: f64) -> Result<Self, AdiError> {
         Ok(Self {
             raw: unsafe {
                 bail_on!(

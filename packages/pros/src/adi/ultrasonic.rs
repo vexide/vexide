@@ -29,7 +29,7 @@ impl AdiUltrasonic {
     /// # Notices
     ///
     /// This is not officially a function in the PROS API, however it is in the kernel.
-    pub fn shutdown(&self) -> Result<i32, AdiError> {
+    pub fn shutdown(&mut self) -> Result<i32, AdiError> {
         Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_ultrasonic_shutdown(self.raw)) })
     }
 }

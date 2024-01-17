@@ -12,7 +12,7 @@ use crate::{
 };
 
 #[repr(i32)]
-pub enum AdiPortType {
+pub enum AdiDeviceType {
     AnalogIn = E_ADI_ANALOG_IN,
     AnalogOut = E_ADI_ANALOG_OUT,
     DigitalIn = E_ADI_DIGITAL_IN,
@@ -27,31 +27,31 @@ pub enum AdiPortType {
     LegacyUltrasonic = E_ADI_LEGACY_ULTRASONIC,
 }
 
-impl TryFrom<adi_port_config_e_t> for AdiPortType {
+impl TryFrom<adi_port_config_e_t> for AdiDeviceType {
     type Error = AdiError;
 
     fn try_from(value: adi_port_config_e_t) -> Result<Self, Self::Error> {
         match value {
-            E_ADI_ANALOG_IN => Ok(AdiPortType::AnalogIn),
-            E_ADI_ANALOG_OUT => Ok(AdiPortType::AnalogOut),
-            E_ADI_DIGITAL_IN => Ok(AdiPortType::DigitalIn),
-            E_ADI_DIGITAL_OUT => Ok(AdiPortType::DigitalOut),
+            E_ADI_ANALOG_IN => Ok(AdiDeviceType::AnalogIn),
+            E_ADI_ANALOG_OUT => Ok(AdiDeviceType::AnalogOut),
+            E_ADI_DIGITAL_IN => Ok(AdiDeviceType::DigitalIn),
+            E_ADI_DIGITAL_OUT => Ok(AdiDeviceType::DigitalOut),
 
-            E_ADI_LEGACY_GYRO => Ok(AdiPortType::LegacyGyro),
+            E_ADI_LEGACY_GYRO => Ok(AdiDeviceType::LegacyGyro),
 
-            E_ADI_LEGACY_SERVO => Ok(AdiPortType::LegacyServo),
-            E_ADI_LEGACY_PWM => Ok(AdiPortType::LegacyPwm),
+            E_ADI_LEGACY_SERVO => Ok(AdiDeviceType::LegacyServo),
+            E_ADI_LEGACY_PWM => Ok(AdiDeviceType::LegacyPwm),
 
-            E_ADI_LEGACY_ENCODER => Ok(AdiPortType::LegacyEncoder),
-            E_ADI_LEGACY_ULTRASONIC => Ok(AdiPortType::LegacyUltrasonic),
+            E_ADI_LEGACY_ENCODER => Ok(AdiDeviceType::LegacyEncoder),
+            E_ADI_LEGACY_ULTRASONIC => Ok(AdiDeviceType::LegacyUltrasonic),
 
             _ => Err(AdiError::InvalidConfigType),
         }
     }
 }
 
-impl From<AdiPortType> for adi_port_config_e_t {
-    fn from(value: AdiPortType) -> Self {
+impl From<AdiDeviceType> for adi_port_config_e_t {
+    fn from(value: AdiDeviceType) -> Self {
         value as _
     }
 }
@@ -83,7 +83,7 @@ impl AdiPort {
     }
 
     /// Configures an ADI port to act as a given sensor type.
-    pub fn configure(&mut self, config: AdiPortType) -> Result<i32, AdiError> {
+    pub fn configure(&mut self, config: AdiDeviceType) -> Result<i32, AdiError> {
         Ok(bail_on! {
             PROS_ERR,
             unsafe { pros_sys::adi_port_set_config(self.0, config as _) }
@@ -91,7 +91,7 @@ impl AdiPort {
     }
 
     /// Returns the configuration for the given ADI port.
-    pub fn config(&self) -> Result<AdiPortType, AdiError> {
+    pub fn config(&self) -> Result<AdiDeviceType, AdiError> {
         Ok(unsafe { bail_on!(PROS_ERR, pros_sys::adi_port_get_config(self.0)) }.try_into()?)
     }
 }
