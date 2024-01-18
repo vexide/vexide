@@ -7,9 +7,9 @@ pub struct Robot {
     peripherals: DynamicPeripherals,
 }
 impl Robot {
-    fn new() -> Self {
+    fn new(peripherals: Peripherals) -> Self {
         Self {
-            peripherals: DynamicPeripherals::new(Peripherals::take().unwrap()),
+            peripherals: DynamicPeripherals::new(peripherals),
         }
     }
 }
@@ -23,4 +23,4 @@ impl AsyncRobot for Robot {
         Ok(())
     }
 }
-async_robot!(Robot, Robot::new());
+async_robot!(Robot, Robot::new(Peripherals::take().unwrap()));
