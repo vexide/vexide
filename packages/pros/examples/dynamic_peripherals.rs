@@ -1,10 +1,7 @@
 #![no_std]
 #![no_main]
 
-use pros::{
-    peripherals::{DynamicPeripherals, Peripherals},
-    prelude::*,
-};
+use pros::prelude::*;
 
 pub struct Robot {
     peripherals: DynamicPeripherals,
@@ -12,7 +9,7 @@ pub struct Robot {
 impl Robot {
     fn new() -> Self {
         Self {
-            peripherals: Peripherals::take().unwrap().into(),
+            peripherals: DynamicPeripherals::new(Peripherals::take().unwrap()),
         }
     }
 }
