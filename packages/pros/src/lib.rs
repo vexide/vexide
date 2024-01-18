@@ -388,6 +388,7 @@ pub mod prelude {
             position::Position,
             smart::{
                 distance::DistanceSensor,
+                expander::AdiExpander,
                 gps::GpsSensor,
                 imu::InertialSensor,
                 link::{Link, RxLink, TxLink},
