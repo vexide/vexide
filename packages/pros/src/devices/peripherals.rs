@@ -1,12 +1,8 @@
 use core::sync::atomic::AtomicBool;
 
-use crate::adi::AdiSlot;
+use crate::devices::{adi::AdiPort, smart::SmartPort};
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
-
-pub struct SmartPort {
-    pub port_index: u8,
-}
 
 pub struct Peripherals {
     pub smart_port_1: SmartPort,
@@ -31,49 +27,49 @@ pub struct Peripherals {
     pub smart_port_20: SmartPort,
     pub smart_port_21: SmartPort,
 
-    pub adi_slot_a: AdiSlot,
-    pub adi_slot_b: AdiSlot,
-    pub adi_slot_c: AdiSlot,
-    pub adi_slot_d: AdiSlot,
-    pub adi_slot_e: AdiSlot,
-    pub adi_slot_f: AdiSlot,
-    pub adi_slot_g: AdiSlot,
-    pub adi_slot_h: AdiSlot,
+    pub adi_port_a: AdiPort,
+    pub adi_port_b: AdiPort,
+    pub adi_port_c: AdiPort,
+    pub adi_port_d: AdiPort,
+    pub adi_port_e: AdiPort,
+    pub adi_port_f: AdiPort,
+    pub adi_port_g: AdiPort,
+    pub adi_port_h: AdiPort,
 }
 
 impl Peripherals {
     const unsafe fn new() -> Self {
         Self {
-            smart_port_1: SmartPort { port_index: 1 },
-            smart_port_2: SmartPort { port_index: 2 },
-            smart_port_3: SmartPort { port_index: 3 },
-            smart_port_4: SmartPort { port_index: 4 },
-            smart_port_5: SmartPort { port_index: 5 },
-            smart_port_6: SmartPort { port_index: 6 },
-            smart_port_7: SmartPort { port_index: 7 },
-            smart_port_8: SmartPort { port_index: 8 },
-            smart_port_9: SmartPort { port_index: 9 },
-            smart_port_10: SmartPort { port_index: 10 },
-            smart_port_11: SmartPort { port_index: 11 },
-            smart_port_12: SmartPort { port_index: 12 },
-            smart_port_13: SmartPort { port_index: 13 },
-            smart_port_14: SmartPort { port_index: 14 },
-            smart_port_15: SmartPort { port_index: 15 },
-            smart_port_16: SmartPort { port_index: 16 },
-            smart_port_17: SmartPort { port_index: 17 },
-            smart_port_18: SmartPort { port_index: 18 },
-            smart_port_19: SmartPort { port_index: 19 },
-            smart_port_20: SmartPort { port_index: 20 },
-            smart_port_21: SmartPort { port_index: 21 },
+            smart_port_1: SmartPort::new(1),
+            smart_port_2: SmartPort::new(2),
+            smart_port_3: SmartPort::new(3),
+            smart_port_4: SmartPort::new(4),
+            smart_port_5: SmartPort::new(5),
+            smart_port_6: SmartPort::new(6),
+            smart_port_7: SmartPort::new(7),
+            smart_port_8: SmartPort::new(8),
+            smart_port_9: SmartPort::new(9),
+            smart_port_10: SmartPort::new(10),
+            smart_port_11: SmartPort::new(11),
+            smart_port_12: SmartPort::new(12),
+            smart_port_13: SmartPort::new(13),
+            smart_port_14: SmartPort::new(14),
+            smart_port_15: SmartPort::new(15),
+            smart_port_16: SmartPort::new(16),
+            smart_port_17: SmartPort::new(17),
+            smart_port_18: SmartPort::new(18),
+            smart_port_19: SmartPort::new(19),
+            smart_port_20: SmartPort::new(20),
+            smart_port_21: SmartPort::new(21),
 
-            adi_slot_a: AdiSlot { index: 1 },
-            adi_slot_b: AdiSlot { index: 2 },
-            adi_slot_c: AdiSlot { index: 3 },
-            adi_slot_d: AdiSlot { index: 4 },
-            adi_slot_e: AdiSlot { index: 5 },
-            adi_slot_f: AdiSlot { index: 6 },
-            adi_slot_g: AdiSlot { index: 7 },
-            adi_slot_h: AdiSlot { index: 8 },
+            adi_port_a: AdiPort::new(1, None),
+            adi_port_b: AdiPort::new(2, None),
+            adi_port_c: AdiPort::new(3, None),
+            adi_port_d: AdiPort::new(4, None),
+            adi_port_e: AdiPort::new(5, None),
+            adi_port_f: AdiPort::new(6, None),
+            adi_port_g: AdiPort::new(7, None),
+            adi_port_h: AdiPort::new(8, None),
         }
     }
 
@@ -125,9 +121,7 @@ impl DynamicPeripherals {
             return None;
         };
         self.smart_ports[port_index] = true;
-        Some(SmartPort {
-            port_index: port_index as u8 + 1,
-        })
+        Some(unsafe { SmartPort::new(port_index as u8 + 1) })
     }
 
     /// Creates an [`AdiSlot`] only if one has not been created on the given slot before.
@@ -136,13 +130,13 @@ impl DynamicPeripherals {
     ///
     /// This function panics if the provided port is outside the range 1-8.
     /// Slots outside of this range are invalid and cannot be created.
-    pub fn take_adi_slot(&mut self, slot_index: u8) -> Option<AdiSlot> {
-        let slot_index = slot_index as usize - 1;
-        if self.adi_slots[slot_index] {
+    pub fn take_adi_port(&mut self, port_index: u8) -> Option<AdiPort> {
+        let port_index = port_index as usize - 1;
+        if self.adi_slots[port_index] {
             return None;
         }
-        self.smart_ports[slot_index] = true;
-        Some(unsafe { AdiSlot::new(slot_index as u8 + 1)? })
+        self.smart_ports[port_index] = true;
+        Some(unsafe { AdiPort::new(port_index as u8 + 1, None) })
     }
 }
 impl From<Peripherals> for DynamicPeripherals {

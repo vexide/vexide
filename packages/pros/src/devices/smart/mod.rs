@@ -75,7 +75,7 @@ impl SmartPort {
     /// Creating new `SmartPort`s is inherently unsafe due to the possibility of constructing
     /// more than one device on the same port index allowing multiple mutable references to
     /// the same hardware device. Prefer using [`Peripherals`] to register devices if possible.
-    pub unsafe fn new(index: u8) -> Self {
+    pub const unsafe fn new(index: u8) -> Self {
         Self { index }
     }
 

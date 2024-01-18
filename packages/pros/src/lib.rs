@@ -66,7 +66,6 @@ pub mod pid;
 pub mod sync;
 #[macro_use]
 pub mod task;
-pub mod peripherals;
 
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
@@ -386,6 +385,7 @@ pub mod prelude {
                 ultrasonic::AdiUltrasonic,
                 AdiDevice, AdiPort,
             },
+            peripherals::{DynamicPeripherals, Peripherals},
             position::Position,
             smart::{
                 distance::DistanceSensor,
@@ -403,7 +403,6 @@ pub mod prelude {
         io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write},
         lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
         os_task_local,
-        peripherals::{DynamicPeripherals, Peripherals},
         pid::*,
         sync_robot,
         task::{delay, sleep, spawn},
