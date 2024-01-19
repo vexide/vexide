@@ -1,6 +1,13 @@
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::devices::adi::AdiPort;
 
+/// Represents an ADI expander module plugged into a smart port.
+///
+/// ADI Expanders allow a smart port to be used as an "adapter" for eight additional ADI slots
+/// if all onboard [`AdiPorts`] are used.
+///
+/// This struct gives access to [`AdiPort`]s similarly to how [`Peripherals`] works. Ports may
+/// be partially moved out of this struct to create devices.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiExpander {
     pub adi_1: AdiPort,

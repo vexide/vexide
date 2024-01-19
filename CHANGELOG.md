@@ -35,6 +35,7 @@ Before releasing:
 - Macros for printing to stdout (`println`, `print`, `eprintln`, etc...) (#30)
 - All ADI device bindings (#55)
 - `LocalKey` now has `Cell`/`RefCell`-specific methods for setting and taking values. (#42)
+- Support for ADI Expander modules with `AdiExpander`. (#63)
 
 ### Fixed
 
