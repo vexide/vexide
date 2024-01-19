@@ -5,35 +5,33 @@ use core::time::Duration;
 
 use pros::prelude::*;
 
-#[derive(Debug, Default)]
-struct ExampleRobot;
+struct ExampleRobot {
+    encoder: AdiEncoder,
+    ultrasonic: AdiUltrasonic,
+    gyro: AdiGyro,
+}
+impl ExampleRobot {
+    pub fn new(peripherals: Peripherals) -> Self {
+        Self {
+            encoder: AdiEncoder::new((peripherals.adi_a, peripherals.adi_b), false).unwrap(),
+            ultrasonic: AdiUltrasonic::new((peripherals.adi_c, peripherals.adi_d)).unwrap(),
+            gyro: AdiGyro::new(peripherals.adi_e, 1.0).unwrap()
+        }
+    }
+}
 
 impl AsyncRobot for ExampleRobot {
     async fn opcontrol(&mut self) -> pros::Result {
-        let peripherals = Peripherals::take().unwrap();
-
-        let encoder_top_port = peripherals.adi_a;
-        let encoder_bottom_port = peripherals.adi_b;
-
-        let ultrasonic_ping_port = peripherals.adi_c;
-        let ultrasonic_echo_port = peripherals.adi_d;
-
-        let gyro_port = peripherals.adi_e;
-
-        let mut encoder = AdiEncoder::new((encoder_top_port, encoder_bottom_port), false).unwrap();
-        let ultrasonic = AdiUltrasonic::new((ultrasonic_ping_port, ultrasonic_echo_port)).unwrap();
-        let mut gyro = AdiGyro::new(gyro_port, 1.0).unwrap();
-
-        gyro.zero().unwrap();
-        encoder.zero().unwrap();
+        self.gyro.zero()?;
+        self.encoder.zero()?;
 
         loop {
-            println!("Encoder value: {:?}", encoder.value());
-            println!("Ultrasonic value: {:?}", ultrasonic.value());
+            println!("Encoder value: {:?}", self.encoder.value());
+            println!("Ultrasonic value: {:?}", self.ultrasonic.value());
 
             pros::task::delay(Duration::from_millis(10));
         }
     }
 }
 
-async_robot!(ExampleRobot);
+async_robot!(ExampleRobot, ExampleRobot::new(Peripherals::take().unwrap()));

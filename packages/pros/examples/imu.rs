@@ -5,18 +5,24 @@ use core::time::Duration;
 
 use pros::prelude::*;
 
-#[derive(Default)]
-pub struct Robot;
+pub struct Robot {
+    imu: InertialSensor,
+}
+impl Robot {
+    fn new(peripherals: Peripherals) -> Self {
+        Self {
+            imu: InertialSensor::new(peripherals.port_1),
+        }
+    }
+}
 
 impl AsyncRobot for Robot {
     async fn opcontrol(&mut self) -> pros::Result {
-        let peripherals = Peripherals::take().unwrap();
-        let mut imu = InertialSensor::new(peripherals.smart_1);
 
-        imu.calibrate().await?;
+        self.imu.calibrate().await?;
 
         loop {
-            let euler = imu.euler()?;
+            let euler = self.imu.euler()?;
 
             println!(
                 "Pitch: {} Roll: {} Yaw: {}",
@@ -28,4 +34,4 @@ impl AsyncRobot for Robot {
     }
 }
 
-async_robot!(Robot);
+async_robot!(Robot, Robot::new(Peripherals::take().unwrap()));
