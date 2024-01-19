@@ -7,7 +7,7 @@ keywords = ["PROS", "Robotics", "bindings"]
 categories = ["os", "api-bindings", "no-std", "science::robotics"]
 license = "MIT"
 repository = "https://github.com/pros-rs/pros-rs"
-readme = "../README.md"
+readme = "../../README.md"
 authors = [
     "pros-rs",
     "Gavin Niederman <gavinniederman@gmail.com>",
