@@ -18,7 +18,6 @@ impl Robot {
 
 impl AsyncRobot for Robot {
     async fn opcontrol(&mut self) -> pros::Result {
-
         self.imu.calibrate().await?;
 
         loop {

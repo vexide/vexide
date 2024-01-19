@@ -23,7 +23,9 @@ struct ExampleRobot {
 impl ExampleRobot {
     pub fn new(peripherals: Peripherals) -> Self {
         Self {
-            motor: Arc::new(Mutex::new(Motor::new(peripherals.port_2, BrakeMode::Brake).unwrap())),
+            motor: Arc::new(Mutex::new(
+                Motor::new(peripherals.port_2, BrakeMode::Brake).unwrap(),
+            )),
             vision: VisionSensor::new(peripherals.port_9, VisionZeroPoint::Center).unwrap(),
         }
     }
@@ -76,14 +78,20 @@ impl AsyncRobot for ExampleRobot {
                 .set_output(controller.state().joysticks.right.y)?;
 
             // println!("pid out {}", pid.update(10.0, motor.position().into_degrees() as f32));
-            println!("Vision objs {}", self.vision.nth_largest_object(0)?.middle_x);
+            println!(
+                "Vision objs {}",
+                self.vision.nth_largest_object(0)?.middle_x
+            );
 
             // Once again, sleep.
             sleep(Duration::from_millis(20)).await;
         }
     }
 }
-async_robot!(ExampleRobot, ExampleRobot::new(Peripherals::take().unwrap()));
+async_robot!(
+    ExampleRobot,
+    ExampleRobot::new(Peripherals::take().unwrap())
+);
 
 fn left_button_callback() {
     println!("Left button pressed!");

@@ -15,7 +15,7 @@ impl ExampleRobot {
         Self {
             encoder: AdiEncoder::new((peripherals.adi_a, peripherals.adi_b), false).unwrap(),
             ultrasonic: AdiUltrasonic::new((peripherals.adi_c, peripherals.adi_d)).unwrap(),
-            gyro: AdiGyro::new(peripherals.adi_e, 1.0).unwrap()
+            gyro: AdiGyro::new(peripherals.adi_e, 1.0).unwrap(),
         }
     }
 }
@@ -34,4 +34,7 @@ impl AsyncRobot for ExampleRobot {
     }
 }
 
-async_robot!(ExampleRobot, ExampleRobot::new(Peripherals::take().unwrap()));
+async_robot!(
+    ExampleRobot,
+    ExampleRobot::new(Peripherals::take().unwrap())
+);
