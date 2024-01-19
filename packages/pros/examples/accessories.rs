@@ -6,10 +6,30 @@ extern crate alloc;
 use alloc::sync::Arc;
 use core::time::Duration;
 
-use pros::{prelude::*, sync::Mutex, task::delay};
+use pros::{
+    devices::{
+        smart::vision::{LedMode, Rgb, VisionZeroPoint},
+        Controller,
+    },
+    prelude::*,
+    sync::Mutex,
+    task::delay,
+};
 
-#[derive(Debug, Default)]
-struct ExampleRobot;
+struct ExampleRobot {
+    motor: Arc<Mutex<Motor>>,
+    vision: VisionSensor,
+}
+impl ExampleRobot {
+    pub fn new(peripherals: Peripherals) -> Self {
+        Self {
+            motor: Arc::new(Mutex::new(
+                Motor::new(peripherals.port_2, BrakeMode::Brake).unwrap(),
+            )),
+            vision: VisionSensor::new(peripherals.port_9, VisionZeroPoint::Center).unwrap(),
+        }
+    }
+}
 
 impl AsyncRobot for ExampleRobot {
     async fn opcontrol(&mut self) -> pros::Result {
@@ -20,27 +40,21 @@ impl AsyncRobot for ExampleRobot {
             }
         });
 
-        pros::async_runtime::block_on(handle);
-
+        handle.await;
         // Create a new motor plugged into port 2. The motor will brake when not moving.
         // We'll wrap it in an Arc<Mutex<T>> to allow safe access to the device from multiple tasks.
-        let motor = Arc::new(Mutex::new(Motor::new(
-            unsafe { SmartPort::new(2) },
-            BrakeMode::Brake,
-        )?));
-        motor.lock().wait_until_stopped().await?;
+        self.motor.lock().wait_until_stopped().await?;
 
         // Create a controller, specifically controller 1.
         let controller = Controller::Master;
 
-        let mut vision = VisionSensor::new(unsafe { SmartPort::new(9) }, VisionZeroPoint::Center)?;
-        vision.set_led(LedMode::On(Rgb::new(0, 0, 255)));
+        self.vision.set_led(LedMode::On(Rgb::new(0, 0, 255)));
 
         pros::lcd::buttons::register(left_button_callback, Button::Left);
 
         // Spawn a new task that will print whether or not the motor is stopped constantly.
         spawn({
-            let motor = Arc::clone(&motor); // Obtain a shared reference to our motor to safely share between tasks.
+            let motor = Arc::clone(&self.motor); // Obtain a shared reference to our motor to safely share between tasks.
 
             move || loop {
                 println!(
@@ -59,19 +73,25 @@ impl AsyncRobot for ExampleRobot {
         loop {
             // Set the motors output with how far up or down the right joystick is pushed.
             // Set output takes a float from -1 to 1 that is scaled to -12 to 12 volts.
-            motor
+            self.motor
                 .lock()
                 .set_output(controller.state().joysticks.right.y)?;
 
             // println!("pid out {}", pid.update(10.0, motor.position().into_degrees() as f32));
-            println!("Vision objs {}", vision.nth_largest_object(0)?.middle_x);
+            println!(
+                "Vision objs {}",
+                self.vision.nth_largest_object(0)?.middle_x
+            );
 
             // Once again, sleep.
             sleep(Duration::from_millis(20)).await;
         }
     }
 }
-async_robot!(ExampleRobot);
+async_robot!(
+    ExampleRobot,
+    ExampleRobot::new(Peripherals::take().unwrap())
+);
 
 fn left_button_callback() {
     println!("Left button pressed!");
