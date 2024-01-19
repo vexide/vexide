@@ -35,6 +35,8 @@ Before releasing:
 - Macros for printing to stdout (`println`, `print`, `eprintln`, etc...) (#30)
 - All ADI device bindings (#55)
 - `LocalKey` now has `Cell`/`RefCell`-specific methods for setting and taking values. (#42)
+- Implements TryFrom for Gearset.
+- Adds support for getting brake modes from motors. (#66)
 
 ### Fixed
 
@@ -48,6 +50,9 @@ Before releasing:
 - Overhauled the `competition` module with more straightforward getters for competition state. (#38) (**Breaking Change**)
 - LLEMU-related macros have been prefixed with `llemu_` (e.g. `llemu_println`). (**Breaking Change**) (#30)
 - Added `Debug`, `Copy`, and `Clone` derives for common structs (#37)
+- Adjusts constructor arguments for `Motor` to allow passing `Gearset` and `reversed` instead of `brake_mode` at construction. (**Breaking Change**) (#66)
+- Renamed `Motor::get_state` to `Motor::state`. (**Breaking Change**) (#66)
+- Changed `Motor::reversed` to return `Result<bool, _>`` rather than just `false` if `PROS_ERR` is returned. (**Breaking Change**) (#66)
 
 ### Removed
 
