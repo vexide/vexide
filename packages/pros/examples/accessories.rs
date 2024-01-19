@@ -24,7 +24,7 @@ impl ExampleRobot {
     pub fn new(peripherals: Peripherals) -> Self {
         Self {
             motor: Arc::new(Mutex::new(
-                Motor::new(peripherals.port_2, BrakeMode::Brake).unwrap(),
+                Motor::new(peripherals.port_2, Gearset::Green, false).unwrap(),
             )),
             vision: VisionSensor::new(peripherals.port_9, VisionZeroPoint::Center).unwrap(),
         }
