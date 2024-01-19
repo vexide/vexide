@@ -54,6 +54,12 @@
 
 #![feature(error_in_core, stdsimd, negative_impls)]
 #![no_std]
+#![warn(
+    missing_docs,
+    rust_2018_idioms,
+    missing_debug_implementations,
+    unsafe_op_in_unsafe_fn
+)]
 
 extern crate alloc;
 
