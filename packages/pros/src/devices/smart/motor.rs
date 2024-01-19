@@ -39,55 +39,44 @@ pub struct Motor {
 //TODO: Implement good set_velocity and get_velocity functions.
 //TODO: Measure the number of counts per rotation. Fow now we assume it is 4096
 impl Motor {
-    pub fn new(port: SmartPort, brake_mode: BrakeMode) -> Result<Self, MotorError> {
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::motor_set_encoder_units(port.index(), pros_sys::E_MOTOR_ENCODER_DEGREES)
-            );
-            bail_on!(
-                PROS_ERR,
-                pros_sys::motor_set_brake_mode(port.index(), brake_mode.into())
-            );
-        }
+    pub fn new(port: SmartPort, gearset: Gearset, reversed: bool) -> Result<Self, MotorError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_set_encoder_units(port.index(), pros_sys::E_MOTOR_ENCODER_DEGREES)
+        });
 
-        Ok(Self { port })
+        let mut motor = Self { port };
+
+        motor.set_gearset(gearset)?;
+        motor.set_reversed(reversed)?;
+
+        Ok(motor)
     }
 
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::motor_set_gearing(self.port.index(), gearset as i32)
-            );
-        }
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_set_gearing(self.port.index(), gearset as i32)
+        });
         Ok(())
     }
 
     pub fn gearset(&self) -> Result<Gearset, MotorError> {
-        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::motor_get_gearing(self.port.index())) }.into())
+        unsafe { pros_sys::motor_get_gearing(self.port.index()).try_into() }
     }
 
     /// Takes in a f32 from -1 to 1 that is scaled to -12 to 12 volts.
     /// Useful for driving motors with controllers.
     pub fn set_output(&mut self, output: f32) -> Result<(), MotorError> {
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::motor_move(self.port.index(), (output * 127.0) as i32)
-            );
-        }
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_move(self.port.index(), (output * 127.0) as i32)
+        });
         Ok(())
     }
 
     /// Takes in and i8 between -127 and 127 which is scaled to -12 to 12 Volts.
     pub fn set_raw_output(&mut self, raw_output: i8) -> Result<(), MotorError> {
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::motor_move(self.port.index(), raw_output as i32)
-            );
-        }
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_move(self.port.index(), raw_output as i32)
+        });
         Ok(())
     }
 
@@ -96,12 +85,9 @@ impl Motor {
         if !(-12.0..=12.0).contains(&voltage) || voltage.is_nan() {
             return Err(MotorError::VoltageOutOfRange);
         }
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::motor_move_voltage(self.port.index(), (voltage * 1000.0) as i32)
-            );
-        }
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_move_voltage(self.port.index(), (voltage * 1000.0) as i32)
+        });
 
         Ok(())
     }
@@ -113,12 +99,9 @@ impl Motor {
         position: Position,
         velocity: i32,
     ) -> Result<(), MotorError> {
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::motor_move_absolute(self.port.index(), position.into_degrees(), velocity)
-            );
-        };
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_move_absolute(self.port.index(), position.into_degrees(), velocity)
+        });
         Ok(())
     }
 
@@ -129,51 +112,41 @@ impl Motor {
         position: Position,
         velocity: i32,
     ) -> Result<(), MotorError> {
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::motor_move_relative(self.port.index(), position.into_degrees(), velocity)
-            );
-        }
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_move_relative(self.port.index(), position.into_degrees(), velocity)
+        });
+
         Ok(())
     }
 
     /// Returns the power drawn by the motor in Watts.
     pub fn power(&self) -> Result<f64, MotorError> {
-        unsafe {
-            Ok(bail_on!(
-                PROS_ERR_F,
-                pros_sys::motor_get_power(self.port.index())
-            ))
-        }
+        Ok(bail_on!(PROS_ERR_F, unsafe {
+            pros_sys::motor_get_power(self.port.index())
+        }))
     }
 
     /// Returns the torque output of the motor in Nm.
     pub fn torque(&self) -> Result<f64, MotorError> {
-        unsafe {
-            Ok(bail_on!(
-                PROS_ERR_F,
-                pros_sys::motor_get_torque(self.port.index())
-            ))
-        }
+        Ok(bail_on!(PROS_ERR_F, unsafe {
+            pros_sys::motor_get_torque(self.port.index())
+        }))
     }
 
     /// Returns the voltage the motor is drawing in volts.
     pub fn voltage(&self) -> Result<f64, MotorError> {
         // docs say this function returns PROS_ERR_F but it actually returns PROS_ERR
-        let millivolts =
-            unsafe { bail_on!(PROS_ERR, pros_sys::motor_get_voltage(self.port.index())) };
+        let millivolts = bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_get_voltage(self.port.index())
+        });
         Ok(millivolts as f64 / 1000.0)
     }
 
     /// Returns the current position of the motor.
     pub fn position(&self) -> Result<Position, MotorError> {
-        unsafe {
-            Ok(Position::from_degrees(bail_on!(
-                PROS_ERR_F,
-                pros_sys::motor_get_position(self.port.index())
-            )))
-        }
+        Ok(Position::from_degrees(bail_on!(PROS_ERR_F, unsafe {
+            pros_sys::motor_get_position(self.port.index())
+        })))
     }
 
     /// Returns the current draw of the motor.
@@ -186,9 +159,9 @@ impl Motor {
     /// Sets the current encoder position to zero without moving the motor.
     /// Analogous to taring or resetting the encoder to the current position.
     pub fn zero(&mut self) -> Result<(), MotorError> {
-        unsafe {
-            bail_on!(PROS_ERR, pros_sys::motor_tare_position(self.port.index()));
-        }
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_tare_position(self.port.index())
+        });
         Ok(())
     }
 
@@ -217,9 +190,13 @@ impl Motor {
         Ok(())
     }
 
-    //TODO: Test this, as im not entirely sure of the actual implementation
+    pub fn brake_mode(&self) -> Result<BrakeMode, MotorError> {
+        unsafe { pros_sys::motor_get_brake_mode(self.port.index()).try_into() }
+    }
+
+    // TODO: Test this, as im not entirely sure of the actual implementation
     /// Get the current state of the motor.
-    pub fn get_state(&self) -> Result<MotorState, MotorError> {
+    pub fn state(&self) -> Result<MotorState, MotorError> {
         let bit_flags = bail_on!(PROS_ERR as _, unsafe {
             pros_sys::motor_get_flags(self.port.index())
         });
@@ -235,8 +212,10 @@ impl Motor {
     }
 
     /// Check if this motor has been reversed.
-    pub fn reversed(&self) -> bool {
-        unsafe { pros_sys::motor_is_reversed(self.port.index()) == 1 }
+    pub fn reversed(&self) -> Result<bool, MotorError> {
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_is_reversed(self.port.index())
+        }) == 1)
     }
 
     /// Returns a future that completes when the motor reports that it has stopped.
@@ -257,22 +236,34 @@ impl SmartDevice for Motor {
 
 /// Determines how a motor should act when braking.
 #[derive(Debug, Clone, Copy)]
+#[repr(i32)]
 pub enum BrakeMode {
     /// Motor never brakes.
-    None,
+    None = pros_sys::E_MOTOR_BRAKE_COAST,
     /// Motor uses regenerative braking to slow down faster.
-    Brake,
+    Brake = pros_sys::E_MOTOR_BRAKE_BRAKE,
     /// Motor exerts force to hold the same position.
-    Hold,
+    Hold = pros_sys::E_MOTOR_BRAKE_HOLD,
+}
+
+impl TryFrom<pros_sys::motor_brake_mode_e_t> for BrakeMode {
+    type Error = MotorError;
+
+    fn try_from(value: pros_sys::motor_brake_mode_e_t) -> Result<Self, MotorError> {
+        bail_on!(PROS_ERR, value);
+
+        Ok(match value {
+            pros_sys::E_MOTOR_BRAKE_COAST => Self::None,
+            pros_sys::E_MOTOR_BRAKE_BRAKE => Self::Brake,
+            pros_sys::E_MOTOR_BRAKE_HOLD => Self::Hold,
+            _ => unreachable!(),
+        })
+    }
 }
 
 impl From<BrakeMode> for pros_sys::motor_brake_mode_e_t {
-    fn from(other: BrakeMode) -> pros_sys::motor_brake_mode_e_t {
-        match other {
-            BrakeMode::Brake => pros_sys::E_MOTOR_BRAKE_BRAKE,
-            BrakeMode::Hold => pros_sys::E_MOTOR_BRAKE_HOLD,
-            BrakeMode::None => pros_sys::E_MOTOR_BRAKE_COAST,
-        }
+    fn from(value: BrakeMode) -> pros_sys::motor_brake_mode_e_t {
+        value as _
     }
 }
 
@@ -321,14 +312,24 @@ impl Gearset {
     pub const RPM_600: Gearset = Gearset::Blue;
 }
 
-impl From<i32> for Gearset {
-    fn from(value: i32) -> Self {
-        match value {
-            pros_sys::E_MOTOR_GEAR_RED => Gearset::Red,
-            pros_sys::E_MOTOR_GEAR_GREEN => Gearset::Green,
-            pros_sys::E_MOTOR_GEAR_BLUE => Gearset::Blue,
+impl From<Gearset> for pros_sys::motor_gearset_e_t {
+    fn from(value: Gearset) -> Self {
+        value as _
+    }
+}
+
+impl TryFrom<pros_sys::motor_gearset_e_t> for Gearset {
+    type Error = MotorError;
+
+    fn try_from(value: pros_sys::motor_gearset_e_t) -> Result<Self, MotorError> {
+        bail_on!(PROS_ERR, value);
+
+        Ok(match value {
+            pros_sys::E_MOTOR_GEAR_RED => Self::Red,
+            pros_sys::E_MOTOR_GEAR_GREEN => Self::Green,
+            pros_sys::E_MOTOR_GEAR_BLUE => Self::Blue,
             _ => unreachable!(),
-        }
+        })
     }
 }
 
@@ -342,7 +343,7 @@ impl<'a> core::future::Future for MotorStoppedFuture<'a> {
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        match self.motor.get_state()?.stopped {
+        match self.motor.state()?.stopped {
             true => core::task::Poll::Ready(Ok(())),
             false => {
                 cx.waker().wake_by_ref();
