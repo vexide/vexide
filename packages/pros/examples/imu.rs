@@ -3,7 +3,7 @@
 
 use core::time::Duration;
 
-use pros::{peripherals, prelude::*};
+use pros::prelude::*;
 
 #[derive(Default)]
 pub struct Robot;
@@ -11,7 +11,7 @@ pub struct Robot;
 impl AsyncRobot for Robot {
     async fn opcontrol(&mut self) -> pros::Result {
         let peripherals = Peripherals::take().unwrap();
-        let imu = InertialSensor::new(peripherals.smart_port_1)?;
+        let mut imu = InertialSensor::new(peripherals.smart_1);
 
         imu.calibrate().await?;
 

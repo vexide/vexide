@@ -3,7 +3,7 @@
 
 use core::time::Duration;
 
-use pros::{peripherals, prelude::*};
+use pros::prelude::*;
 
 #[derive(Default)]
 pub struct Robot;
@@ -11,7 +11,7 @@ pub struct Robot;
 impl SyncRobot for Robot {
     fn opcontrol(&mut self) -> pros::Result {
         let peripherals = Peripherals::take().unwrap();
-        let sensor = OpticalSensor::new(peripherals.smart_port_1, true)?;
+        let sensor = OpticalSensor::new(peripherals.smart_1, true)?;
 
         loop {
             println!(

@@ -6,7 +6,15 @@ extern crate alloc;
 use alloc::sync::Arc;
 use core::time::Duration;
 
-use pros::{prelude::*, sync::Mutex, task::delay};
+use pros::{
+    devices::{
+        smart::vision::{LedMode, Rgb, VisionZeroPoint},
+        Controller,
+    },
+    prelude::*,
+    sync::Mutex,
+    task::delay,
+};
 
 #[derive(Debug, Default)]
 struct ExampleRobot;
@@ -26,7 +34,7 @@ impl AsyncRobot for ExampleRobot {
         // Create a new motor plugged into port 2. The motor will brake when not moving.
         // We'll wrap it in an Arc<Mutex<T>> to allow safe access to the device from multiple tasks.
         let motor = Arc::new(Mutex::new(Motor::new(
-            peripherals.smart_port_2,
+            peripherals.smart_2,
             BrakeMode::Brake,
         )?));
         motor.lock().wait_until_stopped().await?;
@@ -34,7 +42,7 @@ impl AsyncRobot for ExampleRobot {
         // Create a controller, specifically controller 1.
         let controller = Controller::Master;
 
-        let mut vision = VisionSensor::new(peripherals.smart_port_9, VisionZeroPoint::Center)?;
+        let mut vision = VisionSensor::new(peripherals.smart_9, VisionZeroPoint::Center)?;
         vision.set_led(LedMode::On(Rgb::new(0, 0, 255)));
 
         pros::lcd::buttons::register(left_button_callback, Button::Left);
