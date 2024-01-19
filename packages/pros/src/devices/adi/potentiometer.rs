@@ -11,7 +11,7 @@ pub struct AdiPotentiometer {
 }
 
 impl AdiPotentiometer {
-    /// Create an AdiPotentiometer, returning err `AdiError::InvalidPort` if the port is invalid.
+    /// Create a new potentiometer from an [`AdiPort`].
     pub fn new(port: AdiPort, potentiometer_type: AdiPotentiometerType) -> Result<Self, AdiError> {
         let raw = bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_potentiometer_init(

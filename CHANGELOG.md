@@ -34,6 +34,8 @@ Before releasing:
 - Various types from the `no_std_io` have are re-exported from this module to provide missing functionality from `std`. (#30)
 - Macros for printing to stdout (`println`, `print`, `eprintln`, etc...) (#30)
 - All ADI device bindings (#55)
+- `LocalKey` now has `Cell`/`RefCell`-specific methods for setting and taking values. (#42)
+- `Peripherals` and `DynamicPeripherals` structs to ensure that you have only registered one device on a given smart or ADI port. (#53)
 
 ### Fixed
 
@@ -53,6 +55,7 @@ Before releasing:
 ### Removed
 
 - Removed several broken bindings in `pros_sys` relating to competition state. (#38) (**Breaking Change**)
+- `LocalKey` no longer implements `set` for non-`Cell`/`RefCell` stored values. (**Breaking change**) (#42)
 
 ## [0.6.0] - 2024-01-14
 

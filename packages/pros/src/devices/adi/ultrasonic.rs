@@ -11,7 +11,7 @@ pub struct AdiUltrasonic {
 }
 
 impl AdiUltrasonic {
-    /// Create an AdiUltrasonic, returning err `AdiError::InvalidPort` if the port is invalid.
+    /// Create a new ultrasonic sensor from a ping and echo [`AdiPort`].
     pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, AdiError> {
         let port_ping = ports.0;
         let port_echo = ports.1;

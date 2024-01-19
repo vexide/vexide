@@ -47,7 +47,7 @@ impl Motor {
             );
             bail_on!(
                 PROS_ERR,
-                pros_sys::motor_set_brake_mode(port.index, brake_mode.into())
+                pros_sys::motor_set_brake_mode(port.index(), brake_mode.into())
             );
         }
 

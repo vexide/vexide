@@ -22,6 +22,7 @@ pub mod smart;
 
 pub mod battery;
 pub mod controller;
+pub mod peripherals;
 pub mod position;
 
 pub use controller::Controller;

@@ -18,5 +18,9 @@
         "${workspaceFolder}/armv7a-vexos-eabi.json",
         "wasm32-unknown-unknown",
     ],
-    "rust-analyzer.showUnlinkedFileNotification": false
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    "files.trimTrailingWhitespace": true,
+    "files.trimFinalNewlines": true,
+    "files.insertFinalNewline": true,
+    "files.eol": "\n",
 }
