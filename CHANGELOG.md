@@ -49,6 +49,8 @@ Before releasing:
 - Overhauled the `competition` module with more straightforward getters for competition state. (#38) (**Breaking Change**)
 - LLEMU-related macros have been prefixed with `llemu_` (e.g. `llemu_println`). (**Breaking Change**) (#30)
 - Added `Debug`, `Copy`, and `Clone` derives for common structs (#37)
+- Battery API functions now return `Result<_, BatteryError>`. (**Breaking Change**) (#62)
+- Renamed `battery::get_capacity` to `battery::capacity`, `battery::get_current` -> `battery::current`, `battery::get_temperature` -> `battery::temperature`, `battery::get_voltage` -> `battery::voltage`. (**Breaking Change**) (#62)
 
 ### Removed
 
