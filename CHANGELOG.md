@@ -36,7 +36,6 @@ Before releasing:
 - All ADI device bindings (#55)
 - `LocalKey` now has `Cell`/`RefCell`-specific methods for setting and taking values. (#42)
 - `Peripherals` and `DynamicPeripherals` structs to ensure that you have only registered one device on a given smart or ADI port. (#53)
-- Added more `Debug` implementations (#70)
 
 ### Fixed
 
