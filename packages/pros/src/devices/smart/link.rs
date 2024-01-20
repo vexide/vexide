@@ -30,6 +30,7 @@ pub trait Link: SmartDevice {
 }
 
 /// A recieving end of a VEXLink connection.
+#[derive(Debug)]
 pub struct RxLink {
     port: SmartPort,
     id: CString,
@@ -112,6 +113,7 @@ impl io::Read for RxLink {
 }
 
 /// A transmitting end of a VEXLink connection.
+#[derive(Debug)]
 pub struct TxLink {
     port: SmartPort,
     id: CString,

@@ -7,9 +7,11 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
+use core::fmt::Debug;
 
 use crate::sync::Mutex;
 
+#[derive(Debug)]
 pub struct ButtonsState {
     pub left_pressed: bool,
     pub middle_pressed: bool,
@@ -25,6 +27,7 @@ pub fn read_buttons() -> ButtonsState {
     }
 }
 
+#[derive(Debug)]
 pub enum Button {
     Left,
     Middle,
@@ -35,6 +38,16 @@ pub struct ButtonCallbacks {
     pub left_cb: Option<Box<dyn Fn() + Send>>,
     pub middle_cb: Option<Box<dyn Fn() + Send>>,
     pub right_cb: Option<Box<dyn Fn() + Send>>,
+}
+
+impl Debug for ButtonCallbacks {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ButtonCallbacks")
+            .field("left_cb", &self.left_cb.is_some())
+            .field("middle_cb", &self.middle_cb.is_some())
+            .field("right_cb", &self.right_cb.is_some())
+            .finish()
+    }
 }
 
 lazy_static::lazy_static! {

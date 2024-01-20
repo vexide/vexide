@@ -73,7 +73,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
 }
 
 /// An owned permission to perform actions on a task.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct TaskHandle {
     pub(crate) task: pros_sys::task_t,
 }
@@ -151,7 +151,7 @@ impl TaskHandle {
 }
 
 /// An ergonomic builder for tasks. Alternatively you can use [`spawn`].
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Builder<'a> {
     name: Option<&'a str>,
     priority: Option<TaskPriority>,
@@ -198,6 +198,7 @@ impl<'a> Builder<'a> {
 }
 
 /// Represents the current state of a task.
+#[derive(Debug)]
 pub enum TaskState {
     /// The task is currently utilizing the processor
     Running,
@@ -231,6 +232,7 @@ impl From<u32> for TaskState {
 /// Represents how much time the cpu should spend on this task.
 /// (Otherwise known as the priority)
 #[repr(u32)]
+#[derive(Debug)]
 pub enum TaskPriority {
     High = 16,
     Default = 8,
@@ -252,6 +254,7 @@ impl From<TaskPriority> for u32 {
 /// Represents how large of a stack the task should get.
 /// Tasks that don't have any or many variables and/or don't need floats can use the low stack depth option.
 #[repr(u32)]
+#[derive(Debug)]
 pub enum TaskStackDepth {
     Default = 8192,
     Low = 512,
@@ -303,6 +306,7 @@ pub fn delay(duration: Duration) {
 }
 
 /// An interval that can be used to repeatedly run code at a given rate.
+#[derive(Debug)]
 pub struct Interval {
     last_unblock_time: u32,
 }
@@ -334,6 +338,7 @@ impl Interval {
 
 /// A future that will complete after the given duration.
 /// Sleep futures that are closer to completion are prioritized to improve accuracy.
+#[derive(Debug)]
 pub struct SleepFuture {
     target_millis: u32,
 }
@@ -381,6 +386,7 @@ pub fn get_notification() -> u32 {
     unsafe { pros_sys::task_notify_take(false, pros_sys::TIMEOUT_MAX) }
 }
 
+#[derive(Debug)]
 pub struct SchedulerSuspendGuard {
     _private: (),
 }

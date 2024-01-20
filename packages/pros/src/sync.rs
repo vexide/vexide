@@ -98,6 +98,7 @@ impl<T> From<T> for Mutex<T> {
 
 /// Allows the user to access the data from a locked mutex.
 /// Dereference to get the inner data.
+#[derive(Debug)]
 pub struct MutexGuard<'a, T> {
     mutex: &'a Mutex<T>,
 }

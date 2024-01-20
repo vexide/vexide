@@ -4,6 +4,7 @@ use crate::devices::{adi::AdiPort, smart::SmartPort};
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
+#[derive(Debug)]
 pub struct Peripherals {
     pub port_1: SmartPort,
     pub port_2: SmartPort,
@@ -106,6 +107,7 @@ impl Peripherals {
 /// Guarentees that ports are only used once **at runtime**
 /// This is useful for when you want to store a peripherals struct for use in multiple functions.
 /// When possible, use [`Peripherals`] instead.
+#[derive(Debug)]
 pub struct DynamicPeripherals {
     smart_ports: [bool; 21],
     adi_slots: [bool; 8],

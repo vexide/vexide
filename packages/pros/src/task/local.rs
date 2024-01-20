@@ -77,6 +77,7 @@ struct ThreadLocalStorage {
 
 /// A TLS key that owns its data.
 /// Can be created with the [`os_task_local`](crate::os_task_local!) macro.
+#[derive(Debug)]
 pub struct LocalKey<T: 'static> {
     index: Once<usize>,
     init: fn() -> T,

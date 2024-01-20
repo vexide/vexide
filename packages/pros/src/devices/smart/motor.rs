@@ -332,6 +332,7 @@ impl From<i32> for Gearset {
     }
 }
 
+#[derive(Debug)]
 pub struct MotorStoppedFuture<'a> {
     motor: &'a Motor,
 }
