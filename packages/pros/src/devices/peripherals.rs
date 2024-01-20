@@ -39,40 +39,46 @@ pub struct Peripherals {
 
 impl Peripherals {
     const unsafe fn new() -> Self {
-        Self {
-            port_1: SmartPort::new(1),
-            port_2: SmartPort::new(2),
-            port_3: SmartPort::new(3),
-            port_4: SmartPort::new(4),
-            port_5: SmartPort::new(5),
-            port_6: SmartPort::new(6),
-            port_7: SmartPort::new(7),
-            port_8: SmartPort::new(8),
-            port_9: SmartPort::new(9),
-            port_10: SmartPort::new(10),
-            port_11: SmartPort::new(11),
-            port_12: SmartPort::new(12),
-            port_13: SmartPort::new(13),
-            port_14: SmartPort::new(14),
-            port_15: SmartPort::new(15),
-            port_16: SmartPort::new(16),
-            port_17: SmartPort::new(17),
-            port_18: SmartPort::new(18),
-            port_19: SmartPort::new(19),
-            port_20: SmartPort::new(20),
-            port_21: SmartPort::new(21),
+        // SAFETY: caller must ensure that the SmartPorts and AdiPorts created are unique
+        unsafe {
+            Self {
+                port_1: SmartPort::new(1),
+                port_2: SmartPort::new(2),
+                port_3: SmartPort::new(3),
+                port_4: SmartPort::new(4),
+                port_5: SmartPort::new(5),
+                port_6: SmartPort::new(6),
+                port_7: SmartPort::new(7),
+                port_8: SmartPort::new(8),
+                port_9: SmartPort::new(9),
+                port_10: SmartPort::new(10),
+                port_11: SmartPort::new(11),
+                port_12: SmartPort::new(12),
+                port_13: SmartPort::new(13),
+                port_14: SmartPort::new(14),
+                port_15: SmartPort::new(15),
+                port_16: SmartPort::new(16),
+                port_17: SmartPort::new(17),
+                port_18: SmartPort::new(18),
+                port_19: SmartPort::new(19),
+                port_20: SmartPort::new(20),
+                port_21: SmartPort::new(21),
 
-            adi_a: AdiPort::new(1, None),
-            adi_b: AdiPort::new(2, None),
-            adi_c: AdiPort::new(3, None),
-            adi_d: AdiPort::new(4, None),
-            adi_e: AdiPort::new(5, None),
-            adi_f: AdiPort::new(6, None),
-            adi_g: AdiPort::new(7, None),
-            adi_h: AdiPort::new(8, None),
+                adi_a: AdiPort::new(1, None),
+                adi_b: AdiPort::new(2, None),
+                adi_c: AdiPort::new(3, None),
+                adi_d: AdiPort::new(4, None),
+                adi_e: AdiPort::new(5, None),
+                adi_f: AdiPort::new(6, None),
+                adi_g: AdiPort::new(7, None),
+                adi_h: AdiPort::new(8, None),
+            }
         }
     }
 
+    /// Attempts to create a new [`Peripherals`] struct, returning `None` if one has already been created.
+    ///
+    /// After calling this function, future calls to [`Peripherals::take`] will return `None`.
     pub fn take() -> Option<Self> {
         if PERIPHERALS_TAKEN.swap(true, core::sync::atomic::Ordering::AcqRel) {
             None
@@ -81,9 +87,19 @@ impl Peripherals {
         }
     }
 
+    /// Creates a new [`Peripherals`] struct without ensuring that is the only unique instance.
+    ///
+    /// After calling this function, future calls to [`Peripherals::take`] will return `None`.
+    ///
+    /// # Safety
+    ///
+    /// Creating new [`SmartPort`]s and [`Peripherals`] instances is inherently unsafe due to the possibility of constructing more than
+    /// one device on the same port index and allowing multiple mutable references to the same hardware device.
+    /// The caller must ensure that only one mutable reference to each port is used.
     pub unsafe fn steal() -> Self {
         PERIPHERALS_TAKEN.store(true, core::sync::atomic::Ordering::Release);
-        Self::new()
+        // SAFETY: caller must ensure that this call is safe
+        unsafe { Self::new() }
     }
 }
 

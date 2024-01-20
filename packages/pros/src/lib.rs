@@ -354,7 +354,7 @@ macro_rules! sync_robot {
 }
 
 #[panic_handler]
-pub fn panic(info: &core::panic::PanicInfo) -> ! {
+pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     let current_task = task::current();
 
     let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());

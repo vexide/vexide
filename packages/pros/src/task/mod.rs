@@ -272,7 +272,8 @@ where
     F: FnOnce(),
 {
     unsafe extern "C" fn cast_and_call_external(this: *mut core::ffi::c_void) {
-        let this = Box::from_raw(this.cast::<Self>());
+        // SAFETY: caller must ensure `this` is an owned `TaskEntrypoint<F>` on the heap
+        let this = unsafe { Box::from_raw(this.cast::<Self>()) };
 
         (this.function)()
     }
@@ -401,7 +402,8 @@ impl Drop for SchedulerSuspendGuard {
 /// must not be called while the scheduler is suspended.
 #[must_use = "The scheduler will only remain suspended for the lifetime of the returned guard"]
 pub unsafe fn suspend_all() -> SchedulerSuspendGuard {
-    pros_sys::rtos_suspend_all();
+    // SAFETY: Caller must ensure that other FreeRTOS API functions are not called while the scheduler is suspended.
+    unsafe { pros_sys::rtos_suspend_all() };
     SchedulerSuspendGuard { _private: () }
 }
 
