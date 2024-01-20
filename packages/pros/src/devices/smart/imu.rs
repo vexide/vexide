@@ -426,7 +426,7 @@ pub enum InertialCalibrateFuture {
 impl core::future::Future for InertialCalibrateFuture {
     type Output = Result<(), InertialError>;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match *self {
             Self::Calibrate(port) => match unsafe { pros_sys::imu_reset(port) } {
                 PROS_ERR => {

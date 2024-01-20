@@ -7,7 +7,7 @@ use core::fmt::{self, Write};
 use super::WRITER;
 
 #[doc(hidden)]
-pub fn _llemu_print(args: fmt::Arguments) {
+pub fn _llemu_print(args: fmt::Arguments<'_>) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 

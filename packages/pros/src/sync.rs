@@ -28,7 +28,7 @@ impl<T> Mutex<T> {
 
     /// Locks the mutex so that it cannot be locked in another task at the same time.
     /// Blocks the current task until the lock is acquired.
-    pub fn lock(&self) -> MutexGuard<T> {
+    pub fn lock(&self) -> MutexGuard<'_, T> {
         if !unsafe { pros_sys::mutex_take(self.pros_mutex, pros_sys::TIMEOUT_MAX) } {
             panic!("Mutex lock failed: {}", take_errno());
         }
@@ -37,7 +37,7 @@ impl<T> Mutex<T> {
     }
 
     /// Attempts to acquire this lock. This function does not block.
-    pub fn try_lock(&self) -> Option<MutexGuard<T>> {
+    pub fn try_lock(&self) -> Option<MutexGuard<'_, T>> {
         let success = unsafe { pros_sys::mutex_take(self.pros_mutex, 0) };
         success.then(|| MutexGuard::new(self))
     }

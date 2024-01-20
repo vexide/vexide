@@ -240,7 +240,7 @@ impl Motor {
     }
 
     /// Returns a future that completes when the motor reports that it has stopped.
-    pub fn wait_until_stopped(&self) -> MotorStoppedFuture {
+    pub fn wait_until_stopped(&self) -> MotorStoppedFuture<'_> {
         MotorStoppedFuture { motor: self }
     }
 }
