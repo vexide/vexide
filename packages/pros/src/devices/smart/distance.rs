@@ -24,30 +24,37 @@ impl DistanceSensor {
 
     /// Returns the distance to the object the sensor detects in millimeters.
     pub fn distance(&self) -> Result<u32, PortError> {
-        Ok(unsafe { bail_on!(PROS_ERR, pros_sys::distance_get(self.port.index())) as u32 })
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::distance_get(self.port.index())
+        }) as u32)
     }
 
     /// returns the velocity of the object the sensor detects in m/s
     pub fn object_velocity(&self) -> Result<f64, PortError> {
         // all VEX Distance Sensor functions return PROS_ERR on failure even though
         // some return floating point values (not PROS_ERR_F)
-        Ok(unsafe {
-            bail_on!(
-                PROS_ERR as c_double,
-                pros_sys::distance_get_object_velocity(self.port.index())
-            )
-        })
+        Ok(bail_on!(PROS_ERR as c_double, unsafe {
+            pros_sys::distance_get_object_velocity(self.port.index())
+        }))
+    }
+
+    /// Get the current guess at relative object size.
+    ///
+    /// This is a value that has a range of 0 to 400.
+    /// A 18" x 30" grey card will return a value of approximately 75
+    /// in typical room lighting.
+    pub fn object_size(&self) -> Result<u32, PortError> {
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::distance_get_object_size(self.port.index())
+        }) as u32)
     }
 
     /// Returns the confidence in the distance measurement from 0% to 100%.
     pub fn distance_confidence(&self) -> Result<f32, PortError> {
         // 0 -> 63
-        let confidence = unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::distance_get_confidence(self.port.index())
-            )
-        } as f32;
+        let confidence = bail_on!(PROS_ERR, unsafe {
+            pros_sys::distance_get_confidence(self.port.index())
+        }) as f32;
         Ok(confidence * 100.0 / 63.0)
     }
 }
