@@ -35,6 +35,7 @@ Before releasing:
 - Macros for printing to stdout (`println`, `print`, `eprintln`, etc...) (#30)
 - All ADI device bindings (#55)
 - `LocalKey` now has `Cell`/`RefCell`-specific methods for setting and taking values. (#42)
+- `Peripherals` and `DynamicPeripherals` structs to ensure that you have only registered one device on a given smart or ADI port. (#53)
 
 ### Fixed
 
@@ -50,6 +51,8 @@ Before releasing:
 - LLEMU-related macros have been prefixed with `llemu_` (e.g. `llemu_println`). (**Breaking Change**) (#30)
 - Added `Debug`, `Copy`, and `Clone` derives for common structs (#37)
 - Renamed `InertialSensor::is_calibrating` to `InertialSensor::calibrating`. (**Breaking Change**) (#65)
+- Battery API functions now return `Result<_, BatteryError>`. (**Breaking Change**) (#62)
+- Renamed `battery::get_capacity` to `battery::capacity`, `battery::get_current` -> `battery::current`, `battery::get_temperature` -> `battery::temperature`, `battery::get_voltage` -> `battery::voltage`. (**Breaking Change**) (#62)
 
 ### Removed
 

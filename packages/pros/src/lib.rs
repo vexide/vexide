@@ -385,6 +385,7 @@ pub mod prelude {
                 ultrasonic::AdiUltrasonic,
                 AdiDevice, AdiPort,
             },
+            peripherals::{DynamicPeripherals, Peripherals},
             position::Position,
             smart::{
                 distance::DistanceSensor,
