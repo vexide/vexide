@@ -279,7 +279,8 @@ impl Controller {
     pub fn joystick_axis(&self, axis: JoystickAxis) -> Result<f32, ControllerError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::controller_get_analog(self.id(), axis as pros_sys::controller_analog_e_t)
-        }) as f32 / 127.0)
+        }) as f32
+            / 127.0)
     }
 }
 
