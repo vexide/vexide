@@ -24,7 +24,7 @@ pub struct InertialSensor {
 
 impl InertialSensor {
     /// Create a new inertial sensor from a smart port index.
-    pub fn new(port: SmartPort) -> Self {
+    pub const fn new(port: SmartPort) -> Self {
         Self { port }
     }
 

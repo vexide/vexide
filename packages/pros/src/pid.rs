@@ -26,7 +26,7 @@ pub struct PidController {
 }
 
 impl PidController {
-    pub fn new(kp: f32, ki: f32, kd: f32) -> Self {
+    pub const fn new(kp: f32, ki: f32, kd: f32) -> Self {
         Self {
             kp,
             ki,

@@ -117,7 +117,7 @@ pub enum Controller {
 }
 
 impl Controller {
-    fn id(&self) -> controller_id_e_t {
+    const fn id(&self) -> controller_id_e_t {
         *self as controller_id_e_t
     }
 

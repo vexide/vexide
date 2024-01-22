@@ -104,7 +104,7 @@ pub struct MutexGuard<'a, T> {
 }
 
 impl<'a, T> MutexGuard<'a, T> {
-    fn new(mutex: &'a Mutex<T>) -> Self {
+    const fn new(mutex: &'a Mutex<T>) -> Self {
         Self { mutex }
     }
 }

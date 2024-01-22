@@ -10,7 +10,7 @@ pub struct AdiMotor {
 
 impl AdiMotor {
     /// Create a new motor from an [`AdiPort`].
-    pub fn new(port: AdiPort) -> Self {
+    pub const fn new(port: AdiPort) -> Self {
         Self { port }
     }
 

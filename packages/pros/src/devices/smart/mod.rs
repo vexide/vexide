@@ -82,7 +82,7 @@ impl SmartPort {
     /// Get the index of the port (port number).
     ///
     /// Ports are indexed starting from 1.
-    pub fn index(&self) -> u8 {
+    pub const fn index(&self) -> u8 {
         self.index
     }
 

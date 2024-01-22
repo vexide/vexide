@@ -10,7 +10,7 @@ pub struct AdiDigitalIn {
 
 impl AdiDigitalIn {
     /// Create a digital input from an ADI port.
-    pub fn new(port: AdiPort) -> Self {
+    pub const fn new(port: AdiPort) -> Self {
         Self { port }
     }
 
@@ -64,7 +64,7 @@ pub struct AdiDigitalOut {
 
 impl AdiDigitalOut {
     /// Create a digital output from an [`AdiPort`].
-    pub fn new(port: AdiPort) -> Self {
+    pub const fn new(port: AdiPort) -> Self {
         Self { port }
     }
 

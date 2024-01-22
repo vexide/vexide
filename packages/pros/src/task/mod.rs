@@ -165,20 +165,20 @@ impl<'a> Builder<'a> {
     }
 
     /// Sets the name of the task, this is useful for debugging.
-    pub fn name(mut self, name: &'a str) -> Self {
+    pub const fn name(mut self, name: &'a str) -> Self {
         self.name = Some(name);
         self
     }
 
     /// Sets the priority of the task (how much time the scheduler gives to it.).
-    pub fn priority(mut self, priority: TaskPriority) -> Self {
+    pub const fn priority(mut self, priority: TaskPriority) -> Self {
         self.priority = Some(priority);
         self
     }
 
     /// Sets how large the stack for the task is.
     /// This can usually be set to default
-    pub fn stack_depth(mut self, stack_depth: TaskStackDepth) -> Self {
+    pub const fn stack_depth(mut self, stack_depth: TaskStackDepth) -> Self {
         self.stack_depth = Some(stack_depth);
         self
     }

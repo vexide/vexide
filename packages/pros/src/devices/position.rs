@@ -16,17 +16,17 @@ pub enum Position {
 
 impl Position {
     /// Creates a position from a specified number of degrees.
-    pub fn from_degrees(position: f64) -> Self {
+    pub const fn from_degrees(position: f64) -> Self {
         Self::Degrees(position)
     }
 
     /// Creates a position from a specified number of rotations.
-    pub fn from_rotations(position: f64) -> Self {
+    pub const fn from_rotations(position: f64) -> Self {
         Self::Rotations(position)
     }
 
     /// Creates a position from a specified number of counts (raw encoder tics).
-    pub fn from_counts(position: i64) -> Self {
+    pub const fn from_counts(position: i64) -> Self {
         Self::Counts(position)
     }
 

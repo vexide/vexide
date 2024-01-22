@@ -53,13 +53,13 @@ impl AdiPort {
     /// Get the index of the port (port number).
     ///
     /// Ports are indexed starting from 1.
-    pub fn index(&self) -> u8 {
+    pub const fn index(&self) -> u8 {
         self.index
     }
 
     /// Get the index of this port's associated [`AdiExpander`] smart port, or `None` if this port is not
     /// associated with an expander.
-    pub fn expander_index(&self) -> Option<u8> {
+    pub const fn expander_index(&self) -> Option<u8> {
         self.expander_index
     }
 

@@ -10,7 +10,7 @@ pub struct AdiAnalogIn {
 
 impl AdiAnalogIn {
     /// Create a analog input from an ADI port.
-    pub fn new(port: AdiPort) -> Self {
+    pub const fn new(port: AdiPort) -> Self {
         Self { port }
     }
 
@@ -109,7 +109,7 @@ pub struct AdiAnalogOut {
 
 impl AdiAnalogOut {
     /// Create a analog output from an [`AdiPort`].
-    pub fn new(port: AdiPort) -> Self {
+    pub const fn new(port: AdiPort) -> Self {
         Self { port }
     }
 

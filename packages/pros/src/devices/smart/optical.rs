@@ -177,7 +177,7 @@ impl OpticalSensor {
     }
 
     /// Determine if gesture detection is enabled or not on the sensor.
-    pub fn gesture_detection_enabled(&self) -> bool {
+    pub const fn gesture_detection_enabled(&self) -> bool {
         self.gesture_detection_enabled
     }
 

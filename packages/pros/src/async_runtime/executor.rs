@@ -27,7 +27,7 @@ impl !Send for Executor {}
 impl !Sync for Executor {}
 
 impl Executor {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             queue: RefCell::new(VecDeque::new()),
             reactor: RefCell::new(Reactor::new()),

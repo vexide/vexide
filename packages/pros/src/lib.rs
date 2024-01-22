@@ -58,7 +58,8 @@
     missing_docs,
     rust_2018_idioms,
     missing_debug_implementations,
-    unsafe_op_in_unsafe_fn
+    unsafe_op_in_unsafe_fn,
+    clippy::missing_const_for_fn
 )]
 
 extern crate alloc;

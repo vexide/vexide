@@ -28,7 +28,7 @@ impl AdiPotentiometer {
         })
     }
 
-    pub fn potentiometer_type(&self) -> AdiPotentiometerType {
+    pub const fn potentiometer_type(&self) -> AdiPotentiometerType {
         self.potentiometer_type
     }
 
