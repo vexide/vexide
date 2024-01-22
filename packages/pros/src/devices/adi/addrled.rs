@@ -13,7 +13,7 @@ pub struct AdiAddrLed {
 }
 
 impl AdiAddrLed {
-    pub fn new(port: AdiPort, length: usize) -> Result<Self, AdiError> {
+    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
         let raw = bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_led_init(port.internal_expander_index(), port.index())
         });
@@ -21,7 +21,7 @@ impl AdiAddrLed {
         Ok(Self {
             port,
             raw,
-            buffer: Vec::with_capacity(length),
+            buffer: Vec::new(),
         })
     }
 
