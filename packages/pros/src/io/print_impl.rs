@@ -61,19 +61,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#![no_std]
-#![allow(dead_code)]
-#![allow(unused)]
-#![warn(unsafe_op_in_unsafe_fn)]
-
 use core::{convert::TryFrom, file, line, stringify};
-
-/// This forces a "C" library linkage
-#[cfg(not(windows))]
-#[link(name = "c")]
-mod c {
-    extern "C" {}
-}
 
 // These constants are used by the macros but we don't want to expose
 // them to library users.
