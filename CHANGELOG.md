@@ -43,12 +43,14 @@ Before releasing:
 - Fixed error handling in IMU sensor bindings. (#37)
 - Fixed errors in doctests and examples throughout the crate. (#37)
 - Fixed Missing ERRNO and ADI config variants in pros-sys (#55)
+- Fixed incorrect error handling with `InertialSensor::status`. (#65)
 
 ### Changed
 
 - Overhauled the `competition` module with more straightforward getters for competition state. (#38) (**Breaking Change**)
 - LLEMU-related macros have been prefixed with `llemu_` (e.g. `llemu_println`). (**Breaking Change**) (#30)
 - Added `Debug`, `Copy`, and `Clone` derives for common structs (#37, #70)
+- Renamed `InertialSensor::is_calibrating` to `InertialSensor::calibrating`. (**Breaking Change**) (#65)
 - Battery API functions now return `Result<_, BatteryError>`. (**Breaking Change**) (#62)
 - Renamed `battery::get_capacity` to `battery::capacity`, `battery::get_current` -> `battery::current`, `battery::get_temperature` -> `battery::temperature`, `battery::get_voltage` -> `battery::voltage`. (**Breaking Change**) (#62)
 
@@ -56,6 +58,7 @@ Before releasing:
 
 - Removed several broken bindings in `pros_sys` relating to competition state. (#38) (**Breaking Change**)
 - `LocalKey` no longer implements `set` for non-`Cell`/`RefCell` stored values. (**Breaking change**) (#42)
+- Removed the now-redundant `InertialStatus::error` function. (**Breaking Change**) (#65)
 
 ## [0.6.0] - 2024-01-14
 
