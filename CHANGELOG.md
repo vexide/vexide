@@ -23,6 +23,16 @@ Before releasing:
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Removed
+
+## [0.7.0]
+
+### Added
+
 - `SmartPort` struct for device access. (#34)
 - `SmartDevice` trait for common functionality across smart port devices. (#34)
 - Methods to get a device's port number as well as determine if the device is plugged in or not. (#34)
@@ -123,3 +133,4 @@ Before releasing:
 [0.4.0]: https://github.com/pros-rs/pros-rs/releases/tag/v0.4.0
 [0.5.0]: https://github.com/pros-rs/pros-rs/compare/v0.4.0...v0.5.0
 [0.6.0]: https://github.com/pros-rs/pros-rs/compare/v0.5.0...v0.6.0
+[0.7.0]: https://github.com/pros-rs/pros-rs/compare/v0.6.0...v0.7.0
