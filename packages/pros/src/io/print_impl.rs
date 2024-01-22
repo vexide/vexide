@@ -65,19 +65,19 @@
 use core::{convert::TryFrom, file, line, stringify};
 
 #[doc(hidden)]
-pub struct __ProsSysWriter(i32);
+pub struct __SerialWriter(i32);
 
-impl core::fmt::Write for __ProsSysWriter {
+impl core::fmt::Write for __SerialWriter {
     #[inline]
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         __println(self.0, s)
     }
 }
 
-impl __ProsSysWriter {
+impl __SerialWriter {
     #[inline]
-    pub const fn new(err: bool) -> __ProsSysWriter {
-        __ProsSysWriter(if err { 2 } else { 1 })
+    pub const fn new(err: bool) -> __SerialWriter {
+        __SerialWriter(if err { 2 } else { 1 })
     }
 
     #[inline]
@@ -137,7 +137,7 @@ macro_rules! println {
         {
             #[allow(unused_must_use)]
             {
-                let mut stm = $crate::io::print_impl::__ProsSysWriter::new(false);
+                let mut stm = $crate::io::print_impl::__SerialWriter::new(false);
                 stm.write_fmt(format_args!($($arg)*));
                 stm.write_nl();
             }
@@ -157,7 +157,7 @@ macro_rules! print {
         {
             #[allow(unused_must_use)]
             {
-                let mut stm = $crate::io::print_impl::__ProsSysWriter::new(false);
+                let mut stm = $crate::io::print_impl::__SerialWriter::new(false);
                 stm.write_fmt(format_args!($($arg)*));
             }
         }
@@ -177,7 +177,7 @@ macro_rules! eprintln {
         {
             #[allow(unused_must_use)]
             {
-                let mut stm = $crate::io::print_impl::__ProsSysWriter::new(true);
+                let mut stm = $crate::io::print_impl::__SerialWriter::new(true);
                 stm.write_fmt(format_args!($($arg)*));
                 stm.write_nl();
             }
@@ -197,7 +197,7 @@ macro_rules! eprint {
         {
             #[allow(unused_must_use)]
             {
-                let mut stm = $crate::io::print_impl::__ProsSysWriter::new(true);
+                let mut stm = $crate::io::print_impl::__SerialWriter::new(true);
                 stm.write_fmt(format_args!($($arg)*));
             }
         }
@@ -212,7 +212,7 @@ macro_rules! write {
     ($arg:expr) => {
         #[allow(unused_must_use)]
         {
-            let mut stm = $crate::io::print_impl::__ProsSysWriter::new(false);
+            let mut stm = $crate::io::print_impl::__SerialWriter::new(false);
             stm.write_str($arg);
         }
     };
@@ -226,7 +226,7 @@ macro_rules! ewrite {
     ($arg:expr) => {{
         #[allow(unused_must_use)]
         {
-            let mut stm = $crate::io::print_impl::__ProsSysWriter::new(true);
+            let mut stm = $crate::io::print_impl::__SerialWriter::new(true);
             stm.write_str($arg);
         }
     }};
@@ -240,7 +240,7 @@ macro_rules! writeln {
     ($arg:expr) => {
         #[allow(unused_must_use)]
         {
-            let mut stm = $crate::io::print_impl::__ProsSysWriter::new(false);
+            let mut stm = $crate::io::print_impl::__SerialWriter::new(false);
             stm.write_str($arg);
             stm.write_nl();
         }
@@ -255,7 +255,7 @@ macro_rules! ewriteln {
     ($arg:expr) => {{
         #[allow(unused_must_use)]
         {
-            let mut stm = $crate::io::print_impl::__ProsSysWriter::new(true);
+            let mut stm = $crate::io::print_impl::__SerialWriter::new(true);
             stm.write_str($arg);
             stm.write_nl();
         }
