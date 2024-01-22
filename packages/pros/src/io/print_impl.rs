@@ -61,16 +61,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#[allow(unused_imports)]
 use core::{convert::TryFrom, file, line, stringify};
-
-// These constants are used by the macros but we don't want to expose
-// them to library users.
-#[doc(hidden)]
-pub const __NEWLINE: &str = "\n";
-#[doc(hidden)]
-pub const __STDOUT: i32 = 1;
-#[doc(hidden)]
-pub const __STDERR: i32 = 2;
 
 #[doc(hidden)]
 pub struct __ProsSysWriter(i32);
@@ -84,8 +76,8 @@ impl core::fmt::Write for __ProsSysWriter {
 
 impl __ProsSysWriter {
     #[inline]
-    pub fn new(handle: i32) -> __ProsSysWriter {
-        __ProsSysWriter(handle)
+    pub const fn new(err: bool) -> __ProsSysWriter {
+        __ProsSysWriter(if err { 2 } else { 1 })
     }
 
     #[inline]
@@ -100,7 +92,7 @@ impl __ProsSysWriter {
 
     #[inline]
     pub fn write_nl(&mut self) -> core::fmt::Result {
-        __println(self.0, __NEWLINE)
+        __println(self.0, "\n")
     }
 }
 
@@ -145,7 +137,7 @@ macro_rules! println {
         {
             #[allow(unused_must_use)]
             {
-                let mut stm = $crate::io::print_impl::__ProsSysWriter::new($crate::io::print_impl::__STDOUT);
+                let mut stm = $crate::io::print_impl::__ProsSysWriter::new(false);
                 stm.write_fmt(format_args!($($arg)*));
                 stm.write_nl();
             }
@@ -165,7 +157,7 @@ macro_rules! print {
         {
             #[allow(unused_must_use)]
             {
-                let mut stm = $crate::io::print_impl::__ProsSysWriter::new($crate::io::print_impl::__STDOUT);
+                let mut stm = $crate::io::print_impl::__ProsSysWriter::new(false);
                 stm.write_fmt(format_args!($($arg)*));
             }
         }
@@ -185,7 +177,7 @@ macro_rules! eprintln {
         {
             #[allow(unused_must_use)]
             {
-                let mut stm = $crate::io::print_impl::__ProsSysWriter::new($crate::io::print_impl::__STDERR);
+                let mut stm = $crate::io::print_impl::__ProsSysWriter::new(true);
                 stm.write_fmt(format_args!($($arg)*));
                 stm.write_nl();
             }
@@ -205,7 +197,7 @@ macro_rules! eprint {
         {
             #[allow(unused_must_use)]
             {
-                let mut stm = $crate::io::print_impl::__ProsSysWriter::new($crate::io::print_impl::__STDERR);
+                let mut stm = $crate::io::print_impl::__ProsSysWriter::new(true);
                 stm.write_fmt(format_args!($($arg)*));
             }
         }
@@ -220,8 +212,7 @@ macro_rules! write {
     ($arg:expr) => {
         #[allow(unused_must_use)]
         {
-            let mut stm =
-                $crate::io::print_impl::__ProsSysWriter::new($crate::io::print_impl::__STDOUT);
+            let mut stm = $crate::io::print_impl::__ProsSysWriter::new(false);
             stm.write_str($arg);
         }
     };
@@ -235,8 +226,7 @@ macro_rules! ewrite {
     ($arg:expr) => {{
         #[allow(unused_must_use)]
         {
-            let mut stm =
-                $crate::io::print_impl::__ProsSysWriter::new($crate::io::print_impl::__STDERR);
+            let mut stm = $crate::io::print_impl::__ProsSysWriter::new(true);
             stm.write_str($arg);
         }
     }};
@@ -250,8 +240,7 @@ macro_rules! writeln {
     ($arg:expr) => {
         #[allow(unused_must_use)]
         {
-            let mut stm =
-                $crate::io::print_impl::__ProsSysWriter::new($crate::io::print_impl::__STDOUT);
+            let mut stm = $crate::io::print_impl::__ProsSysWriter::new(false);
             stm.write_str($arg);
             stm.write_nl();
         }
@@ -266,8 +255,7 @@ macro_rules! ewriteln {
     ($arg:expr) => {{
         #[allow(unused_must_use)]
         {
-            let mut stm =
-                $crate::io::print_impl::__ProsSysWriter::new($crate::io::print_impl::__STDERR);
+            let mut stm = $crate::io::print_impl::__ProsSysWriter::new(true);
             stm.write_str($arg);
             stm.write_nl();
         }
