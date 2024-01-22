@@ -54,6 +54,7 @@ Before releasing:
 - Fixed errors in doctests and examples throughout the crate. (#37)
 - Fixed Missing ERRNO and ADI config variants in pros-sys (#55)
 - Fixed incorrect error handling with `InertialSensor::status`. (#65)
+- `Controller::status` now handles errors by returning `Result<ControllerStatus, ControllerError>`. (**Breaking Change**) (#74)
 
 ### Changed
 
