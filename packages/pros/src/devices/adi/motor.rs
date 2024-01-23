@@ -9,12 +9,12 @@ pub struct AdiMotor {
 }
 
 impl AdiMotor {
-    /// Create an [`AdiMotor`].
+    /// Create a new motor from an [`AdiPort`].
     pub fn new(port: AdiPort) -> Self {
         Self { port }
     }
 
-    /// Sets the speed of the given motor.
+    /// Sets the PWM output of the given motor as an i8 from [-127, 127].
     pub fn set_value(&mut self, value: i8) -> Result<(), AdiError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_motor_set(
@@ -26,7 +26,7 @@ impl AdiMotor {
         Ok(())
     }
 
-    /// Returns the last set speed of the motor on the given port.
+    /// Returns the last set PWM output of the motor on the given port.
     pub fn value(&self) -> Result<i32, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_motor_get(self.port.internal_expander_index(), self.port.index())

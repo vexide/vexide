@@ -9,12 +9,12 @@ pub struct AdiDigitalIn {
 }
 
 impl AdiDigitalIn {
-    /// Create an AdiDigitalIn.
+    /// Create a digital input from an ADI port.
     pub fn new(port: AdiPort) -> Self {
         Self { port }
     }
 
-    /// Gets the current value of a digital input pin.
+    /// Gets a rising-edge case for a digital button press.
     pub fn new_press(&mut self) -> Result<bool, AdiError> {
         Ok(unsafe {
             bail_on!(
@@ -63,7 +63,7 @@ pub struct AdiDigitalOut {
 }
 
 impl AdiDigitalOut {
-    /// Create an AdiDigitalOut.
+    /// Create a digital output from an [`AdiPort`].
     pub fn new(port: AdiPort) -> Self {
         Self { port }
     }
