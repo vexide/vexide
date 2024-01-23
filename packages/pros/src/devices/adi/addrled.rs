@@ -4,10 +4,7 @@ use pros_sys::{ext_adi_led_t, PROS_ERR};
 use snafu::Snafu;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use crate::{
-    devices::smart::vision::Rgb,
-    error::{bail_on, map_errno},
-};
+use crate::error::{bail_on, map_errno};
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiAddrLed {
@@ -15,6 +12,8 @@ pub struct AdiAddrLed {
     buffer: Vec<u32>,
     port: AdiPort,
 }
+
+pub const MAX_LED_LENGTH: usize = 64;
 
 impl AdiAddrLed {
     /// Initialize an LED strip on an ADI port from a buffer of light colors.
@@ -58,13 +57,13 @@ impl AdiAddrLed {
     }
 
     /// Set the entire led strip to one color
-    pub fn set_all(&mut self, color: Rgb) -> Result<(), AddrLedError> {
+    pub fn set_all(&mut self, color: impl Into<u32>) -> Result<(), AddrLedError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_led_set_all(
                 self.raw,
                 self.buffer.as_mut_ptr(),
                 self.buffer.len() as u32,
-                u32::from(color),
+                color.into(),
             )
         });
 
@@ -72,12 +71,12 @@ impl AdiAddrLed {
     }
 
     /// Set the entire led strip using the colors contained in a new buffer.
-    pub fn set_buffer<T, I>(&mut self, buffer: T) -> Result<(), AddrLedError>
+    pub fn set_buffer<T, I>(&mut self, buf: T) -> Result<(), AddrLedError>
     where
         T: IntoIterator<Item = I>,
         I: Into<u32>,
     {
-        self.buffer = buffer.into_iter().map(|i| i.into()).collect::<Vec<_>>();
+        self.buffer = buf.into_iter().map(|i| i.into()).collect::<Vec<_>>();
 
         bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_led_set(self.raw, self.buffer.as_mut_ptr(), self.buffer.len() as u32)
@@ -87,13 +86,13 @@ impl AdiAddrLed {
     }
 
     /// Set one pixel on the led strip.
-    pub fn set_pixel(&mut self, index: u32, color: Rgb) -> Result<(), AddrLedError> {
+    pub fn set_pixel(&mut self, index: u32, color: impl Into<u32>) -> Result<(), AddrLedError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_led_set_pixel(
                 self.raw,
                 self.buffer.as_mut_ptr(),
                 self.buffer.len() as u32,
-                u32::from(color),
+                color.into(),
                 index,
             )
         });
