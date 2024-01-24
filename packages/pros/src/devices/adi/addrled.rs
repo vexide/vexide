@@ -85,31 +85,24 @@ impl AdiAddrLed {
         Ok(())
     }
 
-    /// Set one pixel on the led strip.
-    pub fn set_pixel(&mut self, index: u32, color: impl Into<u32>) -> Result<(), AddrLedError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_led_set_pixel(
-                self.raw,
-                self.buffer.as_mut_ptr(),
-                self.buffer.len() as u32,
-                color.into(),
-                index,
-            )
-        });
+    /// Set the color of a single LED on the strip.
+    pub fn set_pixel(&mut self, index: usize, color: impl Into<u32>) -> Result<(), AddrLedError> {
+        if self.buffer.get(index).is_some() {
+            self.buffer[index] = color.into();
 
-        Ok(())
+            bail_on!(PROS_ERR, unsafe {
+                pros_sys::ext_adi_led_set(self.raw, self.buffer.as_mut_ptr(), self.buffer.len() as u32)
+            });
+
+            Ok(())
+        } else {
+            Err(AddrLedError::InvalidBufferAccess)
+        }
     }
 
-    /// Clear one pixel on the LED strip.
-    pub fn clear_pixel(&mut self, index: u32) -> Result<(), AddrLedError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_led_clear_pixel(
-                self.raw,
-                self.buffer.as_mut_ptr(),
-                self.buffer.len() as u32,
-                index,
-            )
-        });
+    /// Clear one LED on the strip.
+    pub fn clear_pixel(&mut self, index: usize) -> Result<(), AddrLedError> {
+        self.set_pixel(index, 0u32)?;
 
         Ok(())
     }
@@ -127,7 +120,7 @@ impl AdiDevice for AdiAddrLed {
     }
 
     fn device_type(&self) -> AdiDeviceType {
-        AdiDeviceType::LegacyPwm
+        AdiDeviceType::DigitalOut
     }
 }
 
