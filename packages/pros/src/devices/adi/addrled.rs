@@ -91,7 +91,11 @@ impl AdiAddrLed {
             self.buffer[index] = color.into();
 
             bail_on!(PROS_ERR, unsafe {
-                pros_sys::ext_adi_led_set(self.raw, self.buffer.as_mut_ptr(), self.buffer.len() as u32)
+                pros_sys::ext_adi_led_set(
+                    self.raw,
+                    self.buffer.as_mut_ptr(),
+                    self.buffer.len() as u32,
+                )
             });
 
             Ok(())
