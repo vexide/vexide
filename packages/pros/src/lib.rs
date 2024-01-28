@@ -74,10 +74,8 @@ mod vexos_env;
 #[cfg(target_arch = "wasm32")]
 mod wasm_env;
 #[macro_use]
-pub mod lcd;
 pub mod competition;
 pub mod io;
-pub mod lvgl;
 pub mod time;
 pub mod usd;
 
@@ -263,7 +261,6 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -274,7 +271,6 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
@@ -326,7 +322,6 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -337,7 +332,6 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
@@ -400,7 +394,6 @@ pub mod prelude {
         eprint, eprintln,
         error::PortError,
         io::{BufRead, Read, Seek, Write},
-        lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
         os_task_local,
         pid::*,
         print, println, sync_robot,
