@@ -49,7 +49,7 @@ impl FeedforwardController {
     ///
     /// # Arguments
     ///
-    /// * `current_velocity` - The current velocity of the system in RPM.
+    /// * `current_velocity` - The current velocity of the system.
     ///
     /// # Returns
     ///
