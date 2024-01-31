@@ -13,10 +13,8 @@ pub struct FeedforwardController {
     pub kv: f32,
     /// Feedforward constant for acceleration compensation.
     pub ka: f32,
-    /// Proportional constant for error correction.
-    pub kp: f32,
-    /// Target velocity in RPM.
-    pub target_rpm: f32,
+    /// Target.
+    pub target: f32,
     /// Previous velocity measurement.
     prev_velocity: f32,
     /// Previous time stamp.
@@ -24,26 +22,24 @@ pub struct FeedforwardController {
 }
 
 impl FeedforwardController {
-    /// Creates a new `FeedforwardController` with the given constants and target RPM.
+    /// Creates a new `FeedforwardController` with the given constants and target.
     ///
     /// # Arguments
     ///
     /// * `ks` - Feedforward constant for static friction compensation.
     /// * `kv` - Feedforward constant for velocity compensation.
     /// * `ka` - Feedforward constant for acceleration compensation.
-    /// * `kp` - Proportional constant for error correction.
-    /// * `target_rpm` - Target velocity in RPM.
+    /// * `target` - Target.
     ///
     /// # Returns
     ///
     /// A new `FeedforwardController`.
-    pub fn new(ks: f32, kv: f32, ka: f32, kp: f32, target_rpm: f32) -> Self {
+    pub fn new(ks: f32, kv: f32, ka: f32, target: f32) -> Self {
         Self {
             ks,
             kv,
             ka,
-            kp,
-            target_rpm,
+            target,
             prev_velocity: 0.0,
             last_time: Instant::now(),
         }
@@ -69,17 +65,11 @@ impl FeedforwardController {
         let accel = (current_velocity - self.prev_velocity) / delta_time;
         self.prev_velocity = current_velocity;
 
-        // Calculate the error between the target velocity and the current velocity
-        let error = self.target_rpm - current_velocity;
-
-        // Apply proportional control to correct the error
-        let proportional = error * self.kp;
-
         // Calculate the feedforward component based on velocity and acceleration
         let v = self.ks * current_velocity.signum() + self.kv * current_velocity + self.ka * accel;
 
-        // The output is the sum of feedback controller (P) and the feedforward controller (V)
-        let output = proportional + v;
+        // The output is the feedforward controller (V)
+        let output = v;
         
         output
     }
