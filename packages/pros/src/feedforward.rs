@@ -1,3 +1,6 @@
+
+use std::time::{Instant, Duration};
+
 /// Feedforward controller for motor control.
 ///
 /// This controller is used to apply feedforward control to achieve desired motor behavior
@@ -17,7 +20,7 @@ pub struct FeedforwardController {
     /// Previous velocity measurement.
     prev_velocity: f32,
     /// Previous time stamp.
-    last_time: i32,
+    last_time: Instant,
 }
 
 impl FeedforwardController {
@@ -42,7 +45,7 @@ impl FeedforwardController {
             kp,
             target_rpm,
             prev_velocity: 0.0,
-            last_time: unsafe { pros_sys::millis() },
+            last_time: Instant::now(),
         }
     }
 
@@ -57,15 +60,10 @@ impl FeedforwardController {
     /// The control output voltage to apply to the motor.
     pub fn update(&mut self, current_velocity: f32) -> f32 {
         // Calculate the time elapsed since the last update
-        let time = unsafe { pros_sys::clock() };
-        let mut delta_time = (time - self.last_time) as f32 / pros_sys::CLOCKS_PER_SEC as f32;
-        if delta_time == 0.0 {
-            delta_time += 0.001;
-        }
-        self.last_time = time;
-
-        // Calculate the velocity
-        let d_dot = current_velocity;
+        let now = Instant::now();
+        let delta_time = now.duration_since(self.last_time).as_secs_f32();
+        let delta_time = if delta_time == 0.0 { 0.001 } else { delta_time };
+        self.last_time = now;
 
         // Calculate the acceleration
         let accel = (current_velocity - self.prev_velocity) / delta_time;
@@ -82,8 +80,6 @@ impl FeedforwardController {
 
         // The output is the sum of feedback controller (P) and the feedforward controller (V)
         let output = proportional + v;
-        
-        self.last_time = time;
         
         output
     }
