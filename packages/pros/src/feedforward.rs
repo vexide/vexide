@@ -39,19 +39,18 @@ impl FeedforwardController {
         }
     }
 
-    /// Updates the feedforward controller with the current velocity and calculates the control output.
+    /// Updates the feedforward controller to calculate the control output.
     ///
     /// # Arguments
     ///
-    /// * `current_velocity` - The current velocity of the system.
     /// * `target_acceleration` - The target_acceleration of the system.
     /// 
     /// # Returns
     ///
     /// The control output to apply to the motor.
-    pub fn update(&mut self, current_velocity: f32, target_acceleration: f32) -> f32 {
+    pub fn update(&mut self, target_acceleration: f32) -> f32 {
         // Calculate the feedforward component based on velocity and acceleration
-        let v = self.ks * current_velocity.signum() + self.kv * current_velocity + self.ka * target_acceleration;
+        let v = self.ks * self.target.signum() + self.kv * self.target + self.ka * target_acceleration;
 
         // The output is the feedforward controller (V)
         let output = v;
