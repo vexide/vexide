@@ -5,7 +5,7 @@ use std::time::{Instant, Duration};
 ///
 /// This controller is used to apply feedforward control to achieve desired motor behavior
 /// based on velocity and acceleration.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct FeedforwardController {
     /// Feedforward constant for static friction compensation.
     pub ks: f32,
