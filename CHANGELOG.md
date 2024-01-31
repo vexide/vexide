@@ -22,7 +22,7 @@ Before releasing:
 ## [Unreleased]
 
 ### Added
-feedforward.rs
+- feedforward struct (#80) 
 
 ### Fixed
 
