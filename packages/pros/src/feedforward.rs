@@ -14,8 +14,10 @@ pub struct FeedforwardController {
     pub kp: f32,
     /// Target velocity in RPM.
     pub target_rpm: f32,
-    /// Previous velocity derivative.
-    prev_d_dot: f32,
+    /// Previous velocity measurement.
+    prev_velocity: f32,
+    /// Previous time stamp.
+    last_time: i32,
 }
 
 impl FeedforwardController {
@@ -39,7 +41,8 @@ impl FeedforwardController {
             ka,
             kp,
             target_rpm,
-            prev_d_dot: 0.0,
+            prev_velocity: 0.0,
+            last_time: unsafe { pros_sys::millis() },
         }
     }
 
@@ -53,24 +56,35 @@ impl FeedforwardController {
     ///
     /// The control output voltage to apply to the motor.
     pub fn update(&mut self, current_velocity: f32) -> f32 {
-        // Calculate the derivative of velocity
+        // Calculate the time elapsed since the last update
+        let time = unsafe { pros_sys::clock() };
+        let mut delta_time = (time - self.last_time) as f32 / pros_sys::CLOCKS_PER_SEC as f32;
+        if delta_time == 0.0 {
+            delta_time += 0.001;
+        }
+        self.last_time = time;
+
+        // Calculate the velocity
         let d_dot = current_velocity;
+
         // Calculate the acceleration
-        let accel = d_dot - self.prev_d_dot;
-        // Update the previous velocity derivative for the next iteration
-        self.prev_d_dot = d_dot;
+        let accel = (current_velocity - self.prev_velocity) / delta_time;
+        self.prev_velocity = current_velocity;
 
         // Calculate the error between the target velocity and the current velocity
-        let error = self.target_rpm - d_dot;
+        let error = self.target_rpm - current_velocity;
+
         // Apply proportional control to correct the error
         let proportional = error * self.kp;
 
         // Calculate the feedforward component based on velocity and acceleration
-        let v = self.ks * d_dot.signum() + self.kv * d_dot + self.ka * accel;
+        let v = self.ks * current_velocity.signum() + self.kv * current_velocity + self.ka * accel;
 
         // The output is the sum of feedback controller (P) and the feedforward controller (V)
         let output = proportional + v;
-
+        
+        self.last_time = time;
+        
         output
     }
 }
