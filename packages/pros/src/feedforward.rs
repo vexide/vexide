@@ -1,6 +1,3 @@
-
-use std::time::{Instant, Duration};
-
 /// Feedforward controller for motor control.
 ///
 /// This controller is used to apply feedforward control to achieve desired motor behavior
@@ -13,12 +10,10 @@ pub struct FeedforwardController {
     pub kv: f32,
     /// Feedforward constant for acceleration compensation.
     pub ka: f32,
+    /// Feedforward constant for the target acceleration.
+    pub target_acceleration: f32,
     /// Target.
     pub target: f32,
-    /// Previous velocity measurement.
-    prev_velocity: f32,
-    /// Previous time stamp.
-    last_time: Instant,
 }
 
 impl FeedforwardController {
@@ -29,19 +24,18 @@ impl FeedforwardController {
     /// * `ks` - Feedforward constant for static friction compensation.
     /// * `kv` - Feedforward constant for velocity compensation.
     /// * `ka` - Feedforward constant for acceleration compensation.
+    /// * `target_acceleration` - Feedforward constant for the target acceleration.
     /// * `target` - Target.
     ///
     /// # Returns
     ///
     /// A new `FeedforwardController`.
-    pub fn new(ks: f32, kv: f32, ka: f32, target: f32) -> Self {
+    pub fn new(ks: f32, kv: f32, ka: f32, target_acceleration: f32, target: f32) -> Self {
         Self {
             ks,
             kv,
             ka,
             target,
-            prev_velocity: 0.0,
-            last_time: Instant::now(),
         }
     }
 
@@ -50,23 +44,14 @@ impl FeedforwardController {
     /// # Arguments
     ///
     /// * `current_velocity` - The current velocity of the system.
-    ///
+    /// * `target_acceleration` - The target_acceleration of the system.
+    /// 
     /// # Returns
     ///
-    /// The control output voltage to apply to the motor.
-    pub fn update(&mut self, current_velocity: f32) -> f32 {
-        // Calculate the time elapsed since the last update
-        let now = Instant::now();
-        let delta_time = now.duration_since(self.last_time).as_secs_f32();
-        let delta_time = if delta_time == 0.0 { 0.001 } else { delta_time };
-        self.last_time = now;
-
-        // Calculate the acceleration
-        let accel = (current_velocity - self.prev_velocity) / delta_time;
-        self.prev_velocity = current_velocity;
-
+    /// The control output to apply to the motor.
+    pub fn update(&mut self, current_velocity: f32, target_acceleration: f32) -> f32 {
         // Calculate the feedforward component based on velocity and acceleration
-        let v = self.ks * current_velocity.signum() + self.kv * current_velocity + self.ka * accel;
+        let v = self.ks * current_velocity.signum() + self.kv * current_velocity + self.ka * target_acceleration;
 
         // The output is the feedforward controller (V)
         let output = v;
