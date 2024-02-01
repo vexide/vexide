@@ -403,7 +403,7 @@ impl Screen {
         x1: i16,
         y1: i16,
         buf: T,
-        stride: i32,
+        src_stride: i32,
     ) -> Result<(), ScreenError>
     where
         T: IntoIterator<Item = I>,
@@ -415,7 +415,7 @@ impl Screen {
             .collect::<Vec<_>>();
 
         bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_copy_area(x0, y0, x1, y1, raw_buf.as_ptr(), stride)
+            pros_sys::screen_copy_area(x0, y0, x1, y1, raw_buf.as_ptr(), src_stride)
         });
 
         Ok(())
