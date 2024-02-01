@@ -204,34 +204,6 @@ macro_rules! eprint {
     };
 }
 
-/// Macro for printing a static string to the standard output.
-///
-/// Does not panic on failure to write - instead silently ignores errors.
-#[macro_export]
-macro_rules! write {
-    ($arg:expr) => {
-        #[allow(unused_must_use)]
-        {
-            let mut stm = $crate::io::print_impl::__SerialWriter::new(false);
-            stm.write_str($arg);
-        }
-    };
-}
-
-/// Macro for printing a static string to the standard error.
-///
-/// Does not panic on failure to write - instead silently ignores errors.
-#[macro_export]
-macro_rules! ewrite {
-    ($arg:expr) => {{
-        #[allow(unused_must_use)]
-        {
-            let mut stm = $crate::io::print_impl::__SerialWriter::new(true);
-            stm.write_str($arg);
-        }
-    }};
-}
-
 /// Macro for printing a static string to the standard output, with a newline.
 ///
 /// Does not panic on failure to write - instead silently ignores errors.

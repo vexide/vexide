@@ -371,7 +371,6 @@ pub mod prelude {
     pub use crate::{
         async_robot,
         async_runtime::*,
-        dbg,
         devices::{
             adi::{
                 analog::{AdiAnalogIn, AdiAnalogOut},
@@ -397,13 +396,12 @@ pub mod prelude {
                 SmartDevice, SmartPort,
             },
         },
-        eprint, eprintln,
         error::PortError,
-        io::{BufRead, Read, Seek, Write},
+        io::{dbg, eprintln, print, println, BufRead, Read, Seek, Write},
         lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
         os_task_local,
         pid::*,
-        print, println, sync_robot,
+        sync_robot,
         task::{delay, sleep, spawn},
         AsyncRobot, SyncRobot,
     };
