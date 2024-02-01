@@ -358,7 +358,8 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
         pros_sys::display_fatal_error(
             CString::new(format!("task '{task_name}' {info}"))
                 .unwrap_or_else(|err| {
-                    eprintln!("Failed to draw panic message to screen: {:#?}", err)
+                    eprintln!("Failed to draw panic message to screen: {:#?}", err);
+                    CString::default()
                 })
                 .into_raw(),
         );
