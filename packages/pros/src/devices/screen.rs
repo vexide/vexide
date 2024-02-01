@@ -14,7 +14,6 @@ use crate::{
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Screen {
-    writer_color: Rgb,
     writer_buffer: String,
     current_line: i16,
 }
@@ -299,16 +298,18 @@ impl From<TouchState> for pros_sys::last_touch_e_t {
 }
 
 impl Screen {
+    /// Create a new screen.
+    ///
+    /// # Safety
+    ///
+    /// Creating new `Screen`s is inherently unsafe due to the possibility of constructing
+    /// more than one screen at once allowing multiple mutable references to the same
+    /// hardware device. Prefer using [`Peripherals`] to register devices if possible.
     pub unsafe fn new() -> Self {
         Self {
             current_line: 0,
             writer_buffer: String::default(),
-            writer_color: Rgb::WHITE,
         }
-    }
-
-    pub fn writer_color(&self) -> Rgb {
-        self.writer_color
     }
 
     fn flush_writer(&mut self) -> Result<(), ScreenError> {
@@ -318,7 +319,7 @@ impl Screen {
                 TextPosition::Line(self.current_line),
                 TextFormat::Medium,
             ),
-            self.writer_color,
+            Rgb::WHITE,
         )?;
 
         self.writer_buffer.clear();
@@ -326,6 +327,10 @@ impl Screen {
         Ok(())
     }
 
+    /// Scroll the entire display buffer.
+    ///
+    /// This function effectively y-offsets all pixels drawn to the display buffer by
+    /// a number (`offset`) of pixels.
     pub fn scroll(&mut self, start: i16, offset: i16) -> Result<(), ScreenError> {
         bail_on!(PROS_ERR as u32, unsafe {
             pros_sys::screen_scroll(start, offset)
@@ -334,16 +339,20 @@ impl Screen {
         Ok(())
     }
 
+    /// Scroll a region of the screen.
+    ///
+    /// This will effectively y-offset the display buffer in this area by
+    /// `offset` pixels.
     pub fn scroll_area(
         &mut self,
         x0: i16,
         y0: i16,
         x1: i16,
         y1: i16,
-        lines: i16,
+        offset: i16,
     ) -> Result<(), ScreenError> {
         bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_scroll_area(x0, y0, x1, y1, lines)
+            pros_sys::screen_scroll_area(x0, y0, x1, y1, offset)
         });
 
         Ok(())
@@ -412,6 +421,10 @@ impl Screen {
         Ok(())
     }
 
+    /// Draw an error box to the screen.
+    ///
+    /// This function is internally used by the pros-rs panic handler for displaying
+    /// panic messages graphically before exiting.
     pub(crate) fn draw_error(&mut self, msg: &str) -> Result<(), ScreenError> {
         const ERROR_BOX_MARGIN: i16 = 16;
         const ERROR_BOX_PADDING: i16 = 16;
