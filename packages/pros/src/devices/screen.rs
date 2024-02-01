@@ -307,10 +307,6 @@ impl Screen {
         }
     }
 
-    pub fn set_writer_color(&mut self, color: impl IntoRgb) {
-        self.writer_color = color.into_rgb();
-    }
-
     pub fn writer_color(&self) -> Rgb {
         self.writer_color
     }
