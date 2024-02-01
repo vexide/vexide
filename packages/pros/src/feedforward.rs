@@ -25,17 +25,15 @@ impl FeedforwardController {
     /// * `kv` - Feedforward constant for velocity compensation.
     /// * `ka` - Feedforward constant for acceleration compensation.
     /// * `target_acceleration` - Feedforward constant for the target acceleration.
-    /// * `target` - Target.
     ///
     /// # Returns
     ///
     /// A new `FeedforwardController`.
-    pub fn new(ks: f32, kv: f32, ka: f32, target_acceleration: f32, target: f32) -> Self {
+    pub fn new(ks: f32, kv: f32, ka: f32, target_acceleration: f32) -> Self {
         Self {
             ks,
             kv,
             ka,
-            target,
         }
     }
 
@@ -44,13 +42,14 @@ impl FeedforwardController {
     /// # Arguments
     ///
     /// * `target_acceleration` - The target_acceleration of the system.
+    /// * `target` - Target.
     /// 
     /// # Returns
     ///
     /// The control output to apply to the motor.
-    pub fn update(&mut self, target_acceleration: f32) -> f32 {
+    pub fn update(&self, target: f32, target_acceleration: f32) -> f32 {
         // Calculate the feedforward component based on velocity and acceleration
-        let v = self.ks * self.target.signum() + self.kv * self.target + self.ka * target_acceleration;
+        let v = self.ks * target.signum() + self.kv * target + self.ka * target_acceleration;
 
         // The output is the feedforward controller (V)
         let output = v;
