@@ -72,10 +72,10 @@ impl AdiPort {
 
     /// Get the type of device this port is currently configured as.
     pub fn configured_type(&self) -> Result<AdiDeviceType, AdiError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
+        bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi::ext_adi_port_get_config(self.internal_expander_index(), self.index())
         })
-        .try_into()?)
+        .try_into()
     }
 }
 
