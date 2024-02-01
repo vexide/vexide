@@ -1,25 +1,18 @@
 #![no_std]
 #![no_main]
 
-use pros::prelude::*;
 use core::fmt::Write;
 
-pub struct Robot {
-    screen: Screen,
-}
+use pros::prelude::*;
 
-impl Robot {
-    pub fn new(peripherals: Peripherals) -> Self {
-        Self {
-            screen: peripherals.screen,
-        }
-    }
-}
+#[derive(Default)]
+pub struct Robot;
 
 impl AsyncRobot for Robot {
     async fn opcontrol(&mut self) -> pros::Result {
-        panic!("AAAAAAHHHHHHH!");
+        println!("basic example");
+
         Ok(())
     }
 }
-async_robot!(Robot, Robot::new(Peripherals::take().unwrap()));
+async_robot!(Robot);

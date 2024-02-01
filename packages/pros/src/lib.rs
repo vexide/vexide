@@ -78,15 +78,10 @@ pub mod io;
 pub mod time;
 pub mod usd;
 
-use alloc::{ffi::CString, format, string::String};
+use alloc::format;
 use core::future::Future;
 
-use devices::screen::{
-    Rect, Screen, Text, TextFormat, TextPosition, SCREEN_HORIZONTAL_RESOLUTION, SCREEN_LINE_HEIGHT,
-    SCREEN_VERTICAL_RESOLUTION,
-};
-
-use crate::color::Rgb;
+use devices::screen::Screen;
 
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 

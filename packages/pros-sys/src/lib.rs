@@ -19,8 +19,8 @@ pub mod motor;
 pub mod optical;
 pub mod rotation;
 pub mod rtos;
-pub mod vision;
 pub mod screen;
+pub mod vision;
 
 use core::ffi::{c_char, c_int, c_void};
 

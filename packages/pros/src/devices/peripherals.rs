@@ -1,6 +1,6 @@
 use core::sync::atomic::AtomicBool;
 
-use crate::devices::{adi::AdiPort, smart::SmartPort, screen::Screen};
+use crate::devices::{adi::AdiPort, screen::Screen, smart::SmartPort};
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
