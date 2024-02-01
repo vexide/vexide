@@ -4,9 +4,6 @@
 //! Allows you to use these macros in a #!\[no_std\] context, or in a situation where the
 //! traditional Rust streams might not be available (ie: at process shutdown time).
 //!
-//! [`writeln`] and [`ewriteln`] are provided for cases where you may not wish
-//! to pull in the overhead of the formatter code and simply wish to print C-style strings.
-//!
 //! ## Usage
 //!
 //! Exactly as you'd use `println!`, `eprintln!` and `dbg!`.
