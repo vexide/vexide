@@ -8,19 +8,22 @@ use pros_sys::PROS_ERR;
 use snafu::Snafu;
 
 use crate::{
-    color::{Rgb, IntoRgb},
+    color::{IntoRgb, Rgb},
     error::{bail_on, map_errno},
 };
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Screen {
+    writer_color: Rgb,
     writer_buffer: String,
-    previous_writer_buffer: String,
     current_line: i16,
 }
 
-const SCREEN_MAX_VISIBLE_LINES: usize = 12;
-const SCREEN_LINE_HEIGHT: usize = 20;
+pub const SCREEN_MAX_VISIBLE_LINES: usize = 12;
+pub const SCREEN_LINE_HEIGHT: i16 = 20;
+
+pub const SCREEN_HORIZONTAL_RESOLUTION: i16 = 480;
+pub const SCREEN_VERTICAL_RESOLUTION: i16 = 240;
 
 impl core::fmt::Write for Screen {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
@@ -45,7 +48,8 @@ impl core::fmt::Write for Screen {
                 TextFormat::Medium,
             ),
             Rgb::WHITE,
-        ).unwrap();
+        )
+        .unwrap();
 
         Ok(())
     }
@@ -209,9 +213,9 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn new(text: impl AsRef<str>, position: TextPosition, format: TextFormat) -> Self {
+    pub fn new(text: &str, position: TextPosition, format: TextFormat) -> Self {
         Self {
-            text: CString::new(text.as_ref())
+            text: CString::new(text)
                 .expect("CString::new encountered NULL (U+0000) byte in non-terminating position."),
             position,
             format,
@@ -298,8 +302,16 @@ impl Screen {
         Self {
             current_line: 0,
             writer_buffer: String::default(),
-            previous_writer_buffer: String::default(),
+            writer_color: Rgb::WHITE,
         }
+    }
+
+    pub fn set_writer_color(&mut self, color: impl IntoRgb) {
+        self.writer_color = color.into_rgb();
+    }
+
+    pub fn writer_color(&self) -> Rgb {
+        self.writer_color
     }
 
     fn flush_writer(&mut self) -> Result<(), ScreenError> {
@@ -309,10 +321,10 @@ impl Screen {
                 TextPosition::Line(self.current_line),
                 TextFormat::Medium,
             ),
-            Rgb::WHITE,
+            self.writer_color,
         )?;
 
-        self.writer_buffer = String::default();
+        self.writer_buffer.clear();
 
         Ok(())
     }
@@ -399,6 +411,62 @@ impl Screen {
         bail_on!(PROS_ERR as u32, unsafe {
             pros_sys::screen_copy_area(x0, y0, x1, y1, raw_buf.as_ptr(), stride)
         });
+
+        Ok(())
+    }
+
+    pub(crate) fn draw_error(&mut self, msg: &str) -> Result<(), ScreenError> {
+        const ERROR_BOX_MARGIN: i16 = 16;
+        const ERROR_BOX_PADDING: i16 = 16;
+        const LINE_MAX_WIDTH: usize = 52;
+
+        let error_box_rect = Rect::new(
+            ERROR_BOX_MARGIN,
+            ERROR_BOX_MARGIN,
+            SCREEN_HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
+            SCREEN_VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
+        );
+
+        self.fill(&error_box_rect, Rgb::RED)?;
+        self.stroke(&error_box_rect, Rgb::WHITE)?;
+
+        let mut buffer = String::new();
+        let mut line: i16 = 0;
+
+        for (i, character) in msg.char_indices() {
+            if !character.is_ascii_control() {
+                buffer.push(character);
+            }
+
+            if character == '\n' || ((buffer.len() % LINE_MAX_WIDTH == 0) && (i > 0)) {
+                self.fill(
+                    &Text::new(
+                        buffer.as_str(),
+                        TextPosition::Point(
+                            ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
+                            ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * SCREEN_LINE_HEIGHT),
+                        ),
+                        TextFormat::Small,
+                    ),
+                    Rgb::WHITE,
+                )?;
+
+                line += 1;
+                buffer.clear();
+            }
+        }
+
+        self.fill(
+            &Text::new(
+                buffer.as_str(),
+                TextPosition::Point(
+                    ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
+                    ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * SCREEN_LINE_HEIGHT),
+                ),
+                TextFormat::Small,
+            ),
+            Rgb::WHITE,
+        )?;
 
         Ok(())
     }

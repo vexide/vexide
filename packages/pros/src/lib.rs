@@ -57,8 +57,6 @@
 
 extern crate alloc;
 
-use core::future::Future;
-
 pub mod async_runtime;
 pub mod devices;
 pub mod error;
@@ -80,7 +78,15 @@ pub mod io;
 pub mod time;
 pub mod usd;
 
-use alloc::{ffi::CString, format};
+use alloc::{ffi::CString, format, string::String};
+use core::future::Future;
+
+use devices::screen::{
+    Rect, Screen, Text, TextFormat, TextPosition, SCREEN_HORIZONTAL_RESOLUTION, SCREEN_LINE_HEIGHT,
+    SCREEN_VERTICAL_RESOLUTION,
+};
+
+use crate::color::Rgb;
 
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
@@ -352,19 +358,16 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
     // panic message here
     let msg = format!("task '{task_name}' {info}");
 
-    eprintln!("{}", msg);
+    eprintln!("{msg}");
 
     unsafe {
-        pros_sys::display_fatal_error(
-            CString::new(msg)
-                .unwrap_or_else(|err| {
-                    eprintln!("Failed to draw panic message to screen: {:#?}", err);
-                    CString::default()
-                })
-                .into_raw(),
-        );
+        Screen::new().draw_error(&msg).unwrap_or_else(|err| {
+            eprintln!("Failed to draw error message to screen: {err}");
+        });
+
         #[cfg(target_arch = "wasm32")]
         wasm_env::sim_log_backtrace();
+
         pros_sys::exit(1);
     }
 }

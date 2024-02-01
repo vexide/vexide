@@ -18,16 +18,7 @@ impl Robot {
 
 impl AsyncRobot for Robot {
     async fn opcontrol(&mut self) -> pros::Result {
-        let mut i = 1;
-
-        loop {
-            self.screen.write_fmt(format_args!("{i}\n"))?;
-            i += 1;
-            pros::task::delay(core::time::Duration::from_millis(100));
-        }
-
-        // self.screen.write_str("Dolor sit")?;
-
+        panic!("AAAAAAHHHHHHH!");
         Ok(())
     }
 }
