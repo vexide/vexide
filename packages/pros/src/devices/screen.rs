@@ -2,20 +2,53 @@
 //!
 //! Contains user calls to the v5 screen for touching and displaying graphics.
 
-use alloc::{ffi::CString, vec::Vec};
+use alloc::{ffi::CString, string::String, vec::Vec};
 
 use pros_sys::PROS_ERR;
 use snafu::Snafu;
 
 use crate::{
-    color::IntoRgb,
+    color::{Rgb, IntoRgb},
     error::{bail_on, map_errno},
 };
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Screen {
-    // Forces unsafe construction through [`Self::new`].
-    _private: (),
+    writer_buffer: String,
+    previous_writer_buffer: String,
+    current_line: i16,
+}
+
+const SCREEN_MAX_VISIBLE_LINES: usize = 12;
+const SCREEN_LINE_HEIGHT: usize = 20;
+
+impl core::fmt::Write for Screen {
+    fn write_str(&mut self, text: &str) -> core::fmt::Result {
+        for character in text.chars() {
+            if character == '\n' {
+                if self.current_line > (SCREEN_MAX_VISIBLE_LINES as i16 - 2) {
+                    self.scroll(0, SCREEN_LINE_HEIGHT as i16).unwrap();
+                } else {
+                    self.current_line += 1;
+                }
+
+                self.flush_writer().unwrap();
+            } else {
+                self.writer_buffer.push(character);
+            }
+        }
+
+        self.fill(
+            &Text::new(
+                self.writer_buffer.as_str(),
+                TextPosition::Line(self.current_line),
+                TextFormat::Medium,
+            ),
+            Rgb::WHITE,
+        ).unwrap();
+
+        Ok(())
+    }
 }
 
 pub trait Fill {
@@ -261,13 +294,32 @@ impl From<TouchState> for pros_sys::last_touch_e_t {
 }
 
 impl Screen {
-    pub const unsafe fn new() -> Self {
-        Self { _private: () }
+    pub unsafe fn new() -> Self {
+        Self {
+            current_line: 0,
+            writer_buffer: String::default(),
+            previous_writer_buffer: String::default(),
+        }
     }
 
-    pub fn scroll(&mut self, start_line: i16, lines: i16) -> Result<(), ScreenError> {
+    fn flush_writer(&mut self) -> Result<(), ScreenError> {
+        self.fill(
+            &Text::new(
+                self.writer_buffer.as_str(),
+                TextPosition::Line(self.current_line),
+                TextFormat::Medium,
+            ),
+            Rgb::WHITE,
+        )?;
+
+        self.writer_buffer = String::default();
+
+        Ok(())
+    }
+
+    pub fn scroll(&mut self, start: i16, offset: i16) -> Result<(), ScreenError> {
         bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_scroll(start_line, lines)
+            pros_sys::screen_scroll(start, offset)
         });
 
         Ok(())
@@ -339,7 +391,10 @@ impl Screen {
         T: IntoIterator<Item = I>,
         I: IntoRgb,
     {
-        let raw_buf = buf.into_iter().map(|i| i.into_rgb().into()).collect::<Vec<_>>();
+        let raw_buf = buf
+            .into_iter()
+            .map(|i| i.into_rgb().into())
+            .collect::<Vec<_>>();
 
         bail_on!(PROS_ERR as u32, unsafe {
             pros_sys::screen_copy_area(x0, y0, x1, y1, raw_buf.as_ptr(), stride)

@@ -75,10 +75,12 @@ mod vexos_env;
 mod wasm_env;
 #[macro_use]
 pub mod competition;
+pub mod color;
 pub mod io;
 pub mod time;
 pub mod usd;
-pub mod color;
+
+use alloc::{ffi::CString, format};
 
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
@@ -348,9 +350,18 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
 
     // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
     // panic message here
-    println!("task '{task_name}' {info}");
+    let msg = format!("task '{task_name}' {info}");
+
+    eprintln!("{}", msg);
 
     unsafe {
+        pros_sys::display_fatal_error(
+            CString::new(format!("task '{task_name}' {info}"))
+                .unwrap_or_else(|err| {
+                    eprintln!("Failed to draw panic message to screen: {:#?}", err)
+                })
+                .into_raw(),
+        );
         #[cfg(target_arch = "wasm32")]
         wasm_env::sim_log_backtrace();
         pros_sys::exit(1);
@@ -366,6 +377,7 @@ pub mod prelude {
     pub use crate::{
         async_robot,
         async_runtime::*,
+        color::Rgb,
         dbg,
         devices::{
             adi::{
@@ -380,6 +392,7 @@ pub mod prelude {
             },
             peripherals::{DynamicPeripherals, Peripherals},
             position::Position,
+            screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
             smart::{
                 distance::DistanceSensor,
                 gps::GpsSensor,
@@ -392,7 +405,6 @@ pub mod prelude {
                 SmartDevice, SmartPort,
             },
         },
-        color::Rgb,
         eprint, eprintln,
         error::PortError,
         io::{BufRead, Read, Seek, Write},

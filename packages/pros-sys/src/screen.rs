@@ -2,7 +2,7 @@
 //!
 //! Contains user calls to the v5 screen for touching and displaying graphics.
 
-use core::ffi::c_int;
+use core::ffi::{c_char, c_int};
 
 /// Struct representing screen touch status, screen last x, screen last y, press count, release count.
 #[repr(C)]
@@ -377,4 +377,18 @@ extern "C" {
 	/// \return 1 if there were no errors, or PROS_ERR if an error occured
 	///          while taking or returning the screen mutex.
 	pub fn screen_touch_callback(cb: touch_event_cb_fn_t, event_type: last_touch_e_t) -> u32;
+
+	/// Display a non-fatal error to the built-in LCD/touch screen.
+	///
+	/// Note that this function is thread-safe, which requires that the scheduler be
+	/// in a functioning state. For situations in which it is unclear whether the
+	/// scheduler is working, use `display_fatal_error` instead.
+	pub fn display_error(text: *const c_char);
+
+	/// Display a fatal error to the built-in LCD/touch screen.
+	///
+	/// This function is intended to be used when the integrity of the RTOS cannot be
+	/// trusted. No thread-safety mechanisms are used and this function only relies
+	/// on the use of the libv5rts.
+	pub fn display_fatal_error(text: *const c_char);
 }
