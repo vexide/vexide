@@ -1,10 +1,12 @@
 use core::sync::atomic::AtomicBool;
 
-use crate::devices::{adi::AdiPort, smart::SmartPort};
+use crate::devices::{adi::AdiPort, smart::SmartPort, screen::Screen};
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
 pub struct Peripherals {
+    pub screen: Screen,
+
     pub port_1: SmartPort,
     pub port_2: SmartPort,
     pub port_3: SmartPort,
@@ -40,6 +42,8 @@ pub struct Peripherals {
 impl Peripherals {
     const unsafe fn new() -> Self {
         Self {
+            screen: Screen::new(),
+
             port_1: SmartPort::new(1),
             port_2: SmartPort::new(2),
             port_3: SmartPort::new(3),
@@ -91,6 +95,7 @@ impl Peripherals {
 /// This is useful for when you want to store a peripherals struct for use in multiple functions.
 /// When possible, use [`Peripherals`] instead.
 pub struct DynamicPeripherals {
+    screen: bool,
     smart_ports: [bool; 21],
     adi_slots: [bool; 8],
 }
@@ -104,6 +109,7 @@ impl DynamicPeripherals {
         let smart_ports = [false; 21];
         let adi_slots = [false; 8];
         Self {
+            screen: false,
             smart_ports,
             adi_slots,
         }
@@ -137,6 +143,14 @@ impl DynamicPeripherals {
         }
         self.smart_ports[port_index] = true;
         Some(unsafe { AdiPort::new(port_index as u8 + 1, None) })
+    }
+
+    pub fn take_screen(&mut self) -> Option<Screen> {
+        if self.screen {
+            return None;
+        }
+        self.screen = true;
+        Some(unsafe { Screen::new() })
     }
 }
 impl From<Peripherals> for DynamicPeripherals {

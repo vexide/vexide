@@ -2,15 +2,11 @@
 //!
 //! Contains user calls to the v5 screen for touching and displaying graphics.
 
-#[repr(C)]
-pub struct touch_event_position_data_s_t {
-    pub x: i16,
-    pub y: i16,
-}
+use core::ffi::c_int;
 
 /// Struct representing screen touch status, screen last x, screen last y, press count, release count.
 #[repr(C)]
-struct screen_touch_status_s_t {
+pub struct screen_touch_status_s_t {
 	/// Represents if the screen is being held, released, or pressed.
 	pub touch_status: last_touch_e_t,
 
@@ -21,10 +17,10 @@ struct screen_touch_status_s_t {
 	pub y: i16,
 
 	/// Represents how many times the screen has be pressed.
-	press_count: i32,
+	pub press_count: i32,
 
 	/// Represents how many times the user released after a touch on the screen.
-	release_count: i32,
+	pub release_count: i32,
 }
 
 pub const E_TEXT_SMALL: c_int = 0;
@@ -40,7 +36,7 @@ pub const E_TOUCH_HELD: c_int = 2;
 pub const E_TOUCH_ERROR: c_int = 3;
 pub type last_touch_e_t = c_int;
 
-pub type touch_event_cb_fn_t = fn();
+pub type touch_event_cb_fn_t = unsafe extern "C" fn();
 
 extern "C" {
 	/// Set the pen color for subsequent graphics operations
@@ -135,6 +131,7 @@ extern "C" {
 	/// This function uses the following values of errno when an error state is
 	/// reached:
 	/// EACCESS - Another resource is currently trying to access the screen mutex.
+	///
 	///
 	/// \param start_line    The line from which scrolling will start
 	/// \param lines			The number of lines to scroll up

@@ -24,6 +24,8 @@ pub mod battery;
 pub mod controller;
 pub mod peripherals;
 pub mod position;
+pub mod screen;
 
 pub use controller::Controller;
 pub use position::Position;
+pub use screen::Screen;

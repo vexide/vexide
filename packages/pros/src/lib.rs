@@ -78,6 +78,7 @@ pub mod competition;
 pub mod io;
 pub mod time;
 pub mod usd;
+pub mod color;
 
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
@@ -391,6 +392,7 @@ pub mod prelude {
                 SmartDevice, SmartPort,
             },
         },
+        color::Rgb,
         eprint, eprintln,
         error::PortError,
         io::{BufRead, Read, Seek, Write},

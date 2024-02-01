@@ -9,7 +9,10 @@ use pros_sys::{PROS_ERR, VISION_OBJECT_ERR_SIG};
 use snafu::Snafu;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::error::{bail_errno, bail_on, map_errno, PortError};
+use crate::{
+    color::Rgb,
+    error::{bail_errno, bail_on, map_errno, PortError},
+};
 
 /// Represents a vision sensor plugged into the vex.
 #[derive(Debug, Eq, PartialEq)]
@@ -162,37 +165,6 @@ impl TryFrom<pros_sys::vision_object_s_t> for VisionObject {
             width: value.width,
             height: value.height,
         })
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Rgb {
-    r: u8,
-    g: u8,
-    b: u8,
-}
-
-impl Rgb {
-    pub fn new(r: u8, g: u8, b: u8) -> Self {
-        Self { r, g, b }
-    }
-}
-
-impl From<Rgb> for u32 {
-    fn from(other: Rgb) -> u32 {
-        ((other.r as u32) << 16) + ((other.g as u32) << 8) + other.b as u32
-    }
-}
-
-const BITMASK: u32 = 0b11111111;
-
-impl From<u32> for Rgb {
-    fn from(value: u32) -> Self {
-        Self {
-            r: ((value >> 16) & BITMASK) as _,
-            g: ((value >> 8) & BITMASK) as _,
-            b: (value & BITMASK) as _,
-        }
     }
 }
 
