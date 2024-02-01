@@ -1,8 +1,6 @@
 #![no_std]
 #![no_main]
 
-use core::fmt::Write;
-
 use pros::prelude::*;
 
 #[derive(Default)]

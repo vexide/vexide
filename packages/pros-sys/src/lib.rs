@@ -57,3 +57,10 @@ extern "C" {
     pub fn exit(code: i32) -> !;
     pub fn write(fd: c_int, buf: *const c_void, count: usize) -> isize;
 }
+
+#[no_mangle] extern "C" fn cpp_opcontrol() {}
+#[no_mangle] extern "C" fn cpp_autonomous() {}
+#[no_mangle] extern "C" fn cpp_disabled() {}
+#[no_mangle] extern "C" fn cpp_competition_initialize() {}
+#[no_mangle] extern "C" fn cpp_initialize() {}
+#[no_mangle] extern "C" fn task_fn_wrapper() {}

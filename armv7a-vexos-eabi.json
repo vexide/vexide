@@ -17,7 +17,7 @@
             "-nostartfiles",
             "-nostdlib",
             "-Wl,-Tv5.ld,-Tv5-common.ld,--gc-sections",
-            "-Wl,--start-group,-lpros,-lc,--end-group"
+            "-Wl,--start-group,-lgcc,-lpros,-lc,--end-group"
         ]
     },
     "relocation-model": "static",
