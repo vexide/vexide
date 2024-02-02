@@ -4,6 +4,7 @@ use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
+/// Cortex era motor device.
 pub struct AdiMotor {
     port: AdiPort,
 }

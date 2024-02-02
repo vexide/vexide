@@ -1,3 +1,5 @@
+//! Inertial sensor (IMU) device.
+
 use core::{
     pin::Pin,
     task::{Context, Poll},
@@ -13,7 +15,9 @@ use crate::{
     time::Instant,
 };
 
+/// The timeout for the IMU to calibrate.
 pub const IMU_RESET_TIMEOUT: Duration = Duration::from_secs(3);
+/// The minimum data rate that you can set an IMU to.
 pub const IMU_MIN_DATA_RATE: Duration = Duration::from_millis(5);
 
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
@@ -389,8 +393,12 @@ impl TryFrom<pros_sys::imu_status_e_t> for InertialStatus {
 }
 
 #[derive(Debug, Clone, Copy)]
+/// Future that calibrates an IMU
+/// created with [`InertialSensor::calibrate`].
 pub enum InertialCalibrateFuture {
+    /// Calibrate the IMU
     Calibrate(u8),
+    /// Wait for the IMU to finish calibrating
     Waiting(u8, Instant),
 }
 
@@ -435,13 +443,20 @@ impl core::future::Future for InertialCalibrateFuture {
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when interacting with an Inertial Sensor.
 pub enum InertialError {
     #[snafu(display("Inertial sensor is still calibrating, but exceeded calibration timeout."))]
+    /// Inertial sensor is still calibrating, but exceeded calibration timeout.
     CalibrationTimedOut,
     #[snafu(display("Sensor data rate has a minimum duration of 5 milliseconds."))]
+    /// Sensor data rate has a minimum duration of 5 milliseconds.
     InvalidDataRate,
     #[snafu(display("{source}"), context(false))]
-    Port { source: PortError },
+    /// Generic port related error.
+    Port {
+        /// The source of the error.
+        source: PortError,
+    },
 }
 
 map_errno! {

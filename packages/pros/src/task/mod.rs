@@ -141,6 +141,7 @@ impl TaskHandle {
         }
     }
 
+    /// Gets the name of the task if possible.
     pub fn name(&self) -> Result<String, Utf8Error> {
         unsafe {
             let name = pros_sys::task_get_name(self.task);
@@ -229,20 +230,19 @@ impl From<u32> for TaskState {
     }
 }
 
+#[repr(u32)]
+#[derive(Debug, Default)]
 /// Represents how much time the cpu should spend on this task.
 /// (Otherwise known as the priority)
-#[repr(u32)]
-#[derive(Debug)]
 pub enum TaskPriority {
+    /// The highest priority, should be used sparingly.
+    /// Loops **MUST** have delays or sleeps to prevent starving other tasks.
     High = 16,
+    /// The default priority.
+    #[default]
     Default = 8,
+    /// The lowest priority, tasks with this priority will barely ever get cpu time.
     Low = 1,
-}
-
-impl Default for TaskPriority {
-    fn default() -> Self {
-        Self::Default
-    }
 }
 
 impl From<TaskPriority> for u32 {
@@ -254,16 +254,14 @@ impl From<TaskPriority> for u32 {
 /// Represents how large of a stack the task should get.
 /// Tasks that don't have any or many variables and/or don't need floats can use the low stack depth option.
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum TaskStackDepth {
+    #[default]
+    /// The default stack depth.
     Default = 8192,
+    /// Low task depth. Many tasks can get away with using this stack depth
+    /// however the brain has enough memory that this usually isn't necessary.
     Low = 512,
-}
-
-impl Default for TaskStackDepth {
-    fn default() -> Self {
-        Self::Default
-    }
 }
 
 struct TaskEntrypoint<F> {
@@ -283,8 +281,10 @@ where
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when spawning a task.
 pub enum SpawnError {
     #[snafu(display("The stack cannot be used as the TCB was not created."))]
+    /// The stack cannot be used as the TCB was not created.
     TCBNotCreated,
 }
 
@@ -387,6 +387,8 @@ pub fn get_notification() -> u32 {
 }
 
 #[derive(Debug)]
+/// A guard that can be used to suspend the FreeRTOS scheduler.
+/// When dropped, the scheduler will be resumed.
 pub struct SchedulerSuspendGuard {
     _private: (),
 }

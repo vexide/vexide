@@ -101,16 +101,27 @@ impl SmartPort {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum SmartDeviceType {
+    /// No device is connected to the port.
     None = pros_sys::apix::E_DEVICE_NONE,
+    /// A motor is connected to the port.
     Motor = pros_sys::apix::E_DEVICE_MOTOR,
+    /// A rotation sensor is connected to the port.
     Rotation = pros_sys::apix::E_DEVICE_ROTATION,
+    /// An inertial sensor is connected to the port.
     Imu = pros_sys::apix::E_DEVICE_IMU,
+    /// A distance sensor is connected to the port.
     Distance = pros_sys::apix::E_DEVICE_DISTANCE,
+    /// A vision sensor is connected to the port.
     Vision = pros_sys::apix::E_DEVICE_VISION,
+    /// An optical sensor is connected to the port.
     Optical = pros_sys::apix::E_DEVICE_OPTICAL,
+    /// A GPS sensor is connected to the port.
     Gps = pros_sys::apix::E_DEVICE_GPS,
+    /// A VEXLink radio is connected to the port.
     Radio = pros_sys::apix::E_DEVICE_RADIO,
+    /// An ADI expander is connected to the port.
     Adi = pros_sys::apix::E_DEVICE_ADI,
+    /// A generic serial device is connected to the port.
     Serial = pros_sys::apix::E_DEVICE_SERIAL,
 }
 

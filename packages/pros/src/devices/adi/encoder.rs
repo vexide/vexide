@@ -4,6 +4,8 @@ use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
+/// ADI encoder device.
+/// Requires two adi ports.
 pub struct AdiEncoder {
     raw: ext_adi_encoder_t,
     port_top: AdiPort,

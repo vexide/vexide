@@ -4,6 +4,7 @@ use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
+/// Generic analog input ADI device.
 pub struct AdiAnalogIn {
     port: AdiPort,
 }
@@ -103,6 +104,7 @@ impl AdiDevice for AdiAnalogIn {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+/// Generic analog output ADI device.
 pub struct AdiAnalogOut {
     port: AdiPort,
 }
