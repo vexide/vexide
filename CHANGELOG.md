@@ -31,7 +31,11 @@ Before releasing:
 
 ### Changed
 
+- Re-exported printing macros from `pros::io`. (#82)
+
 ### Removed
+
+- Removed the confusingly named `write`, `ewrite`, `writeln`, and `ewriteln` macros. (**Breaking Change**) (#82)
 
 ## [0.7.0]
 
