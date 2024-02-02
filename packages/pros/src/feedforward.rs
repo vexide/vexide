@@ -3,7 +3,7 @@
 /// This controller is used to apply feedforward control to achieve desired motor behavior
 /// based on velocity and acceleration.
 #[derive(Debug, Clone)]
-pub struct FeedforwardController {
+pub struct FeedforwardMotorController {
     /// Feedforward constant for static friction compensation.
     pub ks: f32,
     /// Feedforward constant for velocity compensation.
@@ -16,8 +16,8 @@ pub struct FeedforwardController {
     pub target: f32,
 }
 
-impl FeedforwardController {
-    /// Creates a new `FeedforwardController` with the given constants and target.
+impl FeedforwardMotorController {
+    /// Creates a new [`FeedforwardMotorController`] with the given constants and target.
     ///
     /// # Arguments
     ///
@@ -28,7 +28,7 @@ impl FeedforwardController {
     ///
     /// # Returns
     ///
-    /// A new `FeedforwardController`.
+    /// A new [`FeedforwardMotorController`].
     pub fn new(ks: f32, kv: f32, ka: f32, target_acceleration: f32) -> Self {
         Self {
             ks,
