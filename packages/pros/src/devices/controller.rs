@@ -13,30 +13,30 @@ use crate::error::{bail_on, map_errno};
 /// Holds whether or not the buttons on the controller are pressed or not
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Buttons {
-    /// A button
+    /// The 'A' button on the right button pad of the controller.
     pub a: bool,
-    /// B button
+    /// The 'B' button on the right button pad of the controller.
     pub b: bool,
-    /// X button
+    /// The 'X' button on the right button pad of the controller.
     pub x: bool,
-    /// Y button
+    /// The 'Y' button on the right button pad of the controller.
     pub y: bool,
 
-    /// Up button
+    /// The up arrow on the left arrow pad of the controller.
     pub up: bool,
-    /// Down button
+    /// The down arrow on the left arrow pad of the controller.
     pub down: bool,
-    /// Left button
+    /// The left arrow on the left arrow pad of the controller.
     pub left: bool,
-    /// Right button
+    /// The right arrow on the left arrow pad of the controller.
     pub right: bool,
-    /// Front left trigger
+    /// The first trigger on the left side of the controller.
     pub left_trigger_1: bool,
-    /// Back left trigger
+    /// The second trigger on the left side of the controller.
     pub left_trigger_2: bool,
-    /// Front right trigger
+    /// The first trigger on the right side of the controller.
     pub right_trigger_1: bool,
-    /// Back right trigger
+    /// The second trigger on the right side of the controller.
     pub right_trigger_2: bool,
 }
 
@@ -112,29 +112,29 @@ impl ControllerLine {
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControllerButton {
-    /// A button
+    /// The 'A' button on the right button pad of the controller.
     A = pros_sys::E_CONTROLLER_DIGITAL_A,
-    /// B button
+    /// The 'B' button on the right button pad of the controller.
     B = pros_sys::E_CONTROLLER_DIGITAL_B,
-    /// X button
+    /// The 'X' button on the right button pad of the controller.
     X = pros_sys::E_CONTROLLER_DIGITAL_X,
-    /// Y button
+    /// The 'Y' button on the right button pad of the controller.
     Y = pros_sys::E_CONTROLLER_DIGITAL_Y,
-    /// Up button
+    /// The up arrow on the left arrow pad of the controller.
     Up = pros_sys::E_CONTROLLER_DIGITAL_UP,
-    /// Down button
+    /// The down arrow on the left arrow pad of the controller.
     Down = pros_sys::E_CONTROLLER_DIGITAL_DOWN,
-    /// Left button
+    /// The left arrow on the left arrow pad of the controller.
     Left = pros_sys::E_CONTROLLER_DIGITAL_LEFT,
-    /// Right button
+    /// The right arrow on the left arrow pad of the controller.
     Right = pros_sys::E_CONTROLLER_DIGITAL_RIGHT,
-    /// Front left trigger
+    /// The first trigger on the left side of the controller.
     LeftTrigger1 = pros_sys::E_CONTROLLER_DIGITAL_L1,
-    /// Back left trigger
+    /// The second trigger on the left side of the controller.
     LeftTrigger2 = pros_sys::E_CONTROLLER_DIGITAL_L2,
-    /// Front right trigger
+    /// The first trigger on the right side of the controller.
     RightTrigger1 = pros_sys::E_CONTROLLER_DIGITAL_R1,
-    /// Back right trigger
+    /// The second trigger on the right side of the controller.
     RightTrigger2 = pros_sys::E_CONTROLLER_DIGITAL_R2,
 }
 
@@ -142,13 +142,13 @@ pub enum ControllerButton {
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum JoystickAxis {
-    /// Left and right x axis of the left joystick
+    /// Left (-1.0) and right (1.0) x axis of the left joystick
     LeftX = pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
-    /// Up and down y axis of the left joystick
+    /// Down (-1.0) and up (1.0) y axis of the left joystick
     LeftY = pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
-    /// Left and right x axis of the right joystick
+    /// Left (-1.0) and right (1.0) x axis of the right joystick
     RightX = pros_sys::E_CONTROLLER_ANALOG_RIGHT_X,
-    /// Up and down y axis of the right joystick
+    /// Down (-1.0) and up (1.0) y axis of the right joystick
     RightY = pros_sys::E_CONTROLLER_ANALOG_RIGHT_Y,
 }
 
