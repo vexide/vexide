@@ -22,6 +22,7 @@ Before releasing:
 ## [Unreleased]
 
 ### Added
+- feedforward motor controllers (#80) 
 
 ### Fixed
 
