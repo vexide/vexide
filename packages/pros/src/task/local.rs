@@ -56,7 +56,7 @@ fn fetch_storage() -> &'static RefCell<ThreadLocalStorage> {
 
     // Get the thread local storage for this task.
     // Creating it if it doesn't exist.
-    // SAFETY: in pros-rs, index 0 of the freeRTOS TLS is never set to any other type.
+    // SAFETY: This is safe as long as index 0 of the freeRTOS TLS is never set to any other type.
     unsafe {
         thread_local_storage_get(current.task, 0).unwrap_or_else(|| {
             let storage = Box::leak(Box::new(RefCell::new(ThreadLocalStorage {
