@@ -207,20 +207,14 @@ impl SmartDevice for TxLink {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when using VEXLink.
 pub enum LinkError {
-    #[snafu(display("No link is connected through the radio."))]
     /// No link is connected through the radio.
     NoLink,
-    #[snafu(display("The transmitter buffer is still busy with a previous transmission, and there is no room in the FIFO buffer (queue) to transmit the data."))]
     /// The transmitter buffer is still busy with a previous transmission, and there is no room in the FIFO buffer (queue) to transmit the data.
     BufferBusyFull,
-    #[snafu(display("The data given was a C NULL."))]
-    /// The data given was a C NULL.
-    /// TLDR: you fucked up bad
+    /// Invalid data: the data given was a C NULL.
     NullData,
-    #[snafu(display("Protocol error related to start byte, data size, or checksum during a transmission or reception."))]
     /// Protocol error related to start byte, data size, or checksum during a transmission or reception.
     Protocol,
-    #[snafu(display("The link is busy."))]
     /// The link is busy.
     Busy,
     #[snafu(display("{source}"), context(false))]

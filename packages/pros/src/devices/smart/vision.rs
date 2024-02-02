@@ -261,15 +261,10 @@ pub enum LedMode {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when using a vision sensor.
 pub enum VisionError {
-    #[snafu(display("The camera could not be read."))]
     /// The camera could not be read.
     ReadingFailed,
-    #[snafu(display(
-        "The index specified was higher than the total number of objects seen by the camera."
-    ))]
     /// The index specified was higher than the total number of objects seen by the camera.
     IndexTooHigh,
-    #[snafu(display("Port already taken."))]
     /// Port already taken.
     PortTaken,
     #[snafu(display("{source}"), context(false))]

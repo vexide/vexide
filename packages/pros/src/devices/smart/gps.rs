@@ -112,8 +112,7 @@ impl SmartDevice for GpsSensor {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when using a GPS sensor.
 pub enum GpsError {
-    #[snafu(display("GPS sensor is still calibrating."))]
-    /// GPS sensor is still calibrating.
+    /// The GPS sensor is still calibrating.
     StillCalibrating,
     #[snafu(display("{source}"), context(false))]
     /// Generic port related error.

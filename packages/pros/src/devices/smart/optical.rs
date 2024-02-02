@@ -346,15 +346,14 @@ impl TryFrom<pros_sys::optical_raw_s_t> for RgbcRaw {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an optical sensor.
 pub enum OpticalError {
-    #[snafu(display("LED PWM value must be between 0 and 100."))]
-    /// LED PWM value must be between 0 and 100.
+    /// Invalid LED PWM value, must be between 0 and 100.
     InvalidLedPwm,
 
-    #[snafu(display("Integration time must be between 3 and 712 milliseconds. See https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for more information."))]
     /// Integration time must be between 3 and 712 milliseconds.
+    ///
+    /// See https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for more information.
     InvalidIntegrationTime,
 
-    #[snafu(display("Gesture detection is not enabled for this sensor."))]
     /// Gesture detection is not enabled for this sensor.
     GestureDetectionDisabled,
 

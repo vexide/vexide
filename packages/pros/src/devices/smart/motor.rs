@@ -366,8 +366,7 @@ impl<'a> core::future::Future for MotorStoppedFuture<'a> {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when using a motor.
 pub enum MotorError {
-    #[snafu(display("The voltage supplied was outside of the allowed range (-12 to 12)."))]
-    /// The voltage supplied was outside of the allowed range (-12 to 12).
+    /// The voltage supplied was outside of the allowed range of [-12, 12].
     VoltageOutOfRange,
     #[snafu(display("{source}"), context(false))]
     /// Generic port related error.

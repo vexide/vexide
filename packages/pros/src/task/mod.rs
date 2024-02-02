@@ -283,8 +283,7 @@ where
 #[derive(Debug, Snafu)]
 /// Errors that can occur when spawning a task.
 pub enum SpawnError {
-    #[snafu(display("The stack cannot be used as the TCB was not created."))]
-    /// The stack cannot be used as the TCB was not created.
+    /// There is not enough memory to create the task.
     TCBNotCreated,
 }
 

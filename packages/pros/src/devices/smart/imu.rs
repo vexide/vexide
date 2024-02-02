@@ -445,11 +445,9 @@ impl core::future::Future for InertialCalibrateFuture {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an Inertial Sensor.
 pub enum InertialError {
-    #[snafu(display("Inertial sensor is still calibrating, but exceeded calibration timeout."))]
-    /// Inertial sensor is still calibrating, but exceeded calibration timeout.
+    /// The inertial sensor spent too long calibrating.
     CalibrationTimedOut,
-    #[snafu(display("Sensor data rate has a minimum duration of 5 milliseconds."))]
-    /// Sensor data rate has a minimum duration of 5 milliseconds.
+    /// Invalid sensor data rate, expected >= 5 milliseconds.
     InvalidDataRate,
     #[snafu(display("{source}"), context(false))]
     /// Generic port related error.

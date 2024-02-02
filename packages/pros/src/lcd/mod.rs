@@ -39,7 +39,6 @@ lazy_static::lazy_static! {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the LCD.
 pub enum LcdError {
-    #[snafu(display("LCD not initialized"))]
     /// The LCD has not been initialized.
     NotInitialized,
 }

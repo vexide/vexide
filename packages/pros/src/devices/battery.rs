@@ -36,7 +36,6 @@ pub fn voltage() -> Result<i32, BatteryError> {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the robot's battery.
 pub enum BatteryError {
-    #[snafu(display("Another resource is already using the battery"))]
     /// Another resource is already using the battery.
     ConcurrentAccess,
 }

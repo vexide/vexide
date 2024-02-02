@@ -158,31 +158,21 @@ impl From<AdiDeviceType> for adi_port_config_e_t {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when working with ADI devices.
 pub enum AdiError {
-    #[snafu(display("Another resource is currently trying to access the ADI."))]
     /// Another resource is currently trying to access the ADI.
     AlreadyInUse,
 
-    #[snafu(display(
-        "The port specified has been reconfigured or is not configured for digital input."
-    ))]
     /// The port specified has been reconfigured or is not configured for digital input.
     DigitalInputNotConfigured,
 
-    #[snafu(display(
-        "The port type specified is invalid, and cannot be used to configure a port."
-    ))]
     /// The port type specified is invalid, and cannot be used to configure a port.
     InvalidConfigType,
 
-    #[snafu(display("The port has already been configured."))]
     /// The port has already been configured.
     AlreadyConfigured,
 
-    #[snafu(display("The port specified is invalid."))]
     /// The port specified is invalid.
     InvalidPort,
 
-    #[snafu(display("ADI devices may only be initialized from one expander port."))]
     /// ADI devices may only be initialized from one expander port.
     ExpanderPortMismatch,
 

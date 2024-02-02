@@ -336,13 +336,9 @@ impl Controller {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the controller.
 pub enum ControllerError {
-    #[snafu(display(
-        "A controller ID other than E_CONTROLLER_MASTER or E_CONTROLLER_PARTNER was given."
-    ))]
-    /// The controller ID given was not E_CONTROLLER_MASTER or E_CONTROLLER_PARTNER.
+    /// The controller ID given was invalid, expected E_CONTROLLER_MASTER or E_CONTROLLER_PARTNER.
     InvalidControllerId,
 
-    #[snafu(display("Another resource is already using the controller"))]
     /// Another resource is already using the controller.
     ConcurrentAccess,
 }

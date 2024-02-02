@@ -93,14 +93,9 @@ pub trait FromErrno {
 #[derive(Debug, Snafu)]
 /// Generic erros that can take place when using ports on the V5 Brain.
 pub enum PortError {
-    #[snafu(display("The port you specified is outside of the allowed range!"))]
-    /// The port you specified is outside of the allowed range!
+    /// The specified port is outside of the allowed range!
     PortOutOfRange,
-    #[snafu(display(
-        // used to have "Is something else plugged in?" But the vex radio (link) uses the same errno, so that's not always applicable.
-        "The port you specified couldn't be configured as what you specified."
-    ))]
-    /// The port you specified couldn't be configured as what you specified.
+    /// The specified port couldn't be configured as the specified type.
     PortCannotBeConfigured,
 }
 
