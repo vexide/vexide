@@ -23,6 +23,9 @@ Before releasing:
 
 ### Added
 
+- Lightly document all APIs with missing documentation. (#70)
+- Several lints to improve code quality. (#70)
+
 ### Fixed
 
 ### Changed
