@@ -120,6 +120,10 @@ impl SmartPort {
     pub const unsafe fn new(index: u8) -> Self {
         Self { index }
     }
+
+    /// Get the index of the port (port number).
+    ///
+    /// Ports are indexed starting from 1.
     ///
     /// # Examples
     ///
@@ -127,6 +131,7 @@ impl SmartPort {
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
     /// assert_eq!(my_port.index(), 1);
+    /// ```
     pub const fn index(&self) -> u8 {
         self.index
     }
