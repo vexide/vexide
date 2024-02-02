@@ -45,8 +45,8 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param color	The pen color to set (it is recommended to use values
-    /// 		 from the enum defined in colors.h)
+    /// \param color    The pen color to set (it is recommended to use values
+    ///          from the enum defined in colors.h)
     ///
     /// \return Returns 1 if the mutex was successfully returned, or PROS_ERR if
     ///         there was an error either taking or returning the screen mutex.
@@ -73,8 +73,8 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param color	The background color to set (it is recommended to use values
-    /// 					from the enum defined in colors.h)
+    /// \param color    The background color to set (it is recommended to use values
+    ///                     from the enum defined in colors.h)
     ///
     /// \return Returns 1 if the mutex was successfully returned, or
     /// PROS_ERR if there was an error either taking or returning the screen mutex.
@@ -134,7 +134,7 @@ extern "C" {
     ///
     ///
     /// \param start_line    The line from which scrolling will start
-    /// \param lines			The number of lines to scroll up
+    /// \param lines            The number of lines to scroll up
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
@@ -150,11 +150,11 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x0, y0	The (x,y) coordinates of the first corner of the
-    /// 						rectangular region
-    /// \param x1, y1	The (x,y) coordinates of the second corner of the
-    /// 						rectangular region
-    /// \param lines 	The number of lines to scroll upwards
+    /// \param x0, y0    The (x,y) coordinates of the first corner of the
+    ///                         rectangular region
+    /// \param x1, y1    The (x,y) coordinates of the second corner of the
+    ///                         rectangular region
+    /// \param lines     The number of lines to scroll upwards
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///           taking or returning the screen mutex.
@@ -167,13 +167,13 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x0, y0 	The (x,y) coordinates of the first corner of the
-    /// 						rectangular region of the screen
-    /// \param x1, y1	The (x,y) coordinates of the second corner of the
-    /// 						rectangular region of the screen
-    /// \param buf		Off-screen buffer containing screen data
-    /// \param stride	Off-screen buffer width in pixels, such that image size
-    /// 						is stride-padding
+    /// \param x0, y0     The (x,y) coordinates of the first corner of the
+    ///                         rectangular region of the screen
+    /// \param x1, y1    The (x,y) coordinates of the second corner of the
+    ///                         rectangular region of the screen
+    /// \param buf        Off-screen buffer containing screen data
+    /// \param stride    Off-screen buffer width in pixels, such that image size
+    ///                         is stride-padding
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
@@ -192,7 +192,7 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x, y 	The (x,y) coordinates of the pixel
+    /// \param x, y     The (x,y) coordinates of the pixel
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
@@ -204,7 +204,7 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x, y 	The (x,y) coordinates of the erased
+    /// \param x, y     The (x,y) coordinates of the erased
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
@@ -216,8 +216,8 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x0, y0	The (x, y) coordinates of the first point of the line
-    /// \param x1, y1 	The (x, y) coordinates of the second point of the line
+    /// \param x0, y0    The (x, y) coordinates of the first point of the line
+    /// \param x1, y1     The (x, y) coordinates of the second point of the line
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
@@ -229,8 +229,8 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x0, y0	The (x, y) coordinates of the first point of the line
-    /// \param x1, y1 	The (x, y) coordinates of the second point of the line
+    /// \param x0, y0    The (x, y) coordinates of the first point of the line
+    /// \param x1, y1     The (x, y) coordinates of the second point of the line
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
@@ -242,8 +242,8 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x0, y0 	The (x,y) coordinates of the first point of the rectangle
-    /// \param x1, y1 	The (x,y) coordinates of the second point of the rectangle
+    /// \param x0, y0     The (x,y) coordinates of the first point of the rectangle
+    /// \param x1, y1     The (x,y) coordinates of the second point of the rectangle
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
@@ -255,22 +255,22 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x0, y0 	The (x,y) coordinates of the first point of the rectangle
-    /// \param x1, y1 	The (x,y) coordinates of the second point of the rectangle
+    /// \param x0, y0     The (x,y) coordinates of the first point of the rectangle
+    /// \param x1, y1     The (x,y) coordinates of the second point of the rectangle
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
     pub fn screen_erase_rect(x0: i16, y0: i16, x1: i16, y1: i16) -> u32;
 
     /// Fill a rectangular region of the screen using the current pen
-    /// 		  color
+    ///           color
     ///
     /// This function uses the following values of errno when an error state is
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x0, y0 	The (x,y) coordinates of the first point of the rectangle
-    /// \param x1, y1 	The (x,y) coordinates of the second point of the rectangle
+    /// \param x0, y0     The (x,y) coordinates of the first point of the rectangle
+    /// \param x1, y1     The (x,y) coordinates of the second point of the rectangle
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
@@ -282,8 +282,8 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x, y 	The (x,y) coordinates of the center of the circle
-    /// \param r 	The radius of the circle
+    /// \param x, y     The (x,y) coordinates of the center of the circle
+    /// \param r     The radius of the circle
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
@@ -295,22 +295,22 @@ extern "C" {
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x, y 	The (x,y) coordinates of the center of the circle
-    /// \param r 	The radius of the circle
+    /// \param x, y     The (x,y) coordinates of the center of the circle
+    /// \param r     The radius of the circle
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.
     pub fn screen_erase_circle(x: i16, y: i16, radius: i16) -> u32;
 
     /// Fill a circular region of the screen using the current pen
-    /// 		  color
+    ///           color
     ///
     /// This function uses the following values of errno when an error state is
     /// reached:
     /// EACCESS - Another resource is currently trying to access the screen mutex.
     ///
-    /// \param x, y 	The (x,y) coordinates of the center of the circle
-    /// \param r 	The radius of the circle
+    /// \param x, y     The (x,y) coordinates of the center of the circle
+    /// \param r     The radius of the circle
     ///
     /// \return 1 if there were no errors, or PROS_ERR if an error occured
     ///         taking or returning the screen mutex.

@@ -29,7 +29,7 @@ impl core::fmt::Write for Screen {
         for character in text.chars() {
             if character == '\n' {
                 if self.current_line > (SCREEN_MAX_VISIBLE_LINES as i16 - 2) {
-                    self.scroll(0, SCREEN_LINE_HEIGHT as i16)
+                    self.scroll(0, SCREEN_LINE_HEIGHT)
                         .map_err(|_| core::fmt::Error)?;
                 } else {
                     self.current_line += 1;
