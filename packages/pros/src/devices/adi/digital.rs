@@ -1,3 +1,5 @@
+//! Digital input and output ADI devices
+
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};

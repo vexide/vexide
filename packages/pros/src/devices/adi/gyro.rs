@@ -1,3 +1,5 @@
+//! ADI gyro device.
+
 use pros_sys::{ext_adi_gyro_t, PROS_ERR};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};

@@ -1,3 +1,5 @@
+//! ADI motor device.
+
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
