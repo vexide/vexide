@@ -8,7 +8,9 @@ use core::{cmp::Ordering, ops::*};
 /// Represents an angular position.
 #[derive(Clone, Copy, Debug)]
 pub enum Position {
+    /// Degrees of rotation.
     Degrees(f64),
+    /// Counts of full rotations, 360 degrees.
     Rotations(f64),
     /// Raw encoder ticks.
     Counts(i64),

@@ -88,33 +88,50 @@ pub mod lvgl;
 pub mod time;
 pub mod usd;
 
+/// A result type that makes returning errors easier.
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
+/// A trait for robot code that spins up the pros-rs async executor.
+/// This is the preferred trait to run robot code.
 pub trait AsyncRobot {
+    /// Runs during the operator control period.
+    /// This function may be called more than once.
+    /// For that reason, do not use [`Peripherals::take`](prelude::Peripherals::take) in this function.
     fn opcontrol(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
     }
+    /// Runs during the autonomous period.
     fn auto(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
     }
+    /// Runs continuously during the disabled period.
     fn disabled(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
     }
+    /// Runs once when the competition system is initialized.
     fn comp_init(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
     }
 }
 
+/// A trait for robot code that runs without the async executor spun up.
+/// This trait isn't recommended. See [`AsyncRobot`] for the preferred trait to run robot code.
 pub trait SyncRobot {
+    /// Runs during the operator control period.
+    /// This function may be called more than once.
+    /// For that reason, do not use [`Peripherals::take`](prelude::Peripherals::take) in this function.
     fn opcontrol(&mut self) -> Result {
         Ok(())
     }
+    /// Runs during the autonomous period.
     fn auto(&mut self) -> Result {
         Ok(())
     }
+    /// Runs continuously during the disabled period.
     fn disabled(&mut self) -> Result {
         Ok(())
     }
+    /// Runs once when the competition system is initialized.
     fn comp_init(&mut self) -> Result {
         Ok(())
     }
@@ -353,6 +370,7 @@ macro_rules! sync_robot {
 }
 
 #[panic_handler]
+/// The panic handler for pros-rs.
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     let current_task = task::current();
 

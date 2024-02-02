@@ -1,3 +1,27 @@
+//! Peripherals implementations.
+//!
+//! Peripherals are the best way to create devices because they allow you to do it safely.
+//! Both kinds of peripherals, [`Peripherals`] and [`DynamicPeripherals`], guarentee that a given port is only used to create one device.
+//! This is important because creating multiple devices on the same port can cause bugs and unexpected behavior.
+//! Devices can still be created unsafely without using peripherals, but it isn't recommended.
+//!
+//! ## Examples
+//!
+//! ### Using [`Peripherals`]
+//! ```rust
+//! # use pros::prelude::*;
+//! let mut peripherals = Peripherals::take().unwrap();
+//! let motor = Motor::new(peripherals.port_1);
+//! let adi_digital_in = AdiDigitalIn::new(peripherals.adi_d);
+//! ```
+//! ### Using [`DynamicPeripherals`]
+//! ```rust
+//! # use pros::prelude::*;
+//! let mut peripherals = DynamicPeripherals::new(Peripherals::take().unwrap());
+//! let motor = peripherals.take_smart_port(1).unwrap();
+//! let adi_digital_in = peripherals.take_adi_port(4).unwrap();
+//! ```
+
 use core::sync::atomic::AtomicBool;
 
 use crate::devices::{adi::AdiPort, smart::SmartPort};
@@ -5,36 +29,70 @@ use crate::devices::{adi::AdiPort, smart::SmartPort};
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug)]
+/// A struct that contains all ports on the V5 Brain
+/// and guarentees **at compile time** that each port is only used once.
+/// Because of the fact that this checks at compile time, it cannot be moved once it has been used to create a device.
+/// If you need to store a peripherals struct for use in multiple functions, use [`DynamicPeripherals`] instead.
+/// This struct is always preferred over [`DynamicPeripherals`] when possible.
 pub struct Peripherals {
+    /// Smart port 1 on the brain
     pub port_1: SmartPort,
+    /// Smart port 2 on the brain
     pub port_2: SmartPort,
+    /// Smart port 3 on the brain
     pub port_3: SmartPort,
+    /// Smart port 4 on the brain
     pub port_4: SmartPort,
+    /// Smart port 5 on the brain
     pub port_5: SmartPort,
+    /// Smart port 6 on the brain
     pub port_6: SmartPort,
+    /// Smart port 7 on the brain
     pub port_7: SmartPort,
+    /// Smart port 8 on the brain
     pub port_8: SmartPort,
+    /// Smart port 9 on the brain
     pub port_9: SmartPort,
+    /// Smart port 10 on the brain
     pub port_10: SmartPort,
+    /// Smart port 11 on the brain
     pub port_11: SmartPort,
+    /// Smart port 12 on the brain
     pub port_12: SmartPort,
+    /// Smart port 13 on the brain
     pub port_13: SmartPort,
+    /// Smart port 14 on the brain
     pub port_14: SmartPort,
+    /// Smart port 15 on the brain
     pub port_15: SmartPort,
+    /// Smart port 16 on the brain
     pub port_16: SmartPort,
+    /// Smart port 17 on the brain
     pub port_17: SmartPort,
+    /// Smart port 18 on the brain
     pub port_18: SmartPort,
+    /// Smart port 19 on the brain
     pub port_19: SmartPort,
+    /// Smart port 20 on the brain
     pub port_20: SmartPort,
+    /// Smart port 21 on the brain
     pub port_21: SmartPort,
 
+    /// Adi port A on the brain.
     pub adi_a: AdiPort,
+    /// Adi port B on the brain.
     pub adi_b: AdiPort,
+    /// Adi port C on the brain.
     pub adi_c: AdiPort,
+    /// Adi port D on the brain.
     pub adi_d: AdiPort,
+    /// Adi port E on the brain.
     pub adi_e: AdiPort,
+    /// Adi port F on the brain.
     pub adi_f: AdiPort,
+    /// Adi port G on the brain.
     pub adi_g: AdiPort,
+    /// Adi port H on the brain.
     pub adi_h: AdiPort,
 }
 

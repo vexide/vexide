@@ -42,11 +42,13 @@ impl<T> Mutex<T> {
         success.then(|| MutexGuard::new(self))
     }
 
+    /// Consumes the mutex and returns the inner data.
     pub fn into_inner(mut self) -> T {
         let data = mem::take(&mut self.data).unwrap();
         data.into_inner()
     }
 
+    /// Gets a mutable reference to the inner data.
     pub fn get_mut(&mut self) -> &mut T {
         self.data.as_mut().unwrap().get_mut()
     }

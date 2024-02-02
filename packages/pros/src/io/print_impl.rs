@@ -65,6 +65,7 @@
 use core::{convert::TryFrom, file, line, stringify};
 
 #[doc(hidden)]
+#[allow(missing_debug_implementations)]
 pub struct __SerialWriter(i32);
 
 impl core::fmt::Write for __SerialWriter {
@@ -81,7 +82,7 @@ impl __SerialWriter {
     }
 
     #[inline]
-    pub fn write_fmt(&mut self, args: core::fmt::Arguments) -> core::fmt::Result {
+    pub fn write_fmt(&mut self, args: core::fmt::Arguments<'_>) -> core::fmt::Result {
         core::fmt::Write::write_fmt(self, args)
     }
 
