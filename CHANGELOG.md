@@ -22,6 +22,7 @@ Before releasing:
 ## [Unreleased]
 
 ### Added
+- feedforward motor controllers (#80) 
 
 - Lightly document all APIs with missing documentation. (#70)
 - Several lints to improve code quality. (#70)
