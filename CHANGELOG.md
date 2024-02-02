@@ -22,7 +22,7 @@ Before releasing:
 ## [Unreleased]
 
 ### Added
-- feedforward struct (#80) 
+- feedforward motor controllers (#80) 
 
 ### Fixed
 
