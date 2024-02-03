@@ -4,9 +4,6 @@
 //! Allows you to use these macros in a #!\[no_std\] context, or in a situation where the
 //! traditional Rust streams might not be available (ie: at process shutdown time).
 //!
-//! [`writeln`] and [`ewriteln`] are provided for cases where you may not wish
-//! to pull in the overhead of the formatter code and simply wish to print C-style strings.
-//!
 //! ## Usage
 //!
 //! Exactly as you'd use `println!`, `eprintln!` and `dbg!`.
@@ -65,6 +62,7 @@
 use core::{convert::TryFrom, file, line, stringify};
 
 #[doc(hidden)]
+#[allow(missing_debug_implementations)]
 pub struct __SerialWriter(i32);
 
 impl core::fmt::Write for __SerialWriter {
@@ -81,7 +79,7 @@ impl __SerialWriter {
     }
 
     #[inline]
-    pub fn write_fmt(&mut self, args: core::fmt::Arguments) -> core::fmt::Result {
+    pub fn write_fmt(&mut self, args: core::fmt::Arguments<'_>) -> core::fmt::Result {
         core::fmt::Write::write_fmt(self, args)
     }
 
@@ -202,64 +200,6 @@ macro_rules! eprint {
             }
         }
     };
-}
-
-/// Macro for printing a static string to the standard output.
-///
-/// Does not panic on failure to write - instead silently ignores errors.
-#[macro_export]
-macro_rules! write {
-    ($arg:expr) => {
-        #[allow(unused_must_use)]
-        {
-            let mut stm = $crate::io::print_impl::__SerialWriter::new(false);
-            stm.write_str($arg);
-        }
-    };
-}
-
-/// Macro for printing a static string to the standard error.
-///
-/// Does not panic on failure to write - instead silently ignores errors.
-#[macro_export]
-macro_rules! ewrite {
-    ($arg:expr) => {{
-        #[allow(unused_must_use)]
-        {
-            let mut stm = $crate::io::print_impl::__SerialWriter::new(true);
-            stm.write_str($arg);
-        }
-    }};
-}
-
-/// Macro for printing a static string to the standard output, with a newline.
-///
-/// Does not panic on failure to write - instead silently ignores errors.
-#[macro_export]
-macro_rules! writeln {
-    ($arg:expr) => {
-        #[allow(unused_must_use)]
-        {
-            let mut stm = $crate::io::print_impl::__SerialWriter::new(false);
-            stm.write_str($arg);
-            stm.write_nl();
-        }
-    };
-}
-
-/// Macro for printing a static string to the standard error, with a newline.
-///
-/// Does not panic on failure to write - instead silently ignores errors.
-#[macro_export]
-macro_rules! ewriteln {
-    ($arg:expr) => {{
-        #[allow(unused_must_use)]
-        {
-            let mut stm = $crate::io::print_impl::__SerialWriter::new(true);
-            stm.write_str($arg);
-            stm.write_nl();
-        }
-    }};
 }
 
 /// Prints and returns the value of a given expression for quick and dirty

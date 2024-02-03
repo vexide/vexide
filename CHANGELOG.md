@@ -22,6 +22,9 @@ Before releasing:
 ## [Unreleased]
 
 ### Added
+- Added feedforward motor controllers (#80)
+- Lightly document all APIs with missing documentation. (#70)
+- Added `Debug`, `Copy`, and `Clone` derives for common structs (#70)
 
 - Screen drawing API. (#81)
 - Added screen field to `Peripherals` and `DynamicPeripherals::take_screen` method. (#81)
@@ -40,6 +43,9 @@ Before releasing:
 
 - LVGL bindings (pros-sys) and colors (pros). (**Breaking Change**) (#81)
 - LLEMU/lcd bindings. (**Breaking Change**) (#81)
+- Re-exported printing macros from `pros::io`. (#82)
+- Applied several lints to improve code quality. (#70)
+- Removed the confusingly named `write`, `ewrite`, `writeln`, and `ewriteln` macros. (**Breaking Change**) (#82)
 
 ## [0.7.0]
 

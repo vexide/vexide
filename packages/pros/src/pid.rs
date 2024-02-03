@@ -26,7 +26,8 @@ pub struct PidController {
 }
 
 impl PidController {
-    pub fn new(kp: f32, ki: f32, kd: f32) -> Self {
+    /// Create a new PID controller with the given constants.
+    pub const fn new(kp: f32, ki: f32, kd: f32) -> Self {
         Self {
             kp,
             ki,
@@ -37,6 +38,7 @@ impl PidController {
         }
     }
 
+    /// Update the PID controller with the current setpoint and position.
     pub fn update(&mut self, setpoint: f32, position: f32) -> f32 {
         let time = unsafe { pros_sys::clock() };
         let mut delta_time = (time - self.last_time) as f32 / pros_sys::CLOCKS_PER_SEC as f32;

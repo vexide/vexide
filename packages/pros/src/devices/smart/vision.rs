@@ -139,13 +139,20 @@ impl SmartDevice for VisionSensor {
 
 //TODO: figure out how coordinates are done.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+/// An object detected by the vision sensor
 pub struct VisionObject {
+    /// The offset from the top of the object to the vision center.
     pub top: i16,
+    /// The offset from the left of the object to the vision center.
     pub left: i16,
+    /// The x-coordinate of the middle of the object relative to the vision center.
     pub middle_x: i16,
+    /// The y-coordinate of the middle of the object relative to the vision center.
     pub middle_y: i16,
 
+    /// The width of the object.
     pub width: i16,
+    /// The height of the object.
     pub height: i16,
 }
 
@@ -170,35 +177,48 @@ impl TryFrom<pros_sys::vision_object_s_t> for VisionObject {
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// The zero point of the vision sensor.
+/// Vision object coordinates are relative to this point.
 pub enum VisionZeroPoint {
+    /// The zero point will be the top left corner of the vision sensor.
     TopLeft,
+    /// The zero point will be the top right corner of the vision sensor.
     Center,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// The white balance of the vision sensor.
 pub enum WhiteBalance {
+    /// Provide a specific color to balance the white balance.
     Rgb(Rgb),
+    /// Automatically balance the white balance.
     Auto,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// The mode of the vision sensor led.
 pub enum LedMode {
+    /// Turn on the led with a certain color.
     On(Rgb),
+    /// Turn off the led.
     Off,
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when using a vision sensor.
 pub enum VisionError {
-    #[snafu(display(
-        "The index specified was higher than the total number of objects seen by the camera."
-    ))]
+    /// The camera could not be read.
     ReadingFailed,
-    #[snafu(display("The camera could not be read."))]
+    /// The index specified was higher than the total number of objects seen by the camera.
     IndexTooHigh,
-    #[snafu(display("Port already taken."))]
+    /// Port already taken.
     PortTaken,
     #[snafu(display("{source}"), context(false))]
-    Port { source: PortError },
+    /// Generic port related error.
+    Port {
+        /// The source of the error.
+        source: PortError,
+    },
 }
 
 map_errno! {

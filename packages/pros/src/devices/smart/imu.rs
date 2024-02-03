@@ -1,3 +1,5 @@
+//! Inertial sensor (IMU) device.
+
 use core::{
     pin::Pin,
     task::{Context, Poll},
@@ -13,7 +15,9 @@ use crate::{
     time::Instant,
 };
 
+/// The timeout for the IMU to calibrate.
 pub const IMU_RESET_TIMEOUT: Duration = Duration::from_secs(3);
+/// The minimum data rate that you can set an IMU to.
 pub const IMU_MIN_DATA_RATE: Duration = Duration::from_millis(5);
 
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
@@ -24,7 +28,7 @@ pub struct InertialSensor {
 
 impl InertialSensor {
     /// Create a new inertial sensor from a smart port index.
-    pub fn new(port: SmartPort) -> Self {
+    pub const fn new(port: SmartPort) -> Self {
         Self { port }
     }
 
@@ -389,15 +393,19 @@ impl TryFrom<pros_sys::imu_status_e_t> for InertialStatus {
 }
 
 #[derive(Debug, Clone, Copy)]
+/// Future that calibrates an IMU
+/// created with [`InertialSensor::calibrate`].
 pub enum InertialCalibrateFuture {
+    /// Calibrate the IMU
     Calibrate(u8),
+    /// Wait for the IMU to finish calibrating
     Waiting(u8, Instant),
 }
 
 impl core::future::Future for InertialCalibrateFuture {
     type Output = Result<(), InertialError>;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match *self {
             Self::Calibrate(port) => match unsafe { pros_sys::imu_reset(port) } {
                 PROS_ERR => {
@@ -435,13 +443,18 @@ impl core::future::Future for InertialCalibrateFuture {
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when interacting with an Inertial Sensor.
 pub enum InertialError {
-    #[snafu(display("Inertial sensor is still calibrating, but exceeded calibration timeout."))]
+    /// The inertial sensor spent too long calibrating.
     CalibrationTimedOut,
-    #[snafu(display("Sensor data rate has a minimum duration of 5 milliseconds."))]
+    /// Invalid sensor data rate, expected >= 5 milliseconds.
     InvalidDataRate,
     #[snafu(display("{source}"), context(false))]
-    Port { source: PortError },
+    /// Generic port related error.
+    Port {
+        /// The source of the error.
+        source: PortError,
+    },
 }
 
 map_errno! {
