@@ -7,11 +7,11 @@ use alloc::sync::Arc;
 use core::time::Duration;
 
 use pros::{
+    color::Rgb,
     devices::{
         smart::vision::{LedMode, VisionZeroPoint},
         Controller,
     },
-    color::Rgb,
     prelude::*,
     sync::Mutex,
     task::delay,

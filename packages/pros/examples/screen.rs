@@ -1,8 +1,9 @@
 #![no_std]
 #![no_main]
 
-use pros::prelude::*;
 use core::fmt::Write;
+
+use pros::prelude::*;
 
 pub struct Robot {
     screen: Screen,

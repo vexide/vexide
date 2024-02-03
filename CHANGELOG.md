@@ -33,6 +33,8 @@ Before releasing:
 
 ### Changed
 
+- Re-exported printing macros from `pros::io`. (#82)
+- Applied several lints to improve code quality. (#70)
 - Updated to PROS version 4. (**Breaking Change**) (#81)
 - Moved `vision::Rgb` into its own `color.rs` file. (**Breaking Change**) (#81)
 - The VEXOS target has been updated to improve file size and floating point operation speed. (#81)
