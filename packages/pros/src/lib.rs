@@ -430,7 +430,6 @@ pub mod prelude {
         },
         error::PortError,
         io::{dbg, eprintln, print, println, BufRead, Read, Seek, Write},
-        lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
         os_task_local,
         pid::*,
         sync_robot,

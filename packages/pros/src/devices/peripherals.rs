@@ -127,15 +127,14 @@ impl Peripherals {
             port_20: SmartPort::new(20),
             port_21: SmartPort::new(21),
 
-                adi_a: AdiPort::new(1, None),
-                adi_b: AdiPort::new(2, None),
-                adi_c: AdiPort::new(3, None),
-                adi_d: AdiPort::new(4, None),
-                adi_e: AdiPort::new(5, None),
-                adi_f: AdiPort::new(6, None),
-                adi_g: AdiPort::new(7, None),
-                adi_h: AdiPort::new(8, None),
-            }
+            adi_a: AdiPort::new(1, None),
+            adi_b: AdiPort::new(2, None),
+            adi_c: AdiPort::new(3, None),
+            adi_d: AdiPort::new(4, None),
+            adi_e: AdiPort::new(5, None),
+            adi_f: AdiPort::new(6, None),
+            adi_g: AdiPort::new(7, None),
+            adi_h: AdiPort::new(8, None),
         }
     }
 
