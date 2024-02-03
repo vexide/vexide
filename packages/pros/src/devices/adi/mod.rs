@@ -5,6 +5,7 @@ use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
 
+//TODO: much more in depth module documentation for device modules as well as this module.
 pub mod analog;
 pub mod digital;
 pub mod encoder;
@@ -53,13 +54,13 @@ impl AdiPort {
     /// Get the index of the port (port number).
     ///
     /// Ports are indexed starting from 1.
-    pub fn index(&self) -> u8 {
+    pub const fn index(&self) -> u8 {
         self.index
     }
 
     /// Get the index of this port's associated [`AdiExpander`] smart port, or `None` if this port is not
     /// associated with an expander.
-    pub fn expander_index(&self) -> Option<u8> {
+    pub const fn expander_index(&self) -> Option<u8> {
         self.expander_index
     }
 
@@ -81,6 +82,7 @@ impl AdiPort {
 
 /// Common functionality for a ADI (three-wire) devices.
 pub trait AdiDevice {
+    /// The type that port_index should return. This is usually `u8`, but occasionally `(u8, u8)`.
     type PortIndexOutput;
 
     /// Get the index of the [`AdiPort`] this device is registered on.
@@ -101,17 +103,26 @@ pub trait AdiDevice {
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum AdiDeviceType {
+    /// Generic analog input.
     AnalogIn = pros_sys::adi::E_ADI_ANALOG_IN,
+    /// Generic analog output.
     AnalogOut = pros_sys::adi::E_ADI_ANALOG_OUT,
+    /// Generic digital input.
     DigitalIn = pros_sys::adi::E_ADI_DIGITAL_IN,
+    /// Generic digital output.
     DigitalOut = pros_sys::adi::E_ADI_DIGITAL_OUT,
 
+    /// Cortex era gyro.
     LegacyGyro = pros_sys::adi::E_ADI_LEGACY_GYRO,
 
+    /// Cortex era servo motor.
     LegacyServo = pros_sys::adi::E_ADI_LEGACY_SERVO,
+    /// PWM output.
     LegacyPwm = pros_sys::adi::E_ADI_LEGACY_PWM,
 
+    /// Cortex era encoder.
     LegacyEncoder = pros_sys::E_ADI_LEGACY_ENCODER,
+    /// Cortex era ultrasonic sensor.
     LegacyUltrasonic = pros_sys::E_ADI_LEGACY_ULTRASONIC,
 }
 
@@ -145,31 +156,32 @@ impl From<AdiDeviceType> for adi_port_config_e_t {
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when working with ADI devices.
 pub enum AdiError {
-    #[snafu(display("Another resource is currently trying to access the ADI."))]
+    /// Another resource is currently trying to access the ADI.
     AlreadyInUse,
 
-    #[snafu(display(
-        "The port specified has been reconfigured or is not configured for digital input."
-    ))]
+    /// The port specified has been reconfigured or is not configured for digital input.
     DigitalInputNotConfigured,
 
-    #[snafu(display(
-        "The port type specified is invalid, and cannot be used to configure a port."
-    ))]
+    /// The port type specified is invalid, and cannot be used to configure a port.
     InvalidConfigType,
 
-    #[snafu(display("The port has already been configured."))]
+    /// The port has already been configured.
     AlreadyConfigured,
 
-    #[snafu(display("The port specified is invalid."))]
+    /// The port specified is invalid.
     InvalidPort,
 
-    #[snafu(display("ADI devices may only be initialized from one expander port."))]
+    /// ADI devices may only be initialized from one expander port.
     ExpanderPortMismatch,
 
     #[snafu(display("{source}"), context(false))]
-    Port { source: PortError },
+    /// An error occurred while interacting with a port.
+    Port {
+        /// The source of the error
+        source: PortError,
+    },
 }
 
 map_errno! {

@@ -50,6 +50,8 @@ impl DerefMut for LcdColor {
     }
 }
 
+// LVGL will be removed in a soon to be merged PR
+#[allow(missing_docs)]
 impl LcdColor {
     pub const WHITE: Self = Self::new_rgb(0xFF, 0xFF, 0xFF);
     pub const SILVER: Self = Self::new_rgb(0xC0, 0xC0, 0xC0);

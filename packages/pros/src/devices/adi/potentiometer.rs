@@ -1,9 +1,12 @@
+//! ADI Potentiometer device.
+
 use pros_sys::{adi_potentiometer_type_e_t, ext_adi_potentiometer_t, PROS_ERR};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
+/// Analog potentiometer ADI device.
 pub struct AdiPotentiometer {
     potentiometer_type: AdiPotentiometerType,
     raw: ext_adi_potentiometer_t,
@@ -28,7 +31,8 @@ impl AdiPotentiometer {
         })
     }
 
-    pub fn potentiometer_type(&self) -> AdiPotentiometerType {
+    /// Get the type of ADI potentiometer device.
+    pub const fn potentiometer_type(&self) -> AdiPotentiometerType {
         self.potentiometer_type
     }
 
@@ -47,8 +51,11 @@ impl AdiPotentiometer {
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(i32)]
+/// The type of potentiometer device.
 pub enum AdiPotentiometerType {
+    /// EDR potentiometer.
     PotentiometerEdr = pros_sys::E_ADI_POT_EDR,
+    /// V2 potentiometer.
     PotentiometerV2 = pros_sys::E_ADI_POT_V2,
 }
 

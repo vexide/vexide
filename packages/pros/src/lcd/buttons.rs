@@ -7,15 +7,22 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
+use core::fmt::Debug;
 
 use crate::sync::Mutex;
 
+#[derive(Debug)]
+/// A snapshot of the state of the buttons on the llemu
 pub struct ButtonsState {
+    /// Left button pressed state
     pub left_pressed: bool,
+    /// Middle button pressed state
     pub middle_pressed: bool,
+    /// Right button pressed state
     pub right_pressed: bool,
 }
 
+/// Reads the current state of the llemu buttons
 pub fn read_buttons() -> ButtonsState {
     let bit_mask = unsafe { pros_sys::lcd_read_buttons() };
     ButtonsState {
@@ -25,20 +32,39 @@ pub fn read_buttons() -> ButtonsState {
     }
 }
 
+#[derive(Debug)]
+/// The three buttons on the llemu
 pub enum Button {
+    /// The left button
     Left,
+    /// The middle button
     Middle,
+    /// The right button
     Right,
 }
 
-pub struct ButtonCallbacks {
+/// The callbacks for the three buttons on the llemu
+struct ButtonCallbacks {
+    /// The callback for when the left button is pressed
     pub left_cb: Option<Box<dyn Fn() + Send>>,
+    /// The callback for when the middle button is pressed
     pub middle_cb: Option<Box<dyn Fn() + Send>>,
+    /// The callback for when the right button is pressed
     pub right_cb: Option<Box<dyn Fn() + Send>>,
 }
 
+impl Debug for ButtonCallbacks {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ButtonCallbacks")
+            .field("left_cb", &self.left_cb.is_some())
+            .field("middle_cb", &self.middle_cb.is_some())
+            .field("right_cb", &self.right_cb.is_some())
+            .finish()
+    }
+}
+
 lazy_static::lazy_static! {
-    pub static ref BUTTON_CALLBACKS: Mutex<ButtonCallbacks> = Mutex::new(ButtonCallbacks {
+    static ref BUTTON_CALLBACKS: Mutex<ButtonCallbacks> = Mutex::new(ButtonCallbacks {
         left_cb: None,
         middle_cb: None,
         right_cb: None,
@@ -46,6 +72,7 @@ lazy_static::lazy_static! {
 }
 
 // this needs to return errors
+/// Registers a callback for a button on the llemu
 pub fn register(cb: impl Fn() + 'static + Send, button: Button) {
     unsafe {
         pros_sys::lcd_initialize();

@@ -39,6 +39,7 @@ pub struct Motor {
 //TODO: Implement good set_velocity and get_velocity functions.
 //TODO: Measure the number of counts per rotation. Fow now we assume it is 4096
 impl Motor {
+    /// Create a new motor on the given port with the given brake mode.
     pub fn new(port: SmartPort, brake_mode: BrakeMode) -> Result<Self, MotorError> {
         unsafe {
             bail_on!(
@@ -54,6 +55,7 @@ impl Motor {
         Ok(Self { port })
     }
 
+    /// Sets the gearset of the motor.
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
         unsafe {
             bail_on!(
@@ -64,6 +66,7 @@ impl Motor {
         Ok(())
     }
 
+    /// Gets the gearset of the motor.
     pub fn gearset(&self) -> Result<Gearset, MotorError> {
         Ok(unsafe { bail_on!(PROS_ERR, pros_sys::motor_get_gearing(self.port.index())) }.into())
     }
@@ -240,7 +243,7 @@ impl Motor {
     }
 
     /// Returns a future that completes when the motor reports that it has stopped.
-    pub fn wait_until_stopped(&self) -> MotorStoppedFuture {
+    pub const fn wait_until_stopped(&self) -> MotorStoppedFuture<'_> {
         MotorStoppedFuture { motor: self }
     }
 }
@@ -279,7 +282,9 @@ impl From<BrakeMode> for pros_sys::motor_brake_mode_e_t {
 /// Represents what the physical motor is currently doing.
 #[derive(Debug, Clone, Default)]
 pub struct MotorState {
+    /// The motor is currently moving.
     pub busy: bool,
+    /// the motor is not moving.
     pub stopped: bool,
     /// the motor is at zero encoder units of rotation.
     pub zeroed: bool,
@@ -300,8 +305,11 @@ impl From<u32> for MotorState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
 pub enum Gearset {
+    /// 36:1 gear ratio
     Red = pros_sys::E_MOTOR_GEAR_RED,
+    /// 18:1 gear ratio
     Green = pros_sys::E_MOTOR_GEAR_GREEN,
+    /// 6:1 gear ratio
     Blue = pros_sys::E_MOTOR_GEAR_BLUE,
 }
 
@@ -332,6 +340,9 @@ impl From<i32> for Gearset {
     }
 }
 
+#[derive(Debug)]
+/// A future that completes when the motor reports that it has stopped.
+/// Created by [`Motor::wait_until_stopped`]
 pub struct MotorStoppedFuture<'a> {
     motor: &'a Motor,
 }
@@ -353,11 +364,16 @@ impl<'a> core::future::Future for MotorStoppedFuture<'a> {
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when using a motor.
 pub enum MotorError {
-    #[snafu(display("The voltage supplied was outside of the allowed range (-12 to 12)."))]
+    /// The voltage supplied was outside of the allowed range of [-12, 12].
     VoltageOutOfRange,
     #[snafu(display("{source}"), context(false))]
-    Port { source: PortError },
+    /// Generic port related error.
+    Port {
+        /// The source of the error.
+        source: PortError,
+    },
 }
 
 map_errno! {

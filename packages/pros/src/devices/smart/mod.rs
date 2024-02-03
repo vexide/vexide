@@ -132,7 +132,7 @@ impl SmartPort {
     ///
     /// assert_eq!(my_port.index(), 1);
     /// ```
-    pub fn index(&self) -> u8 {
+    pub const fn index(&self) -> u8 {
         self.index
     }
 

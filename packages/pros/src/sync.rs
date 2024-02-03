@@ -28,7 +28,7 @@ impl<T> Mutex<T> {
 
     /// Locks the mutex so that it cannot be locked in another task at the same time.
     /// Blocks the current task until the lock is acquired.
-    pub fn lock(&self) -> MutexGuard<T> {
+    pub fn lock(&self) -> MutexGuard<'_, T> {
         if !unsafe { pros_sys::mutex_take(self.pros_mutex, pros_sys::TIMEOUT_MAX) } {
             panic!("Mutex lock failed: {}", take_errno());
         }
@@ -37,16 +37,18 @@ impl<T> Mutex<T> {
     }
 
     /// Attempts to acquire this lock. This function does not block.
-    pub fn try_lock(&self) -> Option<MutexGuard<T>> {
+    pub fn try_lock(&self) -> Option<MutexGuard<'_, T>> {
         let success = unsafe { pros_sys::mutex_take(self.pros_mutex, 0) };
         success.then(|| MutexGuard::new(self))
     }
 
+    /// Consumes the mutex and returns the inner data.
     pub fn into_inner(mut self) -> T {
         let data = mem::take(&mut self.data).unwrap();
         data.into_inner()
     }
 
+    /// Gets a mutable reference to the inner data.
     pub fn get_mut(&mut self) -> &mut T {
         self.data.as_mut().unwrap().get_mut()
     }
@@ -98,12 +100,13 @@ impl<T> From<T> for Mutex<T> {
 
 /// Allows the user to access the data from a locked mutex.
 /// Dereference to get the inner data.
+#[derive(Debug)]
 pub struct MutexGuard<'a, T> {
     mutex: &'a Mutex<T>,
 }
 
 impl<'a, T> MutexGuard<'a, T> {
-    fn new(mutex: &'a Mutex<T>) -> Self {
+    const fn new(mutex: &'a Mutex<T>) -> Self {
         Self { mutex }
     }
 }

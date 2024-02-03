@@ -22,13 +22,16 @@ Before releasing:
 ## [Unreleased]
 
 ### Added
-- feedforward motor controllers (#80) 
+- Added feedforward motor controllers (#80)
+- Lightly document all APIs with missing documentation. (#70)
+- Added `Debug`, `Copy`, and `Clone` derives for common structs (#70)
 
 ### Fixed
 
 ### Changed
 
 - Re-exported printing macros from `pros::io`. (#82)
+- Applied several lints to improve code quality. (#70)
 
 ### Removed
 

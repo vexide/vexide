@@ -9,18 +9,28 @@ use snafu::Snafu;
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::error::{bail_on, map_errno, PortError};
 
-/// Represents the data output from a GPS sensor.
+//TODO: Figure out what all the units are
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
+/// Represents the data output from a GPS sensor.
 pub struct GpsStatus {
+    /// The x-coordinate of the GPS sensor in meters.
     pub x: f64,
+    /// The y-coordinate of the GPS sensor in meters.
     pub y: f64,
+    /// The pitch of the GPS sensor.
     pub pitch: f64,
+    /// The roll of the GPS sensor.
     pub roll: f64,
+    /// The yaw of the GPS sensor.
     pub yaw: f64,
+    /// The heading of the GPS sensor.
     pub heading: f64,
 
+    /// The x-acceleration of the GPS sensor.
     pub accel_x: f64,
+    /// The y-acceleration of the GPS sensor.
     pub accel_y: f64,
+    /// The z-acceleration of the GPS sensor.
     pub accel_z: f64,
 }
 
@@ -100,11 +110,16 @@ impl SmartDevice for GpsSensor {
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when using a GPS sensor.
 pub enum GpsError {
-    #[snafu(display("GPS sensor is still calibrating."))]
+    /// The GPS sensor is still calibrating.
     StillCalibrating,
     #[snafu(display("{source}"), context(false))]
-    Port { source: PortError },
+    /// Generic port related error.
+    Port {
+        /// The source of the error.
+        source: PortError,
+    },
 }
 
 map_errno! {
