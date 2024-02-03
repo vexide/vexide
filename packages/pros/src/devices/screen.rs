@@ -459,7 +459,15 @@ impl Screen {
             .into_iter()
             .map(|i| i.into_rgb().into())
             .collect::<Vec<_>>();
+        let expected_size = ((x1 - x0) * (y1 - y0)) as usize;
+        if raw_buf.len() != expected_size {
+            return Err(ScreenError::CopyBufferWrongSize {
+                buffer_size: raw_buf.len(),
+                expected_size,
+            });
+        }
 
+        // SAFETY: The buffer is guaranteed to be the correct size.
         bail_on!(PROS_ERR as u32, unsafe {
             pros_sys::screen_copy_area(x0, y0, x1, y1, raw_buf.as_ptr(), src_stride)
         });
@@ -538,6 +546,14 @@ impl Screen {
 pub enum ScreenError {
     /// Another resource is currently trying to access the screen mutex.
     ConcurrentAccess,
+
+    /// The given buffer of colors was wrong size to fill the specified area.
+    CopyBufferWrongSize {
+        /// The size of the buffer.
+        buffer_size: usize,
+        /// The expected size of the buffer.
+        expected_size: usize,
+    },
 }
 
 map_errno! {
