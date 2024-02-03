@@ -1,6 +1,7 @@
 //! Brain screen display and touch functions.
 //!
 //! Contains user calls to the v5 screen for touching and displaying graphics.
+//! The [`Fill`] trait can be used to draw shapes and text to the screen.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
 
@@ -13,15 +14,20 @@ use crate::{
 };
 
 #[derive(Debug, Eq, PartialEq)]
+/// Represents the physical display on the V5 Brain.
 pub struct Screen {
     writer_buffer: String,
     current_line: i16,
 }
 
+/// The maximum number of lines that can be visible on the screen at once.
 pub const SCREEN_MAX_VISIBLE_LINES: usize = 12;
+/// The height of a single line of text on the screen.
 pub const SCREEN_LINE_HEIGHT: i16 = 20;
 
+/// The horizontal resolution of the display.
 pub const SCREEN_HORIZONTAL_RESOLUTION: i16 = 480;
+/// The vertical resolution of the writable part of the display.
 pub const SCREEN_VERTICAL_RESOLUTION: i16 = 240;
 
 impl core::fmt::Write for Screen {
@@ -55,19 +61,26 @@ impl core::fmt::Write for Screen {
     }
 }
 
+/// A type implementing this trait can draw a filled shape to the display.
 pub trait Fill {
+    /// The type of error that can be generated when drawing to the screen.
     type Error;
 
+    /// Draw a filled shape to the display.
     fn fill(&self, screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error>;
 }
 
+/// A type implementing this trait can draw an outlined shape to the display.
 pub trait Stroke {
+    /// The type of error that can be generated when drawing to the screen.
     type Error;
 
+    /// Draw an outlined shape to the display.
     fn stroke(&self, screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error>;
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+/// A circle that can be drawn on the screen.
 pub struct Circle {
     x: i16,
     y: i16,
@@ -75,6 +88,8 @@ pub struct Circle {
 }
 
 impl Circle {
+    /// Create a circle with the given coordinates and radius.
+    /// The coordinates are the center of the circle.
     pub const fn new(x: i16, y: i16, radius: i16) -> Self {
         Self { x, y, radius }
     }
@@ -111,6 +126,8 @@ impl Stroke for Circle {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+/// A line that can be drawn on the screen.
+/// The width is the same as the pen width.
 pub struct Line {
     x0: i16,
     y0: i16,
@@ -119,6 +136,7 @@ pub struct Line {
 }
 
 impl Line {
+    /// Create a new line with the given coordinates.
     pub const fn new(x0: i16, y0: i16, x1: i16, y1: i16) -> Self {
         Self { x0, y0, x1, y1 }
     }
@@ -140,6 +158,7 @@ impl Fill for Line {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+/// A rectangle that can be drawn on the screen.
 pub struct Rect {
     x0: i16,
     y0: i16,
@@ -148,8 +167,14 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub const fn new(x0: i16, y0: i16, x1: i16, y1: i16) -> Self {
-        Self { x0, y0, x1, y1 }
+    /// Create a new rectangle with the given coordinates.
+    pub const fn new(start_x: i16, start_y: i16, end_x: i16, end_y: i16) -> Self {
+        Self {
+            x0: start_x,
+            y0: start_y,
+            x1: end_x,
+            y1: end_y,
+        }
     }
 }
 
@@ -185,11 +210,17 @@ impl Fill for Rect {
 
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+/// Options for how a text object should be formatted.
 pub enum TextFormat {
+    /// Small text.
     Small = pros_sys::E_TEXT_SMALL,
+    /// Medium text.
     Medium = pros_sys::E_TEXT_MEDIUM,
+    /// Large text.
     Large = pros_sys::E_TEXT_LARGE,
+    /// Medium horizontally centered text.
     MediumCenter = pros_sys::E_TEXT_MEDIUM_CENTER,
+    /// Large horizontally centered text.
     LargeCenter = pros_sys::E_TEXT_LARGE_CENTER,
 }
 
@@ -200,12 +231,16 @@ impl From<TextFormat> for pros_sys::text_format_e_t {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+/// The position of a text object on the screen.
 pub enum TextPosition {
+    /// A point to draw the text at.
     Point(i16, i16),
+    /// A line number to draw the text at.
     Line(i16),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// A peice of text that can be drawn on the display.
 pub struct Text {
     position: TextPosition,
     text: CString,
@@ -213,6 +248,7 @@ pub struct Text {
 }
 
 impl Text {
+    /// Create a new text with a given position and format
     pub fn new(text: &str, position: TextPosition, format: TextFormat) -> Self {
         Self {
             text: CString::new(text)
@@ -246,11 +282,17 @@ impl Fill for Text {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+/// A touch event on the screen.
 pub struct TouchEvent {
+    /// Touch state.
     pub state: TouchState,
+    /// X coordinate of the touch.
     pub x: i16,
+    /// Y coordinate of the touch.
     pub y: i16,
+    /// how many times the screen has been pressed.
     pub press_count: i32,
+    /// how many times the screen has been released.
     pub release_count: i32,
 }
 
@@ -270,9 +312,13 @@ impl TryFrom<pros_sys::screen_touch_status_s_t> for TouchEvent {
 
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+/// The state of a given touch.
 pub enum TouchState {
+    /// The touch has been released.
     Released = pros_sys::E_TOUCH_RELEASED,
+    /// The screen has been touched.
     Pressed = pros_sys::E_TOUCH_PRESSED,
+    /// The touch is still being held.
     Held = pros_sys::E_TOUCH_HELD,
 }
 
@@ -481,14 +527,16 @@ impl Screen {
         Ok(())
     }
 
+    /// Get the current touch status of the screen.
     pub fn touch_status(&self) -> Result<TouchEvent, ScreenError> {
         unsafe { pros_sys::screen_touch_status() }.try_into()
     }
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when interacting with the screen.
 pub enum ScreenError {
-    #[snafu(display("Another resource is currently trying to access the screen mutex."))]
+    /// Another resource is currently trying to access the screen mutex.
     ConcurrentAccess,
 }
 

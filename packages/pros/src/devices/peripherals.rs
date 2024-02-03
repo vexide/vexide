@@ -102,39 +102,42 @@ pub struct Peripherals {
 impl Peripherals {
     // SAFETY: caller must ensure that the SmartPorts and AdiPorts created are unique
     unsafe fn new() -> Self {
-        Self {
-            screen: Screen::new(),
+        // SAFETY: caller must ensure that this function is only called once
+        unsafe {
+            Self {
+                screen: Screen::new(),
 
-            port_1: SmartPort::new(1),
-            port_2: SmartPort::new(2),
-            port_3: SmartPort::new(3),
-            port_4: SmartPort::new(4),
-            port_5: SmartPort::new(5),
-            port_6: SmartPort::new(6),
-            port_7: SmartPort::new(7),
-            port_8: SmartPort::new(8),
-            port_9: SmartPort::new(9),
-            port_10: SmartPort::new(10),
-            port_11: SmartPort::new(11),
-            port_12: SmartPort::new(12),
-            port_13: SmartPort::new(13),
-            port_14: SmartPort::new(14),
-            port_15: SmartPort::new(15),
-            port_16: SmartPort::new(16),
-            port_17: SmartPort::new(17),
-            port_18: SmartPort::new(18),
-            port_19: SmartPort::new(19),
-            port_20: SmartPort::new(20),
-            port_21: SmartPort::new(21),
+                port_1: SmartPort::new(1),
+                port_2: SmartPort::new(2),
+                port_3: SmartPort::new(3),
+                port_4: SmartPort::new(4),
+                port_5: SmartPort::new(5),
+                port_6: SmartPort::new(6),
+                port_7: SmartPort::new(7),
+                port_8: SmartPort::new(8),
+                port_9: SmartPort::new(9),
+                port_10: SmartPort::new(10),
+                port_11: SmartPort::new(11),
+                port_12: SmartPort::new(12),
+                port_13: SmartPort::new(13),
+                port_14: SmartPort::new(14),
+                port_15: SmartPort::new(15),
+                port_16: SmartPort::new(16),
+                port_17: SmartPort::new(17),
+                port_18: SmartPort::new(18),
+                port_19: SmartPort::new(19),
+                port_20: SmartPort::new(20),
+                port_21: SmartPort::new(21),
 
-            adi_a: AdiPort::new(1, None),
-            adi_b: AdiPort::new(2, None),
-            adi_c: AdiPort::new(3, None),
-            adi_d: AdiPort::new(4, None),
-            adi_e: AdiPort::new(5, None),
-            adi_f: AdiPort::new(6, None),
-            adi_g: AdiPort::new(7, None),
-            adi_h: AdiPort::new(8, None),
+                adi_a: AdiPort::new(1, None),
+                adi_b: AdiPort::new(2, None),
+                adi_c: AdiPort::new(3, None),
+                adi_d: AdiPort::new(4, None),
+                adi_e: AdiPort::new(5, None),
+                adi_f: AdiPort::new(6, None),
+                adi_g: AdiPort::new(7, None),
+                adi_h: AdiPort::new(8, None),
+            }
         }
     }
 
@@ -220,6 +223,7 @@ impl DynamicPeripherals {
         Some(unsafe { AdiPort::new(port_index as u8 + 1, None) })
     }
 
+    /// Creates a [`Screen`] only if one has not been created before.
     pub fn take_screen(&mut self) -> Option<Screen> {
         if self.screen {
             return None;
