@@ -64,8 +64,6 @@
 
 extern crate alloc;
 
-use core::future::Future;
-
 pub mod async_runtime;
 pub mod devices;
 pub mod error;
@@ -73,6 +71,7 @@ pub mod pid;
 pub mod sync;
 #[macro_use]
 pub mod task;
+pub mod panic;
 
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
@@ -81,12 +80,13 @@ mod vexos_env;
 #[cfg(target_arch = "wasm32")]
 mod wasm_env;
 #[macro_use]
-pub mod lcd;
 pub mod competition;
+pub mod color;
 pub mod io;
-pub mod lvgl;
 pub mod time;
 pub mod usd;
+
+use core::future::Future;
 
 /// A result type that makes returning errors easier.
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
@@ -287,7 +287,6 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -298,7 +297,6 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
@@ -350,7 +348,6 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -361,30 +358,11 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
         }
     };
-}
-
-#[panic_handler]
-/// The panic handler for pros-rs.
-pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
-    let current_task = task::current();
-
-    let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
-
-    // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
-    // panic message here
-    println!("task '{task_name}' {info}");
-
-    unsafe {
-        #[cfg(target_arch = "wasm32")]
-        wasm_env::sim_log_backtrace();
-        pros_sys::exit(1);
-    }
 }
 
 /// Commonly used features of pros-rs.
@@ -396,6 +374,7 @@ pub mod prelude {
     pub use crate::{
         async_robot,
         async_runtime::*,
+        color::Rgb,
         devices::{
             adi::{
                 analog::{AdiAnalogIn, AdiAnalogOut},
@@ -409,6 +388,7 @@ pub mod prelude {
             },
             peripherals::{DynamicPeripherals, Peripherals},
             position::Position,
+            screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
             smart::{
                 distance::DistanceSensor,
                 gps::GpsSensor,
@@ -423,7 +403,6 @@ pub mod prelude {
         },
         error::PortError,
         io::{dbg, eprintln, print, println, BufRead, Read, Seek, Write},
-        lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
         os_task_local,
         pid::*,
         sync_robot,

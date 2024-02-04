@@ -413,10 +413,3 @@ pub unsafe fn suspend_all() -> SchedulerSuspendGuard {
     unsafe { pros_sys::rtos_suspend_all() };
     SchedulerSuspendGuard { _private: () }
 }
-
-#[doc(hidden)]
-pub fn __init_entrypoint() {
-    unsafe {
-        pros_sys::lcd_initialize();
-    }
-}

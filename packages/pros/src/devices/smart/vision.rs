@@ -10,8 +10,8 @@ use snafu::Snafu;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
+    color::Rgb,
     error::{bail_errno, bail_on, map_errno, PortError},
-    lvgl::colors::LcdColor,
 };
 
 /// Represents a vision sensor plugged into the vex.
@@ -172,60 +172,6 @@ impl TryFrom<pros_sys::vision_object_s_t> for VisionObject {
             width: value.width,
             height: value.height,
         })
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
-/// An RGB u8 color
-pub struct Rgb {
-    r: u8,
-    g: u8,
-    b: u8,
-}
-
-impl Rgb {
-    /// Create a new RGB color.
-    pub const fn new(r: u8, g: u8, b: u8) -> Self {
-        Self { r, g, b }
-    }
-}
-
-impl From<Rgb> for u32 {
-    fn from(other: Rgb) -> u32 {
-        ((other.r as u32) << 16) + ((other.g as u32) << 8) + other.b as u32
-    }
-}
-
-const BITMASK: u32 = 0b11111111;
-
-impl From<u32> for Rgb {
-    fn from(value: u32) -> Self {
-        Self {
-            r: ((value >> 16) & BITMASK) as _,
-            g: ((value >> 8) & BITMASK) as _,
-            b: (value & BITMASK) as _,
-        }
-    }
-}
-
-impl From<Rgb> for LcdColor {
-    fn from(other: Rgb) -> Self {
-        Self(pros_sys::lv_color_t {
-            red: other.r,
-            green: other.g,
-            blue: other.b,
-            alpha: 0xFF,
-        })
-    }
-}
-
-impl From<LcdColor> for Rgb {
-    fn from(other: LcdColor) -> Self {
-        Self {
-            r: other.red,
-            g: other.green,
-            b: other.blue,
-        }
     }
 }
 

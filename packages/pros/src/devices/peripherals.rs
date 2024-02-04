@@ -24,7 +24,7 @@
 
 use core::sync::atomic::AtomicBool;
 
-use crate::devices::{adi::AdiPort, smart::SmartPort};
+use crate::devices::{adi::AdiPort, screen::Screen, smart::SmartPort};
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
@@ -35,6 +35,9 @@ static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 /// If you need to store a peripherals struct for use in multiple functions, use [`DynamicPeripherals`] instead.
 /// This struct is always preferred over [`DynamicPeripherals`] when possible.
 pub struct Peripherals {
+    /// Brain screen
+    pub screen: Screen,
+
     /// Smart port 1 on the brain
     pub port_1: SmartPort,
     /// Smart port 2 on the brain
@@ -97,10 +100,13 @@ pub struct Peripherals {
 }
 
 impl Peripherals {
-    const unsafe fn new() -> Self {
-        // SAFETY: caller must ensure that the SmartPorts and AdiPorts created are unique
+    // SAFETY: caller must ensure that the SmartPorts and AdiPorts created are unique
+    unsafe fn new() -> Self {
+        // SAFETY: caller must ensure that this function is only called once
         unsafe {
             Self {
+                screen: Screen::new(),
+
                 port_1: SmartPort::new(1),
                 port_2: SmartPort::new(2),
                 port_3: SmartPort::new(3),
@@ -167,6 +173,7 @@ impl Peripherals {
 /// When possible, use [`Peripherals`] instead.
 #[derive(Debug)]
 pub struct DynamicPeripherals {
+    screen: bool,
     smart_ports: [bool; 21],
     adi_slots: [bool; 8],
 }
@@ -176,10 +183,11 @@ impl DynamicPeripherals {
     /// this function takes a [`Peripherals`].
     /// This guarentees safety because [`Peripherals`] cannot be passed by value
     /// after they have been used to create devices.
-    pub const fn new(_peripherals: Peripherals) -> Self {
+    pub fn new(_peripherals: Peripherals) -> Self {
         let smart_ports = [false; 21];
         let adi_slots = [false; 8];
         Self {
+            screen: false,
             smart_ports,
             adi_slots,
         }
@@ -213,6 +221,15 @@ impl DynamicPeripherals {
         }
         self.smart_ports[port_index] = true;
         Some(unsafe { AdiPort::new(port_index as u8 + 1, None) })
+    }
+
+    /// Creates a [`Screen`] only if one has not been created before.
+    pub fn take_screen(&mut self) -> Option<Screen> {
+        if self.screen {
+            return None;
+        }
+        self.screen = true;
+        Some(unsafe { Screen::new() })
     }
 }
 impl From<Peripherals> for DynamicPeripherals {
