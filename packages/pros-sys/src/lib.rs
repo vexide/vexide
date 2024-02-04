@@ -56,17 +56,35 @@ extern "C" {
     pub fn puts(s: *const c_char) -> i32;
     pub fn exit(code: i32) -> !;
     pub fn write(fd: c_int, buf: *const c_void, count: usize) -> isize;
+
+    pub fn initialize();
+    pub fn opcontrol();
+    pub fn autonomous();
+    pub fn disabled();
+    pub fn competition_initialize();
 }
 
 #[no_mangle]
-extern "C" fn cpp_opcontrol() {}
+unsafe extern "C" fn cpp_opcontrol() {
+    opcontrol();
+}
 #[no_mangle]
-extern "C" fn cpp_autonomous() {}
+unsafe extern "C" fn cpp_autonomous() {
+    autonomous();
+}
 #[no_mangle]
-extern "C" fn cpp_disabled() {}
+unsafe extern "C" fn cpp_disabled() {
+    disabled();
+}
 #[no_mangle]
-extern "C" fn cpp_competition_initialize() {}
+unsafe extern "C" fn cpp_competition_initialize() {
+    competition_initialize();
+}
 #[no_mangle]
-extern "C" fn cpp_initialize() {}
+unsafe extern "C" fn cpp_initialize() {
+    initialize();
+}
 #[no_mangle]
-extern "C" fn task_fn_wrapper() {}
+unsafe extern "C" fn task_fn_wrapper(function: task_fn_t, args: *mut c_void) {
+    function.unwrap()(args);
+}
