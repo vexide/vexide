@@ -1,9 +1,9 @@
 //! Digital input and output ADI devices
 
+use pros_core::bail_on;
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use pros_core::bail_on;
 
 /// Represents the logic level of a digital pin.
 ///

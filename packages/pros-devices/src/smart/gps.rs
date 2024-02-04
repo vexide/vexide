@@ -3,11 +3,11 @@
 //! A notable differenc between this API and that of PROS
 //! is that [`GpsSensor::status`] returns acceleration along with other status data.
 
+use pros_core::{bail_on, error::PortError, map_errno};
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use pros_core::{bail_on, map_errno, error::PortError};
 
 //TODO: Figure out what all the units are
 #[derive(Default, Debug, Clone, Copy, PartialEq)]

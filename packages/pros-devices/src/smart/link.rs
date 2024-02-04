@@ -7,7 +7,11 @@ use alloc::{ffi::CString, string::String};
 use core::ffi::CStr;
 
 use no_std_io::io;
-use pros_core::{bail_errno, bail_on, map_errno, error::{ FromErrno, PortError }};
+use pros_core::{
+    bail_errno, bail_on,
+    error::{FromErrno, PortError},
+    map_errno,
+};
 use pros_sys::{link_receive, link_transmit, E_LINK_RECEIVER, E_LINK_TRANSMITTER};
 use snafu::Snafu;
 

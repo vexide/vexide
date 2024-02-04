@@ -8,10 +8,10 @@
 //! Analog-to-Digital Converter (ADC) in the V5 brain. The brain measures analog input
 //! using 12-bit values ranging from 0 (0V) to 4095 (5V).
 
+use pros_core::bail_on;
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use pros_core::bail_on;
 
 /// Generic analog input ADI device.
 #[derive(Debug, Eq, PartialEq)]

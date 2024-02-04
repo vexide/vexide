@@ -38,10 +38,6 @@
 //! # }
 //! ```
 
-pub use no_std_io::io::*;
-
-pub use crate::{dbg, eprint, eprintln, print, println};
-
 // libc_print is licensed under the MIT License:
 
 // Copyright (c) 2023 Matt Mastracci and contributors
@@ -63,9 +59,12 @@ pub use crate::{dbg, eprint, eprintln, print, println};
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
 #[allow(unused_imports)]
 use core::{convert::TryFrom, file, line, stringify};
+
+pub use no_std_io::io::*;
+
+pub use crate::{dbg, eprint, eprintln, print, println};
 
 #[doc(hidden)]
 #[allow(missing_debug_implementations)]

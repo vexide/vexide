@@ -7,14 +7,12 @@ use alloc::sync::Arc;
 use core::time::Duration;
 
 use pros::{
-    color::Rgb,
     devices::{
         smart::vision::{LedMode, VisionZeroPoint},
         Controller,
     },
     prelude::*,
     sync::Mutex,
-    task::delay,
 };
 
 struct ExampleRobot {
@@ -33,7 +31,7 @@ impl ExampleRobot {
 }
 
 impl AsyncRobot for ExampleRobot {
-    async fn opcontrol(&mut self) -> pros::Result {
+    async fn opcontrol(&mut self) -> Result {
         let handle = pros::async_runtime::spawn(async {
             for _ in 0..5 {
                 println!("Hello from async!");

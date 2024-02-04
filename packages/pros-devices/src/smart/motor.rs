@@ -21,7 +21,7 @@
 //! }
 //! ```
 
-use pros_core::{bail_on, map_errno, error::PortError};
+use pros_core::{bail_on, error::PortError, map_errno};
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 

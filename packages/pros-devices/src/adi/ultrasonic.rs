@@ -1,9 +1,9 @@
 //! ADI ultrasonic sensor.
 
+use pros_core::bail_on;
 use pros_sys::{ext_adi_ultrasonic_t, PROS_ERR};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use pros_core::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
 /// Adi ultrasonic sensor.

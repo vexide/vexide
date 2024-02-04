@@ -5,6 +5,7 @@ pub mod sync;
 pub mod task;
 
 use pros_core::error::Result;
+pub use sync::*;
 
 /// A trait for robot code that runs without the async executor spun up.
 /// This trait isn't recommended. See [`AsyncRobot`] for the preferred trait to run robot code.

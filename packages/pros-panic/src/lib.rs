@@ -2,11 +2,11 @@
 extern crate alloc;
 
 use alloc::format;
-use pros_core::eprintln;
-use pros_sync::task;
 
+use pros_core::eprintln;
 #[cfg(feature = "display_panics")]
 use pros_devices::Screen;
+use pros_sync::task;
 
 extern "C" {
     /// Prints a backtrace to the debug console

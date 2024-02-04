@@ -5,7 +5,7 @@
 extern crate alloc;
 use alloc::vec::Vec;
 
-use pros_core::{bail_errno, bail_on, map_errno, error::PortError};
+use pros_core::{bail_errno, bail_on, error::PortError, map_errno};
 use pros_sys::{PROS_ERR, VISION_OBJECT_ERR_SIG};
 use snafu::Snafu;
 

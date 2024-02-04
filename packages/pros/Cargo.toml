@@ -26,7 +26,7 @@ pros-panic = { version = "0.1.0", path = "../pros-panic", optional = true }
 pros-core = { version = "0.1.0", path = "../pros-core", optional = true }
 
 [features]
-default = ["async", "devices", "math", "panic", "display_panics", "core"]
+default = ["async", "sync", "devices", "math", "panic", "display_panics", "core"]
 
 core = ["dep:pros-core"]
 

@@ -62,24 +62,18 @@
     clippy::missing_const_for_fn
 )]
 
-#[cfg(all(feature = "async", feature = "sync"))]
-compile_error!("The `async` and `sync` features are mutually exclusive.");
-
-#[cfg(all(not(feature = "async"), not(feature = "sync")))]
-compile_error!("You must enable either the `async` or `sync` feature in order to make a robot.");
-
 #[cfg(feature = "async")]
-pub use pros_async;
+pub use pros_async as async_runtime;
 #[cfg(feature = "core")]
-pub use pros_core;
+pub use pros_core as core;
 #[cfg(feature = "devices")]
-pub use pros_devices;
-#[cfg(feature = "sync")]
-pub use pros_sync;
+pub use pros_devices as devices;
 #[cfg(feature = "math")]
-pub use pros_math;
+pub use pros_math as math;
 #[cfg(feature = "panic")]
-pub use pros_panic;
+pub use pros_panic as panic;
+#[cfg(feature = "sync")]
+pub use pros_sync as sync;
 
 /// Commonly used features of pros-rs.
 /// This module is meant to be glob imported.
@@ -126,7 +120,7 @@ pub mod prelude {
     #[cfg(feature = "sync")]
     pub use pros_sync::{
         os_task_local, sync_robot,
-        task::{delay, sleep, spawn},
+        task::{delay, spawn},
         SyncRobot,
     };
 }

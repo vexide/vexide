@@ -1,9 +1,9 @@
 //! ADI encoder device.
 
+use pros_core::bail_on;
 use pros_sys::{ext_adi_encoder_t, PROS_ERR};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use pros_core::bail_on;
 
 /// ADI encoder device.
 /// Requires two adi ports.

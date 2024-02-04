@@ -3,10 +3,10 @@
 extern crate alloc;
 
 pub mod async_runtime;
-
 use core::{future::Future, task::Poll};
 
 use async_runtime::executor::EXECUTOR;
+pub use async_runtime::*;
 use pros_core::error::Result;
 
 /// A future that will complete after the given duration.

@@ -2,11 +2,11 @@
 
 use core::time::Duration;
 
+use pros_core::{bail_on, error::PortError, map_errno};
 use pros_sys::{OPT_GESTURE_ERR, PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use pros_core::{bail_on, map_errno, error::PortError};
 
 /// Represents a smart port configured as a V5 optical sensor
 #[derive(Debug, Eq, PartialEq)]
