@@ -25,7 +25,6 @@ Before releasing:
 - Added feedforward motor controllers (#80)
 - Lightly document all APIs with missing documentation. (#70)
 - Added `Debug`, `Copy`, and `Clone` derives for common structs (#70)
-
 - Screen drawing API. (#81)
 - Added screen field to `Peripherals` and `DynamicPeripherals::take_screen` method. (#81)
 - Added `AdiSolenoid`, a wrapper over `AdiDigitalOut` for actuating SMC pneumatic solenoids. (#61)
@@ -59,6 +58,7 @@ Before releasing:
 - Repurposed `AdiAnalogOut` as `AdiPwmOut` to correct match port output. (**Breaking Change**) (#90).
 - Moved most device-related constants into their associated struct `impl` (**Breaking Change**) (#98).
 - Renamed IMU_RESET_TIMEOUT to `InertialSensor::CALIBRATION_TIMEOUT` (**Breaking Change**) (#98).
+- Split the `pros` crate into several smaller subcrates. (#86) (**Breaking Change**)
 
 ### Removed
 

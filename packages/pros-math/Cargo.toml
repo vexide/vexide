@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 pros-sys = { version = "0.6.0", path = "../pros-sys" }
+pros-core = { version = "0.1.0", path = "../pros-core" }

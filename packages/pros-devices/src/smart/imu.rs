@@ -413,8 +413,8 @@ impl core::future::Future for InertialCalibrateFuture {
             Self::Calibrate(port) => match unsafe { pros_sys::imu_reset(port) } {
                 PROS_ERR => {
                     let errno = take_errno();
-                    return Poll::Ready(Err(InertialError::from_errno(errno)
-                        .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
+                    Poll::Ready(Err(InertialError::from_errno(errno)
+                        .unwrap_or_else(|| panic!("Unknown errno code {errno}"))))
                 }
                 _ => {
                     *self = Self::Waiting(port, Instant::now());
