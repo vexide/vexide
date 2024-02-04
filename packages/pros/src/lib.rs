@@ -62,354 +62,71 @@
     clippy::missing_const_for_fn
 )]
 
-extern crate alloc;
+#[cfg(all(feature = "async", feature = "sync"))]
+compile_error!("The `async` and `sync` features are mutually exclusive.");
 
-pub mod async_runtime;
-pub mod devices;
-pub mod error;
-pub mod pid;
-pub mod sync;
-#[macro_use]
-pub mod task;
-pub mod panic;
+#[cfg(all(not(feature = "async"), not(feature = "sync")))]
+compile_error!("You must enable either the `async` or `sync` feature in order to make a robot.");
 
-#[doc(hidden)]
-pub use pros_sys as __pros_sys;
-#[cfg(target_os = "vexos")]
-mod vexos_env;
-#[cfg(target_arch = "wasm32")]
-mod wasm_env;
-#[macro_use]
-pub mod competition;
-pub mod color;
-pub mod io;
-pub mod time;
-pub mod usd;
-
-use core::future::Future;
-
-/// A result type that makes returning errors easier.
-pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
-
-/// A trait for robot code that spins up the pros-rs async executor.
-/// This is the preferred trait to run robot code.
-pub trait AsyncRobot {
-    /// Runs during the operator control period.
-    /// This function may be called more than once.
-    /// For that reason, do not use [`Peripherals::take`](prelude::Peripherals::take) in this function.
-    fn opcontrol(&mut self) -> impl Future<Output = Result> {
-        async { Ok(()) }
-    }
-    /// Runs during the autonomous period.
-    fn auto(&mut self) -> impl Future<Output = Result> {
-        async { Ok(()) }
-    }
-    /// Runs continuously during the disabled period.
-    fn disabled(&mut self) -> impl Future<Output = Result> {
-        async { Ok(()) }
-    }
-    /// Runs once when the competition system is initialized.
-    fn comp_init(&mut self) -> impl Future<Output = Result> {
-        async { Ok(()) }
-    }
-}
-
-/// A trait for robot code that runs without the async executor spun up.
-/// This trait isn't recommended. See [`AsyncRobot`] for the preferred trait to run robot code.
-pub trait SyncRobot {
-    /// Runs during the operator control period.
-    /// This function may be called more than once.
-    /// For that reason, do not use [`Peripherals::take`](prelude::Peripherals::take) in this function.
-    fn opcontrol(&mut self) -> Result {
-        Ok(())
-    }
-    /// Runs during the autonomous period.
-    fn auto(&mut self) -> Result {
-        Ok(())
-    }
-    /// Runs continuously during the disabled period.
-    fn disabled(&mut self) -> Result {
-        Ok(())
-    }
-    /// Runs once when the competition system is initialized.
-    fn comp_init(&mut self) -> Result {
-        Ok(())
-    }
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! __gen_sync_exports {
-    ($rbt:ty) => {
-        pub static mut ROBOT: Option<$rbt> = None;
-
-        #[doc(hidden)]
-        #[no_mangle]
-        extern "C" fn opcontrol() {
-            <$rbt as $crate::SyncRobot>::opcontrol(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before opcontrol")
-            })
-            .unwrap();
-        }
-
-        #[doc(hidden)]
-        #[no_mangle]
-        extern "C" fn autonomous() {
-            <$rbt as $crate::SyncRobot>::auto(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before opcontrol")
-            })
-            .unwrap();
-        }
-
-        #[doc(hidden)]
-        #[no_mangle]
-        extern "C" fn disabled() {
-            <$rbt as $crate::SyncRobot>::disabled(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before opcontrol")
-            })
-            .unwrap();
-        }
-
-        #[doc(hidden)]
-        #[no_mangle]
-        extern "C" fn competition_initialize() {
-            <$rbt as $crate::SyncRobot>::comp_init(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before opcontrol")
-            })
-            .unwrap();
-        }
-    };
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! __gen_async_exports {
-    ($rbt:ty) => {
-        pub static mut ROBOT: Option<$rbt> = None;
-
-        #[doc(hidden)]
-        #[no_mangle]
-        extern "C" fn opcontrol() {
-            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before opcontrol")
-            }))
-            .unwrap();
-        }
-
-        #[doc(hidden)]
-        #[no_mangle]
-        extern "C" fn autonomous() {
-            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::auto(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before auto")
-            }))
-            .unwrap();
-        }
-
-        #[doc(hidden)]
-        #[no_mangle]
-        extern "C" fn disabled() {
-            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::disabled(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before disabled")
-            }))
-            .unwrap();
-        }
-
-        #[doc(hidden)]
-        #[no_mangle]
-        extern "C" fn competition_initialize() {
-            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::comp_init(unsafe {
-                ROBOT
-                    .as_mut()
-                    .expect("Expected initialize to run before comp_init")
-            }))
-            .unwrap();
-        }
-    };
-}
-
-/// Allows your async robot code to be executed by the pros kernel.
-/// If your robot struct implements Default then you can just supply this macro with its type.
-/// If not, you can supply an expression that returns your robot type to initialize your robot struct.
-/// The code that runs to create your robot struct will run in the initialize function in PROS.
-///
-/// Example of using the macro with a struct that implements Default:
-/// ```rust
-/// use pros::prelude::*;
-/// #[derive(Default)]
-/// struct ExampleRobot;
-/// #[async_trait]
-/// impl AsyncRobot for ExampleRobot {
-///    asnyc fn opcontrol(&mut self) -> pros::Result {
-///       println!("Hello, world!");
-///      Ok(())
-///   }
-/// }
-/// async_robot!(ExampleRobot);
-/// ```
-///
-/// Example of using the macro with a struct that does not implement Default:
-/// ```rust
-/// use pros::prelude::*;
-/// struct ExampleRobot {
-///    x: i32,
-/// }
-/// #[async_trait]
-/// impl AsyncRobot for ExampleRobot {
-///     async fn opcontrol(&mut self) -> pros::Result {
-///         println!("Hello, world! {}", self.x);
-///         Ok(())
-///     }
-/// }
-/// impl ExampleRobot {
-///     pub fn new() -> Self {
-///        Self { x: 5 }
-///    }
-/// }
-/// async_robot!(ExampleRobot, ExampleRobot::new());
-#[macro_export]
-macro_rules! async_robot {
-    ($rbt:ty) => {
-        $crate::__gen_async_exports!($rbt);
-
-        #[no_mangle]
-        extern "C" fn initialize() {
-            unsafe {
-                ROBOT = Some(Default::default());
-            }
-        }
-    };
-    ($rbt:ty, $init:expr) => {
-        $crate::__gen_async_exports!($rbt);
-
-        #[no_mangle]
-        extern "C" fn initialize() {
-            unsafe {
-                ROBOT = Some($init);
-            }
-        }
-    };
-}
-
-/// Allows your sync robot code to be executed by the pros kernel.
-/// If your robot struct implements Default then you can just supply this macro with its type.
-/// If not, you can supply an expression that returns your robot type to initialize your robot struct.
-/// The code that runs to create your robot struct will run in the initialize function in PROS.
-///
-/// Example of using the macro with a struct that implements Default:
-/// ```rust
-/// use pros::prelude::*;
-/// #[derive(Default)]
-/// struct ExampleRobot;
-/// impl SyncRobot for ExampleRobot {
-///    asnyc fn opcontrol(&mut self) -> pros::Result {
-///       println!("Hello, world!");
-///      Ok(())
-///   }
-/// }
-/// sync_robot!(ExampleRobot);
-/// ```
-///
-/// Example of using the macro with a struct that does not implement Default:
-/// ```rust
-/// use pros::prelude::*;
-/// struct ExampleRobot {
-///    x: i32,
-/// }
-/// impl SyncRobot for ExampleRobot {
-///     async fn opcontrol(&mut self) -> pros::Result {
-///         println!("Hello, world! {}", self.x);
-///         Ok(())
-///     }
-/// }
-/// impl ExampleRobot {
-///     pub fn new() -> Self {
-///        Self { x: 5 }
-///    }
-/// }
-/// sync_robot!(ExampleRobot, ExampleRobot::new());
-#[macro_export]
-macro_rules! sync_robot {
-    ($rbt:ty) => {
-        $crate::__gen_sync_exports!($rbt);
-
-        #[no_mangle]
-        extern "C" fn initialize() {
-            unsafe {
-                ROBOT = Some(Default::default());
-            }
-        }
-    };
-    ($rbt:ty, $init:expr) => {
-        $crate::__gen_sync_exports!($rbt);
-
-        #[no_mangle]
-        extern "C" fn initialize() {
-            unsafe {
-                ROBOT = Some($init);
-            }
-        }
-    };
-}
+#[cfg(feature = "async")]
+pub use pros_async;
+#[cfg(feature = "core")]
+pub use pros_core;
+#[cfg(feature = "devices")]
+pub use pros_devices;
+#[cfg(feature = "sync")]
+pub use pros_sync;
+#[cfg(feature = "math")]
+pub use pros_math;
+#[cfg(feature = "panic")]
+pub use pros_panic;
 
 /// Commonly used features of pros-rs.
 /// This module is meant to be glob imported.
 pub mod prelude {
-    // Import Box from alloc so that it can be used in async_trait!
-    pub use alloc::boxed::Box;
-
-    pub use crate::{
-        async_robot,
-        async_runtime::*,
+    #[cfg(feature = "async")]
+    pub use pros_async::{async_robot, async_runtime::*, sleep, AsyncRobot};
+    #[cfg(feature = "core")]
+    pub use pros_core::{
+        dbg, eprint, eprintln,
+        error::{PortError, Result},
+        io::{BufRead, Read, Seek, Write},
+        print, println,
+    };
+    #[cfg(feature = "devices")]
+    pub use pros_devices::{
+        adi::{
+            analog::AdiAnalogIn,
+            digital::{AdiDigitalIn, AdiDigitalOut},
+            encoder::AdiEncoder,
+            gyro::AdiGyro,
+            motor::AdiMotor,
+            potentiometer::{AdiPotentiometer, AdiPotentiometerType},
+            pwm::AdiPwmOut,
+            solenoid::AdiSolenoid,
+            ultrasonic::AdiUltrasonic,
+            AdiDevice, AdiPort,
+        },
         color::Rgb,
-        devices::{
-            adi::{
-                analog::AdiAnalogIn,
-                digital::{AdiDigitalIn, AdiDigitalOut},
-                encoder::AdiEncoder,
-                gyro::AdiGyro,
-                motor::AdiMotor,
-                potentiometer::{AdiPotentiometer, AdiPotentiometerType},
-                pwm::AdiPwmOut,
-                solenoid::AdiSolenoid,
-                ultrasonic::AdiUltrasonic,
-                AdiDevice, AdiPort,
-            },
-            peripherals::{DynamicPeripherals, Peripherals},
             position::Position,
             screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
-            smart::{
-                distance::DistanceSensor,
-                expander::AdiExpander,
-                gps::GpsSensor,
-                imu::InertialSensor,
-                link::{Link, RxLink, TxLink},
-                motor::{BrakeMode, Gearset, Motor},
-                optical::OpticalSensor,
-                rotation::RotationSensor,
-                vision::VisionSensor,
-                SmartDevice, SmartPort,
-            },
+        smart::{
+            distance::DistanceSensor,
+            expander::AdiExpander,
+            gps::GpsSensor,
+            imu::InertialSensor,
+            link::{Link, RxLink, TxLink},
+            motor::{BrakeMode, Gearset, Motor},
+            optical::OpticalSensor,
+            rotation::RotationSensor,
+            vision::VisionSensor,
+            SmartDevice, SmartPort,
         },
-        error::PortError,
-        io::{dbg, eprintln, print, println, BufRead, Read, Seek, Write},
-        os_task_local,
-        pid::*,
-        sync_robot,
+    };
+    #[cfg(feature = "sync")]
+    pub use pros_sync::{
+        os_task_local, sync_robot,
         task::{delay, sleep, spawn},
-        AsyncRobot, SyncRobot,
+        SyncRobot,
     };
 }

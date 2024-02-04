@@ -18,17 +18,23 @@ rust-version = "1.75.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
-spin = "0.9.8"
-pros-sys = { version = "0.6", path = "../pros-sys", features = ["xapi"] }
-snafu = { version = "0.8.0", default-features = false, features = [
-    "rust_1_61",
-    "unstable-core-error",
-] }
-no_std_io = { version = "0.6.0", features = ["alloc"] }
-futures = { version = "0.3.28", default-features = false, features = ["alloc"] }
-async-task = { version = "4.5.0", default-features = false }
-waker-fn = "1.1.1"
+pros-sync = { version = "0.1.0", path = "../pros-sync", optional = true }
+pros-async = { version = "0.1.0", path = "../pros-async", optional = true }
+pros-devices = { version = "0.1.0", path = "../pros-devices", optional = true }
+pros-math = { version = "0.1.0", path = "../pros-math", optional = true }
+pros-panic = { version = "0.1.0", path = "../pros-panic", optional = true }
+pros-core = { version = "0.1.0", path = "../pros-core", optional = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-dlmalloc = { version = "0.2.4", features = ["global"] }
+[features]
+default = ["async", "devices", "math", "panic", "display_panics", "core"]
+
+core = ["dep:pros-core"]
+
+async = ["dep:pros-async"]
+sync = ["dep:pros-sync"]
+
+devices = ["dep:pros-devices"]
+math = ["dep:pros-math"]
+
+panic = ["dep:pros-panic"]
+display_panics = ["pros-panic/display_panics"]
