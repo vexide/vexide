@@ -1,4 +1,17 @@
+//! Synchronization primitives and FreeRTOS task management for [`pros-rs`].
+//!
+//! The synchronization types are modeled after the standard library.
+//! For more information on the task api, see the [`task`] module.
+
 #![no_std]
+#![warn(
+    missing_docs,
+    rust_2018_idioms,
+    missing_debug_implementations,
+    unsafe_op_in_unsafe_fn,
+    clippy::missing_const_for_fn
+)]
+
 extern crate alloc;
 
 pub mod sync;

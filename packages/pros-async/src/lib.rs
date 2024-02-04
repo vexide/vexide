@@ -1,5 +1,17 @@
+//! Tiny async runtime and robot traits for `pros-rs`.
+//! The async executor supports spawning tasks and blocking on futures.
+//! It has a reactor to improve the performance of some futures.
+
 #![no_std]
 #![feature(negative_impls)]
+#![warn(
+    missing_docs,
+    rust_2018_idioms,
+    missing_debug_implementations,
+    unsafe_op_in_unsafe_fn,
+    clippy::missing_const_for_fn
+)]
+
 extern crate alloc;
 
 pub mod async_runtime;

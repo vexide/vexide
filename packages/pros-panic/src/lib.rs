@@ -1,4 +1,15 @@
+//! Panic handler implementation for [`pros-rs`](https://crates.io/crates/pros-rs).
+//! Supports printing a backtrace when running in the simulator.
+//! If the `display_panics` feature is enabled, it will also display the panic message on the V5 Brain display.
+
 #![no_std]
+#![warn(
+    missing_docs,
+    rust_2018_idioms,
+    missing_debug_implementations,
+    unsafe_op_in_unsafe_fn,
+    clippy::missing_const_for_fn
+)]
 extern crate alloc;
 
 use alloc::format;
@@ -8,9 +19,10 @@ use pros_core::eprintln;
 use pros_devices::Screen;
 use pros_sync::task;
 
+#[cfg(target_arch = "wasm32")]
 extern "C" {
     /// Prints a backtrace to the debug console
-    pub fn sim_log_backtrace();
+    fn sim_log_backtrace();
 }
 
 #[panic_handler]

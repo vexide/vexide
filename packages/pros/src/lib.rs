@@ -28,6 +28,7 @@
 //!       loop {
 //!         // Do something
 //!        sleep(Duration::from_millis(20)).await;
+//!       }
 //!    }
 //! }
 //! async_robot!(Robot);
@@ -44,23 +45,15 @@
 //!      loop {
 //!       // Do something
 //!      delay(Duration::from_millis(20));
+//!      }
 //!    }
 //! }
 //! sync_robot!(Robot);
 //! ```
 //!
 //! You may have noticed the `#[derive(Default)]` attribute on these Robot structs.
-//! If you want to learn why, look at the docs for [`async_robot`] or [`sync_robot`].
-
-#![feature(error_in_core, negative_impls)]
+//! If you want to learn why, look at the docs for [`pros_async::async_robot`] or [`pros_sync::sync_robot`].
 #![no_std]
-#![warn(
-    missing_docs,
-    rust_2018_idioms,
-    missing_debug_implementations,
-    unsafe_op_in_unsafe_fn,
-    clippy::missing_const_for_fn
-)]
 
 #[cfg(feature = "async")]
 pub use pros_async as async_runtime;

@@ -18,7 +18,6 @@ pub fn spawn<T>(future: impl Future<Output = T> + 'static) -> Task<T> {
 
 /// Blocks the current task untill a return value can be extracted from the provided future.
 /// Does not poll all futures to completion.
-/// If you want to complete all futures, use the [`complete_all`] function.
 pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
     executor::EXECUTOR.with(|e| e.block_on(spawn(future)))
 }

@@ -295,7 +295,7 @@ map_errno! {
 ///
 /// This function will block the entire task, preventing concurrent
 /// execution of async code. When in an async context, it is recommended
-/// to use [`sleep`] instead.
+/// to use the `sleep` function in [`pros_async`](https://crates.io/crates/pros-async) instead.
 pub fn delay(duration: Duration) {
     unsafe { pros_sys::delay(duration.as_millis() as u32) }
 }

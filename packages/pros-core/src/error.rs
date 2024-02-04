@@ -8,6 +8,7 @@
 /// A result type that makes returning errors easier.
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
+/// Gets the value of errno and sets errno to 0.
 pub fn take_errno() -> i32 {
     let err = unsafe { *pros_sys::__errno() };
     if err != 0 {
