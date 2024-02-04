@@ -71,6 +71,7 @@ pub mod pid;
 pub mod sync;
 #[macro_use]
 pub mod task;
+pub mod panic;
 
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
@@ -85,10 +86,7 @@ pub mod io;
 pub mod time;
 pub mod usd;
 
-use alloc::format;
 use core::future::Future;
-
-use devices::screen::Screen;
 
 /// A result type that makes returning errors easier.
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
@@ -365,31 +363,6 @@ macro_rules! sync_robot {
             }
         }
     };
-}
-
-#[panic_handler]
-/// The panic handler for pros-rs.
-pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
-    let current_task = task::current();
-
-    let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
-
-    // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
-    // panic message here
-    let msg = format!("task '{task_name}' {info}");
-
-    eprintln!("{msg}");
-
-    unsafe {
-        Screen::new().draw_error(&msg).unwrap_or_else(|err| {
-            eprintln!("Failed to draw error message to screen: {err}");
-        });
-
-        #[cfg(target_arch = "wasm32")]
-        wasm_env::sim_log_backtrace();
-
-        pros_sys::exit(1);
-    }
 }
 
 /// Commonly used features of pros-rs.
