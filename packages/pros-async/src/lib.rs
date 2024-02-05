@@ -1,6 +1,8 @@
 //! Tiny async runtime and robot traits for `pros-rs`.
 //! The async executor supports spawning tasks and blocking on futures.
 //! It has a reactor to improve the performance of some futures.
+//! It is recommended to use the `AsyncRobot` trait to run robot code.
+//! FreeRTOS tasks can still be used, but it is recommended to use only async tasks for performance.
 
 #![no_std]
 #![feature(negative_impls)]
@@ -14,12 +16,26 @@
 
 extern crate alloc;
 
-pub mod async_runtime;
 use core::{future::Future, task::Poll};
 
-use async_runtime::executor::EXECUTOR;
-pub use async_runtime::*;
+use async_task::Task;
+use executor::EXECUTOR;
 use pros_core::error::Result;
+
+mod executor;
+mod reactor;
+
+/// Runs a future in the background without having to await it
+/// To get the the return value you can await a task.
+pub fn spawn<T>(future: impl Future<Output = T> + 'static) -> Task<T> {
+    executor::EXECUTOR.with(|e| e.spawn(future))
+}
+
+/// Blocks the current task untill a return value can be extracted from the provided future.
+/// Does not poll all futures to completion.
+pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
+    executor::EXECUTOR.with(|e| e.block_on(spawn(future)))
+}
 
 /// A future that will complete after the given duration.
 /// Sleep futures that are closer to completion are prioritized to improve accuracy.
