@@ -21,11 +21,11 @@ use pros_core::error::Result;
 pub use sync::*;
 
 /// A trait for robot code that runs without the async executor spun up.
-/// This trait isn't recommended. See [`AsyncRobot`] for the preferred trait to run robot code.
+/// This trait isn't recommended. See `AsyncRobot` in [pros-async](https://crates.io/crates/pros-async) for the preferred trait to run robot code.
 pub trait SyncRobot {
     /// Runs during the operator control period.
     /// This function may be called more than once.
-    /// For that reason, do not use [`Peripherals::take`](prelude::Peripherals::take) in this function.
+    /// For that reason, do not use `Peripherals::take` in this function.
     fn opcontrol(&mut self) -> Result {
         Ok(())
     }

@@ -48,7 +48,7 @@ impl InertialSensor {
 
     /// Calibrate IMU asynchronously.
     ///
-    /// Returns an [`InertialCalibrationFuture`] that is be polled until the IMU status flag reports the sensor as
+    /// Returns an [`InertialCalibrateFuture`] that is be polled until the IMU status flag reports the sensor as
     /// no longer calibrating.
     /// There a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
     pub fn calibrate(&mut self) -> InertialCalibrateFuture {

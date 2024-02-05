@@ -60,7 +60,7 @@ pub fn sleep(duration: core::time::Duration) -> SleepFuture {
 pub trait AsyncRobot {
     /// Runs during the operator control period.
     /// This function may be called more than once.
-    /// For that reason, do not use [`Peripherals::take`](prelude::Peripherals::take) in this function.
+    /// For that reason, do not use `Peripherals::take`in this function.
     fn opcontrol(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
     }

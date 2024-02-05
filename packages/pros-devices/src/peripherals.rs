@@ -208,7 +208,7 @@ impl DynamicPeripherals {
         Some(unsafe { SmartPort::new(port_index as u8 + 1) })
     }
 
-    /// Creates an [`AdiSlot`] only if one has not been created on the given slot before.
+    /// Creates an [`AdiPort`] only if one has not been created on the given slot before.
     ///
     /// # Panics
     ///

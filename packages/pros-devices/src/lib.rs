@@ -11,11 +11,11 @@
 //!
 //! # Organization
 //!
-//! - [`devices::smart`] contains abstractions and types for smart port connected devices.
-//! - [`devices::adi`] contains abstractions for three wire ADI connected devices.
-//! - [`devices::battery`] provides functions for getting information about the currently connected
+//! - [`smart`] contains abstractions and types for smart port connected devices.
+//! - [`adi`] contains abstractions for three wire ADI connected devices.
+//! - [`battery`] provides functions for getting information about the currently connected
 //!   battery.
-//! - [`devices::controller`] provides types for interacting with the V5 controller.
+//! - [`controller`] provides types for interacting with the V5 controller.
 
 #![no_std]
 #![warn(

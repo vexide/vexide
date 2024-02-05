@@ -304,19 +304,19 @@ impl Rgb {
     pub const YELLOW: Rgb = Rgb::from_raw(pros_sys::COLOR_YELLOW);
     /// #9ACD32 color constant.
     pub const YELLOW_GREEN: Rgb = Rgb::from_raw(pros_sys::COLOR_YELLOW_GREEN);
-    /// Alias to [`COLOR_DARK_GREY`].
+    /// Alias to [`Self::SLATE_GRAY`].
     pub const DARK_GREY: Rgb = Rgb::from_raw(pros_sys::COLOR_DARK_GREY);
-    /// Alias tp [`COLOR_DARK_SLATE_GREY`].
+    /// Alias to [`Self::DARK_SLATE_GRAY`].
     pub const DARK_SLATE_GREY: Rgb = Rgb::from_raw(pros_sys::COLOR_DARK_SLATE_GREY);
-    /// Alias to [`COLOR_DIM_GREY`].
+    /// Alias to [`Self::DIM_GRAY`].
     pub const DIM_GREY: Rgb = Rgb::from_raw(pros_sys::COLOR_DIM_GREY);
-    /// Alias to [`COLOR_GREY`].
+    /// Alias to [`Self::GRAY`].
     pub const GREY: Rgb = Rgb::from_raw(pros_sys::COLOR_GREY);
-    /// Alias to [`COLOR_LIGHT_GREY`].
+    /// Alias to [`Self::LIGHT_GRAY`].
     pub const LIGHT_GREY: Rgb = Rgb::from_raw(pros_sys::COLOR_LIGHT_GREY);
-    /// Alias to [`COLOR_LIGHT_SLATE_GREY`].
+    /// Alias to [`Self::LIGHT_SLATE_GRAY`].
     pub const LIGHT_SLATE_GREY: Rgb = Rgb::from_raw(pros_sys::COLOR_LIGHT_SLATE_GREY);
-    /// Alias to [`COLOR_SLATE_GREY`].
+    /// Alias to [`Self::SLATE_GREY`].
     pub const SLATE_GREY: Rgb = Rgb::from_raw(pros_sys::COLOR_SLATE_GREY);
 
     const BITMASK: u32 = 0b11111111;

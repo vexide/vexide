@@ -350,7 +350,7 @@ impl Screen {
     ///
     /// Creating new `Screen`s is inherently unsafe due to the possibility of constructing
     /// more than one screen at once allowing multiple mutable references to the same
-    /// hardware device. Prefer using [`Peripherals`] to register devices if possible.
+    /// hardware device. Prefer using [`crate::peripherals::Peripherals`] to register devices if possible.
     pub unsafe fn new() -> Self {
         Self {
             current_line: 0,

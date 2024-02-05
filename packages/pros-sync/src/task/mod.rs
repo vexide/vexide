@@ -30,7 +30,7 @@ use snafu::Snafu;
 
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
 /// Takes in a closure that can move variables if needed.
-/// If your task has a loop it is advised to use [`sleep(duration)`](sleep) so that the task does not take up necessary system resources.
+/// If your task has a loop it is advised to use [`delay`] so that the task does not take up necessary system resources.
 /// Tasks should be long-living; starting many tasks can be slow and is usually not necessary.
 pub fn spawn<F>(f: F) -> TaskHandle
 where
@@ -201,7 +201,7 @@ pub enum TaskState {
     Running,
     /// The task is currently yielding but may run in the future
     Ready,
-    /// The task is blocked. For example, it may be [`sleep`]ing or waiting on a mutex.
+    /// The task is blocked. For example, it may be [`delay`]ing or waiting on a mutex.
     /// Tasks that are in this state will usually return to the task queue after a set timeout.
     Blocked,
     /// The task is suspended. For example, it may be waiting on a mutex or semaphore.

@@ -84,7 +84,7 @@ impl OpticalSensor {
     /// due to less available light being read by the sensor.
     ///
     /// Time value must be a [`Duration`] between 3 and 712 milliseconds. See
-    /// https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for
+    /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for
     /// more information.
     pub fn set_integration_time(&mut self, time: Duration) -> Result<(), OpticalError> {
         if time < Self::MIN_INTEGRATION_TIME || time > Self::MAX_INTEGRATION_TIME {
@@ -189,7 +189,7 @@ impl OpticalSensor {
 
     /// Get the most recent gesture data from the sensor. Gestures will be cleared after 500mS.
     ///
-    /// Will return [`OpticalError::GestureDetectionNotEnabled`] if the sensor is not
+    /// Will return [`OpticalError::GestureDetectionDisabled`] if the sensor is not
     /// confgured to detect gestures.
     pub fn last_gesture_direction(&self) -> Result<GestureDirection, OpticalError> {
         if !self.gesture_detection_enabled {
@@ -201,7 +201,7 @@ impl OpticalSensor {
 
     /// Get the most recent raw gesture data from the sensor.
     ///
-    /// Will return [`OpticalError::GestureDetectionNotEnabled`] if the sensor is not
+    /// Will return [`OpticalError::GestureDetectionDisabled`] if the sensor is not
     /// confgured to detect gestures.
     pub fn last_gesture_raw(&self) -> Result<GestureRaw, OpticalError> {
         if !self.gesture_detection_enabled {
@@ -352,7 +352,7 @@ pub enum OpticalError {
 
     /// Integration time must be between 3 and 712 milliseconds.
     ///
-    /// See https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for more information.
+    /// See <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for more information.
     InvalidIntegrationTime,
 
     /// Gesture detection is not enabled for this sensor.

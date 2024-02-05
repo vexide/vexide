@@ -49,7 +49,7 @@ impl AdiPort {
     ///
     /// Creating new `AdiPort`s is inherently unsafe due to the possibility of constructing
     /// more than one device on the same port index allowing multiple mutable references to
-    /// the same hardware device. Prefer using [`Peripherals`] to register devices if possible.
+    /// the same hardware device. Prefer using [`crate::peripherals::Peripherals`] to register devices if possible.
     pub const unsafe fn new(index: u8, expander_index: Option<u8>) -> Self {
         Self {
             index,
@@ -101,7 +101,7 @@ pub trait AdiDevice {
     /// Ports are indexed starting from 1.
     fn expander_port_index(&self) -> Option<u8>;
 
-    /// Get the variant of [`SmartDeviceType`] that this device is associated with.
+    /// Get the variant of [`AdiDeviceType`] that this device is associated with.
     fn device_type(&self) -> AdiDeviceType;
 }
 
