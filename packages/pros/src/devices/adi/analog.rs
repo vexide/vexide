@@ -3,6 +3,7 @@ use pros_sys::PROS_ERR;
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
+/// Generic analog input ADI device.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiAnalogIn {
     port: AdiPort,

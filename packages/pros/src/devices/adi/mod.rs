@@ -15,6 +15,7 @@ pub mod motor;
 pub mod potentiometer;
 pub mod solenoid;
 pub mod ultrasonic;
+pub mod switch;
 
 pub use addrled::AdiAddrLed;
 pub use analog::{AdiAnalogIn, AdiAnalogOut};
