@@ -1,9 +1,13 @@
+//! ADI ultrasonic sensor.
+
 use pros_sys::{ext_adi_ultrasonic_t, PROS_ERR};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
+/// Adi ultrasonic sensor.
+/// Requires two ports one for pinging, and one for listening for the response.
 pub struct AdiUltrasonic {
     raw: ext_adi_ultrasonic_t,
     port_ping: AdiPort,

@@ -14,6 +14,7 @@ use crate::{
 #[derive(Debug, Eq, PartialEq)]
 pub struct RotationSensor {
     port: SmartPort,
+    /// Whether or not the sensor direction is reversed.
     pub reversed: bool,
 }
 

@@ -33,15 +33,21 @@ static INDEX: AtomicU32 = AtomicU32::new(0);
 /// Unsafe because you can change the thread local storage while it is being read.
 unsafe fn thread_local_storage_set<T>(task: pros_sys::task_t, val: &'static T, index: u32) {
     // Yes, we transmute val. This is the intended use of this function.
-    pros_sys::vTaskSetThreadLocalStoragePointer(task, index as _, (val as *const T).cast());
+    // SAFETY: caller must ensure borrow rules are followed
+    unsafe {
+        pros_sys::vTaskSetThreadLocalStoragePointer(task, index as _, (val as *const T).cast());
+    }
 }
 
 /// Get a value from OS TLS.
 /// # Safety
 /// Unsafe because we can't check if the type is the same as the one that was set.
 unsafe fn thread_local_storage_get<T>(task: pros_sys::task_t, index: u32) -> Option<&'static T> {
-    let val = pros_sys::pvTaskGetThreadLocalStoragePointer(task, index as _);
-    val.cast::<T>().as_ref()
+    // SAFETY: caller must ensure borrow rules are followed and the type is correct
+    unsafe {
+        let val = pros_sys::pvTaskGetThreadLocalStoragePointer(task, index as _);
+        val.cast::<T>().as_ref()
+    }
 }
 
 /// Get or create the [`ThreadLocalStorage`] for the current task.
@@ -50,7 +56,7 @@ fn fetch_storage() -> &'static RefCell<ThreadLocalStorage> {
 
     // Get the thread local storage for this task.
     // Creating it if it doesn't exist.
-    // This is safe as long as index 0 of the freeRTOS TLS is never set to any other type.
+    // SAFETY: This is safe as long as index 0 of the freeRTOS TLS is never set to any other type.
     unsafe {
         thread_local_storage_get(current.task, 0).unwrap_or_else(|| {
             let storage = Box::leak(Box::new(RefCell::new(ThreadLocalStorage {
@@ -71,6 +77,7 @@ struct ThreadLocalStorage {
 
 /// A TLS key that owns its data.
 /// Can be created with the [`os_task_local`](crate::os_task_local!) macro.
+#[derive(Debug)]
 pub struct LocalKey<T: 'static> {
     index: Once<usize>,
     init: fn() -> T,

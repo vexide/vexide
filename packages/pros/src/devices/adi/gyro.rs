@@ -1,9 +1,12 @@
+//! ADI gyro device.
+
 use pros_sys::{ext_adi_gyro_t, PROS_ERR};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
+/// ADI gyro device.
 pub struct AdiGyro {
     raw: ext_adi_gyro_t,
     port: AdiPort,
