@@ -27,10 +27,26 @@ impl AdiSwitch {
         })
     }
 
+    /// Returrns `true` if the switch is currently being pressed.
+    ///
+    /// This is equivalent shorthand to calling `Self::level().is_high()`.
 	pub fn pressed(&self) -> Result<bool, AdiError> {
 		Ok(self.level()?.is_high())
 	}
 
+    /// Returns `true` if the switch has been pressed again since the last time this
+    /// function was called.
+    ///
+    /// # Thread Safety
+    ///
+    /// This function is not thread-safe.
+    ///
+    /// Multiple tasks polling a single button may return different results under the
+    /// same circumstances, so only one task should call this function for any given
+    /// switch. E.g., Task A calls this function for buttons 1 and 2. Task B may call
+    /// this function for button 3, but should not for buttons 1 or 2. A typical
+    /// use-case for this function is to call inside opcontrol to detect new button
+    /// presses, and not in any other tasks.
     pub fn pressed_again(&mut self) -> Result<bool, AdiError> {
 		Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_digital_get_new_press(self.port.internal_expander_index(), self.port.index())

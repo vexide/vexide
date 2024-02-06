@@ -138,13 +138,7 @@ impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
         T: IntoIterator<Item = I>,
         I: Into<Self::Color>,
     {
-        self.buffer = iterator.into_iter().map(|i| i.into()).collect::<Vec<_>>();
-
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_led_set(self.raw, self.buffer.as_mut_ptr(), self.buffer.len() as u32)
-        });
-
-        Ok(())
+        self.set_buffer(iterator)
     }
 }
 
