@@ -21,12 +21,11 @@ rust-version = "1.75.0"
 pros-sync = { version = "0.1.0", path = "../pros-sync", optional = true }
 pros-async = { version = "0.1.0", path = "../pros-async", optional = true }
 pros-devices = { version = "0.1.0", path = "../pros-devices", optional = true }
-pros-math = { version = "0.1.0", path = "../pros-math", optional = true }
 pros-panic = { version = "0.1.0", path = "../pros-panic", optional = true }
 pros-core = { version = "0.1.0", path = "../pros-core", optional = true }
 
 [features]
-default = ["async", "sync", "devices", "math", "panic", "display_panics", "core"]
+default = ["async", "sync", "devices", "panic", "display_panics", "core"]
 
 core = ["dep:pros-core"]
 
@@ -34,7 +33,6 @@ async = ["dep:pros-async"]
 sync = ["dep:pros-sync"]
 
 devices = ["dep:pros-devices"]
-math = ["dep:pros-math"]
 
 panic = ["dep:pros-panic"]
 display_panics = ["pros-panic/display_panics"]
