@@ -39,8 +39,10 @@ impl AdiUltrasonic {
         })
     }
 
-    /// Gets the current ultrasonic sensor value in centimeters.
-    pub fn value(&self) -> Result<i32, AdiError> {
+    /// Get the distance of a surface to the ultrasonic sensor's mounting point in centimeters.
+    ///
+    /// Round and fluffy objects can cause inaccurate values to be returned.
+    pub fn distance(&self) -> Result<i32, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_ultrasonic_get(self.raw)
         }))

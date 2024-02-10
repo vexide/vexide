@@ -1,3 +1,5 @@
+//! ADI Digital Switch
+
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiDigitalIn, AdiError, AdiPort, digital::LogicLevel};
@@ -30,7 +32,7 @@ impl AdiSwitch {
     /// Returrns `true` if the switch is currently being pressed.
     ///
     /// This is equivalent shorthand to calling `Self::level().is_high()`.
-	pub fn pressed(&self) -> Result<bool, AdiError> {
+	pub fn is_pressed(&self) -> Result<bool, AdiError> {
 		Ok(self.level()?.is_high())
 	}
 
@@ -47,7 +49,7 @@ impl AdiSwitch {
     /// this function for button 3, but should not for buttons 1 or 2. A typical
     /// use-case for this function is to call inside opcontrol to detect new button
     /// presses, and not in any other tasks.
-    pub fn pressed_again(&mut self) -> Result<bool, AdiError> {
+    pub fn was_pressed(&mut self) -> Result<bool, AdiError> {
 		Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_digital_get_new_press(self.port.internal_expander_index(), self.port.index())
         }) != 0)

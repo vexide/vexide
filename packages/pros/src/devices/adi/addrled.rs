@@ -1,11 +1,20 @@
+//! ADI Addressable LEDs
+//!
+//! This module contains abstractions for interacting with WS2812B addressable smart LED
+//! strips over ADI ports.
+
 use alloc::vec::Vec;
 
 use pros_sys::{ext_adi_led_t, PROS_ERR};
 use snafu::Snafu;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use crate::error::{bail_on, map_errno};
+use crate::{
+    color::IntoRgb,
+    error::{bail_on, map_errno},
+};
 
+/// WS2812B Addressable LED Strip
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiAddrLed {
     raw: ext_adi_led_t,
@@ -13,6 +22,7 @@ pub struct AdiAddrLed {
     port: AdiPort,
 }
 
+/// The max number of LED diodes on one strip that a single ADI port can control.
 pub const MAX_LED_LENGTH: usize = 64;
 
 impl AdiAddrLed {
@@ -57,13 +67,13 @@ impl AdiAddrLed {
     }
 
     /// Set the entire led strip to one color
-    pub fn set_all(&mut self, color: impl Into<u32>) -> Result<(), AddrLedError> {
+    pub fn set_all(&mut self, color: impl IntoRgb) -> Result<(), AddrLedError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_led_set_all(
                 self.raw,
                 self.buffer.as_mut_ptr(),
                 self.buffer.len() as u32,
-                color.into(),
+                color.into_rgb().into(),
             )
         });
 
@@ -74,9 +84,12 @@ impl AdiAddrLed {
     pub fn set_buffer<T, I>(&mut self, buf: T) -> Result<(), AddrLedError>
     where
         T: IntoIterator<Item = I>,
-        I: Into<u32>,
+        I: IntoRgb,
     {
-        self.buffer = buf.into_iter().map(|i| i.into()).collect::<Vec<_>>();
+        self.buffer = buf
+            .into_iter()
+            .map(|i| i.into_rgb().into())
+            .collect::<Vec<_>>();
 
         bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_led_set(self.raw, self.buffer.as_mut_ptr(), self.buffer.len() as u32)
@@ -86,9 +99,9 @@ impl AdiAddrLed {
     }
 
     /// Set the color of a single LED on the strip.
-    pub fn set_pixel(&mut self, index: usize, color: impl Into<u32>) -> Result<(), AddrLedError> {
+    pub fn set_pixel(&mut self, index: usize, color: impl IntoRgb) -> Result<(), AddrLedError> {
         if self.buffer.get(index).is_some() {
-            self.buffer[index] = color.into();
+            self.buffer[index] = color.into_rgb().into();
 
             bail_on!(PROS_ERR, unsafe {
                 pros_sys::ext_adi_led_set(
@@ -131,26 +144,41 @@ impl AdiDevice for AdiAddrLed {
 #[cfg(feature = "smart-leds-trait")]
 impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
     type Error = AddrLedError;
-    type Color = u32;
+    type Color = Rgb;
 
     fn write<T, I>(&mut self, iterator: T) -> Result<(), Self::Error>
     where
         T: IntoIterator<Item = I>,
         I: Into<Self::Color>,
     {
-        self.set_buffer(iterator)
+        self.buffer = iterator
+            .into_iter()
+            .map(|i| i.into().into())
+            .collect::<Vec<_>>();
+
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_led_set(self.raw, self.buffer.as_mut_ptr(), self.buffer.len() as u32)
+        });
+
+        Ok(())
     }
 }
 
+/// Errors that can occur when interacting with an Addrled strip.
 #[derive(Debug, Snafu)]
 pub enum AddrLedError {
+    /// Failed to access LED buffer. A given value is not correct, or the buffer is null.
     #[snafu(display(
         "Failed to access LED buffer. A given value is not correct, or the buffer is null."
     ))]
     InvalidBufferAccess,
 
     #[snafu(display("{source}"), context(false))]
-    Adi { source: AdiError },
+    /// Generic ADI related error.
+    Adi {
+        /// The source of the error
+        source: AdiError,
+    },
 }
 
 map_errno! {

@@ -5,13 +5,26 @@ use pros_sys::PROS_ERR;
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
+/// Represents the logic level of a digital pin.
+///
+/// On digital devices, logic levels represent the two possible voltage signals that define
+/// the state of a pin. This value is either [`High`] or [`Low`], depending on the intended
+/// state of the device.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogicLevel {
+    /// A high digital signal.
+    ///
+    /// ADI ports operate on 3.3V logic, so this value indicates a voltage of 3.3V or above.
     High,
+
+    /// The low digital signal.
+    ///
+    /// ADI ports operate on 3.3V logic, so this value indicates a voltage below 3.3V.
     Low,
 }
 
 impl LogicLevel {
+    /// Returns `true` if the level is [`High`].
     pub fn is_high(&self) -> bool {
         match self {
             Self::High => true,
@@ -19,6 +32,7 @@ impl LogicLevel {
         }
     }
 
+    /// Returns `true` if the level is [`Low`].
     pub fn is_low(&self) -> bool {
         !self.is_high()
     }
@@ -58,6 +72,16 @@ impl AdiDigitalIn {
             true => LogicLevel::High,
             false => LogicLevel::Low,
         })
+    }
+
+    /// Returns `true` if the digital input's logic level level is [`LogicLevel::High`].
+    pub fn is_high(&self) -> Result<bool, AdiError> {
+        Ok(self.level()?.is_high())
+    }
+
+    /// Returns `true` if the digital input's logic level level is [`LogicLevel::Low`].
+    pub fn is_low(&self) -> Result<bool, AdiError> {
+        Ok(self.level()?.is_high())
     }
 }
 
@@ -103,10 +127,14 @@ impl AdiDigitalOut {
         Ok(())
     }
 
+    /// Set the digital logic level to [`LogicLevel::High`]. Analagous to
+    /// [`Self::set_level(LogicLevel::High)`].
     pub fn set_high(&mut self) -> Result<(), AdiError> {
         self.set_level(LogicLevel::High)
     }
 
+    /// Set the digital logic level to [`LogicLevel::Low`]. Analagous to
+    /// [`Self::set_level(LogicLevel::Low)`].
     pub fn set_low(&mut self) -> Result<(), AdiError> {
         self.set_level(LogicLevel::Low)
     }
