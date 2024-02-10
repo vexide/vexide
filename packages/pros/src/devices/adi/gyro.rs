@@ -1,6 +1,6 @@
 //! ADI gyro device.
 
-use pros_sys::{ext_adi_gyro_t, PROS_ERR};
+use pros_sys::{ext_adi_gyro_t, PROS_ERR, PROS_ERR_F};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;

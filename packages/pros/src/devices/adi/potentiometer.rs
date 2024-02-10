@@ -1,6 +1,6 @@
 //! ADI Potentiometer device.
 
-use pros_sys::{adi_potentiometer_type_e_t, ext_adi_potentiometer_t, PROS_ERR};
+use pros_sys::{adi_potentiometer_type_e_t, ext_adi_potentiometer_t, PROS_ERR, PROS_ERR_F};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;

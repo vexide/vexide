@@ -9,7 +9,6 @@ use crate::error::{bail_on, map_errno, PortError};
 pub mod analog;
 pub mod digital;
 
-pub mod addrled;
 pub mod encoder;
 pub mod gyro;
 pub mod motor;
@@ -18,7 +17,6 @@ pub mod solenoid;
 pub mod ultrasonic;
 pub mod switch;
 
-pub use addrled::AdiAddrLed;
 pub use analog::{AdiAnalogIn, AdiAnalogOut};
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
 pub use encoder::AdiEncoder;
