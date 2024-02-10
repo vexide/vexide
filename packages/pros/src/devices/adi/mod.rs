@@ -1,6 +1,6 @@
 //! ADI (Triport) devices on the Vex V5.
 
-use pros_sys::{adi_port_config_e_t, PROS_ERR};
+use pros_sys::{adi_port_config_e_t, E_ADI_ERR, PROS_ERR};
 use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
@@ -79,10 +79,10 @@ impl AdiPort {
 
     /// Get the type of device this port is currently configured as.
     pub fn configured_type(&self) -> Result<AdiDeviceType, AdiError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
+        bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi::ext_adi_port_get_config(self.internal_expander_index(), self.index())
         })
-        .try_into()?)
+        .try_into()
     }
 }
 
@@ -136,6 +136,8 @@ impl TryFrom<adi_port_config_e_t> for AdiDeviceType {
     type Error = AdiError;
 
     fn try_from(value: adi_port_config_e_t) -> Result<Self, Self::Error> {
+        bail_on!(E_ADI_ERR, value);
+
         match value {
             pros_sys::E_ADI_ANALOG_IN => Ok(AdiDeviceType::AnalogIn),
             pros_sys::E_ADI_ANALOG_OUT => Ok(AdiDeviceType::AnalogOut),
@@ -150,7 +152,7 @@ impl TryFrom<adi_port_config_e_t> for AdiDeviceType {
             pros_sys::E_ADI_LEGACY_ENCODER => Ok(AdiDeviceType::LegacyEncoder),
             pros_sys::E_ADI_LEGACY_ULTRASONIC => Ok(AdiDeviceType::LegacyUltrasonic),
 
-            _ => Err(AdiError::InvalidConfigType),
+            _ => Err(AdiError::UnknownDeviceType),
         }
     }
 }
@@ -167,20 +169,17 @@ pub enum AdiError {
     /// Another resource is currently trying to access the ADI.
     AlreadyInUse,
 
-    /// The port specified has been reconfigured or is not configured for digital input.
-    DigitalInputNotConfigured,
+    /// PROS returned an unrecognized device type.
+    UnknownDeviceType,
 
-    /// The port type specified is invalid, and cannot be used to configure a port.
-    InvalidConfigType,
-
-    /// The port has already been configured.
-    AlreadyConfigured,
-
-    /// The port specified is invalid.
-    InvalidPort,
+    /// The port specified has not been configured for the device type specified.
+    PortNotConfigured,
 
     /// ADI devices may only be initialized from one expander port.
     ExpanderPortMismatch,
+
+    /// A given value is not correct, or the buffer is null.
+    InvalidValue,
 
     #[snafu(display("{source}"), context(false))]
     /// An error occurred while interacting with a port.
@@ -193,7 +192,8 @@ pub enum AdiError {
 map_errno! {
     AdiError {
         EACCES => Self::AlreadyInUse,
-        EADDRINUSE => Self::DigitalInputNotConfigured,
+        EADDRINUSE => Self::PortNotConfigured,
+        EINVAL => Self::InvalidValue,
     }
     inherit PortError;
 }
