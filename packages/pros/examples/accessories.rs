@@ -7,12 +7,12 @@ use alloc::sync::Arc;
 use core::time::Duration;
 
 use pros::{
+    core::sync::Mutex,
     devices::{
         smart::vision::{LedMode, VisionZeroPoint},
         Controller,
     },
     prelude::*,
-    core::sync::Mutex,
 };
 
 struct ExampleRobot {
