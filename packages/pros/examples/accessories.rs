@@ -12,7 +12,7 @@ use pros::{
         Controller,
     },
     prelude::*,
-    sync::Mutex,
+    core::sync::Mutex,
 };
 
 struct ExampleRobot {
@@ -50,7 +50,7 @@ impl AsyncRobot for ExampleRobot {
         self.vision.set_led(LedMode::On(Rgb::new(0, 0, 255)));
 
         // Spawn a new task that will print whether or not the motor is stopped constantly.
-        spawn({
+        pros_core::task::spawn({
             let motor = Arc::clone(&self.motor); // Obtain a shared reference to our motor to safely share between tasks.
 
             move || loop {

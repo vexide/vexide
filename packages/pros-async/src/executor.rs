@@ -9,7 +9,7 @@ use core::{
 };
 
 use async_task::{Runnable, Task};
-use pros_sync::{os_task_local, task::delay};
+use pros_core::{os_task_local, task::delay};
 use waker_fn::waker_fn;
 
 use super::reactor::Reactor;

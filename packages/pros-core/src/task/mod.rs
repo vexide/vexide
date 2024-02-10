@@ -25,8 +25,9 @@ use alloc::{
 };
 use core::{ffi::CStr, hash::Hash, str::Utf8Error, time::Duration};
 
-use pros_core::{bail_on, map_errno};
 use snafu::Snafu;
+
+use crate::{bail_on, map_errno};
 
 /// Creates a task to be run 'asynchronously' (More information at the [FreeRTOS docs](https://www.freertos.org/taskandcr.html)).
 /// Takes in a closure that can move variables if needed.

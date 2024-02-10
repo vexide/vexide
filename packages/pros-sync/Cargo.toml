@@ -12,4 +12,3 @@ snafu = { version = "0.8.0", default-features = false, features = [
     "rust_1_61",
     "unstable-core-error",
 ] }
-spin = "0.9.8"

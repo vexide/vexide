@@ -9,7 +9,6 @@ edition = "2021"
 pros-core = { version = "0.1.0", path = "../pros-core" }
 pros-devices = { version = "0.1.0", path = "../pros-devices", optional = true }
 pros-sys = { version = "0.6.0", path = "../pros-sys" }
-pros-sync = { version = "0.1.0", path = "../pros-sync" }
 
 [features]
 default = ["display_panics"]

@@ -72,13 +72,14 @@ pub use pros_sync as sync;
 /// This module is meant to be glob imported.
 pub mod prelude {
     #[cfg(feature = "async")]
-    pub use pros_async::{async_robot, spawn, block_on, sleep, AsyncRobot};
+    pub use pros_async::{async_robot, block_on, sleep, spawn, AsyncRobot};
     #[cfg(feature = "core")]
     pub use pros_core::{
         dbg, eprint, eprintln,
         error::{PortError, Result},
         io::{BufRead, Read, Seek, Write},
         print, println,
+        task::delay,
     };
     #[cfg(feature = "devices")]
     pub use pros_devices::{
@@ -111,8 +112,5 @@ pub mod prelude {
         },
     };
     #[cfg(feature = "sync")]
-    pub use pros_sync::{
-        os_task_local, sync_robot,
-        SyncRobot,
-    };
+    pub use pros_sync::{sync_robot, SyncRobot};
 }

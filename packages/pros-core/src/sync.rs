@@ -4,7 +4,7 @@
 
 use core::{cell::UnsafeCell, fmt::Debug, mem};
 
-use pros_core::error::take_errno;
+use crate::error::take_errno;
 
 /// The basic mutex type.
 /// Mutexes are used to share variables between tasks safely.
