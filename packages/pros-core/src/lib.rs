@@ -7,6 +7,8 @@
 //! - Errno handling: [`error`]
 //! - Serial terminal printing: [`io`]
 //! - No-std [`Instant`](time::Instant)s: [`time`]
+//! - Synchronization primitives: [`sync`]
+//! - FreeRTOS task management: [`task`]
 
 #![no_std]
 #![feature(error_in_core)]
