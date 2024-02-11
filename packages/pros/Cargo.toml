@@ -36,3 +36,6 @@ devices = ["dep:pros-devices"]
 
 panic = ["dep:pros-panic"]
 display_panics = ["pros-panic/display_panics"]
+
+[lints]
+workspace = true

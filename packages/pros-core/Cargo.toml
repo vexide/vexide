@@ -16,3 +16,6 @@ spin = "0.9.8"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 dlmalloc = { version = "0.2.4", features = ["global"] }
+
+[lints]
+workspace = true

@@ -13,3 +13,6 @@ snafu = { version = "0.8.0", default-features = false, features = [
     "unstable-core-error",
 ] }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
+
+[lints]
+workspace = true
