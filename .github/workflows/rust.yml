@@ -14,7 +14,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: nightly-2024-02-07
           override: true
 
       - name: Check
@@ -33,7 +33,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: nightly-2024-02-07
           override: true
 
       - name: Setup | Install Rustfmt
