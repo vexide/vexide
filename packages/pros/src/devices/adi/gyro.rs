@@ -32,9 +32,7 @@ impl AdiGyro {
 
     /// Reset the current gyro angle to zero degrees.
     pub fn zero(&mut self) -> Result<(), AdiError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_gyro_reset(self.raw)
-        });
+        bail_on!(PROS_ERR, unsafe { pros_sys::ext_adi_gyro_reset(self.raw) });
         Ok(())
     }
 }
