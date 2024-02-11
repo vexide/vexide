@@ -18,7 +18,7 @@ pub struct DistanceSensor {
 
 impl DistanceSensor {
     /// Create a new distance sensor from a smart port index.
-    pub fn new(port: SmartPort) -> Self {
+    pub const fn new(port: SmartPort) -> Self {
         Self { port }
     }
 

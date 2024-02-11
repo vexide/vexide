@@ -1,16 +1,19 @@
+//! Analog input and output ADI devices.
+
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
+/// Generic analog input ADI device.
 pub struct AdiAnalogIn {
     port: AdiPort,
 }
 
 impl AdiAnalogIn {
     /// Create a analog input from an ADI port.
-    pub fn new(port: AdiPort) -> Self {
+    pub const fn new(port: AdiPort) -> Self {
         Self { port }
     }
 
@@ -103,13 +106,14 @@ impl AdiDevice for AdiAnalogIn {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+/// Generic analog output ADI device.
 pub struct AdiAnalogOut {
     port: AdiPort,
 }
 
 impl AdiAnalogOut {
     /// Create a analog output from an [`AdiPort`].
-    pub fn new(port: AdiPort) -> Self {
+    pub const fn new(port: AdiPort) -> Self {
         Self { port }
     }
 

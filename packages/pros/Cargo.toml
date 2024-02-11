@@ -27,8 +27,6 @@ snafu = { version = "0.8.0", default-features = false, features = [
 ] }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 futures = { version = "0.3.28", default-features = false, features = ["alloc"] }
-slab = { version = "0.4.9", default-features = false }
-hashbrown = { version = "0.14.1", default-features = true }
 async-task = { version = "4.5.0", default-features = false }
 waker-fn = "1.1.1"
 

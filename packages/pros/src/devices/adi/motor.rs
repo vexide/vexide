@@ -1,16 +1,19 @@
+//! ADI motor device.
+
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
+/// Cortex era motor device.
 pub struct AdiMotor {
     port: AdiPort,
 }
 
 impl AdiMotor {
     /// Create a new motor from an [`AdiPort`].
-    pub fn new(port: AdiPort) -> Self {
+    pub const fn new(port: AdiPort) -> Self {
         Self { port }
     }
 

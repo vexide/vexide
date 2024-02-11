@@ -1,3 +1,5 @@
+//! Optical sensor device
+
 use core::time::Duration;
 
 use pros_sys::{OPT_GESTURE_ERR, PROS_ERR, PROS_ERR_F};
@@ -6,9 +8,12 @@ use snafu::Snafu;
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::error::{bail_on, map_errno, PortError};
 
+/// The smallest integration time you can set on an optical sensor.
 pub const MIN_INTEGRATION_TIME: Duration = Duration::from_millis(3);
+/// The largest integration time you can set on an optical sensor.
 pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
+/// The maximum value for the LED PWM.
 pub const MAX_LED_PWM: u8 = 100;
 
 /// Represents a smart port configured as a V5 optical sensor
@@ -177,7 +182,7 @@ impl OpticalSensor {
     }
 
     /// Determine if gesture detection is enabled or not on the sensor.
-    pub fn gesture_detection_enabled(&self) -> bool {
+    pub const fn gesture_detection_enabled(&self) -> bool {
         self.gesture_detection_enabled
     }
 
@@ -217,13 +222,20 @@ impl SmartDevice for OpticalSensor {
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
+/// Represents a gesture and its direction.
 pub enum GestureDirection {
+    /// Up gesture.
     Up,
+    /// Down gesture.
     Down,
+    /// Left gesture.
     Left,
+    /// Right gesture.
     Right,
+    /// Gesture error.
     Error,
     #[default]
+    /// No gesture detected.
     NoGesture,
 }
 
@@ -245,13 +257,21 @@ impl TryFrom<pros_sys::optical_direction_e_t> for GestureDirection {
 }
 
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+/// Raw gesture data from an [`OpticalSensor`].
 pub struct GestureRaw {
+    /// Up value.
     pub up: u8,
+    /// Down value.
     pub down: u8,
+    /// Left value.
     pub left: u8,
+    /// Right value.
     pub right: u8,
+    /// Gesture type.
     pub gesture_type: u8,
+    /// The count of the gesture.
     pub count: u16,
+    /// The time of the gesture.
     pub time: u32,
 }
 
@@ -272,10 +292,15 @@ impl TryFrom<pros_sys::optical_gesture_s_t> for GestureRaw {
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
+/// RGBC data from a [`OpticalSensor`].
 pub struct Rgbc {
+    /// The red value from the sensor.
     pub red: f64,
+    /// The green value from the sensor.
     pub green: f64,
+    /// The blue value from the sensor.
     pub blue: f64,
+    /// The brightness value from the sensor.
     pub brightness: f64,
 }
 
@@ -293,10 +318,15 @@ impl TryFrom<pros_sys::optical_rgb_s_t> for Rgbc {
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+/// Represents the raw RGBC data from the sensor.
 pub struct RgbcRaw {
+    /// The red value from the sensor.
     pub red: u32,
+    /// The green value from the sensor.
     pub green: u32,
+    /// The blue value from the sensor.
     pub blue: u32,
+    /// The clear value from the sensor.
     pub clear: u32,
 }
 
@@ -314,18 +344,25 @@ impl TryFrom<pros_sys::optical_raw_s_t> for RgbcRaw {
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when interacting with an optical sensor.
 pub enum OpticalError {
-    #[snafu(display("LED PWM value must be between 0 and 100."))]
+    /// Invalid LED PWM value, must be between 0 and 100.
     InvalidLedPwm,
 
-    #[snafu(display("Integration time must be between 3 and 712 milliseconds. See https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for more information."))]
+    /// Integration time must be between 3 and 712 milliseconds.
+    ///
+    /// See https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for more information.
     InvalidIntegrationTime,
 
-    #[snafu(display("Gesture detection is not enabled for this sensor."))]
+    /// Gesture detection is not enabled for this sensor.
     GestureDetectionDisabled,
 
     #[snafu(display("{source}"), context(false))]
-    Port { source: PortError },
+    /// Generic port related error.
+    Port {
+        /// The source of the error
+        source: PortError,
+    },
 }
 
 map_errno! {

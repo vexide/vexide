@@ -30,12 +30,18 @@ pub trait Link: SmartDevice {
 }
 
 /// A recieving end of a VEXLink connection.
+#[derive(Debug)]
 pub struct RxLink {
     port: SmartPort,
     id: CString,
 }
 
 impl RxLink {
+    /// Get the number of bytes in the incoming buffer.
+    /// Be aware that the number of incoming bytes can change between when this is called
+    /// and when you read from the link.
+    /// If you create a buffer of this size, and then attempt to read into it
+    /// you may encounter panics or data loss.
     pub fn num_incoming_bytes(&self) -> Result<u32, LinkError> {
         let num = unsafe {
             bail_on!(
@@ -47,6 +53,8 @@ impl RxLink {
         Ok(num)
     }
 
+    /// Clear all bytes in the incoming buffer.
+    /// All data in the incoming will be lost and completely unrecoverable.
     pub fn clear_incoming_buf(&self) -> Result<(), LinkError> {
         unsafe {
             bail_on!(
@@ -58,6 +66,7 @@ impl RxLink {
         Ok(())
     }
 
+    /// Receive data from the link incoming buffer into a buffer.
     pub fn receive(&self, buf: &mut [u8]) -> Result<u32, LinkError> {
         const PROS_ERR_U32: u32 = pros_sys::PROS_ERR as _;
 
@@ -112,6 +121,7 @@ impl io::Read for RxLink {
 }
 
 /// A transmitting end of a VEXLink connection.
+#[derive(Debug)]
 pub struct TxLink {
     port: SmartPort,
     id: CString,
@@ -120,6 +130,7 @@ pub struct TxLink {
 impl TxLink {
     // I have literally no idea what the purpose of this is,
     // there is no way to push to the transmission buffer without transmitting it.
+    /// Get the number of bytes to be sent over this link.
     pub fn num_outgoing_bytes(&self) -> Result<u32, LinkError> {
         let num = unsafe {
             bail_on!(
@@ -131,6 +142,7 @@ impl TxLink {
         Ok(num)
     }
 
+    /// Transmit a buffer of data over the link.
     pub fn transmit(&self, buf: &[u8]) -> Result<u32, LinkError> {
         const PROS_ERR_U32: u32 = pros_sys::PROS_ERR as _;
 
@@ -193,19 +205,24 @@ impl SmartDevice for TxLink {
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when using VEXLink.
 pub enum LinkError {
-    #[snafu(display("No link is connected through the radio."))]
+    /// No link is connected through the radio.
     NoLink,
-    #[snafu(display("The transmitter buffer is still busy with a previous transmission, and there is no room in the FIFO buffer (queue) to transmit the data."))]
+    /// The transmitter buffer is still busy with a previous transmission, and there is no room in the FIFO buffer (queue) to transmit the data.
     BufferBusyFull,
-    #[snafu(display("The data given was a C NULL."))]
+    /// Invalid data: the data given was a C NULL.
     NullData,
-    #[snafu(display("Protocol error related to start byte, data size, or checksum during a transmission or reception."))]
+    /// Protocol error related to start byte, data size, or checksum during a transmission or reception.
     Protocol,
-    #[snafu(display("The link is busy."))]
+    /// The link is busy.
     Busy,
     #[snafu(display("{source}"), context(false))]
-    Port { source: PortError },
+    /// Generic port related error
+    Port {
+        /// The source of the error
+        source: PortError,
+    },
 }
 
 map_errno! {
