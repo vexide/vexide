@@ -1,7 +1,4 @@
-//! Synchronization primitives and FreeRTOS task management for [`pros-rs`].
-//!
-//! The synchronization types are modeled after the standard library.
-//! For more information on the task api, see the [`task`] module.
+//! Synchronous robot code trait for [pros-rs](https://crates.io/crates/pros).
 
 #![no_std]
 
