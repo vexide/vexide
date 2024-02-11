@@ -25,6 +25,7 @@ pub mod adi;
 pub mod smart;
 
 pub mod battery;
+pub mod competition;
 pub mod controller;
 pub mod peripherals;
 pub mod position;

@@ -15,7 +15,6 @@
 
 extern crate alloc;
 
-pub mod competition;
 pub mod error;
 pub mod io;
 pub mod pros_alloc;
