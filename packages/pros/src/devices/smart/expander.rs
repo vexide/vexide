@@ -1,4 +1,4 @@
-//! ADI expander module support. 
+//! ADI expander module support.
 //!
 //! The ADI expander API is similar to that of [`Peripherals`].
 //! A main difference between the two is that ADI expanders can be created safely without returning an option.
