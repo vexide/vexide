@@ -38,12 +38,12 @@ impl AdiSolenoid {
     }
 
     /// Returns the current [`LogicLevel`] of the solenoid's digital output state.
-    pub  const fn level(&self) -> LogicLevel {
+    pub const fn level(&self) -> LogicLevel {
         self.level
     }
 
     /// Returns `true` if the solenoid is open.
-    pub  const fn is_open(&self) -> LogicLevel {
+    pub const fn is_open(&self) -> LogicLevel {
         self.level
     }
 
