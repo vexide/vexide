@@ -24,7 +24,7 @@ impl AdiSwitch {
         self.digital_in.level()
     }
 
-    /// Returrns `true` if the switch is currently being pressed.
+    /// Returns `true` if the switch is currently being pressed.
     ///
     /// This is equivalent shorthand to calling `Self::level().is_high()`.
     pub fn is_pressed(&self) -> Result<bool, AdiError> {
@@ -47,7 +47,8 @@ impl AdiSwitch {
     pub fn was_pressed(&mut self) -> Result<bool, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_digital_get_new_press(
-                self.digital_in.expander_port_index()
+                self.digital_in
+                    .expander_port_index()
                     .unwrap_or(pros_sys::adi::INTERNAL_ADI_PORT as u8),
                 self.digital_in.port_index(),
             )
