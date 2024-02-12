@@ -20,7 +20,7 @@ pub struct Reactor {
 }
 
 impl Reactor {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             sleepers: Sleepers {
                 sleepers: BTreeMap::new(),

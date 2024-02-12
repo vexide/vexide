@@ -52,12 +52,17 @@
 //! You may have noticed the `#[derive(Default)]` attribute on these Robot structs.
 //! If you want to learn why, look at the docs for [`async_robot`] or [`sync_robot`].
 
-#![feature(error_in_core, stdsimd, negative_impls)]
+#![feature(error_in_core, negative_impls)]
 #![no_std]
+#![warn(
+    missing_docs,
+    rust_2018_idioms,
+    missing_debug_implementations,
+    unsafe_op_in_unsafe_fn,
+    clippy::missing_const_for_fn
+)]
 
 extern crate alloc;
-
-use core::future::Future;
 
 pub mod async_runtime;
 pub mod devices;
@@ -66,6 +71,7 @@ pub mod pid;
 pub mod sync;
 #[macro_use]
 pub mod task;
+pub mod panic;
 
 #[doc(hidden)]
 pub use pros_sys as __pros_sys;
@@ -74,42 +80,58 @@ mod vexos_env;
 #[cfg(target_arch = "wasm32")]
 mod wasm_env;
 #[macro_use]
-pub mod lcd;
 pub mod competition;
+pub mod color;
 pub mod io;
-pub mod lvgl;
 pub mod time;
 pub mod usd;
 
+use core::future::Future;
+
+/// A result type that makes returning errors easier.
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
-use crate::io::println;
-
+/// A trait for robot code that spins up the pros-rs async executor.
+/// This is the preferred trait to run robot code.
 pub trait AsyncRobot {
+    /// Runs during the operator control period.
+    /// This function may be called more than once.
+    /// For that reason, do not use [`Peripherals::take`](prelude::Peripherals::take) in this function.
     fn opcontrol(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
     }
+    /// Runs during the autonomous period.
     fn auto(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
     }
+    /// Runs continuously during the disabled period.
     fn disabled(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
     }
+    /// Runs once when the competition system is initialized.
     fn comp_init(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
     }
 }
 
+/// A trait for robot code that runs without the async executor spun up.
+/// This trait isn't recommended. See [`AsyncRobot`] for the preferred trait to run robot code.
 pub trait SyncRobot {
+    /// Runs during the operator control period.
+    /// This function may be called more than once.
+    /// For that reason, do not use [`Peripherals::take`](prelude::Peripherals::take) in this function.
     fn opcontrol(&mut self) -> Result {
         Ok(())
     }
+    /// Runs during the autonomous period.
     fn auto(&mut self) -> Result {
         Ok(())
     }
+    /// Runs continuously during the disabled period.
     fn disabled(&mut self) -> Result {
         Ok(())
     }
+    /// Runs once when the competition system is initialized.
     fn comp_init(&mut self) -> Result {
         Ok(())
     }
@@ -265,7 +287,6 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -276,7 +297,6 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
@@ -328,7 +348,6 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some(Default::default());
             }
@@ -339,30 +358,11 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
-            ::pros::task::__init_entrypoint();
             unsafe {
                 ROBOT = Some($init);
             }
         }
     };
-}
-
-#[panic_handler]
-pub fn panic(info: &core::panic::PanicInfo) -> ! {
-    let current_task = task::current();
-
-    let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
-
-    // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
-    // panic message here
-    println!("task '{task_name}' {info}");
-
-    #[cfg(target_arch = "wasm32")]
-    wasm_env::sim_log_backtrace();
-
-    unsafe {
-        pros_sys::exit(1);
-    }
 }
 
 /// Commonly used features of pros-rs.
@@ -374,6 +374,7 @@ pub mod prelude {
     pub use crate::{
         async_robot,
         async_runtime::*,
+        color::Rgb,
         devices::{
             adi::{
                 analog::{AdiAnalogIn, AdiAnalogOut},
@@ -387,6 +388,7 @@ pub mod prelude {
             },
             peripherals::{DynamicPeripherals, Peripherals},
             position::Position,
+            screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
             smart::{
                 distance::DistanceSensor,
                 expander::AdiExpander,
@@ -401,8 +403,7 @@ pub mod prelude {
             },
         },
         error::PortError,
-        io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write},
-        lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
+        io::{dbg, eprintln, print, println, BufRead, Read, Seek, Write},
         os_task_local,
         pid::*,
         sync_robot,

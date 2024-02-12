@@ -1,10 +1,11 @@
 //! ADI (Triport) devices on the Vex V5.
 
-use pros_sys::{adi_port_config_e_t, PROS_ERR};
+use pros_sys::{adi_port_config_e_t, E_ADI_ERR, PROS_ERR};
 use snafu::Snafu;
 
 use crate::error::{bail_on, map_errno, PortError};
 
+//TODO: much more in depth module documentation for device modules as well as this module.
 pub mod analog;
 pub mod digital;
 pub mod encoder;
@@ -53,13 +54,13 @@ impl AdiPort {
     /// Get the index of the port (port number).
     ///
     /// Ports are indexed starting from 1.
-    pub fn index(&self) -> u8 {
+    pub const fn index(&self) -> u8 {
         self.index
     }
 
     /// Get the index of this port's associated [`AdiExpander`] smart port, or `None` if this port is not
     /// associated with an expander.
-    pub fn expander_index(&self) -> Option<u8> {
+    pub const fn expander_index(&self) -> Option<u8> {
         self.expander_index
     }
 
@@ -72,15 +73,16 @@ impl AdiPort {
 
     /// Get the type of device this port is currently configured as.
     pub fn configured_type(&self) -> Result<AdiDeviceType, AdiError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
+        bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi::ext_adi_port_get_config(self.internal_expander_index(), self.index())
         })
-        .try_into()?)
+        .try_into()
     }
 }
 
 /// Common functionality for a ADI (three-wire) devices.
 pub trait AdiDevice {
+    /// The type that port_index should return. This is usually `u8`, but occasionally `(u8, u8)`.
     type PortIndexOutput;
 
     /// Get the index of the [`AdiPort`] this device is registered on.
@@ -101,17 +103,26 @@ pub trait AdiDevice {
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum AdiDeviceType {
+    /// Generic analog input.
     AnalogIn = pros_sys::adi::E_ADI_ANALOG_IN,
+    /// Generic analog output.
     AnalogOut = pros_sys::adi::E_ADI_ANALOG_OUT,
+    /// Generic digital input.
     DigitalIn = pros_sys::adi::E_ADI_DIGITAL_IN,
+    /// Generic digital output.
     DigitalOut = pros_sys::adi::E_ADI_DIGITAL_OUT,
 
+    /// Cortex era gyro.
     LegacyGyro = pros_sys::adi::E_ADI_LEGACY_GYRO,
 
+    /// Cortex era servo motor.
     LegacyServo = pros_sys::adi::E_ADI_LEGACY_SERVO,
+    /// PWM output.
     LegacyPwm = pros_sys::adi::E_ADI_LEGACY_PWM,
 
+    /// Cortex era encoder.
     LegacyEncoder = pros_sys::E_ADI_LEGACY_ENCODER,
+    /// Cortex era ultrasonic sensor.
     LegacyUltrasonic = pros_sys::E_ADI_LEGACY_ULTRASONIC,
 }
 
@@ -119,6 +130,8 @@ impl TryFrom<adi_port_config_e_t> for AdiDeviceType {
     type Error = AdiError;
 
     fn try_from(value: adi_port_config_e_t) -> Result<Self, Self::Error> {
+        bail_on!(E_ADI_ERR, value);
+
         match value {
             pros_sys::E_ADI_ANALOG_IN => Ok(AdiDeviceType::AnalogIn),
             pros_sys::E_ADI_ANALOG_OUT => Ok(AdiDeviceType::AnalogOut),
@@ -133,7 +146,7 @@ impl TryFrom<adi_port_config_e_t> for AdiDeviceType {
             pros_sys::E_ADI_LEGACY_ENCODER => Ok(AdiDeviceType::LegacyEncoder),
             pros_sys::E_ADI_LEGACY_ULTRASONIC => Ok(AdiDeviceType::LegacyUltrasonic),
 
-            _ => Err(AdiError::InvalidConfigType),
+            _ => Err(AdiError::UnknownDeviceType),
         }
     }
 }
@@ -145,37 +158,36 @@ impl From<AdiDeviceType> for adi_port_config_e_t {
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when working with ADI devices.
 pub enum AdiError {
-    #[snafu(display("Another resource is currently trying to access the ADI."))]
+    /// Another resource is currently trying to access the ADI.
     AlreadyInUse,
 
-    #[snafu(display(
-        "The port specified has been reconfigured or is not configured for digital input."
-    ))]
-    DigitalInputNotConfigured,
+    /// PROS returned an unrecognized device type.
+    UnknownDeviceType,
 
-    #[snafu(display(
-        "The port type specified is invalid, and cannot be used to configure a port."
-    ))]
-    InvalidConfigType,
+    /// The port specified has not been configured for the device type specified.
+    PortNotConfigured,
 
-    #[snafu(display("The port has already been configured."))]
-    AlreadyConfigured,
-
-    #[snafu(display("The port specified is invalid."))]
-    InvalidPort,
-
-    #[snafu(display("ADI devices may only be initialized from one expander port."))]
+    /// ADI devices may only be initialized from one expander port.
     ExpanderPortMismatch,
 
+    /// A given value is not correct, or the buffer is null.
+    InvalidValue,
+
     #[snafu(display("{source}"), context(false))]
-    Port { source: PortError },
+    /// An error occurred while interacting with a port.
+    Port {
+        /// The source of the error
+        source: PortError,
+    },
 }
 
 map_errno! {
     AdiError {
         EACCES => Self::AlreadyInUse,
-        EADDRINUSE => Self::DigitalInputNotConfigured,
+        EADDRINUSE => Self::PortNotConfigured,
+        EINVAL => Self::InvalidValue,
     }
     inherit PortError;
 }

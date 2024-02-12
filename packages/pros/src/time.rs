@@ -62,7 +62,7 @@ impl Instant {
     /// println!("{:?}", new_now.checked_duration_since(now));
     /// println!("{:?}", now.checked_duration_since(new_now)); // None
     /// ```
-    pub fn checked_duration_since(&self, earlier: Instant) -> Option<Duration> {
+    pub const fn checked_duration_since(&self, earlier: Instant) -> Option<Duration> {
         if earlier.0 < self.0 {
             Some(Duration::from_micros(self.0 - earlier.0))
         } else {
