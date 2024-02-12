@@ -14,8 +14,11 @@ pub struct AdiSolenoid {
 
 impl AdiSolenoid {
     /// Create an AdiSolenoid.
-    pub fn new(port: AdiPort) -> Self {
-        Self { port, level: LogicLevel::Low }
+    pub const fn new(port: AdiPort) -> Self {
+        Self {
+            port,
+            level: LogicLevel::Low,
+        }
     }
 
     /// Sets the digital logic level of the solenoid. [`LogicLevel::Low`] will close the solenoid,
@@ -35,17 +38,17 @@ impl AdiSolenoid {
     }
 
     /// Returns the current [`LogicLevel`] of the solenoid's digital output state.
-    pub fn level(&self) -> LogicLevel {
+    pub  const fn level(&self) -> LogicLevel {
         self.level
     }
 
     /// Returns `true` if the solenoid is open.
-    pub fn is_open(&self) -> LogicLevel {
+    pub  const fn is_open(&self) -> LogicLevel {
         self.level
     }
 
     /// Returns `true` if the solenoid is closed.
-    pub fn is_closed(&self) -> LogicLevel {
+    pub const fn is_closed(&self) -> LogicLevel {
         self.level
     }
 

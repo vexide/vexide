@@ -36,7 +36,7 @@ impl AdiPotentiometer {
         self.potentiometer_type
     }
 
-    /// Gets the current potentiometer angle in tenths of a degree.
+    /// Gets the current potentiometer angle in degrees.
     ///
     /// The original potentiometer rotates 250 degrees
     /// thus returning an angle between 0-250 degrees.
@@ -45,7 +45,7 @@ impl AdiPotentiometer {
     pub fn angle(&self) -> Result<f64, AdiError> {
         Ok(bail_on!(PROS_ERR_F, unsafe {
             pros_sys::ext_adi_potentiometer_get_angle(self.raw)
-        }))
+        }) / 10.0)
     }
 }
 
