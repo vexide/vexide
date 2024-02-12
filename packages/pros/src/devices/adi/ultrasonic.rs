@@ -39,22 +39,13 @@ impl AdiUltrasonic {
         })
     }
 
-    /// Get the distance of a surface to the ultrasonic sensor's mounting point
-    /// in millimeters.
+    /// Get the distance reading of the ultrasonic sensor in centimeters.
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
-    pub fn distance(&self) -> Result<f64, AdiError> {
-        Ok(self.raw_distance()? as f64 / 10.0)
-    }
-
-    /// Get the raw distance reading of the ultrasonic sensor. This value is returned
-    /// in 10^-4 * meters, or ten-thousanths of a meter.
-    ///
-    /// Round and/or fluffy objects can cause inaccurate values to be returned.
-    pub fn raw_distance(&self) -> Result<i32, AdiError> {
+    pub fn distance(&self) -> Result<u16, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_ultrasonic_get(self.raw)
-        }))
+        }) as u16)
     }
 }
 

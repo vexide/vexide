@@ -53,10 +53,10 @@ impl AdiAnalogIn {
     ///
     /// The value returned is undefined if the analog pin has been switched to a different mode.
     /// The meaning of the returned value varies depending on the sensor attached.
-    pub fn value(&self) -> Result<i32, AdiError> {
+    pub fn value(&self) -> Result<u16, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_analog_read(self.port.internal_expander_index(), self.port.index())
-        }))
+        }) as u16)
     }
 
     /// Reads an analog input channel and returns the calculated voltage input (0-5V).
@@ -81,13 +81,13 @@ impl AdiAnalogIn {
     /// This function is inappropriate for sensor values intended for integration,
     /// as round-off error can accumulate causing drift over time.
     /// Use [`Self::calibrated_value_hr`] instead.
-    pub fn calibrated_value(&self) -> Result<i32, AdiError> {
+    pub fn calibrated_value(&self) -> Result<u16, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_analog_read_calibrated(
                 self.port.internal_expander_index(),
                 self.port.index(),
             )
-        }))
+        }) as u16)
     }
 
     /// Reads the calibrated value of an analog input channel with enhanced precision.
@@ -104,13 +104,13 @@ impl AdiAnalogIn {
     /// between two values come out in the wash when integrated over time.
     ///
     /// Think of the value as the true value times 16.
-    pub fn calibrated_value_hr(&self) -> Result<i32, AdiError> {
+    pub fn calibrated_value_hr(&self) -> Result<i16, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_analog_read_calibrated_HR(
                 self.port.internal_expander_index(),
                 self.port.index(),
             )
-        }))
+        }) as i16)
     }
 }
 
@@ -143,12 +143,12 @@ impl AdiAnalogOut {
     }
 
     /// Sets the output for the Analog Output from 0 (0V) to 4095 (5V).
-    pub fn set_value(&mut self, value: i32) -> Result<(), AdiError> {
+    pub fn set_value(&mut self, value: u16) -> Result<(), AdiError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_port_set_value(
                 self.port.internal_expander_index(),
                 self.port.index(),
-                value,
+                value as i32,
             )
         });
 
@@ -162,7 +162,7 @@ impl AdiAnalogOut {
     /// This function has a precision of `5.0/4095.0` volts, as ADC reports 12-bit voltage data
     /// on a scale of 0-4095.
     pub fn set_voltage(&mut self, value: f64) -> Result<(), AdiError> {
-        self.set_value((value / 5.0 * 4095.0) as i32)
+        self.set_value((value / 5.0 * 4095.0) as u16)
     }
 }
 

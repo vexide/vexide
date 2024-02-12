@@ -54,10 +54,10 @@ impl AdiLineTracker {
     ///
     /// This is a raw 12-bit value from [0, 4095] representing the voltage level from
     /// 0-5V measured by the V5 brain's ADC.
-    pub fn raw_reflectivity(&self) -> Result<i32, AdiError> {
+    pub fn raw_reflectivity(&self) -> Result<u16, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_analog_read(self.port.internal_expander_index(), self.port.index())
-        }))
+        }) as u16)
     }
 }
 
