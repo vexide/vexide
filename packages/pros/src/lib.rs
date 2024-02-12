@@ -377,7 +377,7 @@ pub mod prelude {
         color::Rgb,
         devices::{
             adi::{
-                analog::AdiAnalogIn,
+                analog::{AdiAnalogIn, AdiAnalogOut},
                 digital::{AdiDigitalIn, AdiDigitalOut},
                 encoder::AdiEncoder,
                 gyro::AdiGyro,

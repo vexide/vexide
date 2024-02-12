@@ -80,7 +80,7 @@ impl AdiAnalogIn {
     ///
     /// This function is inappropriate for sensor values intended for integration,
     /// as round-off error can accumulate causing drift over time.
-    /// Use [`Self::calibrated_value_hr`] instead.
+    /// Use [`Self::high_precision_calibrated_value`] instead.
     pub fn calibrated_value(&self) -> Result<i16, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_analog_read_calibrated(
