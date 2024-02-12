@@ -21,6 +21,7 @@
 //! More specific info for each device is availible in their respective modules.
 
 pub mod distance;
+pub mod expander;
 pub mod gps;
 pub mod imu;
 pub mod link;
@@ -30,6 +31,7 @@ pub mod rotation;
 pub mod vision;
 
 pub use distance::DistanceSensor;
+pub use expander::AdiExpander;
 pub use gps::GpsSensor;
 pub use imu::InertialSensor;
 pub use link::{Link, RxLink, TxLink};
