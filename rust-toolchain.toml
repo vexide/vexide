@@ -1,4 +1,4 @@
 [toolchain]
-channel = "nightly"
-components = [ "rust-src" ]
-targets = [ "armv7a-none-eabi" ]
+channel = "nightly-2024-02-07"
+components = ["rust-src"]
+targets = ["armv7a-none-eabi"]

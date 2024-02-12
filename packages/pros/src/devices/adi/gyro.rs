@@ -1,7 +1,6 @@
 //! ADI gyro device.
 
 use core::time::Duration;
-
 use pros_sys::{ext_adi_gyro_t, PROS_ERR, PROS_ERR_F};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
