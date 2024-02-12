@@ -1,4 +1,4 @@
-//! Analog input and output ADI devices.
+//! ADI Analog Interfaces
 //!
 //! # Overview
 //!
@@ -21,8 +21,16 @@ pub struct AdiAnalogIn {
 
 impl AdiAnalogIn {
     /// Create a analog input from an ADI port.
-    pub const fn new(port: AdiPort) -> Self {
-        Self { port }
+    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_port_set_config(
+                port.internal_expander_index(),
+                port.index(),
+                pros_sys::E_ADI_ANALOG_IN,
+            )
+        });
+
+        Ok(Self { port })
     }
 
     /// Calibrates the analog sensor on the specified channel.
@@ -127,57 +135,5 @@ impl AdiDevice for AdiAnalogIn {
 
     fn device_type(&self) -> AdiDeviceType {
         AdiDeviceType::AnalogIn
-    }
-}
-
-/// Generic analog output ADI device.
-#[derive(Debug, Eq, PartialEq)]
-pub struct AdiAnalogOut {
-    port: AdiPort,
-}
-
-impl AdiAnalogOut {
-    /// Create a analog output from an [`AdiPort`].
-    pub const fn new(port: AdiPort) -> Self {
-        Self { port }
-    }
-
-    /// Sets the output for the Analog Output from 0 (0V) to 4095 (5V).
-    pub fn set_value(&mut self, value: u16) -> Result<(), AdiError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_port_set_value(
-                self.port.internal_expander_index(),
-                self.port.index(),
-                value as i32,
-            )
-        });
-
-        Ok(())
-    }
-
-    /// Sets the output for the Analog Output from 0V to (5V).
-    ///
-    /// # Precision
-    ///
-    /// This function has a precision of `5.0/4095.0` volts, as ADC reports 12-bit voltage data
-    /// on a scale of 0-4095.
-    pub fn set_voltage(&mut self, value: f64) -> Result<(), AdiError> {
-        self.set_value((value / 5.0 * 4095.0) as u16)
-    }
-}
-
-impl AdiDevice for AdiAnalogOut {
-    type PortIndexOutput = u8;
-
-    fn port_index(&self) -> Self::PortIndexOutput {
-        self.port.index()
-    }
-
-    fn expander_port_index(&self) -> Option<u8> {
-        self.port.expander_index()
-    }
-
-    fn device_type(&self) -> AdiDeviceType {
-        AdiDeviceType::AnalogOut
     }
 }

@@ -8,6 +8,7 @@ use crate::error::{bail_on, map_errno, PortError};
 //TODO: much more in depth module documentation for device modules as well as this module.
 pub mod analog;
 pub mod digital;
+pub mod pwm;
 
 pub mod encoder;
 pub mod gyro;
@@ -111,21 +112,31 @@ pub trait AdiDevice {
 pub enum AdiDeviceType {
     /// Generic analog input.
     AnalogIn = pros_sys::adi::E_ADI_ANALOG_IN,
+
     /// Generic analog output.
+    ///
+    /// This doesn't actually emit analog signals from the ADI pins; it's
+    /// just PWM output.
     AnalogOut = pros_sys::adi::E_ADI_ANALOG_OUT,
+
     /// Generic digital input.
     DigitalIn = pros_sys::adi::E_ADI_DIGITAL_IN,
+
     /// Generic digital output.
     DigitalOut = pros_sys::adi::E_ADI_DIGITAL_OUT,
 
-    /// Cortex-era gyro.
+    /// Cortex-era yaw-rate gyroscope.
     LegacyGyro = pros_sys::adi::E_ADI_LEGACY_GYRO,
+
     /// Cortex-era servo motor.
     LegacyServo = pros_sys::adi::E_ADI_LEGACY_SERVO,
+
     /// PWM output.
     LegacyPwm = pros_sys::adi::E_ADI_LEGACY_PWM,
+
     /// Cortex-era encoder.
     LegacyEncoder = pros_sys::E_ADI_LEGACY_ENCODER,
+
     /// Cortex-era ultrasonic sensor.
     LegacyUltrasonic = pros_sys::E_ADI_LEGACY_ULTRASONIC,
 }

@@ -377,12 +377,13 @@ pub mod prelude {
         color::Rgb,
         devices::{
             adi::{
-                analog::{AdiAnalogIn, AdiAnalogOut},
+                analog::AdiAnalogIn,
                 digital::{AdiDigitalIn, AdiDigitalOut},
                 encoder::AdiEncoder,
                 gyro::AdiGyro,
                 motor::AdiMotor,
                 potentiometer::{AdiPotentiometer, AdiPotentiometerType},
+                pwm::AdiPwmOut,
                 solenoid::AdiSolenoid,
                 ultrasonic::AdiUltrasonic,
                 AdiDevice, AdiPort,

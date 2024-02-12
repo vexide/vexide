@@ -1,38 +1,28 @@
 //! ADI Solenoid Pneumatic Control
 
-use pros_sys::PROS_ERR;
-
-use super::{digital::LogicLevel, AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use crate::error::bail_on;
+use super::{digital::LogicLevel, AdiDevice, AdiDeviceType, AdiDigitalOut, AdiError, AdiPort};
 
 /// Digital pneumatic solenoid valve.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiSolenoid {
-    port: AdiPort,
+    digital_out: AdiDigitalOut,
     level: LogicLevel,
 }
 
 impl AdiSolenoid {
     /// Create an AdiSolenoid.
-    pub const fn new(port: AdiPort) -> Self {
-        Self {
-            port,
+    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
+        Ok(Self {
+            digital_out: AdiDigitalOut::new(port)?,
             level: LogicLevel::Low,
-        }
+        })
     }
 
     /// Sets the digital logic level of the solenoid. [`LogicLevel::Low`] will close the solenoid,
     /// and [`LogicLevel::High`] will open it.
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), AdiError> {
+        self.digital_out.set_level(level)?;
         self.level = level;
-
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_digital_write(
-                self.port.internal_expander_index(),
-                self.port.index(),
-                level.is_high(),
-            )
-        });
 
         Ok(())
     }
@@ -43,18 +33,18 @@ impl AdiSolenoid {
     }
 
     /// Returns `true` if the solenoid is open.
-    pub const fn is_open(&self) -> LogicLevel {
-        self.level
+    pub const fn is_open(&self) -> bool {
+        self.level.is_high()
     }
 
     /// Returns `true` if the solenoid is closed.
-    pub const fn is_closed(&self) -> LogicLevel {
-        self.level
+    pub const fn is_closed(&self) -> bool {
+        self.level.is_low()
     }
 
     /// Open the solenoid, allowing air pressure through the "open" valve.
     pub fn open(&mut self) -> Result<(), AdiError> {
-        self.set_level(LogicLevel::High)
+        self.digital_out.set_level(LogicLevel::High)
     }
 
     /// Close the solenoid.
@@ -64,12 +54,12 @@ impl AdiSolenoid {
     /// - On double-acting solenoids (e.g. SYJ3120-SMO-M3-F), this will block air pressure through
     /// the "open" valve and allow air pressure into the "close" valve.
     pub fn close(&mut self) -> Result<(), AdiError> {
-        self.set_level(LogicLevel::Low)
+        self.digital_out.set_level(LogicLevel::Low)
     }
 
     /// Toggle the solenoid's state between open and closed.
     pub fn toggle(&mut self) -> Result<(), AdiError> {
-        self.set_level(!self.level)
+        self.digital_out.set_level(!self.level)
     }
 }
 
@@ -77,11 +67,11 @@ impl AdiDevice for AdiSolenoid {
     type PortIndexOutput = u8;
 
     fn port_index(&self) -> Self::PortIndexOutput {
-        self.port.index()
+        self.digital_out.port_index()
     }
 
     fn expander_port_index(&self) -> Option<u8> {
-        self.port.expander_index()
+        self.digital_out.expander_port_index()
     }
 
     fn device_type(&self) -> AdiDeviceType {

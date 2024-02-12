@@ -61,8 +61,16 @@ pub struct AdiDigitalIn {
 
 impl AdiDigitalIn {
     /// Create a digital input from an ADI port.
-    pub const fn new(port: AdiPort) -> Self {
-        Self { port }
+    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_port_set_config(
+                port.internal_expander_index(),
+                port.index(),
+                pros_sys::E_ADI_DIGITAL_IN,
+            )
+        });
+
+        Ok(Self { port })
     }
 
     /// Gets the current logic level of a digital input pin.
@@ -112,8 +120,16 @@ pub struct AdiDigitalOut {
 
 impl AdiDigitalOut {
     /// Create a digital output from an [`AdiPort`].
-    pub const fn new(port: AdiPort) -> Self {
-        Self { port }
+    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_port_set_config(
+                port.internal_expander_index(),
+                port.index(),
+                pros_sys::E_ADI_DIGITAL_OUT,
+            )
+        });
+
+        Ok(Self { port })
     }
 
     /// Sets the digital logic level (high or low) of a pin.

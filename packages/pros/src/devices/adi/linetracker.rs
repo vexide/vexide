@@ -23,31 +23,27 @@
 //! between 1/8 and 1/4 of an inch away from the surface it is measuring. It is also important
 //! to keep lighting in the room consistent, so sensors' readings remain accurate.
 
-use pros_sys::PROS_ERR;
-
-use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use crate::error::bail_on;
+use super::{AdiAnalogIn, AdiDevice, AdiDeviceType, AdiError, AdiPort};
 
 /// Analog line tracker device.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiLineTracker {
-    port: AdiPort,
+    analog_in: AdiAnalogIn,
 }
 
 impl AdiLineTracker {
     /// Create a line tracker on an ADI port.
-    pub const fn new(port: AdiPort) -> Self {
-        Self { port }
+    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
+        Ok(Self {
+            analog_in: AdiAnalogIn::new(port)?,
+        })
     }
 
     /// Get the reflectivity factor measured by the sensor.
     ///
     /// This is returned as a value ranging from [0.0, 1.0].
     pub fn reflectivity(&self) -> Result<f64, AdiError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_analog_read(self.port.internal_expander_index(), self.port.index())
-        }) as f64
-            / 4095.0)
+        Ok(self.analog_in.value()? as f64 / 4095.0)
     }
 
     /// Get the raw reflectivity factor of the sensor.
@@ -55,9 +51,7 @@ impl AdiLineTracker {
     /// This is a raw 12-bit value from [0, 4095] representing the voltage level from
     /// 0-5V measured by the V5 brain's ADC.
     pub fn raw_reflectivity(&self) -> Result<u16, AdiError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_analog_read(self.port.internal_expander_index(), self.port.index())
-        }) as u16)
+        self.analog_in.value()
     }
 }
 
@@ -65,11 +59,11 @@ impl AdiDevice for AdiLineTracker {
     type PortIndexOutput = u8;
 
     fn port_index(&self) -> Self::PortIndexOutput {
-        self.port.index()
+        self.analog_in.port_index()
     }
 
     fn expander_port_index(&self) -> Option<u8> {
-        self.port.expander_index()
+        self.analog_in.expander_port_index()
     }
 
     fn device_type(&self) -> AdiDeviceType {
