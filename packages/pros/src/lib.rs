@@ -383,6 +383,7 @@ pub mod prelude {
                 gyro::AdiGyro,
                 motor::AdiMotor,
                 potentiometer::{AdiPotentiometer, AdiPotentiometerType},
+                solenoid::AdiSolenoid,
                 ultrasonic::AdiUltrasonic,
                 AdiDevice, AdiPort,
             },

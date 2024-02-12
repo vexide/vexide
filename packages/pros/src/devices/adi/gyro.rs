@@ -1,11 +1,20 @@
 //! ADI gyro device.
+
+use core::time::Duration;
+
 use pros_sys::{ext_adi_gyro_t, PROS_ERR, PROS_ERR_F};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
-#[derive(Debug, Eq, PartialEq)]
+/// The time it takes to calibrate an [`AdiGyro`].
+///
+/// The theoretical calibration time is 1024ms, but in practice this seemed to be the
+/// actual time that it takes.
+pub const GYRO_CALIBRATION_TIME: Duration = Duration::from_millis(1300);
+
 /// ADI gyro device.
+#[derive(Debug, Eq, PartialEq)]
 pub struct AdiGyro {
     raw: ext_adi_gyro_t,
     port: AdiPort,
@@ -13,6 +22,9 @@ pub struct AdiGyro {
 
 impl AdiGyro {
     /// Create a new gyro from an [`AdiPort`].
+    ///
+    /// If the given port has not previously been configured as a gyro, then this
+    /// function blocks for a 1300ms calibration period.
     pub fn new(port: AdiPort, multiplier: f64) -> Result<Self, AdiError> {
         let raw = bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_gyro_init(port.internal_expander_index(), port.index(), multiplier)
@@ -21,13 +33,12 @@ impl AdiGyro {
         Ok(Self { raw, port })
     }
 
-    /// Gets the current gyro angle in tenths of a degree. Unless a multiplier is applied to the gyro, the return value will be a whole number representing the number of degrees of rotation times 10.
+    /// Gets the yaw angle of the gyroscope in degrees.
     ///
-    /// There are 360 degrees in a circle, thus the gyro will return 3600 for one whole rotation.
-    pub fn value(&self) -> Result<f64, AdiError> {
-        Ok(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::ext_adi_gyro_get(self.raw)
-        }))
+    /// Unless a multiplier is applied to the gyro, the return value will be a whole
+    /// number representing the number of degrees of rotation.
+    pub fn angle(&self) -> Result<f64, AdiError> {
+        Ok(bail_on!(PROS_ERR_F, unsafe { pros_sys::ext_adi_gyro_get(self.raw) }) / 10.0)
     }
 
     /// Reset the current gyro angle to zero degrees.
