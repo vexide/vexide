@@ -34,7 +34,10 @@ impl LogicLevel {
 
     /// Returns `true` if the level is [`Low`].
     pub const fn is_low(&self) -> bool {
-        !self.is_high()
+        match self {
+            Self::High => false,
+            Self::Low => true,
+        }
     }
 }
 
