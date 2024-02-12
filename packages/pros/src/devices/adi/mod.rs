@@ -8,18 +8,24 @@ use crate::error::{bail_on, map_errno, PortError};
 //TODO: much more in depth module documentation for device modules as well as this module.
 pub mod analog;
 pub mod digital;
+
 pub mod encoder;
 pub mod gyro;
+pub mod linetracker;
 pub mod motor;
 pub mod potentiometer;
+pub mod solenoid;
+pub mod switch;
 pub mod ultrasonic;
 
-pub use analog::{AdiAnalogIn, AdiAnalogOut};
+pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
 pub use encoder::AdiEncoder;
 pub use gyro::AdiGyro;
+pub use linetracker::AdiLineTracker;
 pub use motor::AdiMotor;
 pub use potentiometer::AdiPotentiometer;
+pub use solenoid::AdiSolenoid;
 pub use ultrasonic::AdiUltrasonic;
 
 /// Represents an ADI (three wire) port on a V5 Brain or V5 Three Wire Expander.
@@ -112,17 +118,15 @@ pub enum AdiDeviceType {
     /// Generic digital output.
     DigitalOut = pros_sys::adi::E_ADI_DIGITAL_OUT,
 
-    /// Cortex era gyro.
+    /// Cortex-era gyro.
     LegacyGyro = pros_sys::adi::E_ADI_LEGACY_GYRO,
-
-    /// Cortex era servo motor.
+    /// Cortex-era servo motor.
     LegacyServo = pros_sys::adi::E_ADI_LEGACY_SERVO,
     /// PWM output.
     LegacyPwm = pros_sys::adi::E_ADI_LEGACY_PWM,
-
-    /// Cortex era encoder.
+    /// Cortex-era encoder.
     LegacyEncoder = pros_sys::E_ADI_LEGACY_ENCODER,
-    /// Cortex era ultrasonic sensor.
+    /// Cortex-era ultrasonic sensor.
     LegacyUltrasonic = pros_sys::E_ADI_LEGACY_ULTRASONIC,
 }
 
