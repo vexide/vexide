@@ -31,6 +31,8 @@ Before releasing:
 
 ### Fixed
 
+- Fix error handling and error type variats in ADI bindings
+
 ### Changed
 
 - Re-exported printing macros from `pros::io`. (#82)

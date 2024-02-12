@@ -52,7 +52,7 @@
 //! You may have noticed the `#[derive(Default)]` attribute on these Robot structs.
 //! If you want to learn why, look at the docs for [`async_robot`] or [`sync_robot`].
 
-#![feature(error_in_core, stdsimd, negative_impls)]
+#![feature(error_in_core, negative_impls)]
 #![no_std]
 #![warn(
     missing_docs,
