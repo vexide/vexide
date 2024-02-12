@@ -10,14 +10,23 @@ use crate::devices::adi::AdiPort;
 /// be partially moved out of this struct to create devices.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiExpander {
+    /// ADI port A on the expander.
     pub adi_a: AdiPort,
+    /// ADI port B on the expander.
     pub adi_b: AdiPort,
+    /// ADI Port C on the expander.
     pub adi_c: AdiPort,
+    /// ADI Port D on the expander.
     pub adi_d: AdiPort,
+    /// ADI Port E on the expander.
     pub adi_e: AdiPort,
+    /// ADI Port F on the expander.
     pub adi_f: AdiPort,
+    /// ADI Port G on the expander.
     pub adi_g: AdiPort,
+    /// ADI Port H on the expander.
     pub adi_h: AdiPort,
+
     port: SmartPort,
 }
 
