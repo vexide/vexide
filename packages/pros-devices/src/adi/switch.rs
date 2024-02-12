@@ -1,9 +1,9 @@
 //! ADI Digital Switch
 
+use pros_core::bail_on;
 use pros_sys::PROS_ERR;
 
 use super::{digital::LogicLevel, AdiDevice, AdiDeviceType, AdiDigitalIn, AdiError, AdiPort};
-use pros_core::bail_on;
 
 /// Generic digital input ADI device.
 #[derive(Debug, Eq, PartialEq)]

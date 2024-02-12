@@ -96,8 +96,9 @@ pub mod prelude {
             AdiDevice, AdiPort,
         },
         color::Rgb,
-            position::Position,
-            screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
+        peripherals::{DynamicPeripherals, Peripherals},
+        position::Position,
+        screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,

@@ -26,8 +26,8 @@ impl AsyncRobot for ExampleRobot {
         self.encoder.zero()?;
 
         loop {
-            println!("Encoder value: {:?}", self.encoder.value());
-            println!("Ultrasonic value: {:?}", self.ultrasonic.value());
+            println!("Encoder position: {:?}", self.encoder.position());
+            println!("Ultrasonic distance: {:?}", self.ultrasonic.distance());
 
             delay(Duration::from_millis(10));
         }
