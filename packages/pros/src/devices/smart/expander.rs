@@ -1,3 +1,9 @@
+//! ADI expander module support. 
+//!
+//! The ADI expander API is similar to that of [`Peripherals`].
+//! A main difference between the two is that ADI expanders can be created safely without returning an option.
+//! This is because they require a [`SmartPort`] to be created which can only be created without either peripherals struct unsafely.
+
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::devices::adi::AdiPort;
 
