@@ -81,13 +81,13 @@ impl AdiAnalogIn {
     /// This function is inappropriate for sensor values intended for integration,
     /// as round-off error can accumulate causing drift over time.
     /// Use [`Self::calibrated_value_hr`] instead.
-    pub fn calibrated_value(&self) -> Result<u16, AdiError> {
+    pub fn calibrated_value(&self) -> Result<i16, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_analog_read_calibrated(
                 self.port.internal_expander_index(),
                 self.port.index(),
             )
-        }) as u16)
+        }) as i16)
     }
 
     /// Reads the calibrated value of an analog input channel with enhanced precision.
