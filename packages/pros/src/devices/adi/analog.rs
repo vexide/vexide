@@ -104,7 +104,7 @@ impl AdiAnalogIn {
     /// between two values come out in the wash when integrated over time.
     ///
     /// Think of the value as the true value times 16.
-    pub fn calibrated_value_hr(&self) -> Result<i16, AdiError> {
+    pub fn high_precision_calibrated_value(&self) -> Result<i16, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_analog_read_calibrated_HR(
                 self.port.internal_expander_index(),
