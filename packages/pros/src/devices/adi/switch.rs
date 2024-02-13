@@ -56,12 +56,6 @@ impl AdiSwitch {
     }
 }
 
-impl From<AdiDigitalIn> for AdiSwitch {
-    fn from(digital_in: AdiDigitalIn) -> Self {
-        Self { digital_in }
-    }
-}
-
 impl AdiDevice for AdiSwitch {
     type PortIndexOutput = u8;
 
