@@ -59,6 +59,12 @@ Before releasing:
 - Moved most device-related constants into their associated struct `impl` (**Breaking Change**) (#98).
 - Renamed IMU_RESET_TIMEOUT to `InertialSensor::CALIBRATION_TIMEOUT` (**Breaking Change**) (#98).
 - Split the `pros` crate into several smaller subcrates. (#86) (**Breaking Change**)
+- Changed the `pros` crate into a metapackage without any code of it's own. (**Breaking Change**) (#86)
+- Split the `pros` crate into several smaller subcrates. (**Breaking Change**) (#86)
+  - Added the `pros-async` crate with the async executor and robot trait.
+  - Added the `pros-sync` crate for the sync robot trait.
+  - Added the `pros-core` crate with basic abstractions over `pros-sys` needed to compile a program to the brain.
+  - Added the `pros-panic` crate for the panic handler implementation.
 
 ### Removed
 
