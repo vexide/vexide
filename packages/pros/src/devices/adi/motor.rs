@@ -8,7 +8,7 @@ use crate::error::bail_on;
 #[derive(Debug, Eq, PartialEq)]
 /// Cortex era motor device.
 pub struct AdiMotor {
-    pub(crate) port: AdiPort,
+    port: AdiPort,
 }
 
 impl AdiMotor {

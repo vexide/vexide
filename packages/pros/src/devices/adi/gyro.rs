@@ -17,7 +17,7 @@ pub const GYRO_CALIBRATION_TIME: Duration = Duration::from_millis(1300);
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiGyro {
     raw: ext_adi_gyro_t,
-    pub(crate) port: AdiPort,
+    port: AdiPort,
 }
 
 impl AdiGyro {
