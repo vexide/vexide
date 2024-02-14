@@ -3,7 +3,7 @@
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use crate::error::bail_on;
+use pros_core::bail_on;
 
 /// Generic PWM output ADI device.
 #[derive(Debug, Eq, PartialEq)]
