@@ -1,9 +1,9 @@
 //! ADI Pulse-width modulation (PWM).
 
+use pros_core::bail_on;
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
-use pros_core::bail_on;
 
 /// Generic PWM output ADI device.
 #[derive(Debug, Eq, PartialEq)]
