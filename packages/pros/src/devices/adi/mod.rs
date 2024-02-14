@@ -8,6 +8,7 @@ use crate::error::{bail_on, map_errno, PortError};
 //TODO: much more in depth module documentation for device modules as well as this module.
 pub mod analog;
 pub mod digital;
+pub mod pwm;
 
 pub mod encoder;
 pub mod gyro;
@@ -111,21 +112,35 @@ pub trait AdiDevice {
 pub enum AdiDeviceType {
     /// Generic analog input.
     AnalogIn = pros_sys::adi::E_ADI_ANALOG_IN,
-    /// Generic analog output.
-    AnalogOut = pros_sys::adi::E_ADI_ANALOG_OUT,
+
+    /// Generic PWM output.
+    ///
+    /// This is actually equivalent `pros_sys::adi::E_ADI_ANALOG_OUT`, which is a misnomer.
+    /// "Analog Out" in reality outputs an 8-bit PWM value.
+    PwmOut = pros_sys::adi::E_ADI_ANALOG_OUT,
+
     /// Generic digital input.
     DigitalIn = pros_sys::adi::E_ADI_DIGITAL_IN,
+
     /// Generic digital output.
     DigitalOut = pros_sys::adi::E_ADI_DIGITAL_OUT,
 
-    /// Cortex-era gyro.
+    /// Cortex-era yaw-rate gyroscope.
     LegacyGyro = pros_sys::adi::E_ADI_LEGACY_GYRO,
+
     /// Cortex-era servo motor.
     LegacyServo = pros_sys::adi::E_ADI_LEGACY_SERVO,
-    /// PWM output.
+
+    /// MC29 Controller Output
+    ///
+    /// This differs from [`Self::PwmOut`] in that it is specifically designed for controlling
+    /// legacy ADI motors. Rather than taking a u8 for output, it takes a i8 allowing negative
+    /// values to be sent for controlling motors in reverse with a nicer API.
     LegacyPwm = pros_sys::adi::E_ADI_LEGACY_PWM,
+
     /// Cortex-era encoder.
     LegacyEncoder = pros_sys::E_ADI_LEGACY_ENCODER,
+
     /// Cortex-era ultrasonic sensor.
     LegacyUltrasonic = pros_sys::E_ADI_LEGACY_ULTRASONIC,
 }
@@ -138,7 +153,7 @@ impl TryFrom<adi_port_config_e_t> for AdiDeviceType {
 
         match value {
             pros_sys::E_ADI_ANALOG_IN => Ok(AdiDeviceType::AnalogIn),
-            pros_sys::E_ADI_ANALOG_OUT => Ok(AdiDeviceType::AnalogOut),
+            pros_sys::E_ADI_ANALOG_OUT => Ok(AdiDeviceType::PwmOut),
             pros_sys::E_ADI_DIGITAL_IN => Ok(AdiDeviceType::DigitalIn),
             pros_sys::E_ADI_DIGITAL_OUT => Ok(AdiDeviceType::DigitalOut),
 

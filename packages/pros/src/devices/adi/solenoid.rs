@@ -14,11 +14,19 @@ pub struct AdiSolenoid {
 
 impl AdiSolenoid {
     /// Create an AdiSolenoid.
-    pub const fn new(port: AdiPort) -> Self {
-        Self {
+    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_port_set_config(
+                port.internal_expander_index(),
+                port.index(),
+                pros_sys::E_ADI_DIGITAL_OUT,
+            )
+        });
+
+        Ok(Self {
             port,
             level: LogicLevel::Low,
-        }
+        })
     }
 
     /// Sets the digital logic level of the solenoid. [`LogicLevel::Low`] will close the solenoid,

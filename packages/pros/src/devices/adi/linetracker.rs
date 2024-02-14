@@ -36,8 +36,16 @@ pub struct AdiLineTracker {
 
 impl AdiLineTracker {
     /// Create a line tracker on an ADI port.
-    pub const fn new(port: AdiPort) -> Self {
-        Self { port }
+    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_port_set_config(
+                port.internal_expander_index(),
+                port.index(),
+                pros_sys::E_ADI_ANALOG_IN,
+            )
+        });
+
+        Ok(Self { port })
     }
 
     /// Get the reflectivity factor measured by the sensor.
