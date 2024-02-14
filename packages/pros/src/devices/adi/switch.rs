@@ -8,27 +8,40 @@ use crate::error::bail_on;
 /// Generic digital input ADI device.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiSwitch {
-    digital_in: AdiDigitalIn,
+    port: AdiPort,
 }
 
 impl AdiSwitch {
-    /// Create a digital switch from an ADI port.
+    /// Create a digital input from an ADI port.
     pub fn new(port: AdiPort) -> Result<Self, AdiError> {
-        Ok(Self {
-            digital_in: AdiDigitalIn::new(port)?,
-        })
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_port_set_config(
+                port.internal_expander_index(),
+                port.index(),
+                pros_sys::E_ADI_DIGITAL_IN,
+            )
+        });
+
+        Ok(Self { port })
     }
 
     /// Gets the current logic level of a digital switch.
     pub fn level(&self) -> Result<LogicLevel, AdiError> {
-        self.digital_in.level()
+        let value = bail_on!(PROS_ERR, unsafe {
+            pros_sys::ext_adi_digital_read(self.port.internal_expander_index(), self.port.index())
+        }) != 0;
+
+        Ok(match value {
+            true => LogicLevel::High,
+            false => LogicLevel::Low,
+        })
     }
 
-    /// Returns `true` if the switch is currently being pressed.
+    /// Returrns `true` if the switch is currently being pressed.
     ///
     /// This is equivalent shorthand to calling `Self::level().is_high()`.
     pub fn is_pressed(&self) -> Result<bool, AdiError> {
-        self.digital_in.is_high()
+        Ok(self.level()?.is_high())
     }
 
     /// Returns `true` if the switch has been pressed again since the last time this
@@ -47,12 +60,18 @@ impl AdiSwitch {
     pub fn was_pressed(&mut self) -> Result<bool, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_digital_get_new_press(
-                self.digital_in
-                    .expander_port_index()
-                    .unwrap_or(pros_sys::adi::INTERNAL_ADI_PORT as u8),
-                self.digital_in.port_index(),
+                self.port.internal_expander_index(),
+                self.port.index(),
             )
         }) != 0)
+    }
+}
+
+impl From<AdiDigitalIn> for AdiSwitch {
+    fn from(device: AdiDigitalIn) -> Self {
+        Self {
+            port: unsafe { AdiPort::new(device.port_index(), device.expander_port_index()) },
+        }
     }
 }
 
@@ -60,11 +79,11 @@ impl AdiDevice for AdiSwitch {
     type PortIndexOutput = u8;
 
     fn port_index(&self) -> Self::PortIndexOutput {
-        self.digital_in.port_index()
+        self.port.index()
     }
 
     fn expander_port_index(&self) -> Option<u8> {
-        self.digital_in.expander_port_index()
+        self.port.expander_index()
     }
 
     fn device_type(&self) -> AdiDeviceType {
