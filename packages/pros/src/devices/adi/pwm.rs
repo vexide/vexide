@@ -25,8 +25,11 @@ impl AdiPwmOut {
         Ok(Self { port })
     }
 
-    /// Sets the PWM output from 0 (0V) to 4095 (5V).
-    pub fn set_value(&mut self, value: u8) -> Result<(), AdiError> {
+    /// Sets the PWM output width.
+    ///
+    /// This value is sent over 16ms periods with pulse widths ranging from roughly
+    /// 0.94mS to 2.03mS.
+    pub fn set_output(&mut self, value: u8) -> Result<(), AdiError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_port_set_value(
                 self.port.internal_expander_index(),
@@ -51,8 +54,6 @@ impl AdiDevice for AdiPwmOut {
     }
 
     fn device_type(&self) -> AdiDeviceType {
-        // This could be either AnalogOut or LegacyPwm, they
-        // have seemingly equivalent behavior.
-        AdiDeviceType::AnalogOut
+        AdiDeviceType::PwmOut
     }
 }

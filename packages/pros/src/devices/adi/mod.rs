@@ -113,11 +113,11 @@ pub enum AdiDeviceType {
     /// Generic analog input.
     AnalogIn = pros_sys::adi::E_ADI_ANALOG_IN,
 
-    /// Generic analog output.
+    /// Generic PWM output.
     ///
-    /// This doesn't actually emit analog signals from the ADI pins; it's
-    /// just PWM output.
-    AnalogOut = pros_sys::adi::E_ADI_ANALOG_OUT,
+    /// This is actually equivalent `pros_sys::adi::E_ADI_ANALOG_OUT`, which is a misnomer.
+    /// "Analog Out" in reality outputs an 8-bit PWM value.
+    PwmOut = pros_sys::adi::E_ADI_ANALOG_OUT,
 
     /// Generic digital input.
     DigitalIn = pros_sys::adi::E_ADI_DIGITAL_IN,
@@ -131,7 +131,11 @@ pub enum AdiDeviceType {
     /// Cortex-era servo motor.
     LegacyServo = pros_sys::adi::E_ADI_LEGACY_SERVO,
 
-    /// PWM output.
+    /// MC29 Controller Output
+    ///
+    /// This differs from [`Self::PwmOut`] in that it is specifically designed for controlling
+    /// legacy ADI motors. Rather than taking a u8 for output, it takes a i8 allowing negative
+    /// values to be sent for controlling motors in reverse with a nicer API.
     LegacyPwm = pros_sys::adi::E_ADI_LEGACY_PWM,
 
     /// Cortex-era encoder.
@@ -149,7 +153,7 @@ impl TryFrom<adi_port_config_e_t> for AdiDeviceType {
 
         match value {
             pros_sys::E_ADI_ANALOG_IN => Ok(AdiDeviceType::AnalogIn),
-            pros_sys::E_ADI_ANALOG_OUT => Ok(AdiDeviceType::AnalogOut),
+            pros_sys::E_ADI_ANALOG_OUT => Ok(AdiDeviceType::PwmOut),
             pros_sys::E_ADI_DIGITAL_IN => Ok(AdiDeviceType::DigitalIn),
             pros_sys::E_ADI_DIGITAL_OUT => Ok(AdiDeviceType::DigitalOut),
 
