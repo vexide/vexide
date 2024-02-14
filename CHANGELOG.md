@@ -54,6 +54,7 @@ Before releasing:
 - Refactors `AdiMotor` to match the smart motor APIs, having output/raw output getters/setters.
 - Renamed `AdiUltrasonic::value` to `AdiUltrasonic::distance` (**Breaking Change**) (#61).
 - Renamed `AdiEncoder::value` to `AdiEncoder::position` (**Breaking Change**) (#61).
+- Repurposed `AdiAnalogOut` as `AdiPwmOut` to correct match port output. (**Breaking Change**) (#90).
 
 ### Removed
 
