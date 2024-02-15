@@ -459,7 +459,8 @@ impl Screen {
             .into_iter()
             .map(|i| i.into_rgb().into())
             .collect::<Vec<_>>();
-        let expected_size = ((x1 - x0) * (y1 - y0)) as usize;
+        // Convert the coordinates to u32 to avoid overflows when multiplying.
+        let expected_size = ((x1 - x0) as u32 * (y1 - y0) as u32) as usize;
         if raw_buf.len() != expected_size {
             return Err(ScreenError::CopyBufferWrongSize {
                 buffer_size: raw_buf.len(),
