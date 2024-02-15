@@ -92,7 +92,6 @@ Before releasing:
 - Fixed Missing ERRNO and ADI config variants in pros-sys (#55)
 - Fixed incorrect error handling with `InertialSensor::status`. (#65)
 - `Controller::status` now handles errors by returning `Result<ControllerStatus, ControllerError>`. (**Breaking Change**) (#74)
-- Fixed a multiplication overflow in `screen::draw_buffer`. (#92)
 
 ### Changed
 
