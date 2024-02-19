@@ -25,15 +25,13 @@ pub mod adi;
 pub mod smart;
 
 pub mod battery;
+pub mod color;
 pub mod competition;
 pub mod controller;
 pub mod peripherals;
 pub mod position;
 pub mod screen;
 pub mod usd;
-
-//TODO: find a better place to put this
-pub mod color;
 
 pub use controller::Controller;
 pub use position::Position;

@@ -13,7 +13,7 @@
 //!
 //! Most devices can be created with a `new` function that generally takes a port number along with other
 //! device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
-//! using the [`crate::peripherals`] API.
+//! using the [`peripherals`](crate::peripherals) API.
 //!
 //! In cases where PROS gives the option of a blocking or non-blocking API,
 //! the blocking API is used for a synchronous method and the non-blocking API is used to create a future.
@@ -108,7 +108,7 @@ impl SmartPort {
     /// Creating new `SmartPort`s is inherently unsafe due to the possibility of constructing
     /// more than one device on the same port index allowing multiple mutable references to
     /// the same hardware device. This violates rust's borrow checked guarantees. Prefer using
-    /// [`crate::peripherals::Peripherals`] to register devices if possible.
+    /// [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
     ///
     /// # Examples
     ///
