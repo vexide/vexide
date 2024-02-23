@@ -61,12 +61,11 @@ pub use pros_async as async_runtime;
 pub use pros_core as core;
 #[cfg(feature = "devices")]
 pub use pros_devices as devices;
-#[cfg(feature = "math")]
-pub use pros_math as math;
 #[cfg(feature = "panic")]
 pub use pros_panic as panic;
 #[cfg(feature = "sync")]
 pub use pros_sync as sync;
+pub use pros_sys as sys;
 
 /// Commonly used features of pros-rs.
 /// This module is meant to be glob imported.
