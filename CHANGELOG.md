@@ -64,6 +64,7 @@ Before releasing:
   - `pros-devices` for device bindings.
   - `pros-sync` for the sync robot trait.
   - `pros-core` with basic abstractions over `pros-sys` needed to compile a program to the brain.
+  - `pros-math` with commonly used controllers and other mathematical models.
   - `pros-panic` for the panic handler implementation.
 
 ### Removed
