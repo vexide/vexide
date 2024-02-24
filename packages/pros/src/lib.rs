@@ -65,6 +65,9 @@ pub use pros_devices as devices;
 pub use pros_panic as panic;
 #[cfg(feature = "sync")]
 pub use pros_sync as sync;
+#[cfg(feature = "math")]
+pub use pros_math as math;
+
 pub use pros_sys as sys;
 
 /// Commonly used features of pros-rs.
@@ -113,4 +116,6 @@ pub mod prelude {
     };
     #[cfg(feature = "sync")]
     pub use pros_sync::{sync_robot, SyncRobot};
+    #[cfg(feature = "math")]
+    pub use pros_math::{feedforward::MotorFeedforwardController, pid::PidController};
 }
