@@ -58,10 +58,10 @@ Before releasing:
 - Repurposed `AdiAnalogOut` as `AdiPwmOut` to correct match port output. (**Breaking Change**) (#90).
 - Moved most device-related constants into their associated struct `impl` (**Breaking Change**) (#98).
 - Renamed IMU_RESET_TIMEOUT to `InertialSensor::CALIBRATION_TIMEOUT` (**Breaking Change**) (#98).
-- Split the `pros` crate into several smaller subcrates. (#86) (**Breaking Change**)
-- Changed the `pros` crate into a metapackage without any code of its own. (**Breaking Change**) (#86)
-- Split the `pros` crate into several smaller subcrates. (**Breaking Change**) (#86)
+- Repurposed the `pros` crate as a metapackage without any code of its own. (**Breaking Change**) (#86)
+- Split the pros-rs into several small subcrates. (**Breaking Change**) (#86)
   - `pros-async` with the async executor and robot trait.
+  - `pros-devices` for device bindings.
   - `pros-sync` for the sync robot trait.
   - `pros-core` with basic abstractions over `pros-sys` needed to compile a program to the brain.
   - `pros-panic` for the panic handler implementation.
