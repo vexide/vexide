@@ -1,8 +1,12 @@
+//! ADI encoder device.
+
 use pros_sys::{ext_adi_encoder_t, PROS_ERR};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
+/// ADI encoder device.
+/// Requires two adi ports.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiEncoder {
     raw: ext_adi_encoder_t,
@@ -45,7 +49,7 @@ impl AdiEncoder {
     }
 
     /// Gets the number of ticks recorded by the encoder.
-    pub fn value(&self) -> Result<i32, AdiError> {
+    pub fn position(&self) -> Result<i32, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::adi_encoder_get(self.raw)
         }))

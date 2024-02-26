@@ -4,7 +4,7 @@
 //!
 //! # Overview
 //!
-//! The V5 brain features 21 RJ11 4p4c connector ports (known as "Smart Ports") for communicating with
+//! The V5 brain features 21 RJ9 4p4c connector ports (known as "Smart Ports") for communicating with
 //! newer V5 peripherals, as well as six 3-wire ports with analog-to-digital conversion capability for
 //! compatibility with legacy cortex devices. This module provides access for both smart devices and
 //! ADI devices.
@@ -24,6 +24,8 @@ pub mod battery;
 pub mod controller;
 pub mod peripherals;
 pub mod position;
+pub mod screen;
 
 pub use controller::Controller;
 pub use position::Position;
+pub use screen::Screen;

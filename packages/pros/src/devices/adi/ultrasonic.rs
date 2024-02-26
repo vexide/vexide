@@ -1,9 +1,13 @@
+//! ADI ultrasonic sensor.
+
 use pros_sys::{ext_adi_ultrasonic_t, PROS_ERR};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
 #[derive(Debug, Eq, PartialEq)]
+/// Adi ultrasonic sensor.
+/// Requires two ports one for pinging, and one for listening for the response.
 pub struct AdiUltrasonic {
     raw: ext_adi_ultrasonic_t,
     port_ping: AdiPort,
@@ -35,11 +39,13 @@ impl AdiUltrasonic {
         })
     }
 
-    /// Gets the current ultrasonic sensor value in centimeters.
-    pub fn value(&self) -> Result<i32, AdiError> {
+    /// Get the distance reading of the ultrasonic sensor in centimeters.
+    ///
+    /// Round and/or fluffy objects can cause inaccurate values to be returned.
+    pub fn distance(&self) -> Result<u16, AdiError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::ext_adi_ultrasonic_get(self.raw)
-        }))
+        }) as u16)
     }
 }
 

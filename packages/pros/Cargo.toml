@@ -1,6 +1,6 @@
 [package]
 name = "pros"
-version = "0.7.0-pre.1"
+version = "0.7.0"
 edition = "2021"
 description = "Rust bindings for PROS"
 keywords = ["PROS", "Robotics", "bindings"]
@@ -20,18 +20,15 @@ rust-version = "1.75.0"
 [dependencies]
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 spin = "0.9.8"
-pros-sys = { version = "0.5", path = "../pros-sys", features = ["xapi"] }
+pros-sys = { version = "0.6", path = "../pros-sys", features = ["xapi"] }
 snafu = { version = "0.8.0", default-features = false, features = [
     "rust_1_61",
     "unstable-core-error",
 ] }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 futures = { version = "0.3.28", default-features = false, features = ["alloc"] }
-slab = { version = "0.4.9", default-features = false }
-hashbrown = { version = "0.14.1", default-features = true }
 async-task = { version = "4.5.0", default-features = false }
 waker-fn = "1.1.1"
-libc-print = "0.1.22"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 dlmalloc = { version = "0.2.4", features = ["global"] }

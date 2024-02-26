@@ -73,7 +73,7 @@ fn spawn_inner<F: FnOnce() + Send + 'static>(
 }
 
 /// An owned permission to perform actions on a task.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct TaskHandle {
     pub(crate) task: pros_sys::task_t,
 }
@@ -141,6 +141,7 @@ impl TaskHandle {
         }
     }
 
+    /// Gets the name of the task if possible.
     pub fn name(&self) -> Result<String, Utf8Error> {
         unsafe {
             let name = pros_sys::task_get_name(self.task);
@@ -151,7 +152,7 @@ impl TaskHandle {
 }
 
 /// An ergonomic builder for tasks. Alternatively you can use [`spawn`].
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Builder<'a> {
     name: Option<&'a str>,
     priority: Option<TaskPriority>,
@@ -165,20 +166,20 @@ impl<'a> Builder<'a> {
     }
 
     /// Sets the name of the task, this is useful for debugging.
-    pub fn name(mut self, name: &'a str) -> Self {
+    pub const fn name(mut self, name: &'a str) -> Self {
         self.name = Some(name);
         self
     }
 
     /// Sets the priority of the task (how much time the scheduler gives to it.).
-    pub fn priority(mut self, priority: TaskPriority) -> Self {
+    pub const fn priority(mut self, priority: TaskPriority) -> Self {
         self.priority = Some(priority);
         self
     }
 
     /// Sets how large the stack for the task is.
     /// This can usually be set to default
-    pub fn stack_depth(mut self, stack_depth: TaskStackDepth) -> Self {
+    pub const fn stack_depth(mut self, stack_depth: TaskStackDepth) -> Self {
         self.stack_depth = Some(stack_depth);
         self
     }
@@ -198,6 +199,7 @@ impl<'a> Builder<'a> {
 }
 
 /// Represents the current state of a task.
+#[derive(Debug)]
 pub enum TaskState {
     /// The task is currently utilizing the processor
     Running,
@@ -228,19 +230,19 @@ impl From<u32> for TaskState {
     }
 }
 
+#[repr(u32)]
+#[derive(Debug, Default)]
 /// Represents how much time the cpu should spend on this task.
 /// (Otherwise known as the priority)
-#[repr(u32)]
 pub enum TaskPriority {
+    /// The highest priority, should be used sparingly.
+    /// Loops **MUST** have delays or sleeps to prevent starving other tasks.
     High = 16,
+    /// The default priority.
+    #[default]
     Default = 8,
+    /// The lowest priority, tasks with this priority will barely ever get cpu time.
     Low = 1,
-}
-
-impl Default for TaskPriority {
-    fn default() -> Self {
-        Self::Default
-    }
 }
 
 impl From<TaskPriority> for u32 {
@@ -252,15 +254,14 @@ impl From<TaskPriority> for u32 {
 /// Represents how large of a stack the task should get.
 /// Tasks that don't have any or many variables and/or don't need floats can use the low stack depth option.
 #[repr(u32)]
+#[derive(Debug, Default)]
 pub enum TaskStackDepth {
+    #[default]
+    /// The default stack depth.
     Default = 8192,
+    /// Low task depth. Many tasks can get away with using this stack depth
+    /// however the brain has enough memory that this usually isn't necessary.
     Low = 512,
-}
-
-impl Default for TaskStackDepth {
-    fn default() -> Self {
-        Self::Default
-    }
 }
 
 struct TaskEntrypoint<F> {
@@ -272,15 +273,17 @@ where
     F: FnOnce(),
 {
     unsafe extern "C" fn cast_and_call_external(this: *mut core::ffi::c_void) {
-        let this = Box::from_raw(this.cast::<Self>());
+        // SAFETY: caller must ensure `this` is an owned `TaskEntrypoint<F>` on the heap
+        let this = unsafe { Box::from_raw(this.cast::<Self>()) };
 
         (this.function)()
     }
 }
 
 #[derive(Debug, Snafu)]
+/// Errors that can occur when spawning a task.
 pub enum SpawnError {
-    #[snafu(display("The stack cannot be used as the TCB was not created."))]
+    /// There is not enough memory to create the task.
     TCBNotCreated,
 }
 
@@ -302,6 +305,7 @@ pub fn delay(duration: Duration) {
 }
 
 /// An interval that can be used to repeatedly run code at a given rate.
+#[derive(Debug)]
 pub struct Interval {
     last_unblock_time: u32,
 }
@@ -333,6 +337,7 @@ impl Interval {
 
 /// A future that will complete after the given duration.
 /// Sleep futures that are closer to completion are prioritized to improve accuracy.
+#[derive(Debug)]
 pub struct SleepFuture {
     target_millis: u32,
 }
@@ -380,6 +385,9 @@ pub fn get_notification() -> u32 {
     unsafe { pros_sys::task_notify_take(false, pros_sys::TIMEOUT_MAX) }
 }
 
+#[derive(Debug)]
+/// A guard that can be used to suspend the FreeRTOS scheduler.
+/// When dropped, the scheduler will be resumed.
 pub struct SchedulerSuspendGuard {
     _private: (),
 }
@@ -401,13 +409,7 @@ impl Drop for SchedulerSuspendGuard {
 /// must not be called while the scheduler is suspended.
 #[must_use = "The scheduler will only remain suspended for the lifetime of the returned guard"]
 pub unsafe fn suspend_all() -> SchedulerSuspendGuard {
-    pros_sys::rtos_suspend_all();
+    // SAFETY: Caller must ensure that other FreeRTOS API functions are not called while the scheduler is suspended.
+    unsafe { pros_sys::rtos_suspend_all() };
     SchedulerSuspendGuard { _private: () }
-}
-
-#[doc(hidden)]
-pub fn __init_entrypoint() {
-    unsafe {
-        pros_sys::lcd_initialize();
-    }
 }

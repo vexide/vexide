@@ -44,7 +44,7 @@ pub enum CompetitionSystem {
     /// Competition state is controlled by a VEX Field Controller.
     FieldControl,
 
-    // Competition state is controlled by a VEXnet competition switch.
+    /// Competition state is controlled by a VEXnet competition switch.
     CompetitionSwitch,
 }
 
