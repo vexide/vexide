@@ -17,7 +17,7 @@ extern crate alloc;
 
 pub mod error;
 pub mod io;
-pub mod pros_alloc;
+pub mod allocator;
 pub mod sync;
 pub mod task;
 pub mod time;
