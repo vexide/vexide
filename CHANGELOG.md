@@ -35,6 +35,7 @@ Before releasing:
 ### Fixed
 
 - Fix error handling and error type variats in ADI bindings
+- Fix `AsynRobot` only running opcontrol
 
 ### Changed
 
