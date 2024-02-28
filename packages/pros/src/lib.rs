@@ -209,7 +209,7 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn autonomous() {
-            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
+            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::auto(unsafe {
                 ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before auto")
@@ -220,7 +220,7 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn disabled() {
-            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
+            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::disabled(unsafe {
                 ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before disabled")
@@ -231,7 +231,7 @@ macro_rules! __gen_async_exports {
         #[doc(hidden)]
         #[no_mangle]
         extern "C" fn competition_initialize() {
-            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::opcontrol(unsafe {
+            $crate::async_runtime::block_on(<$rbt as $crate::AsyncRobot>::comp_init(unsafe {
                 ROBOT
                     .as_mut()
                     .expect("Expected initialize to run before comp_init")
