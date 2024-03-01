@@ -449,7 +449,7 @@ extern "C" {
 
     \param port
            The V5 port number from 1-21
-    \param[in] timestamp
+    \param\[in] timestamp
                A pointer to a time in milliseconds for which the encoder count
                will be returned. If NULL, the timestamp at which the encoder
                count was read will not be supplied

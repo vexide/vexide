@@ -213,7 +213,7 @@ extern "C" {
     ) -> vision_object_s_t;
     /**
     Gets the exposure parameter of the Vision Sensor. See
-    https://pros.cs.purdue.edu/v5/tutorials/topical/vision.html#exposure-setting
+    <https://pros.cs.purdue.edu/v5/tutorials/topical/vision.html#exposure-setting>
     for more details.
 
     This function uses the following values of errno when an error state is
@@ -224,7 +224,7 @@ extern "C" {
     \param port
            The V5 port number from 1-21
 
-    \return The current exposure setting from [0,150], PROS_ERR if an error
+    \return The current exposure setting from \[0,150], PROS_ERR if an error
     occurred
     */
     pub fn vision_get_exposure(port: u8) -> i32;
@@ -283,7 +283,7 @@ extern "C" {
            (0 is the largest item, 1 is the second largest, etc.)
     \param object_count
            The number of objects to read
-    \param[out] object_arr
+    \param\[out] object_arr
                 A pointer to copy the objects into
 
     \return The number of object signatures copied. This number will be less than
@@ -317,7 +317,7 @@ extern "C" {
            (0 is the largest item, 1 is the second largest, etc.)
     \param signature
            The signature ID [1-7] for which objects will be returned.
-    \param[out] object_arr
+    \param\[out] object_arr
                 A pointer to copy the objects into
 
     \return The number of object signatures copied. This number will be less than
@@ -351,7 +351,7 @@ extern "C" {
            (0 is the largest item, 1 is the second largest, etc.)
     \param color_code
            The vision_color_code_t for which objects will be returned
-    \param[out] object_arr
+    \param\[out] object_arr
                 A pointer to copy the objects into
 
     \return The number of object signatures copied. This number will be less than
@@ -388,7 +388,7 @@ extern "C" {
            The V5 port number from 1-21
     \param signature_id
            The signature id to store into
-    \param[in] signature_ptr
+    \param\[in] signature_ptr
                A pointer to the signature to save
 
     \return 1 if no errors occurred, PROS_ERR otherwise
@@ -418,7 +418,7 @@ extern "C" {
     pub fn vision_set_auto_white_balance(port: u8, enable: u8) -> i32;
     /**
     Sets the exposure parameter of the Vision Sensor. See
-    https://pros.cs.purdue.edu/v5/tutorials/topical/vision.html#exposure-setting
+    <https://pros.cs.purdue.edu/v5/tutorials/topical/vision.html#exposure-setting>
     for more details.
 
     This function uses the following values of errno when an error state is
@@ -429,7 +429,7 @@ extern "C" {
     \param port
            The V5 port number from 1-21
     \param percent
-           The new exposure setting from [0,150]
+           The new exposure setting from \[0,150]
 
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.

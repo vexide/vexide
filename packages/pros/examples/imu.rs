@@ -17,7 +17,7 @@ impl Robot {
 }
 
 impl AsyncRobot for Robot {
-    async fn opcontrol(&mut self) -> pros::Result {
+    async fn opcontrol(&mut self) -> Result {
         self.imu.calibrate().await?;
 
         loop {
@@ -28,7 +28,7 @@ impl AsyncRobot for Robot {
                 euler.pitch, euler.roll, euler.yaw
             );
 
-            pros::task::delay(Duration::from_secs(1));
+            delay(Duration::from_secs(1));
         }
     }
 }

@@ -173,7 +173,7 @@ extern "C" {
     pub fn task_get_current() -> task_t;
     /** Sends a simple notification to task and increments the notification counter.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html for
+    See <https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html> for
     details.
 
     \param task
@@ -184,7 +184,7 @@ extern "C" {
     /** Utilizes task notifications to wait until specified task is complete and deleted,
     then continues to execute the program. Analogous to std::thread::join in C++.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html for
+    See <https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html> for
     details.
 
     \param task
@@ -196,7 +196,7 @@ extern "C" {
     retrieve the value of the notification in the target task before modifying
     the notification value.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html for
+    See <https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html> for
     details.
 
     \param task
@@ -222,7 +222,7 @@ extern "C" {
     ) -> u32;
     /** Waits for a notification to be nonzero.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html for
+    See <https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html> for
     details.
 
     \param clear_on_exit
@@ -237,7 +237,7 @@ extern "C" {
     pub fn task_notify_take(clear_on_exit: bool, timeout: u32) -> u32;
     /** Clears the notification for a task.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html for
+    See <https://pros.cs.purdue.edu/v5/tutorials/topical/notifications.html> for
     details.
 
     \param task
@@ -247,7 +247,7 @@ extern "C" {
     pub fn task_notify_clear(task: task_t) -> bool;
     /** Creates a mutex.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/topical/multitasking.html#mutexes
+    See <https://pros.cs.purdue.edu/v5/tutorials/topical/multitasking.html#mutexes>
     for details.
 
     \return A handle to a newly created mutex. If an error occurred, NULL will be
@@ -256,7 +256,7 @@ extern "C" {
     /** Takes and locks a mutex, waiting for up to a certain number of milliseconds
     before timing out.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/topical/multitasking.html#mutexes
+    See <https://pros.cs.purdue.edu/v5/tutorials/topical/multitasking.html#mutexes>
     for details.
 
     \param mutex

@@ -21,15 +21,15 @@ impl ExampleRobot {
 }
 
 impl AsyncRobot for ExampleRobot {
-    async fn opcontrol(&mut self) -> pros::Result {
+    async fn opcontrol(&mut self) -> Result {
         self.gyro.zero()?;
         self.encoder.zero()?;
 
         loop {
-            println!("Encoder value: {:?}", self.encoder.value());
-            println!("Ultrasonic value: {:?}", self.ultrasonic.value());
+            println!("Encoder position: {:?}", self.encoder.position());
+            println!("Ultrasonic distance: {:?}", self.ultrasonic.distance());
 
-            pros::task::delay(Duration::from_millis(10));
+            delay(Duration::from_millis(10));
         }
     }
 }
