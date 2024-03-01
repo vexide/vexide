@@ -32,15 +32,6 @@ use crate::{
     error::{bail_on, map_errno, PortError},
 };
 
-/// The maximum voltage value that can be sent to a [`Motor`].
-pub const MOTOR_MAX_VOLTAGE: f64 = 12.0;
-
-/// The rate at which data can be read from a [`Motor`].
-pub const MOTOR_READ_DATA_RATE: Duration = Duration::from_millis(10);
-
-/// The rate at which data can be written to a [`Motor].
-pub const MOTOR_WRITE_DATA_RATE: Duration = Duration::from_millis(5);
-
 /// The basic motor struct.
 #[derive(Debug, PartialEq)]
 pub struct Motor {
@@ -68,8 +59,16 @@ pub enum MotorTarget {
 }
 
 // TODO: Measure the number of counts per rotation. Fow now we assume it is 4096
-// TODO: Wrap motor_modify_profiled_velocity
 impl Motor {
+    /// The maximum voltage value that can be sent to a [`Motor`].
+    pub const MAX_VOLTAGE: f64 = 12.0;
+
+    /// The rate at which data can be read from a [`Motor`].
+    pub const DATA_READ_RATE: Duration = Duration::from_millis(10);
+
+    /// The rate at which data can be written to a [`Motor`].
+    pub const DATA_WRITE_RATE: Duration = Duration::from_millis(5);
+
     /// Create a new motor from a smart port index.
     pub fn new(port: SmartPort, gearset: Gearset, reversed: bool) -> Result<Self, MotorError> {
         bail_on!(PROS_ERR, unsafe {
@@ -171,6 +170,26 @@ impl Motor {
         velocity: i32,
     ) -> Result<(), MotorError> {
         self.set_target(MotorTarget::RelativePosition(position, velocity))
+    }
+
+    /// Changes the output velocity for a profiled movement (motor_move_absolute or motor_move_relative).
+    /// This will have no effect if the motor is not following a profiled movement.
+    pub fn set_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_modify_profiled_velocity(self.port.index(), velocity)
+        });
+
+        match self.target {
+            MotorTarget::AbsolutePosition(position, _) => {
+                self.target = MotorTarget::AbsolutePosition(position, velocity)
+            },
+            MotorTarget::RelativePosition(position, _) => {
+                self.target = MotorTarget::RelativePosition(position, velocity)
+            }
+            _ => {}
+        }
+
+        Ok(())
     }
 
     /// Get the current [`MotorTarget`] value that the motor is attempting to reach.
