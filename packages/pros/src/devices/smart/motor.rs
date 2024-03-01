@@ -21,7 +21,9 @@
 //! }
 //! ```
 
-use pros_sys::{PROS_ERR, PROS_ERR_F};
+use core::time::Duration;
+
+use pros_sys::{motor_fault_e_t, motor_flag_e_t, PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -30,26 +32,150 @@ use crate::{
     error::{bail_on, map_errno, PortError},
 };
 
+/// The maximum voltage value that can be sent to a [`Motor`].
+pub const MOTOR_MAX_VOLTAGE: f64 = 12.0;
+
+/// The rate at which data can be read from a [`Motor`].
+pub const MOTOR_READ_DATA_RATE: Duration = Duration::from_millis(10);
+
+/// The rate at which data can be written to a [`Motor].
+pub const MOTOR_WRITE_DATA_RATE: Duration = Duration::from_millis(5);
+
 /// The basic motor struct.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Motor {
     port: SmartPort,
+    target: MotorTarget,
 }
 
-//TODO: Implement good set_velocity and get_velocity functions.
-//TODO: Measure the number of counts per rotation. Fow now we assume it is 4096
+/// Represents a possible target for a [`Motor`].
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum MotorTarget {
+    /// Motor is braking using a [`BrakeMode`].
+    Brake(BrakeMode),
+
+    /// Motor is attempting to hold a velocity using internal PID control.
+    Velocity(i32),
+
+    /// Motor is outputting a raw voltage.
+    Voltage(f64),
+
+    /// Motor is attempting to reach a relative position.
+    RelativePosition(Position, i32),
+
+    /// Motor is attempting to reach an absolute position.
+    AbsolutePosition(Position, i32),
+}
+
+// TODO: Measure the number of counts per rotation. Fow now we assume it is 4096
+// TODO: Wrap motor_modify_profiled_velocity
 impl Motor {
+    /// Create a new motor from a smart port index.
     pub fn new(port: SmartPort, gearset: Gearset, reversed: bool) -> Result<Self, MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_encoder_units(port.index(), pros_sys::E_MOTOR_ENCODER_DEGREES)
         });
 
-        let mut motor = Self { port };
+        let mut motor = Self {
+            port,
+            target: MotorTarget::Voltage(0.0),
+        };
 
         motor.set_gearset(gearset)?;
         motor.set_reversed(reversed)?;
 
         Ok(motor)
+    }
+
+    /// Sets the target that the motor should attempt to reach.
+    ///
+    /// This could be a voltage, velocity, position, or even brake mode.
+    pub fn set_target(&mut self, target: MotorTarget) -> Result<(), MotorError> {
+        match target {
+            MotorTarget::Brake(mode) => unsafe {
+                bail_on!(
+                    PROS_ERR,
+                    pros_sys::motor_set_brake_mode(self.port.index(), mode.into())
+                );
+                bail_on!(PROS_ERR, pros_sys::motor_brake(self.port.index()));
+            },
+            MotorTarget::Velocity(rpm) => {
+                bail_on!(PROS_ERR, unsafe {
+                    pros_sys::motor_move_velocity(self.port.index(), rpm)
+                });
+            },
+            MotorTarget::Voltage(volts) => {
+                bail_on!(PROS_ERR, unsafe {
+                    pros_sys::motor_move_voltage(self.port.index(), (volts * 1000.0) as i32)
+                });
+            },
+            MotorTarget::AbsolutePosition(position, velocity) => {
+                bail_on!(PROS_ERR, unsafe {
+                    pros_sys::motor_move_absolute(
+                        self.port.index(),
+                        position.into_degrees(),
+                        velocity,
+                    )
+                });
+            },
+            MotorTarget::RelativePosition(position, velocity) => {
+                bail_on!(PROS_ERR, unsafe {
+                    pros_sys::motor_move_relative(
+                        self.port.index(),
+                        position.into_degrees(),
+                        velocity,
+                    )
+                });
+            },
+        }
+
+        self.target = target;
+        Ok(())
+    }
+
+    /// Sets the motors target to a given [`BrakeMode`].
+    pub fn brake(&mut self, mode: BrakeMode) -> Result<(), MotorError> {
+        self.set_target(MotorTarget::Brake(mode))
+    }
+
+    /// Spins the motor at a target velocity.
+    ///
+    /// This velocity corresponds to different actual speeds in RPM depending on the gearset used for the motor.
+    /// Velocity is held with an internal PID controller to ensure consistent speed, as opposed to setting the
+    /// motor's voltage.
+    pub fn set_velocity(&mut self, rpm: i32) -> Result<(), MotorError> {
+        self.set_target(MotorTarget::Velocity(rpm))
+    }
+
+    /// Sets the motor's ouput voltage.
+    ///
+    /// This voltage value spans from -12 (fully spinning reverse) to +12 (fully spinning forwards) volts, and
+    /// controls the raw output of the motor.
+    pub fn set_voltage(&mut self, volts: f64) -> Result<(), MotorError> {
+        self.set_target(MotorTarget::Voltage(volts))
+    }
+
+    /// Sets an absolute position target for the motor to attempt to reach.
+    pub fn set_absolute_target(
+        &mut self,
+        position: Position,
+        velocity: i32,
+    ) -> Result<(), MotorError> {
+        self.set_target(MotorTarget::AbsolutePosition(position, velocity))
+    }
+
+    /// Sets an position target relative to the current position for the motor to attempt to reach.
+    pub fn set_relative_target(
+        &mut self,
+        position: Position,
+        velocity: i32,
+    ) -> Result<(), MotorError> {
+        self.set_target(MotorTarget::RelativePosition(position, velocity))
+    }
+
+    /// Get the current [`MotorTarget`] value that the motor is attempting to reach.
+    pub fn target(&self) -> MotorTarget {
+        self.target
     }
 
     /// Sets the gearset of the motor.
@@ -65,60 +191,11 @@ impl Motor {
         unsafe { pros_sys::motor_get_gearing(self.port.index()).try_into() }
     }
 
-    /// Takes in a f32 from -1 to 1 that is scaled to -12 to 12 volts.
-    /// Useful for driving motors with controllers.
-    pub fn set_output(&mut self, output: f32) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_move(self.port.index(), (output * 127.0) as i32)
-        });
-        Ok(())
-    }
-
-    /// Takes in and i8 between -127 and 127 which is scaled to -12 to 12 Volts.
-    pub fn set_raw_output(&mut self, raw_output: i8) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_move(self.port.index(), raw_output as i32)
-        });
-        Ok(())
-    }
-
-    /// Takes in a voltage that must be between -12 and 12 Volts.
-    pub fn set_voltage(&mut self, voltage: f32) -> Result<(), MotorError> {
-        if !(-12.0..=12.0).contains(&voltage) || voltage.is_nan() {
-            return Err(MotorError::VoltageOutOfRange);
-        }
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_move_voltage(self.port.index(), (voltage * 1000.0) as i32)
-        });
-
-        Ok(())
-    }
-
-    /// Moves the motor to an absolute position, based off of when the motor was zeroed
-    /// units for the velocity is RPM.
-    pub fn set_position_absolute(
-        &mut self,
-        position: Position,
-        velocity: i32,
-    ) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_move_absolute(self.port.index(), position.into_degrees(), velocity)
-        });
-        Ok(())
-    }
-
-    /// Moves the motor to a position relative to the current position.
-    /// units for velocity is RPM.
-    pub fn set_position_relative(
-        &mut self,
-        position: Position,
-        velocity: i32,
-    ) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_move_relative(self.port.index(), position.into_degrees(), velocity)
-        });
-
-        Ok(())
+    /// Gets the estimated angular velocity (RPM) of the motor.
+    pub fn velocity(&self) -> Result<f64, MotorError> {
+        Ok(bail_on!(PROS_ERR_F, unsafe {
+            pros_sys::motor_get_actual_velocity(self.port.index())
+        }))
     }
 
     /// Returns the power drawn by the motor in Watts.
@@ -151,10 +228,28 @@ impl Motor {
         })))
     }
 
-    /// Returns the current draw of the motor.
-    pub fn current_draw(&self) -> Result<i32, MotorError> {
+    /// Returns the raw position data recorded by the motor at a given timestamp.
+    pub fn raw_position(&self, timestamp: Duration) -> Result<i32, MotorError> {
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_get_raw_position(self.port.index(), timestamp.as_millis() as *const u32)
+        }))
+    }
+
+    /// Returns the electrical current draw of the motor in amps.
+    pub fn current(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_current_draw(self.port.index())
+        }) as f64 / 1000.0)
+    }
+
+    /// Gets the efficiency of the motor in percent.
+    ///
+    /// An efficiency of 100% means that the motor is moving electrically while
+    /// drawing no electrical power, and an efficiency of 0% means that the motor
+    /// is drawing power but not moving.
+    pub fn efficiency(&self) -> Result<f64, MotorError> {
+        Ok(bail_on!(PROS_ERR_F, unsafe {
+            pros_sys::motor_get_efficiency(self.port.index())
         }))
     }
 
@@ -167,45 +262,87 @@ impl Motor {
         Ok(())
     }
 
-    /// Stops the motor based on the current [`BrakeMode`]
-    pub fn brake(&mut self) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_brake(self.port.index())
-        });
-        Ok(())
-    }
-
     /// Sets the current encoder position to the given position without moving the motor.
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
-    pub fn set_zero_position(&mut self, position: Position) -> Result<(), MotorError> {
+    pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_zero_position(self.port.index(), position.into_degrees())
         });
         Ok(())
     }
 
-    /// Sets how the motor should act when stopping.
-    pub fn set_brake_mode(&mut self, brake_mode: BrakeMode) -> Result<(), MotorError> {
+    pub fn set_current_limit(&mut self, limit: f64) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_brake_mode(self.port.index(), brake_mode.into())
+            pros_sys::motor_set_current_limit(self.port.index(), (limit * 1000.0) as i32)
         });
         Ok(())
     }
 
-    pub fn brake_mode(&self) -> Result<BrakeMode, MotorError> {
-        unsafe { pros_sys::motor_get_brake_mode(self.port.index()).try_into() }
-    }
-
-    // TODO: Test this, as im not entirely sure of the actual implementation
-    /// Get the current state of the motor.
-    pub fn state(&self) -> Result<MotorState, MotorError> {
-        let bit_flags = bail_on!(PROS_ERR as _, unsafe {
-            pros_sys::motor_get_flags(self.port.index())
+    pub fn set_voltage_limit(&mut self, limit: i32) -> Result<(), MotorError> {
+        bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_set_voltage_limit(self.port.index(), limit)
         });
-        Ok(bit_flags.into())
+        Ok(())
     }
 
-    /// Reverse this motor by multiplying all input by -1.
+    fn current_limit(&self) -> Result<f64, MotorError> {
+        Ok(bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_get_current_limit(self.port.index())
+        }) as f64 / 1000.0)
+    }
+
+    fn voltage_limit(&self) -> Result<Option<i32>, MotorError> {
+        let raw_limit = bail_on!(PROS_ERR, unsafe {
+            pros_sys::motor_get_voltage_limit(self.port.index())
+        });
+
+        Ok(match raw_limit {
+            0 => None,
+            limited => Some(limited)
+        })
+    }
+
+    /// Get the status flagss of a motor.
+    pub fn status(&self) -> Result<MotorStatus, MotorError> {
+        unsafe { pros_sys::motor_get_flags(self.port.index()).try_into() }
+    }
+
+    /// Check if the motor's stopped flag is set.
+    pub fn is_stopped(&self) -> Result<bool, MotorError> {
+        Ok(self.status()?.is_stopped())
+    }
+
+    /// Check if the motor's zeroed flag is set.
+    pub fn is_zeroed(&self) -> Result<bool, MotorError> {
+        Ok(self.status()?.is_zeroed())
+    }
+
+    /// Get the faults flags of the motor.
+    pub fn faults(&self) -> Result<MotorFaults, MotorError> {
+        unsafe { pros_sys::motor_get_faults(self.port.index()).try_into() }
+    }
+
+    /// Check if the motor's over temperature flag is set.
+    pub fn is_over_temperature(&self) -> Result<bool, MotorError> {
+        Ok(self.faults()?.is_over_temperature())
+    }
+
+    /// Check if the motor's overcurrent flag is set.
+    pub fn is_over_current(&self) -> Result<bool, MotorError> {
+        Ok(self.faults()?.is_over_current())
+    }
+
+    /// Check if a H-bridge (motor driver) fault has occurred.
+    pub fn is_driver_fault(&self) -> Result<bool, MotorError> {
+        Ok(self.faults()?.is_driver_fault())
+    }
+
+    /// Check if the motor's H-bridge has an overucrrent fault.
+    pub fn is_driver_over_current(&self) -> Result<bool, MotorError> {
+        Ok(self.faults()?.is_driver_over_current())
+    }
+
+    /// Reverse this motor's output values.
     pub fn set_reversed(&mut self, reversed: bool) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_reversed(self.port.index(), reversed)
@@ -214,7 +351,7 @@ impl Motor {
     }
 
     /// Check if this motor has been reversed.
-    pub fn reversed(&self) -> Result<bool, MotorError> {
+    pub fn is_reversed(&self) -> Result<bool, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_is_reversed(self.port.index())
         }) == 1)
@@ -223,6 +360,30 @@ impl Motor {
     /// Returns a future that completes when the motor reports that it has stopped.
     pub const fn wait_until_stopped(&self) -> MotorStoppedFuture<'_> {
         MotorStoppedFuture { motor: self }
+    }
+
+    #[cfg(feature = "dangerous_motor_tuning")]
+    pub fn set_velocity_tuning_constants(
+        &mut self,
+        constants: MotorTuningConstants,
+    ) -> Result<(), MotorError> {
+        bail_on!(PROS_ERR, unsafe {
+            #[allow(deprecated)]
+            pros_sys::motor_set_pos_pid_full(self.port.index(), constants.into())
+        });
+        Ok(())
+    }
+
+    #[cfg(feature = "dangerous_motor_tuning")]
+    pub fn set_position_tuning_constants(
+        &mut self,
+        constants: MotorTuningConstants,
+    ) -> Result<(), MotorError> {
+        bail_on!(PROS_ERR, unsafe {
+            #[allow(deprecated)]
+            pros_sys::motor_set_vel_pid_full(self.port.index(), constants.into())
+        });
+        Ok(())
     }
 }
 
@@ -237,7 +398,7 @@ impl SmartDevice for Motor {
 }
 
 /// Determines how a motor should act when braking.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(i32)]
 pub enum BrakeMode {
     /// Motor never brakes.
@@ -269,24 +430,66 @@ impl From<BrakeMode> for pros_sys::motor_brake_mode_e_t {
     }
 }
 
-/// Represents what the physical motor is currently doing.
-#[derive(Debug, Clone, Default)]
-pub struct MotorState {
-    /// The motor is currently moving.
-    pub busy: bool,
-    /// the motor is not moving.
-    pub stopped: bool,
-    /// the motor is at zero encoder units of rotation.
-    pub zeroed: bool,
+/// The fault flags returned by a [`Motor`].
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+pub struct MotorFaults(pub u32);
+
+impl MotorFaults {
+    /// Checks if the motor's temperature is above its limit.
+    pub fn is_over_temperature(&self) -> bool {
+        self.0 & pros_sys::E_MOTOR_FAULT_MOTOR_OVER_TEMP != 0
+    }
+
+    /// Check if the motor's H-bridge has encountered a fault.
+    pub fn is_driver_fault(&self) -> bool {
+        self.0 & pros_sys::E_MOTOR_FAULT_DRIVER_FAULT != 0
+    }
+
+    /// Check if the motor is over current.
+    pub fn is_over_current(&self) -> bool {
+        self.0 & pros_sys::E_MOTOR_FAULT_OVER_CURRENT != 0
+    }
+
+    /// Check if the motor's H-bridge is over current.
+    pub fn is_driver_over_current(&self) -> bool {
+        self.0 & pros_sys::E_MOTOR_FAULT_DRV_OVER_CURRENT != 0
+    }
 }
 
-//TODO: Test this, like mentioned above
-impl From<u32> for MotorState {
-    fn from(value: u32) -> Self {
-        Self {
-            busy: (value & pros_sys::E_MOTOR_FLAGS_BUSY) == 0b001,
-            stopped: (value & pros_sys::E_MOTOR_FLAGS_ZERO_VELOCITY) == 0b010,
-            zeroed: (value & pros_sys::E_MOTOR_FLAGS_ZERO_POSITION) == 0b100,
+impl TryFrom<motor_fault_e_t> for MotorFaults {
+    type Error = MotorError;
+
+    fn try_from(value: motor_fault_e_t) -> Result<Self, Self::Error> {
+        Ok(Self(bail_on!(PROS_ERR as _, value)))
+    }
+}
+
+/// The status flags returned by a [`Motor`].
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+pub struct MotorStatus(pub u32);
+
+impl MotorStatus {
+    /// Check if the motor is currently stopped.
+    pub fn is_stopped(&self) -> bool {
+        self.0 & pros_sys::E_MOTOR_FLAGS_ZERO_VELOCITY != 0
+    }
+
+    /// Check if the motor is at its zero position.
+    pub fn is_zeroed(&self) -> bool {
+        self.0 & pros_sys::E_MOTOR_FLAGS_ZERO_POSITION != 0
+    }
+}
+
+impl TryFrom<motor_flag_e_t> for MotorStatus {
+    type Error = MotorError;
+
+    fn try_from(value: motor_flag_e_t) -> Result<Self, Self::Error> {
+        let flags = bail_on!(PROS_ERR as _, value);
+
+        if flags & pros_sys::E_MOTOR_FLAGS_BUSY == 0 {
+            Ok(Self(flags))
+        } else {
+            Err(MotorError::Busy)
         }
     }
 }
@@ -340,9 +543,54 @@ impl TryFrom<pros_sys::motor_gearset_e_t> for Gearset {
     }
 }
 
-#[derive(Debug)]
+/// Holds the information about a Motor's position or velocity PID controls.
+///
+/// These values are in 4.4 format, meaning that a value of 0x20 represents 2.0,
+/// 0x21 represents 2.0625, 0x22 represents 2.125, etc.
+#[cfg(feature = "dangerous_motor_tuning")]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct MotorTuningConstants {
+    /// The feedforward constant.
+    pub kf: f64,
+
+    /// The proportional constant.
+    pub kp: f64,
+
+    /// The integral constant.
+    pub ki: f64,
+
+    /// The derivative constant.
+    pub kd: f64,
+
+    /// A constant used for filtering the profile acceleration.
+    pub filter: f64,
+
+    /// The integral limit.
+    pub limit: f64,
+
+    /// The threshold for determining if a position movement has
+    /// reached its goal. This has no effect for velocity PID calculations.
+    pub threshold: f64,
+
+    /// The rate at whsich the PID computation is run in ms.
+    pub loopspeed: Duration,
+}
+
+#[cfg(feature = "dangerous_motor_tuning")]
+impl From<MotorTuningConstants> for pros_sys::motor_pid_full_s_t {
+    fn from(value: MotorTuningConstants) -> Self {
+        unsafe {
+            // Docs incorrectly claim that this function can set errno.
+            // It can't. <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_motors.c#L250>.
+            #[allow(deprecated)]
+            pros_sys::motor_convert_pid_full(value.kf, value.kp, value.ki, value.kd, value.filter, value.limit, value.threshold, value.loopspeed.as_millis() as f64)
+        }
+    }
+}
+
 /// A future that completes when the motor reports that it has stopped.
 /// Created by [`Motor::wait_until_stopped`]
+#[derive(Debug)]
 pub struct MotorStoppedFuture<'a> {
     motor: &'a Motor,
 }
@@ -353,7 +601,7 @@ impl<'a> core::future::Future for MotorStoppedFuture<'a> {
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        match self.motor.state()?.stopped {
+        match self.motor.status()?.is_stopped() {
             true => core::task::Poll::Ready(Ok(())),
             false => {
                 cx.waker().wake_by_ref();
@@ -366,10 +614,10 @@ impl<'a> core::future::Future for MotorStoppedFuture<'a> {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when using a motor.
 pub enum MotorError {
-    /// The voltage supplied was outside of the allowed range of [-12, 12].
-    VoltageOutOfRange,
-    #[snafu(display("{source}"), context(false))]
+    /// Failed to communicate with the motor while attempting to read flags.
+    Busy,
     /// Generic port related error.
+    #[snafu(display("{source}"), context(false))]
     Port {
         /// The source of the error.
         source: PortError,

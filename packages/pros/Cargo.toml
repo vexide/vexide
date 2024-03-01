@@ -32,3 +32,6 @@ waker-fn = "1.1.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 dlmalloc = { version = "0.2.4", features = ["global"] }
+
+[features]
+dangerous-motor-tuning = []
