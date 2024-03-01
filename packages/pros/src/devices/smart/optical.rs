@@ -8,14 +8,6 @@ use snafu::Snafu;
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::error::{bail_on, map_errno, PortError};
 
-/// The smallest integration time you can set on an optical sensor.
-pub const MIN_INTEGRATION_TIME: Duration = Duration::from_millis(3);
-/// The largest integration time you can set on an optical sensor.
-pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
-
-/// The maximum value for the LED PWM.
-pub const MAX_LED_PWM: u8 = 100;
-
 /// Represents a smart port configured as a V5 optical sensor
 #[derive(Debug, Eq, PartialEq)]
 pub struct OpticalSensor {
@@ -24,6 +16,15 @@ pub struct OpticalSensor {
 }
 
 impl OpticalSensor {
+    /// The smallest integration time you can set on an optical sensor.
+    pub const MIN_INTEGRATION_TIME: Duration = Duration::from_millis(3);
+
+    /// The largest integration time you can set on an optical sensor.
+    pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
+
+    /// The maximum value for the LED PWM.
+    pub const MAX_LED_PWM: u8 = 100;
+
     /// Creates a new inertial sensor from a smart port index.
     ///
     /// Gesture detection features can be optionally enabled, allowing the use of [`Self::last_gesture_direction()`] and [`Self::last_gesture_direction()`].
@@ -54,7 +55,7 @@ impl OpticalSensor {
 
     /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
     pub fn set_led_pwm(&mut self, value: u8) -> Result<(), OpticalError> {
-        if value > MAX_LED_PWM {
+        if value > Self::MAX_LED_PWM {
             return Err(OpticalError::InvalidLedPwm);
         }
         unsafe {
@@ -86,7 +87,7 @@ impl OpticalSensor {
     /// https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9 for
     /// more information.
     pub fn set_integration_time(&mut self, time: Duration) -> Result<(), OpticalError> {
-        if time < MIN_INTEGRATION_TIME || time > MAX_INTEGRATION_TIME {
+        if time < Self::MIN_INTEGRATION_TIME || time > Self::MAX_INTEGRATION_TIME {
             return Err(OpticalError::InvalidIntegrationTime);
         }
 

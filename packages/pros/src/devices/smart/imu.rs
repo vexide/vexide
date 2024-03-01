@@ -15,11 +15,6 @@ use crate::{
     time::Instant,
 };
 
-/// The timeout for the IMU to calibrate.
-pub const IMU_RESET_TIMEOUT: Duration = Duration::from_secs(3);
-/// The minimum data rate that you can set an IMU to.
-pub const IMU_MIN_DATA_RATE: Duration = Duration::from_millis(5);
-
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
 #[derive(Debug, Eq, PartialEq)]
 pub struct InertialSensor {
@@ -27,6 +22,12 @@ pub struct InertialSensor {
 }
 
 impl InertialSensor {
+    /// The timeout for the IMU to calibrate.
+    pub const CALIBRATION_TIMEOUT: Duration = Duration::from_secs(3);
+
+    /// The minimum data rate that you can set an IMU to.
+    pub const MIN_DATA_RATE: Duration = Duration::from_millis(5);
+
     /// Create a new inertial sensor from a smart port index.
     pub const fn new(port: SmartPort) -> Self {
         Self { port }
@@ -237,10 +238,10 @@ impl InertialSensor {
 
     /// Sets the update rate of the IMU.
     ///
-    /// This duration must be above [`IMU_MIN_DATA_RATE`] (5 milliseconds).
+    /// This duration must be above [`Self::MIN_DATA_RATE`] (5 milliseconds).
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
         unsafe {
-            let rate_ms = if data_rate > IMU_MIN_DATA_RATE {
+            let rate_ms = if data_rate > Self::MIN_DATA_RATE {
                 if let Ok(rate) = u32::try_from(data_rate.as_millis()) {
                     rate
                 } else {
@@ -431,7 +432,7 @@ impl core::future::Future for InertialCalibrateFuture {
 
                 if !is_calibrating {
                     return Poll::Ready(Ok(()));
-                } else if timestamp.elapsed() > IMU_RESET_TIMEOUT {
+                } else if timestamp.elapsed() > InertialSensor::CALIBRATION_TIMEOUT {
                     return Poll::Ready(Err(InertialError::CalibrationTimedOut));
                 }
 

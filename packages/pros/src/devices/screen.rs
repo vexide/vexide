@@ -20,22 +20,12 @@ pub struct Screen {
     current_line: i16,
 }
 
-/// The maximum number of lines that can be visible on the screen at once.
-pub const SCREEN_MAX_VISIBLE_LINES: usize = 12;
-/// The height of a single line of text on the screen.
-pub const SCREEN_LINE_HEIGHT: i16 = 20;
-
-/// The horizontal resolution of the display.
-pub const SCREEN_HORIZONTAL_RESOLUTION: i16 = 480;
-/// The vertical resolution of the writable part of the display.
-pub const SCREEN_VERTICAL_RESOLUTION: i16 = 240;
-
 impl core::fmt::Write for Screen {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
         for character in text.chars() {
             if character == '\n' {
-                if self.current_line > (SCREEN_MAX_VISIBLE_LINES as i16 - 2) {
-                    self.scroll(0, SCREEN_LINE_HEIGHT)
+                if self.current_line > (Self::MAX_VISIBLE_LINES as i16 - 2) {
+                    self.scroll(0, Self::LINE_HEIGHT)
                         .map_err(|_| core::fmt::Error)?;
                 } else {
                     self.current_line += 1;
@@ -344,6 +334,18 @@ impl From<TouchState> for pros_sys::last_touch_e_t {
 }
 
 impl Screen {
+    /// The maximum number of lines that can be visible on the screen at once.
+    pub const MAX_VISIBLE_LINES: usize = 12;
+
+    /// The height of a single line of text on the screen.
+    pub const LINE_HEIGHT: i16 = 20;
+
+    /// The horizontal resolution of the display.
+    pub const HORIZONTAL_RESOLUTION: i16 = 480;
+
+    /// The vertical resolution of the writable part of the display.
+    pub const VERTICAL_RESOLUTION: i16 = 240;
+
     /// Create a new screen.
     ///
     /// # Safety
@@ -488,8 +490,8 @@ impl Screen {
         let error_box_rect = Rect::new(
             ERROR_BOX_MARGIN,
             ERROR_BOX_MARGIN,
-            SCREEN_HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
-            SCREEN_VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
+            Self::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
+            Self::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
         );
 
         self.fill(&error_box_rect, Rgb::RED)?;
@@ -509,7 +511,7 @@ impl Screen {
                         buffer.as_str(),
                         TextPosition::Point(
                             ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                            ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * SCREEN_LINE_HEIGHT),
+                            ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Self::LINE_HEIGHT),
                         ),
                         TextFormat::Small,
                     ),
@@ -526,7 +528,7 @@ impl Screen {
                 buffer.as_str(),
                 TextPosition::Point(
                     ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                    ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * SCREEN_LINE_HEIGHT),
+                    ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Self::LINE_HEIGHT),
                 ),
                 TextFormat::Small,
             ),
