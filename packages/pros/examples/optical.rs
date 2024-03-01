@@ -16,8 +16,8 @@ impl Robot {
     }
 }
 
-impl SyncRobot for Robot {
-    fn opcontrol(&mut self) -> Result {
+impl AsyncRobot for Robot {
+    async fn opcontrol(&mut self) -> Result {
         loop {
             println!(
 				"-----\nHue: {}\nSaturation: {}\nBrightess: {}\nLast Gesture Direction: {:?}\n-----\n",
@@ -32,4 +32,4 @@ impl SyncRobot for Robot {
     }
 }
 
-sync_robot!(Robot, Robot::new(Peripherals::take().unwrap()));
+async_robot!(Robot, Robot::new(Peripherals::take().unwrap()));

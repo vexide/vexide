@@ -27,7 +27,7 @@ pros-math = { version = "0.1.0", path = "../pros-math", optional = true }
 pros-sys = { version = "0.6.0", path = "../pros-sys" }
 
 [features]
-default = ["async", "sync", "devices", "panic", "display_panics", "core", "math"]
+default = ["async", "devices", "panic", "display_panics", "core", "math"]
 
 core = ["dep:pros-core"]
 
