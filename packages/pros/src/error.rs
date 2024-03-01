@@ -97,9 +97,12 @@ pub enum PortError {
     PortOutOfRange,
     /// The specified port couldn't be configured as the specified type.
     PortCannotBeConfigured,
+    /// The specified port is already being used or is mismatched.
+    AlreadyInUse,
 }
 
 map_errno!(PortError {
     ENXIO => Self::PortOutOfRange,
     ENODEV => Self::PortCannotBeConfigured,
+    EADDRINUSE => Self::AlreadyInUse,
 });
