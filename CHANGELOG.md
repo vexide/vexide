@@ -56,6 +56,8 @@ Before releasing:
 - Renamed `AdiUltrasonic::value` to `AdiUltrasonic::distance` (**Breaking Change**) (#61).
 - Renamed `AdiEncoder::value` to `AdiEncoder::position` (**Breaking Change**) (#61).
 - Repurposed `AdiAnalogOut` as `AdiPwmOut` to correct match port output. (**Breaking Change**) (#90).
+- Moved most device-related constants into their associated struct `impl` (**Breaking Change**) (#98).
+- Renamed IMU_RESET_TIMEOUT to `InertialSensor::CALIBRATION_TIMEOUT` (**Breaking Change**) (#98).
 
 ### Removed
 
