@@ -272,6 +272,7 @@ impl Motor {
         Ok(())
     }
 
+    /// Sets the current limit for the motor in amps.
     pub fn set_current_limit(&mut self, limit: f64) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_current_limit(self.port.index(), (limit * 1000.0) as i32)
@@ -279,6 +280,7 @@ impl Motor {
         Ok(())
     }
 
+    /// Sets the voltage limit for the motor in volts.
     pub fn set_voltage_limit(&mut self, limit: i32) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_voltage_limit(self.port.index(), limit)
@@ -286,20 +288,24 @@ impl Motor {
         Ok(())
     }
 
-    fn current_limit(&self) -> Result<f64, MotorError> {
+    /// Gets the current limit for the motor in mA.
+    ///
+    /// The default value is 2.5A.
+    pub fn current_limit(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_current_limit(self.port.index())
         }) as f64
             / 1000.0)
     }
 
-    fn voltage_limit(&self) -> Result<Option<i32>, MotorError> {
+    /// Gets the voltage limit for the motor if one has been explicitly set.
+    pub fn voltage_limit(&self) -> Result<Option<i32>, MotorError> {
         let raw_limit = bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_voltage_limit(self.port.index())
         });
 
         Ok(match raw_limit {
-            0 => None,
+            0 => None, // SDK uses a voltage limit of zero to indicate that there is no limit present
             limited => Some(limited),
         })
     }
