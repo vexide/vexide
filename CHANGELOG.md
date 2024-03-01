@@ -36,6 +36,7 @@ Before releasing:
 
 - Fix error handling and error type variats in ADI bindings
 - Fix `AsynRobot` only running opcontrol
+- Properly handle `EADDRINUSE` return for smart port errors (**Breaking Change**) (#97)
 
 ### Changed
 
