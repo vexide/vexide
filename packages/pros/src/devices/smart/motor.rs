@@ -594,8 +594,15 @@ impl TryFrom<pros_sys::motor_gearset_e_t> for Gearset {
 
 /// Holds the information about a Motor's position or velocity PID controls.
 ///
-/// These values are in 4.4 format, meaning that a value of 0x20 represents 2.0,
-/// 0x21 represents 2.0625, 0x22 represents 2.125, etc.
+/// # Hardware Safety
+///
+/// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
+/// to smart motors if done incorrectly. Use these functions entirely at your own risk.
+///
+/// VEX has chosen not to disclose the default constants used by smart motors, and currently
+/// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
+/// well-known or understood, as we have no reference for what these constants should look
+/// like.
 #[cfg(feature = "dangerous_motor_tuning")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MotorTuningConstants {
@@ -615,14 +622,17 @@ pub struct MotorTuningConstants {
     pub filter: f64,
 
     /// The integral limit.
-    pub limit: f64,
+    ///
+    /// Presumably used for anti-windup protection.
+    pub integral_limit: f64,
 
-    /// The threshold for determining if a position movement has
-    /// reached its goal. This has no effect for velocity PID calculations.
-    pub threshold: f64,
+    /// The threshold for determining if a position movement has reached its goal.
+    ///
+    /// This has no effect for velocity PID calculations.
+    pub tolerance: f64,
 
-    /// The rate at whsich the PID computation is run in ms.
-    pub loopspeed: Duration,
+    /// The rate at which the PID computation is run in ms.
+    pub sample_rate: Duration,
 }
 
 #[cfg(feature = "dangerous_motor_tuning")]
@@ -639,8 +649,8 @@ impl From<MotorTuningConstants> for pros_sys::motor_pid_full_s_t {
                 value.kd,
                 value.filter,
                 value.limit,
-                value.threshold,
-                value.loopspeed.as_millis() as f64,
+                value.tolerance,
+                value.sample_rate.as_millis() as f64,
             )
         }
     }
