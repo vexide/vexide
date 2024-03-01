@@ -368,7 +368,7 @@ impl Motor {
     ///
     /// # Hardware Safety
     ///
-    /// Retuning internal motor control is **dangerous**, and can result in permanent hardware damage
+    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
     /// to smart motors if done incorrectly. Use these functions entirely at your own risk.
     ///
     /// VEX has chosen not to disclose the default constants used by smart motors, and currently
@@ -391,7 +391,7 @@ impl Motor {
     ///
     /// # Hardware Safety
     ///
-    /// Retuning internal motor control is **dangerous**, and can result in permanent hardware damage
+    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
     /// to smart motors if done incorrectly. Use these functions entirely at your own risk.
     ///
     /// VEX has chosen not to disclose the default constants used by smart motors, and currently
