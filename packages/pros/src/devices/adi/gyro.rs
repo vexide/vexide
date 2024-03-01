@@ -7,12 +7,6 @@ use pros_sys::{ext_adi_gyro_t, PROS_ERR, PROS_ERR_F};
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use crate::error::bail_on;
 
-/// The time it takes to calibrate an [`AdiGyro`].
-///
-/// The theoretical calibration time is 1024ms, but in practice this seemed to be the
-/// actual time that it takes.
-pub const GYRO_CALIBRATION_TIME: Duration = Duration::from_millis(1300);
-
 /// ADI gyro device.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiGyro {
@@ -21,6 +15,12 @@ pub struct AdiGyro {
 }
 
 impl AdiGyro {
+    /// The time it takes to calibrate an [`AdiGyro`].
+    ///
+    /// The theoretical calibration time is 1024ms, but in practice this seemed to be the
+    /// actual time that it takes.
+    pub const CALIBRATION_TIME: Duration = Duration::from_millis(1300);
+
     /// Create a new gyro from an [`AdiPort`].
     ///
     /// If the given port has not previously been configured as a gyro, then this
