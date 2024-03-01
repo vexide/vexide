@@ -34,8 +34,8 @@ fn draw_error(
     let error_box_rect = pros_devices::screen::Rect::new(
         ERROR_BOX_MARGIN,
         ERROR_BOX_MARGIN,
-        pros_devices::screen::SCREEN_HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
-        pros_devices::screen::SCREEN_VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
+        Screen::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
+        Screen::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
     );
 
     screen.fill(&error_box_rect, pros_devices::color::Rgb::RED)?;
@@ -55,9 +55,7 @@ fn draw_error(
                     buffer.as_str(),
                     pros_devices::screen::TextPosition::Point(
                         ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                        ERROR_BOX_MARGIN
-                            + ERROR_BOX_PADDING
-                            + (line * pros_devices::screen::SCREEN_LINE_HEIGHT),
+                        ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Screen::LINE_HEIGHT),
                     ),
                     pros_devices::screen::TextFormat::Small,
                 ),
@@ -74,9 +72,7 @@ fn draw_error(
             buffer.as_str(),
             pros_devices::screen::TextPosition::Point(
                 ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                ERROR_BOX_MARGIN
-                    + ERROR_BOX_PADDING
-                    + (line * pros_devices::screen::SCREEN_LINE_HEIGHT),
+                ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Screen::LINE_HEIGHT),
             ),
             pros_devices::screen::TextFormat::Small,
         ),
