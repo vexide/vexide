@@ -103,12 +103,12 @@ impl Motor {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_velocity(self.port.index(), rpm)
                 });
-            },
+            }
             MotorTarget::Voltage(volts) => {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_voltage(self.port.index(), (volts * 1000.0) as i32)
                 });
-            },
+            }
             MotorTarget::AbsolutePosition(position, velocity) => {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_absolute(
@@ -117,7 +117,7 @@ impl Motor {
                         velocity,
                     )
                 });
-            },
+            }
             MotorTarget::RelativePosition(position, velocity) => {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_relative(
@@ -126,7 +126,7 @@ impl Motor {
                         velocity,
                     )
                 });
-            },
+            }
         }
 
         self.target = target;
@@ -239,7 +239,8 @@ impl Motor {
     pub fn current(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_current_draw(self.port.index())
-        }) as f64 / 1000.0)
+        }) as f64
+            / 1000.0)
     }
 
     /// Gets the efficiency of the motor in percent.
@@ -288,7 +289,8 @@ impl Motor {
     fn current_limit(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_current_limit(self.port.index())
-        }) as f64 / 1000.0)
+        }) as f64
+            / 1000.0)
     }
 
     fn voltage_limit(&self) -> Result<Option<i32>, MotorError> {
@@ -298,7 +300,7 @@ impl Motor {
 
         Ok(match raw_limit {
             0 => None,
-            limited => Some(limited)
+            limited => Some(limited),
         })
     }
 
@@ -362,6 +364,17 @@ impl Motor {
         MotorStoppedFuture { motor: self }
     }
 
+    /// Adjusts the internal tuning constants of the motor when using velocity control.
+    ///
+    /// # Hardware Safety
+    ///
+    /// Retuning internal motor control is **dangerous**, and can result in permanent hardware damage
+    /// to smart motors if done incorrectly. Use these functions entirely at your own risk.
+    ///
+    /// VEX has chosen not to disclose the default constants used by smart motors, and currently
+    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
+    /// well-known or understood, as we have no reference for what these constants should look
+    /// like.
     #[cfg(feature = "dangerous_motor_tuning")]
     pub fn set_velocity_tuning_constants(
         &mut self,
@@ -374,6 +387,17 @@ impl Motor {
         Ok(())
     }
 
+    /// Adjusts the internal tuning constants of the motor when using position control.
+    ///
+    /// # Hardware Safety
+    ///
+    /// Retuning internal motor control is **dangerous**, and can result in permanent hardware damage
+    /// to smart motors if done incorrectly. Use these functions entirely at your own risk.
+    ///
+    /// VEX has chosen not to disclose the default constants used by smart motors, and currently
+    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
+    /// well-known or understood, as we have no reference for what these constants should look
+    /// like.
     #[cfg(feature = "dangerous_motor_tuning")]
     pub fn set_position_tuning_constants(
         &mut self,
@@ -583,7 +607,16 @@ impl From<MotorTuningConstants> for pros_sys::motor_pid_full_s_t {
             // Docs incorrectly claim that this function can set errno.
             // It can't. <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_motors.c#L250>.
             #[allow(deprecated)]
-            pros_sys::motor_convert_pid_full(value.kf, value.kp, value.ki, value.kd, value.filter, value.limit, value.threshold, value.loopspeed.as_millis() as f64)
+            pros_sys::motor_convert_pid_full(
+                value.kf,
+                value.kp,
+                value.ki,
+                value.kd,
+                value.filter,
+                value.limit,
+                value.threshold,
+                value.loopspeed.as_millis() as f64,
+            )
         }
     }
 }
