@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pros-sys = { version = "0.6.0", path = "../pros-sys" }
+pros-sys = { version = "0.7.0", path = "../pros-sys" }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 snafu = { version = "0.8.0", default-features = false, features = [
     "rust_1_61",

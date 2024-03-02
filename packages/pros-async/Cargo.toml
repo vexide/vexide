@@ -9,7 +9,7 @@ edition = "2021"
 async-task = { version = "4.5.0", default-features = false }
 pros-core = { version = "0.1.0", path = "../pros-core" }
 waker-fn = "1.1.1"
-pros-sys = { version = "0.6.0", path = "../pros-sys" }
+pros-sys = { version = "0.7.0", path = "../pros-sys" }
 
 [lints]
 workspace = true
