@@ -18,7 +18,7 @@ impl Robot {
 }
 
 impl AsyncRobot for Robot {
-    async fn opcontrol(&mut self) -> pros::Result {
+    async fn opcontrol(&mut self) -> Result {
         self.screen.fill(&Rect::new(0, 0, 20, 20), Rgb::RED)?;
         self.screen.stroke(&Circle::new(25, 25, 20), Rgb::BLUE)?;
 

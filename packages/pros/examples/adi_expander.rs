@@ -15,18 +15,18 @@ impl Robot {
 
         Self {
             // Create an encoder on the expander's A and B ports.
-            encoder: AdiEncoder::new((expander.adi_a, expander.adi_b), false),
+            encoder: AdiEncoder::new((expander.adi_a, expander.adi_b), false).unwrap(),
         }
     }
 }
 
 impl AsyncRobot for Robot {
-    async fn opcontrol(&mut self) -> pros::Result {
+    async fn opcontrol(&mut self) -> Result {
         // Read from the encoder every second.
         loop {
-            println!("Encoder value: {}", self.encoder.value()?);
+            println!("Encoder position: {}", self.encoder.position()?);
 
-            pros::task::delay(Duration::from_secs(1));
+            delay(Duration::from_secs(1));
         }
     }
 }
