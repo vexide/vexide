@@ -22,6 +22,16 @@ Before releasing:
 ## [Unreleased]
 
 ### Added
+
+### Fixed
+
+### Changed
+
+### Removed
+
+## [0.8.0]
+
+### Added
 - Added feedforward motor controllers (#80)
 - Lightly document all APIs with missing documentation. (#70)
 - Added `Debug`, `Copy`, and `Clone` derives for common structs (#70)
@@ -178,8 +188,9 @@ Before releasing:
 
 ### Removed
 
-[unreleased]: https://github.com/pros-rs/pros-rs/compare/v0.7.0...HEAD
+[unreleased]: https://github.com/pros-rs/pros-rs/compare/v0.8.0...HEAD
 [0.4.0]: https://github.com/pros-rs/pros-rs/releases/tag/v0.4.0
 [0.5.0]: https://github.com/pros-rs/pros-rs/compare/v0.4.0...v0.5.0
 [0.6.0]: https://github.com/pros-rs/pros-rs/compare/v0.5.0...v0.6.0
 [0.7.0]: https://github.com/pros-rs/pros-rs/compare/v0.6.0...v0.7.0
+[0.8.0]: https://github.com/pros-rs/pros-rs/compare/v0.7.0...v0.8.0
