@@ -9,6 +9,12 @@ categories = [
     "no-std",
     "science::robotics",
 ]
+repository = "https://github.com/gavin-niederman/pros-rs"
+authors = [
+    "pros-rs",
+    "Gavin Niederman <gavinniederman@gmail.com>",
+    "doinkythederp <doinkythederp@icloud.com>",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
