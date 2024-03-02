@@ -4,6 +4,12 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "High level device for pros-rs"
+keywords = ["PROS", "Robotics", "bindings"]
+categories = [
+    "api-bindings",
+    "no-std",
+    "science::robotics",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

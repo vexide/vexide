@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "Panic handler for pros-rs"
+keywords = ["PROS", "Robotics"]
+categories = [
+    "no-std",
+    "science::robotics",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

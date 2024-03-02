@@ -4,6 +4,12 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "A simple async executor for pros-rs"
+keywords = ["PROS", "Robotics", "bindings", "async"]
+categories = [
+    "no-std",
+    "science::robotics",
+    "Asynchronous"
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
