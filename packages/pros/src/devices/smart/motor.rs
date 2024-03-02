@@ -281,7 +281,13 @@ impl Motor {
         });
 
         Ok(match raw_limit {
-            0 => None, // SDK uses a voltage limit of zero to indicate that there is no limit present
+            // SDK uses a voltage limit of zero to indicate that there is no limit present
+            0 => None,
+
+            // TODO: Docs claim that this function returns volts, but I
+            // seriously don't buy it. We unfortunately can't tell if
+            // this is true or not just from source code, since this
+            // function just wraps vexDeviceMotorVoltageLimitGet.
             limit => Some(limit as f64 / 1000.0),
         })
     }
