@@ -1,4 +1,6 @@
-This module provides functionality for accessing hardware annected to the V5 brain.
+# pros-devices
+
+functionality for accessing hardware connected to the V5 brain.
 
 # Overview
 
