@@ -1,25 +1,4 @@
-//! Motors and gearsets.
-//!
-//! The motor API is similar to that of [`sensors`](crate::sensors).
-//! Multiple motors can be created on the same port and they are thread safe.
-//!
-//! Motors can be created with the [`Motor::new`] function.
-//! Once created they can be controlled with one three functions:
-//! [`Motor::set_output`], [`Motor::set_raw_output`], and [`Motor::set_voltage`].
-//! [`Motor::set_output`] takes in a f32 from -1 to 1 for ease of use with [`Controller`](crate::controller::Controller)s.
-//! [`Motor::set_raw_output`] takes in an i8 from -127 to 127.
-//! [`Motor::set_voltage`] takes in an i16 from -12000 to 12000.
-//!
-//! Example of driving a single motor with a controller:
-//! ```rust
-//! # use pros::prelude::*;
-//! let motor = Motor::new(1, BrakeMode::Brake).unwrap();
-//! let controller = Controller::Master;
-//! loop {
-//!     let output = controller.state().joysticks.left.y;
-//!     motor.set_output(output).ok();
-//! }
-//! ```
+//! V5 Smart Motors
 
 use core::time::Duration;
 
@@ -51,14 +30,10 @@ pub enum MotorTarget {
     /// Motor is outputting a raw voltage.
     Voltage(f64),
 
-    /// Motor is attempting to reach a relative position.
-    RelativePosition(Position, i32),
-
-    /// Motor is attempting to reach an absolute position.
-    AbsolutePosition(Position, i32),
+    /// Motor is attempting to reach a position.
+    Position(Position, i32),
 }
 
-// TODO: Measure the number of counts per rotation. Fow now we assume it is 4096
 impl Motor {
     /// The maximum voltage value that can be sent to a [`Motor`].
     pub const MAX_VOLTAGE: f64 = 12.0;
@@ -108,18 +83,9 @@ impl Motor {
                     pros_sys::motor_move_voltage(self.port.index(), (volts * 1000.0) as i32)
                 });
             }
-            MotorTarget::AbsolutePosition(position, velocity) => {
+            MotorTarget::Position(position, velocity) => {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_absolute(
-                        self.port.index(),
-                        position.into_degrees(),
-                        velocity,
-                    )
-                });
-            }
-            MotorTarget::RelativePosition(position, velocity) => {
-                bail_on!(PROS_ERR, unsafe {
-                    pros_sys::motor_move_relative(
                         self.port.index(),
                         position.into_degrees(),
                         velocity,
@@ -155,36 +121,25 @@ impl Motor {
     }
 
     /// Sets an absolute position target for the motor to attempt to reach.
-    pub fn set_absolute_target(
+    pub fn rotate_to_position(
         &mut self,
         position: Position,
         velocity: i32,
     ) -> Result<(), MotorError> {
-        self.set_target(MotorTarget::AbsolutePosition(position, velocity))
-    }
-
-    /// Sets an position target relative to the current position for the motor to attempt to reach.
-    pub fn set_relative_target(
-        &mut self,
-        position: Position,
-        velocity: i32,
-    ) -> Result<(), MotorError> {
-        self.set_target(MotorTarget::RelativePosition(position, velocity))
+        self.set_target(MotorTarget::Position(position, velocity))
     }
 
     /// Changes the output velocity for a profiled movement (motor_move_absolute or motor_move_relative).
+    ///
     /// This will have no effect if the motor is not following a profiled movement.
-    pub fn set_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
+    pub fn update_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_modify_profiled_velocity(self.port.index(), velocity)
         });
 
         match self.target {
-            MotorTarget::AbsolutePosition(position, _) => {
-                self.target = MotorTarget::AbsolutePosition(position, velocity)
-            },
-            MotorTarget::RelativePosition(position, _) => {
-                self.target = MotorTarget::RelativePosition(position, velocity)
+            MotorTarget::Position(position, _) => {
+                self.target = MotorTarget::Position(position, velocity)
             }
             _ => {}
         }
@@ -247,7 +202,7 @@ impl Motor {
         })))
     }
 
-    /// Returns the raw position data recorded by the motor at a given timestamp.
+    /// Returns the raw position tick data recorded by the motor at a given timestamp.
     pub fn raw_position(&self, timestamp: Duration) -> Result<i32, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_raw_position(self.port.index(), timestamp.as_millis() as *const u32)
@@ -300,16 +255,18 @@ impl Motor {
     }
 
     /// Sets the voltage limit for the motor in volts.
-    pub fn set_voltage_limit(&mut self, limit: i32) -> Result<(), MotorError> {
+    pub fn set_voltage_limit(&mut self, limit: f64) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_voltage_limit(self.port.index(), limit)
+            // TODO: Docs claim that this function takes volts, but I
+            // seriously don't buy it. We unfortunately can't tell if
+            // this is true or not just from source code, since this
+            // function just wraps vexDeviceMotorVoltageLimitSet.
+            pros_sys::motor_set_voltage_limit(self.port.index(), (limit * 1000.0) as i32)
         });
         Ok(())
     }
 
-    /// Gets the current limit for the motor in mA.
-    ///
-    /// The default value is 2.5A.
+    /// Gets the current limit for the motor in amps.
     pub fn current_limit(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_current_limit(self.port.index())
@@ -318,14 +275,14 @@ impl Motor {
     }
 
     /// Gets the voltage limit for the motor if one has been explicitly set.
-    pub fn voltage_limit(&self) -> Result<Option<i32>, MotorError> {
+    pub fn voltage_limit(&self) -> Result<Option<f64>, MotorError> {
         let raw_limit = bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_voltage_limit(self.port.index())
         });
 
         Ok(match raw_limit {
             0 => None, // SDK uses a voltage limit of zero to indicate that there is no limit present
-            limited => Some(limited),
+            limit => Some(limit as f64 / 1000.0),
         })
     }
 
@@ -369,7 +326,7 @@ impl Motor {
         Ok(self.faults()?.is_driver_over_current())
     }
 
-    /// Reverse this motor's output values.
+    /// Set whether or not this motor's ouput should be reversed.
     pub fn set_reversed(&mut self, reversed: bool) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_reversed(self.port.index(), reversed)
