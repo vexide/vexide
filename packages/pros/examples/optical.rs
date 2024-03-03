@@ -16,8 +16,8 @@ impl Robot {
     }
 }
 
-impl SyncRobot for Robot {
-    fn opcontrol(&mut self) -> pros::Result {
+impl AsyncRobot for Robot {
+    async fn opcontrol(&mut self) -> Result {
         loop {
             println!(
 				"-----\nHue: {}\nSaturation: {}\nBrightess: {}\nLast Gesture Direction: {:?}\n-----\n",
@@ -27,9 +27,9 @@ impl SyncRobot for Robot {
 				self.optical.last_gesture_direction()?
 			);
 
-            pros::task::delay(Duration::from_millis(10));
+            delay(Duration::from_millis(10));
         }
     }
 }
 
-sync_robot!(Robot, Robot::new(Peripherals::take().unwrap()));
+async_robot!(Robot, Robot::new(Peripherals::take().unwrap()));

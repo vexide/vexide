@@ -14,7 +14,7 @@ impl Robot {
     }
 }
 impl AsyncRobot for Robot {
-    async fn opcontrol(&mut self) -> pros::Result {
+    async fn opcontrol(&mut self) -> Result {
         let motor = Motor::new(
             self.peripherals.take_smart_port(10).unwrap(),
             BrakeMode::Brake,

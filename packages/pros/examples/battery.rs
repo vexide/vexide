@@ -7,7 +7,7 @@ use pros::{devices::battery, prelude::*};
 pub struct Robot;
 
 impl AsyncRobot for Robot {
-    async fn opcontrol(&mut self) -> pros::Result {
+    async fn opcontrol(&mut self) -> Result {
         if battery::capacity()? < 20.0 {
             println!("Battery is low!");
         } else if battery::temperature()? > 999.0 {

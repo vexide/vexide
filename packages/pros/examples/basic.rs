@@ -7,7 +7,7 @@ use pros::prelude::*;
 pub struct Robot;
 
 impl AsyncRobot for Robot {
-    async fn opcontrol(&mut self) -> pros::Result {
+    async fn opcontrol(&mut self) -> Result {
         println!("basic example");
 
         Ok(())

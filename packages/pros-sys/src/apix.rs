@@ -32,7 +32,7 @@ identifier.
 When used with serctl, the extra argument must be the little endian
 representation of the stream identifier (e.g. "sout" -> 0x74756f73)
 
-Visit https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial
+Visit <https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial>
 to learn more.
  */
 pub const SERCTL_ACTIVATE: u32 = 10;
@@ -43,7 +43,7 @@ identifier.
 When used with serctl, the extra argument must be the little endian
 representation of the stream identifier (e.g. "sout" -> 0x74756f73)
 
-Visit https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial
+Visit <https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial>
 to learn more.
  */
 pub const SERCTL_DEACTIVATE: u32 = 11;
@@ -53,7 +53,7 @@ Action macro to pass into fdctl that enables blocking writes for the file
 The extra argument is not used with this action, provide any value (e.g.
 NULL) instead
 
-Visit https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial
+Visit <https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial>
 to learn more.
  */
 pub const SERCTL_BLKWRITE: u32 = 12;
@@ -63,7 +63,7 @@ Action macro to pass into fdctl that makes writes non-blocking for the file
 The extra argument is not used with this action, provide any value (e.g.
 NULL) instead
 
-Visit https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial
+Visit <https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial>
 to learn more.
  */
 pub const SERCTL_NOBLKWRITE: u32 = 13;
@@ -74,7 +74,7 @@ capabilities
 The extra argument is not used with this action, provide any value (e.g.
 NULL) instead
 
-Visit https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial
+Visit <https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial>
 to learn more.
  */
 pub const SERCTL_ENABLE_COBS: u32 = 14;
@@ -85,7 +85,7 @@ capabilities
 The extra argument is not used with this action, provide any value (e.g.
 NULL) instead
 
-Visit https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial
+Visit <https://pros.cs.purdue.edu/v5/tutorials/topical/filesystem.html#serial>
 to learn more.
  */
 pub const SERCTL_DISABLE_COBS: u32 = 15;
@@ -117,7 +117,7 @@ extern "C" {
     Unblocks a task in the Blocked state (e.g. waiting for a delay, on a
     semaphore, etc.).
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#abort_delay for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#abort_delay> for
     details.
      */
     pub fn task_abort_delay(task: task_t) -> bool;
@@ -148,7 +148,7 @@ extern "C" {
     Creates a recursive mutex which can be locked recursively by the owner.
 
     See
-    https://pros.cs.purdue.edu/v5/extended/multitasking.html#recursive_mutexes
+    <https://pros.cs.purdue.edu/v5/extended/multitasking.html#recursive_mutexes>
     for details.
 
     \return A newly created recursive mutex.
@@ -158,7 +158,7 @@ extern "C" {
     Takes a recursive mutex.
 
     See
-    https://pros.cs.purdue.edu/v5/extended/multitasking.html#recursive_mutexes
+    <https://pros.cs.purdue.edu/v5/extended/multitasking.html#recursive_mutexes>
     for details.
 
     \param mutex
@@ -173,7 +173,7 @@ extern "C" {
     Gives a recursive mutex.
 
     See
-    https://pros.cs.purdue.edu/v5/extended/multitasking.html#recursive_mutexes
+    <https://pros.cs.purdue.edu/v5/extended/multitasking.html#recursive_mutexes>
     for details.
 
     \param mutex
@@ -185,7 +185,7 @@ extern "C" {
     /**
     Returns a handle to the current owner of a mutex.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#extra for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#extra> for
     details.
 
     \param mutex
@@ -198,7 +198,7 @@ extern "C" {
     /**
     Creates a counting sempahore.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/multitasking.html#semaphores for
+    See <https://pros.cs.purdue.edu/v5/tutorials/multitasking.html#semaphores> for
     details.
 
     \param max_count
@@ -213,7 +213,7 @@ extern "C" {
     /**
     Deletes a semaphore (or binary semaphore)
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#semaphores for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#semaphores> for
     details.
 
     \param sem
@@ -224,7 +224,7 @@ extern "C" {
     Creates a binary semaphore.
 
     See
-    https://pros.cs.purdue.edu/v5/extended/multitasking#.htmlbinary_semaphores
+    <https://pros.cs.purdue.edu/v5/extended/multitasking#.htmlbinary_semaphores>
     for details.
 
     \return A newly created semaphore.
@@ -234,7 +234,7 @@ extern "C" {
     Waits for the semaphore's value to be greater than 0. If the value is already
     greater than 0, this function immediately returns.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/multitasking.html#semaphores for
+    See <https://pros.cs.purdue.edu/v5/tutorials/multitasking.html#semaphores> for
     details.
 
     \param sem
@@ -252,7 +252,7 @@ extern "C" {
     /**
     Increments a semaphore's value.
 
-    See https://pros.cs.purdue.edu/v5/tutorials/multitasking.html#semaphores for
+    See <https://pros.cs.purdue.edu/v5/tutorials/multitasking.html#semaphores> for
     details.
 
     \param sem
@@ -266,7 +266,7 @@ extern "C" {
     /**
     Returns the current value of the semaphore.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#extra for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#extra> for
     details.
 
     \param sem
@@ -279,7 +279,7 @@ extern "C" {
     /**
     Creates a queue.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues> for
     details.
 
     \param length
@@ -295,7 +295,7 @@ extern "C" {
     Posts an item to the front of a queue. The item is queued by copy, not by
     reference.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues> for
     details.
 
     \param queue
@@ -314,7 +314,7 @@ extern "C" {
     Posts an item to the end of a queue. The item is queued by copy, not by
     reference.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues> for
     details.
 
     \param queue
@@ -332,7 +332,7 @@ extern "C" {
     /**
     Receive an item from a queue without removing the item from the queue.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues> for
     details.
 
     \param queue
@@ -349,7 +349,7 @@ extern "C" {
     /**
     Receive an item from the queue.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues> for
     details.
 
     \param queue
@@ -368,7 +368,7 @@ extern "C" {
     /**
     Return the number of messages stored in a queue.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues> for
     details.
 
     \param queue
@@ -380,7 +380,7 @@ extern "C" {
     /**
     Return the number of spaces left in a queue.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues> for
     details.
 
     \param queue
@@ -392,7 +392,7 @@ extern "C" {
     /**
     Delete a queue.
 
-    See https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues for
+    See <https://pros.cs.purdue.edu/v5/extended/multitasking.html#queues> for
     details.
 
     \param queue
