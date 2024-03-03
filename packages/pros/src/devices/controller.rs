@@ -135,43 +135,31 @@ impl Controller {
     }
 
     /// Gets the current state of the controller in its entirety.
-    pub fn state(&self) -> Result<ControllerState, ControllerError> {
-        Ok(ControllerState {
+    pub fn state(&self) -> ControllerState {
+        ControllerState {
             joysticks: unsafe {
                 Joysticks {
                     left: Joystick {
-                        x: bail_on!(
-                            PROS_ERR,
-                            pros_sys::controller_get_analog(
-                                self.id(),
-                                pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
-                            )
+                        x: pros_sys::controller_get_analog(
+                            self.id(),
+                            pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
                         ) as f32
                             / 127.0,
-                        y: bail_on!(
-                            PROS_ERR,
-                            pros_sys::controller_get_analog(
-                                self.id(),
-                                pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
-                            )
+                        y: pros_sys::controller_get_analog(
+                            self.id(),
+                            pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
                         ) as f32
                             / 127.0,
                     },
                     right: Joystick {
-                        x: bail_on!(
-                            PROS_ERR,
-                            pros_sys::controller_get_analog(
-                                self.id(),
-                                pros_sys::E_CONTROLLER_ANALOG_RIGHT_X,
-                            )
+                        x: pros_sys::controller_get_analog(
+                            self.id(),
+                            pros_sys::E_CONTROLLER_ANALOG_RIGHT_X,
                         ) as f32
                             / 127.0,
-                        y: bail_on!(
-                            PROS_ERR,
-                            pros_sys::controller_get_analog(
-                                self.id(),
-                                pros_sys::E_CONTROLLER_ANALOG_RIGHT_Y,
-                            )
+                        y: pros_sys::controller_get_analog(
+                            self.id(),
+                            pros_sys::E_CONTROLLER_ANALOG_RIGHT_Y,
                         ) as f32
                             / 127.0,
                     },
@@ -179,118 +167,72 @@ impl Controller {
             },
             buttons: unsafe {
                 Buttons {
-                    a: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_A,
-                        )
+                    a: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_A,
                     ) == 1,
-                    b: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_B,
-                        )
+                    b: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_B,
                     ) == 1,
-                    x: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_X,
-                        )
+                    x: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_X,
                     ) == 1,
-                    y: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_Y,
-                        )
+                    y: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_Y,
                     ) == 1,
-                    up: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_UP,
-                        )
+                    up: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_UP,
                     ) == 1,
-                    down: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_DOWN,
-                        )
+                    down: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_DOWN,
                     ) == 1,
-                    left: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_LEFT,
-                        )
+                    left: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_LEFT,
                     ) == 1,
-                    right: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_RIGHT,
-                        )
+                    right: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_RIGHT,
                     ) == 1,
-                    left_trigger_1: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_L1,
-                        )
+                    left_trigger_1: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_L1,
                     ) == 1,
-                    left_trigger_2: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_L2,
-                        )
+                    left_trigger_2: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_L2,
                     ) == 1,
-                    right_trigger_1: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_R1,
-                        )
+                    right_trigger_1: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_R1,
                     ) == 1,
-                    right_trigger_2: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_R2,
-                        )
+                    right_trigger_2: pros_sys::controller_get_digital(
+                        self.id(),
+                        pros_sys::E_CONTROLLER_DIGITAL_R2,
                     ) == 1,
                 }
             },
-        })
+        }
     }
 
     /// Gets the state of a specific button on the controller.
-    pub fn button(&self, button: ControllerButton) -> Result<bool, ControllerError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::controller_get_digital(self.id(), button as pros_sys::controller_digital_e_t)
-        }) == 1)
+    pub fn button(&self, button: ControllerButton) -> bool {
+        unsafe { pros_sys::controller_get_digital(self.id(), button as u32) == 1 }
     }
 
     /// Gets the state of a specific joystick axis on the controller.
-    pub fn joystick_axis(&self, axis: JoystickAxis) -> Result<f32, ControllerError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::controller_get_analog(self.id(), axis as pros_sys::controller_analog_e_t)
-        }) as f32
-            / 127.0)
+    pub fn joystick_axis(&self, axis: JoystickAxis) -> f32 {
+        unsafe { pros_sys::controller_get_analog(self.id(), axis as u32) as f32 / 127.0 }
     }
 }
 
 #[derive(Debug, Snafu)]
 pub enum ControllerError {
-    #[snafu(display(
-        "A controller ID other than E_CONTROLLER_MASTER or E_CONTROLLER_PARTNER was given."
-    ))]
-    InvalidControllerId,
-
     #[snafu(display("Another resource is already using the controller"))]
     ConcurrentAccess,
 }
@@ -298,6 +240,5 @@ pub enum ControllerError {
 map_errno! {
     ControllerError {
         EACCES => Self::ConcurrentAccess,
-        EINVAL => Self::InvalidControllerId,
     }
 }

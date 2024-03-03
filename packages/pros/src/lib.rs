@@ -83,6 +83,8 @@ pub mod usd;
 
 pub type Result<T = ()> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
 
+use crate::io::println;
+
 pub trait AsyncRobot {
     fn opcontrol(&mut self) -> impl Future<Output = Result> {
         async { Ok(()) }
@@ -355,9 +357,10 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
     // panic message here
     println!("task '{task_name}' {info}");
 
+    #[cfg(target_arch = "wasm32")]
+    wasm_env::sim_log_backtrace();
+
     unsafe {
-        #[cfg(target_arch = "wasm32")]
-        wasm_env::sim_log_backtrace();
         pros_sys::exit(1);
     }
 }
@@ -371,7 +374,6 @@ pub mod prelude {
     pub use crate::{
         async_robot,
         async_runtime::*,
-        dbg,
         devices::{
             adi::{
                 analog::{AdiAnalogIn, AdiAnalogOut},
@@ -397,13 +399,12 @@ pub mod prelude {
                 SmartDevice, SmartPort,
             },
         },
-        eprint, eprintln,
         error::PortError,
-        io::{BufRead, Read, Seek, Write},
+        io::{dbg, eprint, eprintln, print, println, BufRead, Read, Seek, Write},
         lcd::{buttons::Button, llemu_print, llemu_println, LcdError},
         os_task_local,
         pid::*,
-        print, println, sync_robot,
+        sync_robot,
         task::{delay, sleep, spawn},
         AsyncRobot, SyncRobot,
     };
