@@ -273,20 +273,20 @@ impl Motor {
     }
 
     /// Gets the voltage limit for the motor if one has been explicitly set.
-    pub fn voltage_limit(&self) -> Result<Option<f64>, MotorError> {
+    pub fn voltage_limit(&self) -> Result<f64, MotorError> {
         let raw_limit = bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_voltage_limit(self.port.index())
         });
 
         Ok(match raw_limit {
             // SDK uses a voltage limit of zero to indicate that there is no limit present
-            0 => None,
+            0 => Self::MAX_VOLTAGE,
 
             // TODO: Docs claim that this function returns volts, but I
             // seriously don't buy it. We unfortunately can't tell if
             // this is true or not just from source code, since this
             // function just wraps vexDeviceMotorVoltageLimitGet.
-            limit => Some(limit as f64 / 1000.0),
+            limit => limit as f64 / 1000.0,
         })
     }
 
