@@ -2,8 +2,9 @@
 
 use core::time::Duration;
 
+use bitflags::bitflags;
 use pros_core::{bail_on, error::PortError, map_errno};
-use pros_sys::{motor_fault_e_t, motor_flag_e_t, PROS_ERR, PROS_ERR_F};
+use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -290,44 +291,48 @@ impl Motor {
         })
     }
 
-    /// Get the status flagss of a motor.
+    /// Get the status flags of a motor.
     pub fn status(&self) -> Result<MotorStatus, MotorError> {
-        unsafe { pros_sys::motor_get_flags(self.port.index()).try_into() }
+        let bits = bail_on!(PROS_ERR as u32, unsafe {
+            pros_sys::motor_get_flags(self.port.index())
+        });
+
+        // For some reason, PROS doesn't set errno if this flag is returned,
+        // even though it is by-definition an error (failing to retrieve flags).
+        if (bits & pros_sys::E_MOTOR_FLAGS_BUSY) != 0 {
+            return Err(MotorError::Busy);
+        }
+
+        Ok(MotorStatus::from_bits_retain(bits))
     }
 
-    /// Check if the motor's stopped flag is set.
-    pub fn is_stopped(&self) -> Result<bool, MotorError> {
-        Ok(self.status()?.is_stopped())
-    }
-
-    /// Check if the motor's zeroed flag is set.
-    pub fn is_zeroed(&self) -> Result<bool, MotorError> {
-        Ok(self.status()?.is_zeroed())
-    }
-
-    /// Get the faults flags of the motor.
+    /// Get the fault flags of the motor.
     pub fn faults(&self) -> Result<MotorFaults, MotorError> {
-        unsafe { pros_sys::motor_get_faults(self.port.index()).try_into() }
+        let bits = bail_on!(PROS_ERR as u32, unsafe {
+            pros_sys::motor_get_faults(self.port.index())
+        });
+
+        Ok(MotorFaults::from_bits_retain(bits))
     }
 
     /// Check if the motor's over temperature flag is set.
     pub fn is_over_temperature(&self) -> Result<bool, MotorError> {
-        Ok(self.faults()?.is_over_temperature())
+        Ok(self.faults()?.contains(MotorFaults::OVER_TEMPERATURE))
     }
 
     /// Check if the motor's overcurrent flag is set.
     pub fn is_over_current(&self) -> Result<bool, MotorError> {
-        Ok(self.faults()?.is_over_current())
+        Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
 
     /// Check if a H-bridge (motor driver) fault has occurred.
     pub fn is_driver_fault(&self) -> Result<bool, MotorError> {
-        Ok(self.faults()?.is_driver_fault())
+        Ok(self.faults()?.contains(MotorFaults::DRIVER_FAULT))
     }
 
     /// Check if the motor's H-bridge has an overucrrent fault.
     pub fn is_driver_over_current(&self) -> Result<bool, MotorError> {
-        Ok(self.faults()?.is_driver_over_current())
+        Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
 
     /// Set whether or not this motor's ouput should be reversed.
@@ -343,11 +348,6 @@ impl Motor {
         Ok(bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_is_reversed(self.port.index())
         }) == 1)
-    }
-
-    /// Returns a future that completes when the motor reports that it has stopped.
-    pub const fn wait_until_stopped(&self) -> MotorStoppedFuture<'_> {
-        MotorStoppedFuture { motor: self }
     }
 
     /// Adjusts the internal tuning constants of the motor when using velocity control.
@@ -440,67 +440,44 @@ impl From<BrakeMode> for pros_sys::motor_brake_mode_e_t {
     }
 }
 
-/// The fault flags returned by a [`Motor`].
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
-pub struct MotorFaults(pub u32);
+bitflags! {
+    /// The fault flags returned by a [`Motor`].
+    #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+    pub struct MotorFaults: u32 {
+        /// The motor's temperature is above its limit.
+        const OVER_TEMPERATURE = pros_sys::E_MOTOR_FAULT_MOTOR_OVER_TEMP;
 
-impl MotorFaults {
-    /// Checks if the motor's temperature is above its limit.
-    pub fn is_over_temperature(&self) -> bool {
-        self.0 & pros_sys::E_MOTOR_FAULT_MOTOR_OVER_TEMP != 0
-    }
+        /// The motor is over current.
+        const OVER_CURRENT = pros_sys::E_MOTOR_FAULT_OVER_CURRENT;
 
-    /// Check if the motor's H-bridge has encountered a fault.
-    pub fn is_driver_fault(&self) -> bool {
-        self.0 & pros_sys::E_MOTOR_FAULT_DRIVER_FAULT != 0
-    }
+        /// The motor's H-bridge has encountered a fault.
+        const DRIVER_FAULT = pros_sys::E_MOTOR_FAULT_DRIVER_FAULT;
 
-    /// Check if the motor is over current.
-    pub fn is_over_current(&self) -> bool {
-        self.0 & pros_sys::E_MOTOR_FAULT_OVER_CURRENT != 0
-    }
-
-    /// Check if the motor's H-bridge is over current.
-    pub fn is_driver_over_current(&self) -> bool {
-        self.0 & pros_sys::E_MOTOR_FAULT_DRV_OVER_CURRENT != 0
+        /// The motor's H-bridge is over current.
+        const DRIVER_OVER_CURRENT = pros_sys::E_MOTOR_FAULT_DRV_OVER_CURRENT;
     }
 }
 
-impl TryFrom<motor_fault_e_t> for MotorFaults {
-    type Error = MotorError;
+bitflags! {
+    /// The status bits returned by a [`Motor`].
+    #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+    pub struct MotorStatus: u32 {
+        /// The motor is currently near zero velocity.
+        #[deprecated(
+            since = "0.9.0",
+            note = "This flag will never be set by the hardware, even though it exists in the SDK. This may change in the future."
+        )]
+        const STOPPED = pros_sys::E_MOTOR_FLAGS_ZERO_VELOCITY;
 
-    fn try_from(value: motor_fault_e_t) -> Result<Self, Self::Error> {
-        Ok(Self(bail_on!(PROS_ERR as _, value)))
-    }
-}
+        /// The motor is at its zero position.
+        #[deprecated(
+            since = "0.9.0",
+            note = "This flag will never be set by the hardware, even though it exists in the SDK. This may change in the future."
+        )]
+        const ZEROED = pros_sys::E_MOTOR_FLAGS_ZERO_POSITION;
 
-/// The status flags returned by a [`Motor`].
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
-pub struct MotorStatus(pub u32);
-
-impl MotorStatus {
-    /// Check if the motor is currently stopped.
-    pub fn is_stopped(&self) -> bool {
-        self.0 & pros_sys::E_MOTOR_FLAGS_ZERO_VELOCITY != 0
-    }
-
-    /// Check if the motor is at its zero position.
-    pub fn is_zeroed(&self) -> bool {
-        self.0 & pros_sys::E_MOTOR_FLAGS_ZERO_POSITION != 0
-    }
-}
-
-impl TryFrom<motor_flag_e_t> for MotorStatus {
-    type Error = MotorError;
-
-    fn try_from(value: motor_flag_e_t) -> Result<Self, Self::Error> {
-        let flags = bail_on!(PROS_ERR as _, value);
-
-        if flags & pros_sys::E_MOTOR_FLAGS_BUSY == 0 {
-            Ok(Self(flags))
-        } else {
-            Err(MotorError::Busy)
-        }
+        /// Cannot currently communicate to the motor
+        const BUSY = pros_sys::E_MOTOR_FLAGS_BUSY;
     }
 }
 
@@ -617,34 +594,16 @@ impl From<MotorTuningConstants> for pros_sys::motor_pid_full_s_t {
     }
 }
 
-/// A future that completes when the motor reports that it has stopped.
-/// Created by [`Motor::wait_until_stopped`]
-#[derive(Debug)]
-pub struct MotorStoppedFuture<'a> {
-    motor: &'a Motor,
-}
-
-impl<'a> core::future::Future for MotorStoppedFuture<'a> {
-    type Output = pros_core::error::Result;
-    fn poll(
-        self: core::pin::Pin<&mut Self>,
-        cx: &mut core::task::Context<'_>,
-    ) -> core::task::Poll<Self::Output> {
-        match self.motor.status()?.is_stopped() {
-            true => core::task::Poll::Ready(Ok(())),
-            false => {
-                cx.waker().wake_by_ref();
-                core::task::Poll::Pending
-            }
-        }
-    }
-}
-
 #[derive(Debug, Snafu)]
 /// Errors that can occur when using a motor.
 pub enum MotorError {
     /// Failed to communicate with the motor while attempting to read flags.
     Busy,
+
+    /// This functionality is not currently implemented in hardware, even
+    /// though the SDK may support it.
+    NotImplemented,
+
     /// Generic port related error.
     #[snafu(display("{source}"), context(false))]
     Port {
@@ -654,6 +613,8 @@ pub enum MotorError {
 }
 
 map_errno! {
-    MotorError {}
+    MotorError {
+        ENOSYS => Self::NotImplemented,
+    }
     inherit PortError;
 }
