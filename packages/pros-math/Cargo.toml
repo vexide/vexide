@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "Commonly used mathematical formulas for pros-rs"
-keywords = ["PROS", "Robotics"]
+keywords = ["PROS", "Robotics", "vex", "v5"]
 categories = [
     "no-std",
     "science::robotics",
+    "Mathematics",
 ]
 repository = "https://github.com/gavin-niederman/pros-rs"
 authors = [

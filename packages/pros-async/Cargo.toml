@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "A simple async executor for pros-rs"
-keywords = ["PROS", "Robotics", "bindings", "async"]
+keywords = ["PROS", "Robotics", "bindings", "async", "vex", "v5"]
 categories = [
     "no-std",
     "science::robotics",
