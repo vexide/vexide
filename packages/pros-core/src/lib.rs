@@ -3,7 +3,6 @@
 //!
 //! Included in this crate:
 //! - Global allocator: [`pros_alloc`]
-//! - Competition state checking: [`competition`]
 //! - Errno handling: [`error`]
 //! - Serial terminal printing: [`io`]
 //! - No-std [`Instant`](time::Instant)s: [`time`]

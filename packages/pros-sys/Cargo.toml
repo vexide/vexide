@@ -3,7 +3,7 @@ name = "pros-sys"
 version = "0.7.0"
 edition = "2021"
 description = "EFI for the PROS rust bindings"
-keywords = ["PROS", "Robotics", "bindings"]
+keywords = ["PROS", "Robotics", "bindings", "vex", "v5"]
 categories = [
     "api-bindings",
     "development-tools::ffi",
