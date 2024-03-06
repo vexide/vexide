@@ -23,14 +23,43 @@ pub enum MotorControl {
     /// Motor is braking using a [`BrakeMode`].
     Brake(BrakeMode),
 
-    /// Motor is attempting to hold a velocity using internal PID control.
-    Velocity(i32),
-
     /// Motor is outputting a raw voltage.
     Voltage(f64),
 
-    /// Motor is attempting to reach a position.
+    /// Motor is attempting to hold a velocity using internal PID control.
+    Velocity(i32),
+
+    /// Motor is attempting to reach a position using internal PID control.
     Position(Position, i32),
+}
+
+/// Represents a possible direction that a motor can be configured as.
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+pub enum Direction {
+    /// Motor rotates in the forward direction.
+    #[default]
+    Forward,
+
+    /// Motor rotates in the reverse direction.
+    Reverse
+}
+
+impl Direction {
+    /// Returns `true` if the level is [`Forward`].
+    pub const fn is_forward(&self) -> bool {
+        match self {
+            Self::Forward => true,
+            Self::Reverse => false,
+        }
+    }
+
+    /// Returns `true` if the level is [`Reverse`].
+    pub const fn is_reverse(&self) -> bool {
+        match self {
+            Self::Forward => false,
+            Self::Reverse => true,
+        }
+    }
 }
 
 impl Motor {
@@ -44,7 +73,7 @@ impl Motor {
     pub const DATA_WRITE_RATE: Duration = Duration::from_millis(5);
 
     /// Create a new motor from a smart port index.
-    pub fn new(port: SmartPort, gearset: Gearset, reversed: bool) -> Result<Self, MotorError> {
+    pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Result<Self, MotorError> {
         bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_set_encoder_units(port.index(), pros_sys::E_MOTOR_ENCODER_DEGREES)
         });
@@ -55,7 +84,7 @@ impl Motor {
         };
 
         motor.set_gearset(gearset)?;
-        motor.set_reversed(reversed)?;
+        motor.set_direction(direction)?;
 
         Ok(motor)
     }
@@ -146,7 +175,7 @@ impl Motor {
         Ok(())
     }
 
-    /// Get the current [`MotorControl`] value that the motor is attempting to reach.
+    /// Get the current [`MotorControl`] value that the motor is attempting to use.
     pub fn target(&self) -> MotorControl {
         self.target
     }
@@ -335,19 +364,24 @@ impl Motor {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
 
-    /// Set whether or not this motor's ouput should be reversed.
-    pub fn set_reversed(&mut self, reversed: bool) -> Result<(), MotorError> {
+    /// Set the [`Direction`] of this motor.
+    pub fn set_direction(&mut self, direction: Direction) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_reversed(self.port.index(), reversed)
+            pros_sys::motor_set_reversed(self.port.index(), direction.is_reverse())
         });
         Ok(())
     }
 
-    /// Check if this motor has been reversed.
-    pub fn is_reversed(&self) -> Result<bool, MotorError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
+    /// Get the [`Direction`] of this motor.
+    pub fn direction(&self) -> Result<Direction, MotorError> {
+        let reversed = bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_is_reversed(self.port.index())
-        }) == 1)
+        }) == 1;
+
+        Ok(match reversed {
+            false => Direction::Forward,
+            true => Direction::Reverse,
+        })
     }
 
     /// Adjusts the internal tuning constants of the motor when using velocity control.
