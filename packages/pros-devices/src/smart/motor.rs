@@ -13,12 +13,12 @@ use crate::Position;
 #[derive(Debug, PartialEq)]
 pub struct Motor {
     port: SmartPort,
-    target: MotorTarget,
+    target: MotorControl,
 }
 
 /// Represents a possible target for a [`Motor`].
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum MotorTarget {
+pub enum MotorControl {
     /// Motor is braking using a [`BrakeMode`].
     Brake(BrakeMode),
 
@@ -50,7 +50,7 @@ impl Motor {
 
         let mut motor = Self {
             port,
-            target: MotorTarget::Voltage(0.0),
+            target: MotorControl::Voltage(0.0),
         };
 
         motor.set_gearset(gearset)?;
@@ -62,26 +62,26 @@ impl Motor {
     /// Sets the target that the motor should attempt to reach.
     ///
     /// This could be a voltage, velocity, position, or even brake mode.
-    pub fn set_target(&mut self, target: MotorTarget) -> Result<(), MotorError> {
+    pub fn set_target(&mut self, target: MotorControl) -> Result<(), MotorError> {
         match target {
-            MotorTarget::Brake(mode) => unsafe {
+            MotorControl::Brake(mode) => unsafe {
                 bail_on!(
                     PROS_ERR,
                     pros_sys::motor_set_brake_mode(self.port.index(), mode.into())
                 );
                 bail_on!(PROS_ERR, pros_sys::motor_brake(self.port.index()));
             },
-            MotorTarget::Velocity(rpm) => {
+            MotorControl::Velocity(rpm) => {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_velocity(self.port.index(), rpm)
                 });
             }
-            MotorTarget::Voltage(volts) => {
+            MotorControl::Voltage(volts) => {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_voltage(self.port.index(), (volts * 1000.0) as i32)
                 });
             }
-            MotorTarget::Position(position, velocity) => {
+            MotorControl::Position(position, velocity) => {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_absolute(
                         self.port.index(),
@@ -98,7 +98,7 @@ impl Motor {
 
     /// Sets the motors target to a given [`BrakeMode`].
     pub fn brake(&mut self, mode: BrakeMode) -> Result<(), MotorError> {
-        self.set_target(MotorTarget::Brake(mode))
+        self.set_target(MotorControl::Brake(mode))
     }
 
     /// Spins the motor at a target velocity.
@@ -107,7 +107,7 @@ impl Motor {
     /// Velocity is held with an internal PID controller to ensure consistent speed, as opposed to setting the
     /// motor's voltage.
     pub fn set_velocity(&mut self, rpm: i32) -> Result<(), MotorError> {
-        self.set_target(MotorTarget::Velocity(rpm))
+        self.set_target(MotorControl::Velocity(rpm))
     }
 
     /// Sets the motor's ouput voltage.
@@ -115,7 +115,7 @@ impl Motor {
     /// This voltage value spans from -12 (fully spinning reverse) to +12 (fully spinning forwards) volts, and
     /// controls the raw output of the motor.
     pub fn set_voltage(&mut self, volts: f64) -> Result<(), MotorError> {
-        self.set_target(MotorTarget::Voltage(volts))
+        self.set_target(MotorControl::Voltage(volts))
     }
 
     /// Sets an absolute position target for the motor to attempt to reach.
@@ -124,7 +124,7 @@ impl Motor {
         position: Position,
         velocity: i32,
     ) -> Result<(), MotorError> {
-        self.set_target(MotorTarget::Position(position, velocity))
+        self.set_target(MotorControl::Position(position, velocity))
     }
 
     /// Changes the output velocity for a profiled movement (motor_move_absolute or motor_move_relative).
@@ -136,8 +136,8 @@ impl Motor {
         });
 
         match self.target {
-            MotorTarget::Position(position, _) => {
-                self.target = MotorTarget::Position(position, velocity)
+            MotorControl::Position(position, _) => {
+                self.target = MotorControl::Position(position, velocity)
             }
             _ => {}
         }
@@ -145,8 +145,8 @@ impl Motor {
         Ok(())
     }
 
-    /// Get the current [`MotorTarget`] value that the motor is attempting to reach.
-    pub fn target(&self) -> MotorTarget {
+    /// Get the current [`MotorControl`] value that the motor is attempting to reach.
+    pub fn target(&self) -> MotorControl {
         self.target
     }
 
