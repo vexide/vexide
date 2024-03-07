@@ -104,25 +104,41 @@ impl Motor {
                 );
                 bail_on!(PROS_ERR, pros_sys::motor_brake(self.port.index() as i8));
             },
-            MotorControl::Velocity(rpm) => {
-                bail_on!(PROS_ERR, unsafe {
+            MotorControl::Velocity(rpm) => unsafe {
+                bail_on!(
+                    PROS_ERR,
                     pros_sys::motor_move_velocity(self.port.index() as i8, rpm)
-                });
-            }
+                );
+                bail_on!(
+                    PROS_ERR,
+                    pros_sys::motor_set_brake_mode(
+                        self.port.index() as i8,
+                        pros_sys::E_MOTOR_BRAKE_COAST
+                    )
+                );
+            },
             MotorControl::Voltage(volts) => {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_voltage(self.port.index() as i8, (volts * 1000.0) as i32)
                 });
             }
-            MotorControl::Position(position, velocity) => {
-                bail_on!(PROS_ERR, unsafe {
+            MotorControl::Position(position, velocity) => unsafe {
+                bail_on!(
+                    PROS_ERR,
+                    pros_sys::motor_set_brake_mode(
+                        self.port.index() as i8,
+                        pros_sys::E_MOTOR_BRAKE_COAST
+                    )
+                );
+                bail_on!(
+                    PROS_ERR,
                     pros_sys::motor_move_absolute(
                         self.port.index() as i8,
                         position.into_degrees(),
                         velocity,
                     )
-                });
-            }
+                );
+            },
         }
 
         self.target = target;
@@ -507,14 +523,14 @@ bitflags! {
             since = "0.9.0",
             note = "This flag will never be set by the hardware, even though it exists in the SDK. This may change in the future."
         )]
-        const STOPPED = pros_sys::E_MOTOR_FLAGS_ZERO_VELOCITY;
+        const ZERO_VELOCITY = pros_sys::E_MOTOR_FLAGS_ZERO_VELOCITY;
 
         /// The motor is at its zero position.
         #[deprecated(
             since = "0.9.0",
             note = "This flag will never be set by the hardware, even though it exists in the SDK. This may change in the future."
         )]
-        const ZEROED = pros_sys::E_MOTOR_FLAGS_ZERO_POSITION;
+        const ZERO_POSITION = pros_sys::E_MOTOR_FLAGS_ZERO_POSITION;
 
         /// Cannot currently communicate to the motor
         const BUSY = pros_sys::E_MOTOR_FLAGS_BUSY;
