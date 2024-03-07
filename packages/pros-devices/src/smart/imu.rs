@@ -105,7 +105,7 @@ impl InertialSensor {
     /// Read the inertial sensor's status code.
     pub fn status(&self) -> Result<InertialStatus, InertialError> {
         let bits = bail_on!(pros_sys::E_IMU_STATUS_ERROR, unsafe {
-            pros_sys::motor_get_flags(self.port.index())
+            pros_sys::imu_get_status(self.port.index())
         });
 
         Ok(InertialStatus::from_bits_retain(bits))

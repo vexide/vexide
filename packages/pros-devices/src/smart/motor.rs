@@ -34,14 +34,13 @@ pub enum MotorControl {
 }
 
 /// Represents a possible direction that a motor can be configured as.
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Direction {
     /// Motor rotates in the forward direction.
-    #[default]
     Forward,
 
     /// Motor rotates in the reverse direction.
-    Reverse
+    Reverse,
 }
 
 impl Direction {
@@ -73,9 +72,13 @@ impl Motor {
     pub const DATA_WRITE_RATE: Duration = Duration::from_millis(5);
 
     /// Create a new motor from a smart port index.
-    pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Result<Self, MotorError> {
+    pub fn new(
+        port: SmartPort,
+        gearset: Gearset,
+        direction: Direction,
+    ) -> Result<Self, MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_encoder_units(port.index(), pros_sys::E_MOTOR_ENCODER_DEGREES)
+            pros_sys::motor_set_encoder_units(port.index() as i8, pros_sys::E_MOTOR_ENCODER_DEGREES)
         });
 
         let mut motor = Self {
@@ -97,24 +100,24 @@ impl Motor {
             MotorControl::Brake(mode) => unsafe {
                 bail_on!(
                     PROS_ERR,
-                    pros_sys::motor_set_brake_mode(self.port.index(), mode.into())
+                    pros_sys::motor_set_brake_mode(self.port.index() as i8, mode.into())
                 );
-                bail_on!(PROS_ERR, pros_sys::motor_brake(self.port.index()));
+                bail_on!(PROS_ERR, pros_sys::motor_brake(self.port.index() as i8));
             },
             MotorControl::Velocity(rpm) => {
                 bail_on!(PROS_ERR, unsafe {
-                    pros_sys::motor_move_velocity(self.port.index(), rpm)
+                    pros_sys::motor_move_velocity(self.port.index() as i8, rpm)
                 });
             }
             MotorControl::Voltage(volts) => {
                 bail_on!(PROS_ERR, unsafe {
-                    pros_sys::motor_move_voltage(self.port.index(), (volts * 1000.0) as i32)
+                    pros_sys::motor_move_voltage(self.port.index() as i8, (volts * 1000.0) as i32)
                 });
             }
             MotorControl::Position(position, velocity) => {
                 bail_on!(PROS_ERR, unsafe {
                     pros_sys::motor_move_absolute(
-                        self.port.index(),
+                        self.port.index() as i8,
                         position.into_degrees(),
                         velocity,
                     )
@@ -162,7 +165,7 @@ impl Motor {
     /// This will have no effect if the motor is not following a profiled movement.
     pub fn update_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_modify_profiled_velocity(self.port.index(), velocity)
+            pros_sys::motor_modify_profiled_velocity(self.port.index() as i8, velocity)
         });
 
         match self.target {
@@ -183,34 +186,34 @@ impl Motor {
     /// Sets the gearset of the motor.
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_gearing(self.port.index(), gearset as i32)
+            pros_sys::motor_set_gearing(self.port.index() as i8, gearset as i32)
         });
         Ok(())
     }
 
     /// Gets the gearset of the motor.
     pub fn gearset(&self) -> Result<Gearset, MotorError> {
-        unsafe { pros_sys::motor_get_gearing(self.port.index()).try_into() }
+        unsafe { pros_sys::motor_get_gearing(self.port.index() as i8).try_into() }
     }
 
     /// Gets the estimated angular velocity (RPM) of the motor.
     pub fn velocity(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_actual_velocity(self.port.index())
+            pros_sys::motor_get_actual_velocity(self.port.index() as i8)
         }))
     }
 
     /// Returns the power drawn by the motor in Watts.
     pub fn power(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_power(self.port.index())
+            pros_sys::motor_get_power(self.port.index() as i8)
         }))
     }
 
     /// Returns the torque output of the motor in Nm.
     pub fn torque(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_torque(self.port.index())
+            pros_sys::motor_get_torque(self.port.index() as i8)
         }))
     }
 
@@ -218,7 +221,7 @@ impl Motor {
     pub fn voltage(&self) -> Result<f64, MotorError> {
         // docs say this function returns PROS_ERR_F but it actually returns PROS_ERR
         let millivolts = bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_voltage(self.port.index())
+            pros_sys::motor_get_voltage(self.port.index() as i8)
         });
         Ok(millivolts as f64 / 1000.0)
     }
@@ -226,21 +229,24 @@ impl Motor {
     /// Returns the current position of the motor.
     pub fn position(&self) -> Result<Position, MotorError> {
         Ok(Position::from_degrees(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_position(self.port.index())
+            pros_sys::motor_get_position(self.port.index() as i8)
         })))
     }
 
     /// Returns the raw position tick data recorded by the motor at a given timestamp.
     pub fn raw_position(&self, timestamp: Duration) -> Result<i32, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_raw_position(self.port.index(), timestamp.as_millis() as *const u32)
+            pros_sys::motor_get_raw_position(
+                self.port.index() as i8,
+                timestamp.as_millis() as *const u32,
+            )
         }))
     }
 
     /// Returns the electrical current draw of the motor in amps.
     pub fn current(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_current_draw(self.port.index())
+            pros_sys::motor_get_current_draw(self.port.index() as i8)
         }) as f64
             / 1000.0)
     }
@@ -252,7 +258,7 @@ impl Motor {
     /// is drawing power but not moving.
     pub fn efficiency(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_efficiency(self.port.index())
+            pros_sys::motor_get_efficiency(self.port.index() as i8)
         }))
     }
 
@@ -260,7 +266,7 @@ impl Motor {
     /// Analogous to taring or resetting the encoder to the current position.
     pub fn zero(&mut self) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_tare_position(self.port.index())
+            pros_sys::motor_tare_position(self.port.index() as i8)
         });
         Ok(())
     }
@@ -269,7 +275,7 @@ impl Motor {
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
     pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_zero_position(self.port.index(), position.into_degrees())
+            pros_sys::motor_set_zero_position(self.port.index() as i8, position.into_degrees())
         });
         Ok(())
     }
@@ -277,7 +283,7 @@ impl Motor {
     /// Sets the current limit for the motor in amps.
     pub fn set_current_limit(&mut self, limit: f64) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_current_limit(self.port.index(), (limit * 1000.0) as i32)
+            pros_sys::motor_set_current_limit(self.port.index() as i8, (limit * 1000.0) as i32)
         });
         Ok(())
     }
@@ -289,7 +295,7 @@ impl Motor {
             // seriously don't buy it. We unfortunately can't tell if
             // this is true or not just from source code, since this
             // function just wraps vexDeviceMotorVoltageLimitSet.
-            pros_sys::motor_set_voltage_limit(self.port.index(), (limit * 1000.0) as i32)
+            pros_sys::motor_set_voltage_limit(self.port.index() as i8, (limit * 1000.0) as i32)
         });
         Ok(())
     }
@@ -297,7 +303,7 @@ impl Motor {
     /// Gets the current limit for the motor in amps.
     pub fn current_limit(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_current_limit(self.port.index())
+            pros_sys::motor_get_current_limit(self.port.index() as i8)
         }) as f64
             / 1000.0)
     }
@@ -305,7 +311,7 @@ impl Motor {
     /// Gets the voltage limit for the motor if one has been explicitly set.
     pub fn voltage_limit(&self) -> Result<f64, MotorError> {
         let raw_limit = bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_voltage_limit(self.port.index())
+            pros_sys::motor_get_voltage_limit(self.port.index() as i8)
         });
 
         Ok(match raw_limit {
@@ -323,7 +329,7 @@ impl Motor {
     /// Get the status flags of a motor.
     pub fn status(&self) -> Result<MotorStatus, MotorError> {
         let bits = bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::motor_get_flags(self.port.index())
+            pros_sys::motor_get_flags(self.port.index() as i8)
         });
 
         // For some reason, PROS doesn't set errno if this flag is returned,
@@ -338,7 +344,7 @@ impl Motor {
     /// Get the fault flags of the motor.
     pub fn faults(&self) -> Result<MotorFaults, MotorError> {
         let bits = bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::motor_get_faults(self.port.index())
+            pros_sys::motor_get_faults(self.port.index() as i8)
         });
 
         Ok(MotorFaults::from_bits_retain(bits))
@@ -367,7 +373,7 @@ impl Motor {
     /// Set the [`Direction`] of this motor.
     pub fn set_direction(&mut self, direction: Direction) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_reversed(self.port.index(), direction.is_reverse())
+            pros_sys::motor_set_reversed(self.port.index() as i8, direction.is_reverse())
         });
         Ok(())
     }
@@ -375,7 +381,7 @@ impl Motor {
     /// Get the [`Direction`] of this motor.
     pub fn direction(&self) -> Result<Direction, MotorError> {
         let reversed = bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_is_reversed(self.port.index())
+            pros_sys::motor_is_reversed(self.port.index() as i8)
         }) == 1;
 
         Ok(match reversed {
@@ -402,7 +408,7 @@ impl Motor {
     ) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             #[allow(deprecated)]
-            pros_sys::motor_set_pos_pid_full(self.port.index(), constants.into())
+            pros_sys::motor_set_pos_pid_full(self.port.index() as i8, constants.into())
         });
         Ok(())
     }
@@ -425,7 +431,7 @@ impl Motor {
     ) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
             #[allow(deprecated)]
-            pros_sys::motor_set_vel_pid_full(self.port.index(), constants.into())
+            pros_sys::motor_set_vel_pid_full(self.port.index() as i8, constants.into())
         });
         Ok(())
     }
