@@ -307,10 +307,8 @@ impl Motor {
     /// Sets the voltage limit for the motor in volts.
     pub fn set_voltage_limit(&mut self, limit: f64) -> Result<(), MotorError> {
         bail_on!(PROS_ERR, unsafe {
-            // TODO: Docs claim that this function takes volts, but I
-            // seriously don't buy it. We unfortunately can't tell if
-            // this is true or not just from source code, since this
-            // function just wraps vexDeviceMotorVoltageLimitSet.
+            // Docs claim that this function takes volts, but this is incorrect. It takes millivolts,
+            // just like all other SDK voltage-related functions.
             pros_sys::motor_set_voltage_limit(self.port.index() as i8, (limit * 1000.0) as i32)
         });
         Ok(())
