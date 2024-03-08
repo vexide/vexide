@@ -311,6 +311,7 @@ impl Motor {
             // just like all other SDK voltage-related functions.
             pros_sys::motor_set_voltage_limit(self.port.index() as i8, (limit * 1000.0) as i32)
         });
+
         Ok(())
     }
 
@@ -322,23 +323,18 @@ impl Motor {
             / 1000.0)
     }
 
-    /// Gets the voltage limit for the motor if one has been explicitly set.
-    pub fn voltage_limit(&self) -> Result<f64, MotorError> {
-        let raw_limit = bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_voltage_limit(self.port.index() as i8)
-        });
-
-        Ok(match raw_limit {
-            // SDK uses a voltage limit of zero to indicate that there is no limit present
-            0 => Self::MAX_VOLTAGE,
-
-            // TODO: Docs claim that this function returns volts, but I
-            // seriously don't buy it. We unfortunately can't tell if
-            // this is true or not just from source code, since this
-            // function just wraps vexDeviceMotorVoltageLimitGet.
-            limit => limit as f64 / 1000.0,
-        })
-    }
+    // /// Gets the voltage limit for the motor if one has been explicitly set.
+    // /// NOTE: Broken until next kernel version due to mutex release bug.
+    // pub fn voltage_limit(&self) -> Result<f64, MotorError> {
+    //     // NOTE: PROS docs claim that this function will return zero if voltage is uncapped.
+    //     //
+    //     // From testing this does not appear to be true, so we don't need to perform any
+    //     // special checks for a zero return value.
+    //     Ok(bail_on!(PROS_ERR, unsafe {
+    //         pros_sys::motor_get_voltage_limit(self.port.index() as i8)
+    //     }) as f64
+    //         / 1000.0)
+    // }
 
     /// Get the status flags of a motor.
     pub fn status(&self) -> Result<MotorStatus, MotorError> {
