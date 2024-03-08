@@ -107,14 +107,14 @@ impl Motor {
             MotorControl::Velocity(rpm) => unsafe {
                 bail_on!(
                     PROS_ERR,
-                    pros_sys::motor_move_velocity(self.port.index() as i8, rpm)
-                );
-                bail_on!(
-                    PROS_ERR,
                     pros_sys::motor_set_brake_mode(
                         self.port.index() as i8,
                         pros_sys::E_MOTOR_BRAKE_COAST
                     )
+                );
+                bail_on!(
+                    PROS_ERR,
+                    pros_sys::motor_move_velocity(self.port.index() as i8, rpm)
                 );
             },
             MotorControl::Voltage(volts) => {
@@ -168,7 +168,7 @@ impl Motor {
     }
 
     /// Sets an absolute position target for the motor to attempt to reach.
-    pub fn rotate_to_position(
+    pub fn set_position_target(
         &mut self,
         position: Position,
         velocity: i32,
