@@ -557,6 +557,22 @@ impl Gearset {
     pub const RPM_200: Gearset = Gearset::Green;
     /// 600 rpm
     pub const RPM_600: Gearset = Gearset::Blue;
+
+    /// Rated max speed for a smart motor with a red gearset cartridge.
+    pub const MAX_RED_RPM: f64 = 100.0;
+    /// Rated speed for a smart motor with a green cartridge.
+    pub const MAX_GREEN_RPM: f64 = 200.0;
+    /// Rated speed for a smart motor with a blue cartridge.
+    pub const MAX_BLUE_RPM: f64 = 600.0;
+
+    /// Get the rated maximum speed for this motor gearset.
+    pub const fn max_rpm(&self) -> f64 {
+        match self {
+            Self::Red => Self::MAX_RED_RPM,
+            Self::Green => Self::MAX_GREEN_RPM,
+            Self::Blue => Self::MAX_BLUE_RPM,
+        }
+    }
 }
 
 impl From<Gearset> for pros_sys::motor_gearset_e_t {
