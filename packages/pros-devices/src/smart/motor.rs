@@ -3,7 +3,7 @@
 use core::time::Duration;
 
 use bitflags::bitflags;
-use pros_core::{bail_on, error::PortError, map_errno};
+use pros_core::{bail_on, error::PortError, map_errno, time::Instant};
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
@@ -249,14 +249,24 @@ impl Motor {
         })))
     }
 
-    /// Returns the raw position tick data recorded by the motor at a given timestamp.
-    pub fn raw_position(&self, timestamp: Duration) -> Result<i32, MotorError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
+    /// Returns the most recently recorded raw encoder tick data from the motor's IME
+    /// along with a timestamp of the internal clock of the motor indicating when the
+    /// data was recorded.
+    pub fn raw_position(&self) -> Result<(i32, Duration), MotorError> {
+        let timestamp = 0 as *mut u32;
+
+        // PROS docs claim that this function gets the position *at* a recorded timestamp,
+        // but in reality the "timestamp" paramater is a mutable outvalue. The function
+        // outputs the most recent recorded posision AND the timestamp it was measured at,
+        // rather than a position at a requested timestamp.
+        let ticks = bail_on!(PROS_ERR, unsafe {
             pros_sys::motor_get_raw_position(
                 self.port.index() as i8,
-                timestamp.as_millis() as *const u32,
+                timestamp,
             )
-        }))
+        });
+
+        Ok((ticks, Duration::from_millis(unsafe { *timestamp } as u64)))
     }
 
     /// Returns the electrical current draw of the motor in amps.
