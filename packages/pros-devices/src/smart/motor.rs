@@ -7,7 +7,7 @@ use pros_core::{bail_on, error::PortError, map_errno};
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
-use super::{SmartDevice, SmartDeviceType, SmartDeviceTimestamp, SmartPort};
+use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
 use crate::Position;
 
 /// The basic motor struct.

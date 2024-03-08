@@ -30,6 +30,8 @@ pub mod optical;
 pub mod rotation;
 pub mod vision;
 
+use core::fmt;
+
 pub use distance::DistanceSensor;
 pub use expander::AdiExpander;
 pub use gps::GpsSensor;
@@ -40,8 +42,6 @@ pub use optical::OpticalSensor;
 use pros_core::{bail_on, error::PortError};
 pub use rotation::RotationSensor;
 pub use vision::VisionSensor;
-
-use core::fmt;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {
