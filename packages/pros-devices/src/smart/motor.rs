@@ -267,15 +267,15 @@ impl Motor {
             / 1000.0)
     }
 
-    /// Gets the efficiency of the motor in percent.
+    /// Gets the efficiency of the motor from a range of [0.0, 1.0].
     ///
-    /// An efficiency of 100% means that the motor is moving electrically while
-    /// drawing no electrical power, and an efficiency of 0% means that the motor
+    /// An efficiency of 1.0 means that the motor is moving electrically while
+    /// drawing no electrical power, and an efficiency of 0.0 means that the motor
     /// is drawing power but not moving.
     pub fn efficiency(&self) -> Result<f64, MotorError> {
         Ok(bail_on!(PROS_ERR_F, unsafe {
             pros_sys::motor_get_efficiency(self.port.index() as i8)
-        }))
+        }) / 100.0)
     }
 
     /// Sets the current encoder position to zero without moving the motor.
