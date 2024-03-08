@@ -260,10 +260,7 @@ impl Motor {
         // outputs the most recent recorded posision AND the timestamp it was measured at,
         // rather than a position at a requested timestamp.
         let ticks = bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_raw_position(
-                self.port.index() as i8,
-                timestamp,
-            )
+            pros_sys::motor_get_raw_position(self.port.index() as i8, timestamp)
         });
 
         Ok((ticks, Duration::from_millis(unsafe { *timestamp } as u64)))
