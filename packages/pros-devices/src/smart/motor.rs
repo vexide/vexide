@@ -3,11 +3,11 @@
 use core::time::Duration;
 
 use bitflags::bitflags;
-use pros_core::{bail_on, error::PortError, map_errno, time::Instant};
+use pros_core::{bail_on, error::PortError, map_errno};
 use pros_sys::{PROS_ERR, PROS_ERR_F};
 use snafu::Snafu;
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceType, SmartDeviceTimestamp, SmartPort};
 use crate::Position;
 
 /// The basic motor struct.
@@ -252,7 +252,7 @@ impl Motor {
     /// Returns the most recently recorded raw encoder tick data from the motor's IME
     /// along with a timestamp of the internal clock of the motor indicating when the
     /// data was recorded.
-    pub fn raw_position(&self) -> Result<(i32, Duration), MotorError> {
+    pub fn raw_position(&self) -> Result<(i32, SmartDeviceTimestamp), MotorError> {
         let timestamp = 0 as *mut u32;
 
         // PROS docs claim that this function gets the position *at* a recorded timestamp,
@@ -263,7 +263,7 @@ impl Motor {
             pros_sys::motor_get_raw_position(self.port.index() as i8, timestamp)
         });
 
-        Ok((ticks, Duration::from_millis(unsafe { *timestamp } as u64)))
+        Ok((ticks, SmartDeviceTimestamp(unsafe { *timestamp })))
     }
 
     /// Returns the electrical current draw of the motor in amps.
