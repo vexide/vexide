@@ -51,10 +51,7 @@ impl AsyncRobot for ExampleRobot {
             let motor = Arc::clone(&self.motor); // Obtain a shared reference to our motor to safely share between tasks.
 
             move || loop {
-                println!(
-                    "Motor stopped? {}",
-                    motor.lock().velocity() < 2
-                );
+                println!("Motor stopped? {}", motor.lock().velocity() < 2);
 
                 // Sleep the task as to not steal processing time from the OS.
                 // This should always be done in any loop, including loops in the main task.
