@@ -544,26 +544,33 @@ pub enum Gearset {
 }
 
 impl Gearset {
-    /// 36:1 gear ratio
-    pub const RATIO_36: Gearset = Gearset::Red;
-    /// 18:1 gear ratio
-    pub const RATIO_18: Gearset = Gearset::Green;
-    /// 6:1 gear ratio
-    pub const RATIO_6: Gearset = Gearset::Blue;
+    /// 36:1 gear ratio (alias to `Self::Red`)
+    pub const RATIO_36: Gearset = Self::Red;
+    /// 18:1 gear ratio (alias to `Self::Green`)
+    pub const RATIO_18: Gearset = Self::Green;
+    /// 6:1 gear ratio (alias to `Self::Blue`)
+    pub const RATIO_6: Gearset = Self::Blue;
 
-    /// 100 rpm
-    pub const RPM_100: Gearset = Gearset::Red;
-    /// 200 rpm
-    pub const RPM_200: Gearset = Gearset::Green;
-    /// 600 rpm
-    pub const RPM_600: Gearset = Gearset::Blue;
+    /// 100 rpm gearset (alias to `Self::Red`)
+    pub const RPM_100: Gearset = Self::Red;
+    /// 200 rpm (alias to `Self::Green`)
+    pub const RPM_200: Gearset = Self::Green;
+    /// 600 rpm (alias to `Self::Blue`)
+    pub const RPM_600: Gearset = Self::Blue;
 
-    /// Rated max speed for a smart motor with a red gearset cartridge.
+    /// Rated max speed for a smart motor with a [`Red`] gearset.
     pub const MAX_RED_RPM: f64 = 100.0;
-    /// Rated speed for a smart motor with a green cartridge.
+    /// Rated speed for a smart motor with a [`Green`] gearset.
     pub const MAX_GREEN_RPM: f64 = 200.0;
-    /// Rated speed for a smart motor with a blue cartridge.
+    /// Rated speed for a smart motor with a [`Blue`] gearset.
     pub const MAX_BLUE_RPM: f64 = 600.0;
+
+    /// Number of encoder ticks per revolution for the [`Red`] gearset.
+    pub const RED_TICKS_PER_REVOLUTION: u32 = 1800;
+    /// Number of encoder ticks per revolution for the [`Green`] gearset.
+    pub const GREEN_TICKS_PER_REVOLUTION: u32 = 900;
+    /// Number of encoder ticks per revolution for the [`Blue`] gearset.
+    pub const BLUE_TICKS_PER_REVOLUTION: u32 = 300;
 
     /// Get the rated maximum speed for this motor gearset.
     pub const fn max_rpm(&self) -> f64 {
@@ -571,6 +578,15 @@ impl Gearset {
             Self::Red => Self::MAX_RED_RPM,
             Self::Green => Self::MAX_GREEN_RPM,
             Self::Blue => Self::MAX_BLUE_RPM,
+        }
+    }
+
+    /// Get the number of encoder ticks per revolution for this motor gearset.
+    pub const fn ticks_per_revolution(&self) -> u32 {
+        match self {
+            Self::Red => Self::RED_TICKS_PER_REVOLUTION,
+            Self::Green => Self::GREEN_TICKS_PER_REVOLUTION,
+            Self::Blue => Self::BLUE_TICKS_PER_REVOLUTION,
         }
     }
 }
