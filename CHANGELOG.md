@@ -23,11 +23,14 @@ Before releasing:
 
 ### Added
 
-- `object_size` method on `DistanceSensor` for getting a guess at an object's relative size.
+- `relative_size` method on `DistanceSensor` for getting a guess at an object's relative size. (#73)
 
 ### Fixed
 
 ### Changed
+
+- Renamed `DistanceSensor::object_velocity` to `DistanceSensor::velocity`.
+- Adjusted `distance_confidence` to return a value from [`0.0`, `1.0`] rather than 0-100 to match other percentage getters.
 
 ### Removed
 
