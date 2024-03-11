@@ -26,9 +26,6 @@ pros-core = { version = "0.1.0", path = "../pros-core", optional = true }
 pros-math = { version = "0.1.0", path = "../pros-math", optional = true }
 pros-sys = { version = "0.7.0", path = "../pros-sys" }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-dlmalloc = { version = "0.2.4", features = ["global"] }
-
 [features]
 default = ["async", "devices", "panic", "display_panics", "core", "math"]
 
