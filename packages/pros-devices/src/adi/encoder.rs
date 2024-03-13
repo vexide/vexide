@@ -3,6 +3,8 @@
 use pros_core::bail_on;
 use pros_sys::{ext_adi_encoder_t, PROS_ERR};
 
+use crate::Position;
+
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 
 /// ADI encoder device.
@@ -49,10 +51,12 @@ impl AdiEncoder {
     }
 
     /// Gets the number of ticks recorded by the encoder.
-    pub fn position(&self) -> Result<i32, AdiError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
+    pub fn position(&self) -> Result<Position, AdiError> {
+        let degrees = bail_on!(PROS_ERR, unsafe {
             pros_sys::adi_encoder_get(self.raw)
-        }))
+        });
+
+        Ok(Position::from_degrees(degrees as f64))
     }
 }
 

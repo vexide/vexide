@@ -49,6 +49,7 @@ Before releasing:
   - Renamed `Motor::get_state` to `Motor::status`.
 - Status structs containing device bits now use the `bitflags!` crate. (**Breaking Change**) (#66)
 - Renamed `InertialSensor::calibrating` to `InertialSensor::calibrating` (**Breaking CHange**) (#66)
+- AdiEncoder now returns `Position` rather than just degrees.
 
 ### Removed
 
