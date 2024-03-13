@@ -31,6 +31,7 @@ Before releasing:
   - Added support for getting motor fault flags (e.g. over-temperature, over-current, H-bridge faults).
   - Added support for internal motor PID tuning. Feature gated behind `dangerous_motor_tuning`, as this can cause hardware damage and is not recommended.
   - Added various constants for convenience around `Motor` and `Gearset`.
+- Added `Controller` API to the `pros::prelude` module. (#108)
 
 ### Fixed
 
