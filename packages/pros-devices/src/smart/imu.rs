@@ -6,6 +6,7 @@ use core::{
     time::Duration,
 };
 
+use bitflags::bitflags;
 use pros_core::{
     bail_on,
     error::{take_errno, FromErrno, PortError},
@@ -56,8 +57,8 @@ impl InertialSensor {
     }
 
     /// Check if the Intertial Sensor is currently calibrating.
-    pub fn calibrating(&mut self) -> Result<bool, InertialError> {
-        Ok(self.status()?.calibrating())
+    pub fn is_calibrating(&mut self) -> Result<bool, InertialError> {
+        Ok(self.status()?.contains(InertialStatus::CALIBRATING))
     }
 
     /// Get the total number of degrees the Inertial Sensor has spun about the z-axis.
@@ -103,7 +104,11 @@ impl InertialSensor {
 
     /// Read the inertial sensor's status code.
     pub fn status(&self) -> Result<InertialStatus, InertialError> {
-        unsafe { pros_sys::imu_get_status(self.port.index()).try_into() }
+        let bits = bail_on!(pros_sys::E_IMU_STATUS_ERROR, unsafe {
+            pros_sys::imu_get_status(self.port.index())
+        });
+
+        Ok(InertialStatus::from_bits_retain(bits))
     }
 
     /// Get a quaternion representing the Inertial Sensor’s orientation.
@@ -376,22 +381,12 @@ impl TryFrom<pros_sys::imu_raw_s> for InertialRaw {
     }
 }
 
-/// Represents a status code returned by the Inertial Sensor.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct InertialStatus(pub u32);
-
-impl InertialStatus {
-    /// Determine if the sensor is currently calibrating.
-    pub const fn calibrating(&self) -> bool {
-        self.0 & pros_sys::E_IMU_STATUS_CALIBRATING != 0
-    }
-}
-
-impl TryFrom<pros_sys::imu_status_e_t> for InertialStatus {
-    type Error = InertialError;
-
-    fn try_from(value: pros_sys::imu_status_e_t) -> Result<Self, Self::Error> {
-        Ok(Self(bail_on!(pros_sys::E_IMU_STATUS_ERROR, value)))
+bitflags! {
+    /// The status bits returned by an [`InertialSensor`].
+    #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+    pub struct InertialStatus: u32 {
+        /// The sensor is currently calibrating.
+        const CALIBRATING = pros_sys::E_IMU_STATUS_CALIBRATING;
     }
 }
 
