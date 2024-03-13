@@ -185,8 +185,9 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
+            let robot = Default::default();
             unsafe {
-                ROBOT = Some(Default::default());
+                ROBOT = Some(robot);
             }
         }
     };
@@ -195,8 +196,9 @@ macro_rules! async_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
+            let robot = $init;
             unsafe {
-                ROBOT = Some($init);
+                ROBOT = Some(robot);
             }
         }
     };

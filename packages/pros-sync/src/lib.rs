@@ -123,8 +123,9 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
+            let robot = Default::default();
             unsafe {
-                ROBOT = Some(Default::default());
+                ROBOT = Some(robot);
             }
         }
     };
@@ -133,8 +134,9 @@ macro_rules! sync_robot {
 
         #[no_mangle]
         extern "C" fn initialize() {
+            let robot = $init;
             unsafe {
-                ROBOT = Some($init);
+                ROBOT = Some(robot);
             }
         }
     };

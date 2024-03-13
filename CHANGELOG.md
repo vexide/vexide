@@ -35,6 +35,7 @@ Before releasing:
 ### Fixed
 
 - `pros_sys` bindings to the Motors C API now takes the correct port type (`i8`) as of PROS 4 (**Breaking Change**) (#66).
+- Fixed the unintended `unsafe` context present in the `sync_robot` and `async_robot` family of macros (**Breaking Change**) (#107).
 
 ### Changed
 
