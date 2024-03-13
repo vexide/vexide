@@ -43,3 +43,4 @@ pub const ERANGE: c_int = 34;
 pub const EHOSTDOWN: c_int = 112;
 pub const EBADMSG: c_int = 74;
 pub const EADDRINUSE: c_int = 98;
+pub const ENOSYS: c_int = 38;

@@ -118,7 +118,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_move(port: u8, voltage: i32) -> i32;
+    pub fn motor_move(port: i8, voltage: i32) -> i32;
     /**
     Stops the motor using the currently configured brake mode.
 
@@ -138,7 +138,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_brake(port: u8) -> i32;
+    pub fn motor_brake(port: i8) -> i32;
     /**
     Sets the target absolute position for the motor to move to.
 
@@ -163,7 +163,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_move_absolute(port: u8, position: c_double, velocity: i32) -> i32;
+    pub fn motor_move_absolute(port: i8, position: c_double, velocity: i32) -> i32;
     /**
     Sets the relative target position for the motor to move to.
 
@@ -190,7 +190,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_move_relative(port: u8, position: c_double, velocity: i32) -> i32;
+    pub fn motor_move_relative(port: i8, position: c_double, velocity: i32) -> i32;
     /**
     Sets the velocity for the motor.
 
@@ -214,7 +214,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_move_velocity(port: u8, velocity: i32) -> i32;
+    pub fn motor_move_velocity(port: i8, velocity: i32) -> i32;
     /**
     Sets the output voltage for the motor from -12000 to 12000 in millivolts
 
@@ -231,7 +231,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_move_voltage(port: u8, voltage: i32) -> i32;
+    pub fn motor_move_voltage(port: i8, voltage: i32) -> i32;
     /**
     Changes the output velocity for a profiled movement (motor_move_absolute or
     motor_move_relative). This will have no effect if the motor is not following
@@ -251,7 +251,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_modify_profiled_velocity(port: u8, velocity: i32) -> i32;
+    pub fn motor_modify_profiled_velocity(port: i8, velocity: i32) -> i32;
     /**
     Gets the target position set for the motor by the user.
 
@@ -266,7 +266,7 @@ extern "C" {
     \return The target position in its encoder units or PROS_ERR_F if the
     operation failed, setting errno.
     */
-    pub fn motor_get_target_position(port: u8) -> c_double;
+    pub fn motor_get_target_position(port: i8) -> c_double;
     /**
     Gets the velocity commanded to the motor by the user.
 
@@ -281,7 +281,7 @@ extern "C" {
     \return The commanded motor velocity from +-100, +-200, or +-600, or PROS_ERR
     if the operation failed, setting errno.
     */
-    pub fn motor_get_target_velocity(port: u8) -> i32;
+    pub fn motor_get_target_velocity(port: i8) -> i32;
     /**
     Gets the actual velocity of the motor.
 
@@ -296,7 +296,7 @@ extern "C" {
     \return The motor's actual velocity in RPM or PROS_ERR_F if the operation
     failed, setting errno.
     */
-    pub fn motor_get_actual_velocity(port: u8) -> c_double;
+    pub fn motor_get_actual_velocity(port: i8) -> c_double;
     /**
     Gets the current drawn by the motor in mA.
 
@@ -311,7 +311,7 @@ extern "C" {
     \return The motor's current in mA or PROS_ERR if the operation failed,
     setting errno.
     */
-    pub fn motor_get_current_draw(port: u8) -> i32;
+    pub fn motor_get_current_draw(port: i8) -> i32;
     /**
     Gets the direction of movement for the motor.
 
@@ -326,7 +326,7 @@ extern "C" {
     \return 1 for moving in the positive direction, -1 for moving in the
     negative direction, or PROS_ERR if the operation failed, setting errno.
     */
-    pub fn motor_get_direction(port: u8) -> i32;
+    pub fn motor_get_direction(port: i8) -> i32;
     /**
     Gets the efficiency of the motor in percent.
 
@@ -345,7 +345,7 @@ extern "C" {
     \return The motor's efficiency in percent or PROS_ERR_F if the operation
     failed, setting errno.
     */
-    pub fn motor_get_efficiency(port: u8) -> c_double;
+    pub fn motor_get_efficiency(port: i8) -> c_double;
     /**
     Checks if the motor is drawing over its current limit.
 
@@ -360,7 +360,7 @@ extern "C" {
     \return 1 if the motor's current limit is being exceeded and 0 if the current
     limit is not exceeded, or PROS_ERR if the operation failed, setting errno.
     */
-    pub fn motor_is_over_current(port: u8) -> i32;
+    pub fn motor_is_over_current(port: i8) -> i32;
     /**
     Checks if the motor's temperature is above its limit.
 
@@ -375,7 +375,7 @@ extern "C" {
     \return 1 if the temperature limit is exceeded and 0 if the the temperature
     is below the limit, or PROS_ERR if the operation failed, setting errno.
     */
-    pub fn motor_is_over_temp(port: u8) -> i32;
+    pub fn motor_is_over_temp(port: i8) -> i32;
     /**
     Checks if the motor is stopped.
 
@@ -389,7 +389,7 @@ extern "C" {
     \return 1 if the motor is not moving, 0 if the motor is moving, or PROS_ERR
     if the operation failed, setting errno
     */
-    pub fn motor_is_stopped(port: u8) -> i32;
+    pub fn motor_is_stopped(port: i8) -> i32;
     /**
     Checks if the motor is at its zero position.
 
@@ -404,7 +404,7 @@ extern "C" {
     moved from its absolute zero, or PROS_ERR if the operation failed,
     setting errno
     */
-    pub fn motor_get_zero_position_flag(port: u8) -> i32;
+    pub fn motor_get_zero_position_flag(port: i8) -> i32;
 
     /**
     Gets the faults experienced by the motor.
@@ -421,7 +421,7 @@ extern "C" {
 
     \return A bitfield containing the motor's faults.
     */
-    pub fn motor_get_faults(port: u8) -> motor_fault_e_t;
+    pub fn motor_get_faults(port: i8) -> motor_fault_e_t;
     /**
     Gets the flags set by the motor's operation.
 
@@ -437,7 +437,7 @@ extern "C" {
 
     \return A bitfield containing the motor's flags.
     */
-    pub fn motor_get_flags(port: u8) -> motor_flag_e_t;
+    pub fn motor_get_flags(port: i8) -> motor_flag_e_t;
 
     /**
     Gets the raw encoder count of the motor at a given timestamp.
@@ -457,7 +457,7 @@ extern "C" {
     \return The raw encoder count at the given timestamp or PROS_ERR if the
     operation failed.
     */
-    pub fn motor_get_raw_position(port: u8, timestamp: *const u32) -> i32;
+    pub fn motor_get_raw_position(port: i8, timestamp: *const u32) -> i32;
     /**
     Gets the absolute position of the motor in its encoder units.
 
@@ -472,7 +472,7 @@ extern "C" {
     \return The motor's absolute position in its encoder units or PROS_ERR_F
     if the operation failed, setting errno.
     */
-    pub fn motor_get_position(port: u8) -> c_double;
+    pub fn motor_get_position(port: i8) -> c_double;
     /**
     Gets the power drawn by the motor in Watts.
 
@@ -487,7 +487,7 @@ extern "C" {
     \return The motor's power draw in Watts or PROS_ERR_F if the operation
     failed, setting errno.
     */
-    pub fn motor_get_power(port: u8) -> c_double;
+    pub fn motor_get_power(port: i8) -> c_double;
     /**
     Gets the temperature of the motor in degrees Celsius.
 
@@ -502,7 +502,7 @@ extern "C" {
     \return The motor's temperature in degrees Celsius or PROS_ERR_F if the
     operation failed, setting errno.
     */
-    pub fn motor_get_temperature(port: u8) -> c_double;
+    pub fn motor_get_temperature(port: i8) -> c_double;
     /**
     Gets the torque generated by the motor in Newton Meters (Nm).
 
@@ -517,7 +517,7 @@ extern "C" {
     \return The motor's torque in Nm or PROS_ERR_F if the operation failed,
     setting errno.
     */
-    pub fn motor_get_torque(port: u8) -> c_double;
+    pub fn motor_get_torque(port: i8) -> c_double;
     /**
     Gets the voltage delivered to the motor in millivolts.
 
@@ -532,7 +532,7 @@ extern "C" {
     \return The motor's voltage in mV or PROS_ERR_F if the operation failed,
     setting errno.
     */
-    pub fn motor_get_voltage(port: u8) -> i32;
+    pub fn motor_get_voltage(port: i8) -> i32;
 
     /**
     Sets the position for the motor in its encoder units.
@@ -552,7 +552,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_set_zero_position(port: u8, position: c_double) -> i32;
+    pub fn motor_set_zero_position(port: i8, position: c_double) -> i32;
     /**
     Sets the "absolute" zero position of the motor to its current position.
 
@@ -567,7 +567,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_tare_position(port: u8) -> i32;
+    pub fn motor_tare_position(port: i8) -> i32;
     /**
     Sets one of motor_brake_mode_e_t to the motor.
 
@@ -584,7 +584,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_set_brake_mode(port: u8, mode: motor_brake_mode_e_t) -> i32;
+    pub fn motor_set_brake_mode(port: i8, mode: motor_brake_mode_e_t) -> i32;
     /**
     Sets the current limit for the motor in mA.
 
@@ -601,7 +601,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_set_current_limit(port: u8, limit: i32) -> i32;
+    pub fn motor_set_current_limit(port: i8, limit: i32) -> i32;
     /**
     Sets one of motor_encoder_units_e_t for the motor encoder.
 
@@ -618,7 +618,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_set_encoder_units(port: u8, units: motor_encoder_units_e_t) -> i32;
+    pub fn motor_set_encoder_units(port: i8, units: motor_encoder_units_e_t) -> i32;
     /**
     Sets one of motor_gearset_e_t for the motor.
 
@@ -635,7 +635,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_set_gearing(port: u8, gearset: motor_gearset_e_t) -> i32;
+    pub fn motor_set_gearing(port: i8, gearset: motor_gearset_e_t) -> i32;
 
     /**
     Takes in floating point values and returns a properly formatted pid struct.
@@ -739,7 +739,7 @@ extern "C" {
     #[deprecated(
         note = "Changing these values is not supported by VEX and may lead to permanent motor damage."
     )]
-    pub fn motor_set_pos_pid(port: u8, pid: motor_pid_s_t) -> i32;
+    pub fn motor_set_pos_pid(port: i8, pid: motor_pid_s_t) -> i32;
     /**
     Sets one of motor_pid_full_s_t for the motor.
 
@@ -764,7 +764,7 @@ extern "C" {
     #[deprecated(
         note = "Changing these values is not supported by VEX and may lead to permanent motor damage."
     )]
-    pub fn motor_set_pos_pid_full(port: u8, pid: motor_pid_full_s_t) -> i32;
+    pub fn motor_set_pos_pid_full(port: i8, pid: motor_pid_full_s_t) -> i32;
     /**
     Sets one of motor_pid_s_t for the motor. This intended to just modify the
     main PID constants.
@@ -790,7 +790,7 @@ extern "C" {
     #[deprecated(
         note = "Changing these values is not supported by VEX and may lead to permanent motor damage."
     )]
-    pub fn motor_set_vel_pid(port: u8, pid: motor_pid_s_t) -> i32;
+    pub fn motor_set_vel_pid(port: i8, pid: motor_pid_s_t) -> i32;
     /**
     Sets one of motor_pid_full_s_t for the motor.
 
@@ -815,7 +815,7 @@ extern "C" {
     #[deprecated(
         note = "Changing these values is not supported by VEX and may lead to permanent motor damage."
     )]
-    pub fn motor_set_vel_pid_full(port: u8, pid: motor_pid_full_s_t) -> i32;
+    pub fn motor_set_vel_pid_full(port: i8, pid: motor_pid_full_s_t) -> i32;
     /**
     Gets the position PID that was set for the motor. This function will return
     zero for all of the parameters if the motor_set_pos_pid() or
@@ -838,7 +838,7 @@ extern "C" {
     #[deprecated(
         note = "Changing these values is not supported by VEX and may lead to permanent motor damage."
     )]
-    pub fn motor_get_pos_pid(port: u8) -> motor_pid_full_s_t;
+    pub fn motor_get_pos_pid(port: i8) -> motor_pid_full_s_t;
     /**
     Gets the velocity PID that was set for the motor. This function will return
     zero for all of the parameters if the motor_set_vel_pid() or
@@ -861,7 +861,7 @@ extern "C" {
     #[deprecated(
         note = "Changing these values is not supported by VEX and may lead to permanent motor damage."
     )]
-    pub fn motor_get_vel_pid(port: u8) -> motor_pid_full_s_t;
+    pub fn motor_get_vel_pid(port: i8) -> motor_pid_full_s_t;
     /**
     Sets the reverse flag for the motor.
 
@@ -880,7 +880,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_set_reversed(port: u8, reversed: bool) -> i32;
+    pub fn motor_set_reversed(port: i8, reversed: bool) -> i32;
     /**
     Sets the voltage limit for the motor in Volts.
 
@@ -897,7 +897,7 @@ extern "C" {
     \return 1 if the operation was successful or PROS_ERR if the operation
     failed, setting errno.
     */
-    pub fn motor_set_voltage_limit(port: u8, limit: i32) -> i32;
+    pub fn motor_set_voltage_limit(port: i8, limit: i32) -> i32;
     /**
     Gets the brake mode that was set for the motor.
 
@@ -912,7 +912,7 @@ extern "C" {
     \return One of motor_brake_mode_e_t, according to what was set for the motor,
     or E_MOTOR_BRAKE_INVALID if the operation failed, setting errno.
     */
-    pub fn motor_get_brake_mode(port: u8) -> motor_brake_mode_e_t;
+    pub fn motor_get_brake_mode(port: i8) -> motor_brake_mode_e_t;
     /**
     Gets the current limit for the motor in mA.
 
@@ -929,7 +929,7 @@ extern "C" {
     \return The motor's current limit in mA or PROS_ERR if the operation failed,
     setting errno.
     */
-    pub fn motor_get_current_limit(port: u8) -> i32;
+    pub fn motor_get_current_limit(port: i8) -> i32;
     /**
     Gets the encoder units that were set for the motor.
 
@@ -944,7 +944,7 @@ extern "C" {
     \return One of motor_encoder_units_e_t according to what is set for the motor
     or E_MOTOR_ENCODER_INVALID if the operation failed.
     */
-    pub fn motor_get_encoder_units(port: u8) -> motor_encoder_units_e_t;
+    pub fn motor_get_encoder_units(port: i8) -> motor_encoder_units_e_t;
     /**
     Gets the gearset that was set for the motor.
 
@@ -959,7 +959,7 @@ extern "C" {
     \return One of motor_gearset_e_t according to what is set for the motor,
     or E_GEARSET_INVALID if the operation failed.
     */
-    pub fn motor_get_gearing(port: u8) -> motor_gearset_e_t;
+    pub fn motor_get_gearing(port: i8) -> motor_gearset_e_t;
     /**
     Gets the operation direction of the motor as set by the user.
 
@@ -974,7 +974,7 @@ extern "C" {
     \return 1 if the motor has been reversed and 0 if the motor was not reversed,
     or PROS_ERR if the operation failed, setting errno.
     */
-    pub fn motor_is_reversed(port: u8) -> i32;
+    pub fn motor_is_reversed(port: i8) -> i32;
     /**
        Gets the voltage limit set by the user.
 
@@ -992,5 +992,5 @@ extern "C" {
        \return The motor's voltage limit in V or PROS_ERR if the operation failed,
        setting errno.
     */
-    pub fn motor_get_voltage_limit(port: u8) -> i32;
+    pub fn motor_get_voltage_limit(port: i8) -> i32;
 }

@@ -27,6 +27,10 @@ snafu = { version = "0.8.0", default-features = false, features = [
     "unstable-core-error",
 ] }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
+bitflags = "2.4.2"
 
 [lints]
 workspace = true
+
+[features]
+dangerous_motor_tuning = []

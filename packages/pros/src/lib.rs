@@ -106,7 +106,7 @@ pub mod prelude {
             gps::GpsSensor,
             imu::InertialSensor,
             link::{Link, RxLink, TxLink},
-            motor::{BrakeMode, Gearset, Motor},
+            motor::{BrakeMode, Direction, Gearset, Motor, MotorControl},
             optical::OpticalSensor,
             rotation::RotationSensor,
             vision::VisionSensor,

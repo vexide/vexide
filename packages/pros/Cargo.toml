@@ -40,3 +40,5 @@ math = ["dep:pros-math"]
 
 panic = ["dep:pros-panic"]
 display_panics = ["pros-panic/display_panics"]
+
+dangerous-motor-tuning = ["pros-devices/dangerous_motor_tuning"]

@@ -17,7 +17,8 @@ impl AsyncRobot for Robot {
     async fn opcontrol(&mut self) -> Result {
         let motor = Motor::new(
             self.peripherals.take_smart_port(10).unwrap(),
-            BrakeMode::Brake,
+            Gearset::Green,
+            false,
         )?;
         motor.wait_until_stopped().await?;
         Ok(())

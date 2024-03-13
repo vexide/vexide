@@ -30,6 +30,8 @@ pub mod optical;
 pub mod rotation;
 pub mod vision;
 
+use core::fmt;
+
 pub use distance::DistanceSensor;
 pub use expander::AdiExpander;
 pub use gps::GpsSensor;
@@ -236,5 +238,25 @@ impl From<SmartDeviceType> for pros_sys::apix::v5_device_e_t {
     /// Convert a [`SmartDeviceType`] into a raw `pros_sys::apix::v5_device_e_t`.
     fn from(value: SmartDeviceType) -> Self {
         value as _
+    }
+}
+
+/// Represents a timestamp on a smart device's internal clock. This type offers
+/// no guarantees that the device's clock is in sync with the internal clock of
+/// the brain, and thus cannot be safely compared with [`pros_core::time::Instant`]s.
+///
+/// There is additionally no guarantee that this is in sync with other smart devices,
+/// or even the same device if a disconnect occurred causing the clock to reset. As such,
+/// this is effectively a newtype wrapper of `u32`.
+///
+/// # Precision
+///
+/// This type has a precision of 1 millisecond.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SmartDeviceTimestamp(pub u32);
+
+impl fmt::Debug for SmartDeviceTimestamp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
     }
 }
