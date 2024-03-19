@@ -97,6 +97,7 @@ pub mod prelude {
             AdiDevice, AdiPort,
         },
         color::Rgb,
+        controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
         screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},

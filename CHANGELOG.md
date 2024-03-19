@@ -31,12 +31,14 @@ Before releasing:
   - Added support for getting motor fault flags (e.g. over-temperature, over-current, H-bridge faults).
   - Added support for internal motor PID tuning. Feature gated behind `dangerous_motor_tuning`, as this can cause hardware damage and is not recommended.
   - Added various constants for convenience around `Motor` and `Gearset`.
+- Added `Controller` API to the `pros::prelude` module. (#108)
 
 - `relative_size` method on `DistanceSensor` for getting a guess at an object's relative size. (#73)
 
 ### Fixed
 
 - `pros_sys` bindings to the Motors C API now takes the correct port type (`i8`) as of PROS 4 (**Breaking Change**) (#66).
+- Fixed the unintended `unsafe` context present in the `sync_robot` and `async_robot` family of macros (**Breaking Change**) (#107).
 
 ### Changed
 
@@ -53,6 +55,7 @@ Before releasing:
   - Renamed `Motor::get_state` to `Motor::status`.
 - Status structs containing device bits now use the `bitflags!` crate. (**Breaking Change**) (#66)
 - Renamed `InertialSensor::calibrating` to `InertialSensor::calibrating` (**Breaking CHange**) (#66)
+- AdiEncoder now returns `Position` rather than just degrees (**Breaking Change**) (#106).
 
 ### Removed
 
