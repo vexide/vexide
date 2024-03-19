@@ -33,6 +33,8 @@ Before releasing:
   - Added various constants for convenience around `Motor` and `Gearset`.
 - Added `Controller` API to the `pros::prelude` module. (#108)
 
+- `relative_size` method on `DistanceSensor` for getting a guess at an object's relative size. (#73)
+
 ### Fixed
 
 - `pros_sys` bindings to the Motors C API now takes the correct port type (`i8`) as of PROS 4 (**Breaking Change**) (#66).
@@ -40,6 +42,8 @@ Before releasing:
 
 ### Changed
 
+- Renamed `DistanceSensor::object_velocity` to `DistanceSensor::velocity`.
+- Adjusted `distance_confidence` to return a value from [`0.0`, `1.0`] rather than 0-100 to match other percentage getters.
 - Refactored the Motor API (**Breaking Change**) (#66)
   - Adjusts constructor arguments for `Motor` to allow passing `Gearset` and a direction instead of `brake_mode` at construction. (**Breaking Change**) (#66)
   - Renamed `Motor::get_state` to `Motor::state`. (**Breaking Change**) (#66)
