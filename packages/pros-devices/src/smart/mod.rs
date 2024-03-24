@@ -41,6 +41,7 @@ pub use motor::Motor;
 pub use optical::OpticalSensor;
 use pros_core::{bail_on, error::PortError};
 pub use rotation::RotationSensor;
+use vex_sys::{vexDeviceGetByIndex, V5_DeviceT, V5_DeviceType};
 pub use vision::VisionSensor;
 
 /// Defines common functionality shared by all smart port devices.
@@ -137,6 +138,28 @@ impl SmartPort {
     /// ```
     pub const fn index(&self) -> u8 {
         self.index
+    }
+
+    /// Get the raw device handle connected to this port.
+    pub(crate) fn device_handle(&self) -> V5_DeviceT {
+        unsafe {
+            vexDeviceGetByIndex((self.index - 1) as u32)
+        }
+    }
+
+    /// Verify that a specific device type is currently plugged into this port.
+    pub(crate) fn validate(&self, device_type: V5_DeviceType) -> Result<(), PortError> {
+        let dev = unsafe { *self.device_handle() };
+
+        if !dev.exists {
+            // No device is plugged into the port.
+            return Err(PortError::NoDevice)
+        } else if dev.device_type != device_type {
+            // The connected device doesn't match the requested type.
+            return Err(PortError::IncorrectDevice)
+        }
+
+        Ok(())
     }
 
     /// Get the type of device currently connected to this port.

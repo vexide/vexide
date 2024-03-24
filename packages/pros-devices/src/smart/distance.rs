@@ -2,10 +2,12 @@
 //!
 //! Pretty much one to one with the PROS C and CPP API, except Result is used instead of ERRNO values.
 
-use core::ffi::c_double;
-
-use pros_core::{bail_on, error::PortError};
-use pros_sys::PROS_ERR;
+use pros_core::error::PortError;
+use snafu::Snafu;
+use vex_sys::{
+    vexDeviceDistanceConfidenceGet, vexDeviceDistanceDistanceGet, vexDeviceDistanceObjectSizeGet,
+    vexDeviceDistanceObjectVelocityGet, vexDeviceDistanceStatusGet, V5_DeviceType,
+};
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 
@@ -22,20 +24,32 @@ impl DistanceSensor {
         Self { port }
     }
 
+    /// Validates that the sensor is currently connected to its port, and that its status code
+    /// is either 0x82 or 0x86.
+    ///
+    /// It's unknown what these status codes indicate (likely related to port status), but PROS
+    /// performs this check in their API, so we will too.
+    ///
+    /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_distance.c#L20>
+    fn validate(&self) -> Result<(), DistanceError> {
+        match self.status()? {
+            0x82 | 0x86 => Ok(()),
+            _ => Err(DistanceError::BadStatusCode),
+        }
+    }
+
     /// Returns the distance to the object the sensor detects in millimeters.
-    pub fn distance(&self) -> Result<u32, PortError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::distance_get(self.port.index())
-        }) as u32)
+    pub fn distance(&self) -> Result<u32, DistanceError> {
+        self.validate()?;
+
+        Ok(unsafe { vexDeviceDistanceDistanceGet(self.port.device_handle()) })
     }
 
     /// Returns the velocity of the object the sensor detects in m/s
-    pub fn velocity(&self) -> Result<f64, PortError> {
-        // All VEX Distance Sensor functions return PROS_ERR on failure even though
-        // some return floating point values (not PROS_ERR_F)
-        Ok(bail_on!(PROS_ERR as c_double, unsafe {
-            pros_sys::distance_get_object_velocity(self.port.index())
-        }))
+    pub fn velocity(&self) -> Result<f64, DistanceError> {
+        self.validate()?;
+
+        Ok(unsafe { vexDeviceDistanceObjectVelocityGet(self.port.device_handle()) })
     }
 
     /// Get the current guess at relative "object size".
@@ -49,20 +63,27 @@ impl DistanceSensor {
     /// of salt.
     ///
     /// [`vex::sizeType`]: https://api.vexcode.cloud/v5/search/sizeType/sizeType/enum
-    pub fn relative_size(&self) -> Result<u32, PortError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::distance_get_object_size(self.port.index())
-        }) as u32)
+    pub fn relative_size(&self) -> Result<u32, DistanceError> {
+        self.validate()?;
+
+        Ok(unsafe { vexDeviceDistanceObjectSizeGet(self.port.device_handle()) as u32 })
     }
 
     /// Returns the confidence in the distance measurement from 0.0 to 1.0.
-    pub fn distance_confidence(&self) -> Result<f64, PortError> {
-        // 0 -> 63
-        let confidence = bail_on!(PROS_ERR, unsafe {
-            pros_sys::distance_get_confidence(self.port.index())
-        }) as f64;
+    pub fn distance_confidence(&self) -> Result<f64, DistanceError> {
+        self.validate()?;
 
-        Ok(confidence / 63.0)
+        Ok(
+            unsafe { vexDeviceDistanceConfidenceGet(self.port.device_handle()) as u32 } as f64
+                / 63.0,
+        )
+    }
+
+    /// Gets the status code of the distance sensor
+    pub fn status(&self) -> Result<u32, DistanceError> {
+        self.port.validate(V5_DeviceType::DistanceSensor)?;
+
+        Ok(unsafe { vexDeviceDistanceStatusGet(self.port.device_handle()) })
     }
 }
 
@@ -74,4 +95,18 @@ impl SmartDevice for DistanceSensor {
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::Distance
     }
+}
+
+#[derive(Debug, Snafu)]
+/// Errors that can occur when using a distance sensor.
+pub enum DistanceError {
+    /// The sensor's status code is not 0x82 or 0x86.
+    BadStatusCode,
+
+    /// Generic port related error.
+    #[snafu(display("{source}"), context(false))]
+    Port {
+        /// The source of the error.
+        source: PortError,
+    },
 }

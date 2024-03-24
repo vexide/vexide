@@ -22,6 +22,7 @@ authors = [
 [dependencies]
 pros-core = { version = "0.1.0", path = "../pros-core" }
 pros-sys = { path = "../pros-sys", version = "0.7.0", features = ["xapi"] }
+vex_sys = { git = "https://github.com/pros-rs/vex-sys/" }
 snafu = { version = "0.8.0", default-features = false, features = [
     "rust_1_61",
     "unstable-core-error",

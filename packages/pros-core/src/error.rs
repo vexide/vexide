@@ -103,6 +103,9 @@ pub enum PortError {
     PortCannotBeConfigured,
     /// The specified port is already being used or is mismatched.
     AlreadyInUse,
+
+    NoDevice,
+    IncorrectDevice,
 }
 
 map_errno!(PortError {
