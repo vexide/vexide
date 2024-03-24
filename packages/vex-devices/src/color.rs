@@ -26,6 +26,54 @@ pub struct Rgb {
 }
 
 impl Rgb {
+    /// "White" color as defined in the HTML 4.01 specification.
+    pub const WHITE: Rgb = Rgb::from_raw(0xFFFFFF);
+
+    /// "Silver" color as defined in the HTML 4.01 specification.
+    pub const SILVER: Rgb = Rgb::from_raw(0xC0C0C0);
+
+    /// "Gray" color as defined in the HTML 4.01 specification.
+    pub const GRAY: Rgb = Rgb::from_raw(0x808080);
+
+    /// "Black" color as defined in the HTML 4.01 specification.
+    pub const BLACK: Rgb = Rgb::from_raw(0x000000);
+
+    /// "Red" color as defined in the HTML 4.01 specification.
+    pub const RED: Rgb = Rgb::from_raw(0xFF0000);
+
+    /// "Maroon" color as defined in the HTML 4.01 specification.
+    pub const MAROON: Rgb = Rgb::from_raw(0x800000);
+
+    /// "Yellow" color as defined in the HTML 4.01 specification.
+    pub const YELLOW: Rgb = Rgb::from_raw(0xFFFF00);
+
+    /// "Olive" color as defined in the HTML 4.01 specification.
+    pub const OLIVE: Rgb = Rgb::from_raw(0x808000);
+
+    /// "Lime" color as defined in the HTML 4.01 specification.
+    pub const LIME: Rgb = Rgb::from_raw(0x00FF00);
+
+    /// "Green" color as defined in the HTML 4.01 specification.
+    pub const GREEN: Rgb = Rgb::from_raw(0x008000);
+
+    /// "Aqua" color as defined in the HTML 4.01 specification.
+    pub const AQUA: Rgb = Rgb::from_raw(0x00FFFF);
+
+    /// "Teal" color as defined in the HTML 4.01 specification.
+    pub const TEAL: Rgb = Rgb::from_raw(0x008080);
+
+    /// "Blue" color as defined in the HTML 4.01 specification.
+    pub const BLUE: Rgb = Rgb::from_raw(0x0000FF);
+
+    /// "Navy" color as defined in the HTML 4.01 specification.
+    pub const NAVY: Rgb = Rgb::from_raw(0x000080);
+
+    /// "Fuchsia" color as defined in the HTML 4.01 specification.
+    pub const FUCHSIA: Rgb = Rgb::from_raw(0xFF00FF);
+
+    /// "Purple" color as defined in the HTML 4.01 specification.
+    pub const PURPLE: Rgb = Rgb::from_raw(0x800080);
+
     const BITMASK: u32 = 0b11111111;
 
     /// Create a new RGB8 color.
