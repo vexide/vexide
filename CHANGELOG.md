@@ -106,7 +106,7 @@ Before releasing:
 - Repurposed the `pros` crate as a metapackage without any code of its own. (**Breaking Change**) (#86)
 - Split the pros-rs into several small subcrates. (**Breaking Change**) (#86)
   - `pros-async` with the async executor and robot trait.
-  - `pros-devices` for device bindings.
+  - `vex-devices` for device bindings.
   - `pros-sync` for the sync robot trait.
   - `pros-core` with basic abstractions over `pros-sys` needed to compile a program to the brain.
   - `pros-math` with commonly used controllers and other mathematical models.

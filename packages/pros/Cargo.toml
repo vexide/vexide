@@ -20,7 +20,7 @@ rust-version = "1.75.0"
 [dependencies]
 pros-sync = { version = "0.1.0", path = "../pros-sync", optional = true }
 pros-async = { version = "0.1.0", path = "../pros-async", optional = true }
-pros-devices = { version = "0.1.0", path = "../pros-devices", optional = true }
+vex-devices = { version = "0.1.0", path = "../vex-devices", optional = true }
 pros-panic = { version = "0.1.0", path = "../pros-panic", optional = true }
 pros-core = { version = "0.1.0", path = "../pros-core", optional = true }
 pros-math = { version = "0.1.0", path = "../pros-math", optional = true }
@@ -34,11 +34,11 @@ core = ["dep:pros-core"]
 async = ["dep:pros-async"]
 sync = ["dep:pros-sync"]
 
-devices = ["dep:pros-devices"]
+devices = ["dep:vex-devices"]
 
 math = ["dep:pros-math"]
 
 panic = ["dep:pros-panic"]
 display_panics = ["pros-panic/display_panics"]
 
-dangerous-motor-tuning = ["pros-devices/dangerous_motor_tuning"]
+dangerous-motor-tuning = ["vex-devices/dangerous_motor_tuning"]
