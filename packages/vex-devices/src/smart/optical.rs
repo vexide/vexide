@@ -2,11 +2,15 @@
 
 use core::time::Duration;
 
-use bitflags::bitflags;
-use pros_core::{bail_on, error::PortError};
+use pros_core::error::PortError;
 use snafu::Snafu;
 use vex_sys::{
-    vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureDisable, vexDeviceOpticalGestureEnable, vexDeviceOpticalGestureGet, vexDeviceOpticalHueGet, vexDeviceOpticalIntegrationTimeGet, vexDeviceOpticalIntegrationTimeSet, vexDeviceOpticalLedPwmGet, vexDeviceOpticalLedPwmSet, vexDeviceOpticalProximityGet, vexDeviceOpticalProximityThreshold, vexDeviceOpticalRawGet, vexDeviceOpticalRgbGet, vexDeviceOpticalSatGet, vexDeviceOpticalStatusGet, V5_DeviceOpticalGesture, V5_DeviceOpticalRaw, V5_DeviceOpticalRgb
+    vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureDisable, vexDeviceOpticalGestureEnable,
+    vexDeviceOpticalGestureGet, vexDeviceOpticalHueGet, vexDeviceOpticalIntegrationTimeGet,
+    vexDeviceOpticalIntegrationTimeSet, vexDeviceOpticalLedPwmGet, vexDeviceOpticalLedPwmSet,
+    vexDeviceOpticalProximityGet, vexDeviceOpticalProximityThreshold, vexDeviceOpticalRawGet,
+    vexDeviceOpticalRgbGet, vexDeviceOpticalSatGet, vexDeviceOpticalStatusGet,
+    V5_DeviceOpticalGesture, V5_DeviceOpticalRaw, V5_DeviceOpticalRgb,
 };
 
 use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
@@ -121,13 +125,14 @@ impl OpticalSensor {
         Ok(unsafe { vexDeviceOpticalBrightnessGet(self.device_handle()) })
     }
 
-    /// Get the detected proximity value
+    /// Get the analog proximity value from `0` to `1.0`.
     ///
-    /// Proximity has a range of `0` to `255`.
-    pub fn proximity(&self) -> Result<i32, OpticalError> {
+    /// A reading of 1.0 indicates that the object is close to the sensor, while 0.0
+    /// indicates that no object is detected in range of the sensor.
+    pub fn proximity(&self) -> Result<f64, OpticalError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalProximityGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceOpticalProximityGet(self.device_handle()) } as f64 / 255.0)
     }
 
     /// Set the sensor's proximity threshold.
@@ -220,9 +225,7 @@ impl OpticalSensor {
     pub fn status(&self) -> Result<u32, OpticalError> {
         self.validate_port()?;
 
-        Ok(unsafe {
-            vexDeviceOpticalStatusGet(self.device_handle())
-        })
+        Ok(unsafe { vexDeviceOpticalStatusGet(self.device_handle()) })
     }
 }
 
