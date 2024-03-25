@@ -2,11 +2,14 @@
 
 use core::time::Duration;
 
-use pros_core::{bail_on, error::PortError, map_errno};
-use pros_sys::{OPT_GESTURE_ERR, PROS_ERR, PROS_ERR_F};
+use bitflags::bitflags;
+use pros_core::{bail_on, error::PortError};
 use snafu::Snafu;
+use vex_sys::{
+    vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureDisable, vexDeviceOpticalGestureEnable, vexDeviceOpticalGestureGet, vexDeviceOpticalHueGet, vexDeviceOpticalIntegrationTimeGet, vexDeviceOpticalIntegrationTimeSet, vexDeviceOpticalLedPwmGet, vexDeviceOpticalLedPwmSet, vexDeviceOpticalProximityGet, vexDeviceOpticalProximityThreshold, vexDeviceOpticalRawGet, vexDeviceOpticalRgbGet, vexDeviceOpticalSatGet, vexDeviceOpticalStatusGet, V5_DeviceOpticalGesture, V5_DeviceOpticalRaw, V5_DeviceOpticalRgb
+};
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
 
 /// Represents a smart port configured as a V5 optical sensor
 #[derive(Debug, Eq, PartialEq)]
@@ -17,13 +20,14 @@ pub struct OpticalSensor {
 
 impl OpticalSensor {
     /// The smallest integration time you can set on an optical sensor.
+    ///
+    /// Source: <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9>
     pub const MIN_INTEGRATION_TIME: Duration = Duration::from_millis(3);
 
     /// The largest integration time you can set on an optical sensor.
+    ///
+    /// Source: <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9>
     pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
-
-    /// The maximum value for the LED PWM.
-    pub const MAX_LED_PWM: u8 = 100;
 
     /// Creates a new inertial sensor from a smart port index.
     ///
@@ -43,39 +47,30 @@ impl OpticalSensor {
         Ok(sensor)
     }
 
-    /// Get the pwm value of the White LED. PWM value ranges from 0 to 100.
-    pub fn led_pwm(&self) -> Result<i32, OpticalError> {
-        unsafe {
-            Ok(bail_on!(
-                PROS_ERR,
-                pros_sys::optical_get_led_pwm(self.port.index())
-            ))
-        }
+    /// Get the PWM percentage (intensity/brightness) of the sensor's LED indicator.
+    pub fn led_brightness(&self) -> Result<i32, OpticalError> {
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceOpticalLedPwmGet(self.device_handle()) })
     }
 
-    /// Sets the pwm value of the White LED. Valid values are in the range `0` `100`.
-    pub fn set_led_pwm(&mut self, value: u8) -> Result<(), OpticalError> {
-        if value > Self::MAX_LED_PWM {
-            return Err(OpticalError::InvalidLedPwm);
-        }
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::optical_set_led_pwm(self.port.index(), value)
-            );
-        }
+    /// Set the PWM percentage (intensity/brightness) of the sensor's LED indicator.
+    pub fn set_led_brightness(&mut self, brightness: f64) -> Result<(), OpticalError> {
+        self.validate_port()?;
+
+        unsafe { vexDeviceOpticalLedPwmSet(self.device_handle(), (brightness * 100.0) as i32) }
+
         Ok(())
     }
 
     /// Get integration time (update rate) of the optical sensor in milliseconds, with
     /// minimum time being 3ms and the maximum time being 712ms.
     pub fn integration_time(&self) -> Result<Duration, OpticalError> {
-        unsafe {
-            Ok(Duration::from_millis(bail_on!(
-                PROS_ERR_F,
-                pros_sys::optical_get_integration_time(self.port.index())
-            ) as u64))
-        }
+        self.validate_port()?;
+
+        Ok(Duration::from_millis(
+            unsafe { vexDeviceOpticalIntegrationTimeGet(self.device_handle()) } as u64,
+        ))
     }
 
     /// Set integration time (update rate) of the optical sensor.
@@ -87,16 +82,14 @@ impl OpticalSensor {
     /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for
     /// more information.
     pub fn set_integration_time(&mut self, time: Duration) -> Result<(), OpticalError> {
-        if time < Self::MIN_INTEGRATION_TIME || time > Self::MAX_INTEGRATION_TIME {
-            return Err(OpticalError::InvalidIntegrationTime);
-        }
+        self.validate_port()?;
 
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::optical_set_integration_time(self.port.index(), time.as_millis() as f64)
-            );
-        }
+        let time = time.as_millis().clamp(
+            Self::MIN_INTEGRATION_TIME.as_millis(),
+            Self::MAX_INTEGRATION_TIME.as_millis(),
+        ) as f64;
+
+        unsafe { vexDeviceOpticalIntegrationTimeSet(self.device_handle(), time) }
 
         Ok(())
     }
@@ -105,58 +98,68 @@ impl OpticalSensor {
     ///
     /// Hue has a range of `0` to `359.999`.
     pub fn hue(&self) -> Result<f64, OpticalError> {
-        unsafe {
-            Ok(bail_on!(
-                PROS_ERR_F,
-                pros_sys::optical_get_hue(self.port.index())
-            ))
-        }
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceOpticalHueGet(self.device_handle()) })
     }
 
     /// Gets the detected color saturation.
     ///
     /// Saturation has a range `0` to `1.0`.
     pub fn saturation(&self) -> Result<f64, OpticalError> {
-        unsafe {
-            Ok(bail_on!(
-                PROS_ERR_F,
-                pros_sys::optical_get_saturation(self.port.index())
-            ))
-        }
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceOpticalSatGet(self.device_handle()) })
     }
 
     /// Get the detected color brightness.
     ///
     /// Brightness values range from `0` to `1.0`.
     pub fn brightness(&self) -> Result<f64, OpticalError> {
-        unsafe {
-            Ok(bail_on!(
-                PROS_ERR_F,
-                pros_sys::optical_get_brightness(self.port.index())
-            ))
-        }
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceOpticalBrightnessGet(self.device_handle()) })
     }
 
     /// Get the detected proximity value
     ///
     /// Proximity has a range of `0` to `255`.
     pub fn proximity(&self) -> Result<i32, OpticalError> {
-        unsafe {
-            Ok(bail_on!(
-                PROS_ERR,
-                pros_sys::optical_get_proximity(self.port.index())
-            ))
-        }
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceOpticalProximityGet(self.device_handle()) })
     }
 
-    /// Get the processed RGBC data from the sensor
-    pub fn rgbc(&self) -> Result<Rgbc, OpticalError> {
-        unsafe { pros_sys::optical_get_rgb(self.port.index()).try_into() }
+    /// Set the sensor's proximity threshold.
+    ///
+    /// Range and units are currently undocumented in the SDK.
+    /// TODO: Test on hardware.
+    pub fn set_proximity_threshold(&self, proximity: i32) -> Result<(), OpticalError> {
+        self.validate_port()?;
+
+        unsafe { vexDeviceOpticalProximityThreshold(self.device_handle(), proximity) }
+
+        Ok(())
+    }
+
+    /// Get the processed RGB data from the sensor
+    pub fn rgb(&self) -> Result<OpticalRgb, OpticalError> {
+        self.validate_port();
+
+        let mut data = V5_DeviceOpticalRgb::default();
+        unsafe { vexDeviceOpticalRgbGet(self.device_handle(), &mut data) };
+
+        Ok(data.into())
     }
 
     /// Get the raw, unprocessed RGBC data from the sensor
-    pub fn rgbc_raw(&self) -> Result<RgbcRaw, OpticalError> {
-        unsafe { pros_sys::optical_get_raw(self.port.index()).try_into() }
+    pub fn raw(&self) -> Result<OpticalRaw, OpticalError> {
+        self.validate_port();
+
+        let mut data = V5_DeviceOpticalRaw::default();
+        unsafe { vexDeviceOpticalRawGet(self.device_handle(), &mut data) };
+
+        Ok(data.into())
     }
 
     /// Enables gesture detection features on the sensor.
@@ -164,21 +167,21 @@ impl OpticalSensor {
     /// This allows [`Self::last_gesture_direction()`] and [`Self::last_gesture_direction()`] to be called without error, if
     /// gesture detection wasn't already enabled.
     pub fn enable_gesture_detection(&mut self) -> Result<(), OpticalError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::optical_enable_gesture(self.port.index())
-        });
+        self.validate_port()?;
 
+        unsafe { vexDeviceOpticalGestureEnable(self.device_handle()) }
         self.gesture_detection_enabled = true;
+
         Ok(())
     }
 
     /// Disables gesture detection features on the sensor.
     pub fn disable_gesture_detection(&mut self) -> Result<(), OpticalError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::optical_disable_gesture(self.port.index())
-        });
+        self.validate_port()?;
 
-        self.gesture_detection_enabled = false;
+        unsafe { vexDeviceOpticalGestureDisable(self.device_handle()) }
+        self.gesture_detection_enabled = true;
+
         Ok(())
     }
 
@@ -191,24 +194,35 @@ impl OpticalSensor {
     ///
     /// Will return [`OpticalError::GestureDetectionDisabled`] if the sensor is not
     /// confgured to detect gestures.
-    pub fn last_gesture_direction(&self) -> Result<GestureDirection, OpticalError> {
+    pub fn last_gesture(&self) -> Result<Gesture, OpticalError> {
         if !self.gesture_detection_enabled {
             return Err(OpticalError::GestureDetectionDisabled);
         }
+        self.validate_port()?;
 
-        unsafe { pros_sys::optical_get_gesture(self.port.index()).try_into() }
+        let mut gesture = V5_DeviceOpticalGesture::default();
+        let direction: GestureDirection =
+            unsafe { vexDeviceOpticalGestureGet(self.device_handle(), &mut gesture) }.into();
+
+        Ok(Gesture {
+            direction,
+            up: gesture.udata,
+            down: gesture.ddata,
+            left: gesture.ldata,
+            right: gesture.rdata,
+            gesture_type: gesture.gesture_type,
+            count: gesture.count,
+            time: gesture.time,
+        })
     }
 
-    /// Get the most recent raw gesture data from the sensor.
-    ///
-    /// Will return [`OpticalError::GestureDetectionDisabled`] if the sensor is not
-    /// confgured to detect gestures.
-    pub fn last_gesture_raw(&self) -> Result<GestureRaw, OpticalError> {
-        if !self.gesture_detection_enabled {
-            return Err(OpticalError::GestureDetectionDisabled);
-        }
+    /// Gets the status code of the distance sensor
+    pub fn status(&self) -> Result<u32, OpticalError> {
+        self.validate_port()?;
 
-        unsafe { pros_sys::optical_get_gesture_raw(self.port.index()).try_into() }
+        Ok(unsafe {
+            vexDeviceOpticalStatusGet(self.device_handle())
+        })
     }
 }
 
@@ -222,44 +236,43 @@ impl SmartDevice for OpticalSensor {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
 /// Represents a gesture and its direction.
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 pub enum GestureDirection {
-    /// Up gesture.
-    Up,
-    /// Down gesture.
-    Down,
-    /// Left gesture.
-    Left,
-    /// Right gesture.
-    Right,
-    /// Gesture error.
-    Error,
-    #[default]
     /// No gesture detected.
-    NoGesture,
+    #[default]
+    None = 0,
+    /// Up gesture.
+    Up = 1,
+    /// Down gesture.
+    Down = 2,
+    /// Left gesture.
+    Left = 3,
+    /// Right gesture.
+    Right = 4,
 }
 
-impl TryFrom<pros_sys::optical_direction_e_t> for GestureDirection {
-    type Error = OpticalError;
-
-    fn try_from(value: pros_sys::optical_direction_e_t) -> Result<GestureDirection, OpticalError> {
-        bail_on!(pros_sys::E_OPTICAL_DIRECTION_ERROR, value);
-
-        Ok(match value {
-            pros_sys::E_OPTICAL_DIRECTION_UP => Self::Up,
-            pros_sys::E_OPTICAL_DIRECTION_DOWN => Self::Down,
-            pros_sys::E_OPTICAL_DIRECTION_LEFT => Self::Left,
-            pros_sys::E_OPTICAL_DIRECTION_RIGHT => Self::Right,
-            pros_sys::E_OPTICAL_DIRECTION_NO_GESTURE => Self::NoGesture,
-            _ => unreachable!("Encountered unknown gesture direction code."),
-        })
+impl From<u32> for GestureDirection {
+    fn from(code: u32) -> Self {
+        // https://github.com/purduesigbots/pros/blob/master/include/pros/optical.h#L37
+        match code {
+            //
+            1 => Self::Up,
+            2 => Self::Down,
+            3 => Self::Left,
+            4 => Self::Right,
+            // Normally this is just 0, but this is `From` so we have to handle
+            // all values even if they're unreacahable.
+            _ => Self::None,
+        }
     }
 }
 
+/// Gesture data from an [`OpticalSensor`].
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
-/// Raw gesture data from an [`OpticalSensor`].
-pub struct GestureRaw {
+pub struct Gesture {
+    /// Gesture Direction
+    pub direction: GestureDirection,
     /// Up value.
     pub up: u8,
     /// Down value.
@@ -276,25 +289,9 @@ pub struct GestureRaw {
     pub time: u32,
 }
 
-impl TryFrom<pros_sys::optical_gesture_s_t> for GestureRaw {
-    type Error = OpticalError;
-
-    fn try_from(value: pros_sys::optical_gesture_s_t) -> Result<GestureRaw, OpticalError> {
-        Ok(Self {
-            up: bail_on!(OPT_GESTURE_ERR as u8, value.udata),
-            down: value.ddata,
-            left: value.ldata,
-            right: value.rdata,
-            gesture_type: value.r#type,
-            count: value.count,
-            time: value.time,
-        })
-    }
-}
-
+/// RGB data from a [`OpticalSensor`].
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-/// RGBC data from a [`OpticalSensor`].
-pub struct Rgbc {
+pub struct OpticalRgb {
     /// The red value from the sensor.
     pub red: f64,
     /// The green value from the sensor.
@@ -305,56 +302,44 @@ pub struct Rgbc {
     pub brightness: f64,
 }
 
-impl TryFrom<pros_sys::optical_rgb_s_t> for Rgbc {
-    type Error = OpticalError;
-
-    fn try_from(value: pros_sys::optical_rgb_s_t) -> Result<Rgbc, OpticalError> {
-        Ok(Self {
-            red: bail_on!(PROS_ERR_F, value.red), // Docs incorrectly claim this is PROS_ERR
-            green: value.green,
-            blue: value.blue,
-            brightness: value.brightness,
-        })
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
-/// Represents the raw RGBC data from the sensor.
-pub struct RgbcRaw {
-    /// The red value from the sensor.
-    pub red: u32,
-    /// The green value from the sensor.
-    pub green: u32,
-    /// The blue value from the sensor.
-    pub blue: u32,
-    /// The clear value from the sensor.
-    pub clear: u32,
-}
-
-impl TryFrom<pros_sys::optical_raw_s_t> for RgbcRaw {
-    type Error = OpticalError;
-
-    fn try_from(value: pros_sys::optical_raw_s_t) -> Result<RgbcRaw, OpticalError> {
-        Ok(Self {
-            clear: bail_on!(PROS_ERR_F as u32, value.clear),
+impl From<V5_DeviceOpticalRgb> for OpticalRgb {
+    fn from(value: V5_DeviceOpticalRgb) -> Self {
+        Self {
             red: value.red,
             green: value.green,
             blue: value.blue,
-        })
+            brightness: value.brightness,
+        }
+    }
+}
+
+/// Represents the raw RGBC data from the sensor.
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OpticalRaw {
+    /// The red value from the sensor.
+    pub red: u16,
+    /// The green value from the sensor.
+    pub green: u16,
+    /// The blue value from the sensor.
+    pub blue: u16,
+    /// The clear value from the sensor.
+    pub clear: u16,
+}
+
+impl From<V5_DeviceOpticalRaw> for OpticalRaw {
+    fn from(value: V5_DeviceOpticalRaw) -> Self {
+        Self {
+            red: value.red,
+            green: value.green,
+            blue: value.blue,
+            clear: value.clear,
+        }
     }
 }
 
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an optical sensor.
 pub enum OpticalError {
-    /// Invalid LED PWM value, must be between 0 and 100.
-    InvalidLedPwm,
-
-    /// Integration time must be between 3 and 712 milliseconds.
-    ///
-    /// See <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for more information.
-    InvalidIntegrationTime,
-
     /// Gesture detection is not enabled for this sensor.
     GestureDetectionDisabled,
 
@@ -364,8 +349,4 @@ pub enum OpticalError {
         /// The source of the error
         source: PortError,
     },
-}
-
-map_errno! {
-    OpticalError {} inherit PortError;
 }

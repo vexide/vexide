@@ -6,10 +6,10 @@ use pros_core::error::PortError;
 use snafu::Snafu;
 use vex_sys::{
     vexDeviceDistanceConfidenceGet, vexDeviceDistanceDistanceGet, vexDeviceDistanceObjectSizeGet,
-    vexDeviceDistanceObjectVelocityGet, vexDeviceDistanceStatusGet, V5_DeviceType,
+    vexDeviceDistanceObjectVelocityGet, vexDeviceDistanceStatusGet,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
 
 /// A physical distance sensor plugged into a port.
 /// Distance sensors can only keep track of one object at a time.
@@ -42,14 +42,14 @@ impl DistanceSensor {
     pub fn distance(&self) -> Result<u32, DistanceError> {
         self.validate()?;
 
-        Ok(unsafe { vexDeviceDistanceDistanceGet(self.port.device_handle()) })
+        Ok(unsafe { vexDeviceDistanceDistanceGet(self.device_handle()) })
     }
 
     /// Returns the velocity of the object the sensor detects in m/s
     pub fn velocity(&self) -> Result<f64, DistanceError> {
         self.validate()?;
 
-        Ok(unsafe { vexDeviceDistanceObjectVelocityGet(self.port.device_handle()) })
+        Ok(unsafe { vexDeviceDistanceObjectVelocityGet(self.device_handle()) })
     }
 
     /// Get the current guess at relative "object size".
@@ -66,24 +66,21 @@ impl DistanceSensor {
     pub fn relative_size(&self) -> Result<u32, DistanceError> {
         self.validate()?;
 
-        Ok(unsafe { vexDeviceDistanceObjectSizeGet(self.port.device_handle()) as u32 })
+        Ok(unsafe { vexDeviceDistanceObjectSizeGet(self.device_handle()) as u32 })
     }
 
     /// Returns the confidence in the distance measurement from 0.0 to 1.0.
     pub fn distance_confidence(&self) -> Result<f64, DistanceError> {
         self.validate()?;
 
-        Ok(
-            unsafe { vexDeviceDistanceConfidenceGet(self.port.device_handle()) as u32 } as f64
-                / 63.0,
-        )
+        Ok(unsafe { vexDeviceDistanceConfidenceGet(self.device_handle()) as u32 } as f64 / 63.0)
     }
 
     /// Gets the status code of the distance sensor
     pub fn status(&self) -> Result<u32, DistanceError> {
-        self.port.validate(V5_DeviceType::DistanceSensor)?;
+        self.validate_port()?;
 
-        Ok(unsafe { vexDeviceDistanceStatusGet(self.port.device_handle()) })
+        Ok(unsafe { vexDeviceDistanceStatusGet(self.device_handle()) })
     }
 }
 

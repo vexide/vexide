@@ -86,6 +86,16 @@ macro_rules! bail_on {
 }
 use snafu::Snafu;
 
+#[derive(Debug, Snafu)]
+/// Generic erros that can take place when using ports on the V5 Brain.
+pub enum PortError {
+    /// No device is plugged into the port.
+    Disconnected,
+
+    /// The incorrect device type is plugged into the port.
+    IncorrectDevice,
+}
+
 /// A trait for converting an errno value into an error type.
 pub trait FromErrno {
     /// Consume the current `errno` and, if it contains a known error, returns Self.
@@ -93,23 +103,3 @@ pub trait FromErrno {
     where
         Self: Sized;
 }
-
-#[derive(Debug, Snafu)]
-/// Generic erros that can take place when using ports on the V5 Brain.
-pub enum PortError {
-    /// The specified port is outside of the allowed range!
-    PortOutOfRange,
-    /// The specified port couldn't be configured as the specified type.
-    PortCannotBeConfigured,
-    /// The specified port is already being used or is mismatched.
-    AlreadyInUse,
-
-    NoDevice,
-    IncorrectDevice,
-}
-
-map_errno!(PortError {
-    ENXIO => Self::PortOutOfRange,
-    ENODEV => Self::PortCannotBeConfigured,
-    EADDRINUSE => Self::AlreadyInUse,
-});
