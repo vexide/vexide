@@ -135,18 +135,6 @@ impl OpticalSensor {
         Ok(unsafe { vexDeviceOpticalProximityGet(self.device_handle()) } as f64 / 255.0)
     }
 
-    /// Set the sensor's proximity threshold.
-    ///
-    /// Range and units are currently undocumented in the SDK.
-    /// TODO: Test on hardware.
-    pub fn set_proximity_threshold(&self, proximity: i32) -> Result<(), OpticalError> {
-        self.validate_port()?;
-
-        unsafe { vexDeviceOpticalProximityThreshold(self.device_handle(), proximity) }
-
-        Ok(())
-    }
-
     /// Get the processed RGB data from the sensor
     pub fn rgb(&self) -> Result<OpticalRgb, OpticalError> {
         self.validate_port();
