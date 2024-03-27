@@ -48,8 +48,7 @@ impl core::fmt::Write for Screen {
                 TextFormat::Medium,
             ),
             Rgb::WHITE,
-        )
-        .map_err(|_| core::fmt::Error)?;
+        );
 
         Ok(())
     }
