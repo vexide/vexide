@@ -2,349 +2,398 @@
 //!
 //! Controllers are identified by their id, which is either 0 (master) or 1 (partner).
 //! State of a controller can be checked by calling [`Controller::state`] which will return a struct with all of the buttons' and joysticks' state.
+use alloc::ffi::CString;
 
-use alloc::{ffi::CString, vec::Vec};
-
-use pros_core::{bail_on, map_errno};
-use pros_sys::{controller_id_e_t, PROS_ERR};
 use snafu::Snafu;
+use vex_sdk::{vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId, V5_ControllerIndex};
 
-/// Holds whether or not the buttons on the controller are pressed or not
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
-pub struct Buttons {
-    /// The 'A' button on the right button pad of the controller.
-    pub a: bool,
-    /// The 'B' button on the right button pad of the controller.
-    pub b: bool,
-    /// The 'X' button on the right button pad of the controller.
-    pub x: bool,
-    /// The 'Y' button on the right button pad of the controller.
-    pub y: bool,
+use crate::{
+    adi::digital::LogicLevel,
+    competition::{self, CompetitionMode},
+};
 
-    /// The up arrow on the left arrow pad of the controller.
-    pub up: bool,
-    /// The down arrow on the left arrow pad of the controller.
-    pub down: bool,
-    /// The left arrow on the left arrow pad of the controller.
-    pub left: bool,
-    /// The right arrow on the left arrow pad of the controller.
-    pub right: bool,
-    /// The first trigger on the left side of the controller.
-    pub left_trigger_1: bool,
-    /// The second trigger on the left side of the controller.
-    pub left_trigger_2: bool,
-    /// The first trigger on the right side of the controller.
-    pub right_trigger_1: bool,
-    /// The second trigger on the right side of the controller.
-    pub right_trigger_2: bool,
+fn controller_connected(id: ControllerId) -> bool {
+    unsafe { vexControllerConnectionStatusGet(id.into()) as u32 != 0 }
+}
+
+/// Digital Controller Button
+#[derive(Debug, Eq, PartialEq)]
+pub struct Button {
+    id: ControllerId,
+    channel: V5_ControllerIndex,
+    last_level: LogicLevel,
+}
+
+impl Button {
+    fn validate(&self) -> Result<(), ControllerError> {
+        if !controller_connected(self.id) {
+            return Err(ControllerError::NotConnected);
+        }
+
+        Ok(())
+    }
+
+    /// Gets the current logic level of a digital input pin.
+    pub fn level(&self) -> Result<LogicLevel, ControllerError> {
+        self.validate()?;
+        if competition::mode() != CompetitionMode::Driver {
+            return Err(ControllerError::CompetitionControl);
+        }
+
+        let value =
+            unsafe { vexControllerGet(self.id.into(), self.channel.try_into().unwrap()) != 0 };
+
+        let level = match value {
+            true => LogicLevel::High,
+            false => LogicLevel::Low,
+        };
+        self.last_level = level;
+
+        Ok(level)
+    }
+
+    /// Returrns `true` if the button is currently being pressed.
+    ///
+    /// This is equivalent shorthand to calling `Self::level().is_high()`.
+    pub fn is_pressed(&self) -> Result<bool, ControllerError> {
+        self.validate()?;
+        Ok(self.level()?.is_high())
+    }
+
+    /// Returns `true` if the button has been pressed again since the last time this
+    /// function was called.
+    ///
+    /// # Thread Safety
+    ///
+    /// This function is not thread-safe.
+    ///
+    /// Multiple tasks polling a single button may return different results under the
+    /// same circumstances, so only one task should call this function for any given
+    /// switch. E.g., Task A calls this function for buttons 1 and 2. Task B may call
+    /// this function for button 3, but should not for buttons 1 or 2. A typical
+    /// use-case for this function is to call inside opcontrol to detect new button
+    /// presses, and not in any other tasks.
+    pub fn was_pressed(&mut self) -> Result<bool, ControllerError> {
+        self.validate()?;
+        if competition::mode() != CompetitionMode::Driver {
+            return Err(ControllerError::CompetitionControl);
+        }
+        let current_level = self.level()?;
+        Ok(self.last_level.is_low() && current_level.is_high())
+    }
 }
 
 /// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
 /// On the x axis left is negative, and right is positive.
 /// On the y axis down is negative, and up is positive.
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Joystick {
-    /// Left and right x value of the joystick
-    pub x: f32,
-    /// Up and down y value of the joystick
-    pub y: f32,
+    id: ControllerId,
+    x_channel: V5_ControllerIndex,
+    y_channel: V5_ControllerIndex,
 }
 
-/// Stores both joysticks on the controller.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Joysticks {
-    /// Left joystick
-    pub left: Joystick,
-    /// Right joystick
-    pub right: Joystick,
-}
+impl Joystick {
+    fn validate(&self) -> Result<(), ControllerError> {
+        if !controller_connected(self.id) {
+            return Err(ControllerError::NotConnected);
+        }
 
-/// Stores the current state of the controller; the joysticks and buttons.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ControllerState {
-    /// Analog joysticks state
-    pub joysticks: Joysticks,
-    /// Digital buttons state
-    pub buttons: Buttons,
-}
-
-/// Represents one line on the controller console.
-#[derive(Debug, Clone, Copy)]
-pub struct ControllerLine {
-    controller: Controller,
-    line: u8,
-}
-
-impl ControllerLine {
-    /// The maximum length that can fit in one line on the controllers display.
-    pub const MAX_TEXT_LEN: usize = 14;
-    /// The maximum line number that can be used on the controller display.
-    pub const MAX_LINE_NUM: u8 = 2;
-
-    /// Attempts to print text to the controller display.
-    /// Returns an error if the text is too long to fit on the display or if an internal PROS error occured.
-    pub fn try_print(&self, text: impl Into<Vec<u8>>) -> Result<(), ControllerError> {
-        let text = text.into();
-        let text_len = text.len();
-        assert!(
-            text_len > ControllerLine::MAX_TEXT_LEN,
-            "Printed text is too long to fit on controller display ({text_len} > {})",
-            Self::MAX_TEXT_LEN
-        );
-        let c_text = CString::new(text).expect("parameter `text` should not contain null bytes");
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::controller_set_text(self.controller.id(), self.line, 0, c_text.as_ptr())
-        });
         Ok(())
     }
-    /// Prints text to the controller display.
-    /// # Panics
-    /// Unlike [`ControllerLine::try_print`],
-    /// this function will panic if the text is too long to fit on the display
-    /// or if an internal PROS error occured.
-    pub fn print(&self, text: impl Into<Vec<u8>>) {
-        self.try_print(text).unwrap();
+
+    /// Gets the value of the joystick position on its x-axis from [-1, 1].
+    pub fn x(&self) -> Result<f32, ControllerError> {
+        self.validate()?;
+        Ok(self.x_raw()? as f32 / 127.0)
     }
-}
 
-/// A digital channel (button) on the VEX controller.
-#[repr(u32)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ControllerButton {
-    /// The 'A' button on the right button pad of the controller.
-    A = pros_sys::E_CONTROLLER_DIGITAL_A,
-    /// The 'B' button on the right button pad of the controller.
-    B = pros_sys::E_CONTROLLER_DIGITAL_B,
-    /// The 'X' button on the right button pad of the controller.
-    X = pros_sys::E_CONTROLLER_DIGITAL_X,
-    /// The 'Y' button on the right button pad of the controller.
-    Y = pros_sys::E_CONTROLLER_DIGITAL_Y,
-    /// The up arrow on the left arrow pad of the controller.
-    Up = pros_sys::E_CONTROLLER_DIGITAL_UP,
-    /// The down arrow on the left arrow pad of the controller.
-    Down = pros_sys::E_CONTROLLER_DIGITAL_DOWN,
-    /// The left arrow on the left arrow pad of the controller.
-    Left = pros_sys::E_CONTROLLER_DIGITAL_LEFT,
-    /// The right arrow on the left arrow pad of the controller.
-    Right = pros_sys::E_CONTROLLER_DIGITAL_RIGHT,
-    /// The first trigger on the left side of the controller.
-    LeftTrigger1 = pros_sys::E_CONTROLLER_DIGITAL_L1,
-    /// The second trigger on the left side of the controller.
-    LeftTrigger2 = pros_sys::E_CONTROLLER_DIGITAL_L2,
-    /// The first trigger on the right side of the controller.
-    RightTrigger1 = pros_sys::E_CONTROLLER_DIGITAL_R1,
-    /// The second trigger on the right side of the controller.
-    RightTrigger2 = pros_sys::E_CONTROLLER_DIGITAL_R2,
-}
+    /// Gets the value of the joystick position on its y-axis from [-1, 1].
+    pub fn y(&self) -> Result<f32, ControllerError> {
+        self.validate()?;
+        Ok(self.y_raw()? as f32 / 127.0)
+    }
 
-/// An analog channel (joystick axis) on the VEX controller.
-#[repr(u32)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum JoystickAxis {
-    /// Left (-1.0) and right (1.0) x axis of the left joystick
-    LeftX = pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
-    /// Down (-1.0) and up (1.0) y axis of the left joystick
-    LeftY = pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
-    /// Left (-1.0) and right (1.0) x axis of the right joystick
-    RightX = pros_sys::E_CONTROLLER_ANALOG_RIGHT_X,
-    /// Down (-1.0) and up (1.0) y axis of the right joystick
-    RightY = pros_sys::E_CONTROLLER_ANALOG_RIGHT_Y,
+    /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
+    pub fn x_raw(&self) -> Result<i8, ControllerError> {
+        self.validate()?;
+        if competition::mode() != CompetitionMode::Driver {
+            return Err(ControllerError::CompetitionControl);
+        }
+
+        Ok(unsafe { vexControllerGet(self.id.into(), self.x_channel) } as _)
+    }
+
+    /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
+    pub fn y_raw(&self) -> Result<i8, ControllerError> {
+        self.validate()?;
+        if competition::mode() != CompetitionMode::Driver {
+            return Err(ControllerError::CompetitionControl);
+        }
+
+        Ok(unsafe { vexControllerGet(self.id.into(), self.y_channel) } as _)
+    }
 }
 
 /// The basic type for a controller.
 /// Used to get the state of its joysticks and controllers.
-#[repr(u32)]
-#[derive(Debug, Clone, Copy, Default)]
-pub enum Controller {
-    /// The master controller. Controllers default to this value.
-    #[default]
-    Master = pros_sys::E_CONTROLLER_MASTER,
-    /// The partner controller.
-    Partner = pros_sys::E_CONTROLLER_PARTNER,
+#[derive(Debug, Eq, PartialEq)]
+pub struct Controller {
+    id: ControllerId,
+
+    /// Controller Screen
+    pub screen: ControllerScreen,
+
+    /// Left Joystick
+    pub left_stick: Joystick,
+    /// Right Joystick
+    pub right_stick: Joystick,
+
+    /// Button A
+    pub button_a: Button,
+    /// Button B
+    pub button_b: Button,
+    /// Button X
+    pub button_x: Button,
+    /// Button Y
+    pub button_y: Button,
+
+    /// Button Up
+    pub button_up: Button,
+    /// Button Down
+    pub button_down: Button,
+    /// Button Left
+    pub button_left: Button,
+    /// Button Right
+    pub button_right: Button,
+
+    /// Top Left Trigger
+    pub left_trigger_1: Button,
+    /// Bottom Left Trigger
+    pub left_trigger_2: Button,
+    /// Top Right Trigger
+    pub right_trigger_1: Button,
+    /// Bottom Right Trigger
+    pub right_trigger_2: Button,
+}
+
+/// Controller LCD Console
+#[derive(Debug, Eq, PartialEq)]
+pub struct ControllerScreen {
+    id: ControllerId,
+}
+
+impl ControllerScreen {
+    /// Maximum number of characters that can be drawn to a text line.
+    pub const MAX_LINE_LENGTH: usize = 14;
+
+    /// Number of available text lines on the controller before clearing the screen.
+    pub const MAX_LINES: usize = 2;
+
+    fn validate(&self) -> Result<(), ControllerError> {
+        if !controller_connected(self.id) {
+            return Err(ControllerError::NotConnected);
+        }
+
+        Ok(())
+    }
+
+    /// Clear the contents of a specific text line.
+    pub fn clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
+        //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
+        //TODO: We should check the version and change behavior based on it.
+        self.set_text("", line, 0)?;
+
+        Ok(())
+    }
+
+    /// Clear the whole screen.
+    pub fn clear_screen(&mut self) -> Result<(), ControllerError> {
+        for line in 0..Self::MAX_LINES as u8 {
+            self.clear_line(line)?;
+        }
+
+        Ok(())
+    }
+
+    /// Set the text contents at a specific row/column offset.
+    pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
+        self.validate()?;
+        if col >= Self::MAX_LINE_LENGTH as u8 {
+            return Err(ControllerError::InvalidLine);
+        }
+
+        let id: V5_ControllerId = self.id.into();
+        let text = CString::new(text).map_err(|_| ControllerError::NonTerminatingNull)?.into_raw();
+
+        unsafe { vexControllerTextSet(id as u32, (line + 1) as _, (col + 1) as _, text as *const _); }
+
+        // stop rust from leaking the CString
+        drop(unsafe { CString::from_raw(text) });
+
+        Ok(())
+    }
+}
+
+/// Represents an identifier for one of the two possible controllers
+/// connected to the V5 brain.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ControllerId {
+    /// Primary ("Master") Controller
+    Primary,
+
+    /// Partner Controller
+    Partner,
+}
+
+impl From<ControllerId> for V5_ControllerId {
+    fn from(id: ControllerId) -> Self {
+        match id {
+            ControllerId::Primary => V5_ControllerId::kControllerMaster,
+            ControllerId::Partner => V5_ControllerId::kControllerPartner,
+        }
+    }
 }
 
 impl Controller {
-    const fn id(&self) -> controller_id_e_t {
-        *self as controller_id_e_t
+    fn validate(&self) -> Result<(), ControllerError> {
+        if !controller_connected(self.id) {
+            return Err(ControllerError::NotConnected);
+        }
+
+        Ok(())
     }
 
-    /// Returns a line on the controller display that can be used to print to the controller.
-    pub fn line(&self, line_num: u8) -> ControllerLine {
-        assert!(
-            line_num > ControllerLine::MAX_LINE_NUM,
-            "Line number is too large for controller display ({line_num} > {})",
-            ControllerLine::MAX_LINE_NUM
-        );
-
-        ControllerLine {
-            controller: *self,
-            line: line_num,
+    /// Create a new controller.
+    ///
+    /// # Safety
+    ///
+    /// Creating new `Controller`s is inherently unsafe due to the possibility of constructing
+    /// more than one screen at once allowing multiple mutable references to the same
+    /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    pub const unsafe fn new(id: ControllerId) -> Self {
+        Self {
+            id,
+            screen: ControllerScreen { id },
+            left_stick: Joystick {
+                id,
+                x_channel: V5_ControllerIndex::Axis1,
+                y_channel: V5_ControllerIndex::Axis2,
+            },
+            right_stick: Joystick {
+                id,
+                x_channel: V5_ControllerIndex::Axis3,
+                y_channel: V5_ControllerIndex::Axis4,
+            },
+            button_a: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonA,
+                last_level: LogicLevel::Low,
+            },
+            button_b: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonB,
+                last_level: LogicLevel::Low,
+            },
+            button_x: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonX,
+                last_level: LogicLevel::Low,
+            },
+            button_y: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonY,
+                last_level: LogicLevel::Low,
+            },
+            button_up: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonUp,
+                last_level: LogicLevel::Low,
+            },
+            button_down: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonDown,
+                last_level: LogicLevel::Low,
+            },
+            button_left: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonLeft,
+                last_level: LogicLevel::Low,
+            },
+            button_right: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonRight,
+                last_level: LogicLevel::Low,
+            },
+            left_trigger_1: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonL1,
+                last_level: LogicLevel::Low,
+            },
+            left_trigger_2: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonL2,
+                last_level: LogicLevel::Low,
+            },
+            right_trigger_1: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonR1,
+                last_level: LogicLevel::Low,
+            },
+            right_trigger_2: Button {
+                id,
+                channel: V5_ControllerIndex::ButtonR2,
+                last_level: LogicLevel::Low,
+            },
         }
     }
 
-    /// Gets the current state of the controller in its entirety.
-    pub fn state(&self) -> Result<ControllerState, ControllerError> {
-        Ok(ControllerState {
-            joysticks: unsafe {
-                Joysticks {
-                    left: Joystick {
-                        x: bail_on!(
-                            PROS_ERR,
-                            pros_sys::controller_get_analog(
-                                self.id(),
-                                pros_sys::E_CONTROLLER_ANALOG_LEFT_X,
-                            )
-                        ) as f32
-                            / 127.0,
-                        y: bail_on!(
-                            PROS_ERR,
-                            pros_sys::controller_get_analog(
-                                self.id(),
-                                pros_sys::E_CONTROLLER_ANALOG_LEFT_Y,
-                            )
-                        ) as f32
-                            / 127.0,
-                    },
-                    right: Joystick {
-                        x: bail_on!(
-                            PROS_ERR,
-                            pros_sys::controller_get_analog(
-                                self.id(),
-                                pros_sys::E_CONTROLLER_ANALOG_RIGHT_X,
-                            )
-                        ) as f32
-                            / 127.0,
-                        y: bail_on!(
-                            PROS_ERR,
-                            pros_sys::controller_get_analog(
-                                self.id(),
-                                pros_sys::E_CONTROLLER_ANALOG_RIGHT_Y,
-                            )
-                        ) as f32
-                            / 127.0,
-                    },
-                }
-            },
-            buttons: unsafe {
-                Buttons {
-                    a: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_A,
-                        )
-                    ) == 1,
-                    b: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_B,
-                        )
-                    ) == 1,
-                    x: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_X,
-                        )
-                    ) == 1,
-                    y: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_Y,
-                        )
-                    ) == 1,
-                    up: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_UP,
-                        )
-                    ) == 1,
-                    down: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_DOWN,
-                        )
-                    ) == 1,
-                    left: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_LEFT,
-                        )
-                    ) == 1,
-                    right: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_RIGHT,
-                        )
-                    ) == 1,
-                    left_trigger_1: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_L1,
-                        )
-                    ) == 1,
-                    left_trigger_2: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_L2,
-                        )
-                    ) == 1,
-                    right_trigger_1: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_R1,
-                        )
-                    ) == 1,
-                    right_trigger_2: bail_on!(
-                        PROS_ERR,
-                        pros_sys::controller_get_digital(
-                            self.id(),
-                            pros_sys::E_CONTROLLER_DIGITAL_R2,
-                        )
-                    ) == 1,
-                }
-            },
+    /// Returns `true` if the controller is connected to the brain.
+    pub fn is_connected(&self) -> bool {
+        controller_connected(self.id)
+    }
+
+    /// Gets the controller's battery capacity.
+    pub fn battery_capacity(&self) -> Result<i32, ControllerError> {
+        self.validate()?;
+
+        Ok(unsafe {
+            vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryCapacity)
         })
     }
 
-    /// Gets the state of a specific button on the controller.
-    pub fn button(&self, button: ControllerButton) -> Result<bool, ControllerError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::controller_get_digital(self.id(), button as pros_sys::controller_digital_e_t)
-        }) == 1)
+    /// Gets the controller's battery level.
+    pub fn battery_level(&self) -> Result<i32, ControllerError> {
+        self.validate()?;
+
+        Ok(unsafe {
+            vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryLevel)
+        })
     }
 
-    /// Gets the state of a specific joystick axis on the controller.
-    pub fn joystick_axis(&self, axis: JoystickAxis) -> Result<f32, ControllerError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::controller_get_analog(self.id(), axis as pros_sys::controller_analog_e_t)
-        }) as f32
-            / 127.0)
+    /// Send a rumble pattern to the controller's vibration motor.
+    ///
+    /// This function takes a string consisting of the characters '.', '-', and ' ', where
+    /// dots are short rumbles, dashes are long rumbles, and spaces are pauses. Maximum
+    /// supported length is 8 characters.
+    pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
+        self.validate()?;
+
+        self.screen.set_text(pattern, 3, 0);
+
+        Ok(())
     }
 }
 
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the controller.
 pub enum ControllerError {
-    /// The controller ID given was invalid, expected E_CONTROLLER_MASTER or E_CONTROLLER_PARTNER.
-    InvalidControllerId,
-
-    /// Another resource is already using the controller.
-    ConcurrentAccess,
-}
-
-map_errno! {
-    ControllerError {
-        EACCES => Self::ConcurrentAccess,
-        EINVAL => Self::InvalidControllerId,
-    }
+    /// The controller is not connected to the brain.
+    NotConnected,
+    /// CString::new encountered NULL (U+0000) byte in non-terminating position.
+    NonTerminatingNull,
+    /// Access to controller data is restricted by competition control.
+    CompetitionControl,
+    /// An invalid line number was given.
+    InvalidLine,
 }
