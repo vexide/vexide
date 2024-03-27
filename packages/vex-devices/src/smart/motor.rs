@@ -6,13 +6,19 @@ use bitflags::bitflags;
 use pros_core::error::PortError;
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorBrakeModeSet, vexDeviceMotorCurrentGet, vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet, vexDeviceMotorEfficiencyGet, vexDeviceMotorEncoderUnitsSet, vexDeviceMotorFaultsGet, vexDeviceMotorFlagsGet, vexDeviceMotorGearingGet, vexDeviceMotorGearingSet, vexDeviceMotorPositionGet, vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset, vexDeviceMotorPositionSet, vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet, vexDeviceMotorReverseFlagSet, vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet, vexDeviceMotorVelocityGet, vexDeviceMotorVelocitySet, vexDeviceMotorVelocityUpdate, vexDeviceMotorVoltageGet, vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet, V5MotorBrakeMode, V5MotorGearset
+    vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorBrakeModeSet, vexDeviceMotorCurrentGet,
+    vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet, vexDeviceMotorEfficiencyGet,
+    vexDeviceMotorEncoderUnitsSet, vexDeviceMotorFaultsGet, vexDeviceMotorFlagsGet,
+    vexDeviceMotorGearingGet, vexDeviceMotorGearingSet, vexDeviceMotorPositionGet,
+    vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset, vexDeviceMotorPositionSet,
+    vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet, vexDeviceMotorReverseFlagSet,
+    vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet, vexDeviceMotorVelocityGet,
+    vexDeviceMotorVelocitySet, vexDeviceMotorVelocityUpdate, vexDeviceMotorVoltageGet,
+    vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet,
+    V5MotorBrakeMode, V5MotorGearset,
 };
-
 #[cfg(feature = "dangerous_motor_tuning")]
-use vex_sdk::{
-    vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid
-};
+use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{SmartDevice, SmartDeviceInternal, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
 use crate::Position;
@@ -112,6 +118,7 @@ impl Motor {
         match target {
             MotorControl::Brake(mode) => unsafe {
                 vexDeviceMotorBrakeModeSet(self.device_handle(), mode.into());
+                // Force motor into braking by putting it into velocity control with a 0rpm setpoint.
                 vexDeviceMotorVelocitySet(self.device_handle(), 0);
             },
             MotorControl::Velocity(rpm) => unsafe {
@@ -323,6 +330,7 @@ impl Motor {
         Ok(unsafe { vexDeviceMotorVoltageLimitGet(self.device_handle()) } as f64 / 1000.0)
     }
 
+    /// Returns the internal teperature recorded by the motor in increments of 5°C.
     pub fn temperature(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorTemperatureGet(self.device_handle()) })
@@ -334,6 +342,8 @@ impl Motor {
 
         let bits = unsafe { vexDeviceMotorFlagsGet(self.device_handle()) };
 
+        // This is technically just a flag, but it indicates that an error occurred when trying
+        // to get the flags, so we return early here.
         if (bits & pros_sys::E_MOTOR_FLAGS_BUSY) != 0 {
             return Err(MotorError::Busy);
         }

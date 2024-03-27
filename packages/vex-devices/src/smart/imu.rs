@@ -362,7 +362,7 @@ impl core::future::Future for InertialCalibrateFuture {
                     cx.waker().wake_by_ref();
                     Poll::Pending
                 }
-            },
+            }
             Self::Waiting(port, timestamp, phase) => {
                 if timestamp.elapsed() > InertialSensor::CALIBRATION_TIMEOUT {
                     // Calibration took too long and exceeded timeout.
@@ -379,19 +379,22 @@ impl core::future::Future for InertialCalibrateFuture {
                     },
                 );
 
-                if status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::Start {
+                if status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::Start
+                {
                     // Calibration has started, so we'll change to waiting for it to end.
                     *self = Self::Waiting(port, timestamp, CalibrationPhase::End);
                     cx.waker().wake_by_ref();
                     return Poll::Pending;
-                } else if !status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::End {
+                } else if !status.contains(InertialStatus::CALIBRATING)
+                    && phase == CalibrationPhase::End
+                {
                     // Calibration has finished.
                     return Poll::Ready(Ok(()));
                 }
 
                 cx.waker().wake_by_ref();
                 Poll::Pending
-            },
+            }
         }
     }
 }
