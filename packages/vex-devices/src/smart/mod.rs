@@ -39,7 +39,7 @@ pub use motor::Motor;
 pub use optical::OpticalSensor;
 use pros_core::error::PortError;
 pub use rotation::RotationSensor;
-use vex_sys::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
+use vex_sdk::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
 pub use vision::VisionSensor;
 
 /// Defines common functionality shared by all smart port devices.
@@ -107,19 +107,24 @@ pub(crate) trait SmartDeviceInternal: SmartDevice {
 
     /// Verify that the device type is currently plugged into this port.
     fn validate_port(&self) -> Result<(), PortError> {
-        let device = unsafe { *self.device_handle() };
-        let plugged_type: SmartDeviceType = device.device_type.into();
-
-        if !device.exists {
-            // No device is plugged into the port.
-            return Err(PortError::Disconnected);
-        } else if plugged_type != self.device_type() {
-            // The connected device doesn't match the requested type.
-            return Err(PortError::IncorrectDevice);
-        }
-
-        Ok(())
+        validate_port(self.port_index(), self.device_type())
     }
+}
+
+/// Verify that the device type is currently plugged into this port.
+pub(crate) fn validate_port(index: u8, device_type: SmartDeviceType) -> Result<(), PortError> {
+    let device = unsafe { *vexDeviceGetByIndex((index - 1) as u32) };
+    let plugged_type: SmartDeviceType = device.device_type.into();
+
+    if !device.exists {
+        // No device is plugged into the port.
+        return Err(PortError::Disconnected);
+    } else if plugged_type != device_type {
+        // The connected device doesn't match the requested type.
+        return Err(PortError::IncorrectDevice);
+    }
+
+    Ok(())
 }
 
 impl<T: SmartDevice> SmartDeviceInternal for T {}
@@ -247,15 +252,6 @@ impl From<V5_DeviceType> for SmartDeviceType {
         match value {
             V5_DeviceType::kDeviceTypeNoSensor => Self::None,
             V5_DeviceType::kDeviceTypeMotorSensor => Self::Motor,
-            // TODO:
-            // I'm not entirely sure that this conversion is correct.
-            // This behavior is taken from the PROS kernel, which treats
-            // the rotation sensor as kDeviceTypeAbsEncSensor, however the
-            // SDK also uses the "absEnc" terminology to represent ADI
-            // encoders which is an entirely different thing.
-            //
-            // Not sure what else this value would be, but it still needs
-            // hardware testing
             V5_DeviceType::kDeviceTypeAbsEncSensor => Self::Rotation,
             V5_DeviceType::kDeviceTypeImuSensor => Self::Imu,
             V5_DeviceType::kDeviceTypeDistanceSensor => Self::Distance,
@@ -279,7 +275,6 @@ impl From<SmartDeviceType> for V5_DeviceType {
         match value {
             SmartDeviceType::None => V5_DeviceType::kDeviceTypeNoSensor,
             SmartDeviceType::Motor => V5_DeviceType::kDeviceTypeMotorSensor,
-            // TODO: See comment in the conversion impl above this one. Same deal.
             SmartDeviceType::Rotation => V5_DeviceType::kDeviceTypeAbsEncSensor,
             SmartDeviceType::Imu => V5_DeviceType::kDeviceTypeImuSensor,
             SmartDeviceType::Distance => V5_DeviceType::kDeviceTypeDistanceSensor,

@@ -1,7 +1,7 @@
 //! Utilities for getting competition control state.
 
 use bitflags::bitflags;
-use vex_sys::vexCompetitionStatus;
+use vex_sdk::vexCompetitionStatus;
 
 bitflags! {
     /// The status bits returned by [`competition::state`].

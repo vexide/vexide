@@ -4,13 +4,13 @@ use core::time::Duration;
 
 use pros_core::error::PortError;
 use snafu::Snafu;
-use vex_sys::{
+use vex_sdk::{
     vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureDisable, vexDeviceOpticalGestureEnable,
     vexDeviceOpticalGestureGet, vexDeviceOpticalHueGet, vexDeviceOpticalIntegrationTimeGet,
     vexDeviceOpticalIntegrationTimeSet, vexDeviceOpticalLedPwmGet, vexDeviceOpticalLedPwmSet,
-    vexDeviceOpticalProximityGet, vexDeviceOpticalProximityThreshold, vexDeviceOpticalRawGet,
-    vexDeviceOpticalRgbGet, vexDeviceOpticalSatGet, vexDeviceOpticalStatusGet,
-    V5_DeviceOpticalGesture, V5_DeviceOpticalRaw, V5_DeviceOpticalRgb,
+    vexDeviceOpticalProximityGet, vexDeviceOpticalRawGet, vexDeviceOpticalRgbGet,
+    vexDeviceOpticalSatGet, vexDeviceOpticalStatusGet, V5_DeviceOpticalGesture,
+    V5_DeviceOpticalRaw, V5_DeviceOpticalRgb,
 };
 
 use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
@@ -88,12 +88,12 @@ impl OpticalSensor {
     pub fn set_integration_time(&mut self, time: Duration) -> Result<(), OpticalError> {
         self.validate_port()?;
 
-        let time = time.as_millis().clamp(
+        let time_ms = time.as_millis().clamp(
             Self::MIN_INTEGRATION_TIME.as_millis(),
             Self::MAX_INTEGRATION_TIME.as_millis(),
         ) as f64;
 
-        unsafe { vexDeviceOpticalIntegrationTimeSet(self.device_handle(), time) }
+        unsafe { vexDeviceOpticalIntegrationTimeSet(self.device_handle(), time_ms) }
 
         Ok(())
     }

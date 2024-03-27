@@ -2,88 +2,107 @@
 //!
 //! Rotation sensors operate on the same [`Position`] type as motors to measure rotation.
 
-use pros_core::{bail_on, error::PortError};
-use pros_sys::PROS_ERR;
+use pros_core::error::PortError;
+use vex_sdk::{
+    vexDeviceAbsEncAngleGet, vexDeviceAbsEncPositionGet, vexDeviceAbsEncPositionSet,
+    vexDeviceAbsEncReset, vexDeviceAbsEncReverseFlagGet, vexDeviceAbsEncReverseFlagSet,
+    vexDeviceAbsEncStatusGet, vexDeviceAbsEncVelocityGet,
+};
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
+use super::{motor::Direction, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
 use crate::position::Position;
 
 /// A physical rotation sensor plugged into a port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct RotationSensor {
     port: SmartPort,
-    /// Whether or not the sensor direction is reversed.
-    pub reversed: bool,
 }
 
 impl RotationSensor {
     /// Creates a new rotation sensor on the given port.
     /// Whether or not the sensor should be reversed on creation can be specified.
-    pub fn new(port: SmartPort, reversed: bool) -> Result<Self, PortError> {
-        unsafe {
-            bail_on!(PROS_ERR, pros_sys::rotation_reset_position(port.index()));
-            if reversed {
-                bail_on!(
-                    PROS_ERR,
-                    pros_sys::rotation_set_reversed(port.index(), true)
-                );
-            }
-        }
+    pub fn new(port: SmartPort, direction: Direction) -> Result<Self, PortError> {
+        let mut sensor = Self { port };
 
-        Ok(Self { port, reversed })
+        sensor.reset()?;
+        sensor.set_direction(direction)?;
+
+        Ok(sensor)
     }
 
     /// Sets the position to zero.
-    pub fn zero(&mut self) -> Result<(), PortError> {
+    pub fn reset(&mut self) -> Result<(), PortError> {
+        self.validate_port()?;
+
         unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::rotation_reset_position(self.port.index())
-            );
+            vexDeviceAbsEncReset(self.device_handle());
         }
+
         Ok(())
     }
 
     /// Sets the position.
     pub fn set_position(&mut self, position: Position) -> Result<(), PortError> {
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::rotation_set_position(
-                    self.port.index(),
-                    (position.into_counts() * 100) as _
-                )
-            );
-        }
+        self.validate_port()?;
+
+        unsafe { vexDeviceAbsEncPositionSet(self.device_handle(), position.into_degrees() as i32) }
+
         Ok(())
     }
 
     /// Sets whether or not the rotation sensor should be reversed.
-    pub fn set_reversed(&mut self, reversed: bool) -> Result<(), PortError> {
-        self.reversed = reversed;
+    pub fn set_direction(&mut self, direction: Direction) -> Result<(), PortError> {
+        self.validate_port()?;
 
-        unsafe {
-            bail_on!(
-                PROS_ERR,
-                pros_sys::rotation_set_reversed(self.port.index(), reversed)
-            );
-        }
+        unsafe { vexDeviceAbsEncReverseFlagSet(self.device_handle(), direction.is_reverse()) }
+
         Ok(())
     }
 
-    /// Reverses the rotation sensor.
-    pub fn reverse(&mut self) -> Result<(), PortError> {
-        self.set_reversed(!self.reversed)
+    /// Sets whether or not the rotation sensor should be reversed.
+    pub fn direction(&self) -> Result<Direction, PortError> {
+        self.validate_port()?;
+
+        Ok(
+            match unsafe { vexDeviceAbsEncReverseFlagGet(self.device_handle()) } {
+                false => Direction::Forward,
+                true => Direction::Reverse,
+            },
+        )
     }
 
-    //TODO: See if this is accurate enough or consider switching to get_position function.
-    /// Gets the current position of the sensor.
+    /// Get the total number of degrees rotated by the sensor based on direction.
     pub fn position(&self) -> Result<Position, PortError> {
-        Ok(unsafe {
-            Position::from_degrees(
-                bail_on!(PROS_ERR, pros_sys::rotation_get_angle(self.port.index())) as f64 / 100.0,
-            )
-        })
+        self.validate_port()?;
+
+        Ok(Position::from_degrees(
+            unsafe { vexDeviceAbsEncPositionGet(self.device_handle()) } as f64 / 100.0,
+        ))
+    }
+
+    /// Get the angle of rotation measured by the sensor.
+    ///
+    /// This value is reported from 0-360 degrees.
+    pub fn angle(&self) -> Result<Position, PortError> {
+        self.validate_port()?;
+
+        Ok(Position::from_degrees(
+            unsafe { vexDeviceAbsEncAngleGet(self.device_handle()) } as f64 / 100.0,
+        ))
+    }
+
+    /// Get the sensor's current velocity in degrees per second
+    pub fn velocity(&self) -> Result<f64, PortError> {
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceAbsEncVelocityGet(self.device_handle()) as f64 / 1000.0 })
+    }
+
+    /// Returns the sensor's status code.
+    pub fn status(&self) -> Result<u32, PortError> {
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceAbsEncStatusGet(self.device_handle()) })
     }
 }
 

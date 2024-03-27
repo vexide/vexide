@@ -7,16 +7,16 @@ use core::{
 };
 
 use bitflags::bitflags;
-use pros_core::{
-    bail_on,
-    error::{take_errno, PortError},
-    time::Instant,
-};
-use pros_sys::{PROS_ERR, PROS_ERR_F};
+use pros_core::{error::PortError, time::Instant};
 use snafu::Snafu;
-use vex_sys::{vexDeviceImuDegreesGet, vexDeviceImuHeadingGet, vexDeviceImuStatusGet};
+use vex_sdk::{
+    vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
+    vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
+    vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5_DeviceImuAttitude,
+    V5_DeviceImuQuaternion, V5_DeviceImuRaw,
+};
 
-use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
 
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
 #[derive(Debug, PartialEq)]
@@ -28,11 +28,17 @@ pub struct InertialSensor {
 }
 
 impl InertialSensor {
-    /// The timeout for the IMU to calibrate.
+    /// The time limit used by the PROS kernel for bailing out of calibration. In theory, this
+    /// could be as low as 2s, but is kept at 3s for margin-of-error.
+    ///
+    /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L31>
     pub const CALIBRATION_TIMEOUT: Duration = Duration::from_secs(3);
 
     /// The minimum data rate that you can set an IMU to.
     pub const MIN_DATA_RATE: Duration = Duration::from_millis(5);
+
+    /// The maximum value that can be returned by [`Self::heading`].
+    pub const MAX_HEADING: f64 = 360.0;
 
     /// Create a new inertial sensor from a smart port index.
     pub const fn new(port: SmartPort) -> Self {
@@ -48,58 +54,9 @@ impl InertialSensor {
     /// calibrating.
     fn validate(&self) -> Result<(), InertialError> {
         if self.is_calibrating()? {
-            return Err(InertialError::Calibrating);
+            return Err(InertialError::StillCalibrating);
         }
         Ok(())
-    }
-
-    /// Calibrate IMU asynchronously.
-    ///
-    /// Returns an [`InertialCalibrateFuture`] that is be polled until the IMU status flag reports the sensor as
-    /// no longer calibrating.
-    /// There a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
-    pub fn calibrate(&mut self) -> InertialCalibrateFuture {
-        InertialCalibrateFuture::Calibrate(self.port.index())
-    }
-
-    /// Check if the Intertial Sensor is currently calibrating.
-    pub fn is_calibrating(&mut self) -> Result<bool, InertialError> {
-        Ok(self.status()?.contains(InertialStatus::CALIBRATING))
-    }
-
-    /// Get the total number of degrees the Inertial Sensor has spun about the z-axis.
-    ///
-    /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
-    /// while counterclockwise rotations are represented with negative ones.
-    pub fn rotation(&self) -> Result<f64, InertialError> {
-        self.validate()?;
-        // TODO: Test vexDeviceImuDegreesGet
-        Ok(unsafe { vexDeviceImuDegreesGet(self.device_handle()) } + self.rotation_offset)
-    }
-
-    /// Get the Inertial Sensor’s heading relative to the initial direction of its x-axis.
-    ///
-    /// This value is bounded by [0, 360) degrees. Clockwise rotations are represented with positive degree values,
-    /// while counterclockwise rotations are represented with negative ones.
-    pub fn heading(&self) -> Result<f64, InertialError> {
-        self.validate()?;
-        // TODO: test vexDeviceImuHeadingGet
-        Ok(unsafe { vexDeviceImuHeadingGet(self.device_handle()) } + self.heading_offset)
-    }
-
-    /// Get the Inertial Sensor’s yaw angle bounded by (-180, 180) degrees.
-    pub fn yaw(&self) -> Result<f64, InertialError> {
-        Ok(self.euler()?.yaw)
-    }
-
-    /// Get the Inertial Sensor’s pitch angle bounded by (-180, 180) degrees.
-    pub fn pitch(&self) -> Result<f64, InertialError> {
-        Ok(self.euler()?.pitch)
-    }
-
-    /// Get the Inertial Sensor’s roll angle bounded by (-180, 180) degrees.
-    pub fn roll(&self) -> Result<f64, InertialError> {
-        Ok(self.euler()?.roll)
     }
 
     /// Read the inertial sensor's status code.
@@ -111,95 +68,137 @@ impl InertialSensor {
         }))
     }
 
-    /// Get a quaternion representing the Inertial Sensor’s orientation.
-    pub fn quaternion(&self) -> Result<Quaternion, InertialError> {
-        unsafe { pros_sys::imu_get_quaternion(self.port.index()).try_into() }
+    /// Check if the Intertial Sensor is currently calibrating.
+    pub fn is_calibrating(&mut self) -> Result<bool, InertialError> {
+        Ok(self.status()?.contains(InertialStatus::CALIBRATING))
     }
 
-    /// Get the Euler angles representing the Inertial Sensor’s orientation.
+    /// Calibrate IMU asynchronously.
+    ///
+    /// Returns an [`InertialCalibrateFuture`] that is be polled until the IMU status flag reports the sensor as
+    /// no longer calibrating.
+    /// There a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
+    pub fn calibrate(&mut self) -> InertialCalibrateFuture {
+        InertialCalibrateFuture::Calibrate(self.port.index())
+    }
+
+    /// Get the total number of degrees the Inertial Sensor has spun about the z-axis.
+    ///
+    /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
+    /// while counterclockwise rotations are represented with negative ones.
+    pub fn rotation(&self) -> Result<f64, InertialError> {
+        self.validate()?;
+        Ok(unsafe { vexDeviceImuHeadingGet(self.device_handle()) } - self.rotation_offset)
+    }
+
+    /// Get the Inertial Sensor’s yaw angle bounded by [0, 360) degrees.
+    ///
+    /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
+    /// represented with negative ones.
+    pub fn heading(&self) -> Result<f64, InertialError> {
+        self.validate()?;
+        Ok(
+            (unsafe { vexDeviceImuDegreesGet(self.device_handle()) } - self.heading_offset)
+                % Self::MAX_HEADING,
+        )
+    }
+
+    /// Get a quaternion representing the Inertial Sensor’s orientation.
+    pub fn quaternion(&self) -> Result<Quaternion, InertialError> {
+        self.validate()?;
+
+        let mut data = V5_DeviceImuQuaternion::default();
+        unsafe {
+            vexDeviceImuQuaternionGet(self.device_handle(), &mut data);
+        }
+
+        Ok(data.into())
+    }
+
+    /// Get the Euler angles (yaw, pitch, roll) representing the Inertial Sensor’s orientation.
     pub fn euler(&self) -> Result<Euler, InertialError> {
-        unsafe { pros_sys::imu_get_euler(self.port.index()).try_into() }
+        self.validate()?;
+
+        let mut data = V5_DeviceImuAttitude::default();
+        unsafe {
+            vexDeviceImuAttitudeGet(self.device_handle(), &mut data);
+        }
+
+        Ok(data.into())
     }
 
     /// Get the Inertial Sensor’s raw gyroscope values.
     pub fn gyro_rate(&self) -> Result<InertialRaw, InertialError> {
-        unsafe { pros_sys::imu_get_gyro_rate(self.port.index()).try_into() }
+        self.validate()?;
+
+        let mut data = V5_DeviceImuRaw::default();
+        unsafe {
+            vexDeviceImuRawGyroGet(self.device_handle(), &mut data);
+        }
+
+        Ok(data.into())
     }
 
     /// Get the Inertial Sensor’s raw accelerometer values.
     pub fn accel(&self) -> Result<InertialRaw, InertialError> {
-        unsafe { pros_sys::imu_get_accel(self.port.index()).try_into() }
+        self.validate()?;
+
+        let mut data = V5_DeviceImuRaw::default();
+        unsafe {
+            vexDeviceImuRawAccelGet(self.device_handle(), &mut data);
+        }
+
+        Ok(data.into())
     }
 
     /// Resets the current reading of the Inertial Sensor’s heading to zero.
-    pub fn zero_heading(&mut self) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_tare_heading(self.port.index())
-        });
-        Ok(())
+    pub fn reset_heading(&mut self) -> Result<(), InertialError> {
+        self.set_heading(Default::default())
     }
 
     /// Resets the current reading of the Inertial Sensor’s rotation to zero.
-    pub fn zero_rotation(&mut self) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_tare_rotation(self.port.index())
-        });
-        Ok(())
-    }
-
-    /// Resets the current reading of the Inertial Sensor’s pitch to zero.
-    pub fn zero_pitch(&mut self) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_tare_pitch(self.port.index())
-        });
-        Ok(())
-    }
-
-    /// Resets the current reading of the Inertial Sensor’s roll to zero.
-    pub fn zero_roll(&mut self) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_tare_roll(self.port.index())
-        });
-        Ok(())
-    }
-
-    /// Resets the current reading of the Inertial Sensor’s yaw to zero.
-    pub fn zero_yaw(&mut self) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_tare_yaw(self.port.index())
-        });
-        Ok(())
+    pub fn reset_rotation(&mut self) -> Result<(), InertialError> {
+        self.set_rotation(Default::default())
     }
 
     /// Reset all 3 euler values of the Inertial Sensor to 0.
-    pub fn zero_euler(&mut self) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_tare_euler(self.port.index())
-        });
-        Ok(())
+    pub fn reset_euler(&mut self) -> Result<(), InertialError> {
+        self.set_euler(Default::default())
     }
 
-    /// Resets all 5 values of the Inertial Sensor to 0.
-    pub fn zero(&mut self) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe { pros_sys::imu_tare(self.port.index()) });
+    /// Resets all values of the Inertial Sensor to 0.
+    pub fn reset(&mut self) -> Result<(), InertialError> {
+        self.reset_heading()?;
+        self.reset_rotation()?;
+        self.reset_euler()?;
+
         Ok(())
     }
 
     /// Sets the current reading of the Inertial Sensor’s euler values to target euler values.
-    ///
-    /// Will default to +/- 180 if target exceeds +/- 180.
     pub fn set_euler(&mut self, euler: Euler) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_set_euler(self.port.index(), euler.into())
-        });
+        self.validate()?;
+
+        let mut attitude = V5_DeviceImuAttitude::default();
+        unsafe {
+            vexDeviceImuAttitudeGet(self.device_handle(), &mut attitude);
+        }
+
+        self.euler_offset = Euler {
+            yaw: euler.yaw - attitude.yaw,
+            pitch: euler.pitch - attitude.pitch,
+            roll: euler.roll - attitude.roll,
+        };
+
         Ok(())
     }
 
     /// Sets the current reading of the Inertial Sensor’s rotation to target value.
     pub fn set_rotation(&mut self, rotation: f64) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_set_rotation(self.port.index(), rotation)
-        });
+        self.validate()?;
+
+        self.rotation_offset = rotation - unsafe { vexDeviceImuHeadingGet(self.device_handle()) };
+
         Ok(())
     }
 
@@ -207,39 +206,10 @@ impl InertialSensor {
     ///
     /// Target will default to 360 if above 360 and default to 0 if below 0.
     pub fn set_heading(&mut self, heading: f64) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_set_heading(self.port.index(), heading)
-        });
-        Ok(())
-    }
+        self.validate()?;
 
-    /// Sets the current reading of the Inertial Sensor’s pitch to target value.
-    ///
-    /// Will default to +/- 180 if target exceeds +/- 180.
-    pub fn set_pitch(&mut self, pitch: f64) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_set_pitch(self.port.index(), pitch)
-        });
-        Ok(())
-    }
+        self.heading_offset = heading - unsafe { vexDeviceImuDegreesGet(self.device_handle()) };
 
-    /// Sets the current reading of the Inertial Sensor’s roll to target value
-    ///
-    /// Will default to +/- 180 if target exceeds +/- 180.
-    pub fn set_roll(&mut self, roll: f64) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_set_roll(self.port.index(), roll)
-        });
-        Ok(())
-    }
-
-    /// Sets the current reading of the Inertial Sensor’s yaw to target value.
-    ///
-    /// Will default to +/- 180 if target exceeds +/- 180.
-    pub fn set_yaw(&mut self, yaw: f64) -> Result<(), InertialError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::imu_set_yaw(self.port.index(), yaw)
-        });
         Ok(())
     }
 
@@ -247,22 +217,11 @@ impl InertialSensor {
     ///
     /// This duration must be above [`Self::MIN_DATA_RATE`] (5 milliseconds).
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
-        unsafe {
-            let rate_ms = if data_rate > Self::MIN_DATA_RATE {
-                if let Ok(rate) = u32::try_from(data_rate.as_millis()) {
-                    rate
-                } else {
-                    return Err(InertialError::InvalidDataRate);
-                }
-            } else {
-                return Err(InertialError::InvalidDataRate);
-            };
+        self.validate()?;
 
-            bail_on!(
-                PROS_ERR,
-                pros_sys::imu_set_data_rate(self.port.index(), rate_ms)
-            );
-        }
+        let time_ms = data_rate.as_millis().max(Self::MIN_DATA_RATE.as_millis()) as u32;
+        unsafe { vexDeviceImuDataRateSet(self.device_handle(), time_ms) }
+
         Ok(())
     }
 }
@@ -294,26 +253,13 @@ pub struct Quaternion {
     pub w: f64,
 }
 
-impl TryFrom<pros_sys::quaternion_s_t> for Quaternion {
-    type Error = InertialError;
-
-    fn try_from(value: pros_sys::quaternion_s_t) -> Result<Quaternion, InertialError> {
-        Ok(Self {
-            x: bail_on!(PROS_ERR_F, value.x),
-            y: value.y,
-            z: value.z,
-            w: value.w,
-        })
-    }
-}
-
-impl From<Quaternion> for pros_sys::quaternion_s_t {
-    fn from(value: Quaternion) -> Self {
-        pros_sys::quaternion_s_t {
-            x: value.x,
-            y: value.y,
-            z: value.z,
-            w: value.w,
+impl From<V5_DeviceImuQuaternion> for Quaternion {
+    fn from(value: V5_DeviceImuQuaternion) -> Self {
+        Self {
+            x: value.a,
+            y: value.b,
+            z: value.c,
+            w: value.d,
         }
     }
 }
@@ -331,24 +277,12 @@ pub struct Euler {
     pub yaw: f64,
 }
 
-impl TryFrom<pros_sys::euler_s_t> for Euler {
-    type Error = InertialError;
-
-    fn try_from(value: pros_sys::euler_s_t) -> Result<Euler, InertialError> {
-        Ok(Self {
-            pitch: bail_on!(PROS_ERR_F, value.pitch),
+impl From<V5_DeviceImuAttitude> for Euler {
+    fn from(value: V5_DeviceImuAttitude) -> Self {
+        Self {
+            pitch: value.pitch,
             roll: value.roll,
             yaw: value.yaw,
-        })
-    }
-}
-
-impl From<Euler> for pros_sys::euler_s_t {
-    fn from(val: Euler) -> Self {
-        pros_sys::euler_s_t {
-            pitch: val.pitch,
-            roll: val.roll,
-            yaw: val.yaw,
         }
     }
 }
@@ -369,15 +303,13 @@ pub struct InertialRaw {
     pub z: f64,
 }
 
-impl TryFrom<pros_sys::imu_raw_s> for InertialRaw {
-    type Error = InertialError;
-
-    fn try_from(value: pros_sys::imu_raw_s) -> Result<InertialRaw, InertialError> {
-        Ok(Self {
-            x: bail_on!(PROS_ERR_F, value.x),
+impl From<V5_DeviceImuRaw> for InertialRaw {
+    fn from(value: V5_DeviceImuRaw) -> Self {
+        Self {
+            x: value.x,
             y: value.y,
             z: value.z,
-        })
+        }
     }
 }
 
@@ -390,14 +322,26 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+/// Defines a waiting phase in [`InertialCalibrateFuture`].
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum CalibrationPhase {
+    /// Future is currently waiting for the IMU to report [`InertialStatus::CALIBRATING`], indicating
+    /// that it has started calibration.
+    Start,
+
+    /// Waiting for calibration to end.
+    End,
+}
+
 /// Future that calibrates an IMU
 /// created with [`InertialSensor::calibrate`].
+#[derive(Debug, Clone, Copy)]
 pub enum InertialCalibrateFuture {
     /// Calibrate the IMU
     Calibrate(u8),
-    /// Wait for the IMU to finish calibrating
-    Waiting(u8, Instant),
+    /// Wait for the IMU to either begin calibrating or end calibration, depending on the
+    /// designated [`CalibrationPhase`].
+    Waiting(u8, Instant, CalibrationPhase),
 }
 
 impl core::future::Future for InertialCalibrateFuture {
@@ -405,37 +349,49 @@ impl core::future::Future for InertialCalibrateFuture {
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match *self {
-            Self::Calibrate(port) => match unsafe { pros_sys::imu_reset(port) } {
-                PROS_ERR => {
-                    let errno = take_errno();
-                    Poll::Ready(Err(InertialError::from_errno(errno)
-                        .unwrap_or_else(|| panic!("Unknown errno code {errno}"))))
-                }
-                _ => {
-                    *self = Self::Waiting(port, Instant::now());
+            Self::Calibrate(port) => {
+                if let Err(err) = validate_port(port, SmartDeviceType::Imu) {
+                    // IMU isn't plugged in, no need to go any further.
+                    Poll::Ready(Err(InertialError::Port { source: err }))
+                } else {
+                    // Request that vexos calibrate the IMU, and transition to pending state.
+                    unsafe { vexDeviceImuReset(vexDeviceGetByIndex((port - 1) as u32)) }
+
+                    // Change to waiting for calibration to start.
+                    *self = Self::Waiting(port, Instant::now(), CalibrationPhase::Start);
                     cx.waker().wake_by_ref();
                     Poll::Pending
                 }
             },
-            Self::Waiting(port, timestamp) => {
-                let is_calibrating = match unsafe { pros_sys::imu_get_status(port) } {
-                    pros_sys::E_IMU_STATUS_ERROR => {
-                        let errno = take_errno();
-                        return Poll::Ready(Err(InertialError::from_errno(take_errno())
-                            .unwrap_or_else(|| panic!("Unknown errno code {errno}"))));
-                    }
-                    value => (value & pros_sys::E_IMU_STATUS_CALIBRATING) != 0,
-                };
-
-                if !is_calibrating {
-                    return Poll::Ready(Ok(()));
-                } else if timestamp.elapsed() > InertialSensor::CALIBRATION_TIMEOUT {
+            Self::Waiting(port, timestamp, phase) => {
+                if timestamp.elapsed() > InertialSensor::CALIBRATION_TIMEOUT {
+                    // Calibration took too long and exceeded timeout.
                     return Poll::Ready(Err(InertialError::CalibrationTimedOut));
+                }
+
+                let status = InertialStatus::from_bits_retain(
+                    if let Err(err) = validate_port(port, SmartDeviceType::Imu) {
+                        // IMU got unplugged, so we'll resolve early.
+                        return Poll::Ready(Err(InertialError::Port { source: err }));
+                    } else {
+                        // Get status flags from vexos.
+                        unsafe { vexDeviceImuStatusGet(vexDeviceGetByIndex((port - 1) as u32)) }
+                    },
+                );
+
+                if status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::Start {
+                    // Calibration has started, so we'll change to waiting for it to end.
+                    *self = Self::Waiting(port, timestamp, CalibrationPhase::End);
+                    cx.waker().wake_by_ref();
+                    return Poll::Pending;
+                } else if !status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::End {
+                    // Calibration has finished.
+                    return Poll::Ready(Ok(()));
                 }
 
                 cx.waker().wake_by_ref();
                 Poll::Pending
-            }
+            },
         }
     }
 }
@@ -443,12 +399,10 @@ impl core::future::Future for InertialCalibrateFuture {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an Inertial Sensor.
 pub enum InertialError {
-    /// The inertial sensor spent too long calibrating.
+    /// The inertial sensor took longer than three seconds to calibrate.
     CalibrationTimedOut,
     /// The inertial is still calibrating.
-    Calibrating,
-    /// Invalid sensor data rate, expected >= 5 milliseconds.
-    InvalidDataRate,
+    StillCalibrating,
     #[snafu(display("{source}"), context(false))]
     /// Generic port related error.
     Port {

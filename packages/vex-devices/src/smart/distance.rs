@@ -4,7 +4,7 @@
 
 use pros_core::error::PortError;
 use snafu::Snafu;
-use vex_sys::{
+use vex_sdk::{
     vexDeviceDistanceConfidenceGet, vexDeviceDistanceDistanceGet, vexDeviceDistanceObjectSizeGet,
     vexDeviceDistanceObjectVelocityGet, vexDeviceDistanceStatusGet,
 };
