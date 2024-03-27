@@ -3,11 +3,17 @@
 //! Contains user calls to the v5 screen for touching and displaying graphics.
 //! The [`Fill`] trait can be used to draw shapes and text to the screen.
 
-use alloc::{ffi::CString, string::String, vec::Vec};
+use alloc::{borrow::ToOwned, ffi::CString, string::String, vec::Vec};
+use core::mem;
 
 use pros_core::{bail_on, map_errno};
 use pros_sys::PROS_ERR;
 use snafu::Snafu;
+use vex_sdk::{
+    vexDisplayBackgroundColor, vexDisplayCircleDraw, vexDisplayCircleFill, vexDisplayCopyRect,
+    vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw, vexDisplayPixelSet,
+    vexDisplayRectDraw, vexDisplayRectFill, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
+};
 
 use crate::color::{IntoRgb, Rgb};
 
@@ -51,20 +57,14 @@ impl core::fmt::Write for Screen {
 
 /// A type implementing this trait can draw a filled shape to the display.
 pub trait Fill {
-    /// The type of error that can be generated when drawing to the screen.
-    type Error;
-
     /// Draw a filled shape to the display.
-    fn fill(&self, screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error>;
+    fn fill(&self, screen: &mut Screen, color: impl IntoRgb);
 }
 
 /// A type implementing this trait can draw an outlined shape to the display.
 pub trait Stroke {
-    /// The type of error that can be generated when drawing to the screen.
-    type Error;
-
     /// Draw an outlined shape to the display.
-    fn stroke(&self, screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error>;
+    fn stroke(&self, screen: &mut Screen, color: impl IntoRgb);
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -84,32 +84,20 @@ impl Circle {
 }
 
 impl Fill for Circle {
-    type Error = ScreenError;
-
-    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_set_pen(color.into_rgb().into())
-        });
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_fill_circle(self.x, self.y, self.radius)
-        });
-
-        Ok(())
+    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+        unsafe {
+            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayCircleFill(self.x as _, self.y as _, self.radius as _);
+        }
     }
 }
 
 impl Stroke for Circle {
-    type Error = ScreenError;
-
-    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_set_pen(color.into_rgb().into())
-        });
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_draw_circle(self.x, self.y, self.radius)
-        });
-
-        Ok(())
+    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) {
+        unsafe {
+            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayCircleDraw(self.x as _, self.y as _, self.radius as _);
+        }
     }
 }
 
@@ -131,17 +119,11 @@ impl Line {
 }
 
 impl Fill for Line {
-    type Error = ScreenError;
-
-    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_set_pen(color.into_rgb().into())
-        });
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_draw_line(self.x0, self.y0, self.x1, self.y1)
-        });
-
-        Ok(())
+    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+        unsafe {
+            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayLineDraw(self.x0 as _, self.y0 as _, self.x1 as _, self.y1 as _);
+        }
     }
 }
 
@@ -167,32 +149,20 @@ impl Rect {
 }
 
 impl Stroke for Rect {
-    type Error = ScreenError;
-
-    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_set_pen(color.into_rgb().into())
-        });
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_draw_rect(self.x0, self.y0, self.x1, self.y1)
-        });
-
-        Ok(())
+    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) {
+        unsafe {
+            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayRectDraw(self.x0 as _, self.y0 as _, self.x1 as _, self.y1 as _);
+        }
     }
 }
 
 impl Fill for Rect {
-    type Error = ScreenError;
-
-    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_set_pen(color.into_rgb().into())
-        });
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_fill_rect(self.x0, self.y0, self.x1, self.y1)
-        });
-
-        Ok(())
+    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+        unsafe {
+            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayRectFill(self.x0 as _, self.y0 as _, self.x1 as _, self.y1 as _)
+        }
     }
 }
 
@@ -247,14 +217,14 @@ impl Text {
     }
 }
 
+//TODO: Implement this in terms of soon to be added vex-sdk screen printing functions.
 impl Fill for Text {
-    type Error = ScreenError;
+    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+        // This implementation is technically broken because it doesn't account errno.
+        // This will be fixed once we have switched to vex-sdk.
+        unsafe {
+            pros_sys::screen_set_pen(color.into_rgb().into());
 
-    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) -> Result<(), Self::Error> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_set_pen(color.into_rgb().into())
-        });
-        bail_on!(PROS_ERR as u32, unsafe {
             match self.position {
                 TextPosition::Point(x, y) => {
                     pros_sys::screen_print_at(self.format.into(), x, y, self.text.as_ptr())
@@ -262,10 +232,8 @@ impl Fill for Text {
                 TextPosition::Line(line) => {
                     pros_sys::screen_print(self.format.into(), line, self.text.as_ptr())
                 }
-            }
-        });
-
-        Ok(())
+            };
+        }
     }
 }
 
@@ -284,20 +252,6 @@ pub struct TouchEvent {
     pub release_count: i32,
 }
 
-impl TryFrom<pros_sys::screen_touch_status_s_t> for TouchEvent {
-    type Error = ScreenError;
-
-    fn try_from(value: pros_sys::screen_touch_status_s_t) -> Result<Self, Self::Error> {
-        Ok(Self {
-            state: value.touch_status.try_into()?,
-            x: value.x,
-            y: value.y,
-            press_count: value.press_count,
-            release_count: value.release_count,
-        })
-    }
-}
-
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// The state of a given touch.
@@ -310,24 +264,13 @@ pub enum TouchState {
     Held = pros_sys::E_TOUCH_HELD,
 }
 
-impl TryFrom<pros_sys::last_touch_e_t> for TouchState {
-    type Error = ScreenError;
-
-    fn try_from(value: pros_sys::last_touch_e_t) -> Result<Self, Self::Error> {
-        bail_on!(pros_sys::E_TOUCH_ERROR, value);
-
-        Ok(match value {
-            pros_sys::E_TOUCH_RELEASED => Self::Released,
-            pros_sys::E_TOUCH_PRESSED => Self::Pressed,
-            pros_sys::E_TOUCH_HELD => Self::Held,
-            _ => unreachable!(),
-        })
-    }
-}
-
-impl From<TouchState> for pros_sys::last_touch_e_t {
-    fn from(value: TouchState) -> pros_sys::last_touch_e_t {
-        value as _
+impl From<V5_TouchEvent> for TouchState {
+    fn from(value: V5_TouchEvent) -> Self {
+        match value {
+            V5_TouchEvent::kTouchEventPress => Self::Pressed,
+            V5_TouchEvent::kTouchEventRelease => Self::Released,
+            V5_TouchEvent::kTouchEventPressAuto => Self::Held,
+        }
     }
 }
 
@@ -366,7 +309,7 @@ impl Screen {
                 TextFormat::Medium,
             ),
             Rgb::WHITE,
-        )?;
+        );
 
         self.writer_buffer.clear();
 
@@ -405,40 +348,28 @@ impl Screen {
     }
 
     /// Draw a filled object to the screen.
-    pub fn fill(
-        &mut self,
-        shape: &impl Fill<Error = ScreenError>,
-        color: impl IntoRgb,
-    ) -> Result<(), ScreenError> {
+    pub fn fill(&mut self, shape: &impl Fill, color: impl IntoRgb) {
         shape.fill(self, color)
     }
 
     /// Draw an outlined object to the screen.
-    pub fn stroke(
-        &mut self,
-        shape: &impl Stroke<Error = ScreenError>,
-        color: impl IntoRgb,
-    ) -> Result<(), ScreenError> {
+    pub fn stroke(&mut self, shape: &impl Stroke, color: impl IntoRgb) {
         shape.stroke(self, color)
     }
 
     /// Wipe the entire display buffer, filling it with a specified color.
-    pub fn erase(color: impl IntoRgb) -> Result<(), ScreenError> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_set_eraser(color.into_rgb().into())
-        });
-        bail_on!(PROS_ERR as u32, unsafe { pros_sys::screen_erase() });
-
-        Ok(())
+    pub fn erase(color: impl IntoRgb) {
+        unsafe {
+            vexDisplayBackgroundColor(color.into_rgb().into());
+            vexDisplayErase();
+        };
     }
 
     /// Draw a color to a specified pixel position on the screen.
-    pub fn draw_pixel(x: i16, y: i16) -> Result<(), ScreenError> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_draw_pixel(x, y)
-        });
-
-        Ok(())
+    pub fn draw_pixel(x: i16, y: i16) {
+        unsafe {
+            vexDisplayPixelSet(x as _, y as _);
+        }
     }
 
     /// Draw a buffer of pixel colors to a specified region of the screen.
@@ -455,7 +386,7 @@ impl Screen {
         T: IntoIterator<Item = I>,
         I: IntoRgb,
     {
-        let raw_buf = buf
+        let mut raw_buf = buf
             .into_iter()
             .map(|i| i.into_rgb().into())
             .collect::<Vec<_>>();
@@ -469,9 +400,16 @@ impl Screen {
         }
 
         // SAFETY: The buffer is guaranteed to be the correct size.
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_copy_area(x0, y0, x1, y1, raw_buf.as_ptr(), src_stride)
-        });
+        unsafe {
+            vexDisplayCopyRect(
+                x0 as _,
+                y0 as _,
+                x1 as _,
+                y1 as _,
+                raw_buf.as_mut_ptr(),
+                src_stride,
+            );
+        }
 
         Ok(())
     }
@@ -492,8 +430,8 @@ impl Screen {
             Self::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
         );
 
-        self.fill(&error_box_rect, Rgb::RED)?;
-        self.stroke(&error_box_rect, Rgb::WHITE)?;
+        self.fill(&error_box_rect, Rgb::RED);
+        self.stroke(&error_box_rect, Rgb::WHITE);
 
         let mut buffer = String::new();
         let mut line: i16 = 0;
@@ -514,7 +452,7 @@ impl Screen {
                         TextFormat::Small,
                     ),
                     Rgb::WHITE,
-                )?;
+                );
 
                 line += 1;
                 buffer.clear();
@@ -531,14 +469,27 @@ impl Screen {
                 TextFormat::Small,
             ),
             Rgb::WHITE,
-        )?;
+        );
 
         Ok(())
     }
 
     /// Get the current touch status of the screen.
-    pub fn touch_status(&self) -> Result<TouchEvent, ScreenError> {
-        unsafe { pros_sys::screen_touch_status() }.try_into()
+    pub fn touch_status(&self) -> TouchEvent {
+        // vexTouchDataGet (probably) doesn't read from the given status pointer so this is fine.
+        let mut touch_status: V5_TouchStatus = unsafe { mem::zeroed() };
+
+        unsafe {
+            vexTouchDataGet(&mut touch_status as *mut _);
+        }
+
+        TouchEvent {
+            state: touch_status.lastEvent.into(),
+            x: touch_status.lastXpos,
+            y: touch_status.lastYpos,
+            press_count: touch_status.pressCount,
+            release_count: touch_status.releaseCount,
+        }
     }
 }
 
