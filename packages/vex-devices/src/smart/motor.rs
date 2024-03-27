@@ -3,11 +3,18 @@
 use core::time::Duration;
 
 use bitflags::bitflags;
-use pros_core::{bail_on, error::PortError, map_errno};
-use pros_sys::{PROS_ERR, PROS_ERR_F};
+use pros_core::error::PortError;
 use snafu::Snafu;
+use vex_sdk::{
+    vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorBrakeModeSet, vexDeviceMotorCurrentGet, vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet, vexDeviceMotorEfficiencyGet, vexDeviceMotorEncoderUnitsSet, vexDeviceMotorFaultsGet, vexDeviceMotorFlagsGet, vexDeviceMotorGearingGet, vexDeviceMotorGearingSet, vexDeviceMotorPositionGet, vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset, vexDeviceMotorPositionSet, vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet, vexDeviceMotorReverseFlagSet, vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet, vexDeviceMotorVelocityGet, vexDeviceMotorVelocitySet, vexDeviceMotorVelocityUpdate, vexDeviceMotorVoltageGet, vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet, V5MotorBrakeMode, V5MotorGearset
+};
 
-use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
+#[cfg(feature = "dangerous_motor_tuning")]
+use vex_sdk::{
+    vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid
+};
+
+use super::{SmartDevice, SmartDeviceInternal, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
 use crate::Position;
 
 /// The basic motor struct.
@@ -77,10 +84,6 @@ impl Motor {
         gearset: Gearset,
         direction: Direction,
     ) -> Result<Self, MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_encoder_units(port.index() as i8, pros_sys::E_MOTOR_ENCODER_DEGREES)
-        });
-
         let mut motor = Self {
             port,
             target: MotorControl::Voltage(0.0),
@@ -89,6 +92,13 @@ impl Motor {
         motor.set_gearset(gearset)?;
         motor.set_direction(direction)?;
 
+        unsafe {
+            vexDeviceMotorEncoderUnitsSet(
+                motor.device_handle(),
+                vex_sdk::V5MotorEncoderUnits::kMotorEncoderDegrees,
+            );
+        }
+
         Ok(motor)
     }
 
@@ -96,52 +106,41 @@ impl Motor {
     ///
     /// This could be a voltage, velocity, position, or even brake mode.
     pub fn set_target(&mut self, target: MotorControl) -> Result<(), MotorError> {
+        self.validate_port()?;
+        self.target = target;
+
         match target {
             MotorControl::Brake(mode) => unsafe {
-                bail_on!(
-                    PROS_ERR,
-                    pros_sys::motor_set_brake_mode(self.port.index() as i8, mode.into())
-                );
-                bail_on!(PROS_ERR, pros_sys::motor_brake(self.port.index() as i8));
+                vexDeviceMotorBrakeModeSet(self.device_handle(), mode.into());
+                vexDeviceMotorVelocitySet(self.device_handle(), 0);
             },
             MotorControl::Velocity(rpm) => unsafe {
-                bail_on!(
-                    PROS_ERR,
-                    pros_sys::motor_set_brake_mode(
-                        self.port.index() as i8,
-                        pros_sys::E_MOTOR_BRAKE_COAST
-                    )
+                vexDeviceMotorBrakeModeSet(
+                    self.device_handle(),
+                    vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                bail_on!(
-                    PROS_ERR,
-                    pros_sys::motor_move_velocity(self.port.index() as i8, rpm)
-                );
+                vexDeviceMotorVelocitySet(self.device_handle(), rpm);
             },
-            MotorControl::Voltage(volts) => {
-                bail_on!(PROS_ERR, unsafe {
-                    pros_sys::motor_move_voltage(self.port.index() as i8, (volts * 1000.0) as i32)
-                });
-            }
-            MotorControl::Position(position, velocity) => unsafe {
-                bail_on!(
-                    PROS_ERR,
-                    pros_sys::motor_set_brake_mode(
-                        self.port.index() as i8,
-                        pros_sys::E_MOTOR_BRAKE_COAST
-                    )
+            MotorControl::Voltage(volts) => unsafe {
+                vexDeviceMotorBrakeModeSet(
+                    self.device_handle(),
+                    vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                bail_on!(
-                    PROS_ERR,
-                    pros_sys::motor_move_absolute(
-                        self.port.index() as i8,
-                        position.into_degrees(),
-                        velocity,
-                    )
+                vexDeviceMotorVoltageSet(self.device_handle(), (volts * 1000.0) as i32);
+            },
+            MotorControl::Position(position, velocity) => unsafe {
+                vexDeviceMotorBrakeModeSet(
+                    self.device_handle(),
+                    vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
+                );
+                vexDeviceMotorAbsoluteTargetSet(
+                    self.device_handle(),
+                    position.into_degrees(),
+                    velocity,
                 );
             },
         }
 
-        self.target = target;
         Ok(())
     }
 
@@ -180,9 +179,11 @@ impl Motor {
     ///
     /// This will have no effect if the motor is not following a profiled movement.
     pub fn update_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_modify_profiled_velocity(self.port.index() as i8, velocity)
-        });
+        self.validate_port()?;
+
+        unsafe {
+            vexDeviceMotorVelocityUpdate(self.device_handle(), velocity);
+        }
 
         match self.target {
             MotorControl::Position(position, _) => {
@@ -195,83 +196,74 @@ impl Motor {
     }
 
     /// Get the current [`MotorControl`] value that the motor is attempting to use.
-    pub fn target(&self) -> MotorControl {
-        self.target
+    pub fn target(&self) -> Result<MotorControl, MotorError> {
+        self.validate_port()?;
+        Ok(self.target)
     }
 
     /// Sets the gearset of the motor.
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_gearing(self.port.index() as i8, gearset as i32)
-        });
+        self.validate_port()?;
+        unsafe {
+            vexDeviceMotorGearingSet(self.device_handle(), gearset.into());
+        }
         Ok(())
     }
 
     /// Gets the gearset of the motor.
     pub fn gearset(&self) -> Result<Gearset, MotorError> {
-        unsafe { pros_sys::motor_get_gearing(self.port.index() as i8).try_into() }
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceMotorGearingGet(self.device_handle()) }.into())
     }
 
     /// Gets the estimated angular velocity (RPM) of the motor.
-    pub fn velocity(&self) -> Result<f64, MotorError> {
-        Ok(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_actual_velocity(self.port.index() as i8)
-        }))
+    pub fn velocity(&self) -> Result<i32, MotorError> {
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceMotorVelocityGet(self.device_handle()) })
     }
 
     /// Returns the power drawn by the motor in Watts.
     pub fn power(&self) -> Result<f64, MotorError> {
-        Ok(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_power(self.port.index() as i8)
-        }))
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceMotorPowerGet(self.device_handle()) })
     }
 
     /// Returns the torque output of the motor in Nm.
     pub fn torque(&self) -> Result<f64, MotorError> {
-        Ok(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_torque(self.port.index() as i8)
-        }))
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceMotorTorqueGet(self.device_handle()) })
     }
 
     /// Returns the voltage the motor is drawing in volts.
     pub fn voltage(&self) -> Result<f64, MotorError> {
-        // docs say this function returns PROS_ERR_F but it actually returns PROS_ERR
-        let millivolts = bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_voltage(self.port.index() as i8)
-        });
-        Ok(millivolts as f64 / 1000.0)
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceMotorVoltageGet(self.device_handle()) } as f64 / 1000.0)
     }
 
     /// Returns the current position of the motor.
     pub fn position(&self) -> Result<Position, MotorError> {
-        Ok(Position::from_degrees(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_position(self.port.index() as i8)
-        })))
+        self.validate_port()?;
+        Ok(Position::from_degrees(unsafe {
+            vexDeviceMotorPositionGet(self.device_handle())
+        }))
     }
 
     /// Returns the most recently recorded raw encoder tick data from the motor's IME
     /// along with a timestamp of the internal clock of the motor indicating when the
     /// data was recorded.
     pub fn raw_position(&self) -> Result<(i32, SmartDeviceTimestamp), MotorError> {
-        let timestamp = 0 as *mut u32;
+        self.validate_port()?;
 
-        // PROS docs claim that this function gets the position *at* a recorded timestamp,
-        // but in reality the "timestamp" paramater is a mutable outvalue. The function
-        // outputs the most recent recorded posision AND the timestamp it was measured at,
-        // rather than a position at a requested timestamp.
-        let ticks = bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_raw_position(self.port.index() as i8, timestamp)
-        });
+        let mut timestamp = 0 as *mut u32;
+        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device_handle(), timestamp) };
 
         Ok((ticks, SmartDeviceTimestamp(unsafe { *timestamp })))
     }
 
     /// Returns the electrical current draw of the motor in amps.
     pub fn current(&self) -> Result<f64, MotorError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_current_draw(self.port.index() as i8)
-        }) as f64
-            / 1000.0)
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceMotorCurrentGet(self.device_handle()) } as f64 / 1000.0)
     }
 
     /// Gets the efficiency of the motor from a range of [0.0, 1.0].
@@ -280,77 +272,68 @@ impl Motor {
     /// drawing no electrical power, and an efficiency of 0.0 means that the motor
     /// is drawing power but not moving.
     pub fn efficiency(&self) -> Result<f64, MotorError> {
-        Ok(bail_on!(PROS_ERR_F, unsafe {
-            pros_sys::motor_get_efficiency(self.port.index() as i8)
-        }) / 100.0)
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceMotorEfficiencyGet(self.device_handle()) } / 100.0)
     }
 
     /// Sets the current encoder position to zero without moving the motor.
     /// Analogous to taring or resetting the encoder to the current position.
-    pub fn zero(&mut self) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_tare_position(self.port.index() as i8)
-        });
+    pub fn reset_position(&mut self) -> Result<(), MotorError> {
+        self.validate_port()?;
+        unsafe { vexDeviceMotorPositionReset(self.device_handle()) }
         Ok(())
     }
 
     /// Sets the current encoder position to the given position without moving the motor.
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
     pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_zero_position(self.port.index() as i8, position.into_degrees())
-        });
+        self.validate_port()?;
+        unsafe { vexDeviceMotorPositionSet(self.device_handle(), position.into_degrees()) }
         Ok(())
     }
 
     /// Sets the current limit for the motor in amps.
     pub fn set_current_limit(&mut self, limit: f64) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_current_limit(self.port.index() as i8, (limit * 1000.0) as i32)
-        });
+        self.validate_port()?;
+        unsafe { vexDeviceMotorCurrentLimitSet(self.device_handle(), (limit * 1000.0) as i32) }
         Ok(())
     }
 
     /// Sets the voltage limit for the motor in volts.
     pub fn set_voltage_limit(&mut self, limit: f64) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            // Docs claim that this function takes volts, but this is incorrect. It takes millivolts,
-            // just like all other SDK voltage-related functions.
-            pros_sys::motor_set_voltage_limit(self.port.index() as i8, (limit * 1000.0) as i32)
-        });
+        self.validate_port()?;
+
+        unsafe {
+            vexDeviceMotorVoltageLimitSet(self.device_handle(), (limit * 1000.0) as i32);
+        }
 
         Ok(())
     }
 
     /// Gets the current limit for the motor in amps.
     pub fn current_limit(&self) -> Result<f64, MotorError> {
-        Ok(bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_get_current_limit(self.port.index() as i8)
-        }) as f64
-            / 1000.0)
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceMotorCurrentLimitGet(self.device_handle()) } as f64 / 1000.0)
     }
 
-    // /// Gets the voltage limit for the motor if one has been explicitly set.
-    // /// NOTE: Broken until next kernel version due to mutex release bug.
-    // pub fn voltage_limit(&self) -> Result<f64, MotorError> {
-    //     // NOTE: PROS docs claim that this function will return zero if voltage is uncapped.
-    //     //
-    //     // From testing this does not appear to be true, so we don't need to perform any
-    //     // special checks for a zero return value.
-    //     Ok(bail_on!(PROS_ERR, unsafe {
-    //         pros_sys::motor_get_voltage_limit(self.port.index() as i8)
-    //     }) as f64
-    //         / 1000.0)
-    // }
+    /// Gets the voltage limit for the motor if one has been explicitly set.
+    pub fn voltage_limit(&self) -> Result<f64, MotorError> {
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceMotorVoltageLimitGet(self.device_handle()) } as f64 / 1000.0)
+    }
+
+    pub fn temperature(&self) -> Result<f64, MotorError> {
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceMotorTemperatureGet(self.device_handle()) })
+    }
 
     /// Get the status flags of a motor.
     pub fn status(&self) -> Result<MotorStatus, MotorError> {
-        let bits = bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::motor_get_flags(self.port.index() as i8)
-        });
+        self.validate_port()?;
 
-        // For some reason, PROS doesn't set errno if this flag is returned,
-        // even though it is by-definition an error (failing to retrieve flags).
+        let bits = unsafe { vexDeviceMotorFlagsGet(self.device_handle()) };
+
         if (bits & pros_sys::E_MOTOR_FLAGS_BUSY) != 0 {
             return Err(MotorError::Busy);
         }
@@ -360,11 +343,11 @@ impl Motor {
 
     /// Get the fault flags of the motor.
     pub fn faults(&self) -> Result<MotorFaults, MotorError> {
-        let bits = bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::motor_get_faults(self.port.index() as i8)
-        });
+        self.validate_port();
 
-        Ok(MotorFaults::from_bits_retain(bits))
+        Ok(MotorFaults::from_bits_retain(unsafe {
+            vexDeviceMotorFaultsGet(self.device_handle())
+        }))
     }
 
     /// Check if the motor's over temperature flag is set.
@@ -389,22 +372,25 @@ impl Motor {
 
     /// Set the [`Direction`] of this motor.
     pub fn set_direction(&mut self, direction: Direction) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_set_reversed(self.port.index() as i8, direction.is_reverse())
-        });
+        self.validate_port()?;
+
+        unsafe {
+            vexDeviceMotorReverseFlagSet(self.device_handle(), direction.is_reverse());
+        }
+
         Ok(())
     }
 
     /// Get the [`Direction`] of this motor.
     pub fn direction(&self) -> Result<Direction, MotorError> {
-        let reversed = bail_on!(PROS_ERR, unsafe {
-            pros_sys::motor_is_reversed(self.port.index() as i8)
-        }) == 1;
+        self.validate_port()?;
 
-        Ok(match reversed {
-            false => Direction::Forward,
-            true => Direction::Reverse,
-        })
+        Ok(
+            match unsafe { vexDeviceMotorReverseFlagGet(self.device_handle()) } {
+                false => Direction::Forward,
+                true => Direction::Reverse,
+            },
+        )
     }
 
     /// Adjusts the internal tuning constants of the motor when using velocity control.
@@ -423,10 +409,10 @@ impl Motor {
         &mut self,
         constants: MotorTuningConstants,
     ) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            #[allow(deprecated)]
-            pros_sys::motor_set_pos_pid_full(self.port.index() as i8, constants.into())
-        });
+        self.validate_port()?;
+
+        unsafe { vexDeviceMotorVelocityPidSet(self.device_handle(), constants.into()) }
+
         Ok(())
     }
 
@@ -446,10 +432,10 @@ impl Motor {
         &mut self,
         constants: MotorTuningConstants,
     ) -> Result<(), MotorError> {
-        bail_on!(PROS_ERR, unsafe {
-            #[allow(deprecated)]
-            pros_sys::motor_set_vel_pid_full(self.port.index() as i8, constants.into())
-        });
+        self.validate_port()?;
+
+        unsafe { vexDeviceMotorPositionPidSet(self.device_handle(), constants.into()) }
+
         Ok(())
     }
 }
@@ -466,34 +452,34 @@ impl SmartDevice for Motor {
 
 /// Determines how a motor should act when braking.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-#[repr(i32)]
 pub enum BrakeMode {
     /// Motor never brakes.
-    None = pros_sys::E_MOTOR_BRAKE_COAST,
+    Coast,
+
     /// Motor uses regenerative braking to slow down faster.
-    Brake = pros_sys::E_MOTOR_BRAKE_BRAKE,
+    Brake,
+
     /// Motor exerts force to hold the same position.
-    Hold = pros_sys::E_MOTOR_BRAKE_HOLD,
+    Hold,
 }
 
-impl TryFrom<pros_sys::motor_brake_mode_e_t> for BrakeMode {
-    type Error = MotorError;
-
-    fn try_from(value: pros_sys::motor_brake_mode_e_t) -> Result<Self, MotorError> {
-        bail_on!(PROS_ERR, value);
-
-        Ok(match value {
-            pros_sys::E_MOTOR_BRAKE_COAST => Self::None,
-            pros_sys::E_MOTOR_BRAKE_BRAKE => Self::Brake,
-            pros_sys::E_MOTOR_BRAKE_HOLD => Self::Hold,
-            _ => unreachable!(),
-        })
+impl From<V5MotorBrakeMode> for BrakeMode {
+    fn from(value: V5MotorBrakeMode) -> Self {
+        match value {
+            V5MotorBrakeMode::kV5MotorBrakeModeBrake => Self::Brake,
+            V5MotorBrakeMode::kV5MotorBrakeModeCoast => Self::Coast,
+            V5MotorBrakeMode::kV5MotorBrakeModeHold => Self::Hold,
+        }
     }
 }
 
-impl From<BrakeMode> for pros_sys::motor_brake_mode_e_t {
-    fn from(value: BrakeMode) -> pros_sys::motor_brake_mode_e_t {
-        value as _
+impl From<BrakeMode> for V5MotorBrakeMode {
+    fn from(value: BrakeMode) -> Self {
+        match value {
+            BrakeMode::Brake => Self::kV5MotorBrakeModeBrake,
+            BrakeMode::Coast => Self::kV5MotorBrakeModeCoast,
+            BrakeMode::Hold => Self::kV5MotorBrakeModeHold,
+        }
     }
 }
 
@@ -502,16 +488,16 @@ bitflags! {
     #[derive(Debug, Clone, Copy, Eq, PartialEq)]
     pub struct MotorFaults: u32 {
         /// The motor's temperature is above its limit.
-        const OVER_TEMPERATURE = pros_sys::E_MOTOR_FAULT_MOTOR_OVER_TEMP;
+        const OVER_TEMPERATURE = 0x01;
 
         /// The motor is over current.
-        const OVER_CURRENT = pros_sys::E_MOTOR_FAULT_OVER_CURRENT;
+        const OVER_CURRENT = 0x04;
 
         /// The motor's H-bridge has encountered a fault.
-        const DRIVER_FAULT = pros_sys::E_MOTOR_FAULT_DRIVER_FAULT;
+        const DRIVER_FAULT = 0x02;
 
         /// The motor's H-bridge is over current.
-        const DRIVER_OVER_CURRENT = pros_sys::E_MOTOR_FAULT_DRV_OVER_CURRENT;
+        const DRIVER_OVER_CURRENT = 0x08 ;
     }
 }
 
@@ -519,35 +505,34 @@ bitflags! {
     /// The status bits returned by a [`Motor`].
     #[derive(Debug, Clone, Copy, Eq, PartialEq)]
     pub struct MotorStatus: u32 {
+        /// Failed communicate with the motor
+        const BUSY = 0x01;
+
         /// The motor is currently near zero velocity.
         #[deprecated(
             since = "0.9.0",
             note = "This flag will never be set by the hardware, even though it exists in the SDK. This may change in the future."
         )]
-        const ZERO_VELOCITY = pros_sys::E_MOTOR_FLAGS_ZERO_VELOCITY;
+        const ZERO_VELOCITY = 0x02;
 
         /// The motor is at its zero position.
         #[deprecated(
             since = "0.9.0",
             note = "This flag will never be set by the hardware, even though it exists in the SDK. This may change in the future."
         )]
-        const ZERO_POSITION = pros_sys::E_MOTOR_FLAGS_ZERO_POSITION;
-
-        /// Cannot currently communicate to the motor
-        const BUSY = pros_sys::E_MOTOR_FLAGS_BUSY;
+        const ZERO_POSITION = 0x04;
     }
 }
 
 /// Internal gearset used by VEX smart motors.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(i32)]
 pub enum Gearset {
     /// 36:1 gear ratio
-    Red = pros_sys::E_MOTOR_GEAR_RED,
+    Red,
     /// 18:1 gear ratio
-    Green = pros_sys::E_MOTOR_GEAR_GREEN,
+    Green,
     /// 6:1 gear ratio
-    Blue = pros_sys::E_MOTOR_GEAR_BLUE,
+    Blue,
 }
 
 impl Gearset {
@@ -598,24 +583,23 @@ impl Gearset {
     }
 }
 
-impl From<Gearset> for pros_sys::motor_gearset_e_t {
-    fn from(value: Gearset) -> Self {
-        value as _
+impl From<V5MotorGearset> for Gearset {
+    fn from(value: V5MotorGearset) -> Self {
+        match value {
+            V5MotorGearset::kMotorGearSet_06 => Self::Blue,
+            V5MotorGearset::kMotorGearSet_18 => Self::Green,
+            V5MotorGearset::kMotorGearSet_36 => Self::Red,
+        }
     }
 }
 
-impl TryFrom<pros_sys::motor_gearset_e_t> for Gearset {
-    type Error = MotorError;
-
-    fn try_from(value: pros_sys::motor_gearset_e_t) -> Result<Self, MotorError> {
-        bail_on!(PROS_ERR, value);
-
-        Ok(match value {
-            pros_sys::E_MOTOR_GEAR_RED => Self::Red,
-            pros_sys::E_MOTOR_GEAR_GREEN => Self::Green,
-            pros_sys::E_MOTOR_GEAR_BLUE => Self::Blue,
-            _ => unreachable!(),
-        })
+impl From<Gearset> for V5MotorGearset {
+    fn from(value: Gearset) -> Self {
+        match value {
+            Gearset::Blue => Self::kMotorGearSet_06,
+            Gearset::Green => Self::kMotorGearSet_18,
+            Gearset::Red => Self::kMotorGearSet_36,
+        }
     }
 }
 
@@ -630,7 +614,7 @@ impl TryFrom<pros_sys::motor_gearset_e_t> for Gearset {
 /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
 /// well-known or understood, as we have no reference for what these constants should look
 /// like.
-#[cfg(feature = "dangerous_motor_tuning")]
+// #[cfg(feature = "dangerous_motor_tuning")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MotorTuningConstants {
     /// The feedforward constant.
@@ -663,22 +647,18 @@ pub struct MotorTuningConstants {
 }
 
 #[cfg(feature = "dangerous_motor_tuning")]
-impl From<MotorTuningConstants> for pros_sys::motor_pid_full_s_t {
+impl From<MotorTuningConstants> for V5_DeviceMotorPid {
     fn from(value: MotorTuningConstants) -> Self {
-        unsafe {
-            // Docs incorrectly claim that this function can set errno.
-            // It can't. <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_motors.c#L250>.
-            #[allow(deprecated)]
-            pros_sys::motor_convert_pid_full(
-                value.kf,
-                value.kp,
-                value.ki,
-                value.kd,
-                value.filter,
-                value.limit,
-                value.tolerance,
-                value.sample_rate.as_millis() as f64,
-            )
+        Self {
+            kf: (value.kf * 16.0) as u8,
+            kp: (value.kp * 16.0) as u8,
+            ki: (value.ki * 16.0) as u8,
+            kd: (value.kd * 16.0) as u8,
+            filter: (value.filter * 16.0) as u8,
+            limit: (value.integral_limit * 16.0) as u16,
+            threshold: (value.tolerance * 16.0) as u8,
+            loopspeed: (value.sample_rate.as_millis() * 16) as u8,
+            ..Default::default()
         }
     }
 }
@@ -689,21 +669,10 @@ pub enum MotorError {
     /// Failed to communicate with the motor while attempting to read flags.
     Busy,
 
-    /// This functionality is not currently implemented in hardware, even
-    /// though the SDK may support it.
-    NotImplemented,
-
     /// Generic port related error.
     #[snafu(display("{source}"), context(false))]
     Port {
         /// The source of the error.
         source: PortError,
     },
-}
-
-map_errno! {
-    MotorError {
-        ENOSYS => Self::NotImplemented,
-    }
-    inherit PortError;
 }
