@@ -1,9 +1,25 @@
-//! Utilities for getting what state of the competition the robot is in.
+//! Utilities for getting competition control state.
 
-use pros_sys::misc::{COMPETITION_AUTONOMOUS, COMPETITION_CONNECTED, COMPETITION_DISABLED};
+use bitflags::bitflags;
+use vex_sdk::vexCompetitionStatus;
 
-// TODO: change this to use PROS' internal version once we switch to PROS 4.
-const COMPETITION_SYSTEM: u8 = 1 << 3;
+bitflags! {
+    /// The status bits returned by [`competition::state`].
+    #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+    pub struct CompetitionStatus: u32 {
+        /// Robot is connected to field control (NOT competition switch)
+        const SYSTEM = 1 << 3;
+
+        /// Robot is in autonomous mode.
+        const AUTONOMOUS = 1 << 0;
+
+        /// Robot is disabled by field control.
+        const DISABLED = 1 << 1;
+
+        /// Robot is connected to competition control (either competition switch or field control).
+        const CONNECTED = 1 << 2;
+    }
+}
 
 /// Represents a possible mode that robots can be set in during the competition lifecycle.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,7 +43,7 @@ pub enum CompetitionMode {
     /// connecting, but are typically placed into this mode at the start of a match.
     Autonomous,
 
-    /// The Opcontrol competition mode.
+    /// The drivercontrol competition mode.
     ///
     /// When in opcontrol mode, all device access is available including access to
     /// controller joystick values for reading user-input from drive team members.
@@ -35,7 +51,7 @@ pub enum CompetitionMode {
     /// Robots may be placed into opcontrol mode at any point in the competition after
     /// connecting, but are typically placed into this mode following the autonomous
     /// period.
-    Opcontrol,
+    Driver,
 }
 
 /// Represents a type of system used to control competition state.
@@ -48,33 +64,36 @@ pub enum CompetitionSystem {
     CompetitionSwitch,
 }
 
+/// Gets the current competition status flags.
+pub fn status() -> CompetitionStatus {
+    CompetitionStatus::from_bits_retain(unsafe { vexCompetitionStatus() })
+}
+
 /// Gets the current competition mode, or phase.
 pub fn mode() -> CompetitionMode {
-    let status = unsafe { pros_sys::misc::competition_get_status() };
+    let status = status();
 
-    if status & COMPETITION_DISABLED != 0 {
+    if status.contains(CompetitionStatus::DISABLED) {
         CompetitionMode::Disabled
-    } else if status & COMPETITION_AUTONOMOUS != 0 {
+    } else if status.contains(CompetitionStatus::AUTONOMOUS) {
         CompetitionMode::Autonomous
     } else {
-        CompetitionMode::Opcontrol
+        CompetitionMode::Driver
     }
 }
 
 /// Checks if the robot is connected to a competition control system.
 pub fn connected() -> bool {
-    let status = unsafe { pros_sys::misc::competition_get_status() };
-
-    status & COMPETITION_CONNECTED != 0
+    status().contains(CompetitionStatus::CONNECTED)
 }
 
 /// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
 /// is not tethered to a competition controller.
 pub fn system() -> Option<CompetitionSystem> {
-    let status = unsafe { pros_sys::misc::competition_get_status() };
+    let status = status();
 
-    if status & COMPETITION_CONNECTED != 0 {
-        if status & COMPETITION_SYSTEM == 0 {
+    if status.contains(CompetitionStatus::CONNECTED) {
+        if status.contains(CompetitionStatus::SYSTEM) {
             Some(CompetitionSystem::FieldControl)
         } else {
             Some(CompetitionSystem::CompetitionSwitch)

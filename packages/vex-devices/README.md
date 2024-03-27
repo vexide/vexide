@@ -1,4 +1,4 @@
-# pros-devices
+# vex-devices
 
 Functionality for accessing hardware connected to the V5 brain.
 

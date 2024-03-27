@@ -20,13 +20,13 @@ authors = [
 
 [dependencies]
 pros-core = { version = "0.1.0", path = "../pros-core" }
-pros-devices = { version = "0.1.0", path = "../pros-devices", optional = true }
+vex-devices = { version = "0.1.0", path = "../vex-devices", optional = true }
 pros-sys = { version = "0.7.0", path = "../pros-sys" }
 
 [features]
 default = ["display_panics"]
 
-display_panics = ["dep:pros-devices"]
+display_panics = ["dep:vex-devices"]
 
 [lints]
 workspace = true

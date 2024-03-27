@@ -59,8 +59,6 @@
 pub use pros_async as async_runtime;
 #[cfg(feature = "core")]
 pub use pros_core as core;
-#[cfg(feature = "devices")]
-pub use pros_devices as devices;
 #[cfg(feature = "math")]
 pub use pros_math as math;
 #[cfg(feature = "panic")]
@@ -68,6 +66,8 @@ pub use pros_panic as panic;
 #[cfg(feature = "sync")]
 pub use pros_sync as sync;
 pub use pros_sys as sys;
+#[cfg(feature = "devices")]
+pub use vex_devices as devices;
 
 /// Commonly used features of pros-rs.
 /// This module is meant to be glob imported.
@@ -82,8 +82,12 @@ pub mod prelude {
         print, println,
         task::delay,
     };
+    #[cfg(feature = "math")]
+    pub use pros_math::{feedforward::MotorFeedforwardController, pid::PidController};
+    #[cfg(feature = "sync")]
+    pub use pros_sync::{sync_robot, SyncRobot};
     #[cfg(feature = "devices")]
-    pub use pros_devices::{
+    pub use vex_devices::{
         adi::{
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},
@@ -104,7 +108,6 @@ pub mod prelude {
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
-            gps::GpsSensor,
             imu::InertialSensor,
             link::{Link, RxLink, TxLink},
             motor::{BrakeMode, Direction, Gearset, Motor, MotorControl},
@@ -114,8 +117,4 @@ pub mod prelude {
             SmartDevice, SmartPort,
         },
     };
-    #[cfg(feature = "math")]
-    pub use pros_math::{feedforward::MotorFeedforwardController, pid::PidController};
-    #[cfg(feature = "sync")]
-    pub use pros_sync::{sync_robot, SyncRobot};
 }

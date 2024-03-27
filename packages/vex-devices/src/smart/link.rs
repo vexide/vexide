@@ -228,13 +228,3 @@ pub enum LinkError {
         source: PortError,
     },
 }
-
-map_errno! {
-    LinkError {
-        ENXIO => Self::NoLink,
-        EBUSY => Self::BufferBusyFull,
-        EINVAL => Self::NullData,
-        EBADMSG => Self::Protocol,
-    }
-    inherit PortError;
-}

@@ -22,7 +22,6 @@
 
 pub mod distance;
 pub mod expander;
-pub mod gps;
 pub mod imu;
 pub mod link;
 pub mod motor;
@@ -34,13 +33,13 @@ use core::fmt;
 
 pub use distance::DistanceSensor;
 pub use expander::AdiExpander;
-pub use gps::GpsSensor;
 pub use imu::InertialSensor;
 pub use link::{Link, RxLink, TxLink};
 pub use motor::Motor;
 pub use optical::OpticalSensor;
-use pros_core::{bail_on, error::PortError};
+use pros_core::error::PortError;
 pub use rotation::RotationSensor;
+use vex_sdk::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
 pub use vision::VisionSensor;
 
 /// Defines common functionality shared by all smart port devices.
@@ -81,17 +80,54 @@ pub trait SmartDevice {
     ///     println!("No IMU connection found.");
     /// }
     /// ```
-    fn port_connected(&self) -> bool {
-        let plugged_type_result: Result<SmartDeviceType, _> =
-            unsafe { pros_sys::apix::registry_get_plugged_type(self.port_index() - 1).try_into() };
+    fn is_connected(&self) -> bool {
+        let connected_type: SmartDeviceType =
+            unsafe { *vexDeviceGetByIndex((self.port_index() - 1) as u32) }
+                .device_type
+                .into();
 
-        if let Ok(plugged_type) = plugged_type_result {
-            plugged_type == self.device_type()
-        } else {
-            false
-        }
+        connected_type == self.device_type()
+    }
+
+    /// Get the timestamp recorded by this device's internal clock.
+    fn timestamp(&self) -> Result<SmartDeviceTimestamp, PortError> {
+        Ok(SmartDeviceTimestamp(unsafe {
+            vexDeviceGetTimestamp(vexDeviceGetByIndex((self.port_index() - 1) as u32))
+        }))
     }
 }
+
+/// Internal helper functions for port validation, error handling, and interaction with
+/// vex-sys on various smart devices.
+pub(crate) trait SmartDeviceInternal: SmartDevice {
+    /// Get the raw device handle connected to this port.
+    fn device_handle(&self) -> V5_DeviceT {
+        unsafe { vexDeviceGetByIndex((self.port_index() - 1) as u32) }
+    }
+
+    /// Verify that the device type is currently plugged into this port.
+    fn validate_port(&self) -> Result<(), PortError> {
+        validate_port(self.port_index(), self.device_type())
+    }
+}
+
+/// Verify that the device type is currently plugged into this port.
+pub(crate) fn validate_port(index: u8, device_type: SmartDeviceType) -> Result<(), PortError> {
+    let device = unsafe { *vexDeviceGetByIndex((index - 1) as u32) };
+    let plugged_type: SmartDeviceType = device.device_type.into();
+
+    if !device.exists {
+        // No device is plugged into the port.
+        return Err(PortError::Disconnected);
+    } else if plugged_type != device_type {
+        // The connected device doesn't match the requested type.
+        return Err(PortError::IncorrectDevice);
+    }
+
+    Ok(())
+}
+
+impl<T: SmartDevice> SmartDeviceInternal for T {}
 
 /// Represents a smart port on a V5 Brain
 #[derive(Debug, Eq, PartialEq)]
@@ -148,96 +184,112 @@ impl SmartPort {
     ///
     /// println!("Type of device connected to port 1: {:?}", my_port.connected_type()?);
     /// ```
-    pub fn connected_type(&self) -> Result<SmartDeviceType, PortError> {
-        unsafe { pros_sys::apix::registry_get_plugged_type(self.index() - 1).try_into() }
-    }
-
-    /// Get the type of device this port is configured as.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let my_port = unsafe { SmartPort::new(1) };
-    /// let imu = InertialSensor::new(my_port)?;
-    ///
-    /// assert_eq!(my_port.configured_type()?, SmartDeviceType::Imu);
-    /// ```
-    pub fn configured_type(&self) -> Result<SmartDeviceType, PortError> {
-        unsafe { pros_sys::apix::registry_get_bound_type(self.index() - 1).try_into() }
+    pub fn device_type(&self) -> Result<SmartDeviceType, PortError> {
+        Ok(unsafe { *vexDeviceGetByIndex((self.index() - 1) as u32) }
+            .device_type
+            .into())
     }
 }
 
 /// Represents a possible type of device that can be registered on a [`SmartPort`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
+#[repr(u8)]
 pub enum SmartDeviceType {
     /// No device
-    None = pros_sys::apix::E_DEVICE_NONE,
+    None,
 
     /// Smart Motor
-    Motor = pros_sys::apix::E_DEVICE_MOTOR,
+    Motor,
 
     /// Rotation Sensor
-    Rotation = pros_sys::apix::E_DEVICE_ROTATION,
+    Rotation,
 
     /// Inertial Sensor
-    Imu = pros_sys::apix::E_DEVICE_IMU,
+    Imu,
 
     /// Distance Sensor
-    Distance = pros_sys::apix::E_DEVICE_DISTANCE,
+    Distance,
 
     /// Vision Sensor
-    Vision = pros_sys::apix::E_DEVICE_VISION,
+    Vision,
+
+    /// AI Vision Sensor
+    AiVision,
+
+    /// Workcell Electromagnet
+    Magnet,
+
+    /// CTE Workcell Light Tower
+    LightTower,
+
+    /// CTE Workcell Arm
+    Arm,
 
     /// Optical Sensor
-    Optical = pros_sys::apix::E_DEVICE_OPTICAL,
+    Optical,
 
     /// GPS Sensor
-    Gps = pros_sys::apix::E_DEVICE_GPS,
+    Gps,
 
     /// Smart Radio
-    Radio = pros_sys::apix::E_DEVICE_RADIO,
+    Radio,
 
     /// ADI Expander
     ///
     /// This variant is also internally to represent the brain's onboard ADI slots.
-    Adi = pros_sys::apix::E_DEVICE_ADI,
+    Adi,
 
     /// Generic Serial Port
-    Serial = pros_sys::apix::E_DEVICE_SERIAL,
+    GenericSerial,
+
+    /// Other device type code returned by the SDK that is currently unsupported, undocumented,
+    /// or unknown.
+    Unknown(V5_DeviceType),
 }
 
-impl TryFrom<pros_sys::apix::v5_device_e_t> for SmartDeviceType {
-    type Error = PortError;
-
-    /// Convert a raw `pros_sys::apix::v5_device_e_t` from `pros_sys` into a [`SmartDeviceType`].
-    fn try_from(value: pros_sys::apix::v5_device_e_t) -> Result<Self, Self::Error> {
-        // PROS returns either -1 (WTF?!?!) or 255 which both cast to E_DEVICE_UNDEFINED
-        // when setting ERRNO, which can only be ENXIO.
-        //
-        // <https://github.com/purduesigbots/pros/issues/623>
-        bail_on!(pros_sys::apix::E_DEVICE_UNDEFINED, value);
-
-        Ok(match value {
-            pros_sys::apix::E_DEVICE_NONE => Self::None,
-            pros_sys::apix::E_DEVICE_MOTOR => Self::Motor,
-            pros_sys::apix::E_DEVICE_ROTATION => Self::Rotation,
-            pros_sys::apix::E_DEVICE_IMU => Self::Imu,
-            pros_sys::apix::E_DEVICE_DISTANCE => Self::Distance,
-            pros_sys::apix::E_DEVICE_VISION => Self::Vision,
-            pros_sys::apix::E_DEVICE_OPTICAL => Self::Optical,
-            pros_sys::apix::E_DEVICE_RADIO => Self::Radio,
-            pros_sys::apix::E_DEVICE_ADI => Self::Adi,
-            pros_sys::apix::E_DEVICE_SERIAL => Self::Serial,
-            _ => unreachable!(),
-        })
+impl From<V5_DeviceType> for SmartDeviceType {
+    fn from(value: V5_DeviceType) -> Self {
+        match value {
+            V5_DeviceType::kDeviceTypeNoSensor => Self::None,
+            V5_DeviceType::kDeviceTypeMotorSensor => Self::Motor,
+            V5_DeviceType::kDeviceTypeAbsEncSensor => Self::Rotation,
+            V5_DeviceType::kDeviceTypeImuSensor => Self::Imu,
+            V5_DeviceType::kDeviceTypeDistanceSensor => Self::Distance,
+            V5_DeviceType::kDeviceTypeRadioSensor => Self::Radio,
+            V5_DeviceType::kDeviceTypeVisionSensor => Self::Vision,
+            V5_DeviceType::kDeviceTypeAdiSensor => Self::Adi,
+            V5_DeviceType::kDeviceTypeOpticalSensor => Self::Optical,
+            V5_DeviceType::kDeviceTypeMagnetSensor => Self::Magnet,
+            V5_DeviceType::kDeviceTypeGpsSensor => Self::Gps,
+            V5_DeviceType::kDeviceTypeLightTowerSensor => Self::LightTower,
+            V5_DeviceType::kDeviceTypeArmDevice => Self::Arm,
+            V5_DeviceType::kDeviceTypeAiVisionSensor => Self::AiVision,
+            V5_DeviceType::kDeviceTypeGenericSerial => Self::GenericSerial,
+            other => Self::Unknown(other),
+        }
     }
 }
 
-impl From<SmartDeviceType> for pros_sys::apix::v5_device_e_t {
-    /// Convert a [`SmartDeviceType`] into a raw `pros_sys::apix::v5_device_e_t`.
+impl From<SmartDeviceType> for V5_DeviceType {
     fn from(value: SmartDeviceType) -> Self {
-        value as _
+        match value {
+            SmartDeviceType::None => V5_DeviceType::kDeviceTypeNoSensor,
+            SmartDeviceType::Motor => V5_DeviceType::kDeviceTypeMotorSensor,
+            SmartDeviceType::Rotation => V5_DeviceType::kDeviceTypeAbsEncSensor,
+            SmartDeviceType::Imu => V5_DeviceType::kDeviceTypeImuSensor,
+            SmartDeviceType::Distance => V5_DeviceType::kDeviceTypeDistanceSensor,
+            SmartDeviceType::Vision => V5_DeviceType::kDeviceTypeVisionSensor,
+            SmartDeviceType::AiVision => V5_DeviceType::kDeviceTypeAiVisionSensor,
+            SmartDeviceType::Magnet => V5_DeviceType::kDeviceTypeMagnetSensor,
+            SmartDeviceType::LightTower => V5_DeviceType::kDeviceTypeLightTowerSensor,
+            SmartDeviceType::Arm => V5_DeviceType::kDeviceTypeArmDevice,
+            SmartDeviceType::Optical => V5_DeviceType::kDeviceTypeOpticalSensor,
+            SmartDeviceType::Gps => V5_DeviceType::kDeviceTypeGpsSensor,
+            SmartDeviceType::Radio => V5_DeviceType::kDeviceTypeRadioSensor,
+            SmartDeviceType::Adi => V5_DeviceType::kDeviceTypeAdiSensor,
+            SmartDeviceType::GenericSerial => V5_DeviceType::kDeviceTypeGenericSerial,
+            SmartDeviceType::Unknown(raw_type) => raw_type,
+        }
     }
 }
 
