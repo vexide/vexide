@@ -10,10 +10,7 @@ use bitflags::bitflags;
 use pros_core::{error::PortError, time::Instant};
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
-    vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
-    vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5_DeviceImuAttitude,
-    V5_DeviceImuQuaternion, V5_DeviceImuRaw,
+    vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet, vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet, vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode, V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
@@ -71,6 +68,16 @@ impl InertialSensor {
     /// Check if the Intertial Sensor is currently calibrating.
     pub fn is_calibrating(&mut self) -> Result<bool, InertialError> {
         Ok(self.status()?.contains(InertialStatus::CALIBRATING))
+    }
+
+    /// Check if the Intertial Sensor was calibrated using auto-calibration.
+    pub fn is_auto_calibrated(&mut self) -> Result<bool, InertialError> {
+        Ok(self.status()?.contains(InertialStatus::AUTO_CALIBRTED))
+    }
+
+    /// Check if the Intertial Sensor was calibrated using auto-calibration.
+    pub fn physical_orientation(&mut self) -> Result<InertialOrientation, InertialError> {
+        Ok(self.status()?.physical_orientation())
     }
 
     /// Calibrate IMU asynchronously.
@@ -313,12 +320,65 @@ impl From<V5_DeviceImuRaw> for InertialRaw {
     }
 }
 
+/// Represents one of six possible physical IMU orientations relative
+/// to the earth's center of gravity.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum InertialOrientation {
+    /// Z-Axis facing up (VEX logo facing DOWN).
+    ZUp,
+
+    /// Z-Axis facing down (VEX logo facing UP).
+    ZDown,
+
+    /// X-axis facing up.
+    XUp,
+
+    /// X-axis facing down.
+    XDown,
+
+    /// Y-axis facing up.
+    YUp,
+
+    /// Y-axis facing down.
+    YDown,
+}
+
+impl From<InertialOrientation> for V5ImuOrientationMode {
+    fn from(value: InertialOrientation) -> Self {
+        match value {
+            InertialOrientation::ZUp => Self::kImuOrientationZUp,
+            InertialOrientation::ZDown => Self::kImuOrientationZDown,
+            InertialOrientation::XUp => Self::kImuOrientationXUp,
+            InertialOrientation::XDown => Self::kImuOrientationXDown,
+            InertialOrientation::YUp => Self::kImuOrientationYUp,
+            InertialOrientation::YDown => Self::kImuOrientationYDown,
+        }
+    }
+}
+
 bitflags! {
     /// The status bits returned by an [`InertialSensor`].
     #[derive(Debug, Clone, Copy, Eq, PartialEq)]
     pub struct InertialStatus: u32 {
         /// The sensor is currently calibrating.
-        const CALIBRATING = pros_sys::E_IMU_STATUS_CALIBRATING;
+        const CALIBRATING = 0b00001;
+
+        /// The sensor is calibrated using auto-calibration.
+        const AUTO_CALIBRTED = 0b10000;
+    }
+}
+
+impl InertialStatus {
+    /// Returns the physical orientation of the sensor measured at calibration.
+    pub fn physical_orientation(&self) -> InertialOrientation {
+        match (self.bits() >> 1) & 0b111 {
+            0 => InertialOrientation::ZUp,
+            1 => InertialOrientation::ZDown,
+            2 => InertialOrientation::XUp,
+            3 => InertialOrientation::XDown,
+            4 => InertialOrientation::YUp,
+            5 => InertialOrientation::YDown,
+        }
     }
 }
 
