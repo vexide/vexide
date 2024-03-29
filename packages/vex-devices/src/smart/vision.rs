@@ -127,7 +127,7 @@ impl VisionSensor {
         Ok(())
     }
 
-    fn raw_signature(&self, id: u8) -> Result<V5_DeviceVisionSignature, VisionError> {
+    fn raw_signature(&self, id: u8) -> Result<Option<V5_DeviceVisionSignature>, VisionError> {
         if !(1..7).contains(&id) {
             return Err(VisionError::InvalidId);
         }
@@ -137,34 +137,55 @@ impl VisionSensor {
             vexDeviceVisionSignatureGet(self.device_handle(), id as u32, &mut raw_signature)
         };
 
+        if !read_operation {
+            return Ok(None);
+        }
+
         // pad[0] is actually an undocumented flags field on V5_DeviceVisionSignature. If the sensor returns
         // no flags, then it has failed to send data back.
         //
         // TODO: Make sure this is correct and not the PROS docs being wrong here.
         //
         // We also check that the read operation succeeded from the return of vexDeviceVisionSignatureGet.
-        if !read_operation || raw_signature.pad[0] == 0 {
+        if raw_signature.pad[0] == 0 {
             return Err(VisionError::ReadingFailed);
         }
 
-        Ok(raw_signature)
+        Ok(Some(raw_signature))
     }
 
     fn set_signature_type(&mut self, id: u8, sig_type: u32) -> Result<(), VisionError> {
-        let mut raw_sig = self.raw_signature(id)?;
-
-        raw_sig.mType = sig_type;
-
-        unsafe { vexDeviceVisionSignatureSet(self.device_handle(), &mut raw_sig) }
+        if let Some(mut sig) = self.raw_signature(id)? {
+            sig.mType = sig_type;
+            unsafe { vexDeviceVisionSignatureSet(self.device_handle(), &mut sig) }
+        } else {
+            return Err(VisionError::ReadingFailed);
+        }
 
         Ok(())
     }
 
     /// Get a signature from the sensor's onboard volatile memory.
-    pub fn signature(&self, id: u8) -> Result<VisionSignature, VisionError> {
+    pub fn signature(&self, id: u8) -> Result<Option<VisionSignature>, VisionError> {
         self.validate_port()?;
 
-        Ok(self.raw_signature(id)?.into())
+        Ok(match self.raw_signature(id)? {
+            Some(raw) => Some(raw.into()),
+            None => None,
+        })
+    }
+
+    /// Get all signatures currently stored on the sensor's onboard volatile memory.
+    pub fn signatures(&self, id: u8) -> Result<[Option<VisionSignature>; 7], VisionError> {
+        Ok([
+            self.signature(1)?,
+            self.signature(2)?,
+            self.signature(3)?,
+            self.signature(4)?,
+            self.signature(5)?,
+            self.signature(6)?,
+            self.signature(7)?,
+        ])
     }
 
     /// Registers a color code to the sensor's onboard memory. This code will be used to identify objects
