@@ -863,7 +863,7 @@ impl From<V5_DeviceVisionRgb> for Rgb {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when using a vision sensor.
 pub enum VisionError {
-    /// Objects cannot be read while wifi mode is enabled.
+    /// Objects cannot be detected while wifi mode is enabled.
     WifiMode,
 
     /// The given signature ID or argument is out of range.
