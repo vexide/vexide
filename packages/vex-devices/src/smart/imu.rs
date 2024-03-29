@@ -1,16 +1,17 @@
 //! Inertial sensor (IMU) device.
 
 use core::{
-    pin::Pin,
-    task::{Context, Poll},
-    time::Duration,
+    marker::PhantomData, pin::Pin, task::{Context, Poll}, time::Duration
 };
 
 use bitflags::bitflags;
 use pros_core::{error::PortError, time::Instant};
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet, vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet, vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode, V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw
+    vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
+    vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
+    vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode,
+    V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw,
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
@@ -21,7 +22,6 @@ pub struct InertialSensor {
     port: SmartPort,
     rotation_offset: f64,
     heading_offset: f64,
-    euler_offset: Euler,
 }
 
 impl InertialSensor {
@@ -43,7 +43,6 @@ impl InertialSensor {
             port,
             rotation_offset: 0.0,
             heading_offset: 0.0,
-            euler_offset: Euler::default(),
         }
     }
 
@@ -60,9 +59,13 @@ impl InertialSensor {
     pub fn status(&self) -> Result<InertialStatus, InertialError> {
         self.validate_port()?;
 
-        Ok(InertialStatus::from_bits_retain(unsafe {
-            vexDeviceImuStatusGet(self.device_handle())
-        }))
+        let bits = unsafe { vexDeviceImuStatusGet(self.device_handle()) };
+
+        if bits == InertialStatus::STATUS_ERROR {
+            return Err(InertialError::BadStatus);
+        }
+
+        Ok(InertialStatus::from_bits_retain(bits))
     }
 
     /// Check if the Intertial Sensor is currently calibrating.
@@ -111,7 +114,7 @@ impl InertialSensor {
     }
 
     /// Get a quaternion representing the Inertial Sensor’s orientation.
-    pub fn quaternion(&self) -> Result<Quaternion, InertialError> {
+    pub fn quaternion(&self) -> Result<mint::Quaternion<f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuQuaternion::default();
@@ -119,11 +122,14 @@ impl InertialSensor {
             vexDeviceImuQuaternionGet(self.device_handle(), &mut data);
         }
 
-        Ok(data.into())
+        Ok(mint::Quaternion {
+            v: mint::Vector3 { x: data.a, y: data.b, z: data.c },
+            s: data.d,
+        })
     }
 
-    /// Get the Euler angles (yaw, pitch, roll) representing the Inertial Sensor’s orientation.
-    pub fn euler(&self) -> Result<Euler, InertialError> {
+    /// Get the Euler angles (pitch, yaw, roll) representing the Inertial Sensor’s orientation.
+    pub fn euler(&self) -> Result<mint::EulerAngles<f64, f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuAttitude::default();
@@ -131,11 +137,16 @@ impl InertialSensor {
             vexDeviceImuAttitudeGet(self.device_handle(), &mut data);
         }
 
-        Ok(data.into())
+        Ok(mint::EulerAngles {
+            a: data.pitch.to_radians(),
+            b: data.yaw.to_radians(),
+            c: data.roll.to_radians(),
+            marker: PhantomData
+        })
     }
 
     /// Get the Inertial Sensor’s raw gyroscope values.
-    pub fn gyro_rate(&self) -> Result<InertialRaw, InertialError> {
+    pub fn gyro_rate(&self) -> Result<mint::Vector3<f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuRaw::default();
@@ -143,11 +154,17 @@ impl InertialSensor {
             vexDeviceImuRawGyroGet(self.device_handle(), &mut data);
         }
 
-        Ok(data.into())
+        Ok(mint::Vector3 {
+            x: data.x,
+            y: data.y,
+            z: data.z,
+            // NOTE: data.w is unused in the SDK.
+            // See: <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L239C63-L239C64>
+        })
     }
 
     /// Get the Inertial Sensor’s raw accelerometer values.
-    pub fn accel(&self) -> Result<InertialRaw, InertialError> {
+    pub fn accel(&self) -> Result<mint::Vector3<f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuRaw::default();
@@ -155,7 +172,13 @@ impl InertialSensor {
             vexDeviceImuRawAccelGet(self.device_handle(), &mut data);
         }
 
-        Ok(data.into())
+        Ok(mint::Vector3 {
+            x: data.x,
+            y: data.y,
+            z: data.z,
+            // NOTE: data.w is unused in the SDK.
+            // See: <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L239C63-L239C64>
+        })
     }
 
     /// Resets the current reading of the Inertial Sensor’s heading to zero.
@@ -166,38 +189,6 @@ impl InertialSensor {
     /// Resets the current reading of the Inertial Sensor’s rotation to zero.
     pub fn reset_rotation(&mut self) -> Result<(), InertialError> {
         self.set_rotation(Default::default())
-    }
-
-    /// Reset all 3 euler values of the Inertial Sensor to 0.
-    pub fn reset_euler(&mut self) -> Result<(), InertialError> {
-        self.set_euler(Default::default())
-    }
-
-    /// Resets all values of the Inertial Sensor to 0.
-    pub fn reset(&mut self) -> Result<(), InertialError> {
-        self.reset_heading()?;
-        self.reset_rotation()?;
-        self.reset_euler()?;
-
-        Ok(())
-    }
-
-    /// Sets the current reading of the Inertial Sensor’s euler values to target euler values.
-    pub fn set_euler(&mut self, euler: Euler) -> Result<(), InertialError> {
-        self.validate()?;
-
-        let mut attitude = V5_DeviceImuAttitude::default();
-        unsafe {
-            vexDeviceImuAttitudeGet(self.device_handle(), &mut attitude);
-        }
-
-        self.euler_offset = Euler {
-            yaw: euler.yaw - attitude.yaw,
-            pitch: euler.pitch - attitude.pitch,
-            roll: euler.roll - attitude.roll,
-        };
-
-        Ok(())
     }
 
     /// Sets the current reading of the Inertial Sensor’s rotation to target value.
@@ -222,7 +213,7 @@ impl InertialSensor {
 
     /// Sets the update rate of the IMU.
     ///
-    /// This duration must be above [`Self::MIN_DATA_RATE`] (5 milliseconds).
+    /// This duration should be above [`Self::MIN_DATA_RATE`] (5 milliseconds).
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
         self.validate()?;
 
@@ -240,83 +231,6 @@ impl SmartDevice for InertialSensor {
 
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::Imu
-    }
-}
-
-/// Standard quaternion consisting of a vector defining an axis of rotation
-/// and a rotation value about the axis.
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct Quaternion {
-    /// The x-component of the axis of rotation.
-    pub x: f64,
-
-    /// The y-component of the axis of rotation.
-    pub y: f64,
-
-    /// The z-component of the axis of rotation.
-    pub z: f64,
-
-    /// The magnitude of rotation about the axis.
-    pub w: f64,
-}
-
-impl From<V5_DeviceImuQuaternion> for Quaternion {
-    fn from(value: V5_DeviceImuQuaternion) -> Self {
-        Self {
-            x: value.a,
-            y: value.b,
-            z: value.c,
-            w: value.d,
-        }
-    }
-}
-
-/// A 3-axis set of euler angles.
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct Euler {
-    /// The angle measured along the pitch axis.
-    pub pitch: f64,
-
-    /// The angle measured along the roll axis.
-    pub roll: f64,
-
-    /// The angle measured along the yaw axis.
-    pub yaw: f64,
-}
-
-impl From<V5_DeviceImuAttitude> for Euler {
-    fn from(value: V5_DeviceImuAttitude) -> Self {
-        Self {
-            pitch: value.pitch,
-            roll: value.roll,
-            yaw: value.yaw,
-        }
-    }
-}
-
-/// Represents raw data reported by the IMU.
-///
-/// This is effectively a 3D vector containing either angular velocity or
-/// acceleration values depending on the type of data requested..
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct InertialRaw {
-    /// The x component of the raw data.
-    pub x: f64,
-
-    /// The y component of the raw data.
-    pub y: f64,
-
-    /// The z component of the raw data.
-    pub z: f64,
-}
-
-impl From<V5_DeviceImuRaw> for InertialRaw {
-    fn from(value: V5_DeviceImuRaw) -> Self {
-        Self {
-            x: value.x,
-            y: value.y,
-            z: value.z,
-        }
     }
 }
 
@@ -369,6 +283,10 @@ bitflags! {
 }
 
 impl InertialStatus {
+    /// The return value of [`vexDeviceImuStatusGet`] when the device fails to report its
+    /// status bits.
+    pub const STATUS_ERROR: u32 = 0xFF;
+
     /// Returns the physical orientation of the sensor measured at calibration.
     pub fn physical_orientation(&self) -> InertialOrientation {
         match (self.bits() >> 1) & 0b111 {
@@ -435,7 +353,16 @@ impl core::future::Future for InertialCalibrateFuture {
                         return Poll::Ready(Err(InertialError::Port { source: err }));
                     } else {
                         // Get status flags from vexos.
-                        unsafe { vexDeviceImuStatusGet(vexDeviceGetByIndex((port - 1) as u32)) }
+                        let flags = unsafe {
+                            vexDeviceImuStatusGet(vexDeviceGetByIndex((port - 1) as u32))
+                        };
+
+                        // 0xFF is returned when the sensor fails to report flags.
+                        if flags == InertialStatus::STATUS_ERROR {
+                            return Poll::Ready(Err(InertialError::BadStatus));
+                        }
+
+                        flags
                     },
                 );
 
@@ -462,10 +389,12 @@ impl core::future::Future for InertialCalibrateFuture {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an Inertial Sensor.
 pub enum InertialError {
-    /// The inertial sensor took longer than three seconds to calibrate.
+    /// The sensor took longer than three seconds to calibrate.
     CalibrationTimedOut,
-    /// The inertial is still calibrating.
+    /// The sensor is still calibrating.
     StillCalibrating,
+    /// The sensor failed to report its status flags (returned 0xFF).
+    BadStatus,
     #[snafu(display("{source}"), context(false))]
     /// Generic port related error.
     Port {
