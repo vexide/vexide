@@ -10,7 +10,10 @@ use bitflags::bitflags;
 use pros_core::{error::PortError, time::Instant};
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet, vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet, vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode, V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw
+    vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
+    vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
+    vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode,
+    V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw,
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};

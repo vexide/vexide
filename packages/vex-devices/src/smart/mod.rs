@@ -27,8 +27,8 @@ pub mod link;
 pub mod motor;
 pub mod optical;
 pub mod rotation;
-pub mod vision;
 pub mod serial;
+pub mod vision;
 
 use core::fmt;
 
@@ -40,9 +40,9 @@ pub use motor::Motor;
 pub use optical::OpticalSensor;
 use pros_core::error::PortError;
 pub use rotation::RotationSensor;
+pub use serial::SerialPort;
 use vex_sdk::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
 pub use vision::VisionSensor;
-pub use serial::SerialPort;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {
