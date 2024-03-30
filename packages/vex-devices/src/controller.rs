@@ -224,7 +224,7 @@ impl ControllerScreen {
         }
 
         let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text).map_err(|_| ControllerError::NonTerminatingNull)?.into_raw();
+        let text = CString::new(text).map_err(|_| ControllerError::NonTerminatingNul)?.into_raw();
 
         unsafe { vexControllerTextSet(id as u32, (line + 1) as _, (col + 1) as _, text as *const _); }
 
@@ -390,8 +390,8 @@ impl Controller {
 pub enum ControllerError {
     /// The controller is not connected to the brain.
     NotConnected,
-    /// CString::new encountered NULL (U+0000) byte in non-terminating position.
-    NonTerminatingNull,
+    /// CString::new encountered NUL (U+0000) byte in non-terminating position.
+    NonTerminatingNul,
     /// Access to controller data is restricted by competition control.
     CompetitionControl,
     /// An invalid line number was given.
