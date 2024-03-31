@@ -1,0 +1,11 @@
+[package]
+name = "vex-startup"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vex-sdk = { version = "0.3.0" }
+vex-startup-macro = { path = "../vex-startup-macro" }
+
+[lints]
+workspace = true

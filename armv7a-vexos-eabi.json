@@ -16,8 +16,7 @@
         "gcc": [
             "-nostartfiles",
             "-nostdlib",
-            "-Wl,-Tv5.ld,-Tv5-common.ld,--gc-sections",
-            "-Wl,--start-group,-lgcc,-lpros,-lc,--end-group"
+            "-Wl,-Tcold.ld,--gc-sections"
         ]
     },
     "relocation-model": "static",
