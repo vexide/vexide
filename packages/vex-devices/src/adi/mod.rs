@@ -1,7 +1,6 @@
 //! ADI (Triport) devices on the Vex V5.
 
-use pros_core::{bail_on, error::PortError, map_errno};
-use pros_sys::{adi_port_config_e_t, E_ADI_ERR, PROS_ERR};
+use pros_core::error::PortError;
 use snafu::Snafu;
 
 //TODO: much more in depth module documentation for device modules as well as this module.
@@ -27,6 +26,11 @@ pub use motor::AdiMotor;
 pub use potentiometer::AdiPotentiometer;
 pub use solenoid::AdiSolenoid;
 pub use ultrasonic::AdiUltrasonic;
+use vex_sdk::{
+    vexDeviceAdiPortConfigGet, vexDeviceGetByIndex, V5_AdiPortConfiguration, V5_DeviceT,
+};
+
+use crate::smart::{validate_port, SmartDeviceType};
 
 /// Represents an ADI (three wire) port on a V5 Brain or V5 Three Wire Expander.
 #[derive(Debug, Eq, PartialEq)]
@@ -43,6 +47,8 @@ pub struct AdiPort {
 }
 
 impl AdiPort {
+    pub(crate) const INTERNAL_ADI_PORT_INDEX: u8 = 22;
+
     /// Create a new port.
     ///
     /// # Safety
@@ -70,19 +76,30 @@ impl AdiPort {
         self.expander_index
     }
 
-    /// Get the index of this port's associated [`AdiExpander`] smart port, or `pros_sys::adi::INTERNAL_ADI_PORT`
-    /// if this port is not associated with an expander.
-    pub(crate) fn internal_expander_index(&self) -> u8 {
-        self.expander_index
-            .unwrap_or(pros_sys::adi::INTERNAL_ADI_PORT as u8)
+    pub(crate) fn internal_index(&self) -> u32 {
+        (self.index() - 1) as u32
+    }
+
+    pub(crate) fn internal_expander_index(&self) -> u32 {
+        (self.expander_index.unwrap_or(Self::INTERNAL_ADI_PORT_INDEX) - 1) as u32
+    }
+
+    pub(crate) fn device_handle(&self) -> V5_DeviceT {
+        unsafe { vexDeviceGetByIndex(self.internal_expander_index()) }
+    }
+
+    pub(crate) fn validate_port(&self) -> Result<(), PortError> {
+        validate_port(self.internal_expander_index() as u8, SmartDeviceType::Adi)
     }
 
     /// Get the type of device this port is currently configured as.
     pub fn configured_type(&self) -> Result<AdiDeviceType, AdiError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi::ext_adi_port_get_config(self.internal_expander_index(), self.index())
-        })
-        .try_into()
+        self.validate_port()?;
+
+        Ok(
+            unsafe { vexDeviceAdiPortConfigGet(self.device_handle(), self.internal_index()) }
+                .into(),
+        )
     }
 }
 
@@ -106,72 +123,125 @@ pub trait AdiDevice {
 }
 
 /// Represents a possible type of device that can be registered on a [`AdiPort`].
-#[repr(i32)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum AdiDeviceType {
-    /// Generic analog input.
-    AnalogIn = pros_sys::adi::E_ADI_ANALOG_IN,
-
-    /// Generic PWM output.
+    /// Undefined Device Type
     ///
-    /// This is actually equivalent `pros_sys::adi::E_ADI_ANALOG_OUT`, which is a misnomer.
-    /// "Analog Out" in reality outputs an 8-bit PWM value.
-    PwmOut = pros_sys::adi::E_ADI_ANALOG_OUT,
+    /// Interestingly, this port type appears to NOT be used
+    /// for devices that are unconfigured (they are configured
+    /// as [`Self::AnalogIn`] by default, since that's enum variant 0
+    /// in the SDK's API).
+    Undefined,
 
-    /// Generic digital input.
-    DigitalIn = pros_sys::adi::E_ADI_DIGITAL_IN,
+    /// Generic digital input
+    DigitalIn,
 
-    /// Generic digital output.
-    DigitalOut = pros_sys::adi::E_ADI_DIGITAL_OUT,
+    /// Generic digital output
+    DigitalOut,
 
-    /// Cortex-era yaw-rate gyroscope.
-    LegacyGyro = pros_sys::adi::E_ADI_LEGACY_GYRO,
+    /// 12-bit Generic analog input
+    AnalogIn,
 
-    /// Cortex-era servo motor.
-    LegacyServo = pros_sys::adi::E_ADI_LEGACY_SERVO,
+    /// 8-git generic PWM output
+    PwmOut,
+
+    /// Limit Switch / Bumper Switch
+    Switch,
+
+    /// V2 Bumper Switch
+    SwitchV2,
+
+    /// Cortex-era potentiometer
+    Potentiometer,
+
+    /// V2 Potentiometer
+    PotentimeterV2,
+
+    /// Cortex-era yaw-rate gyroscope
+    Gyro,
+
+    /// Cortex-era servo motor
+    Servo,
+
+    /// Quadrature Encoder
+    Encoder,
+
+    /// Ultrasonic Sensor/Sonar
+    Ultrasonic,
+
+    /// Cortex-era Line Tracker
+    LineTracker,
+
+    /// Cortex-era Light Sensor
+    LightSensor,
+
+    /// Cortex-era 3-Axis Accelerometer
+    Accelerometer,
 
     /// MC29 Controller Output
     ///
     /// This differs from [`Self::PwmOut`] in that it is specifically designed for controlling
     /// legacy ADI motors. Rather than taking a u8 for output, it takes a i8 allowing negative
     /// values to be sent for controlling motors in reverse with a nicer API.
-    LegacyPwm = pros_sys::adi::E_ADI_LEGACY_PWM,
+    Motor,
 
-    /// Cortex-era encoder.
-    LegacyEncoder = pros_sys::E_ADI_LEGACY_ENCODER,
+    /// Slew-rate limited motor PWM output
+    MotorSlew,
 
-    /// Cortex-era ultrasonic sensor.
-    LegacyUltrasonic = pros_sys::E_ADI_LEGACY_ULTRASONIC,
+    /// Other device type code returned by the SDK that is currently unsupported, undocumented,
+    /// or unknown.
+    Unknown(V5_AdiPortConfiguration),
 }
 
-impl TryFrom<adi_port_config_e_t> for AdiDeviceType {
-    type Error = AdiError;
-
-    fn try_from(value: adi_port_config_e_t) -> Result<Self, Self::Error> {
-        bail_on!(E_ADI_ERR, value);
-
+impl From<V5_AdiPortConfiguration> for AdiDeviceType {
+    fn from(value: V5_AdiPortConfiguration) -> Self {
         match value {
-            pros_sys::E_ADI_ANALOG_IN => Ok(AdiDeviceType::AnalogIn),
-            pros_sys::E_ADI_ANALOG_OUT => Ok(AdiDeviceType::PwmOut),
-            pros_sys::E_ADI_DIGITAL_IN => Ok(AdiDeviceType::DigitalIn),
-            pros_sys::E_ADI_DIGITAL_OUT => Ok(AdiDeviceType::DigitalOut),
-
-            pros_sys::E_ADI_LEGACY_GYRO => Ok(AdiDeviceType::LegacyGyro),
-
-            pros_sys::E_ADI_LEGACY_SERVO => Ok(AdiDeviceType::LegacyServo),
-            pros_sys::E_ADI_LEGACY_PWM => Ok(AdiDeviceType::LegacyPwm),
-
-            pros_sys::E_ADI_LEGACY_ENCODER => Ok(AdiDeviceType::LegacyEncoder),
-            pros_sys::E_ADI_LEGACY_ULTRASONIC => Ok(AdiDeviceType::LegacyUltrasonic),
-
-            _ => Err(AdiError::UnknownDeviceType),
+            V5_AdiPortConfiguration::kAdiPortTypeUndefined => Self::Undefined,
+            V5_AdiPortConfiguration::kAdiPortTypeDigitalIn => Self::DigitalIn,
+            V5_AdiPortConfiguration::kAdiPortTypeDigitalOut => Self::DigitalOut,
+            V5_AdiPortConfiguration::kAdiPortTypeAnalogIn => Self::AnalogIn,
+            V5_AdiPortConfiguration::kAdiPortTypeAnalogOut => Self::PwmOut,
+            V5_AdiPortConfiguration::kAdiPortTypeLegacyButton => Self::Switch,
+            V5_AdiPortConfiguration::kAdiPortTypeSmartButton => Self::SwitchV2,
+            V5_AdiPortConfiguration::kAdiPortTypeLegacyPotentiometer => Self::Potentiometer,
+            V5_AdiPortConfiguration::kAdiPortTypeSmartPot => Self::PotentimeterV2,
+            V5_AdiPortConfiguration::kAdiPortTypeLegacyGyro => Self::Gyro,
+            V5_AdiPortConfiguration::kAdiPortTypeLegacyServo => Self::Servo,
+            V5_AdiPortConfiguration::kAdiPortTypeQuadEncoder => Self::Encoder,
+            V5_AdiPortConfiguration::kAdiPortTypeSonar => Self::Ultrasonic,
+            V5_AdiPortConfiguration::kAdiPortTypeLegacyLineSensor => Self::LineTracker,
+            V5_AdiPortConfiguration::kAdiPortTypeLegacyLightSensor => Self::LightSensor,
+            V5_AdiPortConfiguration::kAdiPortTypeLegacyAccelerometer => Self::Accelerometer,
+            V5_AdiPortConfiguration::kAdiPortTypeLegacyPwm => Self::Motor,
+            V5_AdiPortConfiguration::kAdiPortTypeLegacyPwmSlew => Self::MotorSlew,
+            other => Self::Unknown(other),
         }
     }
 }
 
-impl From<AdiDeviceType> for adi_port_config_e_t {
+impl From<AdiDeviceType> for V5_AdiPortConfiguration {
     fn from(value: AdiDeviceType) -> Self {
-        value as _
+        match value {
+            AdiDeviceType::Undefined => V5_AdiPortConfiguration::kAdiPortTypeUndefined,
+            AdiDeviceType::DigitalIn => Self::kAdiPortTypeDigitalIn,
+            AdiDeviceType::DigitalOut => Self::kAdiPortTypeDigitalOut,
+            AdiDeviceType::AnalogIn => Self::kAdiPortTypeAnalogIn,
+            AdiDeviceType::PwmOut => Self::kAdiPortTypeAnalogOut,
+            AdiDeviceType::Switch => Self::kAdiPortTypeLegacyButton,
+            AdiDeviceType::SwitchV2 => Self::kAdiPortTypeSmartButton,
+            AdiDeviceType::Potentiometer => Self::kAdiPortTypeLegacyPotentiometer,
+            AdiDeviceType::PotentimeterV2 => Self::kAdiPortTypeSmartPot,
+            AdiDeviceType::Gyro => Self::kAdiPortTypeLegacyGyro,
+            AdiDeviceType::Servo => Self::kAdiPortTypeLegacyServo,
+            AdiDeviceType::Encoder => Self::kAdiPortTypeQuadEncoder,
+            AdiDeviceType::Ultrasonic => Self::kAdiPortTypeSonar,
+            AdiDeviceType::LineTracker => Self::kAdiPortTypeLegacyLineSensor,
+            AdiDeviceType::LightSensor => Self::kAdiPortTypeLegacyLightSensor,
+            AdiDeviceType::Accelerometer => Self::kAdiPortTypeLegacyAccelerometer,
+            AdiDeviceType::Motor => Self::kAdiPortTypeLegacyPwm,
+            AdiDeviceType::MotorSlew => Self::kAdiPortTypeLegacyPwmSlew,
+            AdiDeviceType::Unknown(raw) => raw,
+        }
     }
 }
 
@@ -199,13 +269,4 @@ pub enum AdiError {
         /// The source of the error
         source: PortError,
     },
-}
-
-map_errno! {
-    AdiError {
-        EACCES => Self::AlreadyInUse,
-        EADDRINUSE => Self::PortNotConfigured,
-        EINVAL => Self::InvalidValue,
-    }
-    inherit PortError;
 }
