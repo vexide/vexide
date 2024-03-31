@@ -15,14 +15,19 @@ use vex_sdk::{
 
 use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
 
-/// Represents a smart port configured as a generic serial controller.
+/// Represents a smart port configured as a VEXLink radio.
+///
+/// VEXLink is a point-to-point wireless communications protocol between
+/// two VEXNet radios. For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
 #[derive(Debug, Eq, PartialEq)]
 pub struct RadioLink {
     port: SmartPort,
 }
 
 impl RadioLink {
-    /// Opens a radio link from a VEXNet radio plugged into a smart port.
+    /// Opens a radio link from a VEXNet radio plugged into a smart port. Once
+    /// opened, other VEXNet functionality such as controller tethering on this
+    /// radio will be disabled.
     ///
     /// # Examples
     ///
@@ -56,12 +61,14 @@ impl RadioLink {
         Ok(link)
     }
 
+    /// Returns the number of bytes available to be read in the the radio's input buffer.
     pub fn unread_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
 
         Ok(unsafe { vexDeviceGenericRadioReceiveAvail(self.device_handle()) } as usize)
     }
 
+    /// Returns the number of bytes free in the radio's output buffer.
     pub fn available_write_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
 
@@ -73,6 +80,7 @@ impl RadioLink {
         }
     }
 
+    /// Returns `true` if there is a link established with another radio.
     pub fn is_linked(&self) -> Result<bool, LinkError> {
         self.validate_port()?;
 
