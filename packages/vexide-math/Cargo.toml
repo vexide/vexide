@@ -1,5 +1,5 @@
 [package]
-name = "pros-math"
+name = "vexide-math"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
@@ -19,7 +19,7 @@ authors = [
 
 [dependencies]
 num = { version = "0.4.1", default-features = false }
-pros-core = { version = "0.1.0", path = "../pros-core" }
+vexide-core = { version = "0.1.0", path = "../vexide-core" }
 
 [lints]
 workspace = true

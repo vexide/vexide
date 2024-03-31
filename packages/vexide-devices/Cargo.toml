@@ -1,5 +1,5 @@
 [package]
-name = "vex-devices"
+name = "vexide-devices"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
@@ -20,7 +20,7 @@ authors = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pros-core = { version = "0.1.0", path = "../pros-core" }
+vexide-core = { version = "0.1.0", path = "../vexide-core" }
 pros-sys = { path = "../pros-sys", version = "0.7.0", features = ["xapi"] }
 vex-sdk = { version = "0.5.0" }
 snafu = { version = "0.8.0", default-features = false, features = [

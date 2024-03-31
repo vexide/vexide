@@ -1,13 +1,14 @@
 [package]
-name = "pros-panic"
+name = "vexide-async"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Panic handler for pros-rs"
-keywords = ["PROS", "Robotics", "vex", "v5"]
+description = "A simple async executor for pros-rs"
+keywords = ["PROS", "Robotics", "bindings", "async", "vex", "v5"]
 categories = [
     "no-std",
     "science::robotics",
+    "Asynchronous"
 ]
 repository = "https://github.com/gavin-niederman/pros-rs"
 authors = [
@@ -19,14 +20,10 @@ authors = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pros-core = { version = "0.1.0", path = "../pros-core" }
-vex-devices = { version = "0.1.0", path = "../vex-devices", optional = true }
+async-task = { version = "4.5.0", default-features = false }
+vexide-core = { version = "0.1.0", path = "../vexide-core" }
+waker-fn = "1.1.1"
 pros-sys = { version = "0.7.0", path = "../pros-sys" }
-
-[features]
-default = ["display_panics"]
-
-display_panics = ["dep:vex-devices"]
 
 [lints]
 workspace = true
