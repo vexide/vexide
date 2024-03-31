@@ -24,6 +24,7 @@ async-task = { version = "4.5.0", default-features = false }
 vexide-core = { version = "0.1.0", path = "../vexide-core" }
 waker-fn = "1.1.1"
 pros-sys = { version = "0.7.0", path = "../pros-sys" }
+lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 
 [lints]
 workspace = true
