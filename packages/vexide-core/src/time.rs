@@ -25,7 +25,7 @@ impl Instant {
     /// let now = Instant::now();
     /// ```
     pub fn now() -> Self {
-        Self(unsafe { pros_sys::rtos::micros() })
+        Self(unsafe { vex_sdk::vexSystemHighResTimeGet() })
     }
 
     /// Returns the amount of time elapsed from another instant to this one,
