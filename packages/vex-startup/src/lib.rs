@@ -68,6 +68,9 @@ pub unsafe fn program_entry() {
             ldr sp, =__user_stack_start
             "
         );
+        // Initialize the heap allocator
+        #[cfg(target_arch = "arm")] // This is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
+        pros_core::allocator::vexos::init_heap();
         // Call the user code
         main()
     }

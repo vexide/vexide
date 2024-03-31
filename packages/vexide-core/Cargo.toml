@@ -27,6 +27,7 @@ snafu = { version = "0.8.0", default-features = false, features = [
     "unstable-core-error",
 ] }
 spin = "0.9.8"
+linked_list_allocator = "0.10.5"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 dlmalloc = { version = "0.2.4", features = ["global"] }
