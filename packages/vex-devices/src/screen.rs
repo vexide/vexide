@@ -240,7 +240,7 @@ impl Text {
     pub fn new(text: &str, position: TextPosition, format: TextFormat) -> Self {
         Self {
             text: CString::new(text)
-                .expect("CString::new encountered NULL (U+0000) byte in non-terminating position."),
+                .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
             position,
             format,
         }

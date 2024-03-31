@@ -5,7 +5,10 @@
 use alloc::ffi::CString;
 
 use snafu::Snafu;
-use vex_sdk::{vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId, V5_ControllerIndex};
+use vex_sdk::{
+    vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
+    V5_ControllerIndex,
+};
 
 use crate::{
     adi::digital::LogicLevel,
@@ -224,9 +227,13 @@ impl ControllerScreen {
         }
 
         let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text).map_err(|_| ControllerError::NonTerminatingNull)?.into_raw();
+        let text = CString::new(text)
+            .map_err(|_| ControllerError::NonTerminatingNul)?
+            .into_raw();
 
-        unsafe { vexControllerTextSet(id as u32, (line + 1) as _, (col + 1) as _, text as *const _); }
+        unsafe {
+            vexControllerTextSet(id as u32, (line + 1) as _, (col + 1) as _, text as *const _);
+        }
 
         // stop rust from leaking the CString
         drop(unsafe { CString::from_raw(text) });
@@ -357,18 +364,14 @@ impl Controller {
     pub fn battery_capacity(&self) -> Result<i32, ControllerError> {
         self.validate()?;
 
-        Ok(unsafe {
-            vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryCapacity)
-        })
+        Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryCapacity) })
     }
 
     /// Gets the controller's battery level.
     pub fn battery_level(&self) -> Result<i32, ControllerError> {
         self.validate()?;
 
-        Ok(unsafe {
-            vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryLevel)
-        })
+        Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryLevel) })
     }
 
     /// Send a rumble pattern to the controller's vibration motor.
@@ -390,8 +393,8 @@ impl Controller {
 pub enum ControllerError {
     /// The controller is not connected to the brain.
     NotConnected,
-    /// CString::new encountered NULL (U+0000) byte in non-terminating position.
-    NonTerminatingNull,
+    /// CString::new encountered NUL (U+0000) byte in non-terminating position.
+    NonTerminatingNul,
     /// Access to controller data is restricted by competition control.
     CompetitionControl,
     /// An invalid line number was given.

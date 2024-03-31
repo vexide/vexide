@@ -1,230 +1,249 @@
-//! Connect to VEXLink radios for robot-to-robot communication.
+//! Generic serial device module.
 //!
-//! There are two types of links: [`TxLink`] (transmitter radio module) and [`RxLink`] (receiver radio module).
-//! both implement a shared trait [`Link`] as well as a no_std version of `Write` and `Read` from [`no_std_io`] respectively.
+//! Provides support for using [`SmartPort`]s as generic serial communication devices.
 
-use alloc::{ffi::CString, string::String};
-use core::ffi::CStr;
+use alloc::ffi::CString;
 
 use no_std_io::io;
-use pros_core::{
-    bail_errno, bail_on,
-    error::{FromErrno, PortError},
-    map_errno,
-};
-use pros_sys::{link_receive, link_transmit, E_LINK_RECEIVER, E_LINK_TRANSMITTER};
+use pros_core::error::PortError;
 use snafu::Snafu;
+use vex_sdk::{
+    vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus, vexDeviceGenericRadioReceive,
+    vexDeviceGenericRadioReceiveAvail, vexDeviceGenericRadioTransmit,
+    vexDeviceGenericRadioWriteFree,
+};
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
+use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
 
-/// Types that implement Link can be used to send data to another robot over VEXLink.
-pub trait Link: SmartDevice {
-    /// The identifier of this link.
-    fn id(&self) -> &CStr;
-
-    /// Check whether this link is connected to another robot.
-    fn connected(&self) -> bool {
-        unsafe { pros_sys::link_connected(self.port_index()) }
-    }
-
-    /// Create a new link ready to send or recieve data.
-    fn new(port: SmartPort, id: String, vexlink_override: bool) -> Result<Self, LinkError>
-    where
-        Self: Sized;
-}
-
-/// A recieving end of a VEXLink connection.
-#[derive(Debug)]
-pub struct RxLink {
+/// Represents a smart port configured as a VEXLink radio.
+///
+/// VEXLink is a point-to-point wireless communications protocol between
+/// two VEXNet radios. For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
+#[derive(Debug, Eq, PartialEq)]
+pub struct RadioLink {
     port: SmartPort,
-    id: CString,
 }
 
-impl RxLink {
-    /// Get the number of bytes in the incoming buffer.
-    /// Be aware that the number of incoming bytes can change between when this is called
-    /// and when you read from the link.
-    /// If you create a buffer of this size, and then attempt to read into it
-    /// you may encounter panics or data loss.
-    pub fn num_incoming_bytes(&self) -> Result<u32, LinkError> {
-        let num = unsafe {
-            bail_on!(
-                pros_sys::PROS_ERR as _,
-                pros_sys::link_raw_receivable_size(self.port.index())
-            )
-        };
+impl RadioLink {
+    /// Opens a radio link from a VEXNet radio plugged into a smart port. Once
+    /// opened, other VEXNet functionality such as controller tethering on this
+    /// radio will be disabled.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let link = RadioLink::open(port_1, "643A", LinkType::Manager)?;
+    /// ```
+    pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, LinkError> {
+        let link = Self { port };
 
-        Ok(num)
-    }
+        // Ensure that a radio is plugged into the requested port.
+        //
+        // Once we call [`vexDeviceGenericRadioConnection`], this type
+        // will be changed to be generic serial, but we haven't called
+        // it yet.
+        validate_port(link.port_index(), SmartDeviceType::Radio);
 
-    /// Clear all bytes in the incoming buffer.
-    /// All data in the incoming will be lost and completely unrecoverable.
-    pub fn clear_incoming_buf(&self) -> Result<(), LinkError> {
         unsafe {
-            bail_on!(
-                pros_sys::PROS_ERR as _,
-                pros_sys::link_clear_receive_buf(self.port.index())
-            )
-        };
+            vexDeviceGenericRadioConnection(
+                link.device_handle(),
+                CString::new(id)
+                    .map_err(|_| LinkError::NonTerminatingNul)?
+                    .into_raw(),
+                match link_type {
+                    LinkType::Worker => 0,
+                    LinkType::Manager => 1,
+                },
+                true,
+            );
+        }
 
-        Ok(())
+        Ok(link)
     }
 
-    /// Receive data from the link incoming buffer into a buffer.
-    pub fn receive(&self, buf: &mut [u8]) -> Result<u32, LinkError> {
-        const PROS_ERR_U32: u32 = pros_sys::PROS_ERR as _;
+    /// Returns the number of bytes available to be read in the the radio's input buffer.
+    pub fn unread_bytes(&self) -> Result<usize, LinkError> {
+        self.validate_port()?;
 
-        match unsafe { link_receive(self.port.index(), buf.as_mut_ptr().cast(), buf.len() as _) } {
-            PROS_ERR_U32 => {
-                bail_errno!();
-                unreachable!("Expected errno to be set");
-            }
-            0 => Err(LinkError::Busy),
-            n => Ok(n),
+        Ok(unsafe { vexDeviceGenericRadioReceiveAvail(self.device_handle()) } as usize)
+    }
+
+    /// Returns the number of bytes free in the radio's output buffer.
+    pub fn available_write_bytes(&self) -> Result<usize, LinkError> {
+        self.validate_port()?;
+
+        match unsafe { vexDeviceGenericRadioWriteFree(self.device_handle()) } {
+            // TODO: This check may not be necessary, since PROS doesn't do it,
+            //		 but we do it just to be safe.
+            -1 => Err(LinkError::ReadFailed),
+            available => Ok(available as usize),
         }
     }
+
+    /// Returns `true` if there is a link established with another radio.
+    pub fn is_linked(&self) -> Result<bool, LinkError> {
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceGenericRadioLinkStatus(self.device_handle()) })
+    }
 }
 
-impl Link for RxLink {
-    fn id(&self) -> &CStr {
-        &self.id
-    }
-    fn new(port: SmartPort, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
-        let id = CString::new(id).unwrap();
-        unsafe {
-            bail_on!(
-                pros_sys::PROS_ERR as _,
-                if vexlink_override {
-                    pros_sys::link_init(port.index(), id.as_ptr().cast(), E_LINK_RECEIVER)
-                } else {
-                    pros_sys::link_init_override(port.index(), id.as_ptr().cast(), E_LINK_RECEIVER)
+impl io::Read for RadioLink {
+    /// Read some bytes sent to the radio into the specified buffer, returning
+    /// how many bytes were read.
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let is_linked = self.is_linked().map_err(|e| match e {
+            LinkError::Port { source } => match source {
+                PortError::Disconnected => {
+                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
                 }
-            )
-        };
-        Ok(Self { port, id })
-    }
-}
+                PortError::IncorrectDevice => io::Error::new(
+                    io::ErrorKind::AddrInUse,
+                    "Port is in use as another device.",
+                ),
+            },
+            _ => unreachable!(),
+        })?;
 
-impl SmartDevice for RxLink {
-    fn port_index(&self) -> u8 {
-        self.port.index()
-    }
+        if !is_linked {
+            return Err(io::Error::new(
+                io::ErrorKind::NotConnected,
+                "Radio is not linked!",
+            ));
+        }
 
-    fn device_type(&self) -> SmartDeviceType {
-        SmartDeviceType::Radio
-    }
-}
-
-impl io::Read for RxLink {
-    fn read(&mut self, dst: &mut [u8]) -> io::Result<usize> {
-        let bytes_read = self
-            .receive(dst)
-            .map_err(|_| io::Error::new(io::ErrorKind::Other, "failed to read from link"))?;
-        Ok(bytes_read as _)
-    }
-}
-
-/// A transmitting end of a VEXLink connection.
-#[derive(Debug)]
-pub struct TxLink {
-    port: SmartPort,
-    id: CString,
-}
-
-impl TxLink {
-    // I have literally no idea what the purpose of this is,
-    // there is no way to push to the transmission buffer without transmitting it.
-    /// Get the number of bytes to be sent over this link.
-    pub fn num_outgoing_bytes(&self) -> Result<u32, LinkError> {
-        let num = unsafe {
-            bail_on!(
-                pros_sys::PROS_ERR as _,
-                pros_sys::link_raw_transmittable_size(self.port.index())
-            )
-        };
-
-        Ok(num)
-    }
-
-    /// Transmit a buffer of data over the link.
-    pub fn transmit(&self, buf: &[u8]) -> Result<u32, LinkError> {
-        const PROS_ERR_U32: u32 = pros_sys::PROS_ERR as _;
-
-        match unsafe { link_transmit(self.port.index(), buf.as_ptr().cast(), buf.len() as _) } {
-            PROS_ERR_U32 => {
-                let errno = pros_core::error::take_errno();
-                Err(FromErrno::from_errno(errno)
-                    .unwrap_or_else(|| panic!("Unknown errno code {errno}")))
-            }
-            0 => Err(LinkError::Busy),
-            n => Ok(n),
+        match unsafe {
+            vexDeviceGenericRadioReceive(self.device_handle(), buf.as_mut_ptr(), buf.len() as u16)
+        } {
+            -1 => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Internal read error occurred.",
+            )),
+            recieved => Ok(recieved as usize),
         }
     }
 }
 
-impl io::Write for TxLink {
+impl io::Write for RadioLink {
+    /// Write a buffer into the radio's output buffer, returning how many bytes
+    /// were written.
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let bytes_written = self
-            .transmit(buf)
-            .map_err(|_| io::Error::new(io::ErrorKind::Other, "failed to write to link"))?;
-        Ok(bytes_written as _)
+        let io_error_handler = |e| match e {
+            LinkError::Port { source } => match source {
+                PortError::Disconnected => {
+                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
+                }
+                PortError::IncorrectDevice => io::Error::new(
+                    io::ErrorKind::AddrInUse,
+                    "Port is in use as another device.",
+                ),
+            },
+            _ => unreachable!(),
+        };
+
+        if !self.is_linked().map_err(io_error_handler)? {
+            return Err(io::Error::new(
+                io::ErrorKind::NotConnected,
+                "Radio is not linked!",
+            ));
+        }
+
+        if buf.len() > self.available_write_bytes().map_err(io_error_handler)? {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Buffer length exceeded available bytes in write buffer.",
+            ));
+        }
+
+        match unsafe {
+            vexDeviceGenericRadioTransmit(self.device_handle(), buf.as_mut_ptr(), buf.len() as u16)
+        } {
+            -1 => Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Internal write error occurred.",
+            )),
+            0 => Err(io::Error::new(
+                io::ErrorKind::WriteZero,
+                "Transmit function returned zero written bytes.",
+            )),
+            written => Ok(written as usize),
+        }
     }
+
+    /// This function does nothing.
+    ///
+    /// VEXLink immediately sends and clears data sent into the write buffer.
     fn flush(&mut self) -> io::Result<()> {
+        if !self.is_linked().map_err(|e| match e {
+            LinkError::Port { source } => match source {
+                PortError::Disconnected => {
+                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
+                }
+                PortError::IncorrectDevice => io::Error::new(
+                    io::ErrorKind::AddrInUse,
+                    "Port is in use as another device.",
+                ),
+            },
+            _ => unreachable!(),
+        })? {
+            return Err(io::Error::new(
+                io::ErrorKind::NotConnected,
+                "Radio is not linked!",
+            ));
+        }
+
         Ok(())
     }
 }
 
-impl Link for TxLink {
-    fn id(&self) -> &CStr {
-        &self.id
-    }
-    fn new(port: SmartPort, id: String, vexlink_override: bool) -> Result<Self, LinkError> {
-        let id = CString::new(id).unwrap();
-        unsafe {
-            bail_on!(
-                pros_sys::PROS_ERR as _,
-                if vexlink_override {
-                    pros_sys::link_init(port.index(), id.as_ptr().cast(), E_LINK_TRANSMITTER)
-                } else {
-                    pros_sys::link_init_override(
-                        port.index(),
-                        id.as_ptr().cast(),
-                        E_LINK_TRANSMITTER,
-                    )
-                }
-            )
-        };
-        Ok(Self { port, id })
-    }
-}
-
-impl SmartDevice for TxLink {
+impl SmartDevice for RadioLink {
     fn port_index(&self) -> u8 {
         self.port.index()
     }
 
     fn device_type(&self) -> SmartDeviceType {
-        SmartDeviceType::Radio
+        SmartDeviceType::GenericSerial
     }
 }
 
+/// The type of a radio link being established.
+///
+/// VEXLink is a point-to-point connection, with one "manager" robot and
+/// one "worker" robot.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum LinkType {
+    /// Manager Radio
+    ///
+    /// This end of the link has a 1040 bytes/sec data rate when
+    /// communicating with a worker radio.
+    Manager,
+
+    /// Worker Radio
+    ///
+    /// This end of the link has a 520 bytes/sec data rate when
+    /// communicating with a manager radio.
+    Worker,
+}
+
+/// Errors that can occur when interacting with a [`SerialPort`].
 #[derive(Debug, Snafu)]
-/// Errors that can occur when using VEXLink.
 pub enum LinkError {
-    /// No link is connected through the radio.
-    NoLink,
-    /// The transmitter buffer is still busy with a previous transmission, and there is no room in the FIFO buffer (queue) to transmit the data.
-    BufferBusyFull,
-    /// Invalid data: the data given was a C NULL.
-    NullData,
-    /// Protocol error related to start byte, data size, or checksum during a transmission or reception.
-    Protocol,
-    /// The link is busy.
-    Busy,
+    /// Not linked with another radio.
+    NotLinked,
+
+    /// Internal write error occurred.
+    WriteFailed,
+
+    /// Internal read error occurred.
+    ReadFailed,
+
+    /// CString::new encountered NUL (U+0000) byte in non-terminating position.
+    NonTerminatingNul,
+
+    /// Generic port related error.
     #[snafu(display("{source}"), context(false))]
-    /// Generic port related error
     Port {
-        /// The source of the error
+        /// The source of the error.
         source: PortError,
     },
 }

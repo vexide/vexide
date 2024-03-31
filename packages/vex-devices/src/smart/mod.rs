@@ -27,6 +27,7 @@ pub mod link;
 pub mod motor;
 pub mod optical;
 pub mod rotation;
+pub mod serial;
 pub mod vision;
 
 use core::fmt;
@@ -34,11 +35,12 @@ use core::fmt;
 pub use distance::DistanceSensor;
 pub use expander::AdiExpander;
 pub use imu::InertialSensor;
-pub use link::{Link, RxLink, TxLink};
+pub use link::RadioLink;
 pub use motor::Motor;
 pub use optical::OpticalSensor;
 use pros_core::error::PortError;
 pub use rotation::RotationSensor;
+pub use serial::SerialPort;
 use vex_sdk::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
 pub use vision::VisionSensor;
 
