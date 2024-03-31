@@ -63,8 +63,6 @@ pub use vexide_core as core;
 pub use vexide_math as math;
 #[cfg(feature = "panic")]
 pub use vexide_panic as panic;
-#[cfg(feature = "sync")]
-pub use pros_sync as sync;
 pub use pros_sys as sys;
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
@@ -84,8 +82,6 @@ pub mod prelude {
     };
     #[cfg(feature = "math")]
     pub use vexide_math::{feedforward::MotorFeedforwardController, pid::PidController};
-    #[cfg(feature = "sync")]
-    pub use pros_sync::{sync_robot, SyncRobot};
     #[cfg(feature = "devices")]
     pub use vexide_devices::{
         adi::{
