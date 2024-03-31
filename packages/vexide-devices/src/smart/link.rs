@@ -5,7 +5,7 @@
 use alloc::ffi::CString;
 
 use no_std_io::io;
-use pros_core::error::PortError;
+use vexide_core::error::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus, vexDeviceGenericRadioReceive,

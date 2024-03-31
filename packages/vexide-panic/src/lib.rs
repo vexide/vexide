@@ -8,9 +8,9 @@ extern crate alloc;
 
 use alloc::{format, string::String};
 
-use pros_core::eprintln;
+use vexide_core::eprintln;
 #[cfg(feature = "display_panics")]
-use vex_devices::Screen;
+use vexide_devices::Screen;
 
 #[cfg(target_arch = "wasm32")]
 extern "C" {
@@ -24,22 +24,22 @@ extern "C" {
 /// panic messages graphically before exiting.
 #[cfg(feature = "display_panics")]
 fn draw_error(
-    screen: &mut vex_devices::screen::Screen,
+    screen: &mut vexide_devices::screen::Screen,
     msg: &str,
-) -> Result<(), vex_devices::screen::ScreenError> {
+) -> Result<(), vexide_devices::screen::ScreenError> {
     const ERROR_BOX_MARGIN: i16 = 16;
     const ERROR_BOX_PADDING: i16 = 16;
     const LINE_MAX_WIDTH: usize = 52;
 
-    let error_box_rect = vex_devices::screen::Rect::new(
+    let error_box_rect = vexide_devices::screen::Rect::new(
         ERROR_BOX_MARGIN,
         ERROR_BOX_MARGIN,
         Screen::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
         Screen::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
     );
 
-    screen.fill(&error_box_rect, vex_devices::color::Rgb::RED)?;
-    screen.stroke(&error_box_rect, vex_devices::color::Rgb::WHITE)?;
+    screen.fill(&error_box_rect, vexide_devices::color::Rgb::RED)?;
+    screen.stroke(&error_box_rect, vexide_devices::color::Rgb::WHITE)?;
 
     let mut buffer = String::new();
     let mut line: i16 = 0;
@@ -51,15 +51,15 @@ fn draw_error(
 
         if character == '\n' || ((buffer.len() % LINE_MAX_WIDTH == 0) && (i > 0)) {
             screen.fill(
-                &vex_devices::screen::Text::new(
+                &vexide_devices::screen::Text::new(
                     buffer.as_str(),
-                    vex_devices::screen::TextPosition::Point(
+                    vexide_devices::screen::TextPosition::Point(
                         ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
                         ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Screen::LINE_HEIGHT),
                     ),
-                    vex_devices::screen::TextFormat::Small,
+                    vexide_devices::screen::TextFormat::Small,
                 ),
-                vex_devices::color::Rgb::WHITE,
+                vexide_devices::color::Rgb::WHITE,
             )?;
 
             line += 1;
@@ -68,15 +68,15 @@ fn draw_error(
     }
 
     screen.fill(
-        &vex_devices::screen::Text::new(
+        &vexide_devices::screen::Text::new(
             buffer.as_str(),
-            vex_devices::screen::TextPosition::Point(
+            vexide_devices::screen::TextPosition::Point(
                 ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
                 ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Screen::LINE_HEIGHT),
             ),
-            vex_devices::screen::TextFormat::Small,
+            vexide_devices::screen::TextFormat::Small,
         ),
-        vex_devices::color::Rgb::WHITE,
+        vexide_devices::color::Rgb::WHITE,
     )?;
 
     Ok(())
@@ -85,7 +85,7 @@ fn draw_error(
 #[panic_handler]
 /// The panic handler for pros-rs.
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
-    let current_task = pros_core::task::current();
+    let current_task = vexide_core::task::current();
 
     let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
 

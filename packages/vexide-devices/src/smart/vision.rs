@@ -24,7 +24,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 use core::time::Duration;
 
-use pros_core::error::PortError;
+use vexide_core::error::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceVisionBrightnessGet, vexDeviceVisionBrightnessSet, vexDeviceVisionLedColorGet,

@@ -13,7 +13,7 @@ use core::{future::Future, task::Poll};
 
 use async_task::Task;
 use executor::EXECUTOR;
-use pros_core::error::Result;
+use vexide_core::error::Result;
 
 mod executor;
 mod reactor;

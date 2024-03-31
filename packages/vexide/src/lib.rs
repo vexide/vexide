@@ -52,30 +52,30 @@
 //! ```
 //!
 //! You may have noticed the `#[derive(Default)]` attribute on these Robot structs.
-//! If you want to learn why, look at the docs for [`pros_async::async_robot`] or [`pros_sync::sync_robot`].
+//! If you want to learn why, look at the docs for [`vexide_async::async_robot`] or [`pros_sync::sync_robot`].
 #![no_std]
 
 #[cfg(feature = "async")]
-pub use pros_async as async_runtime;
+pub use vexide_async as async_runtime;
 #[cfg(feature = "core")]
-pub use pros_core as core;
+pub use vexide_core as core;
 #[cfg(feature = "math")]
-pub use pros_math as math;
+pub use vexide_math as math;
 #[cfg(feature = "panic")]
-pub use pros_panic as panic;
+pub use vexide_panic as panic;
 #[cfg(feature = "sync")]
 pub use pros_sync as sync;
 pub use pros_sys as sys;
 #[cfg(feature = "devices")]
-pub use vex_devices as devices;
+pub use vexide_devices as devices;
 
 /// Commonly used features of pros-rs.
 /// This module is meant to be glob imported.
 pub mod prelude {
     #[cfg(feature = "async")]
-    pub use pros_async::{async_robot, block_on, sleep, spawn, AsyncRobot};
+    pub use vexide_async::{async_robot, block_on, sleep, spawn, AsyncRobot};
     #[cfg(feature = "core")]
-    pub use pros_core::{
+    pub use vexide_core::{
         dbg, eprint, eprintln,
         error::{PortError, Result},
         io::{BufRead, Read, Seek, Write},
@@ -83,11 +83,11 @@ pub mod prelude {
         task::delay,
     };
     #[cfg(feature = "math")]
-    pub use pros_math::{feedforward::MotorFeedforwardController, pid::PidController};
+    pub use vexide_math::{feedforward::MotorFeedforwardController, pid::PidController};
     #[cfg(feature = "sync")]
     pub use pros_sync::{sync_robot, SyncRobot};
     #[cfg(feature = "devices")]
-    pub use vex_devices::{
+    pub use vexide_devices::{
         adi::{
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},

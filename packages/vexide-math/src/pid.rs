@@ -22,7 +22,7 @@ pub struct PidController {
     /// based on the rate of change of the error (predicting future values).
     pub kd: f32,
 
-    last_time: pros_core::time::Instant,
+    last_time: vexide_core::time::Instant,
     last_position: f32,
     i: f32,
 }
@@ -34,7 +34,7 @@ impl PidController {
             kp,
             ki,
             kd,
-            last_time: pros_core::time::Instant::now(),
+            last_time: vexide_core::time::Instant::now(),
             last_position: 0.0,
             i: 0.0,
         }
@@ -61,7 +61,7 @@ impl PidController {
         let output = p + i + d;
 
         self.last_position = position;
-        self.last_time = pros_core::time::Instant::now();
+        self.last_time = vexide_core::time::Instant::now();
 
         output
     }

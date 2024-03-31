@@ -1,6 +1,6 @@
 //! ADI Solenoid Pneumatic Control
 
-use pros_core::bail_on;
+use vexide_core::bail_on;
 use pros_sys::PROS_ERR;
 
 use super::{digital::LogicLevel, AdiDevice, AdiDeviceType, AdiError, AdiPort};

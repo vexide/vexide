@@ -23,7 +23,7 @@
 //! between 1/8 and 1/4 of an inch away from the surface it is measuring. It is also important
 //! to keep lighting in the room consistent, so sensors' readings remain accurate.
 
-use pros_core::bail_on;
+use vexide_core::bail_on;
 use pros_sys::PROS_ERR;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};

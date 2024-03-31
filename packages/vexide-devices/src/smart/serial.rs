@@ -3,7 +3,7 @@
 //! Provides support for using [`SmartPort`]s as generic serial communication devices.
 
 use no_std_io::io;
-use pros_core::error::PortError;
+use vexide_core::error::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericSerialBaudrate, vexDeviceGenericSerialEnable, vexDeviceGenericSerialFlush,
