@@ -28,8 +28,22 @@ pub struct ColdHeader {
     pub program_type: u32,
     /// The owner of the program. PROS sets this to 2.
     pub owner: u32,
+    /// Padding before the options.
+    pub padding: [u32; 2],
     /// A bitfield of program options that change the behavior of some jumptable functions.
     pub options: u32,
+}
+impl ColdHeader {
+    /// Creates a new cold header with the correct magic number and options.
+    pub const fn new(program_type: u32, owner: u32, options: u32) -> Self {
+        Self {
+            magic: *b"XVX5",
+            program_type,
+            owner,
+            padding: [0; 2],
+            options,
+        }
+    }
 }
 
 extern "C" {

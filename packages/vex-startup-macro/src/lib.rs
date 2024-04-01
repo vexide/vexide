@@ -29,11 +29,6 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
         #[link_section = ".cold_magic"]
         #[used] // This is needed to prevent the linker from removing this object in release builds
-        static COLD_HEADER: ::vex_startup::ColdHeader = ::vex_startup::ColdHeader {
-            magic: *b"XVX5",
-            program_type: 0,
-            owner: 2,
-            options: 0, // No optional behavior
-        };
+        static COLD_HEADER: ::vex_startup::ColdHeader = ::vex_startup::::ColdHeader::new(2, 0, 0);
     }.into()
 }
