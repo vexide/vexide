@@ -1,0 +1,42 @@
+[package]
+name = "vexide"
+version = "0.1.0"
+edition = "2021"
+description = "Rust bindings for PROS"
+keywords = ["PROS", "Robotics", "bindings", "vex", "v5"]
+categories = ["os", "api-bindings", "no-std", "science::robotics"]
+license = "MIT"
+repository = "https://github.com/pros-rs/pros-rs"
+readme = "../../README.md"
+authors = [
+    "pros-rs",
+    "Gavin Niederman <gavinniederman@gmail.com>",
+    "doinkythederp <doinkythederp@icloud.com>",
+]
+rust-version = "1.75.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+vexide-async = { version = "0.1.0", path = "../vexide-async", optional = true }
+vexide-devices = { version = "0.1.0", path = "../vexide-devices", optional = true }
+vexide-panic = { version = "0.1.0", path = "../vexide-panic", optional = true }
+vexide-core = { version = "0.1.0", path = "../vexide-core", optional = true }
+vexide-math = { version = "0.1.0", path = "../vexide-math", optional = true }
+pros-sys = { version = "0.7.0", path = "../pros-sys" }
+
+[features]
+default = ["async", "devices", "panic", "display_panics", "core", "math"]
+
+core = ["dep:vexide-core"]
+
+async = ["dep:vexide-async"]
+
+devices = ["dep:vexide-devices"]
+
+math = ["dep:vexide-math"]
+
+panic = ["dep:vexide-panic"]
+display_panics = ["vexide-panic/display_panics"]
+
+dangerous-motor-tuning = ["vexide-devices/dangerous_motor_tuning"]
