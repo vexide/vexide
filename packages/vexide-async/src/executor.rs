@@ -5,25 +5,24 @@ use core::{
     pin::Pin,
     sync::atomic::{AtomicBool, Ordering},
     task::{Context, Poll},
-    time::Duration,
 };
 
 use async_task::{Runnable, Task};
-use vexide_core::{os_task_local, task::delay};
+use vexide_core::sync::Mutex;
+use lazy_static::lazy_static;
 use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
 
-os_task_local! {
-    pub(crate) static EXECUTOR: Executor = Executor::new();
+lazy_static! {
+    pub(crate) static ref EXECUTOR: Mutex<Executor> = Mutex::new(Executor::new());
 }
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
     pub(crate) reactor: RefCell<Reactor>,
 }
-
-impl !Send for Executor {}
+// Executor should probably not be Sync or Send but our target doesn't have threads and we need it to be in a static
 impl !Sync for Executor {}
 
 impl Executor {
@@ -34,7 +33,7 @@ impl Executor {
         }
     }
 
-    pub fn spawn<T>(&'static self, future: impl Future<Output = T> + 'static) -> Task<T> {
+    pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
         //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
         //   TODO: Make sure that the waker can never be sent off the thread.
@@ -79,12 +78,7 @@ impl Executor {
                 if let Poll::Ready(output) = Pin::new(&mut task).poll(&mut cx) {
                     return output;
                 }
-                self.tick();
-                // there might be another future to poll, so we continue without sleeping
-                continue;
             }
-
-            delay(Duration::from_millis(10));
             self.tick();
         }
     }
