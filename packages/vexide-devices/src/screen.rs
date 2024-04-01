@@ -476,66 +476,6 @@ impl Screen {
         Ok(())
     }
 
-    /// Draw an error box to the screen.
-    ///
-    /// This function is internally used by the pros-rs panic handler for displaying
-    /// panic messages graphically before exiting.
-    pub fn draw_error(&mut self, msg: &str) -> Result<(), ScreenError> {
-        const ERROR_BOX_MARGIN: i16 = 16;
-        const ERROR_BOX_PADDING: i16 = 16;
-        const LINE_MAX_WIDTH: usize = 52;
-
-        let error_box_rect = Rect::new(
-            ERROR_BOX_MARGIN,
-            ERROR_BOX_MARGIN,
-            Self::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
-            Self::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
-        );
-
-        self.fill(&error_box_rect, Rgb::RED)?;
-        self.stroke(&error_box_rect, Rgb::WHITE)?;
-
-        let mut buffer = String::new();
-        let mut line: i16 = 0;
-
-        for (i, character) in msg.char_indices() {
-            if !character.is_ascii_control() {
-                buffer.push(character);
-            }
-
-            if character == '\n' || ((buffer.len() % LINE_MAX_WIDTH == 0) && (i > 0)) {
-                self.fill(
-                    &Text::new(
-                        buffer.as_str(),
-                        TextPosition::Point(
-                            ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                            ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Self::LINE_HEIGHT),
-                        ),
-                        TextFormat::Small,
-                    ),
-                    Rgb::WHITE,
-                )?;
-
-                line += 1;
-                buffer.clear();
-            }
-        }
-
-        self.fill(
-            &Text::new(
-                buffer.as_str(),
-                TextPosition::Point(
-                    ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                    ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Self::LINE_HEIGHT),
-                ),
-                TextFormat::Small,
-            ),
-            Rgb::WHITE,
-        )?;
-
-        Ok(())
-    }
-
     /// Get the current touch status of the screen.
     pub fn touch_status(&self) -> Result<TouchEvent, ScreenError> {
         unsafe { pros_sys::screen_touch_status() }.try_into()
