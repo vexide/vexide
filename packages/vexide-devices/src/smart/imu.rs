@@ -257,7 +257,7 @@ pub enum InertialOrientation {
     YDown,
 }
 
-impl From<InertialOrientation> for V5ImuOrientationMode::Type {
+impl From<InertialOrientation> for V5ImuOrientationMode {
     fn from(value: InertialOrientation) -> Self {
         match value {
             InertialOrientation::ZUp => Self::kImuOrientationZUp,
