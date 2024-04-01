@@ -378,6 +378,7 @@ impl From<V5_ControllerStatus> for ControllerConnection {
             V5_ControllerStatus::kV5ControllerOffline => Self::Offline,
             V5_ControllerStatus::kV5ControllerTethered => Self::Tethered,
             V5_ControllerStatus::kV5ControllerVexnet => Self::Vexnet,
+            _ => unreachable!(),
         }
     }
 }
