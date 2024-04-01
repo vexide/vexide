@@ -8,7 +8,7 @@ use core::{
 };
 
 use async_task::{Runnable, Task};
-use vexide_core::{os_task_local, task::delay, sync::Mutex};
+use vexide_core::sync::Mutex;
 use lazy_static::lazy_static;
 use waker_fn::waker_fn;
 
