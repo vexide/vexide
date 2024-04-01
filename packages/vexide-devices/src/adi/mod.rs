@@ -187,11 +187,11 @@ pub enum AdiDeviceType {
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,
     /// or unknown.
-    Unknown(V5_AdiPortConfiguration),
+    Unknown(V5_AdiPortConfiguration::Type),
 }
 
-impl From<V5_AdiPortConfiguration> for AdiDeviceType {
-    fn from(value: V5_AdiPortConfiguration) -> Self {
+impl From<V5_AdiPortConfiguration::Type> for AdiDeviceType {
+    fn from(value: V5_AdiPortConfiguration::Type) -> Self {
         match value {
             V5_AdiPortConfiguration::kAdiPortTypeUndefined => Self::Undefined,
             V5_AdiPortConfiguration::kAdiPortTypeDigitalIn => Self::DigitalIn,
@@ -217,7 +217,7 @@ impl From<V5_AdiPortConfiguration> for AdiDeviceType {
     }
 }
 
-impl From<AdiDeviceType> for V5_AdiPortConfiguration {
+impl From<AdiDeviceType> for V5_AdiPortConfiguration::Type {
     fn from(value: AdiDeviceType) -> Self {
         match value {
             AdiDeviceType::Undefined => V5_AdiPortConfiguration::kAdiPortTypeUndefined,

@@ -473,8 +473,8 @@ pub enum BrakeMode {
     Hold,
 }
 
-impl From<V5MotorBrakeMode> for BrakeMode {
-    fn from(value: V5MotorBrakeMode) -> Self {
+impl From<V5MotorBrakeMode::Type> for BrakeMode {
+    fn from(value: V5MotorBrakeMode::Type) -> Self {
         match value {
             V5MotorBrakeMode::kV5MotorBrakeModeBrake => Self::Brake,
             V5MotorBrakeMode::kV5MotorBrakeModeCoast => Self::Coast,
@@ -483,7 +483,7 @@ impl From<V5MotorBrakeMode> for BrakeMode {
     }
 }
 
-impl From<BrakeMode> for V5MotorBrakeMode {
+impl From<BrakeMode> for V5MotorBrakeMode::Type {
     fn from(value: BrakeMode) -> Self {
         match value {
             BrakeMode::Brake => Self::kV5MotorBrakeModeBrake,
@@ -593,8 +593,8 @@ impl Gearset {
     }
 }
 
-impl From<V5MotorGearset> for Gearset {
-    fn from(value: V5MotorGearset) -> Self {
+impl From<V5MotorGearset::Type> for Gearset {
+    fn from(value: V5MotorGearset::Type) -> Self {
         match value {
             V5MotorGearset::kMotorGearSet_06 => Self::Blue,
             V5MotorGearset::kMotorGearSet_18 => Self::Green,
@@ -603,7 +603,7 @@ impl From<V5MotorGearset> for Gearset {
     }
 }
 
-impl From<Gearset> for V5MotorGearset {
+impl From<Gearset> for V5MotorGearset::Type {
     fn from(value: Gearset) -> Self {
         match value {
             Gearset::Blue => Self::kMotorGearSet_06,

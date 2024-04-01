@@ -246,11 +246,11 @@ pub enum SmartDeviceType {
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,
     /// or unknown.
-    Unknown(V5_DeviceType),
+    Unknown(V5_DeviceType::Type),
 }
 
-impl From<V5_DeviceType> for SmartDeviceType {
-    fn from(value: V5_DeviceType) -> Self {
+impl From<V5_DeviceType::Type> for SmartDeviceType {
+    fn from(value: V5_DeviceType::Type) -> Self {
         match value {
             V5_DeviceType::kDeviceTypeNoSensor => Self::None,
             V5_DeviceType::kDeviceTypeMotorSensor => Self::Motor,
@@ -272,7 +272,7 @@ impl From<V5_DeviceType> for SmartDeviceType {
     }
 }
 
-impl From<SmartDeviceType> for V5_DeviceType {
+impl From<SmartDeviceType> for V5_DeviceType::Type {
     fn from(value: SmartDeviceType) -> Self {
         match value {
             SmartDeviceType::None => V5_DeviceType::kDeviceTypeNoSensor,
