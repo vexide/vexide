@@ -1,0 +1,12 @@
+[package]
+name = "vexide-startup"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vex-sdk = { version = "0.7.2" }
+vexide-startup-macro = { path = "../vexide-startup-macro" }
+vexide-core = { version = "0.1.0", path = "../vexide-core"}
+
+[lints]
+workspace = true

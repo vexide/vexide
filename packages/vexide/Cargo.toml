@@ -23,12 +23,14 @@ vexide-devices = { version = "0.1.0", path = "../vexide-devices", optional = tru
 vexide-panic = { version = "0.1.0", path = "../vexide-panic", optional = true }
 vexide-core = { version = "0.1.0", path = "../vexide-core", optional = true }
 vexide-math = { version = "0.1.0", path = "../vexide-math", optional = true }
+vexide-startup = { version = "0.1.0", path = "../vexide-startup", optional = true }
 pros-sys = { version = "0.7.0", path = "../pros-sys" }
 
 [features]
-default = ["async", "devices", "panic", "display_panics", "core", "math"]
+default = ["async", "devices", "panic", "display_panics", "core", "math", "startup"]
 
 core = ["dep:vexide-core"]
+startup = ["dep:vexide-startup"]
 
 async = ["dep:vexide-async"]
 
