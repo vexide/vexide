@@ -24,7 +24,7 @@ fn controller_connected(id: ControllerId) -> bool {
 pub struct Button {
     id: ControllerId,
     channel: V5_ControllerIndex,
-    last_level: LogicLevel,
+    was_pressed: bool,
 }
 
 impl Button {
@@ -38,10 +38,11 @@ impl Button {
 
     /// Gets the current logic level of a digital input pin.
     pub fn level(&self) -> Result<LogicLevel, ControllerError> {
-        self.validate()?;
         if competition::mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
         }
+
+        self.validate()?;
 
         let value =
             unsafe { vexControllerGet(self.id.into(), self.channel.try_into().unwrap()) != 0 };
@@ -50,7 +51,6 @@ impl Button {
             true => LogicLevel::High,
             false => LogicLevel::Low,
         };
-        self.last_level = level;
 
         Ok(level)
     }
@@ -59,30 +59,20 @@ impl Button {
     ///
     /// This is equivalent shorthand to calling `Self::level().is_high()`.
     pub fn is_pressed(&self) -> Result<bool, ControllerError> {
-        self.validate()?;
         Ok(self.level()?.is_high())
     }
 
     /// Returns `true` if the button has been pressed again since the last time this
     /// function was called.
-    ///
-    /// # Thread Safety
-    ///
-    /// This function is not thread-safe.
-    ///
-    /// Multiple tasks polling a single button may return different results under the
-    /// same circumstances, so only one task should call this function for any given
-    /// switch. E.g., Task A calls this function for buttons 1 and 2. Task B may call
-    /// this function for button 3, but should not for buttons 1 or 2. A typical
-    /// use-case for this function is to call inside opcontrol to detect new button
-    /// presses, and not in any other tasks.
     pub fn was_pressed(&mut self) -> Result<bool, ControllerError> {
-        self.validate()?;
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
+        if self.is_pressed()? {
+            self.was_pressed = false;
+        } else if !self.was_pressed {
+            self.was_pressed = true;
+            return Ok(true);
         }
-        let current_level = self.level()?;
-        Ok(self.last_level.is_low() && current_level.is_high())
+
+        Ok(false)
     }
 }
 
@@ -295,62 +285,62 @@ impl Controller {
             button_a: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonA,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             button_b: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonB,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             button_x: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonX,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             button_y: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonY,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             button_up: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonUp,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             button_down: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonDown,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             button_left: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonLeft,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             button_right: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonRight,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             left_trigger_1: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonL1,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             left_trigger_2: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonL2,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             right_trigger_1: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonR1,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
             right_trigger_2: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonR2,
-                last_level: LogicLevel::Low,
+                was_pressed: false,
             },
         }
     }
@@ -380,11 +370,7 @@ impl Controller {
     /// dots are short rumbles, dashes are long rumbles, and spaces are pauses. Maximum
     /// supported length is 8 characters.
     pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
-        self.validate()?;
-
-        self.screen.set_text(pattern, 3, 0);
-
-        Ok(())
+        self.screen.set_text(pattern, 3, 0)
     }
 }
 

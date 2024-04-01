@@ -261,7 +261,7 @@ impl io::Write for SerialPort {
         }
 
         match unsafe {
-            vexDeviceGenericSerialTransmit(self.device_handle(), buf.as_mut_ptr(), buf.len() as i32)
+            vexDeviceGenericSerialTransmit(self.device_handle(), buf.as_ptr(), buf.len() as i32)
         } {
             -1 => Err(io::Error::new(
                 io::ErrorKind::Other,

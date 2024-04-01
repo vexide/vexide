@@ -3,31 +3,14 @@
 use pros_core::error::PortError;
 use snafu::Snafu;
 
-//TODO: much more in depth module documentation for device modules as well as this module.
 pub mod analog;
 pub mod digital;
 pub mod pwm;
 
-pub mod encoder;
-pub mod gyro;
-pub mod linetracker;
-pub mod motor;
-pub mod potentiometer;
-pub mod solenoid;
-pub mod switch;
-pub mod ultrasonic;
-
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
-pub use encoder::AdiEncoder;
-pub use gyro::AdiGyro;
-pub use linetracker::AdiLineTracker;
-pub use motor::AdiMotor;
-pub use potentiometer::AdiPotentiometer;
-pub use solenoid::AdiSolenoid;
-pub use ultrasonic::AdiUltrasonic;
 use vex_sdk::{
-    vexDeviceAdiPortConfigGet, vexDeviceGetByIndex, V5_AdiPortConfiguration, V5_DeviceT,
+    vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex, V5_AdiPortConfiguration, V5_DeviceT
 };
 
 use crate::smart::{validate_port, SmartDeviceType};
@@ -88,13 +71,27 @@ impl AdiPort {
         unsafe { vexDeviceGetByIndex(self.internal_expander_index()) }
     }
 
-    pub(crate) fn validate_port(&self) -> Result<(), PortError> {
+    pub(crate) fn validate_expander(&self) -> Result<(), PortError> {
         validate_port(self.internal_expander_index() as u8, SmartDeviceType::Adi)
+    }
+
+    pub(crate) fn configure(&mut self, config: AdiDeviceType) -> Result<(), AdiError> {
+        self.validate_expander()?;
+
+        unsafe {
+            vexDeviceAdiPortConfigSet(
+                self.device_handle(),
+                self.internal_index(),
+                config.into(),
+            );
+        }
+
+        Ok(())
     }
 
     /// Get the type of device this port is currently configured as.
     pub fn configured_type(&self) -> Result<AdiDeviceType, AdiError> {
-        self.validate_port()?;
+        self.validate_expander()?;
 
         Ok(
             unsafe { vexDeviceAdiPortConfigGet(self.device_handle(), self.internal_index()) }
@@ -214,6 +211,7 @@ impl From<V5_AdiPortConfiguration> for AdiDeviceType {
             V5_AdiPortConfiguration::kAdiPortTypeLegacyAccelerometer => Self::Accelerometer,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyPwm => Self::Motor,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyPwmSlew => Self::MotorSlew,
+            #[allow(unreachable_patterns)]
             other => Self::Unknown(other),
         }
     }
@@ -248,21 +246,6 @@ impl From<AdiDeviceType> for V5_AdiPortConfiguration {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when working with ADI devices.
 pub enum AdiError {
-    /// Another resource is currently trying to access the ADI.
-    AlreadyInUse,
-
-    /// PROS returned an unrecognized device type.
-    UnknownDeviceType,
-
-    /// The port specified has not been configured for the device type specified.
-    PortNotConfigured,
-
-    /// ADI devices may only be initialized from one expander port.
-    ExpanderPortMismatch,
-
-    /// A given value is not correct, or the buffer is null.
-    InvalidValue,
-
     #[snafu(display("{source}"), context(false))]
     /// An error occurred while interacting with a port.
     Port {

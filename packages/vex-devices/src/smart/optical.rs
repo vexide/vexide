@@ -137,7 +137,7 @@ impl OpticalSensor {
 
     /// Get the processed RGB data from the sensor
     pub fn rgb(&self) -> Result<OpticalRgb, OpticalError> {
-        self.validate_port();
+        self.validate_port()?;
 
         let mut data = V5_DeviceOpticalRgb::default();
         unsafe { vexDeviceOpticalRgbGet(self.device_handle(), &mut data) };
@@ -147,7 +147,7 @@ impl OpticalSensor {
 
     /// Get the raw, unprocessed RGBC data from the sensor
     pub fn raw(&self) -> Result<OpticalRaw, OpticalError> {
-        self.validate_port();
+        self.validate_port()?;
 
         let mut data = V5_DeviceOpticalRaw::default();
         unsafe { vexDeviceOpticalRawGet(self.device_handle(), &mut data) };

@@ -1,7 +1,6 @@
 //! ADI Pulse-width modulation (PWM).
 
-use pros_core::bail_on;
-use pros_sys::PROS_ERR;
+use vex_sdk::vexDeviceAdiValueSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 
@@ -13,14 +12,8 @@ pub struct AdiPwmOut {
 
 impl AdiPwmOut {
     /// Create a pwm output from an [`AdiPort`].
-    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_port_set_config(
-                port.internal_expander_index(),
-                port.index(),
-                pros_sys::E_ADI_ANALOG_OUT,
-            )
-        });
+    pub fn new(mut port: AdiPort) -> Result<Self, AdiError> {
+        port.configure(AdiDeviceType::PwmOut)?;
 
         Ok(Self { port })
     }
@@ -30,13 +23,13 @@ impl AdiPwmOut {
     /// This value is sent over 16ms periods with pulse widths ranging from roughly
     /// 0.94mS to 2.03mS.
     pub fn set_output(&mut self, value: u8) -> Result<(), AdiError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_port_set_value(
-                self.port.internal_expander_index(),
-                self.port.index(),
+        unsafe {
+            vexDeviceAdiValueSet(
+                self.port.device_handle(),
+                self.port.internal_index(),
                 value as i32,
             )
-        });
+        }
 
         Ok(())
     }

@@ -1,7 +1,6 @@
 //! Digital input and output ADI devices
 
-use pros_core::bail_on;
-use pros_sys::PROS_ERR;
+use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 
@@ -61,23 +60,19 @@ pub struct AdiDigitalIn {
 
 impl AdiDigitalIn {
     /// Create a digital input from an ADI port.
-    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_port_set_config(
-                port.internal_expander_index(),
-                port.index(),
-                pros_sys::E_ADI_DIGITAL_IN,
-            )
-        });
+    pub fn new(mut port: AdiPort) -> Result<Self, AdiError> {
+        port.configure(AdiDeviceType::DigitalIn)?;
 
         Ok(Self { port })
     }
 
     /// Gets the current logic level of a digital input pin.
     pub fn level(&self) -> Result<LogicLevel, AdiError> {
-        let value = bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_digital_read(self.port.internal_expander_index(), self.port.index())
-        }) != 0;
+        self.port.validate_expander()?;
+
+        let value =
+            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
+                != 0;
 
         Ok(match value {
             true => LogicLevel::High,
@@ -120,27 +115,21 @@ pub struct AdiDigitalOut {
 
 impl AdiDigitalOut {
     /// Create a digital output from an [`AdiPort`].
-    pub fn new(port: AdiPort) -> Result<Self, AdiError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_port_set_config(
-                port.internal_expander_index(),
-                port.index(),
-                pros_sys::E_ADI_DIGITAL_OUT,
-            )
-        });
+    pub fn new(mut port: AdiPort) -> Result<Self, AdiError> {
+        port.configure(AdiDeviceType::DigitalOut)?;
 
         Ok(Self { port })
     }
 
     /// Sets the digital logic level (high or low) of a pin.
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), AdiError> {
-        bail_on!(PROS_ERR, unsafe {
-            pros_sys::ext_adi_digital_write(
-                self.port.internal_expander_index(),
-                self.port.index(),
-                level.is_high(),
-            )
-        });
+        unsafe {
+            vexDeviceAdiValueSet(
+                self.port.device_handle(),
+                self.port.internal_index(),
+                level.is_high() as i32,
+            );
+        }
 
         Ok(())
     }

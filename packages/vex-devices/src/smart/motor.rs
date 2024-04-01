@@ -261,10 +261,10 @@ impl Motor {
     pub fn raw_position(&self) -> Result<(i32, SmartDeviceTimestamp), MotorError> {
         self.validate_port()?;
 
-        let mut timestamp = 0 as *mut u32;
-        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device_handle(), timestamp) };
+        let mut timestamp: u32 = 0;
+        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device_handle(), &mut timestamp) };
 
-        Ok((ticks, SmartDeviceTimestamp(unsafe { *timestamp })))
+        Ok((ticks, SmartDeviceTimestamp(timestamp)))
     }
 
     /// Returns the electrical current draw of the motor in amps.
@@ -353,7 +353,7 @@ impl Motor {
 
     /// Get the fault flags of the motor.
     pub fn faults(&self) -> Result<MotorFaults, MotorError> {
-        self.validate_port();
+        self.validate_port()?;
 
         Ok(MotorFaults::from_bits_retain(unsafe {
             vexDeviceMotorFaultsGet(self.device_handle())
