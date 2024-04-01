@@ -478,7 +478,7 @@ impl Screen {
 
     /// Draw an error box to the screen.
     ///
-    /// This function is internally used by the pros-rs panic handler for displaying
+    /// This function is internally used by the vexide panic handler for displaying
     /// panic messages graphically before exiting.
     pub fn draw_error(&mut self, msg: &str) -> Result<(), ScreenError> {
         const ERROR_BOX_MARGIN: i16 = 16;

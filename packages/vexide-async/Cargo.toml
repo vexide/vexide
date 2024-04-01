@@ -3,16 +3,16 @@ name = "vexide-async"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "A simple async executor for pros-rs"
+description = "The async executor at the core of vexide"
 keywords = ["PROS", "Robotics", "bindings", "async", "vex", "v5"]
 categories = [
     "no-std",
     "science::robotics",
     "Asynchronous"
 ]
-repository = "https://github.com/gavin-niederman/pros-rs"
+repository = "https://github.com/vexide/vexide"
 authors = [
-    "pros-rs",
+    "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
 ]

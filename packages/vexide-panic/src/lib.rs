@@ -1,4 +1,4 @@
-//! Panic handler implementation for [`pros-rs`](https://crates.io/crates/pros-rs).
+//! Panic handler implementation for [`vexide`](https://crates.io/crates/vexide).
 //! Supports printing a backtrace when running in the simulator.
 //! If the `display_panics` feature is enabled, it will also display the panic message on the V5 Brain display.
 
@@ -20,7 +20,7 @@ extern "C" {
 
 /// Draw an error box to the screen.
 ///
-/// This function is internally used by the pros-rs panic handler for displaying
+/// This function is internally used by the vexide panic handler for displaying
 /// panic messages graphically before exiting.
 #[cfg(feature = "display_panics")]
 fn draw_error(
@@ -83,7 +83,7 @@ fn draw_error(
 }
 
 #[panic_handler]
-/// The panic handler for pros-rs.
+/// The panic handler for vexide.
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     let current_task = vexide_core::task::current();
 

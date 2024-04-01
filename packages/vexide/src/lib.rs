@@ -1,12 +1,14 @@
-//! # Pros
-//! Opinionated bindings for the PROS library and kernel.
-//! Not everything in this library is one to one with the PROS API.
+//! # vexide
+//! Work in progress high level bindings for the V5 Brain VEX SDK.
+//! Unlike other libraries for the V5 Brain, vexide doesn't use an RTOS.
+//! Instead, vexide leverages Rust's powerful async/await (cooperative multitasking) to allow faster and more user friendly 3dfcode.
 //!
 //! Advantages over similar libraries or PROS itself:
-//! - Pros-rs has an [`Async executor`](async_runtime) which allows for easy and performant asynchronous code.
-//! - Simulation support with [`pros-simulator`](https://crates.io/crates/pros-simulator) and any interface with it (e.g. [`pros-simulator-gui`](https://github.com/pros-rs/pros-simulator-gui))
-//! - Active development. Pros-rs is actively developed and maintained.
-//! - Pros-rs is a real crate on crates.io instead of a template, or similar. This allows for dependency management with cargo.
+//! - vexideindings for the PROS library and kernel.
+//! Not everything in this library is one to one with the PROS API. has an [`Async executor`](async_runtime) which allows for easy and performant asynchronous code.
+//! - Simulation support with [`pros-simulator`](https://crates.io/crates/pros-simulator) and any interface with it (e.g. [`pros-simulator-gui`](https://github.com/vexide/pros-simulator-gui))
+//! - Active development. vexide is actively developed and maintained.
+//! - vexide is a real crate on crates.io instead of a template, or similar. This allows for dependency management with cargo.
 //!
 //! # Usage
 //!
@@ -67,7 +69,7 @@ pub use pros_sys as sys;
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
 
-/// Commonly used features of pros-rs.
+/// Commonly used features of vexide.
 /// This module is meant to be glob imported.
 pub mod prelude {
     #[cfg(feature = "async")]
