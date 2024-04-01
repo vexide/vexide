@@ -3,16 +3,15 @@
 //! Contains user calls to the v5 screen for touching and displaying graphics.
 //! The [`Fill`] trait can be used to draw shapes and text to the screen.
 
-use alloc::{borrow::ToOwned, ffi::CString, string::String, vec::Vec};
+use alloc::{ffi::CString, string::String, vec::Vec};
 use core::mem;
 
-use vexide_core::{bail_on, map_errno};
-use pros_sys::PROS_ERR;
 use snafu::Snafu;
 use vex_sdk::{
     vexDisplayBackgroundColor, vexDisplayCircleDraw, vexDisplayCircleFill, vexDisplayCopyRect,
     vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw, vexDisplayPixelSet,
-    vexDisplayRectDraw, vexDisplayRectFill, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
+    vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll, vexDisplayScrollRect,
+    vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
 
 use crate::color::{IntoRgb, Rgb};
@@ -226,7 +225,7 @@ impl Fill for Text {
 
             match self.position {
                 TextPosition::Point(x, y) => {
-                    pros_sys::screen_print_at(self.format.into(), x, y, self.text.as_ptr())
+                    pros_sys::screen_print_at(self.format.into(), x, y , self.text.as_ptr())
                 }
                 TextPosition::Line(line) => {
                     pros_sys::screen_print(self.format.into(), line, self.text.as_ptr())
@@ -320,9 +319,7 @@ impl Screen {
     /// This function effectively y-offsets all pixels drawn to the display buffer by
     /// a number (`offset`) of pixels.
     pub fn scroll(&mut self, start: i16, offset: i16) -> Result<(), ScreenError> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_scroll(start, offset)
-        });
+        unsafe { vexDisplayScroll(start as i32, offset as i32) }
 
         Ok(())
     }
@@ -339,9 +336,7 @@ impl Screen {
         y1: i16,
         offset: i16,
     ) -> Result<(), ScreenError> {
-        bail_on!(PROS_ERR as u32, unsafe {
-            pros_sys::screen_scroll_area(x0, y0, x1, y1, offset)
-        });
+        unsafe { vexDisplayScrollRect(x0 as i32, y0 as i32, x1 as i32, y1 as i32, offset as i32) }
 
         Ok(())
     }
@@ -392,7 +387,7 @@ impl Screen {
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((x1 - x0) as u32 * (y1 - y0) as u32) as usize;
         if raw_buf.len() != expected_size {
-            return Err(ScreenError::CopyBufferWrongSize {
+            return Err(ScreenError::BufferSize {
                 buffer_size: raw_buf.len(),
                 expected_size,
             });
@@ -495,20 +490,11 @@ impl Screen {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the screen.
 pub enum ScreenError {
-    /// Another resource is currently trying to access the screen mutex.
-    ConcurrentAccess,
-
     /// The given buffer of colors was wrong size to fill the specified area.
-    CopyBufferWrongSize {
+    BufferSize {
         /// The size of the buffer.
         buffer_size: usize,
         /// The expected size of the buffer.
         expected_size: usize,
     },
-}
-
-map_errno! {
-    ScreenError {
-        EACCES => Self::ConcurrentAccess,
-    }
 }
