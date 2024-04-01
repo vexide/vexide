@@ -16,7 +16,7 @@ use crate::{
 };
 
 fn controller_connected(id: ControllerId) -> bool {
-    unsafe { vexControllerConnectionStatusGet(id.into()) as u32 != 0 }
+    unsafe { vexControllerConnectionStatusGet(id.into()).0 as u32 != 0 }
 }
 
 /// Digital Controller Button
@@ -222,7 +222,7 @@ impl ControllerScreen {
             .into_raw();
 
         unsafe {
-            vexControllerTextSet(id as u32, (line + 1) as _, (col + 1) as _, text as *const _);
+            vexControllerTextSet(id.0 as u32, (line + 1) as _, (col + 1) as _, text as *const _);
         }
 
         // stop rust from leaking the CString
