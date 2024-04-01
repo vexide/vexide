@@ -2,6 +2,8 @@
 //!
 //! Controllers are identified by their id, which is either 0 (master) or 1 (partner).
 //! State of a controller can be checked by calling [`Controller::state`] which will return a struct with all of the buttons' and joysticks' state.
+use core::time::Duration;
+
 use alloc::ffi::CString;
 
 use snafu::Snafu;
@@ -253,6 +255,9 @@ impl From<ControllerId> for V5_ControllerId {
 }
 
 impl Controller {
+    /// The update rate of the controller.
+    pub const UPDATE_RATE: Duration = Duration::from_millis(25);
+
     fn validate(&self) -> Result<(), ControllerError> {
         if !controller_connected(self.id) {
             return Err(ControllerError::NotConnected);
