@@ -42,7 +42,7 @@ impl RadioLink {
         // Once we call [`vexDeviceGenericRadioConnection`], this type
         // will be changed to be generic serial, but we haven't called
         // it yet.
-        validate_port(link.port_index(), SmartDeviceType::Radio);
+        validate_port(link.port_index(), SmartDeviceType::Radio)?;
 
         unsafe {
             vexDeviceGenericRadioConnection(
@@ -156,7 +156,7 @@ impl io::Write for RadioLink {
         }
 
         match unsafe {
-            vexDeviceGenericRadioTransmit(self.device_handle(), buf.as_mut_ptr(), buf.len() as u16)
+            vexDeviceGenericRadioTransmit(self.device_handle(), buf.as_ptr(), buf.len() as u16)
         } {
             -1 => Err(io::Error::new(
                 io::ErrorKind::Other,

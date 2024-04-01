@@ -110,11 +110,7 @@ impl VisionSensor {
             vMean: signature.v_threshold.1,
             vMax: signature.v_threshold.2,
             range: signature.range,
-            mType: if self
-                .codes
-                .into_iter()
-                .any(|code| code.contains_signature(id))
-            {
+            mType: if self.codes.iter().any(|code| code.contains_signature(id)) {
                 V5VisionBlockType::kVisionTypeColorCode
             } else {
                 V5VisionBlockType::kVisionTypeNormal
@@ -176,7 +172,7 @@ impl VisionSensor {
     }
 
     /// Get all signatures currently stored on the sensor's onboard volatile memory.
-    pub fn signatures(&self, id: u8) -> Result<[Option<VisionSignature>; 7], VisionError> {
+    pub fn signatures(&self) -> Result<[Option<VisionSignature>; 7], VisionError> {
         Ok([
             self.signature(1)?,
             self.signature(2)?,
@@ -202,22 +198,18 @@ impl VisionSensor {
     pub fn add_code(&mut self, code: impl Into<VisionCode>) -> Result<(), VisionError> {
         self.validate_port()?;
 
-        let device = self.device_handle();
-
         let code = code.into();
 
-        unsafe {
-            self.set_signature_type(code.0, V5VisionBlockType::kVisionTypeColorCode as _)?;
-            self.set_signature_type(code.1, V5VisionBlockType::kVisionTypeColorCode as _)?;
-            if let Some(sig_3) = code.2 {
-                self.set_signature_type(sig_3, V5VisionBlockType::kVisionTypeColorCode as _)?;
-            }
-            if let Some(sig_4) = code.3 {
-                self.set_signature_type(sig_4, V5VisionBlockType::kVisionTypeColorCode as _)?;
-            }
-            if let Some(sig_5) = code.4 {
-                self.set_signature_type(sig_5, V5VisionBlockType::kVisionTypeColorCode as _)?;
-            }
+        self.set_signature_type(code.0, V5VisionBlockType::kVisionTypeColorCode as _)?;
+        self.set_signature_type(code.1, V5VisionBlockType::kVisionTypeColorCode as _)?;
+        if let Some(sig_3) = code.2 {
+            self.set_signature_type(sig_3, V5VisionBlockType::kVisionTypeColorCode as _)?;
+        }
+        if let Some(sig_4) = code.3 {
+            self.set_signature_type(sig_4, V5VisionBlockType::kVisionTypeColorCode as _)?;
+        }
+        if let Some(sig_5) = code.4 {
+            self.set_signature_type(sig_5, V5VisionBlockType::kVisionTypeColorCode as _)?;
         }
 
         self.codes.push(code);
@@ -387,7 +379,7 @@ impl VisionSensor {
 
     /// Sets the vision sensor's detection mode. See [`VisionMode`] for more information on what
     /// each mode does.
-    pub fn set_mode(&self, mode: VisionMode) -> Result<(), VisionError> {
+    pub fn set_mode(&mut self, mode: VisionMode) -> Result<(), VisionError> {
         self.validate_port()?;
 
         let device = self.device_handle();
@@ -538,7 +530,7 @@ impl VisionSignature {
             u_threshold: (u_min, u_max, u_mean),
             v_threshold: (v_min, v_max, v_mean),
             range,
-            flags: Default::default(),
+            flags: 0,
         }
     }
 }
@@ -582,7 +574,7 @@ impl VisionCode {
         sig_4: Option<u8>,
         sig_5: Option<u8>,
     ) -> Self {
-        Self(sig_1, sig_2, sig_3, sig_4, sig_4)
+        Self(sig_1, sig_2, sig_3, sig_4, sig_5)
     }
 
     /// Creates a [`VisionCode`] from a bit representation of its signature IDs.
@@ -634,7 +626,7 @@ impl VisionCode {
 
     /// Returns the internal ID used by the sensor to determine which signatures
     /// belong to which code.
-    pub const fn id(&self) -> u16 {
+    pub fn id(&self) -> u16 {
         let mut id: u16 = 0;
 
         id = (id << 3) | self.0 as u16;
@@ -687,6 +679,7 @@ impl From<(u8, u8, u8, u8, u8)> for VisionCode {
     }
 }
 
+/// A possible "detection mode" for the vision sensor.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VisionMode {
     /// Uses color signatures and codes to identify objects in blocks.

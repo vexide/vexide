@@ -69,17 +69,17 @@ impl InertialSensor {
     }
 
     /// Check if the Intertial Sensor is currently calibrating.
-    pub fn is_calibrating(&mut self) -> Result<bool, InertialError> {
+    pub fn is_calibrating(&self) -> Result<bool, InertialError> {
         Ok(self.status()?.contains(InertialStatus::CALIBRATING))
     }
 
     /// Check if the Intertial Sensor was calibrated using auto-calibration.
-    pub fn is_auto_calibrated(&mut self) -> Result<bool, InertialError> {
+    pub fn is_auto_calibrated(&self) -> Result<bool, InertialError> {
         Ok(self.status()?.contains(InertialStatus::AUTO_CALIBRTED))
     }
 
     /// Check if the Intertial Sensor was calibrated using auto-calibration.
-    pub fn physical_orientation(&mut self) -> Result<InertialOrientation, InertialError> {
+    pub fn physical_orientation(&self) -> Result<InertialOrientation, InertialError> {
         Ok(self.status()?.physical_orientation())
     }
 
@@ -296,6 +296,7 @@ impl InertialStatus {
             3 => InertialOrientation::XDown,
             4 => InertialOrientation::YUp,
             5 => InertialOrientation::YDown,
+            _ => unreachable!(),
         }
     }
 }
