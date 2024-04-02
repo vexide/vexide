@@ -8,16 +8,18 @@ use core::mem;
 
 use snafu::Snafu;
 use vex_sdk::{
-    vexDisplayBackgroundColor, vexDisplayCircleDraw, vexDisplayCircleFill, vexDisplayCopyRect,
-    vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw, vexDisplayPixelSet,
-    vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll, vexDisplayScrollRect,
+    vexDisplayBackgroundColor, vexDisplayBigCenteredString, vexDisplayBigString,
+    vexDisplayBigStringAt, vexDisplayCenteredString, vexDisplayCircleDraw, vexDisplayCircleFill,
+    vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
+    vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
+    vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
     vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
 
 use crate::color::{IntoRgb, Rgb};
 
-#[derive(Debug, Eq, PartialEq)]
 /// Represents the physical display on the V5 Brain.
+#[derive(Debug, Eq, PartialEq)]
 pub struct Screen {
     writer_buffer: String,
     current_line: i16,
@@ -65,8 +67,8 @@ pub trait Stroke {
     fn stroke(&self, screen: &mut Screen, color: impl IntoRgb);
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// A circle that can be drawn on the screen.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Circle {
     x: i16,
     y: i16,
@@ -99,9 +101,9 @@ impl Stroke for Circle {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// A line that can be drawn on the screen.
 /// The width is the same as the pen width.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Line {
     x0: i16,
     y0: i16,
@@ -125,8 +127,8 @@ impl Fill for Line {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// A rectangle that can be drawn on the screen.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
     x0: i16,
     y0: i16,
@@ -164,30 +166,23 @@ impl Fill for Rect {
     }
 }
 
-#[repr(i32)]
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Options for how a text object should be formatted.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum TextFormat {
     /// Small text.
-    Small = pros_sys::E_TEXT_SMALL,
+    Small,
     /// Medium text.
-    Medium = pros_sys::E_TEXT_MEDIUM,
+    Medium,
     /// Large text.
-    Large = pros_sys::E_TEXT_LARGE,
+    Large,
     /// Medium horizontally centered text.
-    MediumCenter = pros_sys::E_TEXT_MEDIUM_CENTER,
+    MediumCenter,
     /// Large horizontally centered text.
-    LargeCenter = pros_sys::E_TEXT_LARGE_CENTER,
+    LargeCenter,
 }
 
-impl From<TextFormat> for pros_sys::text_format_e_t {
-    fn from(value: TextFormat) -> pros_sys::text_format_e_t {
-        value as _
-    }
-}
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// The position of a text object on the screen.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum TextPosition {
     /// A point to draw the text at.
     Point(i16, i16),
@@ -195,8 +190,8 @@ pub enum TextPosition {
     Line(i16),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
 /// A peice of text that can be drawn on the display.
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text {
     position: TextPosition,
     text: CString,
@@ -221,22 +216,39 @@ impl Fill for Text {
         // This implementation is technically broken because it doesn't account errno.
         // This will be fixed once we have switched to vex-sdk.
         unsafe {
-            pros_sys::screen_set_pen(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into_rgb().into());
 
             match self.position {
-                TextPosition::Point(x, y) => {
-                    pros_sys::screen_print_at(self.format.into(), x, y , self.text.as_ptr())
-                }
-                TextPosition::Line(line) => {
-                    pros_sys::screen_print(self.format.into(), line, self.text.as_ptr())
-                }
+                TextPosition::Point(x, y) => match self.format {
+                    TextFormat::Small | TextFormat::LargeCenter => {
+                        vexDisplaySmallStringAt(x as i32, y as i32, self.text.as_ptr())
+                    }
+                    TextFormat::Medium | TextFormat::MediumCenter => {
+                        vexDisplayStringAt(x as i32, y as i32, self.text.as_ptr())
+                    }
+                    TextFormat::Large => {
+                        vexDisplayBigStringAt(x as i32, y as i32, self.text.as_ptr())
+                    }
+                },
+                TextPosition::Line(line) => match self.format {
+                    TextFormat::Small | TextFormat::Medium => {
+                        vexDisplayString(line as i32, self.text.as_ptr())
+                    }
+                    TextFormat::Large => vexDisplayBigString(line as i32, self.text.as_ptr()),
+                    TextFormat::MediumCenter => {
+                        vexDisplayCenteredString(line as i32, self.text.as_ptr())
+                    }
+                    TextFormat::LargeCenter => {
+                        vexDisplayBigCenteredString(line as i32, self.text.as_ptr())
+                    }
+                },
             };
         }
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// A touch event on the screen.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct TouchEvent {
     /// Touch state.
     pub state: TouchState,
@@ -250,16 +262,15 @@ pub struct TouchEvent {
     pub release_count: i32,
 }
 
-#[repr(i32)]
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// The state of a given touch.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum TouchState {
     /// The touch has been released.
-    Released = pros_sys::E_TOUCH_RELEASED,
+    Released,
     /// The screen has been touched.
-    Pressed = pros_sys::E_TOUCH_PRESSED,
+    Pressed,
     /// The touch is still being held.
-    Held = pros_sys::E_TOUCH_HELD,
+    Held,
 }
 
 impl From<V5_TouchEvent> for TouchState {
@@ -268,6 +279,7 @@ impl From<V5_TouchEvent> for TouchState {
             V5_TouchEvent::kTouchEventPress => Self::Pressed,
             V5_TouchEvent::kTouchEventRelease => Self::Released,
             V5_TouchEvent::kTouchEventPressAuto => Self::Held,
+            _ => unreachable!(),
         }
     }
 }
