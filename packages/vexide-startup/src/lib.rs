@@ -88,7 +88,8 @@ pub unsafe fn program_entry() {
             "
         );
         // Initialize the heap allocator
-        #[cfg(target_arch = "arm")] // This is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
+        #[cfg(target_arch = "arm")]
+        // This is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
         vexide_core::allocator::vexos::init_heap();
         // Call the user code
         main()

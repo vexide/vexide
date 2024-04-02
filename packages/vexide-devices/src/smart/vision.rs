@@ -24,7 +24,6 @@ extern crate alloc;
 use alloc::vec::Vec;
 use core::time::Duration;
 
-use crate::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceVisionBrightnessGet, vexDeviceVisionBrightnessSet, vexDeviceVisionLedColorGet,
@@ -38,7 +37,7 @@ use vex_sdk::{
 };
 
 use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
-use crate::color::Rgb;
+use crate::{color::Rgb, PortError};
 
 /// VEX Vision Sensor
 ///
@@ -114,7 +113,8 @@ impl VisionSensor {
                 V5VisionBlockType::kVisionTypeColorCode
             } else {
                 V5VisionBlockType::kVisionTypeNormal
-            }.0 as _,
+            }
+            .0 as _,
             ..Default::default()
         };
 
@@ -239,7 +239,7 @@ impl VisionSensor {
                 V5VisionWBMode::kVisionWBStart => WhiteBalance::StartupAuto,
                 V5VisionWBMode::kVisionWBManual => {
                     WhiteBalance::Manual(unsafe { vexDeviceVisionWhiteBalanceGet(handle) }.into())
-                },
+                }
                 _ => unreachable!(),
             },
         )
@@ -325,7 +325,7 @@ impl VisionSensor {
                         Rgb::new(led_color.red, led_color.green, led_color.blue),
                         led_color.brightness as f64 / 100.0,
                     )
-                },
+                }
                 _ => unreachable!(),
             },
         )

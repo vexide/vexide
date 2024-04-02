@@ -2,7 +2,11 @@
 //!
 //! Types implemented here are specifically designed to mimic the standard library.
 
-use core::{cell::UnsafeCell, fmt::Debug, sync::atomic::{ AtomicU8, Ordering}};
+use core::{
+    cell::UnsafeCell,
+    fmt::Debug,
+    sync::atomic::{AtomicU8, Ordering},
+};
 
 struct MutexState(AtomicU8);
 impl MutexState {
@@ -12,7 +16,9 @@ impl MutexState {
 
     /// Returns true if the lock was acquired.
     fn try_lock(&self) -> bool {
-        self.0.compare_exchange(0, 1, Ordering::Acquire, Ordering::Acquire).is_ok()
+        self.0
+            .compare_exchange(0, 1, Ordering::Acquire, Ordering::Acquire)
+            .is_ok()
     }
 
     fn unlock(&self) {

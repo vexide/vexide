@@ -2,7 +2,6 @@
 //!
 //! Pretty much one to one with the PROS C and CPP API, except Result is used instead of ERRNO values.
 
-use crate::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceDistanceConfidenceGet, vexDeviceDistanceDistanceGet, vexDeviceDistanceObjectSizeGet,
@@ -10,6 +9,7 @@ use vex_sdk::{
 };
 
 use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use crate::PortError;
 
 /// A physical distance sensor plugged into a port.
 /// Distance sensors can only keep track of one object at a time.

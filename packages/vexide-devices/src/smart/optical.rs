@@ -2,7 +2,6 @@
 
 use core::time::Duration;
 
-use crate::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureDisable, vexDeviceOpticalGestureEnable,
@@ -14,6 +13,7 @@ use vex_sdk::{
 };
 
 use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use crate::PortError;
 
 /// Represents a smart port configured as a V5 optical sensor
 #[derive(Debug, Eq, PartialEq)]

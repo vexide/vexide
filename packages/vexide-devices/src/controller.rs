@@ -2,9 +2,8 @@
 //!
 //! Controllers are identified by their id, which is either 0 (master) or 1 (partner).
 //! State of a controller can be checked by calling [`Controller::state`] which will return a struct with all of the buttons' and joysticks' state.
-use core::time::Duration;
-
 use alloc::ffi::CString;
+use core::time::Duration;
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -18,7 +17,9 @@ use crate::{
 };
 
 fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
-    if unsafe { vexControllerConnectionStatusGet(id.into()) != V5_ControllerStatus::kV5ControllerOffline } {
+    if unsafe {
+        vexControllerConnectionStatusGet(id.into()) != V5_ControllerStatus::kV5ControllerOffline
+    } {
         return Err(ControllerError::Offline);
     }
 
@@ -205,7 +206,12 @@ impl ControllerScreen {
             .into_raw();
 
         unsafe {
-            vexControllerTextSet(id.0 as u32, (line + 1) as _, (col + 1) as _, text as *const _);
+            vexControllerTextSet(
+                id.0 as u32,
+                (line + 1) as _,
+                (col + 1) as _,
+                text as *const _,
+            );
         }
 
         // stop rust from leaking the CString

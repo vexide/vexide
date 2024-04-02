@@ -5,7 +5,6 @@
 use alloc::ffi::CString;
 
 use no_std_io::io;
-use crate::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus, vexDeviceGenericRadioReceive,
@@ -14,6 +13,7 @@ use vex_sdk::{
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use crate::PortError;
 
 /// Represents a smart port configured as a VEXLink radio.
 ///

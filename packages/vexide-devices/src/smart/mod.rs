@@ -38,9 +38,9 @@ pub use imu::InertialSensor;
 pub use link::RadioLink;
 pub use motor::Motor;
 pub use optical::OpticalSensor;
-use snafu::Snafu;
 pub use rotation::RotationSensor;
 pub use serial::SerialPort;
+use snafu::Snafu;
 use vex_sdk::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
 pub use vision::VisionSensor;
 

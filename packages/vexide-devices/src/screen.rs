@@ -334,14 +334,7 @@ impl Screen {
     ///
     /// This will effectively y-offset the display buffer in this area by
     /// `offset` pixels.
-    pub fn scroll_area(
-        &mut self,
-        x0: i16,
-        y0: i16,
-        x1: i16,
-        y1: i16,
-        offset: i16,
-    ) {
+    pub fn scroll_area(&mut self, x0: i16, y0: i16, x1: i16, y1: i16, offset: i16) {
         unsafe { vexDisplayScrollRect(x0 as i32, y0 as i32, x1 as i32, y1 as i32, offset as i32) }
     }
 

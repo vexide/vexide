@@ -60,6 +60,8 @@ impl Future for SleepFuture {
 /// Returns a future that will complete after the given duration.
 pub fn sleep(duration: core::time::Duration) -> SleepFuture {
     SleepFuture {
-        target_millis: unsafe { (vex_sdk::vexSystemHighResTimeGet() / 1000)  as u32 + duration.as_millis() as u32 },
+        target_millis: unsafe {
+            (vex_sdk::vexSystemHighResTimeGet() / 1000) as u32 + duration.as_millis() as u32
+        },
     }
 }

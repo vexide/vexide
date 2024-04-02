@@ -17,9 +17,7 @@ use vex_sdk::{
 };
 use vexide_core::time::Instant;
 
-use super::{
-    validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort,
-};
+use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
 use crate::PortError;
 
 /// Represents a smart port configured as a V5 inertial sensor (IMU)

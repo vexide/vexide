@@ -8,8 +8,9 @@
 //! Analog-to-Digital Converter (ADC) in the V5 brain. The brain measures analog input
 //! using 12-bit values ranging from 0 (0V) to 4095 (5V).
 
-use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 use vex_sdk::vexDeviceAdiValueGet;
+
+use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
 
 /// Generic analog input ADI device.
 #[derive(Debug, Eq, PartialEq)]
@@ -34,9 +35,10 @@ impl AdiAnalogIn {
     pub fn value(&self) -> Result<u16, AdiError> {
         self.port.validate_expander()?;
 
-        Ok(unsafe {
-            vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index())
-        } as u16)
+        Ok(
+            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
+                as u16,
+        )
     }
 
     /// Reads an analog input channel and returns the calculated voltage input (0-5V).

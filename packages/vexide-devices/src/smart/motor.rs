@@ -3,7 +3,6 @@
 use core::time::Duration;
 
 use bitflags::bitflags;
-use crate::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorBrakeModeSet, vexDeviceMotorCurrentGet,
@@ -21,7 +20,7 @@ use vex_sdk::{
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{SmartDevice, SmartDeviceInternal, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
-use crate::Position;
+use crate::{PortError, Position};
 
 /// The basic motor struct.
 #[derive(Debug, PartialEq)]
@@ -340,7 +339,8 @@ impl Motor {
     pub fn status(&self) -> Result<MotorStatus, MotorError> {
         self.validate_port()?;
 
-        let status = MotorStatus::from_bits_retain(unsafe { vexDeviceMotorFlagsGet(self.device_handle()) });
+        let status =
+            MotorStatus::from_bits_retain(unsafe { vexDeviceMotorFlagsGet(self.device_handle()) });
 
         // This is technically just a flag, but it indicates that an error occurred when trying
         // to get the flags, so we return early here.

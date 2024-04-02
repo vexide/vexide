@@ -2,7 +2,6 @@
 //!
 //! Rotation sensors operate on the same [`Position`] type as motors to measure rotation.
 
-use crate::PortError;
 use vex_sdk::{
     vexDeviceAbsEncAngleGet, vexDeviceAbsEncPositionGet, vexDeviceAbsEncPositionSet,
     vexDeviceAbsEncReset, vexDeviceAbsEncReverseFlagGet, vexDeviceAbsEncReverseFlagSet,
@@ -10,7 +9,7 @@ use vex_sdk::{
 };
 
 use super::{motor::Direction, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
-use crate::position::Position;
+use crate::{position::Position, PortError};
 
 /// A physical rotation sensor plugged into a port.
 #[derive(Debug, Eq, PartialEq)]
