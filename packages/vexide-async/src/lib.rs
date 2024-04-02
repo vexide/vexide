@@ -43,7 +43,7 @@ impl Future for SleepFuture {
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        if self.target_millis < unsafe { pros_sys::millis() } {
+        if self.target_millis < unsafe { (vex_sdk::vexSystemHighResTimeGet() / 1000) as _ } {
             Poll::Ready(())
         } else {
             EXECUTOR
@@ -60,6 +60,6 @@ impl Future for SleepFuture {
 /// Returns a future that will complete after the given duration.
 pub fn sleep(duration: core::time::Duration) -> SleepFuture {
     SleepFuture {
-        target_millis: unsafe { pros_sys::millis() + duration.as_millis() as u32 },
+        target_millis: unsafe { (vex_sdk::vexSystemHighResTimeGet() / 1000)  as u32 + duration.as_millis() as u32 },
     }
 }
