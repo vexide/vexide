@@ -1,4 +1,4 @@
-//! Tiny async runtime and robot traits for `pros-rs`.
+//! Tiny async runtime for `vexide`.
 //! The async executor supports spawning tasks and blocking on futures.
 //! It has a reactor to improve the performance of some futures.
 //! It is recommended to use the `AsyncRobot` trait to run robot code.
@@ -60,6 +60,8 @@ impl Future for SleepFuture {
 /// Returns a future that will complete after the given duration.
 pub fn sleep(duration: core::time::Duration) -> SleepFuture {
     SleepFuture {
-        target_millis: unsafe { (vex_sdk::vexSystemHighResTimeGet() / 1000)  as u32 + duration.as_millis() as u32 },
+        target_millis: unsafe {
+            (vex_sdk::vexSystemHighResTimeGet() / 1000) as u32 + duration.as_millis() as u32
+        },
     }
 }

@@ -33,3 +33,14 @@ pub mod usd;
 pub use controller::Controller;
 pub use position::Position;
 pub use screen::Screen;
+use snafu::Snafu;
+
+#[derive(Debug, Snafu)]
+/// Generic erros that can take place when using ports on the V5 Brain.
+pub enum PortError {
+    /// No device is plugged into the port.
+    Disconnected,
+
+    /// The incorrect device type is plugged into the port.
+    IncorrectDevice,
+}

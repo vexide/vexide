@@ -52,6 +52,11 @@ extern "C" {
 
 /// Sets up the user stack, zeroes the BSS section, and calls the user code.
 /// This function is designed to be used as an entrypoint for programs on the VEX V5 Brain.
+///
+/// # Safety
+///
+/// This function MUST only be called once and should only be called at the very start of program initialization.
+/// Calling this function more than one time will seriously mess up both your stack and your heap.
 pub unsafe fn program_entry() {
     unsafe {
         asm!(
@@ -83,7 +88,8 @@ pub unsafe fn program_entry() {
             "
         );
         // Initialize the heap allocator
-        #[cfg(target_arch = "arm")] // This is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
+        #[cfg(target_arch = "arm")]
+        // This is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
         vexide_core::allocator::vexos::init_heap();
         // Call the user code
         main()

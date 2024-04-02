@@ -1,6 +1,6 @@
-use proc_macro:: TokenStream;
-use syn::{parse_macro_input, FnArg, ItemFn, Pat, Signature};
+use proc_macro::TokenStream;
 use quote::quote;
+use syn::{parse_macro_input, FnArg, ItemFn, Pat, Signature};
 
 fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
     let mut error = None;
@@ -13,14 +13,21 @@ fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
         let message = syn::Error::new_spanned(&sig, "Function must be safe");
         match error {
             Some(ref mut e) => e.combine(message),
-            None => { error.replace(message); },
+            None => {
+                error.replace(message);
+            }
         };
     }
     if sig.inputs.len() != 1 {
-        let message = syn::Error::new_spanned(&sig, "Function must take a `Peripherals`");
+        let message = syn::Error::new_spanned(
+            &sig,
+            "Function must take a `vexide_devices::peripherals::Peripherals`",
+        );
         match error {
             Some(ref mut e) => e.combine(message),
-            None => { error.replace(message); },
+            None => {
+                error.replace(message);
+            }
         };
     }
 
@@ -37,7 +44,9 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
         Ok(_) => {}
         Err(e) => return e.to_compile_error().into(),
     }
-    let err = syn::Error::new_spanned(&item.sig, "Function must take a `Peripherals`").to_compile_error().into();
+    let err = syn::Error::new_spanned(&item.sig, "Function must take a `Peripherals`")
+        .to_compile_error()
+        .into();
     let FnArg::Typed(peripherals_arg) = item.sig.inputs.first().unwrap() else {
         return err;
     };

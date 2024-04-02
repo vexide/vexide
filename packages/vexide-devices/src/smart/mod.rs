@@ -38,11 +38,13 @@ pub use imu::InertialSensor;
 pub use link::RadioLink;
 pub use motor::Motor;
 pub use optical::OpticalSensor;
-use vexide_core::error::PortError;
 pub use rotation::RotationSensor;
 pub use serial::SerialPort;
+use snafu::Snafu;
 use vex_sdk::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
 pub use vision::VisionSensor;
+
+use crate::PortError;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {

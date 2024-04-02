@@ -8,8 +8,8 @@ use core::{
 };
 
 use async_task::{Runnable, Task};
-use vexide_core::sync::Mutex;
 use lazy_static::lazy_static;
+use vexide_core::sync::Mutex;
 use waker_fn::waker_fn;
 
 use super::reactor::Reactor;

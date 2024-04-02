@@ -22,7 +22,7 @@ Add any other context about the problem here.
 
 Move all applicable items out of the comment:
 - Operating system (Linux/macOS/Windows):
-- pros-rs version (see `Cargo.toml`):
+- vexide version (see `Cargo.toml`):
 - Rust version (see `rustc --version`):
 - Priority this issue should have (low/med/high):
 - I have tested this issue on the latest development release.
