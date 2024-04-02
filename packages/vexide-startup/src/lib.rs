@@ -11,7 +11,7 @@
 
 use core::{arch::asm, ptr::addr_of_mut};
 
-pub use vex_startup_macro::main;
+pub use vexide_startup_macro::main;
 
 extern "C" {
     // These symbols don't have real types so this is a little bit of a hack
@@ -84,7 +84,7 @@ pub unsafe fn program_entry() {
         );
         // Initialize the heap allocator
         #[cfg(target_arch = "arm")] // This is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
-        pros_core::allocator::vexos::init_heap();
+        vexide_core::allocator::vexos::init_heap();
         // Call the user code
         main()
     }
