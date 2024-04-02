@@ -3,16 +3,16 @@ name = "vexide-math"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Commonly used mathematical formulas for pros-rs"
+description = "Commonly used mathematical formulas for vexide"
 keywords = ["PROS", "Robotics", "vex", "v5"]
 categories = [
     "no-std",
     "science::robotics",
     "Mathematics",
 ]
-repository = "https://github.com/gavin-niederman/pros-rs"
+repository = "https://github.com/vexide/vexide"
 authors = [
-    "pros-rs",
+    "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
 ]
