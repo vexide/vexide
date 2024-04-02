@@ -30,13 +30,12 @@ impl core::fmt::Write for Screen {
         for character in text.chars() {
             if character == '\n' {
                 if self.current_line > (Self::MAX_VISIBLE_LINES as i16 - 2) {
-                    self.scroll(0, Self::LINE_HEIGHT)
-                        .map_err(|_| core::fmt::Error)?;
+                    self.scroll(0, Self::LINE_HEIGHT);
                 } else {
                     self.current_line += 1;
                 }
 
-                self.flush_writer().map_err(|_| core::fmt::Error)?;
+                self.flush_writer();
             } else {
                 self.writer_buffer.push(character);
             }
@@ -310,7 +309,7 @@ impl Screen {
         }
     }
 
-    fn flush_writer(&mut self) -> Result<(), ScreenError> {
+    fn flush_writer(&mut self) {
         self.fill(
             &Text::new(
                 self.writer_buffer.as_str(),
@@ -321,18 +320,14 @@ impl Screen {
         );
 
         self.writer_buffer.clear();
-
-        Ok(())
     }
 
     /// Scroll the entire display buffer.
     ///
     /// This function effectively y-offsets all pixels drawn to the display buffer by
     /// a number (`offset`) of pixels.
-    pub fn scroll(&mut self, start: i16, offset: i16) -> Result<(), ScreenError> {
+    pub fn scroll(&mut self, start: i16, offset: i16) {
         unsafe { vexDisplayScroll(start as i32, offset as i32) }
-
-        Ok(())
     }
 
     /// Scroll a region of the screen.
@@ -346,10 +341,8 @@ impl Screen {
         x1: i16,
         y1: i16,
         offset: i16,
-    ) -> Result<(), ScreenError> {
+    ) {
         unsafe { vexDisplayScrollRect(x0 as i32, y0 as i32, x1 as i32, y1 as i32, offset as i32) }
-
-        Ok(())
     }
 
     /// Draw a filled object to the screen.
@@ -415,66 +408,6 @@ impl Screen {
                 src_stride,
             );
         }
-
-        Ok(())
-    }
-
-    /// Draw an error box to the screen.
-    ///
-    /// This function is internally used by the pros-rs panic handler for displaying
-    /// panic messages graphically before exiting.
-    pub fn draw_error(&mut self, msg: &str) -> Result<(), ScreenError> {
-        const ERROR_BOX_MARGIN: i16 = 16;
-        const ERROR_BOX_PADDING: i16 = 16;
-        const LINE_MAX_WIDTH: usize = 52;
-
-        let error_box_rect = Rect::new(
-            ERROR_BOX_MARGIN,
-            ERROR_BOX_MARGIN,
-            Self::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
-            Self::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
-        );
-
-        self.fill(&error_box_rect, Rgb::RED);
-        self.stroke(&error_box_rect, Rgb::WHITE);
-
-        let mut buffer = String::new();
-        let mut line: i16 = 0;
-
-        for (i, character) in msg.char_indices() {
-            if !character.is_ascii_control() {
-                buffer.push(character);
-            }
-
-            if character == '\n' || ((buffer.len() % LINE_MAX_WIDTH == 0) && (i > 0)) {
-                self.fill(
-                    &Text::new(
-                        buffer.as_str(),
-                        TextPosition::Point(
-                            ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                            ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Self::LINE_HEIGHT),
-                        ),
-                        TextFormat::Small,
-                    ),
-                    Rgb::WHITE,
-                );
-
-                line += 1;
-                buffer.clear();
-            }
-        }
-
-        self.fill(
-            &Text::new(
-                buffer.as_str(),
-                TextPosition::Point(
-                    ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                    ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Self::LINE_HEIGHT),
-                ),
-                TextFormat::Small,
-            ),
-            Rgb::WHITE,
-        );
 
         Ok(())
     }

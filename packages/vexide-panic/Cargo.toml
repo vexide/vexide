@@ -21,7 +21,7 @@ authors = [
 [dependencies]
 vexide-core = { version = "0.1.0", path = "../vexide-core" }
 vexide-devices = { version = "0.1.0", path = "../vexide-devices", optional = true }
-pros-sys = { version = "0.7.0", path = "../pros-sys" }
+vex-sdk = { version = "0.8.0" }
 
 [features]
 default = ["display_panics"]
