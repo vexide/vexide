@@ -2,12 +2,14 @@
 //!
 //! Controllers are identified by their id, which is either 0 (master) or 1 (partner).
 //! State of a controller can be checked by calling [`Controller::state`] which will return a struct with all of the buttons' and joysticks' state.
+use core::time::Duration;
+
 use alloc::ffi::CString;
 
 use snafu::Snafu;
 use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
-    V5_ControllerIndex,
+    V5_ControllerIndex, V5_ControllerStatus,
 };
 
 use crate::{
@@ -15,8 +17,12 @@ use crate::{
     competition::{self, CompetitionMode},
 };
 
-fn controller_connected(id: ControllerId) -> bool {
-    unsafe { vexControllerConnectionStatusGet(id.into()).0 as u32 != 0 }
+fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
+    if unsafe { vexControllerConnectionStatusGet(id.into()) != V5_ControllerStatus::kV5ControllerOffline } {
+        return Err(ControllerError::Offline);
+    }
+
+    Ok(())
 }
 
 /// Digital Controller Button
@@ -28,21 +34,13 @@ pub struct Button {
 }
 
 impl Button {
-    fn validate(&self) -> Result<(), ControllerError> {
-        if !controller_connected(self.id) {
-            return Err(ControllerError::NotConnected);
-        }
-
-        Ok(())
-    }
-
     /// Gets the current logic level of a digital input pin.
     pub fn level(&self) -> Result<LogicLevel, ControllerError> {
         if competition::mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
         }
 
-        self.validate()?;
+        validate_connection(self.id)?;
 
         let value =
             unsafe { vexControllerGet(self.id.into(), self.channel.try_into().unwrap()) != 0 };
@@ -87,29 +85,22 @@ pub struct Joystick {
 }
 
 impl Joystick {
-    fn validate(&self) -> Result<(), ControllerError> {
-        if !controller_connected(self.id) {
-            return Err(ControllerError::NotConnected);
-        }
-
-        Ok(())
-    }
-
     /// Gets the value of the joystick position on its x-axis from [-1, 1].
     pub fn x(&self) -> Result<f32, ControllerError> {
-        self.validate()?;
+        validate_connection(self.id)?;
+
         Ok(self.x_raw()? as f32 / 127.0)
     }
 
     /// Gets the value of the joystick position on its y-axis from [-1, 1].
     pub fn y(&self) -> Result<f32, ControllerError> {
-        self.validate()?;
+        validate_connection(self.id)?;
         Ok(self.y_raw()? as f32 / 127.0)
     }
 
     /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
     pub fn x_raw(&self) -> Result<i8, ControllerError> {
-        self.validate()?;
+        validate_connection(self.id)?;
         if competition::mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
         }
@@ -119,7 +110,7 @@ impl Joystick {
 
     /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
     pub fn y_raw(&self) -> Result<i8, ControllerError> {
-        self.validate()?;
+        validate_connection(self.id)?;
         if competition::mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
         }
@@ -183,14 +174,6 @@ impl ControllerScreen {
     /// Number of available text lines on the controller before clearing the screen.
     pub const MAX_LINES: usize = 2;
 
-    fn validate(&self) -> Result<(), ControllerError> {
-        if !controller_connected(self.id) {
-            return Err(ControllerError::NotConnected);
-        }
-
-        Ok(())
-    }
-
     /// Clear the contents of a specific text line.
     pub fn clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
         //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
@@ -211,7 +194,7 @@ impl ControllerScreen {
 
     /// Set the text contents at a specific row/column offset.
     pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
-        self.validate()?;
+        validate_connection(self.id)?;
         if col >= Self::MAX_LINE_LENGTH as u8 {
             return Err(ControllerError::InvalidLine);
         }
@@ -253,13 +236,8 @@ impl From<ControllerId> for V5_ControllerId {
 }
 
 impl Controller {
-    fn validate(&self) -> Result<(), ControllerError> {
-        if !controller_connected(self.id) {
-            return Err(ControllerError::NotConnected);
-        }
-
-        Ok(())
-    }
+    /// The update rate of the controller.
+    pub const UPDATE_RATE: Duration = Duration::from_millis(25);
 
     /// Create a new controller.
     ///
@@ -345,23 +323,30 @@ impl Controller {
         }
     }
 
-    /// Returns `true` if the controller is connected to the brain.
-    pub fn is_connected(&self) -> bool {
-        controller_connected(self.id)
+    /// Gets the controller's connection type.
+    pub fn connection(&self) -> ControllerConnection {
+        unsafe { vexControllerConnectionStatusGet(self.id.into()) }.into()
     }
 
     /// Gets the controller's battery capacity.
     pub fn battery_capacity(&self) -> Result<i32, ControllerError> {
-        self.validate()?;
+        validate_connection(self.id)?;
 
         Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryCapacity) })
     }
 
     /// Gets the controller's battery level.
     pub fn battery_level(&self) -> Result<i32, ControllerError> {
-        self.validate()?;
+        validate_connection(self.id)?;
 
         Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryLevel) })
+    }
+
+    /// Gets the controller's flags.
+    pub fn flags(&self) -> Result<i32, ControllerError> {
+        validate_connection(self.id)?;
+
+        Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Flags) })
     }
 
     /// Send a rumble pattern to the controller's vibration motor.
@@ -374,11 +359,45 @@ impl Controller {
     }
 }
 
+/// Represents the state of a controller's connection.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ControllerConnection {
+    /// No controller is connected.
+    Offline,
+
+    /// Controller is tethered through a wired smartport connection.
+    Tethered,
+
+    /// Controller is wirelessly connected over a VEXNet radio
+    Vexnet,
+}
+
+impl From<V5_ControllerStatus> for ControllerConnection {
+    fn from(value: V5_ControllerStatus) -> Self {
+        match value {
+            V5_ControllerStatus::kV5ControllerOffline => Self::Offline,
+            V5_ControllerStatus::kV5ControllerTethered => Self::Tethered,
+            V5_ControllerStatus::kV5ControllerVexnet => Self::Vexnet,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl From<ControllerConnection> for V5_ControllerStatus {
+    fn from(value: ControllerConnection) -> Self {
+        match value {
+            ControllerConnection::Offline => Self::kV5ControllerOffline,
+            ControllerConnection::Tethered => Self::kV5ControllerTethered,
+            ControllerConnection::Vexnet => Self::kV5ControllerVexnet,
+        }
+    }
+}
+
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the controller.
 pub enum ControllerError {
     /// The controller is not connected to the brain.
-    NotConnected,
+    Offline,
     /// CString::new encountered NUL (U+0000) byte in non-terminating position.
     NonTerminatingNul,
     /// Access to controller data is restricted by competition control.
