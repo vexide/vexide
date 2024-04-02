@@ -3,10 +3,9 @@
 //! Unlike other libraries for the V5 Brain, vexide doesn't use an RTOS.
 //! Instead, vexide leverages Rust's powerful async/await (cooperative multitasking) to allow faster and more user friendly 3dfcode.
 //!
-//! Advantages over similar libraries or PROS itself:
-//! - vexideindings for the PROS library and kernel.
-//! Not everything in this library is one to one with the PROS API. has an [`Async executor`](async_runtime) which allows for easy and performant asynchronous code.
-//! - Simulation support with [`pros-simulator`](https://crates.io/crates/pros-simulator) and any interface with it (e.g. [`pros-simulator-gui`](https://github.com/vexide/pros-simulator-gui))
+//! Advantages over similar libraries like PROS include:
+//! - vexide is a real crate on crates.io instead of a template, or similar. This allows for dependency management with cargo.
+//! - vexide has an [`Async executor`](async_runtime) which allows for easy and performant asynchronous code.
 //! - Active development. vexide is actively developed and maintained.
 //! - vexide is a real crate on crates.io instead of a template, or similar. This allows for dependency management with cargo.
 //!
