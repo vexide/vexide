@@ -38,8 +38,8 @@ fn draw_error(
         Screen::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
     );
 
-    screen.fill(&error_box_rect, vexide_devices::color::Rgb::RED)?;
-    screen.stroke(&error_box_rect, vexide_devices::color::Rgb::WHITE)?;
+    screen.fill(&error_box_rect, vexide_devices::color::Rgb::RED);
+    screen.stroke(&error_box_rect, vexide_devices::color::Rgb::WHITE);
 
     let mut buffer = String::new();
     let mut line: i16 = 0;
@@ -60,7 +60,7 @@ fn draw_error(
                     vexide_devices::screen::TextFormat::Small,
                 ),
                 vexide_devices::color::Rgb::WHITE,
-            )?;
+            );
 
             line += 1;
             buffer.clear();
@@ -77,7 +77,7 @@ fn draw_error(
             vexide_devices::screen::TextFormat::Small,
         ),
         vexide_devices::color::Rgb::WHITE,
-    )?;
+    );
 
     Ok(())
 }

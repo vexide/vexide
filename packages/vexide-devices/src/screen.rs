@@ -30,13 +30,12 @@ impl core::fmt::Write for Screen {
         for character in text.chars() {
             if character == '\n' {
                 if self.current_line > (Self::MAX_VISIBLE_LINES as i16 - 2) {
-                    self.scroll(0, Self::LINE_HEIGHT)
-                        .map_err(|_| core::fmt::Error)?;
+                    self.scroll(0, Self::LINE_HEIGHT);
                 } else {
                     self.current_line += 1;
                 }
 
-                self.flush_writer().map_err(|_| core::fmt::Error)?;
+                self.flush_writer();
             } else {
                 self.writer_buffer.push(character);
             }
@@ -310,7 +309,7 @@ impl Screen {
         }
     }
 
-    fn flush_writer(&mut self) -> Result<(), ScreenError> {
+    fn flush_writer(&mut self) {
         self.fill(
             &Text::new(
                 self.writer_buffer.as_str(),
@@ -321,18 +320,14 @@ impl Screen {
         );
 
         self.writer_buffer.clear();
-
-        Ok(())
     }
 
     /// Scroll the entire display buffer.
     ///
     /// This function effectively y-offsets all pixels drawn to the display buffer by
     /// a number (`offset`) of pixels.
-    pub fn scroll(&mut self, start: i16, offset: i16) -> Result<(), ScreenError> {
+    pub fn scroll(&mut self, start: i16, offset: i16) {
         unsafe { vexDisplayScroll(start as i32, offset as i32) }
-
-        Ok(())
     }
 
     /// Scroll a region of the screen.
@@ -346,10 +341,8 @@ impl Screen {
         x1: i16,
         y1: i16,
         offset: i16,
-    ) -> Result<(), ScreenError> {
+    ) {
         unsafe { vexDisplayScrollRect(x0 as i32, y0 as i32, x1 as i32, y1 as i32, offset as i32) }
-
-        Ok(())
     }
 
     /// Draw a filled object to the screen.
