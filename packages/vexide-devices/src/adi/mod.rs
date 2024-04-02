@@ -1,6 +1,6 @@
 //! ADI (Triport) devices on the Vex V5.
 
-use vexide_core::error::PortError;
+use crate::PortError;
 use snafu::Snafu;
 
 pub mod analog;

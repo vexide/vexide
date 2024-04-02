@@ -2,7 +2,7 @@
 
 use core::time::Duration;
 
-use vexide_core::error::PortError;
+use crate::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureDisable, vexDeviceOpticalGestureEnable,

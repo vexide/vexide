@@ -1,11 +1,13 @@
 //! Inertial sensor (IMU) device.
 
 use core::{
-    marker::PhantomData, pin::Pin, task::{Context, Poll}, time::Duration
+    marker::PhantomData,
+    pin::Pin,
+    task::{Context, Poll},
+    time::Duration,
 };
 
 use bitflags::bitflags;
-use vexide_core::{error::PortError, time::Instant};
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
@@ -13,8 +15,12 @@ use vex_sdk::{
     vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode,
     V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw,
 };
+use vexide_core::time::Instant;
 
-use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use super::{
+    validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort,
+};
+use crate::PortError;
 
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
 #[derive(Debug, PartialEq)]
@@ -123,7 +129,11 @@ impl InertialSensor {
         }
 
         Ok(mint::Quaternion {
-            v: mint::Vector3 { x: data.a, y: data.b, z: data.c },
+            v: mint::Vector3 {
+                x: data.a,
+                y: data.b,
+                z: data.c,
+            },
             s: data.d,
         })
     }
@@ -141,7 +151,7 @@ impl InertialSensor {
             a: data.pitch.to_radians(),
             b: data.yaw.to_radians(),
             c: data.roll.to_radians(),
-            marker: PhantomData
+            marker: PhantomData,
         })
     }
 

@@ -2,7 +2,7 @@
 //!
 //! Pretty much one to one with the PROS C and CPP API, except Result is used instead of ERRNO values.
 
-use vexide_core::error::PortError;
+use crate::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceDistanceConfidenceGet, vexDeviceDistanceDistanceGet, vexDeviceDistanceObjectSizeGet,

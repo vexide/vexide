@@ -3,7 +3,7 @@
 use core::time::Duration;
 
 use bitflags::bitflags;
-use vexide_core::error::PortError;
+use crate::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorBrakeModeSet, vexDeviceMotorCurrentGet,

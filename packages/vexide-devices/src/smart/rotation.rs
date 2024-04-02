@@ -2,7 +2,7 @@
 //!
 //! Rotation sensors operate on the same [`Position`] type as motors to measure rotation.
 
-use vexide_core::error::PortError;
+use crate::PortError;
 use vex_sdk::{
     vexDeviceAbsEncAngleGet, vexDeviceAbsEncPositionGet, vexDeviceAbsEncPositionSet,
     vexDeviceAbsEncReset, vexDeviceAbsEncReverseFlagGet, vexDeviceAbsEncReverseFlagSet,
