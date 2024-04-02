@@ -61,7 +61,7 @@ impl AdiPort {
         self.expander_index
     }
 
-    pub(crate) fn internal_index(&self) -> u32 {
+    pub(crate) const fn internal_index(&self) -> u32 {
         (self.index() - 1) as u32
     }
 

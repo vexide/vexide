@@ -6,11 +6,11 @@ fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
     let mut error = None;
 
     if sig.asyncness.is_none() {
-        let message = syn::Error::new_spanned(&sig, "Function must be async");
+        let message = syn::Error::new_spanned(sig, "Function must be async");
         error.replace(message);
     }
     if sig.unsafety.is_some() {
-        let message = syn::Error::new_spanned(&sig, "Function must be safe");
+        let message = syn::Error::new_spanned(sig, "Function must be safe");
         match error {
             Some(ref mut e) => e.combine(message),
             None => {
@@ -20,7 +20,7 @@ fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
     }
     if sig.inputs.len() != 1 {
         let message = syn::Error::new_spanned(
-            &sig,
+            sig,
             "Function must take a `vexide_devices::peripherals::Peripherals`",
         );
         match error {

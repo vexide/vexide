@@ -15,7 +15,7 @@ static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 /// Initializes the heap allocator.
 ///
-/// # SAFETY
+/// # Safety
 ///
 /// This function can only be called once.
 pub unsafe fn init_heap() {
