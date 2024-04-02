@@ -13,7 +13,7 @@
         pros-cli = pros-cli-nix.packages.${system}.default;
       in {
         devShell = pkgs.mkShell {
-          buildInputs = with pkgs; [ gcc-arm-embedded-9 cargo-pros' pros-cli ];
+          buildInputs = with pkgs; [ cargo-binutils cargo-pros' pros-cli ];
         };
       }));
 }

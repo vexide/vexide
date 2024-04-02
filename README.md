@@ -12,15 +12,14 @@ vexide is still in development but we are quickly moving towards competition rea
 
 ## Compiling
 
-The only dependency of vexide outside of Rust is The Arm Gnu Toolchain (arm-none-eabi-gcc).
-
+The vexide library itself has no external dependencies, but cargo-pros depends on pros-cli for uploading and cargo-binutils for necessary binary modification.
 Read the installation guide for your OS to see how to get things set up.
 
 ### Windows
 Steps:
-1. Run The Arm Gnu Toolchain [here](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
-2. Install the pros cli, instructions are [here](https://pros.cs.purdue.edu/v5/getting-started/windows.html)
-3. Install cargo pros with ``cargo install cargo-pros``
+1. Install the pros cli, instructions are [here](https://pros.cs.purdue.edu/v5/getting-started/windows.html)
+2. Install cargo pros with ``cargo install cargo-pros``
+3. Install cargo-binutils with ``cargo install cargo-binutils``
 
 To compile the project just run ``cargo pros build``.
 
@@ -36,7 +35,7 @@ There is a ``.envrc`` file included for Nix + Direnv users.
 
 #### Without Nix
 
-Install arm-none-eabi-gcc and pros-cli from your package manager of choice.
+Install cargo-binutils and pros-cli from your package manager of choice.
 Cargo pros can be installed with ``cargo install cargo-pros``.
 
 ### MacOS
