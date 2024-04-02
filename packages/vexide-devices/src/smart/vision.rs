@@ -165,10 +165,7 @@ impl VisionSensor {
     pub fn signature(&self, id: u8) -> Result<Option<VisionSignature>, VisionError> {
         self.validate_port()?;
 
-        Ok(match self.raw_signature(id)? {
-            Some(raw) => Some(raw.into()),
-            None => None,
-        })
+        Ok(self.raw_signature(id)?.map(|raw| raw.into()))
     }
 
     /// Get all signatures currently stored on the sensor's onboard volatile memory.
@@ -623,7 +620,7 @@ impl VisionCode {
             }
         }
 
-        return false;
+        false
     }
 
     /// Returns the internal ID used by the sensor to determine which signatures

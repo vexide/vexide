@@ -43,8 +43,7 @@ impl Button {
 
         validate_connection(self.id)?;
 
-        let value =
-            unsafe { vexControllerGet(self.id.into(), self.channel.try_into().unwrap()) != 0 };
+        let value = unsafe { vexControllerGet(self.id.into(), self.channel) != 0 };
 
         let level = match value {
             true => LogicLevel::High,
@@ -206,12 +205,7 @@ impl ControllerScreen {
             .into_raw();
 
         unsafe {
-            vexControllerTextSet(
-                id.0 as u32,
-                (line + 1) as _,
-                (col + 1) as _,
-                text as *const _,
-            );
+            vexControllerTextSet(id.0, (line + 1) as _, (col + 1) as _, text as *const _);
         }
 
         // stop rust from leaking the CString

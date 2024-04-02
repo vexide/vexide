@@ -191,11 +191,8 @@ impl Motor {
             vexDeviceMotorVelocityUpdate(self.device_handle(), velocity);
         }
 
-        match self.target {
-            MotorControl::Position(position, _) => {
-                self.target = MotorControl::Position(position, velocity)
-            }
-            _ => {}
+        if let MotorControl::Position(position, _) = self.target {
+            self.target = MotorControl::Position(position, velocity)
         }
 
         Ok(())
