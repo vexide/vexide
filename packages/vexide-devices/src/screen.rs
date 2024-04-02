@@ -210,7 +210,6 @@ impl Text {
     }
 }
 
-//TODO: Implement this in terms of soon to be added vex-sdk screen printing functions.
 impl Fill for Text {
     fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
         // This implementation is technically broken because it doesn't account errno.
