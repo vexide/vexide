@@ -6,7 +6,7 @@
 
 extern crate alloc;
 
-use alloc::{format, string::String};
+use alloc::string::{String, ToString};
 
 use vexide_core::eprintln;
 #[cfg(feature = "display_panics")]
@@ -38,8 +38,8 @@ fn draw_error(
         Screen::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
     );
 
-    screen.fill(&error_box_rect, vexide_devices::color::Rgb::RED)?;
-    screen.stroke(&error_box_rect, vexide_devices::color::Rgb::WHITE)?;
+    screen.fill(&error_box_rect, vexide_devices::color::Rgb::RED);
+    screen.stroke(&error_box_rect, vexide_devices::color::Rgb::WHITE);
 
     let mut buffer = String::new();
     let mut line: i16 = 0;
@@ -60,7 +60,7 @@ fn draw_error(
                     vexide_devices::screen::TextFormat::Small,
                 ),
                 vexide_devices::color::Rgb::WHITE,
-            )?;
+            );
 
             line += 1;
             buffer.clear();
@@ -77,7 +77,7 @@ fn draw_error(
             vexide_devices::screen::TextFormat::Small,
         ),
         vexide_devices::color::Rgb::WHITE,
-    )?;
+    );
 
     Ok(())
 }
@@ -85,25 +85,20 @@ fn draw_error(
 #[panic_handler]
 /// The panic handler for vexide.
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
-    let current_task = vexide_core::task::current();
-
-    let task_name = current_task.name().unwrap_or_else(|_| "<unknown>".into());
-
-    // task 'User Initialization (PROS)' panicked at src/lib.rs:22:1:
-    // panic message here
-    let msg = format!("task '{task_name}' {info}");
-
-    eprintln!("{msg}");
+    eprintln!("{info}");
 
     unsafe {
         #[cfg(feature = "display_panics")]
-        draw_error(&mut Screen::new(), &msg).unwrap_or_else(|err| {
+        draw_error(&mut Screen::new(), &info.to_string()).unwrap_or_else(|err| {
             eprintln!("Failed to draw error message to screen: {err}");
         });
 
         #[cfg(target_arch = "wasm32")]
         sim_log_backtrace();
 
-        pros_sys::exit(1);
+        #[cfg(not(feature = "display_panics"))]
+        vex_sdk::vexSystemExitRequest();
+        // unreachable without display_panics
+        loop {}
     }
 }

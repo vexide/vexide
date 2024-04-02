@@ -340,15 +340,15 @@ impl Motor {
     pub fn status(&self) -> Result<MotorStatus, MotorError> {
         self.validate_port()?;
 
-        let bits = unsafe { vexDeviceMotorFlagsGet(self.device_handle()) };
+        let status = MotorStatus::from_bits_retain(unsafe { vexDeviceMotorFlagsGet(self.device_handle()) });
 
         // This is technically just a flag, but it indicates that an error occurred when trying
         // to get the flags, so we return early here.
-        if (bits & pros_sys::E_MOTOR_FLAGS_BUSY) != 0 {
+        if status.contains(MotorStatus::BUSY) {
             return Err(MotorError::Busy);
         }
 
-        Ok(MotorStatus::from_bits_retain(bits))
+        Ok(status)
     }
 
     /// Get the fault flags of the motor.
