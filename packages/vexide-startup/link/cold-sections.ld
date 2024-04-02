@@ -2,7 +2,7 @@ SECTIONS {
 	.hot (NOLOAD) : {
 		/* __hot_start already defined */
 		KEEP(*(.hot_magic))
-		. = 0x8;
+		. = __hot_start + 0x8;
 		__hot_entry_point = .;
 		__hot_end = .;
 	} > HOT
@@ -11,7 +11,7 @@ SECTIONS {
 		__text_start = .;
 		KEEP(*(.cold_magic))
         __cold_magic = .;
-		. = 0x20;
+		. = __text_start + 0x20;
 		*(.boot)
 		*(.text .text.* .gnu.linkonce.t.*)
 		*(.plt)
