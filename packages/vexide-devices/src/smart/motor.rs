@@ -479,6 +479,7 @@ impl From<V5MotorBrakeMode> for BrakeMode {
             V5MotorBrakeMode::kV5MotorBrakeModeBrake => Self::Brake,
             V5MotorBrakeMode::kV5MotorBrakeModeCoast => Self::Coast,
             V5MotorBrakeMode::kV5MotorBrakeModeHold => Self::Hold,
+            _ => unreachable!(),
         }
     }
 }
@@ -599,6 +600,7 @@ impl From<V5MotorGearset> for Gearset {
             V5MotorGearset::kMotorGearSet_06 => Self::Blue,
             V5MotorGearset::kMotorGearSet_18 => Self::Green,
             V5MotorGearset::kMotorGearSet_36 => Self::Red,
+            _ => unreachable!(),
         }
     }
 }

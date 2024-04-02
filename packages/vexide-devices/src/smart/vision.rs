@@ -114,7 +114,7 @@ impl VisionSensor {
                 V5VisionBlockType::kVisionTypeColorCode
             } else {
                 V5VisionBlockType::kVisionTypeNormal
-            } as _,
+            }.0 as _,
             ..Default::default()
         };
 
@@ -200,16 +200,16 @@ impl VisionSensor {
 
         let code = code.into();
 
-        self.set_signature_type(code.0, V5VisionBlockType::kVisionTypeColorCode as _)?;
-        self.set_signature_type(code.1, V5VisionBlockType::kVisionTypeColorCode as _)?;
+        self.set_signature_type(code.0, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
+        self.set_signature_type(code.1, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
         if let Some(sig_3) = code.2 {
-            self.set_signature_type(sig_3, V5VisionBlockType::kVisionTypeColorCode as _)?;
+            self.set_signature_type(sig_3, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
         }
         if let Some(sig_4) = code.3 {
-            self.set_signature_type(sig_4, V5VisionBlockType::kVisionTypeColorCode as _)?;
+            self.set_signature_type(sig_4, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
         }
         if let Some(sig_5) = code.4 {
-            self.set_signature_type(sig_5, V5VisionBlockType::kVisionTypeColorCode as _)?;
+            self.set_signature_type(sig_5, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
         }
 
         self.codes.push(code);
@@ -239,7 +239,8 @@ impl VisionSensor {
                 V5VisionWBMode::kVisionWBStart => WhiteBalance::StartupAuto,
                 V5VisionWBMode::kVisionWBManual => {
                     WhiteBalance::Manual(unsafe { vexDeviceVisionWhiteBalanceGet(handle) }.into())
-                }
+                },
+                _ => unreachable!(),
             },
         )
     }
@@ -324,7 +325,8 @@ impl VisionSensor {
                         Rgb::new(led_color.red, led_color.green, led_color.blue),
                         led_color.brightness as f64 / 100.0,
                     )
-                }
+                },
+                _ => unreachable!(),
             },
         )
     }
@@ -713,6 +715,7 @@ impl From<V5VisionMode> for VisionMode {
             V5VisionMode::kVisionModeLineDetect => Self::LineDetection,
             V5VisionMode::kVisionModeMixed => Self::MixedDetection,
             V5VisionMode::kVisionTypeTest => Self::Test,
+            _ => unreachable!(),
         }
     }
 }
@@ -769,6 +772,7 @@ impl From<V5_DeviceVisionObject> for VisionObject {
                     DetectionSource::Signature(value.signature as u8)
                 }
                 V5VisionBlockType::kVisionTypeLineDetect => DetectionSource::Line,
+                _ => unreachable!(),
             },
             width: value.width,
             height: value.height,
