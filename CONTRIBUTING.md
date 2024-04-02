@@ -1,11 +1,11 @@
-# Contributing to pros-rs
+# Contributing to vexide
 
 Thanks for taking the time to help this project improve! All contributions are
 helpful and welcome.
 
 ## Table of Contents
 
-- [Contributing to pros-rs](#contributing-to-pros-rs)
+- [Contributing to vexide](#contributing-to-vexide)
   - [Table of Contents](#table-of-contents)
   - [I have a question!](#i-have-a-question)
   - [Ways to contribute](#ways-to-contribute)
@@ -27,7 +27,7 @@ helpful and welcome.
 
 If you just have a question about the library or need help, the best way you can
 get support is by creating a post in the [Q&A Discussions
-category](https://github.com/pros-rs/pros-rs/discussions/categories/q-a) or by asking
+category](https://github.com/vexide/vexide/discussions/categories/q-a) or by asking
 in the project's [Discord Server][discord-server].
 
 ## Ways to contribute
@@ -63,7 +63,7 @@ Additionally, try to do the following:
 - Give the issue a **clear and concise** title.
 - Fill out **as many of the template's headers as possible**.
 - Provide a **code sample** to help readers reproduce the issue.
-- Provide your Rust version, pros-rs version, and operating system.
+- Provide your Rust version, vexide version, and operating system.
 - If you have **screenshots, photos, or videos**, attach them to the GitHub issue.
 - Explain **when the problem started happening**. Was it after a recent update?
   Or has it always been an issue?
@@ -97,7 +97,7 @@ Additionally, try to do the following:
 
 ### Contributing code
 
-The simplest ways to start contributing code to pros-rs are by checking the [TODO list](./TODO.md) or by finding an
+The simplest ways to start contributing code to vexide are by checking the [TODO list](./TODO.md) or by finding an
 [Issue][issues-page] to tackle. Each one requests changes to the project, and some are
 more involved than others. Issues with the [good first
 issue][first-issue-search] label are good candidates for your first
@@ -126,7 +126,7 @@ sequence should be LF (line feed), and the file should end with one trailing new
 
 #### Committing & commit messages
 
-All pros-rs projects use [Conventional Commits][conventional-commits-website]
+All vexide projects use [Conventional Commits][conventional-commits-website]
 to keep commit messages informational. Conventional commits have the following form:
 
 ```
@@ -215,10 +215,10 @@ Atom editor's CONTRIBUTING.md. [Click here to go check it
 out.][atom-contributing]
 
 [discord-server]: https://discord.gg/DhfnWNX7ah
-[issues-page]: https://github.com/pros-rs/pros-rs/issues
-[pr-page]: https://github.com/pros-rs/pros-rs/pulls
+[issues-page]: https://github.com/vexide/vexide/issues
+[pr-page]: https://github.com/vexide/vexide/pulls
 [first-issue-search]:
-    https://github.com/pros-rs/pros-rs/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+    https://github.com/vexide/vexide/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 [conventional-commits-website]: https://conventionalcommits.org
 [ignoring-deprecations]: https://keepachangelog.com/en/1.1.0/#ignoring-deprecations
 [link-to-issue-guide]:

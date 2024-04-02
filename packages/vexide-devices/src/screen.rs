@@ -412,7 +412,7 @@ impl Screen {
         Ok(())
     }
 
-    /// Get the current touch status of the screen.
+    /// Get the csurrent touch status of the screen.
     pub fn touch_status(&self) -> TouchEvent {
         // vexTouchDataGet (probably) doesn't read from the given status pointer so this is fine.
         let mut touch_status: V5_TouchStatus = unsafe { mem::zeroed() };

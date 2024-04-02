@@ -1,4 +1,4 @@
-//! Common mathematical formulas and models implemented for [`pros-rs`](https://crates.io/crates/pros).
+//! Common mathematical formulas and models implemented for [`vexide`](https://crates.io/crates/vexide).
 
 #![no_std]
 

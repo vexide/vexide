@@ -3,16 +3,16 @@ name = "vexide-core"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Core functionality for pros-rs"
+description = "Core functionality for vexide"
 keywords = ["PROS", "Robotics", "bindings", "vex", "v5"]
 categories = [
     "api-bindings",
     "no-std",
     "science::robotics",
 ]
-repository = "https://github.com/gavin-niederman/pros-rs"
+repository = "https://github.com/vexide/vexide"
 authors = [
-    "pros-rs",
+    "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
 ]

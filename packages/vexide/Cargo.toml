@@ -6,10 +6,10 @@ description = "Rust bindings for PROS"
 keywords = ["PROS", "Robotics", "bindings", "vex", "v5"]
 categories = ["os", "api-bindings", "no-std", "science::robotics"]
 license = "MIT"
-repository = "https://github.com/pros-rs/pros-rs"
+repository = "https://github.com/vexide/vexide"
 readme = "../../README.md"
 authors = [
-    "pros-rs",
+    "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
 ]

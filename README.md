@@ -1,15 +1,18 @@
-# Pros-rs
+# vexide
 
-Work in progress opinionated Rust bindings for the [PROS](https://github.com/purduesigbots/pros) library and kernel.
+Work in progress high level bindings for the V5 Brain VEX SDK.
+Unlike other libraries for the V5 Brain, vexide doesn't use an RTOS.
+Instead, vexide leverages Rust's powerful async/await (cooperative multitasking) to allow faster and more user friendly code.
 
-This project is still early in development.
-Make sure to check out the todo list [(TODO.md)](TODO.md)
+vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which now serves as a slightly more stable, but unmaintained api using bindings over [PROS](https://github.com/purduesigbots/pros).
+
+vexide is still in development but we are quickly moving towards competition readiness.
 
 ## Usage
 
 ## Compiling
 
-The only dependency of pros-rs outside of Rust is The Arm Gnu Toolchain (arm-none-eabi-gcc).
+The only dependency of vexide outside of Rust is The Arm Gnu Toolchain (arm-none-eabi-gcc).
 
 Read the installation guide for your OS to see how to get things set up.
 
@@ -23,7 +26,7 @@ To compile the project just run ``cargo pros build``.
 
 ### Linux
 
-The steps for getting pros-rs compiling are slightly different based on if you use Nix or not.
+The steps for getting vexide compiling are slightly different based on if you use Nix or not.
 
 #### With Nix
 
@@ -33,7 +36,7 @@ There is a ``.envrc`` file included for Nix + Direnv users.
 
 #### Without Nix
 
-Install arm-none-eabi-gcc and pros-cli from your package manager of choice. 
+Install arm-none-eabi-gcc and pros-cli from your package manager of choice.
 Cargo pros can be installed with ``cargo install cargo-pros``.
 
 ### MacOS
@@ -56,7 +59,7 @@ And you are done! Compile the project with `cargo build`.
 To build projects in this repository for WebAssembly, run ``cargo pros build -s``
 This will automatically pass all of the correct arguments to cargo.
 
-If for some reason you want to do it manually, this is the command: 
+If, for some reason, you want to do it manually, this is the command:
 `cargo build --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort`.
 
 The extra build-std argument is neccesary because this repository's `.cargo/config.toml` enables build-std but only for core, alloc, and compiler_builtins. WebAssembly does come with `std` but there is [currently](https://github.com/rust-lang/cargo/issues/8733) no way to conditionally enable build-std.

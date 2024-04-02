@@ -1,4 +1,4 @@
-//! Tiny async runtime and robot traits for `pros-rs`.
+//! Tiny async runtime for `vexide`.
 //! The async executor supports spawning tasks and blocking on futures.
 //! It has a reactor to improve the performance of some futures.
 //! It is recommended to use the `AsyncRobot` trait to run robot code.
@@ -64,7 +64,7 @@ pub fn sleep(duration: core::time::Duration) -> SleepFuture {
     }
 }
 
-/// A trait for robot code that spins up the pros-rs async executor.
+/// A trait for robot code that spins up the vexide async executor.
 /// This is the preferred trait to run robot code.
 pub trait AsyncRobot {
     /// Runs during the operator control period.
