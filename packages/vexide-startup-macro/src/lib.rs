@@ -17,7 +17,7 @@ fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
         };
     }
     if sig.inputs.len() != 1 {
-        let message = syn::Error::new_spanned(&sig, "Function must take a `Peripherals`");
+        let message = syn::Error::new_spanned(&sig, "Function must take a `vexide_devices::peripherals::Peripherals`");
         match error {
             Some(ref mut e) => e.combine(message),
             None => { error.replace(message); },
