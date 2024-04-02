@@ -1,7 +1,5 @@
-use std::cell::OnceCell;
-
 use proc_macro:: TokenStream;
-use syn::{parse_macro_input, ItemFn, Signature};
+use syn::{parse_macro_input, FnArg, ItemFn, Pat, Signature};
 use quote::quote;
 
 fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
@@ -18,9 +16,18 @@ fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
             None => { error.replace(message); },
         };
     }
-    assert!(sig.inputs.is_empty());
+    if sig.inputs.len() != 1 {
+        let message = syn::Error::new_spanned(&sig, "Function must take a `Peripherals`");
+        match error {
+            Some(ref mut e) => e.combine(message),
+            None => { error.replace(message); },
+        };
+    }
 
-    Ok(())
+    match error {
+        Some(e) => Err(e),
+        None => Ok(()),
+    }
 }
 
 #[proc_macro_attribute]
@@ -30,12 +37,21 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
         Ok(_) => {}
         Err(e) => return e.to_compile_error().into(),
     }
+    let err = syn::Error::new_spanned(&item.sig, "Function must take a `Peripherals`").to_compile_error().into();
+    let FnArg::Typed(peripherals_arg) = item.sig.inputs.first().unwrap() else {
+        return err;
+    };
+    let Pat::Ident(ref peripherals_pat) = *peripherals_arg.pat else {
+        return err;
+    };
+    let peripherals_ident = &peripherals_pat.ident;
 
     let block = item.block;
 
     quote! {
         #[no_mangle]
-        pub extern "C" fn main() {
+        extern "C" fn main() {
+            let #peripherals_ident = ::vexide_devices::peripherals::Peripherals::take().unwrap();
             ::vexide_async::block_on(async #block);
         }
 

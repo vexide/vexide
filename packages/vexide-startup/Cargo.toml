@@ -8,6 +8,7 @@ vex-sdk = { version = "0.9.0" }
 vexide-startup-macro = { path = "../vexide-startup-macro" }
 vexide-core = { version = "0.1.0", path = "../vexide-core"}
 vexide-async = { version = "0.1.0", path = "../vexide-async" }
+vexide-devices = { version = "0.1.0", path = "../vexide-devices" }
 
 [lints]
 workspace = true
