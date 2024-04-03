@@ -61,32 +61,24 @@ pub unsafe fn program_entry() {
     unsafe {
         asm!(
             "
-            // Set the stack pointer for program setup
-            ldr sp, =__kernel_stack_start
+            // Load the user stack
+            ldr sp, =__user_stack_start
             "
         );
     }
 
     // Clear the BSS section
-    let mut bss_start = unsafe { addr_of_mut!(__bss_start) };
-    let bss_end = unsafe { addr_of_mut!(__bss_end) };
-    while bss_start < bss_end {
-        unsafe {
+    unsafe {
+        let mut bss_start = addr_of_mut!(__bss_start);
+        while bss_start < addr_of_mut!(__bss_end) {
             core::ptr::write_volatile(bss_start, 0);
             bss_start = bss_start.offset(1);
         }
     }
-
     // vexPrivateApiDisable
     // (unsafe { *(0x37fc020 as *const extern "C" fn(u32)) })(COLD_HEADER.options);
 
     unsafe {
-        asm!(
-            "
-            // Load the user stack
-            ldr sp, =__user_stack_start
-            "
-        );
         // Initialize the heap allocator
         #[cfg(target_arch = "arm")]
         // This is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.

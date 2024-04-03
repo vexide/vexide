@@ -1,12 +1,4 @@
 SECTIONS {
-	.hot (NOLOAD) : {
-		/* __hot_start already defined */
-		KEEP(*(.hot_magic))
-		. = __hot_start + 0x8;
-		__hot_entry_point = .;
-		__hot_end = .;
-	} > HOT
-
 	.text : {
 		__text_start = .;
 		KEEP(*(.cold_magic))
@@ -15,18 +7,14 @@ SECTIONS {
 		*(.boot)
 		*(.text .text.* .gnu.linkonce.t.*)
 		*(.plt)
-		*(.gnu_warning)
-		*(.gnu_except_table)
 		*(.glue_7 .glue_7t)
 		/* -mfloat-abi=softfp */
 		*(.vfp11_veneer)
-		*(.ARM.extab .gnu.linkonce.armextab.*)
 		__text_end = .;
 	} > ACTIVE
 
 	.rodata : {
 		__rodata_start = .;
-		*(.rodata .rodata.* .gnu.linkonce.r.*)
 		*(.rodata1 .rodata1.*)
 		__rodata_end = .;
 	} > ACTIVE
@@ -56,32 +44,6 @@ SECTIONS {
 		__tdata_end = .;
 	} > ACTIVE
 
-	/* constructors and destructors */
-	.init : {
-		KEEP (*(.init))
-	} > ACTIVE
-	.fini : {
-		KEEP (*(.fini))
-	} > ACTIVE
-	.preinit_array : {
-		__preinit_array_start = .;
-		KEEP (*(SORT_BY_INIT_PRIORITY(.preinit_array.*)))
-		KEEP (*(.preinit_array))
-		__preinit_array_end = .;
-	} > ACTIVE
-	.init_array : {
-		__init_array_start = .;
-		KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
-		KEEP (*(.init_array .ctors))
-		__init_array_end = .;
-	} > ACTIVE
-	.fini_array : {
-		__fini_array_start = .;
-		KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
-		KEEP (*(.fini_array .dtors))
-		__fini_array_end = .;
-	} > ACTIVE
-
 	/* what is this? */
 	.fixup : {
 		__fixup_start = .;
@@ -99,23 +61,6 @@ SECTIONS {
 		__eh_framehdr_start = .;
 		*(.eh_framehdr)
 		__eh_framehdr_end = .;
-	} > ACTIVE
-	.gcc_except_table : {
-		__except_table_start = .;
-		*(.gcc_except_table)
-		__except_table_end = .;
-	} > ACTIVE
-	/* stack unwinding */
-	.ARM.exidx : {
-		__exidx_start = .;
-		*(.ARM.exidx* .gnu.linkonce.armexidx.*.*)
-		__exidx_end = .;
-	} > ACTIVE
-
-	.ARM.attributes : {
-		__arm_attributes_start = .;
-		*(.ARM.attributes)
-		__arm_attributes_end = .;
 	} > ACTIVE
 
 	.bss (NOLOAD) : {
@@ -153,10 +98,6 @@ SECTIONS {
 		. += __user_stack_length;
 		__user_stack_start = .;
 		. = ALIGN(8);
-		__kernel_stack_end = .;
-		. += __kernel_stack_length;
-		__kernel_stack_start = .;
-		__stack = .; /* newlib */
 	} > COLD
 
 	_end = .;

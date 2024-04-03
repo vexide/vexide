@@ -3,15 +3,19 @@
 //! This is done automatically in the `vex-startup` crate,
 //! so you should not need to call it yourself unless you are writing your own startup implementation.
 
-use linked_list_allocator::LockedHeap;
+use core::ptr::addr_of_mut;
+
+use talc::{ ErrOnOom, Span, Talc, Talck };
+
+use spin::Mutex;
 
 extern "C" {
-    static __heap_start: *mut u8;
-    static __heap_length: usize;
+    static mut __heap_start: u8;
+    static mut __heap_end: u8;
 }
 
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: Talck<Mutex<()>, ErrOnOom> = Talc::new(ErrOnOom).lock();
 
 /// Initializes the heap allocator.
 ///
@@ -21,6 +25,6 @@ static ALLOCATOR: LockedHeap = LockedHeap::empty();
 pub unsafe fn init_heap() {
     //SAFETY: User must ensure that this function is only called once.
     unsafe {
-        ALLOCATOR.lock().init(__heap_start, __heap_length);
+        ALLOCATOR.lock().claim(Span::new(addr_of_mut!(__heap_start), addr_of_mut!(__heap_end))).unwrap();
     }
 }
