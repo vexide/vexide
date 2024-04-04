@@ -1,27 +1,17 @@
 #![no_main]
 #![no_std]
 
-use vex_sdk::vexTaskAdd;
-use vexide_core::io::println;
-use vexide_devices::peripherals::Peripherals;
+extern crate alloc;
+use alloc::boxed::Box;
 
-fn background_processing() {
-    loop {
-        vexTasksRun();
-        vexDelay(2);
-    }
-}
+use vexide_devices::peripherals::Peripherals;
 
 #[vexide_startup::main]
 async fn main(peripherals: Peripherals) {
     unsafe {
-        println!("Testing serial output.");
-
-        vexTaskAdd(
-            background_processing,
-            2,
-            c"vexide background processing".as_ptr(),
-        );
+        // Write something to the screen to test if the program is running
+        let test_box = Box::new(100);
+        vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
 
         loop {}
     }
