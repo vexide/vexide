@@ -9,7 +9,6 @@ use vex_sdk::{
 
 use crate::sync::{Mutex, MutexGuard};
 
-pub const SERIAL_BUFFER_SIZE: usize = 2048;
 const STDIO_CHANNEL: u32 = 1;
 
 static STDOUT: Mutex<StdoutRaw> = Mutex::new(StdoutRaw);
@@ -69,16 +68,18 @@ pub fn stdout() -> Stdout {
 }
 
 impl Write for Stdout {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.lock().write(buf)
+	fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+		self.lock().write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.lock().flush()
+		self.lock().flush()
     }
 }
 
 impl Stdout {
+	pub const INTERNAL_BUFFER_SIZE: usize = 2048;
+
     pub fn lock(&self) -> StdoutLock<'static> {
         StdoutLock {
             inner: STDOUT.lock_blocking(),
@@ -131,6 +132,8 @@ impl io::Read for Stdin {
 }
 
 impl Stdin {
+	pub const STDIN_BUFFER_SIZE: usize = 4096;
+
     pub fn lock(&self) -> StdinLock<'static> {
         StdinLock {
             inner: STDIN.lock_blocking(),
