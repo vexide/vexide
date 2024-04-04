@@ -9,7 +9,7 @@
 #![no_std]
 #![feature(asm_experimental_arch)]
 
-use core::{arch::asm, ptr::addr_of_mut};
+use core::{arch::asm, hint, ptr::addr_of_mut};
 
 pub use vexide_startup_macro::main;
 
@@ -80,12 +80,17 @@ pub unsafe fn program_entry() {
 
     unsafe {
         // Initialize the heap allocator
+        // This cfg is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
         #[cfg(target_arch = "arm")]
-        // This is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
         vexide_core::allocator::vexos::init_heap();
         // Call the user code
-        main()
+        main();
+        // Exit the program
+        vex_sdk::vexSystemExitRequest();
     }
 
-    loop {}
+    // Technically unreachable, but the compiler doesn't know that
+    loop {
+        hint::spin_loop();
+    }
 }
