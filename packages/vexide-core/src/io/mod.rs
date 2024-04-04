@@ -1,3 +1,7 @@
+//! Serial input and output functionality.
+//!
+//! This module aims to provide a very similar API to the Rust standard library's `std::io` module.
+
 mod stdio;
 
 pub use no_std_io::io::*;

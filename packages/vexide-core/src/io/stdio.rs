@@ -1,11 +1,5 @@
-extern crate alloc;
-
-use alloc::vec::Vec;
-
-use no_std_io::io::{self, BufRead, Read, Write};
-use vex_sdk::{
-    vexBackgroundProcessing, vexSerialPeekChar, vexSerialReadChar, vexSerialWriteBuffer,
-};
+use no_std_io::io::{self, Write};
+use vex_sdk::{vexBackgroundProcessing, vexSerialReadChar, vexSerialWriteBuffer};
 
 use crate::sync::{Mutex, MutexGuard};
 
@@ -47,6 +41,8 @@ impl io::Write for StdoutRaw {
     }
 }
 
+/// A locked serial output stream.
+/// Only one of these can exist at a time and writes occur without waiting.
 pub struct StdoutLock<'a> {
     inner: MutexGuard<'a, StdoutRaw>,
 }
@@ -61,9 +57,11 @@ impl Write for StdoutLock<'_> {
     }
 }
 
+/// A handle to the serial output stream of this program.
 pub struct Stdout;
 
-pub fn stdout() -> Stdout {
+/// Contstructs a handle to the serial output stream
+pub const fn stdout() -> Stdout {
     Stdout
 }
 
@@ -78,8 +76,11 @@ impl Write for Stdout {
 }
 
 impl Stdout {
+    /// The size of the internal VEXOs FIFO serial out buffer.
     pub const INTERNAL_BUFFER_SIZE: usize = 2048;
 
+    /// Locks the stdout for writing.
+    /// This function is blocking and will wait until the lock is acquired.
     pub fn lock(&self) -> StdoutLock<'static> {
         StdoutLock {
             inner: STDOUT.lock_blocking(),
@@ -113,6 +114,8 @@ impl io::Read for StdinRaw {
     }
 }
 
+/// A locked serial input stream.
+/// Only one of these can exist at a time and reads occur without waiting.
 pub struct StdinLock<'a> {
     inner: MutexGuard<'a, StdinRaw>,
 }
@@ -123,6 +126,7 @@ impl io::Read for StdinLock<'_> {
     }
 }
 
+/// A handle to the serial input stream of this program.
 pub struct Stdin;
 
 impl io::Read for Stdin {
@@ -132,8 +136,11 @@ impl io::Read for Stdin {
 }
 
 impl Stdin {
+    /// The size of the internal VEXOs serial in buffer.
     pub const STDIN_BUFFER_SIZE: usize = 4096;
 
+    /// Locks the stdin for reading.
+    /// This function is blocking and will wait until the lock is acquired.
     pub fn lock(&self) -> StdinLock<'static> {
         StdinLock {
             inner: STDIN.lock_blocking(),
@@ -141,11 +148,13 @@ impl Stdin {
     }
 }
 
-pub fn stdin() -> Stdin {
+/// Constructs a handle to the serial input stream.
+pub const fn stdin() -> Stdin {
     Stdin
 }
 
 #[macro_export]
+/// Prints a message to the standard output and appends a newline.
 macro_rules! println {
     () => {
         $crate::print!("\n")
@@ -157,6 +166,7 @@ macro_rules! println {
 pub use println;
 
 #[macro_export]
+/// Prints a message to the standard output.
 macro_rules! print {
     ($($arg:tt)*) => {{
 		{
@@ -170,6 +180,7 @@ macro_rules! print {
 pub use print;
 
 #[macro_export]
+/// Prints and returns the value of a given expression for quick and dirty debugging.
 macro_rules! dbg {
     () => {
         $crate::println!("[{}:{}]", $file!(), $line!())

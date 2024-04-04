@@ -42,6 +42,8 @@ impl RawMutex {
     }
 }
 unsafe impl lock_api::RawMutex for RawMutex {
+    // Allow this because we can't get around it
+    #[allow(clippy::declare_interior_mutable_const)]
     const INIT: Self = Self::new();
 
     type GuardMarker = lock_api::GuardSend;

@@ -8,6 +8,7 @@
 
 #![no_std]
 #![feature(asm_experimental_arch)]
+#![allow(clippy::needless_doctest_main)]
 
 use core::{arch::asm, hint, ptr::addr_of_mut};
 
