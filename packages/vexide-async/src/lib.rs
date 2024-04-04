@@ -45,12 +45,10 @@ impl Future for SleepFuture {
         if self.target_millis < unsafe { (vex_sdk::vexSystemHighResTimeGet() / 1000) as _ } {
             Poll::Ready(())
         } else {
-            critical_section::with(|_| {
-                EXECUTOR
-                    .reactor
-                    .borrow_mut()
+            EXECUTOR.with_reactor(|reactor| {
+                reactor
                     .sleepers
-                    .push(cx.waker().clone(), self.target_millis);
+                    .push(cx.waker().clone(), self.target_millis)
             });
             Poll::Pending
         }

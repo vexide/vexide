@@ -16,10 +16,9 @@ pub(crate) static EXECUTOR: Executor = Executor::new();
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
-    pub(crate) reactor: RefCell<Reactor>,
+    reactor: RefCell<Reactor>,
 }
 //SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
-//NOTE FOR FUTURE IMPLEMENTATIONS: when accessing the executors reactor, you must enter the critical section to ensure thread safety.
 unsafe impl Send for Executor {}
 unsafe impl Sync for Executor {}
 
@@ -47,6 +46,16 @@ impl Executor {
             task
         })
     }
+
+    /// Run the provided closure with the reactor.
+    /// Used to ensure the thread safety of the executor.
+    /// The closure is run with interrupts disabled.
+    pub(crate) fn with_reactor(&self, f: impl FnOnce(&mut Reactor)) {
+        critical_section::with(|_| {
+            f(&mut self.reactor.borrow_mut());
+        });
+    }
+
 
     pub(crate) fn tick(&self) -> bool {
         critical_section::with(|_| {
