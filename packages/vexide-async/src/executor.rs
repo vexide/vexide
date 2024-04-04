@@ -56,7 +56,6 @@ impl Executor {
         });
     }
 
-
     pub(crate) fn tick(&self) -> bool {
         critical_section::with(|_| {
             self.reactor.borrow_mut().tick();

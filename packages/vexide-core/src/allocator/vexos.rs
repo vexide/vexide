@@ -5,8 +5,9 @@
 
 use core::ptr::addr_of_mut;
 
-use crate::sync::RawMutex;
 use talc::{ErrOnOom, Span, Talc, Talck};
+
+use crate::sync::RawMutex;
 
 extern "C" {
     static mut __heap_start: u8;
