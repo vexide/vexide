@@ -8,15 +8,13 @@ use core::{
 };
 
 use async_task::{Runnable, Task};
-use lazy_static::lazy_static;
-use vexide_core::sync::Mutex;
 use waker_fn::waker_fn;
+
+use crate::lock::ExecutorLock;
 
 use super::reactor::Reactor;
 
-lazy_static! {
-    pub(crate) static ref EXECUTOR: Mutex<Executor> = Mutex::new(Executor::new());
-}
+pub(crate) static EXECUTOR: ExecutorLock = ExecutorLock::new();
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,

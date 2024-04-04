@@ -78,7 +78,7 @@ impl Write for Stdout {
 impl Stdout {
 	pub fn lock(&self) -> StdoutLock<'static> {
 		StdoutLock {
-			inner: STDOUT.lock(),
+			inner: STDOUT.lock_blocking(),
 		}
 	}
 }
@@ -130,7 +130,7 @@ impl io::Read for Stdin {
 impl Stdin {
 	pub fn lock(&self) -> StdinLock<'static> {
 		StdinLock {
-			inner: STDIN.lock(),
+			inner: STDIN.lock_blocking(),
 		}
 	}
 }

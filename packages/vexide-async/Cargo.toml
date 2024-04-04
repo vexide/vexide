@@ -25,6 +25,7 @@ vexide-core = { version = "0.1.0", path = "../vexide-core" }
 waker-fn = "1.1.1"
 vex-sdk = "0.9.1"
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
+lock_api = "0.4.3"
 
 [lints]
 workspace = true

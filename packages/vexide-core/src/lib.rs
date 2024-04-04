@@ -11,8 +11,11 @@
 
 #![no_std]
 #![feature(error_in_core)]
+#![cfg_attr(feature = "critical-section",feature(asm_experimental_arch))]
 
 pub mod allocator;
 pub mod io;
 pub mod sync;
 pub mod time;
+#[cfg(feature = "critical-section")]
+pub mod critical_section;

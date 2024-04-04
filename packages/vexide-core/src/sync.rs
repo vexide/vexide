@@ -3,10 +3,10 @@
 //! Types implemented here are specifically designed to mimic the standard library.
 
 use core::{
-    cell::UnsafeCell,
-    fmt::Debug,
-    sync::atomic::{AtomicU8, Ordering},
+    cell::UnsafeCell, fmt::Debug, future::Future, sync::atomic::{AtomicU8, Ordering}
 };
+
+use lock_api::RawMutex as _;
 
 struct MutexState(AtomicU8);
 impl MutexState {
@@ -24,28 +24,64 @@ impl MutexState {
     fn unlock(&self) {
         self.0.store(0, Ordering::Release);
     }
+}
 
-    fn poison(&self) {
-        self.0.store(2, Ordering::Release);
+/// A raw mutex type built on top of the critical section.
+pub struct RawMutex {
+    state: MutexState,
+}
+impl RawMutex {
+    /// Creates a new raw mutex.
+    pub const fn new() -> Self {
+        Self {
+            state: MutexState::new(),
+        }
+    }
+}
+unsafe impl lock_api::RawMutex for RawMutex {
+    const INIT: Self = Self::new();
+
+    type GuardMarker = lock_api::GuardSend;
+
+    fn lock(&self) {
+        critical_section::with(|_| {
+            while !self.state.try_lock() {}
+        })
     }
 
-    fn is_poisoned(&self) -> bool {
-        self.0.load(Ordering::Acquire) == 2
+    fn try_lock(&self) -> bool {
+        critical_section::with(|_| {
+            self.state.try_lock()
+        })
     }
 
-    fn is_locked(&self) -> bool {
-        self.0.load(Ordering::Acquire) == 1
+    unsafe fn unlock(&self) {
+        critical_section::with(|_| {
+            self.state.unlock();
+        })
     }
+}
 
-    fn is_unlocked(&self) -> bool {
-        self.0.load(Ordering::Acquire) == 0
+/// A future that resolves to a mutex guard.
+pub struct MutexLockFuture<'a, T> {
+    mutex: &'a Mutex<T>,
+}
+impl<'a, T> Future for MutexLockFuture<'a, T> {
+    type Output = MutexGuard<'a, T>;
+
+    fn poll(self: core::pin::Pin<&mut Self>, _: &mut core::task::Context<'_>) -> core::task::Poll<Self::Output> {
+        if self.mutex.raw.try_lock() {
+            core::task::Poll::Ready(MutexGuard::new(self.mutex))
+        } else {
+            core::task::Poll::Pending
+        }
     }
 }
 
 /// The basic mutex type.
 /// Mutexes are used to share variables between tasks safely.
 pub struct Mutex<T> {
-    state: MutexState,
+    raw: RawMutex,
     data: UnsafeCell<T>,
 }
 unsafe impl<T: Send> Send for Mutex<T> {}
@@ -55,26 +91,27 @@ impl<T> Mutex<T> {
     /// Creates a new mutex.
     pub const fn new(data: T) -> Self {
         Self {
-            state: MutexState::new(),
+            raw: RawMutex::new(),
             data: UnsafeCell::new(data),
         }
     }
 
     /// Locks the mutex so that it cannot be locked in another task at the same time.
     /// Blocks the current task until the lock is acquired.
-    pub fn lock(&self) -> MutexGuard<'_, T> {
-        while !self.state.try_lock() {
-            if self.state.is_poisoned() {
-                panic!("Mutex poisoned");
-            }
-        }
+    pub const fn lock(&self) -> MutexLockFuture<'_, T> {
+        MutexLockFuture { mutex: self }
+    }
 
+    /// Used internally to lock the mutex in a blocking fashion.
+    /// This is neccessary because a mutex may be created internally before the executor is ready to be initialized.
+    pub(crate) fn lock_blocking(&self) -> MutexGuard<'_, T> {
+        self.raw.lock();
         MutexGuard::new(self)
     }
 
     /// Attempts to acquire this lock. This function does not block.
     pub fn try_lock(&self) -> Option<MutexGuard<'_, T>> {
-        if self.state.try_lock() {
+        if self.raw.try_lock() {
             Some(MutexGuard { mutex: self })
         } else {
             None
@@ -156,6 +193,6 @@ impl<T> core::ops::DerefMut for MutexGuard<'_, T> {
 
 impl<T> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
-        self.mutex.state.unlock();
+        unsafe { self.mutex.raw.unlock() };
     }
 }

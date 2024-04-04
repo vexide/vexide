@@ -16,6 +16,7 @@ use executor::EXECUTOR;
 
 mod executor;
 mod reactor;
+mod lock;
 
 /// Runs a future in the background without having to await it
 /// To get the the return value you can await a task.

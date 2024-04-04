@@ -30,6 +30,11 @@ snafu = { version = "0.8.0", default-features = false, features = [
 spin = "0.9.8"
 talc = "4.3.1"
 lock_api = "0.4.11"
+critical-section = { version = "1.1.2", features = ["restore-state-bool"], optional = true }
+
+[features]
+default = ["critical-section"]
+critical-section = ["dep:critical-section"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 dlmalloc = { version = "0.2.4", features = ["global"] }
