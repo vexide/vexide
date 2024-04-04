@@ -1,5 +1,5 @@
 use no_std_io::io::{self, Write};
-use vex_sdk::{vexBackgroundProcessing, vexSerialReadChar, vexSerialWriteBuffer};
+use vex_sdk::{vexTasksRun, vexSerialReadChar, vexSerialWriteBuffer};
 
 use crate::sync::{Mutex, MutexGuard};
 
@@ -34,7 +34,7 @@ impl io::Write for StdoutRaw {
     fn flush(&mut self) -> io::Result<()> {
         // Background processing flushes all serial FIFO buffers when it runs.
         unsafe {
-            vexBackgroundProcessing();
+            vexTasksRun();
         }
 
         Ok(())
