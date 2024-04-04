@@ -148,6 +148,7 @@ macro_rules! println {
 		$crate::print!("{}\n", format_args!($($arg)*))
 	};
 }
+pub use println;
 
 #[macro_export]
 macro_rules! print {
@@ -160,6 +161,7 @@ macro_rules! print {
 		}
     }};
 }
+pub use print;
 
 #[macro_export]
 macro_rules! dbg {
@@ -178,3 +180,4 @@ macro_rules! dbg {
         ($($crate::dbg!($val)),+,)
     };
 }
+pub use dbg;
