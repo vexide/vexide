@@ -5,7 +5,7 @@
 
 use core::ptr::addr_of_mut;
 
-use spin::Mutex;
+use crate::sync::RawMutex;
 use talc::{ErrOnOom, Span, Talc, Talck};
 
 extern "C" {
@@ -14,7 +14,7 @@ extern "C" {
 }
 
 #[global_allocator]
-static ALLOCATOR: Talck<Mutex<()>, ErrOnOom> = Talc::new(ErrOnOom).lock();
+static ALLOCATOR: Talck<RawMutex, ErrOnOom> = Talc::new(ErrOnOom).lock();
 
 /// Initializes the heap allocator.
 ///
