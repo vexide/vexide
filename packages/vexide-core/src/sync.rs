@@ -3,7 +3,10 @@
 //! Types implemented here are specifically designed to mimic the standard library.
 
 use core::{
-    cell::UnsafeCell, fmt::Debug, future::Future, sync::atomic::{AtomicU8, Ordering}
+    cell::UnsafeCell,
+    fmt::Debug,
+    future::Future,
+    sync::atomic::{AtomicU8, Ordering},
 };
 
 use lock_api::RawMutex as _;
@@ -52,9 +55,7 @@ unsafe impl lock_api::RawMutex for RawMutex {
     }
 
     fn try_lock(&self) -> bool {
-        critical_section::with(|_| {
-            self.state.try_lock()
-        })
+        critical_section::with(|_| self.state.try_lock())
     }
 
     unsafe fn unlock(&self) {
@@ -71,7 +72,10 @@ pub struct MutexLockFuture<'a, T> {
 impl<'a, T> Future for MutexLockFuture<'a, T> {
     type Output = MutexGuard<'a, T>;
 
-    fn poll(self: core::pin::Pin<&mut Self>, _: &mut core::task::Context<'_>) -> core::task::Poll<Self::Output> {
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        _: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
         if self.mutex.raw.try_lock() {
             core::task::Poll::Ready(MutexGuard::new(self.mutex))
         } else {

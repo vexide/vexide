@@ -3,6 +3,7 @@
 
 extern crate alloc;
 use alloc::boxed::Box;
+
 use vexide_devices::peripherals::Peripherals;
 
 #[vexide_startup::main]

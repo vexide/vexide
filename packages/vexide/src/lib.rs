@@ -75,8 +75,8 @@ pub mod prelude {
     pub use vexide_async::{block_on, sleep, spawn};
     #[cfg(feature = "core")]
     pub use vexide_core::{
-        io::{BufRead, Read, Seek, Write},
         dbg,
+        io::{BufRead, Read, Seek, Write},
         print, println,
     };
     #[cfg(feature = "devices")]

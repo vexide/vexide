@@ -1,8 +1,11 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
+
 use no_std_io::io::{self, BufRead, Read, Write};
-use vex_sdk::{vexBackgroundProcessing, vexSerialPeekChar, vexSerialReadChar, vexSerialWriteBuffer};
+use vex_sdk::{
+    vexBackgroundProcessing, vexSerialPeekChar, vexSerialReadChar, vexSerialWriteBuffer,
+};
 
 use crate::sync::{Mutex, MutexGuard};
 
@@ -20,123 +23,123 @@ struct StdoutRaw;
 
 impl io::Write for StdoutRaw {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let written =
+            unsafe { vexSerialWriteBuffer(STDIO_CHANNEL, buf.as_ptr(), buf.len() as u32) };
 
-		let written = unsafe { vexSerialWriteBuffer(STDIO_CHANNEL, buf.as_ptr(), buf.len() as u32) };
-
-		if written == -1 {
+        if written == -1 {
             return Err(io::Error::new(
                 io::ErrorKind::Other,
                 "Internal write error occurred.",
             ));
-		}
+        }
 
-		self.flush()?;
+        self.flush()?;
 
-		Ok(written as usize)
-	}
+        Ok(written as usize)
+    }
 
-	fn flush(&mut self) -> io::Result<()> {
-		// Background processing flushes all serial FIFO buffers when it runs.
-		unsafe {
-			vexBackgroundProcessing();
-		}
+    fn flush(&mut self) -> io::Result<()> {
+        // Background processing flushes all serial FIFO buffers when it runs.
+        unsafe {
+            vexBackgroundProcessing();
+        }
 
-		Ok(())
-	}
+        Ok(())
+    }
 }
 
 pub struct StdoutLock<'a> {
-	inner: MutexGuard<'a, StdoutRaw>,
+    inner: MutexGuard<'a, StdoutRaw>,
 }
 
 impl Write for StdoutLock<'_> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-		self.inner.write(buf)
-	}
+        self.inner.write(buf)
+    }
 
-	fn flush(&mut self) -> io::Result<()> {
-		self.inner.flush()
-	}
+    fn flush(&mut self) -> io::Result<()> {
+        self.inner.flush()
+    }
 }
 
 pub struct Stdout;
 
 pub fn stdout() -> Stdout {
-	Stdout
+    Stdout
 }
 
 impl Write for Stdout {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-		self.lock().write(buf)
-	}
+        self.lock().write(buf)
+    }
 
-	fn flush(&mut self) -> io::Result<()> {
-		self.lock().flush()
-	}
+    fn flush(&mut self) -> io::Result<()> {
+        self.lock().flush()
+    }
 }
 
 impl Stdout {
-	pub fn lock(&self) -> StdoutLock<'static> {
-		StdoutLock {
-			inner: STDOUT.lock_blocking(),
-		}
-	}
+    pub fn lock(&self) -> StdoutLock<'static> {
+        StdoutLock {
+            inner: STDOUT.lock_blocking(),
+        }
+    }
 }
 
 struct StdinRaw;
 
 impl io::Read for StdinRaw {
-	fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-		let mut iterator = buf.iter_mut();
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let mut iterator = buf.iter_mut();
 
-		let mut byte: i32;
-		let mut written: usize = 0;
+        let mut byte: i32;
+        let mut written: usize = 0;
 
-		// Little but cursed, but hey it gets the job done...
-		while {
-			byte = unsafe { vexSerialReadChar(STDIO_CHANNEL) };
-			byte != -1
-		} {
-			if let Some(next) = iterator.next() {
-				*next = byte as u8;
-				written += 1;
-			}  else {
-				return Ok(written);
-			}
-		}
+        // Little but cursed, but hey it gets the job done...
+        while {
+            byte = unsafe { vexSerialReadChar(STDIO_CHANNEL) };
+            byte != -1
+        } {
+            if let Some(next) = iterator.next() {
+                *next = byte as u8;
+                written += 1;
+            } else {
+                return Ok(written);
+            }
+        }
 
-		Ok(written)
-	}
+        Ok(written)
+    }
 }
 
 pub struct StdinLock<'a> {
-	inner: MutexGuard<'a, StdinRaw>,
+    inner: MutexGuard<'a, StdinRaw>,
 }
 
 impl io::Read for StdinLock<'_> {
-	fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-		self.inner.read(buf)
-	}
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.inner.read(buf)
+    }
 }
 
 pub struct Stdin;
 
 impl io::Read for Stdin {
-	fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-		self.lock().read(buf)
-	}
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.lock().read(buf)
+    }
 }
 
 impl Stdin {
-	pub fn lock(&self) -> StdinLock<'static> {
-		StdinLock {
-			inner: STDIN.lock_blocking(),
-		}
-	}
+    pub fn lock(&self) -> StdinLock<'static> {
+        StdinLock {
+            inner: STDIN.lock_blocking(),
+        }
+    }
 }
 
 pub fn stdin() -> Stdin {
-	Stdin
+    Stdin
 }
 
 #[macro_export]

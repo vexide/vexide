@@ -5,9 +5,8 @@
 
 use core::ptr::addr_of_mut;
 
-use talc::{ ErrOnOom, Span, Talc, Talck };
-
 use spin::Mutex;
+use talc::{ErrOnOom, Span, Talc, Talck};
 
 extern "C" {
     static mut __heap_start: u8;
@@ -25,6 +24,12 @@ static ALLOCATOR: Talck<Mutex<()>, ErrOnOom> = Talc::new(ErrOnOom).lock();
 pub unsafe fn init_heap() {
     //SAFETY: User must ensure that this function is only called once.
     unsafe {
-        ALLOCATOR.lock().claim(Span::new(addr_of_mut!(__heap_start), addr_of_mut!(__heap_end))).unwrap();
+        ALLOCATOR
+            .lock()
+            .claim(Span::new(
+                addr_of_mut!(__heap_start),
+                addr_of_mut!(__heap_end),
+            ))
+            .unwrap();
     }
 }
