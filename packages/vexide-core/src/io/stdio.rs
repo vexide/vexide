@@ -1,5 +1,5 @@
 use no_std_io::io::{self, Write};
-use vex_sdk::{vexTasksRun, vexSerialReadChar, vexSerialWriteBuffer};
+use vex_sdk::{vexSerialReadChar, vexSerialWriteBuffer, vexTasksRun};
 
 use crate::sync::{Mutex, MutexGuard};
 
