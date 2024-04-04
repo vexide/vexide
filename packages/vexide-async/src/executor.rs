@@ -10,18 +10,18 @@ use core::{
 use async_task::{Runnable, Task};
 use waker_fn::waker_fn;
 
-use crate::lock::ExecutorLock;
-
 use super::reactor::Reactor;
 
-pub(crate) static EXECUTOR: ExecutorLock = ExecutorLock::new();
+pub(crate) static EXECUTOR: Executor = Executor::new();
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
     pub(crate) reactor: RefCell<Reactor>,
 }
-// Executor should probably not be Sync or Send but our target doesn't have threads and we need it to be in a static
-impl !Sync for Executor {}
+//SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
+//NOTE FOR FUTURE IMPLEMENTATIONS: when accessing the executors reactor, you must enter the critical section to ensure thread safety.
+unsafe impl Send for Executor {}
+unsafe impl Sync for Executor {}
 
 impl Executor {
     pub const fn new() -> Self {
@@ -32,34 +32,38 @@ impl Executor {
     }
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
-        // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
-        //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
-        //   TODO: Make sure that the waker can never be sent off the thread.
-        let (runnable, task) = unsafe {
-            async_task::spawn_unchecked(future, |runnable| {
-                self.queue.borrow_mut().push_back(runnable)
-            })
-        };
+        critical_section::with(|_| {
+            // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
+            //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
+            //   TODO: Make sure that the waker can never be sent off the thread.
+            let (runnable, task) = unsafe {
+                async_task::spawn_unchecked(future, |runnable| {
+                    self.queue.borrow_mut().push_back(runnable)
+                })
+            };
 
-        runnable.schedule();
+            runnable.schedule();
 
-        task
+            task
+        })
     }
 
     pub(crate) fn tick(&self) -> bool {
-        self.reactor.borrow_mut().tick();
+        critical_section::with(|_| {
+            self.reactor.borrow_mut().tick();
 
-        let runnable = {
-            let mut queue = self.queue.borrow_mut();
-            queue.pop_front()
-        };
-        match runnable {
-            Some(runnable) => {
-                runnable.run();
-                true
+            let runnable = {
+                let mut queue = self.queue.borrow_mut();
+                queue.pop_front()
+            };
+            match runnable {
+                Some(runnable) => {
+                    runnable.run();
+                    true
+                }
+                None => false,
             }
-            None => false,
-        }
+        })
     }
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
