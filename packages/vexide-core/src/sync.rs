@@ -45,7 +45,9 @@ unsafe impl lock_api::RawMutex for RawMutex {
 
     fn lock(&self) {
         critical_section::with(|_| {
-            while !self.state.try_lock() {}
+            while !self.state.try_lock() {
+                core::hint::spin_loop();
+            }
         })
     }
 
