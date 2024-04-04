@@ -56,7 +56,6 @@
 //! If you want to learn why, look at the docs for [`vexide_async::async_robot`] or [`pros_sync::sync_robot`].
 #![no_std]
 
-pub use pros_sys as sys;
 #[cfg(feature = "async")]
 pub use vexide_async as async_runtime;
 #[cfg(feature = "core")]
