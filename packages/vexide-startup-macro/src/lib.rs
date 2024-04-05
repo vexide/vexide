@@ -61,6 +61,15 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[no_mangle]
         extern "C" fn main() {
             let #peripherals_ident = ::vexide_devices::peripherals::Peripherals::take().unwrap();
+
+            // Run vexos background processing at a regular 2ms interval.
+            ::vexide_async::spawn(async {
+                loop {
+                    unsafe { ::vex_sdk::vexTasksRun(); }
+                    ::vexide_async::sleep(::core::time::Duration::from_millis(2)).await;
+                }
+            }).detach();
+
             ::vexide_async::block_on(async #block);
         }
 
