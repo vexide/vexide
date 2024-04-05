@@ -22,6 +22,6 @@
     },
     "relocation-model": "static",
     "target-pointer-width": "32",
-    "os": "vexos",
+    "os": "none",
     "vendor": "vex"
 }
