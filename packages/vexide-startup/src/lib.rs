@@ -47,7 +47,7 @@ impl ColdHeader {
     }
 }
 
-extern "C" {
+extern "Rust" {
     fn main();
 }
 

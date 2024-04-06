@@ -59,7 +59,7 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     quote! {
         #[no_mangle]
-        extern "C" fn main() {
+        extern "Rust" fn main() {
             let #peripherals_ident = ::vexide_devices::peripherals::Peripherals::take().unwrap();
 
             // Run vexos background processing at a regular 2ms interval.
