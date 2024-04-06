@@ -13,7 +13,6 @@
     "rust-analyzer.check.allTargets": false,
     "rust-analyzer.check.targets": [
         "${workspaceFolder}/armv7a-vexos-eabi.json",
-        "wasm32-unknown-unknown",
     ],
     "rust-analyzer.showUnlinkedFileNotification": false,
     "files.trimTrailingWhitespace": true,
