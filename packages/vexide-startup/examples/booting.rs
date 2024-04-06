@@ -2,9 +2,8 @@
 #![no_std]
 
 extern crate alloc;
-use core::time::Duration;
-
 use alloc::boxed::Box;
+use core::time::Duration;
 
 use vexide_async::sleep;
 use vexide_core::println;

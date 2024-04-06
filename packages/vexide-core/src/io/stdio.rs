@@ -32,7 +32,6 @@ impl io::Write for StdoutRaw {
     }
 
     fn flush(&mut self) -> io::Result<()> {
-
         // Serial buffers are automatically flushed every 2mS by vexTasksRun
         // in our background processing task.
         Ok(())
