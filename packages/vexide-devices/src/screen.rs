@@ -78,7 +78,11 @@ impl Circle {
     /// Create a circle with the given coordinates and radius.
     /// The coordinates are the center of the circle.
     pub const fn new(x: i16, y: i16, radius: i16) -> Self {
-        Self { x, y: y + 0x20, radius }
+        Self {
+            x,
+            y: y + 0x20,
+            radius,
+        }
     }
 }
 
