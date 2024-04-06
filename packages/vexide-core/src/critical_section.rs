@@ -28,7 +28,13 @@ unsafe impl critical_section::Impl for ZynqCriticalSection {
         // Don't enable IRQs if we are in a nested critical section
         if restore_state {
             unsafe {
-                asm!("cpsie i")
+                asm!(
+                    "
+                    cpsie i
+                    dsb
+                    isb
+                    "
+                )
             }
         }
     }
