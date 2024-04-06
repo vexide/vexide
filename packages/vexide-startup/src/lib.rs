@@ -88,7 +88,14 @@ pub unsafe fn program_entry() {
         // Print the banner
         #[cfg(not(feature = "no-banner"))]
         print!(include_str!("banner.txt"));
-
+        // Run vexos background processing at a regular 2ms interval.
+        // This is necessary for serial and devices to work properly.
+        vexide_async::spawn(async {
+            loop {
+                vex_sdk::vexTasksRun();
+                vexide_async::sleep(::core::time::Duration::from_millis(2)).await;
+            }
+        }).detach();
         // Call the user code
         main();
         // Exit the program
