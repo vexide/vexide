@@ -7,28 +7,29 @@ critical_section::set_impl!(ZynqCriticalSection);
 
 unsafe impl critical_section::Impl for ZynqCriticalSection {
     unsafe fn acquire() -> critical_section::RawRestoreState {
-        let state: u32;
+        let mut state: u32;
         unsafe {
             asm!("
+                    // Save the current state
                     mrs {0}, cpsr
+                    // Disable IRQs
                     cpsid i
+                    // Synchronization barriers
+                    dsb
+                    isb
                 ",
                 out(reg) state
             )
         }
-        (state & (1 << 7)) == 0
+        (state & 0b1000000) == 0b1000000
     }
 
     unsafe fn release(restore_state: critical_section::RawRestoreState) {
-        let mask: u32 = if restore_state { 1 << 7 } else { 0 };
-        unsafe {
-            asm!("
-                mrs r1, cpsr
-                bic r1, r1, {0}
-                msr cpsr_c, r1
-            ",
-                in(reg) mask
-            )
+        // Don't enable IRQs if we are in a nested critical section
+        if restore_state {
+            unsafe {
+                asm!("cpsie i")
+            }
         }
     }
 }
