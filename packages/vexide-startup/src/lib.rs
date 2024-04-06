@@ -95,7 +95,8 @@ pub unsafe fn program_entry() {
                 vex_sdk::vexTasksRun();
                 vexide_async::sleep(::core::time::Duration::from_millis(2)).await;
             }
-        }).detach();
+        })
+        .detach();
         // Call the user code
         main();
         // Exit the program
