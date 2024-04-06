@@ -12,6 +12,7 @@ authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
+    "Tropical"
 ]
 rust-version = "1.75.0"
 
