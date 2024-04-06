@@ -78,7 +78,7 @@ impl Circle {
     /// Create a circle with the given coordinates and radius.
     /// The coordinates are the center of the circle.
     pub const fn new(x: i16, y: i16, radius: i16) -> Self {
-        Self { x, y, radius }
+        Self { x, y: y + 0x20, radius }
     }
 }
 
@@ -113,7 +113,12 @@ pub struct Line {
 impl Line {
     /// Create a new line with the given coordinates.
     pub const fn new(x0: i16, y0: i16, x1: i16, y1: i16) -> Self {
-        Self { x0, y0, x1, y1 }
+        Self {
+            x0,
+            y0: y0 + 0x20,
+            x1,
+            y1: y1 + 0x20,
+        }
     }
 }
 
@@ -140,9 +145,9 @@ impl Rect {
     pub const fn new(start_x: i16, start_y: i16, end_x: i16, end_y: i16) -> Self {
         Self {
             x0: start_x,
-            y0: start_y,
+            y0: start_y + 0x20,
             x1: end_x,
-            y1: end_y,
+            y1: end_y + 0x20,
         }
     }
 }
@@ -219,13 +224,13 @@ impl Fill for Text {
             match self.position {
                 TextPosition::Point(x, y) => match self.format {
                     TextFormat::Small | TextFormat::LargeCenter => {
-                        vexDisplaySmallStringAt(x as i32, y as i32, self.text.as_ptr())
+                        vexDisplaySmallStringAt(x as i32, (y + 0x20) as i32, self.text.as_ptr())
                     }
                     TextFormat::Medium | TextFormat::MediumCenter => {
-                        vexDisplayStringAt(x as i32, y as i32, self.text.as_ptr())
+                        vexDisplayStringAt(x as i32, (y + 0x20) as i32, self.text.as_ptr())
                     }
                     TextFormat::Large => {
-                        vexDisplayBigStringAt(x as i32, y as i32, self.text.as_ptr())
+                        vexDisplayBigStringAt(x as i32, (y + 0x20) as i32, self.text.as_ptr())
                     }
                 },
                 TextPosition::Line(line) => match self.format {
@@ -335,7 +340,15 @@ impl Screen {
     /// This will effectively y-offset the display buffer in this area by
     /// `offset` pixels.
     pub fn scroll_area(&mut self, x0: i16, y0: i16, x1: i16, y1: i16, offset: i16) {
-        unsafe { vexDisplayScrollRect(x0 as i32, y0 as i32, x1 as i32, y1 as i32, offset as i32) }
+        unsafe {
+            vexDisplayScrollRect(
+                x0 as i32,
+                (y0 + 0x20) as i32,
+                x1 as i32,
+                (y1 + 0x20) as i32,
+                offset as i32,
+            )
+        }
     }
 
     /// Draw a filled object to the screen.
@@ -359,7 +372,7 @@ impl Screen {
     /// Draw a color to a specified pixel position on the screen.
     pub fn draw_pixel(x: i16, y: i16) {
         unsafe {
-            vexDisplayPixelSet(x as _, y as _);
+            vexDisplayPixelSet(x as _, (y + 0x20) as _);
         }
     }
 
