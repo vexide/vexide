@@ -1,9 +1,12 @@
 //! This crate provides a working entrypoint for the VEX V5 Brain.
-//! In order for your code to be started you must provide a main function with the correct signature. eg.
+//!
+//! # Usage
+//!
+//! The `vexide_startup` crate provides a `#[main]` attribute that can be used to define the entrypoint for your program.
+//! Your entrypoint function should be an async function that takes a single argument of type [`Peripherals`](vexide_devices::Peripherals).
 //! ```rust
-//! #[no_mangle]
-//! extern "C" fn main() { ... }
-//! entry!();
+//! #[vexide_startup::main]
+//! async fn main(peripherals: Peripherals) { ... }
 //! ```
 
 #![no_std]
