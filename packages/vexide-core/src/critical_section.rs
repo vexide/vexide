@@ -30,7 +30,9 @@ unsafe impl critical_section::Impl for ZynqCriticalSection {
             unsafe {
                 asm!(
                     "
+                    // Re-enable IRQs
                     cpsie i
+                    // Synchronization barriers
                     dsb
                     isb
                     "
