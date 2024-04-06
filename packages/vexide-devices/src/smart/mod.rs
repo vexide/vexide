@@ -119,7 +119,7 @@ pub(crate) fn validate_port(index: u8, device_type: SmartDeviceType) -> Result<(
     let device = unsafe { *vexDeviceGetByIndex((index - 1) as u32) };
     let plugged_type: SmartDeviceType = device.device_type.into();
 
-    if !device.exists {
+    if !device.installed {
         // No device is plugged into the port.
         return Err(PortError::Disconnected);
     } else if plugged_type != device_type {

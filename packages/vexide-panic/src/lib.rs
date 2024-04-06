@@ -99,6 +99,9 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
         #[cfg(not(feature = "display_panics"))]
         vex_sdk::vexSystemExitRequest();
         // unreachable without display_panics
-        loop {}
+        loop {
+            // Flush the serial buffer so that the panic message is printed
+            vex_sdk::vexTasksRun();
+        }
     }
 }
