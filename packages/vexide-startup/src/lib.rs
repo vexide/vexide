@@ -12,6 +12,7 @@
 
 use core::{arch::asm, hint, ptr::addr_of_mut};
 
+use vexide_core::print;
 pub use vexide_startup_macro::main;
 
 extern "C" {
@@ -84,6 +85,10 @@ pub unsafe fn program_entry() {
         // This cfg is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
         #[cfg(target_arch = "arm")]
         vexide_core::allocator::vexos::init_heap();
+        // Print the banner
+        #[cfg(not(feature = "no-banner"))]
+        print!(include_str!("banner.txt"));
+
         // Call the user code
         main();
         // Exit the program

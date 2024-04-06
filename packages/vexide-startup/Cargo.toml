@@ -12,3 +12,8 @@ vexide-devices = { version = "0.1.0", path = "../vexide-devices" }
 
 [lints]
 workspace = true
+
+[features]
+default = []
+
+no-banner = []
