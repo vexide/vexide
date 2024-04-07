@@ -46,12 +46,17 @@ impl AdiUltrasonic {
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
     pub fn distance(&self) -> Result<u16, UltrasonicError> {
-        Ok(unsafe {
+        self.port_ping.validate_expander()?;
+
+        match unsafe {
             vexDeviceAdiValueGet(
                 self.port_ping.device_handle(),
                 self.port_ping.internal_index(),
             )
-        } as u16)
+        } {
+            -1 => Err(UltrasonicError::NoReading),
+            val => Ok(val as u16),
+        }
     }
 }
 
@@ -74,6 +79,9 @@ impl AdiDevice for AdiUltrasonic {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an ultrasonic range finder.
 pub enum UltrasonicError {
+    /// The sensor is unable to return a valid reading.
+    NoReading,
+
     /// The index of the ping ("output") wire must be on an odd numbered port (A, C, E, G).
     BadPingPort,
 
