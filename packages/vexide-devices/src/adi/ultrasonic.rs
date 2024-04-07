@@ -3,9 +3,8 @@
 use snafu::Snafu;
 use vex_sdk::vexDeviceAdiValueGet;
 
-use crate::PortError;
-
 use super::{AdiDevice, AdiDeviceType, AdiPort};
+use crate::PortError;
 
 /// ADI Range Finders.
 ///
@@ -32,8 +31,8 @@ impl AdiUltrasonic {
             return Err(UltrasonicError::BadPingPort);
         } else if port_echo.index() != (port_ping.index() - 1) {
             // Echo must be directly next to ping on the higher port index.
-			return Err(UltrasonicError::BadEchoPort);
-		}
+            return Err(UltrasonicError::BadEchoPort);
+        }
 
         port_ping.configure(AdiDeviceType::Ultrasonic)?;
 
@@ -47,10 +46,12 @@ impl AdiUltrasonic {
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
     pub fn distance(&self) -> Result<u16, UltrasonicError> {
-        Ok(
-            unsafe { vexDeviceAdiValueGet(self.port_ping.device_handle(), self.port_ping.internal_index()) }
-                as u16,
-        )
+        Ok(unsafe {
+            vexDeviceAdiValueGet(
+                self.port_ping.device_handle(),
+                self.port_ping.internal_index(),
+            )
+        } as u16)
     }
 }
 
@@ -79,8 +80,8 @@ pub enum UltrasonicError {
     /// The echo ("input") wire must be plugged in directly above the ping wire.
     BadEchoPort,
 
-	/// The specified ping and echo ports belong to different ADI expanders.
-	ExpanderPortMismatch,
+    /// The specified ping and echo ports belong to different ADI expanders.
+    ExpanderPortMismatch,
 
     /// Generic port related error.
     #[snafu(display("{source}"), context(false))]
