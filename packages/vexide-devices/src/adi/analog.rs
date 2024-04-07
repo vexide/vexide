@@ -10,7 +10,11 @@
 
 use vex_sdk::vexDeviceAdiValueGet;
 
-use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
+use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
+
+/// The maximum 12-bit analog value returned by the internal
+/// analog-to-digital converters on the brain.
+pub const ADC_MAX_VALUE: u16 = 4095;
 
 /// Generic analog input ADI device.
 #[derive(Debug, Eq, PartialEq)]
@@ -20,7 +24,7 @@ pub struct AdiAnalogIn {
 
 impl AdiAnalogIn {
     /// Create a analog input from an ADI port.
-    pub fn new(mut port: AdiPort) -> Result<Self, AdiError> {
+    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
         port.configure(AdiDeviceType::AnalogIn)?;
 
         Ok(Self { port })
@@ -32,7 +36,7 @@ impl AdiAnalogIn {
     ///
     /// The value returned is undefined if the analog pin has been switched to a different mode.
     /// The meaning of the returned value varies depending on the sensor attached.
-    pub fn value(&self) -> Result<u16, AdiError> {
+    pub fn value(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
 
         Ok(
@@ -52,8 +56,8 @@ impl AdiAnalogIn {
     ///
     /// The value returned is undefined if the analog pin has been switched to a different mode.
     /// The meaning of the returned value varies depending on the sensor attached.
-    pub fn voltage(&self) -> Result<f64, AdiError> {
-        Ok(self.value()? as f64 / 4095.0 * 5.0)
+    pub fn voltage(&self) -> Result<f64, PortError> {
+        Ok(self.value()? as f64 / (ADC_MAX_VALUE as f64) * 5.0)
     }
 }
 
