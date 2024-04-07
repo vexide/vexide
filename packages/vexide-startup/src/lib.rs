@@ -92,7 +92,7 @@ pub unsafe fn program_entry() {
         // Asnii escapes my beloved
         #[cfg(not(feature = "no-banner"))]
         print!(
-"
+            "
 \x1B[1;38;5;196m=%%%%%#-  \x1B[38;5;254m-#%%%%-\x1B[1;38;5;196m  :*%%%%%+.
 \x1B[38;5;208m  -#%%%%#-  \x1B[38;5;254m:%-\x1B[1;38;5;208m  -*%%%%#
 \x1B[38;5;226m    *%%%%#=   -#%%%%%+
