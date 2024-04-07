@@ -7,15 +7,16 @@
         "pros-cli-nix": "pros-cli-nix"
       },
       "locked": {
-        "lastModified": 1709775910,
-        "narHash": "sha256-PF60KNzSX+Z2zrk1KLAPtrzsnoW7A9k8r60zmZbsyQ4=",
+        "lastModified": 1712425173,
+        "narHash": "sha256-CgamBJzvL9x7wuECIeM5uIw9q3e4Av2/GnBhWoiO1NY=",
         "owner": "vexide",
         "repo": "cargo-pros",
-        "rev": "fc8d1f336cd09314b69a7810a59e0c0e4d65a252",
+        "rev": "49da59656e1d329ccd94d75549a0a61d3d05cb36",
         "type": "github"
       },
       "original": {
         "owner": "vexide",
+        "ref": "feat/vexide-support",
         "repo": "cargo-pros",
         "type": "github"
       }
