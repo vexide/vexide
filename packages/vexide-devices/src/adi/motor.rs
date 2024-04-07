@@ -56,13 +56,13 @@ impl AdiMotor {
         self.port.validate_expander()?;
 
         Ok(
-			// TODO:
-			// Subtracting i8::MAX from this value comes from this line in the PROS kernel:
-			//
-			// https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_ext_adi.c#L269
-			//
-			// Presumably this happens because the legacy motor device types return out of 256 (u8)
-			// in the getter, but have an i8 setter. This needs hardware testing, though.
+            // TODO:
+            // Subtracting i8::MAX from this value comes from this line in the PROS kernel:
+            //
+            // https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_ext_adi.c#L269
+            //
+            // Presumably this happens because the legacy motor device types return out of 256 (u8)
+            // in the getter, but have an i8 setter. This needs hardware testing, though.
             (unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
                 - i8::MAX as i32) as i8,
         )
