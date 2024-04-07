@@ -89,7 +89,6 @@ pub unsafe fn program_entry() {
         #[cfg(target_arch = "arm")]
         vexide_core::allocator::vexos::init_heap();
         // Print the banner
-        // Asnii escapes my beloved
         #[cfg(not(feature = "no-banner"))]
         print!(
             "
