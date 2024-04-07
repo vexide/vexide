@@ -24,7 +24,6 @@ extern crate alloc;
 use alloc::vec::Vec;
 use core::time::Duration;
 
-use vexide_core::error::PortError;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceVisionBrightnessGet, vexDeviceVisionBrightnessSet, vexDeviceVisionLedColorGet,
@@ -38,7 +37,7 @@ use vex_sdk::{
 };
 
 use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
-use crate::color::Rgb;
+use crate::{color::Rgb, PortError};
 
 /// VEX Vision Sensor
 ///
@@ -114,7 +113,8 @@ impl VisionSensor {
                 V5VisionBlockType::kVisionTypeColorCode
             } else {
                 V5VisionBlockType::kVisionTypeNormal
-            }.0 as _,
+            }
+            .0 as _,
             ..Default::default()
         };
 
@@ -165,10 +165,7 @@ impl VisionSensor {
     pub fn signature(&self, id: u8) -> Result<Option<VisionSignature>, VisionError> {
         self.validate_port()?;
 
-        Ok(match self.raw_signature(id)? {
-            Some(raw) => Some(raw.into()),
-            None => None,
-        })
+        Ok(self.raw_signature(id)?.map(|raw| raw.into()))
     }
 
     /// Get all signatures currently stored on the sensor's onboard volatile memory.
@@ -239,7 +236,7 @@ impl VisionSensor {
                 V5VisionWBMode::kVisionWBStart => WhiteBalance::StartupAuto,
                 V5VisionWBMode::kVisionWBManual => {
                     WhiteBalance::Manual(unsafe { vexDeviceVisionWhiteBalanceGet(handle) }.into())
-                },
+                }
                 _ => unreachable!(),
             },
         )
@@ -325,7 +322,7 @@ impl VisionSensor {
                         Rgb::new(led_color.red, led_color.green, led_color.blue),
                         led_color.brightness as f64 / 100.0,
                     )
-                },
+                }
                 _ => unreachable!(),
             },
         )
@@ -623,7 +620,7 @@ impl VisionCode {
             }
         }
 
-        return false;
+        false
     }
 
     /// Returns the internal ID used by the sensor to determine which signatures

@@ -10,7 +10,7 @@ use core::{
 /// start of the user program.
 ///
 /// # Precision
-/// This type has a precision of 1 microsecond, and uses [`pros_sys::micros`] internally.
+/// This type has a precision of 1 microsecond, and uses [`vex_sdk::vexSystemHighResTimeGet`] internally.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Instant(u64);
 
@@ -25,7 +25,7 @@ impl Instant {
     /// let now = Instant::now();
     /// ```
     pub fn now() -> Self {
-        Self(unsafe { pros_sys::rtos::micros() })
+        Self(unsafe { vex_sdk::vexSystemHighResTimeGet() })
     }
 
     /// Returns the amount of time elapsed from another instant to this one,

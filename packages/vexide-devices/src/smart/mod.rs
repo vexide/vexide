@@ -38,11 +38,12 @@ pub use imu::InertialSensor;
 pub use link::RadioLink;
 pub use motor::Motor;
 pub use optical::OpticalSensor;
-use vexide_core::error::PortError;
 pub use rotation::RotationSensor;
 pub use serial::SerialPort;
 use vex_sdk::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
 pub use vision::VisionSensor;
+
+use crate::PortError;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {
@@ -118,7 +119,7 @@ pub(crate) fn validate_port(index: u8, device_type: SmartDeviceType) -> Result<(
     let device = unsafe { *vexDeviceGetByIndex((index - 1) as u32) };
     let plugged_type: SmartDeviceType = device.device_type.into();
 
-    if !device.exists {
+    if !device.installed {
         // No device is plugged into the port.
         return Err(PortError::Disconnected);
     } else if plugged_type != device_type {

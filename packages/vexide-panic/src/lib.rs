@@ -8,7 +8,7 @@ extern crate alloc;
 
 use alloc::string::{String, ToString};
 
-use vexide_core::eprintln;
+use vexide_core::println;
 #[cfg(feature = "display_panics")]
 use vexide_devices::Screen;
 
@@ -85,12 +85,12 @@ fn draw_error(
 #[panic_handler]
 /// The panic handler for vexide.
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
-    eprintln!("{info}");
+    println!("{info}");
 
     unsafe {
         #[cfg(feature = "display_panics")]
         draw_error(&mut Screen::new(), &info.to_string()).unwrap_or_else(|err| {
-            eprintln!("Failed to draw error message to screen: {err}");
+            println!("Failed to draw error message to screen: {err}");
         });
 
         #[cfg(target_arch = "wasm32")]
@@ -99,6 +99,9 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
         #[cfg(not(feature = "display_panics"))]
         vex_sdk::vexSystemExitRequest();
         // unreachable without display_panics
-        loop {}
+        loop {
+            // Flush the serial buffer so that the panic message is printed
+            vex_sdk::vexTasksRun();
+        }
     }
 }

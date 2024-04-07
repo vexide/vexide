@@ -60,41 +60,30 @@
 pub use vexide_async as async_runtime;
 #[cfg(feature = "core")]
 pub use vexide_core as core;
+#[cfg(feature = "devices")]
+pub use vexide_devices as devices;
 #[cfg(feature = "math")]
 pub use vexide_math as math;
 #[cfg(feature = "panic")]
 pub use vexide_panic as panic;
-pub use pros_sys as sys;
-#[cfg(feature = "devices")]
-pub use vexide_devices as devices;
 
 /// Commonly used features of vexide.
 /// This module is meant to be glob imported.
 pub mod prelude {
     #[cfg(feature = "async")]
-    pub use vexide_async::{async_robot, block_on, sleep, spawn, AsyncRobot};
+    pub use vexide_async::{block_on, sleep, spawn};
     #[cfg(feature = "core")]
     pub use vexide_core::{
-        dbg, eprint, eprintln,
-        error::{PortError, Result},
+        dbg,
         io::{BufRead, Read, Seek, Write},
         print, println,
-        task::delay,
     };
-    #[cfg(feature = "math")]
-    pub use vexide_math::{feedforward::MotorFeedforwardController, pid::PidController};
     #[cfg(feature = "devices")]
     pub use vexide_devices::{
         adi::{
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},
-            encoder::AdiEncoder,
-            gyro::AdiGyro,
-            motor::AdiMotor,
-            potentiometer::{AdiPotentiometer, AdiPotentiometerType},
             pwm::AdiPwmOut,
-            solenoid::AdiSolenoid,
-            ultrasonic::AdiUltrasonic,
             AdiDevice, AdiPort,
         },
         color::Rgb,
@@ -106,7 +95,7 @@ pub mod prelude {
             distance::DistanceSensor,
             expander::AdiExpander,
             imu::InertialSensor,
-            link::{Link, RxLink, TxLink},
+            link::RadioLink,
             motor::{BrakeMode, Direction, Gearset, Motor, MotorControl},
             optical::OpticalSensor,
             rotation::RotationSensor,
@@ -114,4 +103,6 @@ pub mod prelude {
             SmartDevice, SmartPort,
         },
     };
+    #[cfg(feature = "math")]
+    pub use vexide_math::{feedforward::MotorFeedforwardController, pid::PidController};
 }

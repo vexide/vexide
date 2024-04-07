@@ -1,16 +1,36 @@
-use core::alloc::{GlobalAlloc, Layout};
+//! VexOS heap allocator implemented with the `linked_list_allocator` crate.
+//! [`init_heap`] must be called before any heap allocations are made.
+//! This is done automatically in the `vex-startup` crate,
+//! so you should not need to call it yourself unless you are writing your own startup implementation.
 
-struct Allocator;
-unsafe impl GlobalAlloc for Allocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        // SAFETY: caller must ensure that the alignment and size are valid for the given layout
-        unsafe { pros_sys::memalign(layout.align() as _, layout.size() as _) as *mut u8 }
-    }
-    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
-        // SAFETY: caller must ensure that the given ptr can be deallocated
-        unsafe { pros_sys::free(ptr as *mut core::ffi::c_void) }
-    }
+use core::ptr::addr_of_mut;
+
+use talc::{ErrOnOom, Span, Talc, Talck};
+
+use crate::sync::RawMutex;
+
+extern "C" {
+    static mut __heap_start: u8;
+    static mut __heap_end: u8;
 }
 
 #[global_allocator]
-static ALLOCATOR: Allocator = Allocator;
+static ALLOCATOR: Talck<RawMutex, ErrOnOom> = Talc::new(ErrOnOom).lock();
+
+/// Initializes the heap allocator.
+///
+/// # Safety
+///
+/// This function can only be called once.
+pub unsafe fn init_heap() {
+    //SAFETY: User must ensure that this function is only called once.
+    unsafe {
+        ALLOCATOR
+            .lock()
+            .claim(Span::new(
+                addr_of_mut!(__heap_start),
+                addr_of_mut!(__heap_end),
+            ))
+            .unwrap();
+    }
+}

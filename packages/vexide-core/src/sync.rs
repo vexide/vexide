@@ -2,63 +2,138 @@
 //!
 //! Types implemented here are specifically designed to mimic the standard library.
 
-use core::{cell::UnsafeCell, fmt::Debug, mem};
+use core::{
+    cell::UnsafeCell,
+    fmt::Debug,
+    future::Future,
+    sync::atomic::{AtomicU8, Ordering},
+};
 
-use crate::error::take_errno;
+use lock_api::RawMutex as _;
+
+struct MutexState(AtomicU8);
+impl MutexState {
+    const fn new() -> Self {
+        Self(AtomicU8::new(0))
+    }
+
+    /// Returns true if the lock was acquired.
+    fn try_lock(&self) -> bool {
+        self.0
+            .compare_exchange(0, 1, Ordering::Acquire, Ordering::Acquire)
+            .is_ok()
+    }
+
+    fn unlock(&self) {
+        self.0.store(0, Ordering::Release);
+    }
+}
+
+/// A raw mutex type built on top of the critical section.
+pub struct RawMutex {
+    state: MutexState,
+}
+impl RawMutex {
+    /// Creates a new raw mutex.
+    pub const fn new() -> Self {
+        Self {
+            state: MutexState::new(),
+        }
+    }
+}
+unsafe impl lock_api::RawMutex for RawMutex {
+    // Allow this because we can't get around it
+    #[allow(clippy::declare_interior_mutable_const)]
+    const INIT: Self = Self::new();
+
+    type GuardMarker = lock_api::GuardSend;
+
+    fn lock(&self) {
+        critical_section::with(|_| {
+            while !self.state.try_lock() {
+                core::hint::spin_loop();
+            }
+        })
+    }
+
+    fn try_lock(&self) -> bool {
+        critical_section::with(|_| self.state.try_lock())
+    }
+
+    unsafe fn unlock(&self) {
+        critical_section::with(|_| {
+            self.state.unlock();
+        })
+    }
+}
+
+/// A future that resolves to a mutex guard.
+pub struct MutexLockFuture<'a, T> {
+    mutex: &'a Mutex<T>,
+}
+impl<'a, T> Future for MutexLockFuture<'a, T> {
+    type Output = MutexGuard<'a, T>;
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        _: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        if self.mutex.raw.try_lock() {
+            core::task::Poll::Ready(MutexGuard::new(self.mutex))
+        } else {
+            core::task::Poll::Pending
+        }
+    }
+}
 
 /// The basic mutex type.
 /// Mutexes are used to share variables between tasks safely.
 pub struct Mutex<T> {
-    pros_mutex: pros_sys::mutex_t,
-    data: Option<UnsafeCell<T>>,
+    raw: RawMutex,
+    data: UnsafeCell<T>,
 }
 unsafe impl<T: Send> Send for Mutex<T> {}
 unsafe impl<T> Sync for Mutex<T> {}
 
 impl<T> Mutex<T> {
     /// Creates a new mutex.
-    pub fn new(data: T) -> Self {
-        let pros_mutex = unsafe { pros_sys::mutex_create() };
-
+    pub const fn new(data: T) -> Self {
         Self {
-            pros_mutex,
-            data: Some(UnsafeCell::new(data)),
+            raw: RawMutex::new(),
+            data: UnsafeCell::new(data),
         }
     }
 
     /// Locks the mutex so that it cannot be locked in another task at the same time.
     /// Blocks the current task until the lock is acquired.
-    pub fn lock(&self) -> MutexGuard<'_, T> {
-        if !unsafe { pros_sys::mutex_take(self.pros_mutex, pros_sys::TIMEOUT_MAX) } {
-            panic!("Mutex lock failed: {}", take_errno());
-        }
+    pub const fn lock(&self) -> MutexLockFuture<'_, T> {
+        MutexLockFuture { mutex: self }
+    }
 
-        MutexGuard { mutex: self }
+    /// Used internally to lock the mutex in a blocking fashion.
+    /// This is neccessary because a mutex may be created internally before the executor is ready to be initialized.
+    pub(crate) fn lock_blocking(&self) -> MutexGuard<'_, T> {
+        self.raw.lock();
+        MutexGuard::new(self)
     }
 
     /// Attempts to acquire this lock. This function does not block.
     pub fn try_lock(&self) -> Option<MutexGuard<'_, T>> {
-        let success = unsafe { pros_sys::mutex_take(self.pros_mutex, 0) };
-        success.then(|| MutexGuard::new(self))
+        if self.raw.try_lock() {
+            Some(MutexGuard { mutex: self })
+        } else {
+            None
+        }
     }
 
     /// Consumes the mutex and returns the inner data.
-    pub fn into_inner(mut self) -> T {
-        let data = mem::take(&mut self.data).unwrap();
-        data.into_inner()
+    pub fn into_inner(self) -> T {
+        self.data.into_inner()
     }
 
     /// Gets a mutable reference to the inner data.
     pub fn get_mut(&mut self) -> &mut T {
-        self.data.as_mut().unwrap().get_mut()
-    }
-}
-
-impl<T> Drop for Mutex<T> {
-    fn drop(&mut self) {
-        unsafe {
-            pros_sys::mutex_delete(self.pros_mutex);
-        }
+        self.data.get_mut()
     }
 }
 
@@ -114,20 +189,18 @@ impl<'a, T> MutexGuard<'a, T> {
 impl<T> core::ops::Deref for MutexGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
-        unsafe { &*self.mutex.data.as_ref().unwrap().get() }
+        unsafe { &*self.mutex.data.get() }
     }
 }
 
 impl<T> core::ops::DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.mutex.data.as_ref().unwrap().get() }
+        unsafe { &mut *self.mutex.data.get() }
     }
 }
 
 impl<T> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
-        unsafe {
-            pros_sys::mutex_give(self.mutex.pros_mutex);
-        }
+        unsafe { self.mutex.raw.unlock() };
     }
 }

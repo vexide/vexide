@@ -7,22 +7,21 @@
     "env": "newlib",
     "executables": true,
     "features": "+thumb2,+neon,+vfp3",
-    "linker": "arm-none-eabi-gcc",
-    "linker-flavor": "gcc",
+    "linker": "rust-lld",
+    "linker-flavor": "ld.lld",
     "llvm-target": "armv7a-none-eabi",
     "max-atomic-width": 64,
     "panic-strategy": "abort",
     "post-link-args": {
-        "gcc": [
-            "-nostartfiles",
-            "-nostdlib",
-            "-Wl,-Tv5.ld,-Tv5-common.ld,--gc-sections",
-            "-Wl,--start-group,-lgcc,-lpros,-lc,--end-group"
+        "ld.lld": [
+            "--gc-sections",
+            "--nostdlib",
+            "-Tcold.ld",
+            "-znorelro"
         ]
     },
     "relocation-model": "static",
-    "target-family": "unix",
     "target-pointer-width": "32",
-    "os": "vexos",
+    "os": "none",
     "vendor": "vex"
 }

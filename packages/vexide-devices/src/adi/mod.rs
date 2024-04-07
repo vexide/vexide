@@ -1,7 +1,8 @@
 //! ADI (Triport) devices on the Vex V5.
 
-use vexide_core::error::PortError;
 use snafu::Snafu;
+
+use crate::PortError;
 
 pub mod analog;
 pub mod digital;
@@ -10,7 +11,8 @@ pub mod pwm;
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
 use vex_sdk::{
-    vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex, V5_AdiPortConfiguration, V5_DeviceT
+    vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
+    V5_AdiPortConfiguration, V5_DeviceT,
 };
 
 use crate::smart::{validate_port, SmartDeviceType};
@@ -59,7 +61,7 @@ impl AdiPort {
         self.expander_index
     }
 
-    pub(crate) fn internal_index(&self) -> u32 {
+    pub(crate) const fn internal_index(&self) -> u32 {
         (self.index() - 1) as u32
     }
 
@@ -79,11 +81,7 @@ impl AdiPort {
         self.validate_expander()?;
 
         unsafe {
-            vexDeviceAdiPortConfigSet(
-                self.device_handle(),
-                self.internal_index(),
-                config.into(),
-            );
+            vexDeviceAdiPortConfigSet(self.device_handle(), self.internal_index(), config.into());
         }
 
         Ok(())

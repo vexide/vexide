@@ -1,0 +1,19 @@
+[package]
+name = "vexide-startup"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vex-sdk = "0.10.1"
+vexide-startup-macro = { path = "../vexide-startup-macro" }
+vexide-core = { version = "0.1.0", path = "../vexide-core"}
+vexide-async = { version = "0.1.0", path = "../vexide-async" }
+vexide-devices = { version = "0.1.0", path = "../vexide-devices" }
+
+[lints]
+workspace = true
+
+[features]
+default = []
+
+no-banner = []

@@ -33,7 +33,7 @@ impl MotorFeedforwardController {
     /// # Returns
     ///
     /// A new [`FeedforwardMotorController`].
-    pub fn new(ks: f32, kv: f32, ka: f32, target_acceleration: f32) -> Self {
+    pub const fn new(ks: f32, kv: f32, ka: f32, target_acceleration: f32) -> Self {
         Self {
             ks,
             kv,
@@ -55,11 +55,6 @@ impl MotorFeedforwardController {
     /// The control output to apply to the motor.
     pub fn calculate(&self, target: f32, target_acceleration: f32) -> f32 {
         // Calculate the feedforward component based on velocity and acceleration
-        let v = self.ks * num::signum(target) + self.kv * target + self.ka * target_acceleration;
-
-        // The output is the feedforward controller (V)
-        let output = v;
-
-        output
+        self.ks * num::signum(target) + self.kv * target + self.ka * target_acceleration
     }
 }
