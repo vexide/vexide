@@ -2,7 +2,7 @@
 
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
-use super::{AdiDevice, AdiDeviceType, AdiError, AdiPort};
+use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
 
 /// Represents the logic level of a digital pin.
 ///
@@ -60,14 +60,14 @@ pub struct AdiDigitalIn {
 
 impl AdiDigitalIn {
     /// Create a digital input from an ADI port.
-    pub fn new(mut port: AdiPort) -> Result<Self, AdiError> {
+    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
         port.configure(AdiDeviceType::DigitalIn)?;
 
         Ok(Self { port })
     }
 
     /// Gets the current logic level of a digital input pin.
-    pub fn level(&self) -> Result<LogicLevel, AdiError> {
+    pub fn level(&self) -> Result<LogicLevel, PortError> {
         self.port.validate_expander()?;
 
         let value =
@@ -81,12 +81,12 @@ impl AdiDigitalIn {
     }
 
     /// Returns `true` if the digital input's logic level level is [`LogicLevel::High`].
-    pub fn is_high(&self) -> Result<bool, AdiError> {
+    pub fn is_high(&self) -> Result<bool, PortError> {
         Ok(self.level()?.is_high())
     }
 
     /// Returns `true` if the digital input's logic level level is [`LogicLevel::Low`].
-    pub fn is_low(&self) -> Result<bool, AdiError> {
+    pub fn is_low(&self) -> Result<bool, PortError> {
         Ok(self.level()?.is_high())
     }
 }
@@ -115,14 +115,14 @@ pub struct AdiDigitalOut {
 
 impl AdiDigitalOut {
     /// Create a digital output from an [`AdiPort`].
-    pub fn new(mut port: AdiPort) -> Result<Self, AdiError> {
+    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
         port.configure(AdiDeviceType::DigitalOut)?;
 
         Ok(Self { port })
     }
 
     /// Sets the digital logic level (high or low) of a pin.
-    pub fn set_level(&mut self, level: LogicLevel) -> Result<(), AdiError> {
+    pub fn set_level(&mut self, level: LogicLevel) -> Result<(), PortError> {
         unsafe {
             vexDeviceAdiValueSet(
                 self.port.device_handle(),
@@ -136,13 +136,13 @@ impl AdiDigitalOut {
 
     /// Set the digital logic level to [`LogicLevel::High`]. Analagous to
     /// [`Self::set_level(LogicLevel::High)`].
-    pub fn set_high(&mut self) -> Result<(), AdiError> {
+    pub fn set_high(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::High)
     }
 
     /// Set the digital logic level to [`LogicLevel::Low`]. Analagous to
     /// [`Self::set_level(LogicLevel::Low)`].
-    pub fn set_low(&mut self) -> Result<(), AdiError> {
+    pub fn set_low(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::Low)
     }
 }

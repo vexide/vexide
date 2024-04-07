@@ -1,15 +1,19 @@
 //! ADI (Triport) devices on the Vex V5.
 
-use snafu::Snafu;
-
 use crate::PortError;
 
 pub mod analog;
 pub mod digital;
+pub mod linetracker;
+pub mod motor;
 pub mod pwm;
+pub mod solenoid;
 
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
+pub use linetracker::AdiLineTracker;
+pub use motor::AdiMotor;
+pub use solenoid::AdiSolenoid;
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
@@ -77,7 +81,7 @@ impl AdiPort {
         validate_port(self.internal_expander_index() as u8, SmartDeviceType::Adi)
     }
 
-    pub(crate) fn configure(&mut self, config: AdiDeviceType) -> Result<(), AdiError> {
+    pub(crate) fn configure(&mut self, config: AdiDeviceType) -> Result<(), PortError> {
         self.validate_expander()?;
 
         unsafe {
@@ -88,7 +92,7 @@ impl AdiPort {
     }
 
     /// Get the type of device this port is currently configured as.
-    pub fn configured_type(&self) -> Result<AdiDeviceType, AdiError> {
+    pub fn configured_type(&self) -> Result<AdiDeviceType, PortError> {
         self.validate_expander()?;
 
         Ok(
@@ -239,15 +243,4 @@ impl From<AdiDeviceType> for V5_AdiPortConfiguration {
             AdiDeviceType::Unknown(raw) => raw,
         }
     }
-}
-
-#[derive(Debug, Snafu)]
-/// Errors that can occur when working with ADI devices.
-pub enum AdiError {
-    #[snafu(display("{source}"), context(false))]
-    /// An error occurred while interacting with a port.
-    Port {
-        /// The source of the error
-        source: PortError,
-    },
 }
