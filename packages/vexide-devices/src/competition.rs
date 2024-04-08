@@ -1,9 +1,17 @@
 //! Utilities for getting competition control state.
 
-use core::{pin::Pin, task::{self, Poll}};
+use alloc::boxed::Box;
+use core::{
+    cell::UnsafeCell,
+    future::Future,
+    marker::PhantomPinned,
+    pin::{pin, Pin},
+    task::{self, Poll},
+};
 
 use bitflags::bitflags;
 use futures_core::Stream;
+use pin_project::pin_project;
 use vex_sdk::vexCompetitionStatus;
 
 bitflags! {
@@ -114,10 +122,7 @@ pub struct CompetitionUpdates {
 impl Stream for CompetitionUpdates {
     type Item = CompetitionStatus;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut task::Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
         let current = status();
 
         if self.last_status != Some(current) {
@@ -129,9 +134,113 @@ impl Stream for CompetitionUpdates {
     }
 }
 
+impl CompetitionUpdates {
+    /// Get the last status update.
+    ///
+    /// This is slightly more efficient than calling [`status`] as it does not require another poll,
+    /// however, it can be out of date if the stream has not been polled recently.
+    pub fn last(&self) -> CompetitionStatus {
+        self.last_status.unwrap_or_else(status)
+    }
+}
+
 /// Gets a stream of updates to the competition status.
 ///
 /// Yields the current status when first polled, and thereafter whenever the status changes.
 pub fn updates() -> CompetitionUpdates {
     CompetitionUpdates { last_status: None }
+}
+
+/// A future which delegates to different futures depending on the current competition mode.
+/// I.e., a tiny async runtime specifically for writing competition programs.
+#[pin_project]
+pub struct Competition<Shared: 'static, MkInit, MkDisabled, MkAutonomous, MkDriver>
+where
+    MkInit: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkDriver: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+{
+    // Functions to generate tasks for each mode.
+    mk_init: MkInit,
+    mk_disabled: MkDisabled,
+    mk_autonomous: MkAutonomous,
+    mk_driver: MkDriver,
+
+    /// A stream of updates to the competition status.
+    #[pin]
+    updates: CompetitionUpdates,
+
+    /// The task currently running, or [`None`] if no task is running.
+    ///
+    /// SAFETY:
+    /// - The `'static` lifetime is a lie to the compiler, it actually borrows `self.shared`.
+    ///   Therefore, tasks MUST NOT move their `&'static mut` references, or else they will
+    ///   still be around when we call a `mk_*` function with a new mutable reference to it.
+    ///   We rely on lifetime parametricity of the `mk_*` functions for this (see the HRTBs above).
+    /// - This field MUST come before `shared`, as struct fields are dropped in declaration order.
+    current: Option<Pin<Box<dyn Future<Output = ()> + 'static>>>,
+
+    /// A cell containing the data shared between all tasks.
+    ///
+    /// SAFETY: This field MUST NOT be mutated while a task is running, as tasks may still hold
+    ///         references to it. This is enforced to owners of this struct by the `Pin`,
+    ///         but we have no such guardrails, as we cannot project the pin to it without
+    ///         creating an invalid `Pin<&mut Shared>` before possibly (legally) moving it
+    ///         during task creation.
+    shared: UnsafeCell<Shared>,
+
+    /// Keep `self.current` in place while `self.current` references it.
+    _pin: PhantomPinned,
+}
+
+// This sadly cannot be a method, because it would need to receive the anonymous pin-project type.
+macro_rules! comp_set_task {
+    ($this:expr, $mk:expr) => {{
+        // SAFETY: Before we make a new `&mut Shared`, we ensure that the existing task is dropped.
+        //         Note that although this would not normally ensure that the reference is dropped,
+        //         because the task could move it elsewhere, this is not the case here, because
+        //         the task generator functions (and therefore their returned futures) are valid for
+        //         any _arbitrarily small_ lifetime `'t`. Therefore, they are unable to move it elsewhere
+        //         without proving that the reference will be destroyed before the task returns.
+        drop($this.current.take());
+        let shared = unsafe { &mut *$this.shared.get() };
+
+        *$this.current = Some(Box::into_pin(($mk)(shared)));
+    }};
+}
+
+impl<Shared, MkInit, MkDisabled, MkAutonomous, MkDriver> Future
+    for Competition<Shared, MkInit, MkDisabled, MkAutonomous, MkDriver>
+where
+    MkInit: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkDriver: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+{
+    type Output = (); // TODO: switch to `!` when stable.
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
+        let mut this = self.as_mut().project();
+
+        match this.updates.as_mut().poll_next(cx) {
+            Poll::Pending => {}
+            Poll::Ready(None) => unreachable!(),
+            Poll::Ready(Some(update)) => match (update.connected(), update.mode()) {
+                (true, _) if this.current.is_none() => comp_set_task!(this, &mut this.mk_init),
+                (false, _) | (_, CompetitionMode::Disabled) => {}
+                _ => todo!(),
+            },
+        }
+
+        if let Some(Poll::Ready(_)) = this.current.as_mut().map(|task| task.as_mut().poll(cx)) {
+            match this.updates.last().mode() {
+                CompetitionMode::Disabled => comp_set_task!(this, this.mk_disabled),
+                CompetitionMode::Autonomous => comp_set_task!(this, this.mk_autonomous),
+                CompetitionMode::Driver => comp_set_task!(this, this.mk_driver),
+            }
+        }
+
+        Poll::Pending
+    }
 }
