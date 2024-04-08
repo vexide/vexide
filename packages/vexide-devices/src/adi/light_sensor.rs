@@ -22,24 +22,25 @@ impl AdiLightSensor {
         Ok(Self { port })
     }
 
-    /// Get the brightness factor of a light source measured by
-    /// the sensor.
+    /// Get the brightness factor measured by the sensor. Higher numbers mean
+    /// a brighter light source.
     ///
     /// This is returned as a value ranging from [0.0, 1.0].
     pub fn brightness(&self) -> Result<f64, PortError> {
-        Ok(self.raw_brightness()? as f64 / analog::ADC_MAX_VALUE as f64)
+        Ok((analog::ADC_MAX_VALUE
+            - self.raw_brightness()?) as f64 / analog::ADC_MAX_VALUE as f64)
     }
 
     /// Get the 12-bit brightness reading of the sensor.
     ///
     /// This is a raw 12-bit value from [0, 4095] representing the voltage level from
-    /// 5-0V measured by the V5 brain's ADC.
+    /// 0-%V measured by the V5 brain's ADC.
+    ///
+    /// A low number (less voltage) represents a **brighter** light source.
     pub fn raw_brightness(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
 
-        // Voltage is normally low at higher brightness, so we invert this to make more brightness = higher value.
-        Ok(analog::ADC_MAX_VALUE
-            - unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
+        Ok(unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
                 as u16)
     }
 }

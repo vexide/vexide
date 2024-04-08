@@ -10,6 +10,7 @@ pub mod motor;
 pub mod potentiometer;
 pub mod pwm;
 pub mod solenoid;
+pub mod accelerometer;
 
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
