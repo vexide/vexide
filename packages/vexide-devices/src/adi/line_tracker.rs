@@ -48,17 +48,17 @@ impl AdiLineTracker {
         Ok(self.raw_reflectivity()? as f64 / analog::ADC_MAX_VALUE as f64)
     }
 
-    /// Get the raw reflectivity factor of the sensor.
+    /// Get the 12-bit reflectivity reading of the sensor.
     ///
     /// This is a raw 12-bit value from [0, 4095] representing the voltage level from
-    /// 0-5V measured by the V5 brain's ADC.
+    /// 5-0V measured by the V5 brain's ADC.
     pub fn raw_reflectivity(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
 
-        Ok(
-            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
-                as u16,
-        )
+        // Voltage is normally low at higher reflectivity, so we invert this to make more reflectivity = higher value.
+        Ok(analog::ADC_MAX_VALUE
+            - unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
+                as u16)
     }
 }
 
