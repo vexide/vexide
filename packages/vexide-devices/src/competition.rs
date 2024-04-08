@@ -1,10 +1,13 @@
 //! Utilities for getting competition control state.
 
+use core::{pin::Pin, task::{self, Poll}};
+
 use bitflags::bitflags;
+use futures_core::Stream;
 use vex_sdk::vexCompetitionStatus;
 
 bitflags! {
-    /// The status bits returned by [`competition::state`].
+    /// The status bits returned by [`vex_sdk::vexCompetitionStatus`].
     #[derive(Debug, Clone, Copy, Eq, PartialEq)]
     pub struct CompetitionStatus: u32 {
         /// Robot is connected to field control (NOT competition switch)
@@ -64,41 +67,71 @@ pub enum CompetitionSystem {
     CompetitionSwitch,
 }
 
+impl CompetitionStatus {
+    /// Gets the current competition mode, or phase.
+    pub fn mode(&self) -> CompetitionMode {
+        if self.contains(Self::DISABLED) {
+            CompetitionMode::Disabled
+        } else if self.contains(Self::AUTONOMOUS) {
+            CompetitionMode::Autonomous
+        } else {
+            CompetitionMode::Driver
+        }
+    }
+
+    /// Checks if the robot is connected to a competition control system.
+    pub fn connected(&self) -> bool {
+        self.contains(Self::CONNECTED)
+    }
+
+    /// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
+    /// is not tethered to a competition controller.
+    pub fn system(&self) -> Option<CompetitionSystem> {
+        if self.connected() {
+            if self.contains(Self::SYSTEM) {
+                Some(CompetitionSystem::FieldControl)
+            } else {
+                Some(CompetitionSystem::CompetitionSwitch)
+            }
+        } else {
+            None
+        }
+    }
+}
+
 /// Gets the current competition status flags.
 pub fn status() -> CompetitionStatus {
     CompetitionStatus::from_bits_retain(unsafe { vexCompetitionStatus() })
 }
 
-/// Gets the current competition mode, or phase.
-pub fn mode() -> CompetitionMode {
-    let status = status();
-
-    if status.contains(CompetitionStatus::DISABLED) {
-        CompetitionMode::Disabled
-    } else if status.contains(CompetitionStatus::AUTONOMOUS) {
-        CompetitionMode::Autonomous
-    } else {
-        CompetitionMode::Driver
-    }
+/// A stream of updates to the competition status.
+///
+/// See [`updates`] for more information.
+pub struct CompetitionUpdates {
+    last_status: Option<CompetitionStatus>,
 }
 
-/// Checks if the robot is connected to a competition control system.
-pub fn connected() -> bool {
-    status().contains(CompetitionStatus::CONNECTED)
-}
+impl Stream for CompetitionUpdates {
+    type Item = CompetitionStatus;
 
-/// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
-/// is not tethered to a competition controller.
-pub fn system() -> Option<CompetitionSystem> {
-    let status = status();
+    fn poll_next(
+        self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+    ) -> Poll<Option<Self::Item>> {
+        let current = status();
 
-    if status.contains(CompetitionStatus::CONNECTED) {
-        if status.contains(CompetitionStatus::SYSTEM) {
-            Some(CompetitionSystem::FieldControl)
+        if self.last_status != Some(current) {
+            self.get_mut().last_status = Some(current);
+            Poll::Ready(Some(current))
         } else {
-            Some(CompetitionSystem::CompetitionSwitch)
+            Poll::Pending
         }
-    } else {
-        None
     }
+}
+
+/// Gets a stream of updates to the competition status.
+///
+/// Yields the current status when first polled, and thereafter whenever the status changes.
+pub fn updates() -> CompetitionUpdates {
+    CompetitionUpdates { last_status: None }
 }

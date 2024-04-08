@@ -30,6 +30,7 @@ snafu = { version = "0.8.0", default-features = false, features = [
 mint = "0.5.9"
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 bitflags = "2.4.2"
+futures-core = { version = "0.3.30", default-features = false, features = ["alloc"] }
 
 [lints]
 workspace = true

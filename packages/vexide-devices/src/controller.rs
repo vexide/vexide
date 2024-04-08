@@ -37,7 +37,7 @@ pub struct Button {
 impl Button {
     /// Gets the current logic level of a digital input pin.
     pub fn level(&self) -> Result<LogicLevel, ControllerError> {
-        if competition::mode() != CompetitionMode::Driver {
+        if competition::status().mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
         }
 
@@ -101,7 +101,7 @@ impl Joystick {
     /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
     pub fn x_raw(&self) -> Result<i8, ControllerError> {
         validate_connection(self.id)?;
-        if competition::mode() != CompetitionMode::Driver {
+        if competition::status().mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
         }
 
@@ -111,7 +111,7 @@ impl Joystick {
     /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
     pub fn y_raw(&self) -> Result<i8, ControllerError> {
         validate_connection(self.id)?;
-        if competition::mode() != CompetitionMode::Driver {
+        if competition::status().mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
         }
 
