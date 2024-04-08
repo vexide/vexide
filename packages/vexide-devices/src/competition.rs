@@ -125,6 +125,9 @@ impl Stream for CompetitionUpdates {
     fn poll_next(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
         let current = status();
 
+        // TODO: This should probably be done on a timer in the reactor.
+        cx.waker().wake_by_ref();
+
         if self.last_status != Some(current) {
             self.get_mut().last_status = Some(current);
             Poll::Ready(Some(current))
