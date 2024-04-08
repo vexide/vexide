@@ -4,16 +4,21 @@ use crate::PortError;
 
 pub mod analog;
 pub mod digital;
-pub mod linetracker;
+pub mod line_tracker;
 pub mod motor;
 pub mod pwm;
 pub mod solenoid;
+pub mod light_sensor;
+pub mod potentiometer;
 
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
-pub use linetracker::AdiLineTracker;
+pub use line_tracker::AdiLineTracker;
+pub use light_sensor::AdiLightSensor;
 pub use motor::AdiMotor;
 pub use solenoid::AdiSolenoid;
+pub use potentiometer::{AdiPotentiometer, PotentiometerType};
+
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
