@@ -128,7 +128,7 @@ impl io::Write for RadioLink {
     /// Write a buffer into the radio's output buffer, returning how many bytes
     /// were written.
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let io_error_handler = |e| match e {
+        let is_linked = self.is_linked().map_err(|e| match e {
             LinkError::Port { source } => match source {
                 PortError::Disconnected => {
                     io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
@@ -139,19 +139,12 @@ impl io::Write for RadioLink {
                 ),
             },
             _ => unreachable!(),
-        };
+        })?;
 
-        if !self.is_linked().map_err(io_error_handler)? {
+        if !is_linked {
             return Err(io::Error::new(
                 io::ErrorKind::NotConnected,
                 "Radio is not linked!",
-            ));
-        }
-
-        if buf.len() > self.available_write_bytes().map_err(io_error_handler)? {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Buffer length exceeded available bytes in write buffer.",
             ));
         }
 
@@ -161,10 +154,6 @@ impl io::Write for RadioLink {
             -1 => Err(io::Error::new(
                 io::ErrorKind::Other,
                 "Internal write error occurred.",
-            )),
-            0 => Err(io::Error::new(
-                io::ErrorKind::WriteZero,
-                "Transmit function returned zero written bytes.",
             )),
             written => Ok(written as usize),
         }
