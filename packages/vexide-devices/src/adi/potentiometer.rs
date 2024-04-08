@@ -37,9 +37,9 @@ impl AdiPotentiometer {
     }
 
     /// Get the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
-	pub fn max_angle(&self) -> Result<f64, PortError> {
-		Ok(self.potentiometer_type()?.max_angle())
-	}
+    pub fn max_angle(&self) -> Result<f64, PortError> {
+        Ok(self.potentiometer_type()?.max_angle())
+    }
 
     /// Gets the current potentiometer angle in degrees.
     ///
@@ -71,11 +71,11 @@ pub enum PotentiometerType {
 }
 
 impl PotentiometerType {
-	/// Maxmimum angle for the older cortex-era EDR potentiometer.
-	pub const LEGACY_MAX_ANGLE: f64 = 250.0;
+    /// Maxmimum angle for the older cortex-era EDR potentiometer.
+    pub const LEGACY_MAX_ANGLE: f64 = 250.0;
 
-	/// Maximum angle for the V5-era potentiometer V2.
-	pub const V2_MAX_ANGLE: f64 = 330.0;
+    /// Maximum angle for the V5-era potentiometer V2.
+    pub const V2_MAX_ANGLE: f64 = 330.0;
 
     /// Get the maximum angle measurement (in degrees) for this potentiometer type.
     pub const fn max_angle(&self) -> f64 {
