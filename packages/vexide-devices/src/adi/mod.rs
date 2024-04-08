@@ -82,7 +82,10 @@ impl AdiPort {
     }
 
     pub(crate) fn validate_expander(&self) -> Result<(), PortError> {
-        validate_port((self.internal_expander_index() + 1) as u8, SmartDeviceType::Adi)
+        validate_port(
+            (self.internal_expander_index() + 1) as u8,
+            SmartDeviceType::Adi,
+        )
     }
 
     pub(crate) fn configure(&mut self, config: AdiDeviceType) -> Result<(), PortError> {
