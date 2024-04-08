@@ -1,7 +1,7 @@
 {
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    cargo-pros.url = "github:vexide/cargo-pros";
+    cargo-pros.url = "github:vexide/cargo-pros?ref=feat/vexide-support";
     pros-cli-nix.url = "github:BattleCh1cken/pros-cli-nix";
   };
 

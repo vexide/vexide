@@ -6,6 +6,6 @@ __cold_start = 0x03800000;
 __cold_length = 0x04800000; /* 72 MiB */
 
 __heap_start = 0x04a00000;
-__heap_length = 0x02c00a60; /* 44 MiB */
+__heap_length = 0x02e00000; /* 44 MiB */
 
-__user_stack_length = 278528; /* 2.125 MiB */
+__user_stack_length = 0x204000; /* 2.114 MiB */
