@@ -240,25 +240,15 @@ impl io::Write for SerialPort {
     /// Write a buffer into the serial port's output buffer, returning how many bytes
     /// were written.
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let available_write_bytes = self.available_write_bytes().map_err(|e| match e {
-            SerialError::Port { source } => match source {
-                PortError::Disconnected => {
-                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-                }
-                PortError::IncorrectDevice => io::Error::new(
-                    io::ErrorKind::AddrInUse,
-                    "Port is in use as another device.",
-                ),
-            },
-            _ => unreachable!(),
+        self.validate_port().map_err(|e| match e {
+            PortError::Disconnected => {
+                io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
+            }
+            PortError::IncorrectDevice => io::Error::new(
+                io::ErrorKind::AddrInUse,
+                "Port is in use as another device.",
+            ),
         })?;
-
-        if buf.len() > available_write_bytes {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Buffer length exceeded available bytes in write buffer.",
-            ));
-        }
 
         match unsafe {
             vexDeviceGenericSerialTransmit(self.device_handle(), buf.as_ptr(), buf.len() as i32)
