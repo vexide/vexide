@@ -3,6 +3,7 @@
 use crate::PortError;
 
 pub mod accelerometer;
+pub mod addrled;
 pub mod analog;
 pub mod digital;
 pub mod light_sensor;
