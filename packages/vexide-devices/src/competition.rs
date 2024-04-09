@@ -18,17 +18,17 @@ bitflags! {
     /// The status bits returned by [`vex_sdk::vexCompetitionStatus`].
     #[derive(Debug, Clone, Copy, Eq, PartialEq)]
     pub struct CompetitionStatus: u32 {
-        /// Robot is connected to field control (NOT competition switch)
-        const SYSTEM = 1 << 3;
+        /// Robot is disabled by field control.
+        const DISABLED = 1 << 0;
 
         /// Robot is in autonomous mode.
-        const AUTONOMOUS = 1 << 0;
-
-        /// Robot is disabled by field control.
-        const DISABLED = 1 << 1;
+        const AUTONOMOUS = 1 << 1;
 
         /// Robot is connected to competition control (either competition switch or field control).
         const CONNECTED = 1 << 2;
+
+        /// Robot is connected to field control (NOT competition switch)
+        const SYSTEM = 1 << 3;
     }
 }
 
