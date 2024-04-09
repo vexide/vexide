@@ -6,7 +6,6 @@ extern crate alloc;
 use core::time::Duration;
 
 use vexide::prelude::*;
-use vexide_devices::competition::{CompetitionRobot, CompetitionRobotExt};
 
 struct Robot;
 
