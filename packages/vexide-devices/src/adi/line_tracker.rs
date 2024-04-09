@@ -41,17 +41,23 @@ impl AdiLineTracker {
         Ok(Self { port })
     }
 
-    /// Get the reflectivity factor measured by the sensor.
+    /// Get the reflectivity factor measured by the sensor. Higher numbers mean
+    /// a more reflective object.
     ///
     /// This is returned as a value ranging from [0.0, 1.0].
     pub fn reflectivity(&self) -> Result<f64, PortError> {
-        Ok(self.raw_reflectivity()? as f64 / analog::ADC_MAX_VALUE as f64)
+        Ok(
+            (analog::ADC_MAX_VALUE - self.raw_reflectivity()?) as f64
+                / analog::ADC_MAX_VALUE as f64,
+        )
     }
 
-    /// Get the raw reflectivity factor of the sensor.
+    /// Get the 12-bit reflectivity reading of the sensor.
     ///
     /// This is a raw 12-bit value from [0, 4095] representing the voltage level from
     /// 0-5V measured by the V5 brain's ADC.
+    ///
+    /// A low number (less voltage) represents a **more** reflective object.
     pub fn raw_reflectivity(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
 
