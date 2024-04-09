@@ -12,6 +12,7 @@ use super::{AdiDevice, AdiDeviceType, AdiPort};
 #[cfg(feature = "smart-leds-trait")]
 use crate::color::Rgb;
 use crate::{color::IntoRgb, PortError};
+use no_std_io::io::Write;
 
 /// WS2812B Addressable LED Strip
 #[derive(Debug, Eq, PartialEq)]
@@ -25,25 +26,17 @@ impl AdiAddrLed {
     pub const MAX_LENGTH: usize = 64;
 
     /// Initialize an LED strip on an ADI port with a given number of diodes.
-    pub fn new<T, I>(port: AdiPort, iter: T) -> Result<Self, AddrLedError>
-    where
-        T: IntoIterator<Item = I>,
-        I: IntoRgb,
-    {
+    pub fn new<T, I>(port: AdiPort, length: usize) -> Result<Self, AddrLedError> {
         port.validate_expander()?;
 
-        let buf = iter
-            .into_iter()
-            .map(|i| i.into_rgb().into())
-            .collect::<Vec<_>>();
-
-        if buf.len() > Self::MAX_LENGTH {
+        if length > Self::MAX_LENGTH {
             return Err(AddrLedError::BufferTooLarge);
         }
 
-        let mut device = Self { port, buf };
-
-        device.update();
+        let mut device = Self {
+            port,
+            buf: vec![0; length],
+        };
 
         Ok(device)
     }
@@ -61,9 +54,9 @@ impl AdiAddrLed {
         }
     }
 
-    /// Set the entire led strip to one color
+    /// Set the entire led strip to one color.
     pub fn set_all(&mut self, color: impl IntoRgb) -> Result<(), AddrLedError> {
-        self.set_buffer(vec![u32::from(color.into_rgb()); self.buf.capacity()])
+        self.set_buffer(vec![u32::from(color.into_rgb()); self.buf.len()])
     }
 
     /// Sets an individual diode color on the strip. Returns `AddrledError::OutOfRange` if the provided
@@ -78,29 +71,27 @@ impl AdiAddrLed {
         }
     }
 
-    /// Set the entire led strip using the colors contained in a new buffer. Returns
-    /// how many LEDs could be written.
-    pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<(), AddrLedError>
+    /// Attempt to write an iterator of to the LED strip. Returns how many colors were
+    /// actually written.
+    pub fn write<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
     where
         T: IntoIterator<Item = I>,
         I: IntoRgb,
     {
         self.port.validate_expander()?;
 
-        let buf = iter
+        let old_length = self.buffer.len();
+
+        self.buf = iter
             .into_iter()
             .map(|i| i.into_rgb().into())
             .collect::<Vec<_>>();
 
-        if buf.len() > Self::MAX_LENGTH {
-            return Err(AddrLedError::BufferTooLarge);
-        }
-
-        self.buf = buf;
+        self.buf.resize(old_length, 0); // Preserve previous strip length.
 
         self.update();
 
-        Ok(())
+        Ok(self.buf.len())
     }
 }
 
