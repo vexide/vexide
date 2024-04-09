@@ -37,3 +37,4 @@ workspace = true
 
 [features]
 dangerous_motor_tuning = []
+smart_leds_trait = ["dep:smart-leds-trait"]

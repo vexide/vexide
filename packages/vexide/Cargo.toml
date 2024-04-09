@@ -41,5 +41,5 @@ math = ["dep:vexide-math"]
 panic = ["dep:vexide-panic"]
 display_panics = ["vexide-panic/display_panics"]
 
-dangerous-motor-tuning = ["vexide-devices/dangerous_motor_tuning"]
-smart-leds-trait = ["vexide-devices/smart_leds_trait"]
+dangerous_motor_tuning = ["vexide-devices/dangerous_motor_tuning"]
+smart_leds_trait = ["vexide-devices/smart_leds_trait"]

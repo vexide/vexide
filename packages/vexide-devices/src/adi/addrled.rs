@@ -12,7 +12,6 @@ use super::{AdiDevice, AdiDeviceType, AdiPort};
 #[cfg(feature = "smart-leds-trait")]
 use crate::color::Rgb;
 use crate::{color::IntoRgb, PortError};
-use no_std_io::io::Write;
 
 /// WS2812B Addressable LED Strip
 #[derive(Debug, Eq, PartialEq)]
@@ -56,7 +55,8 @@ impl AdiAddrLed {
 
     /// Set the entire led strip to one color.
     pub fn set_all(&mut self, color: impl IntoRgb) -> Result<(), AddrLedError> {
-        self.set_buffer(vec![u32::from(color.into_rgb()); self.buf.len()])
+        _ = self.write(vec![u32::from(color.into_rgb()); self.buf.len()])?;
+        Ok(())
     }
 
     /// Sets an individual diode color on the strip. Returns `AddrledError::OutOfRange` if the provided
@@ -80,7 +80,7 @@ impl AdiAddrLed {
     {
         self.port.validate_expander()?;
 
-        let old_length = self.buffer.len();
+        let old_length = self.buf.len();
 
         self.buf = iter
             .into_iter()

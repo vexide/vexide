@@ -12,7 +12,8 @@ pub mod motor;
 pub mod potentiometer;
 pub mod pwm;
 pub mod solenoid;
-pub mod ultrasonic;
+pub mod range_finder;
+pub mod encoder;
 
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
@@ -21,7 +22,9 @@ pub use line_tracker::AdiLineTracker;
 pub use motor::AdiMotor;
 pub use potentiometer::{AdiPotentiometer, PotentiometerType};
 pub use solenoid::AdiSolenoid;
-pub use ultrasonic::AdiUltrasonic;
+pub use range_finder::AdiRangeFinder;
+pub use encoder::AdiEncoder;
+
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
@@ -177,7 +180,7 @@ pub enum AdiDeviceType {
     Encoder,
 
     /// Ultrasonic Sensor/Sonar
-    Ultrasonic,
+    RangeFinder,
 
     /// Cortex-era Line Tracker
     LineTracker,
@@ -218,7 +221,7 @@ impl From<V5_AdiPortConfiguration> for AdiDeviceType {
             V5_AdiPortConfiguration::kAdiPortTypeLegacyGyro => Self::Gyro,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyServo => Self::Servo,
             V5_AdiPortConfiguration::kAdiPortTypeQuadEncoder => Self::Encoder,
-            V5_AdiPortConfiguration::kAdiPortTypeSonar => Self::Ultrasonic,
+            V5_AdiPortConfiguration::kAdiPortTypeSonar => Self::AdiRangeFinder,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyLineSensor => Self::LineTracker,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyLightSensor => Self::LightSensor,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyAccelerometer => Self::Accelerometer,
@@ -245,7 +248,7 @@ impl From<AdiDeviceType> for V5_AdiPortConfiguration {
             AdiDeviceType::Gyro => Self::kAdiPortTypeLegacyGyro,
             AdiDeviceType::Servo => Self::kAdiPortTypeLegacyServo,
             AdiDeviceType::Encoder => Self::kAdiPortTypeQuadEncoder,
-            AdiDeviceType::Ultrasonic => Self::kAdiPortTypeSonar,
+            AdiDeviceType::AdiRangeFinder => Self::kAdiPortTypeSonar,
             AdiDeviceType::LineTracker => Self::kAdiPortTypeLegacyLineSensor,
             AdiDeviceType::LightSensor => Self::kAdiPortTypeLegacyLightSensor,
             AdiDeviceType::Accelerometer => Self::kAdiPortTypeLegacyAccelerometer,
