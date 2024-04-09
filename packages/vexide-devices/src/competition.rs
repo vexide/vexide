@@ -157,15 +157,23 @@ pub fn updates() -> CompetitionUpdates {
 /// A future which delegates to different futures depending on the current competition mode.
 /// I.e., a tiny async runtime specifically for writing competition programs.
 #[pin_project]
-pub struct Competition<Shared: 'static, MkInit, MkDisabled, MkAutonomous, MkDriver>
-where
-    MkInit: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+pub struct Competition<
+    Shared: 'static,
+    MkConnected,
+    MkDisconnected,
+    MkDisabled,
+    MkAutonomous,
+    MkDriver,
+> where
+    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
 {
     // Functions to generate tasks for each mode.
-    mk_init: MkInit,
+    mk_connected: MkConnected,
+    mk_disconnected: MkDisconnected,
     mk_disabled: MkDisabled,
     mk_autonomous: MkAutonomous,
     mk_driver: MkDriver,
@@ -173,6 +181,9 @@ where
     /// A stream of updates to the competition status.
     #[pin]
     updates: CompetitionUpdates,
+
+    /// The current phase of the competition runtime.
+    phase: CompetitionRuntimePhase,
 
     /// The task currently running, or [`None`] if no task is running.
     ///
@@ -182,7 +193,7 @@ where
     ///   still be around when we call a `mk_*` function with a new mutable reference to it.
     ///   We rely on lifetime parametricity of the `mk_*` functions for this (see the HRTBs above).
     /// - This field MUST come before `shared`, as struct fields are dropped in declaration order.
-    current: Option<Pin<Box<dyn Future<Output = ()> + 'static>>>,
+    task: Option<Pin<Box<dyn Future<Output = ()> + 'static>>>,
 
     /// A cell containing the data shared between all tasks.
     ///
@@ -197,82 +208,126 @@ where
     _pin: PhantomPinned,
 }
 
-// This sadly cannot be a method, because it would need to receive the anonymous pin-project type.
-macro_rules! comp_set_task {
-    ($this:expr, $mk:expr) => {{
-        // SAFETY: Before we make a new `&mut Shared`, we ensure that the existing task is dropped.
-        //         Note that although this would not normally ensure that the reference is dropped,
-        //         because the task could move it elsewhere, this is not the case here, because
-        //         the task generator functions (and therefore their returned futures) are valid for
-        //         any _arbitrarily small_ lifetime `'t`. Therefore, they are unable to move it elsewhere
-        //         without proving that the reference will be destroyed before the task returns.
-        drop($this.current.take());
-        let shared = unsafe { &mut *$this.shared.get() };
-
-        *$this.current = Some(Box::into_pin(($mk)(shared)));
-    }};
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CompetitionRuntimePhase {
+    NeverConnected,
+    Disconnected,
+    Connected,
+    InMode(CompetitionMode),
 }
 
-impl<Shared, MkInit, MkDisabled, MkAutonomous, MkDriver> Future
-    for Competition<Shared, MkInit, MkDisabled, MkAutonomous, MkDriver>
+impl CompetitionRuntimePhase {
+    /// Process a status update, modifying the phase accordingly.
+    pub fn process_status_update(&mut self, status: CompetitionStatus) {
+        *self = match *self {
+            Self::NeverConnected | Self::Disconnected
+                if status.contains(CompetitionStatus::CONNECTED) =>
+            {
+                Self::Connected
+            }
+            Self::Connected | Self::InMode(_) if !status.contains(CompetitionStatus::CONNECTED) => {
+                Self::Disconnected
+            }
+            Self::InMode(_) => Self::InMode(status.mode()),
+            old => old,
+        }
+    }
+
+    /// Finish the task corresponding to this phase, modifying the phase accordingly.
+    pub fn finish_task(&mut self, status: CompetitionStatus) {
+        *self = match *self {
+            Self::Connected => Self::InMode(status.mode()),
+            old => old,
+        };
+    }
+}
+
+impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver> Future
+    for Competition<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
 where
-    MkInit: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
 {
     type Output = (); // TODO: switch to `!` when stable.
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         let mut this = self.as_mut().project();
 
+        let old_phase = *this.phase;
+
         match this.updates.as_mut().poll_next(cx) {
-            Poll::Pending => {}
+            Poll::Ready(Some(update)) => this.phase.process_status_update(update),
             Poll::Ready(None) => unreachable!(),
-            Poll::Ready(Some(update)) => match (update.connected(), update.mode()) {
-                (true, _) if this.current.is_none() => comp_set_task!(this, &mut this.mk_init),
-                (false, _) | (_, CompetitionMode::Disabled) => {}
-                _ => todo!(),
-            },
+            _ => {}
         }
 
-        if let Some(Poll::Ready(_)) = this.current.as_mut().map(|task| task.as_mut().poll(cx)) {
-            match this.updates.last().mode() {
-                CompetitionMode::Disabled => comp_set_task!(this, this.mk_disabled),
-                CompetitionMode::Autonomous => comp_set_task!(this, this.mk_autonomous),
-                CompetitionMode::Driver => comp_set_task!(this, this.mk_driver),
-            }
+        if let Some(Poll::Ready(_)) = this.task.as_mut().map(|task| task.as_mut().poll(cx)) {
+            *this.task = None;
+            this.phase.finish_task(this.updates.last());
+        }
+
+        if old_phase != *this.phase {
+            // SAFETY: Before we make a new `&mut Shared`, we ensure that the existing task is dropped.
+            //         Note that although this would not normally ensure that the reference is dropped,
+            //         because the task could move it elsewhere, this is not the case here, because
+            //         the task generator functions (and therefore their returned futures) are valid for
+            //         any _arbitrarily small_ lifetime `'t`. Therefore, they are unable to move it elsewhere
+            //         without proving that the reference will be destroyed before the task returns.
+            drop(this.task.take());
+            let shared = unsafe { &mut *this.shared.get() };
+
+            *this.task = match *this.phase {
+                CompetitionRuntimePhase::NeverConnected => None,
+                CompetitionRuntimePhase::Disconnected => Some((this.mk_disconnected)(shared)),
+                CompetitionRuntimePhase::Connected => Some((this.mk_connected)(shared)),
+                CompetitionRuntimePhase::InMode(CompetitionMode::Disabled) => {
+                    Some((this.mk_disabled)(shared))
+                }
+                CompetitionRuntimePhase::InMode(CompetitionMode::Autonomous) => {
+                    Some((this.mk_autonomous)(shared))
+                }
+                CompetitionRuntimePhase::InMode(CompetitionMode::Driver) => {
+                    Some((this.mk_driver)(shared))
+                }
+            };
         }
 
         Poll::Pending
     }
 }
 
-impl<Shared, MkInit, MkDisabled, MkAutonomous, MkDriver>
-    Competition<Shared, MkInit, MkDisabled, MkAutonomous, MkDriver>
+impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+    Competition<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
 where
-    MkInit: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
 {
     /// Create a new competition runtime from the shared state and raw task generator functions.
     /// This API is not recommended for most users, and [`CompetitionRobot::compete`] should be preferred when possible.
     pub fn new_raw(
         shared: Shared,
-        mk_init: MkInit,
+        mk_connected: MkConnected,
+        mk_disconnected: MkDisconnected,
         mk_disabled: MkDisabled,
         mk_autonomous: MkAutonomous,
         mk_driver: MkDriver,
     ) -> Self {
         Self {
-            shared: UnsafeCell::new(shared),
-            mk_init,
+            mk_connected,
+            mk_disconnected,
             mk_disabled,
             mk_autonomous,
             mk_driver,
             updates: updates(),
-            current: None,
+            phase: CompetitionRuntimePhase::NeverConnected,
+            task: None,
+            shared: UnsafeCell::new(shared),
             _pin: PhantomPinned,
         }
     }
@@ -281,8 +336,10 @@ where
 /// A set of tasks to run when the competition is in a particular mode.
 #[allow(async_fn_in_trait)]
 pub trait CompetitionRobot: Sized {
-    /// Runs when the competition is initialized.
-    async fn init(&mut self) {}
+    /// Runs when the competition system is connected.
+    async fn connected(&mut self) {}
+    /// Runs when the competition system is disconnected.
+    async fn disconnected(&mut self) {}
     /// Runs when the robot is disabled.
     async fn disabled(&mut self) {}
     /// Runs when the robot is put into autonomous mode.
@@ -299,17 +356,19 @@ pub trait CompetitionRobotExt: CompetitionRobot {
         self,
     ) -> Competition<
         Self,
-        impl for<'s> FnMut(&'s mut Self) -> Box<dyn Future<Output = ()> + 's>,
-        impl for<'s> FnMut(&'s mut Self) -> Box<dyn Future<Output = ()> + 's>,
-        impl for<'s> FnMut(&'s mut Self) -> Box<dyn Future<Output = ()> + 's>,
-        impl for<'s> FnMut(&'s mut Self) -> Box<dyn Future<Output = ()> + 's>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
     > {
         Competition::new_raw(
             self,
-            |s| Box::new(s.init()),
-            |s| Box::new(s.disabled()),
-            |s| Box::new(s.autonomous()),
-            |s| Box::new(s.driver()),
+            |s| Box::pin(s.connected()),
+            |s| Box::pin(s.disconnected()),
+            |s| Box::pin(s.disabled()),
+            |s| Box::pin(s.autonomous()),
+            |s| Box::pin(s.driver()),
         )
     }
 }
