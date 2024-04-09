@@ -5,8 +5,8 @@ extern crate alloc;
 use alloc::boxed::Box;
 use core::{
     cell::UnsafeCell,
-    future::Future,
-    marker::PhantomPinned,
+    future::{Future, IntoFuture},
+    marker::{PhantomData, PhantomPinned},
     pin::{pin, Pin},
     task::{self, Poll},
 };
@@ -177,17 +177,23 @@ pub fn updates() -> CompetitionUpdates {
 #[pin_project]
 pub struct Competition<
     Shared: 'static,
+    Error,
     MkConnected,
     MkDisconnected,
     MkDisabled,
     MkAutonomous,
     MkDriver,
 > where
-    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkConnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDisconnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDisabled:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkAutonomous:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDriver:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
 {
     // Functions to generate tasks for each mode.
     mk_connected: MkConnected,
@@ -211,7 +217,7 @@ pub struct Competition<
     ///   still be around when we call a `mk_*` function with a new mutable reference to it.
     ///   We rely on lifetime parametricity of the `mk_*` functions for this (see the HRTBs above).
     /// - This field MUST come before `shared`, as struct fields are dropped in declaration order.
-    task: Option<Pin<Box<dyn Future<Output = ()> + 'static>>>,
+    task: Option<Pin<Box<dyn Future<Output = Result<(), Error>> + 'static>>>,
 
     /// A cell containing the data shared between all tasks.
     ///
@@ -260,16 +266,21 @@ impl CompetitionRuntimePhase {
     }
 }
 
-impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver> Future
-    for Competition<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+impl<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver> Future
+    for Competition<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
 where
-    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkConnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDisconnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDisabled:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkAutonomous:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDriver:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
 {
-    type Output = (); // TODO: switch to `!` when stable.
+    type Output = Result<(), Error>; // TODO: switch to `!` when stable.
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         let mut this = self.as_mut().project();
@@ -282,7 +293,11 @@ where
             _ => {}
         }
 
-        if let Some(Poll::Ready(_)) = this.task.as_mut().map(|task| task.as_mut().poll(cx)) {
+        if let Some(Poll::Ready(res)) = this.task.as_mut().map(|task| task.as_mut().poll(cx)) {
+            if let Err(err) = res {
+                return Poll::Ready(Err(err));
+            }
+
             *this.task = None;
             this.phase.finish_task(this.updates.last());
         }
@@ -317,36 +332,294 @@ where
     }
 }
 
-impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
-    Competition<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
-where
-    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+impl<Shared, Error>
+    Competition<
+        Shared,
+        Error,
+        DefaultMk<Shared, Error>,
+        DefaultMk<Shared, Error>,
+        DefaultMk<Shared, Error>,
+        DefaultMk<Shared, Error>,
+        DefaultMk<Shared, Error>,
+    >
 {
-    /// Create a new competition runtime from the shared state and raw task generator functions.
-    /// This API is not recommended for most users, and [`CompetitionRobot::compete`] should be preferred when possible.
-    pub fn new_raw(
-        shared: Shared,
-        mk_connected: MkConnected,
-        mk_disconnected: MkDisconnected,
-        mk_disabled: MkDisabled,
-        mk_autonomous: MkAutonomous,
-        mk_driver: MkDriver,
-    ) -> Self {
-        Self {
-            mk_connected,
-            mk_disconnected,
-            mk_disabled,
-            mk_autonomous,
-            mk_driver,
+    /// Create a typed builder for a competition runtime with the given `shared` data.
+    /// The default tasks simply do nothing, so you do not need to supply them if you don't want to.
+    pub const fn builder(shared: Shared) -> CompetitionBuilder<Shared, Error> {
+        fn default_mk<Shared, Error>(
+            _: &mut Shared,
+        ) -> Pin<Box<dyn Future<Output = Result<(), Error>>>> {
+            Box::pin(async { Ok(()) })
+        }
+
+        CompetitionBuilder {
+            shared,
+            mk_connected: default_mk,
+            mk_disconnected: default_mk,
+            mk_disabled: default_mk,
+            mk_autonomous: default_mk,
+            mk_driver: default_mk,
+            _error: PhantomData,
+        }
+    }
+}
+
+type DefaultMk<Shared, Error> =
+    for<'t> fn(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>;
+
+/// A typed builder for [`Competition`] instances.
+pub struct CompetitionBuilder<
+    Shared,
+    Error,
+    MkConnected = DefaultMk<Shared, Error>,
+    MkDisconnected = DefaultMk<Shared, Error>,
+    MkDisabled = DefaultMk<Shared, Error>,
+    MkAutonomous = DefaultMk<Shared, Error>,
+    MkDriver = DefaultMk<Shared, Error>,
+> {
+    shared: Shared,
+
+    mk_connected: MkConnected,
+    mk_disconnected: MkDisconnected,
+    mk_disabled: MkDisabled,
+    mk_autonomous: MkAutonomous,
+    mk_driver: MkDriver,
+
+    // We're contravariant in the error type.
+    _error: PhantomData<fn(Error)>,
+}
+
+impl<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+    CompetitionBuilder<
+        Shared,
+        Error,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    >
+where
+    MkConnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDisconnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDisabled:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkAutonomous:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDriver:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+{
+    /// Finish the builder, returning a [`Competition`] instance.
+    pub fn finish(
+        self,
+    ) -> Competition<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+    {
+        Competition {
+            mk_connected: self.mk_connected,
+            mk_disconnected: self.mk_disconnected,
+            mk_disabled: self.mk_disabled,
+            mk_autonomous: self.mk_autonomous,
+            mk_driver: self.mk_driver,
             updates: updates(),
             phase: CompetitionRuntimePhase::NeverConnected,
             task: None,
-            shared: UnsafeCell::new(shared),
+            shared: UnsafeCell::new(self.shared),
             _pin: PhantomPinned,
+        }
+    }
+}
+
+impl<Shared: 'static, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+    IntoFuture
+    for CompetitionBuilder<
+        Shared,
+        Error,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    >
+where
+    MkConnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDisconnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDisabled:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkAutonomous:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+    MkDriver:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 't>>,
+{
+    type Output = Result<(), Error>;
+
+    type IntoFuture =
+        Competition<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>;
+
+    fn into_future(self) -> Self::IntoFuture {
+        self.finish()
+    }
+}
+
+impl<Shared, Error, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+    CompetitionBuilder<
+        Shared,
+        Error,
+        DefaultMk<Shared, Error>,
+        MkDisconnected,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    >
+{
+    /// Use the given function to create a task that runs when the robot is connected to a competition system.
+    /// This task will run until termination before any other tasks (disconnected, disabled, autonomous, driver) are run.
+    pub fn on_connected<Mk>(
+        self,
+        mk_connected: Mk,
+    ) -> CompetitionBuilder<Shared, Error, Mk, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+    where
+        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 's>>,
+    {
+        CompetitionBuilder {
+            shared: self.shared,
+            mk_connected,
+            mk_disconnected: self.mk_disconnected,
+            mk_disabled: self.mk_disabled,
+            mk_autonomous: self.mk_autonomous,
+            mk_driver: self.mk_driver,
+            _error: self._error,
+        }
+    }
+}
+
+impl<Shared, Error, MkConnected, MkDisabled, MkAutonomous, MkDriver>
+    CompetitionBuilder<
+        Shared,
+        Error,
+        MkConnected,
+        DefaultMk<Shared, Error>,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    >
+{
+    /// Use the given function to create a task that runs when the robot is disconnected from a competition system.
+    /// This task will run until termination before any other tasks (connected, disabled, autonomous, driver) are run.
+    pub fn on_disconnected<Mk>(
+        self,
+        mk_disconnected: Mk,
+    ) -> CompetitionBuilder<Shared, Error, MkConnected, Mk, MkDisabled, MkAutonomous, MkDriver>
+    where
+        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 's>>,
+    {
+        CompetitionBuilder {
+            shared: self.shared,
+            mk_connected: self.mk_connected,
+            mk_disconnected,
+            mk_disabled: self.mk_disabled,
+            mk_autonomous: self.mk_autonomous,
+            mk_driver: self.mk_driver,
+            _error: self._error,
+        }
+    }
+}
+
+impl<Shared, Error, MkConnected, MkDisconnected, MkAutonomous, MkDriver>
+    CompetitionBuilder<
+        Shared,
+        Error,
+        MkConnected,
+        MkDisconnected,
+        DefaultMk<Shared, Error>,
+        MkAutonomous,
+        MkDriver,
+    >
+{
+    /// Use the given function to create a task that runs while the robot is disabled.
+    /// If the task terminates before the end of the disabled period, it will NOT be restarted.
+    pub fn while_disabled<Mk>(
+        self,
+        mk_disabled: Mk,
+    ) -> CompetitionBuilder<Shared, Error, MkConnected, MkDisconnected, Mk, MkAutonomous, MkDriver>
+    where
+        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 's>>,
+    {
+        CompetitionBuilder {
+            shared: self.shared,
+            mk_connected: self.mk_connected,
+            mk_disconnected: self.mk_disconnected,
+            mk_disabled,
+            mk_autonomous: self.mk_autonomous,
+            mk_driver: self.mk_driver,
+            _error: self._error,
+        }
+    }
+}
+
+impl<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkDriver>
+    CompetitionBuilder<
+        Shared,
+        Error,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        DefaultMk<Shared, Error>,
+        MkDriver,
+    >
+{
+    /// Use the given function to create a task that runs while the robot is autonomously controlled.
+    /// If the task terminates before the end of the autonomous period, it will NOT be restarted.
+    pub fn while_in_autonomous<Mk>(
+        self,
+        mk_autonomous: Mk,
+    ) -> CompetitionBuilder<Shared, Error, MkConnected, MkDisconnected, MkDisabled, Mk, MkDriver>
+    where
+        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 's>>,
+    {
+        CompetitionBuilder {
+            shared: self.shared,
+            mk_connected: self.mk_connected,
+            mk_disconnected: self.mk_disconnected,
+            mk_disabled: self.mk_disabled,
+            mk_autonomous,
+            mk_driver: self.mk_driver,
+            _error: self._error,
+        }
+    }
+}
+
+impl<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
+    CompetitionBuilder<
+        Shared,
+        Error,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        MkAutonomous,
+        DefaultMk<Shared, Error>,
+    >
+{
+    /// Use the given function to create a task that runs while the robot is driver controlled.
+    /// If the task terminates before the end of the driver control period, it will NOT be restarted.
+    pub fn while_driver_controlled<Mk>(
+        self,
+        mk_driver: Mk,
+    ) -> CompetitionBuilder<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, Mk>
+    where
+        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = Result<(), Error>> + 's>>,
+    {
+        CompetitionBuilder {
+            shared: self.shared,
+            mk_connected: self.mk_connected,
+            mk_disconnected: self.mk_disconnected,
+            mk_disabled: self.mk_disabled,
+            mk_autonomous: self.mk_autonomous,
+            mk_driver,
+            _error: self._error,
         }
     }
 }
@@ -354,16 +627,43 @@ where
 /// A set of tasks to run when the competition is in a particular mode.
 #[allow(async_fn_in_trait)]
 pub trait CompetitionRobot: Sized {
+    /// The type of errors which can be returned by tasks.
+    type Error;
+
     /// Runs when the competition system is connected.
-    async fn connected(&mut self) {}
+    ///
+    /// See [`CompetitionBuilder::on_connected`] for more information.
+    async fn connected(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
     /// Runs when the competition system is disconnected.
-    async fn disconnected(&mut self) {}
+    ///
+    /// See [`CompetitionBuilder::on_disconnected`] for more information.
+    async fn disconnected(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
     /// Runs when the robot is disabled.
-    async fn disabled(&mut self) {}
+    ///
+    /// See [`CompetitionBuilder::while_disabled`] for more information.
+    async fn disabled(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
     /// Runs when the robot is put into autonomous mode.
-    async fn autonomous(&mut self) {}
+    ///
+    /// See [`CompetitionBuilder::while_in_autonomous`] for more information.
+    async fn autonomous(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
     /// Runs when the robot is put into driver control mode.
-    async fn driver(&mut self) {}
+    ///
+    /// See [`CompetitionBuilder::while_driver_controlled`] for more information.
+    async fn driver(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
 }
 
 /// Extension methods for [`CompetitionRobot`].
@@ -374,20 +674,20 @@ pub trait CompetitionRobotExt: CompetitionRobot {
         self,
     ) -> Competition<
         Self,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        Self::Error,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>> + 's>>,
     > {
-        Competition::new_raw(
-            self,
-            |s| Box::pin(s.connected()),
-            |s| Box::pin(s.disconnected()),
-            |s| Box::pin(s.disabled()),
-            |s| Box::pin(s.autonomous()),
-            |s| Box::pin(s.driver()),
-        )
+        Competition::builder(self)
+            .on_connected(|s| Box::pin(s.connected()))
+            .on_disconnected(|s| Box::pin(s.disconnected()))
+            .while_disabled(|s| Box::pin(s.disabled()))
+            .while_in_autonomous(|s| Box::pin(s.autonomous()))
+            .while_driver_controlled(|s| Box::pin(s.driver()))
+            .finish()
     }
 }
 

@@ -88,6 +88,7 @@ pub mod prelude {
             AdiDevice, AdiPort,
         },
         color::Rgb,
+        competition::{Competition, CompetitionRobot, CompetitionRobotExt},
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
