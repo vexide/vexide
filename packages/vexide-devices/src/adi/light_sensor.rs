@@ -27,8 +27,7 @@ impl AdiLightSensor {
     ///
     /// This is returned as a value ranging from [0.0, 1.0].
     pub fn brightness(&self) -> Result<f64, PortError> {
-        Ok((analog::ADC_MAX_VALUE
-            - self.raw_brightness()?) as f64 / analog::ADC_MAX_VALUE as f64)
+        Ok((analog::ADC_MAX_VALUE - self.raw_brightness()?) as f64 / analog::ADC_MAX_VALUE as f64)
     }
 
     /// Get the 12-bit brightness reading of the sensor.
@@ -40,8 +39,10 @@ impl AdiLightSensor {
     pub fn raw_brightness(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
 
-        Ok(unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
-                as u16)
+        Ok(
+            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
+                as u16,
+        )
     }
 }
 

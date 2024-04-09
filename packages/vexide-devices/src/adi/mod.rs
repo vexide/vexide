@@ -2,6 +2,7 @@
 
 use crate::PortError;
 
+pub mod accelerometer;
 pub mod analog;
 pub mod digital;
 pub mod light_sensor;
@@ -10,7 +11,6 @@ pub mod motor;
 pub mod potentiometer;
 pub mod pwm;
 pub mod solenoid;
-pub mod accelerometer;
 
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
