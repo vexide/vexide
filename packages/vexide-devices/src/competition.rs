@@ -247,3 +247,71 @@ where
         Poll::Pending
     }
 }
+
+impl<Shared, MkInit, MkDisabled, MkAutonomous, MkDriver>
+    Competition<Shared, MkInit, MkDisabled, MkAutonomous, MkDriver>
+where
+    MkInit: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+    MkDriver: for<'t> FnMut(&'t mut Shared) -> Box<dyn Future<Output = ()> + 't>,
+{
+    /// Create a new competition runtime from the shared state and raw task generator functions.
+    /// This API is not recommended for most users, and [`CompetitionRobot::compete`] should be preferred when possible.
+    pub fn new_raw(
+        shared: Shared,
+        mk_init: MkInit,
+        mk_disabled: MkDisabled,
+        mk_autonomous: MkAutonomous,
+        mk_driver: MkDriver,
+    ) -> Self {
+        Self {
+            shared: UnsafeCell::new(shared),
+            mk_init,
+            mk_disabled,
+            mk_autonomous,
+            mk_driver,
+            updates: updates(),
+            current: None,
+            _pin: PhantomPinned,
+        }
+    }
+}
+
+/// A set of tasks to run when the competition is in a particular mode.
+#[allow(async_fn_in_trait)]
+pub trait CompetitionRobot: Sized {
+    /// Runs when the competition is initialized.
+    async fn init(&mut self) {}
+    /// Runs when the robot is disabled.
+    async fn disabled(&mut self) {}
+    /// Runs when the robot is put into autonomous mode.
+    async fn autonomous(&mut self) {}
+    /// Runs when the robot is put into driver control mode.
+    async fn driver(&mut self) {}
+}
+
+/// Extension methods for [`CompetitionRobot`].
+/// Automatically implemented for any type implementing [`CompetitionRobot`].
+pub trait CompetitionRobotExt: CompetitionRobot {
+    /// Build a competition runtime that competes with this robot.
+    fn compete(
+        self,
+    ) -> Competition<
+        Self,
+        impl for<'s> FnMut(&'s mut Self) -> Box<dyn Future<Output = ()> + 's>,
+        impl for<'s> FnMut(&'s mut Self) -> Box<dyn Future<Output = ()> + 's>,
+        impl for<'s> FnMut(&'s mut Self) -> Box<dyn Future<Output = ()> + 's>,
+        impl for<'s> FnMut(&'s mut Self) -> Box<dyn Future<Output = ()> + 's>,
+    > {
+        Competition::new_raw(
+            self,
+            |s| Box::new(s.init()),
+            |s| Box::new(s.disabled()),
+            |s| Box::new(s.autonomous()),
+            |s| Box::new(s.driver()),
+        )
+    }
+}
+
+impl<R: CompetitionRobot> CompetitionRobotExt for R {}
