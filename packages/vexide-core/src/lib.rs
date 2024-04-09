@@ -19,3 +19,4 @@ pub mod critical_section;
 pub mod io;
 pub mod sync;
 pub mod time;
+pub mod competition;

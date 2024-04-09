@@ -1,5 +1,7 @@
 //! Utilities for getting competition control state.
 
+extern crate alloc;
+
 use alloc::boxed::Box;
 use core::{
     cell::UnsafeCell,
@@ -76,7 +78,12 @@ pub enum CompetitionSystem {
 }
 
 impl CompetitionStatus {
-    /// Gets the current competition mode, or phase.
+    /// Checks if the robot is connected to a competition control system.
+    pub fn connected(&self) -> bool {
+        self.contains(CompetitionStatus::CONNECTED)
+    }
+
+    /// Gets the current competition mode, or phase from these status flags.
     pub fn mode(&self) -> CompetitionMode {
         if self.contains(Self::DISABLED) {
             CompetitionMode::Disabled
@@ -87,15 +94,10 @@ impl CompetitionStatus {
         }
     }
 
-    /// Checks if the robot is connected to a competition control system.
-    pub fn connected(&self) -> bool {
-        self.contains(Self::CONNECTED)
-    }
-
     /// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
     /// is not tethered to a competition controller.
     pub fn system(&self) -> Option<CompetitionSystem> {
-        if self.connected() {
+        if self.contains(CompetitionStatus::CONNECTED) {
             if self.contains(Self::SYSTEM) {
                 Some(CompetitionSystem::FieldControl)
             } else {
@@ -110,6 +112,22 @@ impl CompetitionStatus {
 /// Gets the current competition status flags.
 pub fn status() -> CompetitionStatus {
     CompetitionStatus::from_bits_retain(unsafe { vexCompetitionStatus() })
+}
+
+/// Checks if the robot is connected to a competition control system.
+pub fn connected() -> bool {
+    status().connected()
+}
+
+/// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
+/// is not tethered to a competition controller.
+pub fn system() -> Option<CompetitionSystem> {
+    status().system()
+}
+
+/// Gets the current competition mode, or phase.
+pub fn mode() -> CompetitionMode {
+    status().mode()
 }
 
 /// A stream of updates to the competition status.
@@ -221,11 +239,11 @@ impl CompetitionRuntimePhase {
     pub fn process_status_update(&mut self, status: CompetitionStatus) {
         *self = match *self {
             Self::NeverConnected | Self::Disconnected
-                if status.contains(CompetitionStatus::CONNECTED) =>
+                if status.connected() =>
             {
                 Self::Connected
             }
-            Self::Connected | Self::InMode(_) if !status.contains(CompetitionStatus::CONNECTED) => {
+            Self::Connected | Self::InMode(_) if !status.connected() => {
                 Self::Disconnected
             }
             Self::InMode(_) => Self::InMode(status.mode()),

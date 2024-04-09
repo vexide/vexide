@@ -75,6 +75,7 @@ pub mod prelude {
     #[cfg(feature = "core")]
     pub use vexide_core::{
         dbg,
+        competition::{CompetitionRobot, CompetitionRobotExt, Competition},
         io::{BufRead, Read, Seek, Write},
         print, println,
     };

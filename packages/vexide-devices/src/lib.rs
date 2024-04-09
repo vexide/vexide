@@ -23,7 +23,6 @@ pub mod smart;
 
 pub mod battery;
 pub mod color;
-pub mod competition;
 pub mod controller;
 pub mod peripherals;
 pub mod position;
