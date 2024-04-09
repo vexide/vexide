@@ -74,8 +74,8 @@ pub mod prelude {
     pub use vexide_async::{block_on, sleep, spawn};
     #[cfg(feature = "core")]
     pub use vexide_core::{
+        competition::{Competition, CompetitionRobot, CompetitionRobotExt},
         dbg,
-        competition::{CompetitionRobot, CompetitionRobotExt, Competition},
         io::{BufRead, Read, Seek, Write},
         print, println,
     };

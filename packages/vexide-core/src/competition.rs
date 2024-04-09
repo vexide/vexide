@@ -244,14 +244,8 @@ impl CompetitionRuntimePhase {
     /// Process a status update, modifying the phase accordingly.
     pub fn process_status_update(&mut self, status: CompetitionStatus) {
         *self = match *self {
-            Self::NeverConnected | Self::Disconnected
-                if status.connected() =>
-            {
-                Self::Connected
-            }
-            Self::Connected | Self::InMode(_) if !status.connected() => {
-                Self::Disconnected
-            }
+            Self::NeverConnected | Self::Disconnected if status.connected() => Self::Connected,
+            Self::Connected | Self::InMode(_) if !status.connected() => Self::Disconnected,
             Self::InMode(_) => Self::InMode(status.mode()),
             old => old,
         }
