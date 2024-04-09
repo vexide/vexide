@@ -79,7 +79,7 @@ pub enum CompetitionSystem {
 
 impl CompetitionStatus {
     /// Checks if the robot is connected to a competition control system.
-    pub const fn connected(&self) -> bool {
+    pub const fn is_connected(&self) -> bool {
         self.contains(CompetitionStatus::CONNECTED)
     }
 
@@ -115,8 +115,8 @@ pub fn status() -> CompetitionStatus {
 }
 
 /// Checks if the robot is connected to a competition control system.
-pub fn connected() -> bool {
-    status().connected()
+pub fn is_connected() -> bool {
+    status().is_connected()
 }
 
 /// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
@@ -245,8 +245,8 @@ impl CompetitionRuntimePhase {
     /// Process a status update, modifying the phase accordingly.
     pub fn process_status_update(&mut self, status: CompetitionStatus) {
         *self = match *self {
-            Self::NeverConnected | Self::Disconnected if status.connected() => Self::Connected,
-            Self::Connected | Self::InMode(_) if !status.connected() => Self::Disconnected,
+            Self::NeverConnected | Self::Disconnected if status.is_connected() => Self::Connected,
+            Self::Connected | Self::InMode(_) if !status.is_connected() => Self::Disconnected,
             Self::InMode(_) => Self::InMode(status.mode()),
             old => old,
         }
