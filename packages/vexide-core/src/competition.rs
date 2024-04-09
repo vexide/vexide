@@ -79,12 +79,12 @@ pub enum CompetitionSystem {
 
 impl CompetitionStatus {
     /// Checks if the robot is connected to a competition control system.
-    pub fn connected(&self) -> bool {
+    pub const fn connected(&self) -> bool {
         self.contains(CompetitionStatus::CONNECTED)
     }
 
     /// Gets the current competition mode, or phase from these status flags.
-    pub fn mode(&self) -> CompetitionMode {
+    pub const fn mode(&self) -> CompetitionMode {
         if self.contains(Self::DISABLED) {
             CompetitionMode::Disabled
         } else if self.contains(Self::AUTONOMOUS) {
@@ -96,7 +96,7 @@ impl CompetitionStatus {
 
     /// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
     /// is not tethered to a competition controller.
-    pub fn system(&self) -> Option<CompetitionSystem> {
+    pub const fn system(&self) -> Option<CompetitionSystem> {
         if self.contains(CompetitionStatus::CONNECTED) {
             if self.contains(Self::SYSTEM) {
                 Some(CompetitionSystem::FieldControl)
@@ -168,7 +168,7 @@ impl CompetitionUpdates {
 /// Gets a stream of updates to the competition status.
 ///
 /// Yields the current status when first polled, and thereafter whenever the status changes.
-pub fn updates() -> CompetitionUpdates {
+pub const fn updates() -> CompetitionUpdates {
     CompetitionUpdates { last_status: None }
 }
 
@@ -217,6 +217,7 @@ pub struct Competition<
     ///   still be around when we call a `mk_*` function with a new mutable reference to it.
     ///   We rely on lifetime parametricity of the `mk_*` functions for this (see the HRTBs above).
     /// - This field MUST come before `shared`, as struct fields are dropped in declaration order.
+    #[allow(clippy::type_complexity)]
     task: Option<Pin<Box<dyn Future<Output = Result<(), Error>> + 'static>>>,
 
     /// A cell containing the data shared between all tasks.
