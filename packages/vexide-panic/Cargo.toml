@@ -22,7 +22,7 @@ authors = [
 [dependencies]
 vexide-core = { version = "0.1.0", path = "../vexide-core" }
 vexide-devices = { version = "0.1.0", path = "../vexide-devices", optional = true }
-vex-sdk = "0.10.1"
+vex-sdk = "0.11.0"
 
 [features]
 default = ["display_panics"]

@@ -8,12 +8,14 @@ pub mod linetracker;
 pub mod motor;
 pub mod pwm;
 pub mod solenoid;
+pub mod ultrasonic;
 
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
 pub use linetracker::AdiLineTracker;
 pub use motor::AdiMotor;
 pub use solenoid::AdiSolenoid;
+pub use ultrasonic::AdiUltrasonic;
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
@@ -70,7 +72,7 @@ impl AdiPort {
     }
 
     pub(crate) fn internal_expander_index(&self) -> u32 {
-        (self.expander_index.unwrap_or(Self::INTERNAL_ADI_PORT_INDEX) - 1) as u32
+        ((self.expander_index.unwrap_or(Self::INTERNAL_ADI_PORT_INDEX)) - 1) as u32
     }
 
     pub(crate) fn device_handle(&self) -> V5_DeviceT {
@@ -78,7 +80,10 @@ impl AdiPort {
     }
 
     pub(crate) fn validate_expander(&self) -> Result<(), PortError> {
-        validate_port(self.internal_expander_index() as u8, SmartDeviceType::Adi)
+        validate_port(
+            self.internal_expander_index() as u8 + 1,
+            SmartDeviceType::Adi,
+        )
     }
 
     pub(crate) fn configure(&mut self, config: AdiDeviceType) -> Result<(), PortError> {
