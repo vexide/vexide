@@ -472,7 +472,7 @@ impl<Shared, Error, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
 {
     /// Use the given function to create a task that runs when the robot is connected to a competition system.
     /// This task will run until termination before any other tasks (disconnected, disabled, autonomous, driver) are run.
-    pub fn on_connected<Mk>(
+    pub fn on_connect<Mk>(
         self,
         mk_connected: Mk,
     ) -> CompetitionBuilder<Shared, Error, Mk, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
@@ -504,7 +504,7 @@ impl<Shared, Error, MkConnected, MkDisabled, MkAutonomous, MkDriver>
 {
     /// Use the given function to create a task that runs when the robot is disconnected from a competition system.
     /// This task will run until termination before any other tasks (connected, disabled, autonomous, driver) are run.
-    pub fn on_disconnected<Mk>(
+    pub fn on_disconnect<Mk>(
         self,
         mk_disconnected: Mk,
     ) -> CompetitionBuilder<Shared, Error, MkConnected, Mk, MkDisabled, MkAutonomous, MkDriver>
@@ -600,7 +600,7 @@ impl<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
 {
     /// Use the given function to create a task that runs while the robot is driver controlled.
     /// If the task terminates before the end of the driver control period, it will NOT be restarted.
-    pub fn while_driver<Mk>(
+    pub fn while_driving<Mk>(
         self,
         mk_driver: Mk,
     ) -> CompetitionBuilder<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, Mk>
@@ -627,14 +627,14 @@ pub trait CompetitionRobot: Sized {
 
     /// Runs when the competition system is connected.
     ///
-    /// See [`CompetitionBuilder::on_connected`] for more information.
+    /// See [`CompetitionBuilder::on_connect`] for more information.
     async fn connected(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
 
     /// Runs when the competition system is disconnected.
     ///
-    /// See [`CompetitionBuilder::on_disconnected`] for more information.
+    /// See [`CompetitionBuilder::on_disconnect`] for more information.
     async fn disconnected(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
@@ -648,14 +648,14 @@ pub trait CompetitionRobot: Sized {
 
     /// Runs when the robot is put into autonomous mode.
     ///
-    /// See [`CompetitionBuilder::while_in_autonomous`] for more information.
+    /// See [`CompetitionBuilder::while_autonomous`] for more information.
     async fn autonomous(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
 
     /// Runs when the robot is put into driver control mode.
     ///
-    /// See [`CompetitionBuilder::while_driver_controlled`] for more information.
+    /// See [`CompetitionBuilder::while_driving`] for more information.
     async fn driver(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
@@ -677,11 +677,11 @@ pub trait CompetitionRobotExt: CompetitionRobot {
         impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>> + 's>>,
     > {
         Competition::builder(self)
-            .on_connected(|s| Box::pin(s.connected()))
-            .on_disconnected(|s| Box::pin(s.disconnected()))
+            .on_connect(|s| Box::pin(s.connected()))
+            .on_disconnect(|s| Box::pin(s.disconnected()))
             .while_disabled(|s| Box::pin(s.disabled()))
             .while_autonomous(|s| Box::pin(s.autonomous()))
-            .while_driver(|s| Box::pin(s.driver()))
+            .while_driving(|s| Box::pin(s.driver()))
             .finish()
     }
 }
