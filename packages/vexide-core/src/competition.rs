@@ -568,7 +568,7 @@ impl<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkDriver>
 {
     /// Use the given function to create a task that runs while the robot is autonomously controlled.
     /// If the task terminates before the end of the autonomous period, it will NOT be restarted.
-    pub fn while_in_autonomous<Mk>(
+    pub fn while_autonomous<Mk>(
         self,
         mk_autonomous: Mk,
     ) -> CompetitionBuilder<Shared, Error, MkConnected, MkDisconnected, MkDisabled, Mk, MkDriver>
@@ -600,7 +600,7 @@ impl<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
 {
     /// Use the given function to create a task that runs while the robot is driver controlled.
     /// If the task terminates before the end of the driver control period, it will NOT be restarted.
-    pub fn while_driver_controlled<Mk>(
+    pub fn while_driver<Mk>(
         self,
         mk_driver: Mk,
     ) -> CompetitionBuilder<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, Mk>
@@ -680,8 +680,8 @@ pub trait CompetitionRobotExt: CompetitionRobot {
             .on_connected(|s| Box::pin(s.connected()))
             .on_disconnected(|s| Box::pin(s.disconnected()))
             .while_disabled(|s| Box::pin(s.disabled()))
-            .while_in_autonomous(|s| Box::pin(s.autonomous()))
-            .while_driver_controlled(|s| Box::pin(s.driver()))
+            .while_autonomous(|s| Box::pin(s.autonomous()))
+            .while_driver(|s| Box::pin(s.driver()))
             .finish()
     }
 }
