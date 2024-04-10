@@ -514,6 +514,7 @@ impl VisionSignature {
     /// let my_signature =
     ///     VisionSignature::from_utility(1, 10049, 11513, 10781, -425, 1, -212, 4.1, 0);
     /// ````
+    #[allow(clippy::too_many_arguments)]
     pub const fn from_utility(
         _id: u8, // We don't store IDs in our vision signatures.
         u_min: i32,
