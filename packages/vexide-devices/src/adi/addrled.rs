@@ -32,12 +32,10 @@ impl AdiAddrLed {
             return Err(AddrLedError::BufferTooLarge);
         }
 
-        let mut device = Self {
+        Ok(Self {
             port,
             buf: vec![0; length],
-        };
-
-        Ok(device)
+        })
     }
 
     fn update(&mut self) {
