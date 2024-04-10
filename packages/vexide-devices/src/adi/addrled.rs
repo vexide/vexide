@@ -69,7 +69,7 @@ impl AdiAddrLed {
         }
     }
 
-    /// Attempt to write an iterator of to the LED strip. Returns how many colors were
+    /// Attempt to write an iterator of colors to the LED strip. Returns how many colors were
     /// actually written.
     pub fn write<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
     where
