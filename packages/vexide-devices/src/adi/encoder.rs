@@ -59,24 +59,24 @@ impl AdiEncoder {
     pub fn set_position(&self, position: Position) -> Result<(), EncoderError> {
         self.top_port.validate_expander()?;
 
-		unsafe {
+        unsafe {
             vexDeviceAdiValueSet(
-				self.top_port.device_handle(),
-				self.top_port.internal_index(),
-				position.into_degrees() as i32,
-			)
-		}
+                self.top_port.device_handle(),
+                self.top_port.internal_index(),
+                position.into_degrees() as i32,
+            )
+        }
 
-		Ok(())
-	}
+        Ok(())
+    }
 
     /// Sets the current encoder position to the given position.
     ///
     /// Analogous to taring or resetting the encoder so that the new position is equal
     /// to the given position.
-	pub fn reset_position(&mut self) -> Result<(), EncoderError> {
-		self.set_position(Position::from_degrees(0.0))
-	}
+    pub fn reset_position(&mut self) -> Result<(), EncoderError> {
+        self.set_position(Position::from_degrees(0.0))
+    }
 }
 
 impl AdiDevice for AdiEncoder {
