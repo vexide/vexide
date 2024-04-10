@@ -24,7 +24,7 @@
 
 use core::sync::atomic::AtomicBool;
 
-use crate::{adi::AdiPort, screen::Screen, smart::SmartPort};
+use crate::{adi::AdiPort, controller::ControllerId, screen::Screen, smart::SmartPort, Controller};
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
@@ -37,6 +37,12 @@ static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 pub struct Peripherals {
     /// Brain screen
     pub screen: Screen,
+
+    /// Primary ("Master") Controller
+    pub primary_controller: Controller,
+
+    /// Partner Controller
+    pub partner_controller: Controller,
 
     /// Smart port 1 on the brain
     pub port_1: SmartPort,
@@ -106,6 +112,9 @@ impl Peripherals {
         unsafe {
             Self {
                 screen: Screen::new(),
+
+                primary_controller: Controller::new(ControllerId::Primary),
+                partner_controller: Controller::new(ControllerId::Partner),
 
                 port_1: SmartPort::new(1),
                 port_2: SmartPort::new(2),
