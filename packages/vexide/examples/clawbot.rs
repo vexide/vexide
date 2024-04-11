@@ -23,10 +23,8 @@ impl Competition for Clawbot {
 
     fn driver(&mut self) -> Result<(), PortError> {
         loop {
-
-
-			sleep(Controller::UPDATE_RATE).await;
-		}
+            sleep(Controller::UPDATE_RATE).await;
+        }
     }
 }
 
@@ -37,5 +35,8 @@ async fn main(peripherals: Peripherals) {
         right_motor: Motor::new(peripherals.port_10, Gearset::Green, Direction::Reverse).unwrap(),
         claw: Motor::new(peripherals.port_3, Gearset::Green, Direction::Forward).unwrap(),
         arm: Motor::new(peripherals.port_8, Gearset::Green, Direction::Forward).unwrap(),
-    }.compete().await.unwrap();
+    }
+    .compete()
+    .await
+    .unwrap();
 }
