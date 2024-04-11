@@ -5,7 +5,7 @@
 //! This is because they require a [`SmartPort`] to be created which can only be created without either peripherals struct unsafely.
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::adi::AdiPort;
+use crate::{adi::AdiPort, PortError};
 
 /// Represents an ADI expander module plugged into a smart port.
 ///
@@ -52,6 +52,14 @@ impl AdiExpander {
                 port,
             }
         }
+    }
+
+    /// Creates a new expander on a smart port, returning a [`PortError`] if the device is disconnected,
+    /// an incorrect device, or otherwise unavailable.
+    pub fn try_new(port: SmartPort) -> Result<Self, PortError> {
+        port.validate_type(SmartDeviceType::Adi)?;
+
+        Ok(Self::new(port))
     }
 }
 

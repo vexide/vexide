@@ -91,14 +91,11 @@ impl AdiPort {
         )
     }
 
-    pub(crate) fn configure(&mut self, config: AdiDeviceType) -> Result<(), PortError> {
-        self.validate_expander()?;
-
+    /// Configures the ADI port to a specific type if it wasn't already configured.
+    pub(crate) fn configure(&self, config: AdiDeviceType) {
         unsafe {
             vexDeviceAdiPortConfigSet(self.device_handle(), self.internal_index(), config.into());
         }
-
-        Ok(())
     }
 
     /// Get the type of device this port is currently configured as.

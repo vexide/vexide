@@ -35,10 +35,10 @@ pub struct AdiLineTracker {
 
 impl AdiLineTracker {
     /// Create a line tracker from an ADI port.
-    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
-        port.configure(AdiDeviceType::LineTracker)?;
+    pub fn new(port: AdiPort) -> Self {
+        port.configure(AdiDeviceType::LineTracker);
 
-        Ok(Self { port })
+        Self { port }
     }
 
     /// Get the reflectivity factor measured by the sensor. Higher numbers mean
@@ -60,6 +60,7 @@ impl AdiLineTracker {
     /// A low number (less voltage) represents a **more** reflective object.
     pub fn raw_reflectivity(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         Ok(
             unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }

@@ -13,17 +13,18 @@ use vex_sdk::{
     vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
     vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
     vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode,
-    V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw,
+    V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw, V5_DeviceT,
 };
 use vexide_core::time::Instant;
 
-use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
 #[derive(Debug, PartialEq)]
 pub struct InertialSensor {
     port: SmartPort,
+    device: V5_DeviceT,
     rotation_offset: f64,
     heading_offset: f64,
 }
@@ -42,12 +43,21 @@ impl InertialSensor {
     pub const MAX_HEADING: f64 = 360.0;
 
     /// Create a new inertial sensor from a smart port index.
-    pub const fn new(port: SmartPort) -> Self {
+    pub fn new(port: SmartPort) -> Self {
         Self {
+            device: unsafe { port.device_handle() },
             port,
             rotation_offset: 0.0,
             heading_offset: 0.0,
         }
+    }
+
+    /// Creates a new imu on a smart port, returning a [`PortError`] if the device is disconnected,
+    /// an incorrect device, or otherwise unavailable.
+    pub fn try_new(port: SmartPort) -> Result<Self, PortError> {
+        port.validate_type(SmartDeviceType::Imu)?;
+
+        Ok(Self::new(port))
     }
 
     /// Validates that the sensor is currently connected to its port, and that it isn't currently
@@ -63,7 +73,7 @@ impl InertialSensor {
     pub fn status(&self) -> Result<InertialStatus, InertialError> {
         self.validate_port()?;
 
-        let bits = unsafe { vexDeviceImuStatusGet(self.device_handle()) };
+        let bits = unsafe { vexDeviceImuStatusGet(self.device) };
 
         if bits == InertialStatus::STATUS_ERROR {
             return Err(InertialError::BadStatus);
@@ -102,7 +112,7 @@ impl InertialSensor {
     /// while counterclockwise rotations are represented with negative ones.
     pub fn rotation(&self) -> Result<f64, InertialError> {
         self.validate()?;
-        Ok(unsafe { vexDeviceImuHeadingGet(self.device_handle()) } - self.rotation_offset)
+        Ok(unsafe { vexDeviceImuHeadingGet(self.device) } - self.rotation_offset)
     }
 
     /// Get the Inertial Sensor’s yaw angle bounded by [0, 360) degrees.
@@ -112,7 +122,7 @@ impl InertialSensor {
     pub fn heading(&self) -> Result<f64, InertialError> {
         self.validate()?;
         Ok(
-            (unsafe { vexDeviceImuDegreesGet(self.device_handle()) } - self.heading_offset)
+            (unsafe { vexDeviceImuDegreesGet(self.device) } - self.heading_offset)
                 % Self::MAX_HEADING,
         )
     }
@@ -123,7 +133,7 @@ impl InertialSensor {
 
         let mut data = V5_DeviceImuQuaternion::default();
         unsafe {
-            vexDeviceImuQuaternionGet(self.device_handle(), &mut data);
+            vexDeviceImuQuaternionGet(self.device, &mut data);
         }
 
         Ok(mint::Quaternion {
@@ -142,7 +152,7 @@ impl InertialSensor {
 
         let mut data = V5_DeviceImuAttitude::default();
         unsafe {
-            vexDeviceImuAttitudeGet(self.device_handle(), &mut data);
+            vexDeviceImuAttitudeGet(self.device, &mut data);
         }
 
         Ok(mint::EulerAngles {
@@ -159,7 +169,7 @@ impl InertialSensor {
 
         let mut data = V5_DeviceImuRaw::default();
         unsafe {
-            vexDeviceImuRawGyroGet(self.device_handle(), &mut data);
+            vexDeviceImuRawGyroGet(self.device, &mut data);
         }
 
         Ok(mint::Vector3 {
@@ -177,7 +187,7 @@ impl InertialSensor {
 
         let mut data = V5_DeviceImuRaw::default();
         unsafe {
-            vexDeviceImuRawAccelGet(self.device_handle(), &mut data);
+            vexDeviceImuRawAccelGet(self.device, &mut data);
         }
 
         Ok(mint::Vector3 {
@@ -203,7 +213,7 @@ impl InertialSensor {
     pub fn set_rotation(&mut self, rotation: f64) -> Result<(), InertialError> {
         self.validate()?;
 
-        self.rotation_offset = rotation - unsafe { vexDeviceImuHeadingGet(self.device_handle()) };
+        self.rotation_offset = rotation - unsafe { vexDeviceImuHeadingGet(self.device) };
 
         Ok(())
     }
@@ -214,7 +224,7 @@ impl InertialSensor {
     pub fn set_heading(&mut self, heading: f64) -> Result<(), InertialError> {
         self.validate()?;
 
-        self.heading_offset = heading - unsafe { vexDeviceImuDegreesGet(self.device_handle()) };
+        self.heading_offset = heading - unsafe { vexDeviceImuDegreesGet(self.device) };
 
         Ok(())
     }
@@ -225,8 +235,10 @@ impl InertialSensor {
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
         self.validate()?;
 
-        let time_ms = data_rate.as_millis().max(Self::MIN_DATA_RATE.as_millis()) as u32;
-        unsafe { vexDeviceImuDataRateSet(self.device_handle(), time_ms) }
+        let mut time_ms = data_rate.as_millis().max(Self::MIN_DATA_RATE.as_millis()) as u32;
+        time_ms -= time_ms % 5; // Rate is in increments of 5ms - not sure if this is necessary, but PROS does it.
+
+        unsafe { vexDeviceImuDataRateSet(self.device, time_ms) }
 
         Ok(())
     }
