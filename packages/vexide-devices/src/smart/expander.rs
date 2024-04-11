@@ -53,14 +53,6 @@ impl AdiExpander {
             }
         }
     }
-
-    /// Creates a new expander on a smart port, returning a [`PortError`] if the device is disconnected,
-    /// an incorrect device, or otherwise unavailable.
-    pub fn try_new(port: SmartPort) -> Result<Self, PortError> {
-        port.validate_type(SmartDeviceType::Adi)?;
-
-        Ok(Self::new(port))
-    }
 }
 
 impl SmartDevice for AdiExpander {

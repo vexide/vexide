@@ -47,16 +47,6 @@ impl RotationSensor {
         Self { device, port }
     }
 
-    /// Creates a new rotation sensor on the given port, returning a [`PortError`] if the sensor is disconnected,
-    /// an incorrect device, or otherwise unavailable.
-    ///
-    /// Whether or not the sensor should be reversed on creation can be specified.
-    pub fn try_new(port: SmartPort, direction: Direction) -> Result<Self, PortError> {
-        port.validate_type(SmartDeviceType::Rotation)?;
-
-        Ok(Self::new(port, direction))
-    }
-
     /// Sets the position to zero.
     pub fn reset(&mut self) -> Result<(), PortError> {
         self.validate_port()?;

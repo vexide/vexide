@@ -52,14 +52,6 @@ impl InertialSensor {
         }
     }
 
-    /// Creates a new imu on a smart port, returning a [`PortError`] if the device is disconnected,
-    /// an incorrect device, or otherwise unavailable.
-    pub fn try_new(port: SmartPort) -> Result<Self, PortError> {
-        port.validate_type(SmartDeviceType::Imu)?;
-
-        Ok(Self::new(port))
-    }
-
     /// Validates that the sensor is currently connected to its port, and that it isn't currently
     /// calibrating.
     fn validate(&self) -> Result<(), InertialError> {

@@ -40,14 +40,6 @@ impl OpticalSensor {
         }
     }
 
-    /// Creates a new inertial sensor from a smart port index, returning a [`PortError`] if the device is disconnected,
-    /// an incorrect device, or otherwise unavailable.
-    pub fn try_new(port: SmartPort) -> Result<Self, PortError> {
-        port.validate_type(SmartDeviceType::Optical)?;
-
-        Ok(Self::new(port))
-    }
-
     /// Get the PWM percentage (intensity/brightness) of the sensor's LED indicator.
     pub fn led_brightness(&self) -> Result<i32, PortError> {
         self.validate_port()?;

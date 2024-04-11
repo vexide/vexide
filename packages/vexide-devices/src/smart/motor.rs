@@ -89,10 +89,8 @@ impl Motor {
         let device = unsafe { port.device_handle() }; // SAFETY: This function is only called once on this port.
 
         // NOTE: SDK properly stores device state when unplugged, meaning that we can safely
-        // set these without consequence even if the device is not available. If the user wants
-        // a falliable version of this, they can use [`Self::try_new`] instead, which just wraps
-        // this method in [`Self::validate_port`]. This is an edge case for the SDK though, and
-        // seems to just be a thing for motors.
+        // set these without consequence even if the device is not available. This is an edge
+        // case for the SDK though, and seems to just be a thing for motors and rotation sensors.
         unsafe {
             vexDeviceMotorEncoderUnitsSet(
                 device,
@@ -107,18 +105,6 @@ impl Motor {
             target: MotorControl::Voltage(0.0),
             device,
         }
-    }
-
-    /// Create a new motor from a smart port index, returning a [`PortError`] if the motor is disconnected,
-    /// an incorrect device, or otherwise unavailable.
-    pub fn try_new(
-        port: SmartPort,
-        gearset: Gearset,
-        direction: Direction,
-    ) -> Result<Self, PortError> {
-        port.validate_type(SmartDeviceType::Motor)?;
-
-        Ok(Self::new(port, gearset, direction))
     }
 
     /// Sets the target that the motor should attempt to reach.

@@ -80,14 +80,6 @@ impl VisionSensor {
         }
     }
 
-    /// Creates a new vision sensor on a smart port, returning a [`VisionError`] if the device is disconnected,
-    /// an incorrect device, or otherwise unavailable.
-    pub fn try_new(port: SmartPort) -> Result<Self, PortError> {
-        port.validate_type(SmartDeviceType::Vision)?;
-
-        Ok(Self::new(port))
-    }
-
     /// Adds a detection signature to the sensor's onboard memory. This signature will be used to
     /// identify objects when using [`VisionSensor::objects`].
     ///
