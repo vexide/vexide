@@ -84,14 +84,23 @@ pub mod prelude {
         adi::{
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},
+            light_sensor::AdiLightSensor,
+            line_tracker::AdiLineTracker,
+            motor::AdiMotor,
+            potentiometer::{AdiPotentiometer, PotentiometerType},
             pwm::AdiPwmOut,
+            solenoid::AdiSolenoid,
+            ultrasonic::AdiUltrasonic,
             AdiDevice, AdiPort,
         },
+        battery,
         color::Rgb,
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
-        screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
+        screen::{
+            Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchEvent, TouchState,
+        },
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
@@ -100,7 +109,11 @@ pub mod prelude {
             motor::{BrakeMode, Direction, Gearset, Motor, MotorControl},
             optical::OpticalSensor,
             rotation::RotationSensor,
-            vision::VisionSensor,
+            serial::SerialPort,
+            vision::{
+                LedMode, VisionCode, VisionMode, VisionObject, VisionSensor, VisionSignature,
+                WhiteBalance,
+            },
             SmartDevice, SmartPort,
         },
     };
