@@ -20,3 +20,23 @@ pub mod critical_section;
 pub mod io;
 pub mod sync;
 pub mod time;
+
+/// Exits the program using vexSystemExitRequest.
+/// This function will not instantly exit the program,
+/// but will instead wait 3ms to force the serial buffer to flush.
+pub fn exit() -> ! {
+    unsafe {
+        // Force the serial buffer to flush
+        let exit_time = time::Instant::now();
+        while exit_time.elapsed().as_millis() < 3 {
+            vex_sdk::vexTasksRun();
+        }
+        // Exit the program
+        // Everything after this point is unreachable.
+        vex_sdk::vexSystemExitRequest();
+    }
+    // unreachable.
+    loop {
+        core::hint::spin_loop();
+    }
+}
