@@ -117,6 +117,20 @@ impl<T: AdiDevice<PortIndexOutput = u8>> From<T> for AdiPort {
     }
 }
 
+impl From<AdiUltrasonic> for (AdiPort, AdiPort) {
+    fn from(device: AdiUltrasonic) -> Self {
+        let indexes = device.port_index();
+        let expander_index = device.expander_port_index();
+
+        unsafe {
+            (
+                AdiPort::new(indexes.0, expander_index),
+                AdiPort::new(indexes.1, expander_index),
+            )
+        }
+    }
+}
+
 /// Common functionality for a ADI (three-wire) devices.
 pub trait AdiDevice {
     /// The type that port_index should return. This is usually `u8`, but occasionally `(u8, u8)`.
