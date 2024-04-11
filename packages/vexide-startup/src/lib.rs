@@ -119,16 +119,21 @@ Running user code...
     }
 }
 
-/// Exits the program cleanly.
+/// Exits the program using vexSystemExitRequest.
+/// This function will not instantly exit the program,
+/// but will instead wait 3ms to force the serial buffer to flush.
 pub fn exit() -> ! {
     unsafe {
-        // Flush the serial buffer and other final processing.
-        vex_sdk::vexTasksRun();
+        // Force the serial buffer to flush
+        let exit_time = vexide_core::time::Instant::now();
+        while exit_time.elapsed().as_millis() < 3 {
+            vex_sdk::vexTasksRun();
+        }
         // Exit the program
         // Everything after this point is unreachable.
         vex_sdk::vexSystemExitRequest();
     }
-    // Technically unreachable.
+    // unreachable.
     loop {
         hint::spin_loop();
     }
