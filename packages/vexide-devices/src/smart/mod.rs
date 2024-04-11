@@ -106,6 +106,16 @@ pub trait SmartDevice {
     }
 }
 
+impl<T: SmartDevice> From<T> for SmartPort {
+    fn from(device: T) -> Self {
+        // SAFETY: We can do this, since we ensure that the old smartport was disposed of.
+        // This can effectively be thought as a move out of the device's private `port` field.
+        unsafe {
+            Self::new(device.port_index())
+        }
+    }
+}
+
 /// Verify that the device type is currently plugged into this port.
 ///
 /// This function provides the internal implementations of [`SmartDevice::validate_port`], [`SmartPort::validate_type`],

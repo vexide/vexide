@@ -109,6 +109,16 @@ impl AdiPort {
     }
 }
 
+impl<T: AdiDevice<PortIndexOutput = u8>> From<T> for AdiPort {
+    fn from(device: T) -> Self {
+        // SAFETY: We can do this, since we ensure that the old smartport was disposed of.
+        // This can effectively be thought as a move out of the device's private `port` field.
+        unsafe {
+            Self::new(device.port_index(), device.expander_port_index())
+        }
+    }
+}
+
 /// Common functionality for a ADI (three-wire) devices.
 pub trait AdiDevice {
     /// The type that port_index should return. This is usually `u8`, but occasionally `(u8, u8)`.
