@@ -115,10 +115,20 @@ Running user code...
         // Call the user code
         main();
         // Exit the program
+        exit();
+    }
+}
+
+/// Exits the program cleanly.
+pub fn exit() -> ! {
+    unsafe {
+        // Flush the serial buffer and other final processing.
+        vex_sdk::vexTasksRun();
+        // Exit the program
+        // Everything after this point is unreachable.
         vex_sdk::vexSystemExitRequest();
     }
-
-    // Technically unreachable, but the compiler doesn't know that
+    // Technically unreachable.
     loop {
         hint::spin_loop();
     }
