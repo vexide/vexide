@@ -13,7 +13,7 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
-use core::{arch::asm, hint, ptr::addr_of_mut};
+use core::{arch::asm, ptr::addr_of_mut};
 
 use vexide_core::print;
 pub use vexide_startup_macro::main;
