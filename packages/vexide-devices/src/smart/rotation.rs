@@ -5,7 +5,9 @@
 use core::time::Duration;
 
 use vex_sdk::{
-    vexDeviceAbsEncAngleGet, vexDeviceAbsEncDataRateSet, vexDeviceAbsEncPositionGet, vexDeviceAbsEncPositionSet, vexDeviceAbsEncReset, vexDeviceAbsEncStatusGet, vexDeviceAbsEncVelocityGet, V5_DeviceT
+    vexDeviceAbsEncAngleGet, vexDeviceAbsEncDataRateSet, vexDeviceAbsEncPositionGet,
+    vexDeviceAbsEncPositionSet, vexDeviceAbsEncReset, vexDeviceAbsEncStatusGet,
+    vexDeviceAbsEncVelocityGet, V5_DeviceT,
 };
 
 use super::{motor::Direction, SmartDevice, SmartDeviceType, SmartPort};
