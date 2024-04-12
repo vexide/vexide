@@ -1,3 +1,8 @@
+//! User Program Module
+//!
+//! This module contains functions for accessing/modifying the state of the current
+//! user program.
+
 pub use vex_sdk::{vexSystemExitRequest, vexTasksRun, vexSerialWriteFree};
 
 pub use crate::time::Instant;
