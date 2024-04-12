@@ -74,6 +74,17 @@ impl Direction {
     }
 }
 
+impl core::ops::Not for Direction {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Self::Forward => Self::Reverse,
+            Self::Reverse => Self::Forward,
+        }
+    }
+}
+
 impl Motor {
     /// The maximum voltage value that can be sent to a [`Motor`].
     pub const MAX_VOLTAGE: f64 = 12.0;

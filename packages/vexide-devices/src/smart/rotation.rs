@@ -5,19 +5,29 @@
 use core::time::Duration;
 
 use vex_sdk::{
-    vexDeviceAbsEncAngleGet, vexDeviceAbsEncDataRateSet, vexDeviceAbsEncPositionSet,
-    vexDeviceAbsEncReset, vexDeviceAbsEncReverseFlagGet, vexDeviceAbsEncReverseFlagSet,
-    vexDeviceAbsEncStatusGet, vexDeviceAbsEncVelocityGet, V5_DeviceT,
+    vexDeviceAbsEncAngleGet, vexDeviceAbsEncDataRateSet, vexDeviceAbsEncPositionGet, vexDeviceAbsEncPositionSet, vexDeviceAbsEncReset, vexDeviceAbsEncStatusGet, vexDeviceAbsEncVelocityGet, V5_DeviceT
 };
 
 use super::{motor::Direction, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{position::Position, PortError};
 
 /// A physical rotation sensor plugged into a port.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct RotationSensor {
+    /// Smart Port
     port: SmartPort,
+
+    /// Handle to the internal SDK device instance.
     device: V5_DeviceT,
+
+    /// Current direction state of the sensor.
+    direction: Direction,
+
+    /// The position data recorded by [`Self::position`] at the time the sensor is reversed.
+    direction_offset: f64,
+
+    /// The raw position data recorded by the SDK at the time the sensor is reversed.
+    raw_direction_offset: i32,
 }
 
 impl RotationSensor {
@@ -29,52 +39,68 @@ impl RotationSensor {
     pub fn new(port: SmartPort, direction: Direction) -> Self {
         let device = unsafe { port.device_handle() };
 
-        // NOTE: This is safe to do without port validation, since the SDK has special handling
-        // for this sensor if it is initialized when unplugged.
-        //
-        // FIXME: There's a known race condition with this function that can cause the position
-        // reading to become incorrect if it's ran before device initialization occurs. The only
-        // reasonable fix is reimplementing the reverse flag ourselves, but that's a little
-        // nontrivial to do, since angle and position have different reversing behaviors and require
-        // tracking some weird offsets.
-        //
-        // This forum post provides a better overview of the issue than I can describe here:
-        // <https://www.vexforum.com/t/rotation-sensor-bug-workaround-on-vexos-1-1-0/96577/6>
-        unsafe {
-            vexDeviceAbsEncReverseFlagSet(device, direction.is_reverse());
+        Self {
+            device,
+            port,
+            direction,
+            direction_offset: 0.0,
+            raw_direction_offset: 0,
         }
-
-        Self { device, port }
     }
 
     /// Sets the position to zero.
-    pub fn reset(&mut self) -> Result<(), PortError> {
-        self.validate_port()?;
-
-        unsafe {
-            vexDeviceAbsEncReset(self.device);
-        }
-
-        Ok(())
+    pub fn reset_position(&mut self) -> Result<(), PortError> {
+        // NOTE: We don't use vexDeviceAbsEncReset, since that doesn't actually
+        // zero position. It sets position to whatever the angle value is.
+        self.set_position(Position::from_degrees(0.0))
     }
 
     /// Sets the position.
     pub fn set_position(&mut self, position: Position) -> Result<(), PortError> {
         self.validate_port()?;
 
+        let mut raw_position = (position.into_degrees() * 1000.0) as i32;
+
+        if self.direction == Direction::Reverse {
+            raw_position *= -1;
+        }
+
         unsafe {
-            vexDeviceAbsEncPositionSet(self.device, (position.into_degrees() * 1000.0) as i32)
+            self.direction_offset = 0.0;
+            self.raw_direction_offset = 0;
+            vexDeviceAbsEncPositionSet(self.device, raw_position)
         }
 
         Ok(())
     }
 
     /// Sets whether or not the rotation sensor should be reversed.
-    pub fn set_direction(&mut self, direction: Direction) -> Result<(), PortError> {
-        self.validate_port()?;
-
-        unsafe {
-            vexDeviceAbsEncReverseFlagSet(self.device, direction.is_reverse());
+    pub fn set_direction(&mut self, new_direction: Direction) -> Result<(), PortError> {
+        // You're probably wondering why I don't use [`vexDeviceAbsEncReverseFlagSet`] here. So about that...
+        //
+        // This sensor is a little unique in that it stores two separate values - "position" and "angle". Angle is the literal
+        // angle of rotation of the sensor from 0-36000 centidegrees. Position is how *many* centidegrees the sensor was rotated
+        // by. Position is completely unbounded. Both of these values are treated separately in the SDK, and have different
+        // behaviors when dealing with the reverse flag. When the sensor is reversed, angle is transformed to become 36000 - angle
+        // (converted clockwise -> counterclockwise essentially), while position actually doesn't change at all.
+        //
+        // Rather than simply negating position when reversed, the SDK keeps the current position before reversing and just
+        // reverses the direction of future measurements. So if I were to rotate the sensor by 90 degrees, reverse the
+        // direction, then rotate it another 90 degrees it would now be at a net 0 degree rotation value.
+        //
+        // Now, here's where this all falls apart. There's a known race condition in [`vexDeviceAbsEncReverseFlagSet`], where
+        // if the reverse flag is set before the device reports its first *position* value, the starting position will be at
+        // 36000 rather than 0. This is because the SDK has code for ensuring that "angle" and "position" are set the same. If
+        // we set the reverse flag before position has been initially set, then rather than starting with a position of 0, we
+        // start with a position of 36000 (the default angle after being reversed). So rather than dealing with polling and
+        // status codes and potentially blocking the current thread until this device is initialized, I just recreated this
+        // behavior on our end without ever touching the status code.
+        //
+        // For more information: <https://www.vexforum.com/t/rotation-sensor-bug-workaround-on-vexos-1-1-0/96577/2>
+        if new_direction != self.direction()? {
+            self.direction_offset = self.position()?.into_degrees();
+            self.raw_direction_offset = unsafe { vexDeviceAbsEncPositionGet(self.device) };
+            self.direction = new_direction;
         }
 
         Ok(())
@@ -98,20 +124,23 @@ impl RotationSensor {
     pub fn direction(&self) -> Result<Direction, PortError> {
         self.validate_port()?;
 
-        Ok(
-            match unsafe { vexDeviceAbsEncReverseFlagGet(self.device) } {
-                false => Direction::Forward,
-                true => Direction::Reverse,
-            },
-        )
+        Ok(self.direction)
     }
 
     /// Get the total number of degrees rotated by the sensor based on direction.
     pub fn position(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
+        let mut delta_position = (unsafe { vexDeviceAbsEncPositionGet(self.device) }
+            - self.raw_direction_offset) as f64
+            / 100.0;
+
+        if self.direction == Direction::Reverse {
+            delta_position *= -1.0;
+        }
+
         Ok(Position::from_degrees(
-            unsafe { vexDeviceAbsEncAngleGet(self.device) } as f64 / 100.0,
+            self.direction_offset + delta_position,
         ))
     }
 
@@ -121,16 +150,26 @@ impl RotationSensor {
     pub fn angle(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
-        Ok(Position::from_degrees(
-            unsafe { vexDeviceAbsEncAngleGet(self.device) } as f64 / 100.0,
-        ))
+        let mut raw_angle = unsafe { vexDeviceAbsEncAngleGet(self.device) };
+
+        if self.direction == Direction::Reverse {
+            raw_angle = 36000 - raw_angle;
+        }
+
+        Ok(Position::from_degrees(raw_angle as f64 / 100.0))
     }
 
     /// Get the sensor's current velocity in degrees per second
     pub fn velocity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceAbsEncVelocityGet(self.device) as f64 / 1000.0 })
+        let mut raw_velocity = unsafe { vexDeviceAbsEncVelocityGet(self.device) };
+
+        if self.direction == Direction::Reverse {
+            raw_velocity *= -1;
+        }
+
+        Ok(raw_velocity as f64 / 100.0)
     }
 
     /// Returns the sensor's status code.
