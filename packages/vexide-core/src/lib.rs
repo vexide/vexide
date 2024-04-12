@@ -18,5 +18,6 @@ pub mod competition;
 #[cfg(feature = "critical-section")]
 pub mod critical_section;
 pub mod io;
+pub mod program;
 pub mod sync;
 pub mod time;

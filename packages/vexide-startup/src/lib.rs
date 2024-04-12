@@ -13,7 +13,7 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
-use core::{arch::asm, hint, ptr::addr_of_mut};
+use core::{arch::asm, ptr::addr_of_mut};
 
 use vexide_core::print;
 pub use vexide_startup_macro::main;
@@ -115,11 +115,6 @@ Running user code...
         // Call the user code
         main();
         // Exit the program
-        vex_sdk::vexSystemExitRequest();
-    }
-
-    // Technically unreachable, but the compiler doesn't know that
-    loop {
-        hint::spin_loop();
+        vexide_core::program::exit();
     }
 }
