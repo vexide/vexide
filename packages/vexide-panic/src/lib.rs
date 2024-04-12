@@ -97,7 +97,7 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
         sim_log_backtrace();
 
         #[cfg(not(feature = "display_panics"))]
-        vexide_core::exit();
+        vexide_core::program::exit();
         // unreachable without display_panics
         #[cfg_attr(not(feature = "display_panics"), allow(unreachable_code))]
         loop {

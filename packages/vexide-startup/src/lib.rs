@@ -115,6 +115,6 @@ Running user code...
         // Call the user code
         main();
         // Exit the program
-        vexide_core::exit();
+        vexide_core::program::exit();
     }
 }
