@@ -26,7 +26,7 @@ impl AdiEncoder {
         } else if top_port.index() % 2 == 0 {
             // Top must be on an odd indexed port (A, C, E, G).
             return Err(EncoderError::BadTopPort);
-        } else if bottom_port.index() != (top_port.index() - 1) {
+        } else if bottom_port.index() != (top_port.index() + 1) {
             // Bottom must be directly next to top on the higher port index.
             return Err(EncoderError::BadBottomPort);
         }

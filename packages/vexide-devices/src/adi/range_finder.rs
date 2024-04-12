@@ -29,7 +29,7 @@ impl AdiRangeFinder {
         } else if output_port.index() % 2 == 0 {
             // Output must be on an odd indexed port (A, C, E, G).
             return Err(RangeFinderError::BadOutputPort);
-        } else if input_port.index() != (output_port.index() - 1) {
+        } else if input_port.index() != (output_port.index() + 1) {
             // Input must be directly next to output on the higher port index.
             return Err(RangeFinderError::BadInputPort);
         }
