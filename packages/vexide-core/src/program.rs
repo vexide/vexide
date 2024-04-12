@@ -5,10 +5,9 @@
 
 use core::time::Duration;
 
-pub use vex_sdk::{vexSystemExitRequest, vexTasksRun, vexSerialWriteFree};
+pub use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
 
-pub use crate::time::Instant;
-pub use crate::io;
+pub use crate::{io, time::Instant};
 
 /// Exits the program using vexSystemExitRequest.
 /// This function will not instantly exit the program,

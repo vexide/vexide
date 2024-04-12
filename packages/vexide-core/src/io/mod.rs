@@ -5,6 +5,5 @@
 mod stdio;
 
 pub use no_std_io::io::*;
-pub use stdio::{dbg, print, println, stdin, stdout, Stdin, StdinLock, Stdout, StdoutLock};
-
 pub(crate) use stdio::STDIO_CHANNEL;
+pub use stdio::{dbg, print, println, stdin, stdout, Stdin, StdinLock, Stdout, StdoutLock};
