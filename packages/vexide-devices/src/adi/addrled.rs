@@ -51,7 +51,7 @@ impl AdiAddrLed {
 
     /// Set the entire led strip to one color.
     pub fn set_all(&mut self, color: impl IntoRgb) -> Result<(), AddrLedError> {
-        _ = self.write(vec![u32::from(color.into_rgb()); self.buf.len()])?;
+        _ = self.set_buffer(vec![u32::from(color.into_rgb()); self.buf.len()])?;
         Ok(())
     }
 
@@ -69,7 +69,7 @@ impl AdiAddrLed {
 
     /// Attempt to write an iterator of colors to the LED strip. Returns how many colors were
     /// actually written.
-    pub fn write<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
+    pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
     where
         T: IntoIterator<Item = I>,
         I: IntoRgb,
