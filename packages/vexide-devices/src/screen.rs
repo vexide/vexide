@@ -292,9 +292,18 @@ impl From<V5_TouchEvent> for TouchState {
     }
 }
 
+/// The rendering mode for the screen.
+/// When the screen is on the [`Immediate`](RenderMode::Immediate) mode, all draw calls will immediately show up on the display.
+/// The [`DoubleBuffered`](RenderMode::DoubleBuffered) mode instead pushes all draw calls onto an intermediate buffer
+/// that can be swapped onto the screen by calling [`Screen::render`].
+/// By default the screen uses the [`Immediate`](RenderMode::Immediate) mode.
+/// # Note
+/// [`Screen::render`] **MUST** be called for anything to appear on the screen when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RenderMode {
+    /// Draw calls are immediately pushed to the screen.
     Immediate,
+    /// Draw calls are pushed to an intermediary buffer which can be pushed to the screen with [`Screen::render`].
     DoubleBuffered,
 }
 
@@ -343,6 +352,8 @@ impl Screen {
         self.writer_buffer.clear();
     }
 
+    /// Set the render mode for the screen.
+    /// For more info on render modes, look at the [`RenderMode`] docs.
     pub fn set_render_mode(&mut self, mode: RenderMode) {
         self.render_mode = mode;
         unsafe { match mode {
@@ -357,6 +368,7 @@ impl Screen {
     pub fn render(&mut self) {
         if let RenderMode::DoubleBuffered = self.render_mode {
             unsafe {
+                // TODO: create an async function that does the equivalent of bVsyncWait.
                 vex_sdk::vexDisplayRender(false, false)
             }
         }
