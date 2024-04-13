@@ -1,5 +1,6 @@
 //! Slint platform implementation for the V5 Brain screen.
 
+extern crate alloc;
 use alloc::{boxed::Box, rc::Rc};
 use core::{cell::RefCell, time::Duration};
 
