@@ -8,6 +8,7 @@ use core::{
 };
 
 use async_task::{Runnable, Task};
+use vexide_core::println;
 use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
@@ -31,7 +32,9 @@ impl Executor {
     }
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
+        println!("Entering critical section");
         critical_section::with(|_| {
+            println!("Entered critical section");
             // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
             //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
             //   TODO: Make sure that the waker can never be sent off the thread.

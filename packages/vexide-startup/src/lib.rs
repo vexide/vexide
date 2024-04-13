@@ -13,9 +13,7 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
-use core::{arch::asm, ptr::addr_of_mut};
-
-use vexide_core::print;
+use vexide_core::{print, println};
 pub use vexide_startup_macro::main;
 
 extern "C" {
@@ -63,7 +61,9 @@ extern "Rust" {
 /// This function MUST only be called once and should only be called at the very start of program initialization.
 /// Calling this function more than one time will seriously mess up both your stack and your heap.
 pub unsafe fn program_entry() {
+    #[cfg(target_arch = "arm")]
     unsafe {
+        use core::arch::asm;
         asm!(
             "
             // Load the user stack
@@ -73,7 +73,9 @@ pub unsafe fn program_entry() {
     }
 
     // Clear the BSS section
+    #[cfg(target_arch = "arm")]
     unsafe {
+        use core::ptr::addr_of_mut;
         let mut bss_start = addr_of_mut!(__bss_start);
         while bss_start < addr_of_mut!(__bss_end) {
             core::ptr::write_volatile(bss_start, 0);
@@ -107,7 +109,9 @@ Running user code...
         // This is necessary for serial and devices to work properly.
         vexide_async::spawn(async {
             loop {
+                println!("Running vexTasksRun");
                 vex_sdk::vexTasksRun();
+                println!("Finished vexTasksRun");
                 vexide_async::sleep(::core::time::Duration::from_millis(2)).await;
             }
         })

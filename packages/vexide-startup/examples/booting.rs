@@ -13,8 +13,8 @@ use vexide_devices::peripherals::Peripherals;
 async fn main(peripherals: Peripherals) {
     unsafe {
         // Write something to the screen to test if the program is running
-        let test_box = Box::new(100);
-        vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
+        // let test_box = Box::new(100);
+        // vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
         println!("Hello, world!");
 
         loop {
