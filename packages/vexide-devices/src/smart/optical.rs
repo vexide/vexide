@@ -2,24 +2,23 @@
 
 use core::time::Duration;
 
-use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureDisable, vexDeviceOpticalGestureEnable,
-    vexDeviceOpticalGestureGet, vexDeviceOpticalHueGet, vexDeviceOpticalIntegrationTimeGet,
-    vexDeviceOpticalIntegrationTimeSet, vexDeviceOpticalLedPwmGet, vexDeviceOpticalLedPwmSet,
-    vexDeviceOpticalProximityGet, vexDeviceOpticalRawGet, vexDeviceOpticalRgbGet,
-    vexDeviceOpticalSatGet, vexDeviceOpticalStatusGet, V5_DeviceOpticalGesture,
-    V5_DeviceOpticalRaw, V5_DeviceOpticalRgb,
+    vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureEnable, vexDeviceOpticalGestureGet,
+    vexDeviceOpticalHueGet, vexDeviceOpticalIntegrationTimeGet, vexDeviceOpticalIntegrationTimeSet,
+    vexDeviceOpticalLedPwmGet, vexDeviceOpticalLedPwmSet, vexDeviceOpticalProximityGet,
+    vexDeviceOpticalRawGet, vexDeviceOpticalRgbGet, vexDeviceOpticalSatGet,
+    vexDeviceOpticalStatusGet, V5_DeviceOpticalGesture, V5_DeviceOpticalRaw, V5_DeviceOpticalRgb,
+    V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
 /// Represents a smart port configured as a V5 optical sensor
 #[derive(Debug, Eq, PartialEq)]
 pub struct OpticalSensor {
     port: SmartPort,
-    gesture_detection_enabled: bool,
+    device: V5_DeviceT,
 }
 
 impl OpticalSensor {
@@ -33,47 +32,37 @@ impl OpticalSensor {
     /// Source: <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9>
     pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
-    /// Creates a new inertial sensor from a smart port index.
-    ///
-    /// Gesture detection features can be optionally enabled, allowing the use of [`Self::last_gesture_direction()`] and [`Self::last_gesture_direction()`].
-    pub fn new(port: SmartPort, gesture_detection_enabled: bool) -> Result<Self, OpticalError> {
-        let mut sensor = Self {
+    /// Creates a new optical sensor from a smart port index.
+    pub fn new(port: SmartPort) -> Self {
+        Self {
+            device: unsafe { port.device_handle() },
             port,
-            gesture_detection_enabled,
-        };
-
-        if gesture_detection_enabled {
-            sensor.enable_gesture_detection()?;
-        } else {
-            sensor.disable_gesture_detection()?;
         }
-
-        Ok(sensor)
     }
 
     /// Get the PWM percentage (intensity/brightness) of the sensor's LED indicator.
-    pub fn led_brightness(&self) -> Result<i32, OpticalError> {
+    pub fn led_brightness(&self) -> Result<i32, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalLedPwmGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceOpticalLedPwmGet(self.device) })
     }
 
     /// Set the PWM percentage (intensity/brightness) of the sensor's LED indicator.
-    pub fn set_led_brightness(&mut self, brightness: f64) -> Result<(), OpticalError> {
+    pub fn set_led_brightness(&mut self, brightness: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
-        unsafe { vexDeviceOpticalLedPwmSet(self.device_handle(), (brightness * 100.0) as i32) }
+        unsafe { vexDeviceOpticalLedPwmSet(self.device, (brightness * 100.0) as i32) }
 
         Ok(())
     }
 
     /// Get integration time (update rate) of the optical sensor in milliseconds, with
     /// minimum time being 3ms and the maximum time being 712ms.
-    pub fn integration_time(&self) -> Result<Duration, OpticalError> {
+    pub fn integration_time(&self) -> Result<Duration, PortError> {
         self.validate_port()?;
 
         Ok(Duration::from_millis(
-            unsafe { vexDeviceOpticalIntegrationTimeGet(self.device_handle()) } as u64,
+            unsafe { vexDeviceOpticalIntegrationTimeGet(self.device) } as u64,
         ))
     }
 
@@ -85,7 +74,7 @@ impl OpticalSensor {
     /// Time value must be a [`Duration`] between 3 and 712 milliseconds. See
     /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for
     /// more information.
-    pub fn set_integration_time(&mut self, time: Duration) -> Result<(), OpticalError> {
+    pub fn set_integration_time(&mut self, time: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
         let time_ms = time.as_millis().clamp(
@@ -93,7 +82,7 @@ impl OpticalSensor {
             Self::MAX_INTEGRATION_TIME.as_millis(),
         ) as f64;
 
-        unsafe { vexDeviceOpticalIntegrationTimeSet(self.device_handle(), time_ms) }
+        unsafe { vexDeviceOpticalIntegrationTimeSet(self.device, time_ms) }
 
         Ok(())
     }
@@ -101,101 +90,73 @@ impl OpticalSensor {
     /// Get the detected color hue.
     ///
     /// Hue has a range of `0` to `359.999`.
-    pub fn hue(&self) -> Result<f64, OpticalError> {
+    pub fn hue(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalHueGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceOpticalHueGet(self.device) })
     }
 
     /// Gets the detected color saturation.
     ///
     /// Saturation has a range `0` to `1.0`.
-    pub fn saturation(&self) -> Result<f64, OpticalError> {
+    pub fn saturation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalSatGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceOpticalSatGet(self.device) })
     }
 
     /// Get the detected color brightness.
     ///
     /// Brightness values range from `0` to `1.0`.
-    pub fn brightness(&self) -> Result<f64, OpticalError> {
+    pub fn brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalBrightnessGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceOpticalBrightnessGet(self.device) })
     }
 
     /// Get the analog proximity value from `0` to `1.0`.
     ///
     /// A reading of 1.0 indicates that the object is close to the sensor, while 0.0
     /// indicates that no object is detected in range of the sensor.
-    pub fn proximity(&self) -> Result<f64, OpticalError> {
+    pub fn proximity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalProximityGet(self.device_handle()) } as f64 / 255.0)
+        Ok(unsafe { vexDeviceOpticalProximityGet(self.device) } as f64 / 255.0)
     }
 
     /// Get the processed RGB data from the sensor
-    pub fn rgb(&self) -> Result<OpticalRgb, OpticalError> {
+    pub fn rgb(&self) -> Result<OpticalRgb, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceOpticalRgb::default();
-        unsafe { vexDeviceOpticalRgbGet(self.device_handle(), &mut data) };
+        unsafe { vexDeviceOpticalRgbGet(self.device, &mut data) };
 
         Ok(data.into())
     }
 
     /// Get the raw, unprocessed RGBC data from the sensor
-    pub fn raw(&self) -> Result<OpticalRaw, OpticalError> {
+    pub fn raw(&self) -> Result<OpticalRaw, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceOpticalRaw::default();
-        unsafe { vexDeviceOpticalRawGet(self.device_handle(), &mut data) };
+        unsafe { vexDeviceOpticalRawGet(self.device, &mut data) };
 
         Ok(data.into())
     }
 
-    /// Enables gesture detection features on the sensor.
-    ///
-    /// This allows [`Self::last_gesture_direction()`] and [`Self::last_gesture_direction()`] to be called without error, if
-    /// gesture detection wasn't already enabled.
-    pub fn enable_gesture_detection(&mut self) -> Result<(), OpticalError> {
-        self.validate_port()?;
-
-        unsafe { vexDeviceOpticalGestureEnable(self.device_handle()) }
-        self.gesture_detection_enabled = true;
-
-        Ok(())
-    }
-
-    /// Disables gesture detection features on the sensor.
-    pub fn disable_gesture_detection(&mut self) -> Result<(), OpticalError> {
-        self.validate_port()?;
-
-        unsafe { vexDeviceOpticalGestureDisable(self.device_handle()) }
-        self.gesture_detection_enabled = true;
-
-        Ok(())
-    }
-
-    /// Determine if gesture detection is enabled or not on the sensor.
-    pub const fn gesture_detection_enabled(&self) -> bool {
-        self.gesture_detection_enabled
-    }
-
     /// Get the most recent gesture data from the sensor. Gestures will be cleared after 500mS.
-    ///
-    /// Will return [`OpticalError::GestureDetectionDisabled`] if the sensor is not
-    /// confgured to detect gestures.
-    pub fn last_gesture(&self) -> Result<Gesture, OpticalError> {
-        if !self.gesture_detection_enabled {
-            return Err(OpticalError::GestureDetectionDisabled);
-        }
+    pub fn last_gesture(&self) -> Result<Gesture, PortError> {
         self.validate_port()?;
+
+        // Enable gesture detection if not already enabled.
+        //
+        // For some reason, PROS docs claim that this function makes color reading
+        // unavilable, but from hardware testing this is false.
+        unsafe { vexDeviceOpticalGestureEnable(self.device) };
 
         let mut gesture = V5_DeviceOpticalGesture::default();
         let direction: GestureDirection =
-            unsafe { vexDeviceOpticalGestureGet(self.device_handle(), &mut gesture) }.into();
+            unsafe { vexDeviceOpticalGestureGet(self.device, &mut gesture) }.into();
 
         Ok(Gesture {
             direction,
@@ -210,10 +171,10 @@ impl OpticalSensor {
     }
 
     /// Gets the status code of the distance sensor
-    pub fn status(&self) -> Result<u32, OpticalError> {
+    pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalStatusGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceOpticalStatusGet(self.device) })
     }
 }
 
@@ -326,18 +287,4 @@ impl From<V5_DeviceOpticalRaw> for OpticalRaw {
             clear: value.clear,
         }
     }
-}
-
-#[derive(Debug, Snafu)]
-/// Errors that can occur when interacting with an optical sensor.
-pub enum OpticalError {
-    /// Gesture detection is not enabled for this sensor.
-    GestureDetectionDisabled,
-
-    #[snafu(display("{source}"), context(false))]
-    /// Generic port related error.
-    Port {
-        /// The source of the error
-        source: PortError,
-    },
 }

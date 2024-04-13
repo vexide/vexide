@@ -33,10 +33,11 @@ use vex_sdk::{
     vexDeviceVisionWhiteBalanceGet, vexDeviceVisionWhiteBalanceModeGet,
     vexDeviceVisionWhiteBalanceModeSet, vexDeviceVisionWhiteBalanceSet, vexDeviceVisionWifiModeGet,
     vexDeviceVisionWifiModeSet, V5VisionBlockType, V5VisionLedMode, V5VisionMode, V5VisionWBMode,
-    V5VisionWifiMode, V5_DeviceVisionObject, V5_DeviceVisionRgb, V5_DeviceVisionSignature,
+    V5VisionWifiMode, V5_DeviceT, V5_DeviceVisionObject, V5_DeviceVisionRgb,
+    V5_DeviceVisionSignature,
 };
 
-use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{color::Rgb, PortError};
 
 /// VEX Vision Sensor
@@ -46,6 +47,7 @@ use crate::{color::Rgb, PortError};
 pub struct VisionSensor {
     port: SmartPort,
     codes: Vec<VisionCode>,
+    device: V5_DeviceT,
 }
 
 impl VisionSensor {
@@ -70,15 +72,12 @@ impl VisionSensor {
     /// // Register a vision sensor on port 1.
     /// let mut sensor = VisionSensor::new(peripherals.port_1);
     /// ```
-    pub fn new(port: SmartPort, mode: VisionMode) -> Result<Self, VisionError> {
-        let mut sensor = Self {
+    pub fn new(port: SmartPort) -> Self {
+        Self {
+            device: unsafe { port.device_handle() },
             port,
             codes: Vec::new(),
-        };
-
-        sensor.set_mode(mode)?;
-
-        Ok(sensor)
+        }
     }
 
     /// Adds a detection signature to the sensor's onboard memory. This signature will be used to
@@ -118,7 +117,7 @@ impl VisionSensor {
             ..Default::default()
         };
 
-        unsafe { vexDeviceVisionSignatureSet(self.device_handle(), &mut signature) }
+        unsafe { vexDeviceVisionSignatureSet(self.device, &mut signature) }
 
         Ok(())
     }
@@ -129,9 +128,8 @@ impl VisionSensor {
         }
 
         let mut raw_signature = V5_DeviceVisionSignature::default();
-        let read_operation = unsafe {
-            vexDeviceVisionSignatureGet(self.device_handle(), id as u32, &mut raw_signature)
-        };
+        let read_operation =
+            unsafe { vexDeviceVisionSignatureGet(self.device, id as u32, &mut raw_signature) };
 
         if !read_operation {
             return Ok(None);
@@ -153,7 +151,7 @@ impl VisionSensor {
     fn set_signature_type(&mut self, id: u8, sig_type: u32) -> Result<(), VisionError> {
         if let Some(mut sig) = self.raw_signature(id)? {
             sig.mType = sig_type;
-            unsafe { vexDeviceVisionSignatureSet(self.device_handle(), &mut sig) }
+            unsafe { vexDeviceVisionSignatureSet(self.device, &mut sig) }
         } else {
             return Err(VisionError::ReadingFailed);
         }
@@ -221,22 +219,20 @@ impl VisionSensor {
         self.validate_port()?;
 
         // SDK function gives us brightness percentage 0-100.
-        Ok(unsafe { vexDeviceVisionBrightnessGet(self.device_handle()) } as f64 / 100.0)
+        Ok(unsafe { vexDeviceVisionBrightnessGet(self.device) } as f64 / 100.0)
     }
 
     /// Get the current white balance of the vision sensor as an RGB color.
     pub fn white_balance(&self) -> Result<WhiteBalance, VisionError> {
         self.validate_port()?;
 
-        let handle = self.device_handle();
-
         Ok(
-            match unsafe { vexDeviceVisionWhiteBalanceModeGet(handle) } {
+            match unsafe { vexDeviceVisionWhiteBalanceModeGet(self.device) } {
                 V5VisionWBMode::kVisionWBNormal => WhiteBalance::Auto,
                 V5VisionWBMode::kVisionWBStart => WhiteBalance::StartupAuto,
-                V5VisionWBMode::kVisionWBManual => {
-                    WhiteBalance::Manual(unsafe { vexDeviceVisionWhiteBalanceGet(handle) }.into())
-                }
+                V5VisionWBMode::kVisionWBManual => WhiteBalance::Manual(
+                    unsafe { vexDeviceVisionWhiteBalanceGet(self.device) }.into(),
+                ),
                 _ => unreachable!(),
             },
         )
@@ -246,7 +242,7 @@ impl VisionSensor {
     pub fn set_brightness(&mut self, brightness: f64) -> Result<(), VisionError> {
         self.validate_port()?;
 
-        unsafe { vexDeviceVisionBrightnessSet(self.device_handle(), (brightness * 100.0) as u8) }
+        unsafe { vexDeviceVisionBrightnessSet(self.device, (brightness * 100.0) as u8) }
 
         Ok(())
     }
@@ -257,12 +253,12 @@ impl VisionSensor {
     pub fn set_white_balance(&mut self, white_balance: WhiteBalance) -> Result<(), VisionError> {
         self.validate_port()?;
 
-        unsafe { vexDeviceVisionWhiteBalanceModeSet(self.device_handle(), white_balance.into()) }
+        unsafe { vexDeviceVisionWhiteBalanceModeSet(self.device, white_balance.into()) }
 
         if let WhiteBalance::Manual(rgb) = white_balance {
             unsafe {
                 vexDeviceVisionWhiteBalanceSet(
-                    self.device_handle(),
+                    self.device,
                     V5_DeviceVisionRgb {
                         red: rgb.red(),
                         green: rgb.green(),
@@ -289,12 +285,12 @@ impl VisionSensor {
     pub fn set_led_mode(&mut self, mode: LedMode) -> Result<(), VisionError> {
         self.validate_port()?;
 
-        unsafe { vexDeviceVisionLedModeSet(self.device_handle(), mode.into()) }
+        unsafe { vexDeviceVisionLedModeSet(self.device, mode.into()) }
 
         if let LedMode::Manual(rgb, brightness) = mode {
             unsafe {
                 vexDeviceVisionLedColorSet(
-                    self.device_handle(),
+                    self.device,
                     V5_DeviceVisionRgb {
                         red: rgb.red(),
                         green: rgb.green(),
@@ -312,20 +308,18 @@ impl VisionSensor {
     pub fn led_mode(&self) -> Result<LedMode, VisionError> {
         self.validate_port()?;
 
-        Ok(
-            match unsafe { vexDeviceVisionLedModeGet(self.device_handle()) } {
-                V5VisionLedMode::kVisionLedModeAuto => LedMode::Auto,
-                V5VisionLedMode::kVisionLedModeManual => {
-                    let led_color = unsafe { vexDeviceVisionLedColorGet(self.device_handle()) };
+        Ok(match unsafe { vexDeviceVisionLedModeGet(self.device) } {
+            V5VisionLedMode::kVisionLedModeAuto => LedMode::Auto,
+            V5VisionLedMode::kVisionLedModeManual => {
+                let led_color = unsafe { vexDeviceVisionLedColorGet(self.device) };
 
-                    LedMode::Manual(
-                        Rgb::new(led_color.red, led_color.green, led_color.blue),
-                        led_color.brightness as f64 / 100.0,
-                    )
-                }
-                _ => unreachable!(),
-            },
-        )
+                LedMode::Manual(
+                    Rgb::new(led_color.red, led_color.green, led_color.blue),
+                    led_color.brightness as f64 / 100.0,
+                )
+            }
+            _ => unreachable!(),
+        })
     }
 
     /// Returns a [`Vec`] of objects detected by the sensor.
@@ -334,15 +328,13 @@ impl VisionSensor {
             return Err(VisionError::WifiMode);
         }
 
-        let device = self.device_handle();
-
-        let object_count = unsafe { vexDeviceVisionObjectCountGet(device) } as usize;
+        let object_count = unsafe { vexDeviceVisionObjectCountGet(self.device) } as usize;
         let mut objects = Vec::with_capacity(object_count);
 
         for i in 0..object_count {
             let mut object = V5_DeviceVisionObject::default();
 
-            if unsafe { vexDeviceVisionObjectGet(device, i as u32, &mut object) } == 0 {
+            if unsafe { vexDeviceVisionObjectGet(self.device, i as u32, &mut object) } == 0 {
                 return Err(VisionError::ReadingFailed);
             }
 
@@ -381,11 +373,9 @@ impl VisionSensor {
     pub fn set_mode(&mut self, mode: VisionMode) -> Result<(), VisionError> {
         self.validate_port()?;
 
-        let device = self.device_handle();
-
         unsafe {
             vexDeviceVisionWifiModeSet(
-                device,
+                self.device,
                 match mode {
                     VisionMode::Wifi => V5VisionWifiMode::kVisionWifiModeOn,
                     _ => V5VisionWifiMode::kVisionWifiModeOff,
@@ -393,7 +383,7 @@ impl VisionSensor {
             );
 
             vexDeviceVisionModeSet(
-                device,
+                self.device,
                 match mode {
                     VisionMode::ColorDetection => V5VisionMode::kVisionModeNormal,
                     VisionMode::LineDetection => V5VisionMode::kVisionModeLineDetect,
@@ -413,13 +403,12 @@ impl VisionSensor {
     pub fn mode(&self) -> Result<VisionMode, VisionError> {
         self.validate_port()?;
 
-        let device = self.device_handle();
-
-        if unsafe { vexDeviceVisionWifiModeGet(device) } == V5VisionWifiMode::kVisionWifiModeOn {
+        if unsafe { vexDeviceVisionWifiModeGet(self.device) } == V5VisionWifiMode::kVisionWifiModeOn
+        {
             return Ok(VisionMode::Wifi);
         }
 
-        Ok(unsafe { vexDeviceVisionModeGet(device) }.into())
+        Ok(unsafe { vexDeviceVisionModeGet(self.device) }.into())
     }
 }
 
@@ -514,6 +503,7 @@ impl VisionSignature {
     /// let my_signature =
     ///     VisionSignature::from_utility(1, 10049, 11513, 10781, -425, 1, -212, 4.1, 0);
     /// ````
+    #[allow(clippy::too_many_arguments)]
     pub const fn from_utility(
         _id: u8, // We don't store IDs in our vision signatures.
         u_min: i32,

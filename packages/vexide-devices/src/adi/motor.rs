@@ -17,13 +17,13 @@ impl AdiMotor {
     ///
     /// Motors can be optionally configured to use slew rate control to prevent the internal
     /// PTC from tripping on older cortex-era 393 motors.
-    pub fn new(mut port: AdiPort, slew: bool) -> Result<Self, PortError> {
+    pub fn new(port: AdiPort, slew: bool) -> Self {
         port.configure(match slew {
             false => AdiDeviceType::Motor,
             true => AdiDeviceType::MotorSlew,
-        })?;
+        });
 
-        Ok(Self { port, slew })
+        Self { port, slew }
     }
 
     /// Sets the PWM output of the given motor as an f64 from [-1.0, 1.0].
@@ -34,6 +34,7 @@ impl AdiMotor {
     /// Sets the PWM output of the given motor as an i8 from [-127, 127].
     pub fn set_raw_output(&mut self, pwm: i8) -> Result<(), PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         unsafe {
             vexDeviceAdiValueSet(
@@ -54,6 +55,7 @@ impl AdiMotor {
     /// Returns the last set PWM output of the motor on the given port as an i8 from [-127, 127].
     pub fn raw_output(&self) -> Result<i8, PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         Ok(
             // TODO:

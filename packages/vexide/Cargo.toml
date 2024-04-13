@@ -25,6 +25,7 @@ vexide-panic = { version = "0.1.0", path = "../vexide-panic", optional = true }
 vexide-core = { version = "0.1.0", path = "../vexide-core", optional = true }
 vexide-math = { version = "0.1.0", path = "../vexide-math", optional = true }
 vexide-startup = { version = "0.1.0", path = "../vexide-startup", optional = true }
+vex-sdk = "0.12.0"
 
 [features]
 default = ["async", "devices", "panic", "display_panics", "core", "math", "startup"]

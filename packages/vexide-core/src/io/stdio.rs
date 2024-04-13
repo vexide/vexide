@@ -3,7 +3,7 @@ use vex_sdk::{vexSerialReadChar, vexSerialWriteBuffer};
 
 use crate::sync::{Mutex, MutexGuard};
 
-const STDIO_CHANNEL: u32 = 1;
+pub(crate) const STDIO_CHANNEL: u32 = 1;
 
 static STDOUT: Mutex<StdoutRaw> = Mutex::new(StdoutRaw);
 static STDIN: Mutex<StdinRaw> = Mutex::new(StdinRaw);

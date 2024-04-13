@@ -10,15 +10,13 @@ use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
     V5_ControllerIndex, V5_ControllerStatus,
 };
+use vexide_core::{competition, competition::CompetitionMode};
 
-use crate::{
-    adi::digital::LogicLevel,
-    competition::{self, CompetitionMode},
-};
+use crate::adi::digital::LogicLevel;
 
 fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     if unsafe {
-        vexControllerConnectionStatusGet(id.into()) != V5_ControllerStatus::kV5ControllerOffline
+        vexControllerConnectionStatusGet(id.into()) == V5_ControllerStatus::kV5ControllerOffline
     } {
         return Err(ControllerError::Offline);
     }

@@ -60,15 +60,16 @@ pub struct AdiDigitalIn {
 
 impl AdiDigitalIn {
     /// Create a digital input from an ADI port.
-    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
-        port.configure(AdiDeviceType::DigitalIn)?;
+    pub fn new(port: AdiPort) -> Self {
+        port.configure(AdiDeviceType::DigitalIn);
 
-        Ok(Self { port })
+        Self { port }
     }
 
     /// Gets the current logic level of a digital input pin.
     pub fn level(&self) -> Result<LogicLevel, PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         let value =
             unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
@@ -115,14 +116,17 @@ pub struct AdiDigitalOut {
 
 impl AdiDigitalOut {
     /// Create a digital output from an [`AdiPort`].
-    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
-        port.configure(AdiDeviceType::DigitalOut)?;
+    pub fn new(port: AdiPort) -> Self {
+        port.configure(AdiDeviceType::DigitalOut);
 
-        Ok(Self { port })
+        Self { port }
     }
 
     /// Sets the digital logic level (high or low) of a pin.
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), PortError> {
+        self.port.validate_expander()?;
+        self.port.configure(self.device_type());
+
         unsafe {
             vexDeviceAdiValueSet(
                 self.port.device_handle(),

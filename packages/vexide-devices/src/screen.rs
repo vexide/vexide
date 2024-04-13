@@ -4,7 +4,7 @@
 //! The [`Fill`] trait can be used to draw shapes and text to the screen.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
-use core::mem;
+use core::{mem, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -22,6 +22,7 @@ use crate::color::{IntoRgb, Rgb};
 #[derive(Debug, Eq, PartialEq)]
 pub struct Screen {
     writer_buffer: String,
+    render_mode: RenderMode,
     current_line: i16,
 }
 
@@ -291,6 +292,23 @@ impl From<V5_TouchEvent> for TouchState {
     }
 }
 
+/// The rendering mode for the screen.
+/// When the screen is on the [`Immediate`](RenderMode::Immediate) mode, all draw calls will immediately show up on the display.
+/// The [`DoubleBuffered`](RenderMode::DoubleBuffered) mode instead pushes all draw calls onto an intermediate buffer
+/// that can be swapped onto the screen by calling [`Screen::render`].
+/// By default the screen uses the [`Immediate`](RenderMode::Immediate) mode.
+/// # Note
+/// [`Screen::render`] **MUST** be called for anything to appear on the screen when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RenderMode {
+    /// Draw calls are immediately pushed to the screen.
+    /// This mode is more convenient because you dont have to call [`Screen::render`] to see anything on the screen.
+    Immediate,
+    /// Draw calls are pushed to an intermediary buffer which can be pushed to the screen with [`Screen::render`].
+    /// This mode is useful for removing screen flicker when drawing at high speeds.
+    DoubleBuffered,
+}
+
 impl Screen {
     /// The maximum number of lines that can be visible on the screen at once.
     pub const MAX_VISIBLE_LINES: usize = 12;
@@ -304,6 +322,10 @@ impl Screen {
     /// The vertical resolution of the writable part of the display.
     pub const VERTICAL_RESOLUTION: i16 = 240;
 
+    /// The amount of time it takes for the brain display to fully re-render.
+    /// The brain display is 60fps.
+    pub const REFRESH_INTERVAL: Duration = Duration::from_micros(16667);
+
     /// Create a new screen.
     ///
     /// # Safety
@@ -314,6 +336,7 @@ impl Screen {
     pub unsafe fn new() -> Self {
         Self {
             current_line: 0,
+            render_mode: RenderMode::Immediate,
             writer_buffer: String::default(),
         }
     }
@@ -329,6 +352,35 @@ impl Screen {
         );
 
         self.writer_buffer.clear();
+    }
+
+    /// Set the render mode for the screen.
+    /// For more info on render modes, look at the [`RenderMode`] docs.
+    pub fn set_render_mode(&mut self, mode: RenderMode) {
+        self.render_mode = mode;
+        unsafe {
+            match mode {
+                RenderMode::Immediate => vex_sdk::vexDisplayDoubleBufferDisable(),
+                RenderMode::DoubleBuffered => vex_sdk::vexDisplayRender(false, true),
+            }
+        }
+    }
+
+    /// Gets the [`RenderMode`] of the screen.
+    pub fn render_mode(&self) -> RenderMode {
+        self.render_mode
+    }
+
+    /// Flushes the screens double buffer if it is enabled.
+    /// This is a no-op with the [`Immediate`](RenderMode::Immediate) rendering mode,
+    /// but is necessary for anything to be displayed on the screen when using the  [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
+    pub fn render(&mut self) {
+        if let RenderMode::DoubleBuffered = self.render_mode {
+            unsafe {
+                // TODO: create an async function that does the equivalent of bVsyncWait.
+                vex_sdk::vexDisplayRender(false, false)
+            }
+        }
     }
 
     /// Scroll the entire display buffer.

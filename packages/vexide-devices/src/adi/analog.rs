@@ -24,10 +24,13 @@ pub struct AdiAnalogIn {
 
 impl AdiAnalogIn {
     /// Create a analog input from an ADI port.
-    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
-        port.configure(AdiDeviceType::AnalogIn)?;
+    pub fn new(port: AdiPort) -> Self {
+        // NOTE: Don't care about whether or not the expander is available at this point, since
+        // constructors need to be infalliable. We'll ensure that we're the right configuration
+        // before calling any other methods.
+        port.configure(AdiDeviceType::AnalogIn);
 
-        Ok(Self { port })
+        Self { port }
     }
 
     /// Reads an analog input channel and returns the 12-bit value.
@@ -38,6 +41,7 @@ impl AdiAnalogIn {
     /// The meaning of the returned value varies depending on the sensor attached.
     pub fn value(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         Ok(
             unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }

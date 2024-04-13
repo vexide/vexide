@@ -14,19 +14,20 @@ pub struct AdiSolenoid {
 
 impl AdiSolenoid {
     /// Create an AdiSolenoid.
-    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
-        port.configure(AdiDeviceType::DigitalOut)?;
+    pub fn new(port: AdiPort) -> Self {
+        port.configure(AdiDeviceType::DigitalOut);
 
-        Ok(Self {
+        Self {
             port,
             level: LogicLevel::Low,
-        })
+        }
     }
 
     /// Sets the digital logic level of the solenoid. [`LogicLevel::Low`] will close the solenoid,
     /// and [`LogicLevel::High`] will open it.
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         unsafe {
             vexDeviceAdiValueSet(

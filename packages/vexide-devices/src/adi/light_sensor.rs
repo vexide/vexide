@@ -16,10 +16,10 @@ pub struct AdiLightSensor {
 
 impl AdiLightSensor {
     /// Create a light sensor from an ADI port.
-    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
-        port.configure(AdiDeviceType::LightSensor)?;
+    pub fn new(port: AdiPort) -> Self {
+        port.configure(AdiDeviceType::LightSensor);
 
-        Ok(Self { port })
+        Self { port }
     }
 
     /// Get the brightness factor measured by the sensor. Higher numbers mean
@@ -38,6 +38,7 @@ impl AdiLightSensor {
     /// A low number (less voltage) represents a **brighter** light source.
     pub fn raw_brightness(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         Ok(
             unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }

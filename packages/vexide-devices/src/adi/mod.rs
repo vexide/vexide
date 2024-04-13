@@ -94,14 +94,11 @@ impl AdiPort {
         )
     }
 
-    pub(crate) fn configure(&mut self, config: AdiDeviceType) -> Result<(), PortError> {
-        self.validate_expander()?;
-
+    /// Configures the ADI port to a specific type if it wasn't already configured.
+    pub(crate) fn configure(&self, config: AdiDeviceType) {
         unsafe {
             vexDeviceAdiPortConfigSet(self.device_handle(), self.internal_index(), config.into());
         }
-
-        Ok(())
     }
 
     /// Get the type of device this port is currently configured as.
@@ -112,6 +109,28 @@ impl AdiPort {
             unsafe { vexDeviceAdiPortConfigGet(self.device_handle(), self.internal_index()) }
                 .into(),
         )
+    }
+}
+
+impl<T: AdiDevice<PortIndexOutput = u8>> From<T> for AdiPort {
+    fn from(device: T) -> Self {
+        // SAFETY: We can do this, since we ensure that the old smartport was disposed of.
+        // This can effectively be thought as a move out of the device's private `port` field.
+        unsafe { Self::new(device.port_index(), device.expander_port_index()) }
+    }
+}
+
+impl From<AdiUltrasonic> for (AdiPort, AdiPort) {
+    fn from(device: AdiUltrasonic) -> Self {
+        let indexes = device.port_index();
+        let expander_index = device.expander_port_index();
+
+        unsafe {
+            (
+                AdiPort::new(indexes.0, expander_index),
+                AdiPort::new(indexes.1, expander_index),
+            )
+        }
     }
 }
 
