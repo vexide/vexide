@@ -1,4 +1,4 @@
-use alloc::{boxed::Box, rc::Rc, vec::Vec};
+use alloc::{boxed::Box, rc::Rc};
 use core::{cell::RefCell, time::Duration};
 
 use slint::{
@@ -8,7 +8,7 @@ use slint::{
     },
     LogicalPosition, PhysicalPosition, PhysicalSize, Rgb8Pixel,
 };
-use vexide_core::{println, time::Instant};
+use vexide_core::time::Instant;
 use vexide_devices::{color::Rgb, Screen};
 
 pub struct V5Platform {
@@ -73,14 +73,17 @@ impl Platform for V5Platform {
                 let mut buf = *self.buffer.borrow_mut();
                 renderer.render(&mut buf, Screen::HORIZONTAL_RESOLUTION as _);
                 // Unwrap because the buffer is guaranteed to be the correct size
-                self.screen.borrow_mut().draw_buffer(
-                    0,
-                    0,
-                    Screen::HORIZONTAL_RESOLUTION,
-                    Screen::VERTICAL_RESOLUTION,
-                    buf.into_iter().map(|p| Rgb::new(p.r, p.g, p.b)),
-                    Screen::HORIZONTAL_RESOLUTION as _,
-                ).unwrap();
+                self.screen
+                    .borrow_mut()
+                    .draw_buffer(
+                        0,
+                        0,
+                        Screen::HORIZONTAL_RESOLUTION,
+                        Screen::VERTICAL_RESOLUTION,
+                        buf.into_iter().map(|p| Rgb::new(p.r, p.g, p.b)),
+                        Screen::HORIZONTAL_RESOLUTION as _,
+                    )
+                    .unwrap();
             });
 
             self.window.dispatch_event(self.get_touch_event());

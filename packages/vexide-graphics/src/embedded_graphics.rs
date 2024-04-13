@@ -1,12 +1,19 @@
+//! Embedded-graphics driver for the V5 Brain screen.
+
 use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*, primitives::Rectangle};
 use vexide_devices::{color::Rgb, Screen};
 
+/// An embedded-graphics draw target for the V5 brain screen
+/// Currently, this does not support touch detection like the regular [`Screen`] API.
 pub struct BrainDisplay {
     screen: Screen,
     triple_buffer:
         [u32; Screen::HORIZONTAL_RESOLUTION as usize * Screen::VERTICAL_RESOLUTION as usize],
 }
 impl BrainDisplay {
+    /// Create a new [`BrainDisplay`] from a [`Screen`].
+    /// The screen must be moved into this struct,
+    /// as it is used to render the display and having multiple mutable references to it is unsafe.
     pub fn new(mut screen: Screen) -> Self {
         screen.set_render_mode(vexide_devices::screen::RenderMode::DoubleBuffered);
         Self {
