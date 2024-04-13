@@ -364,6 +364,11 @@ impl Screen {
         }
     }
 
+    /// Gets the [`RenderMode`] of the screen.
+    pub fn render_mode(&self) -> RenderMode {
+        self.render_mode
+    }
+
     /// Flushes the screens double buffer if it is enabled.
     /// This is a no-op with the [`Immediate`](RenderMode::Immediate) rendering mode,
     /// but is necessary for anything to be displayed on the screen when using the  [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
