@@ -4,7 +4,7 @@ target = "./armv7a-vexos-eabi.json"
 [target.wasm32-unknown-unknown]
 rustflags = [
     # "-Ctarget-feature=+atomics,+bulk-memory,+mutable-globals",
-    "-Clink-arg=--import-memory",
+    "-Clink-arg=--export-memory",
     "-Clink-arg=--import-table",
 ]
 
