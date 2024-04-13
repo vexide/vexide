@@ -302,8 +302,10 @@ impl From<V5_TouchEvent> for TouchState {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RenderMode {
     /// Draw calls are immediately pushed to the screen.
+    /// This mode is more convenient because you dont have to call [`Screen::render`] to see anything on the screen.
     Immediate,
     /// Draw calls are pushed to an intermediary buffer which can be pushed to the screen with [`Screen::render`].
+    /// This mode is useful for removing screen flicker when drawing at high speeds.
     DoubleBuffered,
 }
 
