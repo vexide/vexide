@@ -11,5 +11,3 @@
 pub mod embedded_graphics;
 #[cfg(feature = "slint")]
 pub mod slint;
-
-extern crate alloc;

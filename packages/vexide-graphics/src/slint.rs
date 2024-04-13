@@ -19,6 +19,7 @@ pub struct V5Platform {
     start: Instant,
     window: Rc<MinimalSoftwareWindow>,
     screen: RefCell<vexide_devices::Screen>,
+    screen_pressed: RefCell<bool>,
 
     buffer: RefCell<
         [Rgb8Pixel; Screen::HORIZONTAL_RESOLUTION as usize * Screen::VERTICAL_RESOLUTION as usize],
@@ -36,6 +37,7 @@ impl V5Platform {
             start: Instant::now(),
             window,
             screen: RefCell::new(screen),
+            screen_pressed: RefCell::new(false),
             buffer: RefCell::new(
                 [Rgb8Pixel::new(0, 0, 0);
                     Screen::HORIZONTAL_RESOLUTION as usize * Screen::VERTICAL_RESOLUTION as usize],
@@ -48,14 +50,23 @@ impl V5Platform {
         let physical_pos = PhysicalPosition::new(event.x as _, event.y as _);
         let position = LogicalPosition::from_physical(physical_pos, 1.0);
         match event.state {
-            vexide_devices::screen::TouchState::Released => WindowEvent::PointerReleased {
-                position,
-                button: PointerEventButton::Left,
-            },
-            vexide_devices::screen::TouchState::Pressed => WindowEvent::PointerPressed {
-                position,
-                button: PointerEventButton::Left,
-            },
+            vexide_devices::screen::TouchState::Released => {
+                *self.screen_pressed.borrow_mut() = false;
+                WindowEvent::PointerReleased {
+                    position,
+                    button: PointerEventButton::Left,
+                }
+            }
+            vexide_devices::screen::TouchState::Pressed => {
+                if self.screen_pressed.replace(true) {
+                    WindowEvent::PointerMoved { position }
+                } else {
+                    WindowEvent::PointerPressed {
+                        position,
+                        button: PointerEventButton::Left,
+                    }
+                }
+            }
             vexide_devices::screen::TouchState::Held => WindowEvent::PointerMoved { position },
         }
     }
