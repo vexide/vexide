@@ -356,10 +356,12 @@ impl Screen {
     /// For more info on render modes, look at the [`RenderMode`] docs.
     pub fn set_render_mode(&mut self, mode: RenderMode) {
         self.render_mode = mode;
-        unsafe { match mode {
-            RenderMode::Immediate => vex_sdk::vexDisplayDoubleBufferDisable(),
-            RenderMode::DoubleBuffered => vex_sdk::vexDisplayRender(false, true),
-        }}
+        unsafe {
+            match mode {
+                RenderMode::Immediate => vex_sdk::vexDisplayDoubleBufferDisable(),
+                RenderMode::DoubleBuffered => vex_sdk::vexDisplayRender(false, true),
+            }
+        }
     }
 
     /// Flushes the screens double buffer if it is enabled.
