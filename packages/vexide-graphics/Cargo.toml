@@ -1,0 +1,17 @@
+[package]
+name = "vexide-graphics"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+embedded-graphics-core = { version = "0.4.0", optional = true }
+vex-sdk = "0.12.0"
+vexide-devices = { version = "0.1.0", path = "../vexide-devices" }
+
+[lints]
+workspace = true
+
+[features]
+default = ["embedded-graphics"]
+
+embedded-graphics = ["dep:embedded-graphics-core"]
