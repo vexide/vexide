@@ -22,7 +22,7 @@ authors = [
 
 [dependencies]
 vexide-core = { version = "0.1.0", path = "../vexide-core" }
-vex-sdk = "0.12.0"
+vex-sdk = "0.12.2"
 snafu = { version = "0.8.0", default-features = false, features = [
     "rust_1_61",
     "unstable-core-error",
