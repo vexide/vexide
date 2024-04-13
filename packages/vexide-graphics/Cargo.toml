@@ -15,7 +15,7 @@ vexide-devices = { version = "0.1.0", path = "../vexide-devices" }
 workspace = true
 
 [features]
-default = ["embedded-graphics", "slint"]
+default = []
 
 embedded-graphics = ["dep:embedded-graphics-core"]
 slint = ["dep:slint"]
