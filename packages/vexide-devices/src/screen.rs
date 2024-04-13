@@ -463,9 +463,9 @@ impl Screen {
         unsafe {
             vexDisplayCopyRect(
                 x0 as _,
-                y0 as _,
+                y0 as i32 + 0x20,
                 x1 as _,
-                y1 as _,
+                y1 as i32 + 0x20,
                 raw_buf.as_mut_ptr(),
                 src_stride,
             );

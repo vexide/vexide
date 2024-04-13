@@ -1,31 +1,36 @@
-use alloc::{rc::Rc, vec::Vec};
+use alloc::{boxed::Box, rc::Rc, vec::Vec};
 use core::{cell::RefCell, time::Duration};
 
 use slint::{
     platform::{
         software_renderer::{MinimalSoftwareWindow, RepaintBufferType},
-        Platform, PointerEventButton, WindowEvent,
+        Platform, PointerEventButton, WindowAdapter, WindowEvent,
     },
-    LogicalPosition, PhysicalPosition, Rgb8Pixel,
+    LogicalPosition, PhysicalPosition, PhysicalSize, Rgb8Pixel,
 };
-use vexide_core::time::Instant;
+use vexide_core::{println, time::Instant};
 use vexide_devices::{color::Rgb, Screen};
 
 pub struct V5Platform {
     start: Instant,
     window: Rc<MinimalSoftwareWindow>,
-    screen: vexide_devices::Screen,
+    screen: RefCell<vexide_devices::Screen>,
 
     buffer: RefCell<
         [Rgb8Pixel; Screen::HORIZONTAL_RESOLUTION as usize * Screen::VERTICAL_RESOLUTION as usize],
     >,
 }
 impl V5Platform {
-    pub fn new(screen: vexide_devices::Screen, window: Rc<MinimalSoftwareWindow>) -> Self {
+    pub fn new(screen: vexide_devices::Screen) -> Self {
+        let window = MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
+        window.set_size(PhysicalSize::new(
+            Screen::HORIZONTAL_RESOLUTION as _,
+            Screen::VERTICAL_RESOLUTION as _,
+        ));
         Self {
             start: Instant::now(),
             window,
-            screen,
+            screen: RefCell::new(screen),
             buffer: RefCell::new(
                 [Rgb8Pixel::new(0, 0, 0);
                     Screen::HORIZONTAL_RESOLUTION as usize * Screen::VERTICAL_RESOLUTION as usize],
@@ -34,7 +39,7 @@ impl V5Platform {
     }
 
     fn get_touch_event(&self) -> WindowEvent {
-        let event = self.screen.touch_status();
+        let event = self.screen.borrow().touch_status();
         let physical_pos = PhysicalPosition::new(event.x as _, event.y as _);
         let position = LogicalPosition::from_physical(physical_pos, 1.0);
         match event.state {
@@ -67,21 +72,15 @@ impl Platform for V5Platform {
             self.window.draw_if_needed(|renderer| {
                 let mut buf = *self.buffer.borrow_mut();
                 renderer.render(&mut buf, Screen::HORIZONTAL_RESOLUTION as _);
-
-                let mut buf: Vec<u32> = buf
-                    .into_iter()
-                    .map(|p| Rgb::new(p.r, p.g, p.b).into())
-                    .collect();
-                unsafe {
-                    vex_sdk::vexDisplayCopyRect(
-                        0,
-                        0x20,
-                        Screen::HORIZONTAL_RESOLUTION as _,
-                        Screen::VERTICAL_RESOLUTION as i32 + 0x20,
-                        buf.as_mut_ptr(),
-                        Screen::HORIZONTAL_RESOLUTION as _,
-                    )
-                }
+                // Unwrap because the buffer is guaranteed to be the correct size
+                self.screen.borrow_mut().draw_buffer(
+                    0,
+                    0,
+                    Screen::HORIZONTAL_RESOLUTION,
+                    Screen::VERTICAL_RESOLUTION,
+                    buf.into_iter().map(|p| Rgb::new(p.r, p.g, p.b)),
+                    Screen::HORIZONTAL_RESOLUTION as _,
+                ).unwrap();
             });
 
             self.window.dispatch_event(self.get_touch_event());
@@ -91,4 +90,9 @@ impl Platform for V5Platform {
             }
         }
     }
+}
+
+pub fn initialize_slint_backend(screen: Screen) {
+    slint::platform::set_platform(Box::new(V5Platform::new(screen)))
+        .expect("Slint backend already initialized!");
 }
