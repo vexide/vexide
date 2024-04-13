@@ -4,7 +4,7 @@
 //! The [`Fill`] trait can be used to draw shapes and text to the screen.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
-use core::mem;
+use core::{mem, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -22,6 +22,7 @@ use crate::color::{IntoRgb, Rgb};
 #[derive(Debug, Eq, PartialEq)]
 pub struct Screen {
     writer_buffer: String,
+    render_mode: RenderMode,
     current_line: i16,
 }
 
@@ -291,6 +292,12 @@ impl From<V5_TouchEvent> for TouchState {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RenderMode {
+    Immediate,
+    DoubleBuffered,
+}
+
 impl Screen {
     /// The maximum number of lines that can be visible on the screen at once.
     pub const MAX_VISIBLE_LINES: usize = 12;
@@ -304,6 +311,10 @@ impl Screen {
     /// The vertical resolution of the writable part of the display.
     pub const VERTICAL_RESOLUTION: i16 = 240;
 
+    /// The amount of time it takes for the brain display to fully re-render.
+    /// The brain display is 60fps.
+    pub const REFRESH_INTERVAL: Duration = Duration::from_micros(16667);
+
     /// Create a new screen.
     ///
     /// # Safety
@@ -314,6 +325,7 @@ impl Screen {
     pub unsafe fn new() -> Self {
         Self {
             current_line: 0,
+            render_mode: RenderMode::Immediate,
             writer_buffer: String::default(),
         }
     }
@@ -329,6 +341,20 @@ impl Screen {
         );
 
         self.writer_buffer.clear();
+    }
+
+    pub fn set_render_mode(&mut self, mode: RenderMode) {
+        self.render_mode = mode;
+        unsafe { match mode {
+            RenderMode::Immediate => vex_sdk::vexDisplayDoubleBufferDisable(),
+            RenderMode::DoubleBuffered => vex_sdk::vexDisplayRender(false, true),
+        }}
+    }
+
+    pub fn render(&mut self) {
+        unsafe {
+            vex_sdk::vexDisplayRender(false, false)
+        }
     }
 
     /// Scroll the entire display buffer.
