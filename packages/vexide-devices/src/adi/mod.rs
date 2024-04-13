@@ -120,8 +120,22 @@ impl<T: AdiDevice<PortIndexOutput = u8>> From<T> for AdiPort {
     }
 }
 
-impl From<AdiUltrasonic> for (AdiPort, AdiPort) {
-    fn from(device: AdiUltrasonic) -> Self {
+impl From<AdiRangeFinder> for (AdiPort, AdiPort) {
+    fn from(device: AdiRangeFinder) -> Self {
+        let indexes = device.port_index();
+        let expander_index = device.expander_port_index();
+
+        unsafe {
+            (
+                AdiPort::new(indexes.0, expander_index),
+                AdiPort::new(indexes.1, expander_index),
+            )
+        }
+    }
+}
+
+impl From<AdiEncoder> for (AdiPort, AdiPort) {
+    fn from(device: AdiEncoder) -> Self {
         let indexes = device.port_index();
         let expander_index = device.expander_port_index();
 

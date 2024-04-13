@@ -26,8 +26,6 @@ impl AdiAddrLed {
 
     /// Initialize an LED strip on an ADI port with a given number of diodes.
     pub fn new<T, I>(port: AdiPort, length: usize) -> Result<Self, AddrLedError> {
-        port.validate_expander()?;
-
         if length > Self::MAX_LENGTH {
             return Err(AddrLedError::BufferTooLarge);
         }

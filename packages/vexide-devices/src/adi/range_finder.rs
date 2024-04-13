@@ -19,7 +19,7 @@ pub struct AdiRangeFinder {
 impl AdiRangeFinder {
     /// Create a new rangefinder sensor from a output and input [`AdiPort`].
     pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, RangeFinderError> {
-        let mut output_port = ports.0;
+        let output_port = ports.0;
         let input_port = ports.1;
 
         // Port error handling - two-wire devices are a little weird with this sort of thing.
@@ -29,12 +29,12 @@ impl AdiRangeFinder {
         } else if output_port.index() % 2 == 0 {
             // Output must be on an odd indexed port (A, C, E, G).
             return Err(RangeFinderError::BadOutputPort);
-        } else if input_port.index() != (output_port.index() + 1) {
+        } else if input_port.index() != (output_port.index() - 1) {
             // Input must be directly next to output on the higher port index.
             return Err(RangeFinderError::BadInputPort);
         }
 
-        output_port.configure(AdiDeviceType::RangeFinder)?;
+        output_port.configure(AdiDeviceType::RangeFinder);
 
         Ok(Self {
             output_port,
@@ -47,6 +47,7 @@ impl AdiRangeFinder {
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
     pub fn distance(&self) -> Result<u16, RangeFinderError> {
         self.output_port.validate_expander()?;
+        self.output_port.configure(self.device_type());
 
         match unsafe {
             vexDeviceAdiValueGet(

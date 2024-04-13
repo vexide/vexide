@@ -16,7 +16,7 @@ pub struct AdiEncoder {
 impl AdiEncoder {
     /// Create a new encoder sensor from a top and bottom [`AdiPort`].
     pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, EncoderError> {
-        let mut top_port = ports.0;
+        let top_port = ports.0;
         let bottom_port = ports.1;
 
         // Port error handling - two-wire devices are a little weird with this sort of thing.
@@ -31,7 +31,7 @@ impl AdiEncoder {
             return Err(EncoderError::BadBottomPort);
         }
 
-        top_port.configure(AdiDeviceType::Encoder)?;
+        top_port.configure(AdiDeviceType::Encoder);
 
         Ok(Self {
             top_port,
@@ -44,6 +44,7 @@ impl AdiEncoder {
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
     pub fn position(&self) -> Result<Position, EncoderError> {
         self.top_port.validate_expander()?;
+        self.top_port.configure(self.device_type());
 
         Ok(Position::from_degrees(unsafe {
             vexDeviceAdiValueGet(
