@@ -1,16 +1,19 @@
+//! Slint platform implementation for the V5 Brain screen.
+
 use alloc::{boxed::Box, rc::Rc};
 use core::{cell::RefCell, time::Duration};
 
 use slint::{
     platform::{
         software_renderer::{MinimalSoftwareWindow, RepaintBufferType},
-        Platform, PointerEventButton, WindowAdapter, WindowEvent,
+        Platform, PointerEventButton, WindowEvent,
     },
     LogicalPosition, PhysicalPosition, PhysicalSize, Rgb8Pixel,
 };
 use vexide_core::time::Instant;
 use vexide_devices::{color::Rgb, Screen};
 
+/// A Slint platform implementation for the V5 Brain screen.
 pub struct V5Platform {
     start: Instant,
     window: Rc<MinimalSoftwareWindow>,
@@ -21,6 +24,7 @@ pub struct V5Platform {
     >,
 }
 impl V5Platform {
+    /// Create a new [`V5Platform`] from a [`Screen`].
     pub fn new(screen: vexide_devices::Screen) -> Self {
         let window = MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
         window.set_size(PhysicalSize::new(
@@ -95,7 +99,10 @@ impl Platform for V5Platform {
     }
 }
 
-pub fn initialize_slint_backend(screen: Screen) {
+/// Sets the Slint platform to [`V5Platform`].
+/// # Panics
+/// Panics if the Slint platform is already set.
+pub fn initialize_slint_platform(screen: Screen) {
     slint::platform::set_platform(Box::new(V5Platform::new(screen)))
-        .expect("Slint backend already initialized!");
+        .expect("Slint platform already set!");
 }
