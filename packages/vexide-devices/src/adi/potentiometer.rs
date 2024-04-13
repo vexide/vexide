@@ -14,23 +14,21 @@ pub struct AdiPotentiometer {
 
 impl AdiPotentiometer {
     /// Create a new potentiometer from an [`AdiPort`].
-    pub fn new(
-        mut port: AdiPort,
-        potentiometer_type: PotentiometerType,
-    ) -> Result<Self, PortError> {
+    pub fn new(port: AdiPort, potentiometer_type: PotentiometerType) -> Self {
         port.configure(match potentiometer_type {
             PotentiometerType::Legacy => AdiDeviceType::Potentiometer,
             PotentiometerType::V2 => AdiDeviceType::PotentimeterV2,
-        })?;
+        });
 
-        Ok(Self {
+        Self {
             port,
             potentiometer_type,
-        })
+        }
     }
 
     /// Get the type of ADI potentiometer device.
     pub fn potentiometer_type(&self) -> Result<PotentiometerType, PortError> {
+        // Configuration check not necessary since we don't fetch from the SDK.
         self.port.validate_expander()?;
 
         Ok(self.potentiometer_type)
@@ -49,6 +47,7 @@ impl AdiPotentiometer {
     /// thus returning an angle between 0-330 degrees.
     pub fn angle(&self) -> Result<f64, PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         Ok(
             unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }

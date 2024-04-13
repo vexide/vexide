@@ -12,10 +12,10 @@ pub struct AdiPwmOut {
 
 impl AdiPwmOut {
     /// Create a pwm output from an [`AdiPort`].
-    pub fn new(mut port: AdiPort) -> Result<Self, PortError> {
-        port.configure(AdiDeviceType::PwmOut)?;
+    pub fn new(port: AdiPort) -> Self {
+        port.configure(AdiDeviceType::PwmOut);
 
-        Ok(Self { port })
+        Self { port }
     }
 
     /// Sets the PWM output width.
@@ -24,6 +24,7 @@ impl AdiPwmOut {
     /// 0.94mS to 2.03mS.
     pub fn set_output(&mut self, value: u8) -> Result<(), PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         unsafe {
             vexDeviceAdiValueSet(

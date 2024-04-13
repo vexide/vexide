@@ -8,16 +8,17 @@ use vex_sdk::{
     vexDeviceGenericSerialBaudrate, vexDeviceGenericSerialEnable, vexDeviceGenericSerialFlush,
     vexDeviceGenericSerialPeekChar, vexDeviceGenericSerialReadChar, vexDeviceGenericSerialReceive,
     vexDeviceGenericSerialReceiveAvail, vexDeviceGenericSerialTransmit,
-    vexDeviceGenericSerialWriteChar, vexDeviceGenericSerialWriteFree,
+    vexDeviceGenericSerialWriteChar, vexDeviceGenericSerialWriteFree, V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
 /// Represents a smart port configured as a generic serial controller.
 #[derive(Debug, Eq, PartialEq)]
 pub struct SerialPort {
     port: SmartPort,
+    device: V5_DeviceT,
 }
 
 impl SerialPort {
@@ -40,8 +41,7 @@ impl SerialPort {
     /// let serial = SerialPort::open(peripherals.port_1, 115200)?;
     /// ```
     pub fn open(port: SmartPort, baud_rate: u32) -> Self {
-        let serial_port = Self { port };
-        let device = serial_port.device_handle();
+        let device = unsafe { port.device_handle() };
 
         // These can't fail so we don't call validate_port.
         //
@@ -52,7 +52,7 @@ impl SerialPort {
             vexDeviceGenericSerialBaudrate(device, baud_rate as i32);
         }
 
-        serial_port
+        Self { device, port }
     }
 
     /// Clears the internal input and output FIFO buffers.
@@ -78,7 +78,7 @@ impl SerialPort {
         self.validate_port()?;
 
         unsafe {
-            vexDeviceGenericSerialFlush(self.device_handle());
+            vexDeviceGenericSerialFlush(self.device);
         }
 
         Ok(())
@@ -102,7 +102,7 @@ impl SerialPort {
     pub fn read_byte(&self) -> Result<Option<u8>, SerialError> {
         self.validate_port()?;
 
-        let byte = unsafe { vexDeviceGenericSerialReadChar(self.device_handle()) };
+        let byte = unsafe { vexDeviceGenericSerialReadChar(self.device) };
 
         Ok(match byte {
             -1 => None,
@@ -126,7 +126,7 @@ impl SerialPort {
         self.validate_port()?;
 
         Ok(
-            match unsafe { vexDeviceGenericSerialPeekChar(self.device_handle()) } {
+            match unsafe { vexDeviceGenericSerialPeekChar(self.device) } {
                 -1 => None,
                 byte => Some(byte as u8),
             },
@@ -146,7 +146,7 @@ impl SerialPort {
     pub fn write_byte(&mut self, byte: u8) -> Result<(), SerialError> {
         self.validate_port()?;
 
-        match unsafe { vexDeviceGenericSerialWriteChar(self.device_handle(), byte) } {
+        match unsafe { vexDeviceGenericSerialWriteChar(self.device, byte) } {
             -1 => Err(SerialError::WriteFailed),
             _ => Ok(()),
         }
@@ -166,7 +166,7 @@ impl SerialPort {
     pub fn unread_bytes(&self) -> Result<usize, SerialError> {
         self.validate_port()?;
 
-        match unsafe { vexDeviceGenericSerialReceiveAvail(self.device_handle()) } {
+        match unsafe { vexDeviceGenericSerialReceiveAvail(self.device) } {
             // TODO: This check may not be necessary, since PROS doesn't do it,
             //		 but we do it just to be safe.
             -1 => Err(SerialError::ReadFailed),
@@ -188,7 +188,7 @@ impl SerialPort {
     pub fn available_write_bytes(&self) -> Result<usize, SerialError> {
         self.validate_port()?;
 
-        match unsafe { vexDeviceGenericSerialWriteFree(self.device_handle()) } {
+        match unsafe { vexDeviceGenericSerialWriteFree(self.device) } {
             // TODO: This check may not be necessary, since PROS doesn't do it,
             //		 but we do it just to be safe.
             -1 => Err(SerialError::ReadFailed),
@@ -225,7 +225,7 @@ impl io::Read for SerialPort {
         })?;
 
         match unsafe {
-            vexDeviceGenericSerialReceive(self.device_handle(), buf.as_mut_ptr(), buf.len() as i32)
+            vexDeviceGenericSerialReceive(self.device, buf.as_mut_ptr(), buf.len() as i32)
         } {
             -1 => Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -250,9 +250,8 @@ impl io::Write for SerialPort {
             ),
         })?;
 
-        match unsafe {
-            vexDeviceGenericSerialTransmit(self.device_handle(), buf.as_ptr(), buf.len() as i32)
-        } {
+        match unsafe { vexDeviceGenericSerialTransmit(self.device, buf.as_ptr(), buf.len() as i32) }
+        {
             -1 => Err(io::Error::new(
                 io::ErrorKind::Other,
                 "Internal write error occurred.",

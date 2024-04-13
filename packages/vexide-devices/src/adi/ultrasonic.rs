@@ -19,7 +19,7 @@ pub struct AdiUltrasonic {
 impl AdiUltrasonic {
     /// Create a new ultrasonic sensor from a ping and echo [`AdiPort`].
     pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, UltrasonicError> {
-        let mut port_ping = ports.0;
+        let port_ping = ports.0;
         let port_echo = ports.1;
 
         // Port error handling - two-wire devices are a little weird with this sort of thing.
@@ -34,7 +34,7 @@ impl AdiUltrasonic {
             return Err(UltrasonicError::BadEchoPort);
         }
 
-        port_ping.configure(AdiDeviceType::Ultrasonic)?;
+        port_ping.configure(AdiDeviceType::Ultrasonic);
 
         Ok(Self {
             port_ping,
