@@ -113,7 +113,9 @@ impl RotationSensor {
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
-        let mut time_ms = data_rate.as_millis().max(Self::MIN_DATA_INTERVAL.as_millis()) as u32;
+        let mut time_ms = data_rate
+            .as_millis()
+            .max(Self::MIN_DATA_INTERVAL.as_millis()) as u32;
         time_ms -= time_ms % 5; // Rate is in increments of 5ms - not sure if this is necessary, but PROS does it.
 
         unsafe { vexDeviceAbsEncDataRateSet(self.device, time_ms) }
