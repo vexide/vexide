@@ -40,7 +40,7 @@ async fn main(_peripherals: Peripherals) {
     .detach();
 
     // If you are forced to make a tight loop in a sync context, you can use the block_on function.
-    // This function will block the current task until the future passed to it is resolved.
+    // This function will block until the future passed to it is completed.
     // This is less convenient and slower than using async/await, but it is still necessary in some occasions.
     loop {
         println!("Hello from the main task!");
