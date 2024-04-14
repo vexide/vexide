@@ -62,7 +62,8 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
         extern "Rust" fn main() {
             let #peripherals_ident = ::vexide::devices::peripherals::Peripherals::take().unwrap();
 
-            ::vexide::async_runtime::block_on(async #block);
+            let termination = ::vexide::async_runtime::block_on(async #block);
+            <termination as ::vexide::core::program::Termination>::report(termination);
         }
 
         #[no_mangle]
