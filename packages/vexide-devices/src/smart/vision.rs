@@ -62,7 +62,7 @@ impl VisionSensor {
     pub const RESOLUTION_HEIGHT: u16 = 212;
 
     /// The update rate of the vision sensor.
-    pub const UPDATE_RATE: Duration = Duration::from_millis(50);
+    pub const UPDATE_INTERVAL: Duration = Duration::from_millis(50);
 
     /// Creates a new vision sensor on a smart port.
     ///

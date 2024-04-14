@@ -235,7 +235,7 @@ impl From<ControllerId> for V5_ControllerId {
 
 impl Controller {
     /// The update rate of the controller.
-    pub const UPDATE_RATE: Duration = Duration::from_millis(25);
+    pub const UPDATE_INTERVAL: Duration = Duration::from_millis(25);
 
     /// Create a new controller.
     ///

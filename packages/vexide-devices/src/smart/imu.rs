@@ -37,7 +37,7 @@ impl InertialSensor {
     pub const CALIBRATION_TIMEOUT: Duration = Duration::from_secs(3);
 
     /// The minimum data rate that you can set an IMU to.
-    pub const MIN_DATA_RATE: Duration = Duration::from_millis(5);
+    pub const MIN_DATA_INTERVAL: Duration = Duration::from_millis(5);
 
     /// The maximum value that can be returned by [`Self::heading`].
     pub const MAX_HEADING: f64 = 360.0;
@@ -227,7 +227,7 @@ impl InertialSensor {
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
         self.validate()?;
 
-        let mut time_ms = data_rate.as_millis().max(Self::MIN_DATA_RATE.as_millis()) as u32;
+        let mut time_ms = data_rate.as_millis().max(Self::MIN_DATA_INTERVAL.as_millis()) as u32;
         time_ms -= time_ms % 5; // Rate is in increments of 5ms - not sure if this is necessary, but PROS does it.
 
         unsafe { vexDeviceImuDataRateSet(self.device, time_ms) }
