@@ -13,7 +13,7 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
-use vexide_core::{print, println};
+use vexide_core::print;
 pub use vexide_startup_macro::main;
 
 extern "C" {
@@ -109,9 +109,7 @@ Running user code...
         // This is necessary for serial and devices to work properly.
         vexide_async::spawn(async {
             loop {
-                println!("Running vexTasksRun");
                 vex_sdk::vexTasksRun();
-                println!("Finished vexTasksRun");
                 vexide_async::sleep(::core::time::Duration::from_millis(2)).await;
             }
         })
