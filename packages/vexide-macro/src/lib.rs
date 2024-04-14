@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, FnArg, ItemFn, Pat, Signature, Type};
+use syn::{parse_macro_input, FnArg, ItemFn, Pat, Signature};
 
 fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
     let mut error = None;
