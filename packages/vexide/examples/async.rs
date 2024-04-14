@@ -36,7 +36,8 @@ async fn main(_peripherals: Peripherals) {
             // Without this sleep, the main task will be run at most once and serial will stop being output.
             sleep(Duration::from_millis(1)).await;
         }
-    }).detach();
+    })
+    .detach();
 
     // If you are forced to make a tight loop in a sync context, you can use the block_on function.
     // This function will block the current task until the future passed to it is resolved.
