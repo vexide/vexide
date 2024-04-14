@@ -91,7 +91,6 @@ pub mod prelude {
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
-        screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
@@ -104,6 +103,15 @@ pub mod prelude {
             SmartDevice, SmartPort,
         },
     };
+    #[cfg(all(not(feature = "graphics"), feature = "devices"))]
+    pub use vexide_devices::screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState};
+    #[cfg(all(feature = "graphics", feature = "slint"))]
+    pub use vexide_graphics::slint::initialize_slint_platform;
+    #[cfg(all(feature = "graphics", feature = "emdedded-graphics"))]
+    pub use vexide_graphics::embedded_graphics::BrainDisplay;
+    #[cfg(all(feature = "graphics", feature = "emdedded-graphics", feature = "devices"))]
+    pub use vexide_devices::screen::Screen;
+
     #[cfg(feature = "math")]
     pub use vexide_math::{feedforward::MotorFeedforwardController, pid::PidController};
 }
