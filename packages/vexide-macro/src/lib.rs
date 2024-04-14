@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, FnArg, ItemFn, Pat, Signature};
+use syn::{parse_macro_input, Type, FnArg, ItemFn, Pat, Signature};
 
 fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
     let mut error = None;
@@ -54,6 +54,10 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
         return err;
     };
     let peripherals_ident = &peripherals_pat.ident;
+    let ret_type = match &item.sig.output {
+        syn::ReturnType::Default => quote! { () },
+        syn::ReturnType::Type(_, ty) => quote! { #ty },
+    };
 
     let block = item.block;
 
@@ -62,8 +66,8 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
         extern "Rust" fn main() {
             let #peripherals_ident = ::vexide::devices::peripherals::Peripherals::take().unwrap();
 
-            let termination = ::vexide::async_runtime::block_on(async #block);
-            <termination as ::vexide::core::program::Termination>::report(termination);
+            let termination: #ret_type = ::vexide::async_runtime::block_on(async #block);
+            ::vexide::core::program::Termination::report(termination);
         }
 
         #[no_mangle]
