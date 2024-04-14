@@ -26,10 +26,13 @@ vexide-core = { version = "0.1.0", path = "../vexide-core", optional = true }
 vexide-math = { version = "0.1.0", path = "../vexide-math", optional = true }
 vexide-startup = { version = "0.1.0", path = "../vexide-startup", optional = true }
 vexide-graphics = { version = "0.1.0", path = "../vexide-graphics", optional = true }
+vexide-macro = { version = "0.1.0", path = "../vexide-macro", optional = true }
 vex-sdk = "0.12.2"
 
 [features]
-default = ["async", "devices", "panic", "display_panics", "core", "math", "startup"]
+default = ["async", "devices", "panic", "display_panics", "core", "math", "startup", "macro"]
+
+macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 
 core = ["dep:vexide-core"]
 startup = ["dep:vexide-startup"]

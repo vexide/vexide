@@ -29,14 +29,10 @@ snafu = { version = "0.8.0", default-features = false, features = [
 ] }
 talc = "4.3.1"
 lock_api = "0.4.11"
-critical-section = { version = "1.1.2", features = ["restore-state-bool"], optional = true }
+critical-section = { version = "1.1.2", features = ["restore-state-bool"] }
 bitflags = "2.4.2"
 futures-core = { version = "0.3.30", default-features = false, features = ["alloc"] }
 pin-project = "1.1.5"
-
-[features]
-default = ["critical-section"]
-critical-section = ["dep:critical-section"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 dlmalloc = { version = "0.2.4", features = ["global"] }
