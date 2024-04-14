@@ -85,16 +85,6 @@ pub mod prelude {
         io::{BufRead, Read, Seek, Write},
         print, println,
     };
-    #[cfg(all(
-        feature = "graphics",
-        feature = "emdedded-graphics",
-        feature = "devices"
-    ))]
-    pub use vexide_devices::screen::Screen;
-    #[cfg(all(not(feature = "graphics"), feature = "devices"))]
-    pub use vexide_devices::screen::{
-        Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState,
-    };
     #[cfg(feature = "devices")]
     pub use vexide_devices::{
         adi::{
@@ -107,6 +97,7 @@ pub mod prelude {
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
+        screen::Screen,
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
