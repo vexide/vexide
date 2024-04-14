@@ -17,7 +17,7 @@ async fn main(_peripherals: Peripherals) {
     handle.await;
 
     // Handles can be "detached" which makes them run in the background forever.
-    // There is no way to interact with a task once it has been detached.
+    // There is no way to interact with a task handle once it has been detached.
     let handle = spawn(async {
         println!("Hello from a detached async task!");
     });
