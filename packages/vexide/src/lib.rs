@@ -66,6 +66,13 @@ pub use vexide_devices as devices;
 pub use vexide_math as math;
 #[cfg(feature = "panic")]
 pub use vexide_panic as panic;
+#[cfg(feature = "macro")]
+pub use vexide_macro as r#macro;
+#[cfg(feature = "startup")]
+pub use vexide_startup as startup;
+
+#[cfg(feature = "macro")]
+pub use vexide_macro::main;
 
 /// Commonly used features of vexide.
 /// This module is meant to be glob imported.
