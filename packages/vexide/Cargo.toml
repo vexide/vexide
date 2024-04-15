@@ -2,8 +2,8 @@
 name = "vexide"
 version = "0.1.0"
 edition = "2021"
-description = "Rust bindings for PROS"
-keywords = ["PROS", "Robotics", "bindings", "vex", "v5"]
+description = "async/await powered Rust library for VEX V5 Brains"
+keywords = ["Robotics", "bindings", "vex", "v5"]
 categories = ["os", "api-bindings", "no-std", "science::robotics"]
 license = "MIT"
 repository = "https://github.com/vexide/vexide"

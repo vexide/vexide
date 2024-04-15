@@ -20,7 +20,7 @@ impl Instant {
     /// # Examples
     ///
     /// ```
-    /// use pros::time::Instant;
+    /// use vexide::core::time::Instant;
     ///
     /// let now = Instant::now();
     /// ```
@@ -35,7 +35,7 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use pros::{time::Instant, task::delay};
+    /// use vexide::core::{time::Instant, task::delay};
     ///
     /// let now = Instant::now();
     /// delay(Duration::new(1, 0));
@@ -54,7 +54,7 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use pros::{time::Instant, task::delay};
+    /// use vexide::core::{time::Instant, task::delay};
     ///
     /// let now = Instant::now();
     /// delay(Duration::new(1, 0));
@@ -77,7 +77,7 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use pros::{time::Instant, task::delay};
+    /// use vexide::core::{time::Instant, task::delay};
     ///
     /// let instant = Instant::now();
     /// let three_secs = Duration::from_secs(3);
@@ -94,7 +94,7 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use pros::{time::Instant, task::delay};
+    /// use vexide::core::{time::Instant, task::delay};
     ///
     /// let instant = Instant::now();
     /// let three_secs = Duration::from_secs(3);

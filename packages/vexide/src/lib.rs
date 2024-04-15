@@ -8,52 +8,20 @@
 //! - vexide has an [`Async executor`](async_runtime) which allows for easy and performant asynchronous code.
 //! - Active development. vexide is actively developed and maintained.
 //! - vexide is a real crate on crates.io instead of a template, or similar. This allows for dependency management with cargo.
+//! - vexide has no external dependencies. It's 100% Rust and every line of code is yours to see.
+//! - vexide produces tiny and fast binaries.
 //!
 //! # Usage
 //!
-//! When using pros, you have a few options for how you want to get started.
-//! You have two options: `async` and `sync`.
-//! When using async, an async executor is started and you can use it to run code asynchronously without any FreeRTOS tasks.
-//! When using sync, if you want to run code asynchronously you must create a FreeRTOS task.
-//!
-//! Here are some examples of both:
-//!
+//! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
 //! ```rust
 //! // Async
-//! use pros::prelude::*;
-//!
-//! #[derive(Default)]
-//! struct Robot;
-//! impl AsyncRobot for Robot {
-//!    async fn opcontrol(&mut self) -> Result {
-//!       loop {
-//!         // Do something
-//!        sleep(Duration::from_millis(20)).await;
-//!       }
-//!    }
+//! use vexide::prelude::*;
+//! #[vexide::main]
+//! async fn main() {
+//!     println!("Hello, world!");
 //! }
-//! async_robot!(Robot);
-//! ```
-//!
-//!```rust
-//! // Sync
-//! use pros::prelude::*;
-//!
-//! #[derive(Default)]
-//! struct Robot;
-//! impl SyncRobot for Robot {
-//!   fn opcontrol(&mut self) -> Result {
-//!      loop {
-//!       // Do something
-//!      delay(Duration::from_millis(20));
-//!      }
-//!    }
-//! }
-//! sync_robot!(Robot);
-//! ```
-//!
-//! You may have noticed the `#[derive(Default)]` attribute on these Robot structs.
-//! If you want to learn why, look at the docs for [`vexide_async::async_robot`] or [`pros_sync::sync_robot`].
+//!```
 #![no_std]
 
 #[cfg(feature = "async")]
