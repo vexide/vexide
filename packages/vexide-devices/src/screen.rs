@@ -32,11 +32,11 @@ impl core::fmt::Write for Screen {
             if character == '\n' {
                 if self.current_line > (Self::MAX_VISIBLE_LINES as i16 - 2) {
                     self.scroll(0, Self::LINE_HEIGHT);
+                    self.flush_writer();
                 } else {
+                    self.flush_writer();
                     self.current_line += 1;
                 }
-
-                self.flush_writer();
             } else {
                 self.writer_buffer.push(character);
             }
