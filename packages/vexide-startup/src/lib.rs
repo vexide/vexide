@@ -14,7 +14,6 @@
 #![allow(clippy::needless_doctest_main)]
 
 use vexide_core::print;
-pub use vexide_startup_macro::main;
 
 extern "C" {
     // These symbols don't have real types so this is a little bit of a hack

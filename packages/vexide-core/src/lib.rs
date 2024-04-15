@@ -10,12 +10,11 @@
 //! - FreeRTOS task management: [`task`]
 
 #![no_std]
-#![feature(error_in_core)]
-#![cfg_attr(feature = "critical-section", feature(asm_experimental_arch))]
+#![feature(error_in_core, never_type)]
+#![feature(asm_experimental_arch)]
 
 pub mod allocator;
 pub mod competition;
-#[cfg(feature = "critical-section")]
 pub mod critical_section;
 pub mod io;
 pub mod program;
