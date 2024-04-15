@@ -15,7 +15,6 @@ use vex_sdk::{
     vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
     vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
-use vexide_core::{print, println};
 
 use crate::color::{IntoRgb, Rgb};
 
