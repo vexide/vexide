@@ -15,7 +15,6 @@
 //! To use embedded-graphics, create a new [`BrainDisplay`](embedded_graphics::BrainDisplay) using its [`new`](embedded_graphics::BrainDisplay::new) function
 //! and start using it as a draw target.
 
-
 #![no_std]
 #![cfg_attr(feature = "embedded-graphics", feature(never_type))]
 #[cfg(feature = "embedded-graphics")]
