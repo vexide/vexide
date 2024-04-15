@@ -15,6 +15,7 @@ use vex_sdk::{
     vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
     vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
+use vexide_core::{print, println};
 
 use crate::color::{IntoRgb, Rgb};
 
@@ -32,11 +33,11 @@ impl core::fmt::Write for Screen {
             if character == '\n' {
                 if self.current_line > (Self::MAX_VISIBLE_LINES as i16 - 2) {
                     self.scroll(0, Self::LINE_HEIGHT);
+                    self.flush_writer();
                 } else {
+                    self.flush_writer();
                     self.current_line += 1;
                 }
-
-                self.flush_writer();
             } else {
                 self.writer_buffer.push(character);
             }
