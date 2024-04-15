@@ -3,11 +3,38 @@
 //! This module contains functions for accessing/modifying the state of the current
 //! user program.
 
-use core::time::Duration;
+use core::{convert::Infallible, fmt::Debug, time::Duration};
 
 pub use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
 
 pub use crate::{io, time::Instant};
+
+/// A that can be implemented for arbitrary return types in the main function.
+pub trait Termination {
+    /// Run specific termination logic.
+    /// Unlike in the standard library, this function does not return a status code.
+    fn report(self);
+}
+impl Termination for () {
+    fn report(self) {}
+}
+impl Termination for ! {
+    fn report(self) {}
+}
+impl Termination for Infallible {
+    fn report(self) {}
+}
+impl<T: Termination, E: Debug> Termination for Result<T, E> {
+    fn report(self) {
+        match self {
+            Ok(t) => t.report(),
+            Err(e) => {
+                io::println!("Error: {e:?}");
+                exit();
+            }
+        }
+    }
+}
 
 /// Exits the program using vexSystemExitRequest.
 /// This function will not instantly exit the program,
