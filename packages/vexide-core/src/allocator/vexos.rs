@@ -1,4 +1,4 @@
-//! VexOS heap allocator implemented with the `talk` crate.
+//! VexOS heap allocator implemented with the `talc` crate.
 //! [`init_heap`] must be called before any heap allocations are made.
 //! This is done automatically in the `vex-startup` crate,
 //! so you should not need to call it yourself unless you are writing your own startup implementation.
