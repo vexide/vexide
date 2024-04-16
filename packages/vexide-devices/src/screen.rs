@@ -1,6 +1,6 @@
 //! Brain screen display and touch functions.
 //!
-//! Contains user calls to the v5 screen for touching and displaying graphics.
+//! Contains user calls to the V5 Brain screen for touching and displaying graphics.
 //! The [`Fill`] trait can be used to draw shapes and text to the screen.
 
 use alloc::{ffi::CString, string::String, vec::Vec};

@@ -1,8 +1,6 @@
 //! Tiny async runtime for `vexide`.
 //! The async executor supports spawning tasks and blocking on futures.
 //! It has a reactor to improve the performance of some futures.
-//! It is recommended to use the `AsyncRobot` trait to run robot code.
-//! FreeRTOS tasks can still be used, but it is recommended to use only async tasks for performance.
 
 #![no_std]
 

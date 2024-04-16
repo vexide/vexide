@@ -1,4 +1,4 @@
-//! Synchronization types for FreeRTOS tasks.
+//! Synchronization types for async tasks.
 //!
 //! Types implemented here are specifically designed to mimic the standard library.
 

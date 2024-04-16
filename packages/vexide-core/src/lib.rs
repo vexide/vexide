@@ -3,11 +3,12 @@
 //!
 //! Included in this crate:
 //! - Global allocator: [`allocator`]
-//! - Errno handling: [`error`]
+//! - Competition state handling: [`competition`]
+//! - Critical-section implementation: [`critical_section`]
 //! - Serial terminal printing: [`io`]
 //! - No-std [`Instant`](time::Instant)s: [`time`]
 //! - Synchronization primitives: [`sync`]
-//! - FreeRTOS task management: [`task`]
+//! - Program control: [`program`]
 
 #![no_std]
 #![feature(error_in_core, never_type)]
