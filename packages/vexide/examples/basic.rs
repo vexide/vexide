@@ -15,18 +15,16 @@ use vexide_devices::{
 };
 use vexide_panic::panic;
 
-#[vexide_startup::main]
+#[vexide::main]
 async fn main(peripherals: Peripherals) {
-    unsafe {
-        let mut p = peripherals;
-        // Write something to the screen to test if the program is running
-        // let test_box = Box::new(100);
-        // vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
-        println!("Hello, world!");
+    let mut p = peripherals;
+    // Write something to the screen to test if the program is running
+    // let test_box = Box::new(100);
+    // vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
+    println!("Hello, world!");
 
-        p.screen.fill(&Rect::new(0, 0, 20, 20), Rgb::RED);
-        p.screen.stroke(&Circle::new(25, 25, 20), Rgb::BLUE);
+    p.screen.fill(&Rect::new(0, 0, 20, 20), Rgb::RED);
+    p.screen.stroke(&Circle::new(25, 25, 20), Rgb::BLUE);
 
-        writeln!(p.screen, "Hello, world.").unwrap();
-    }
+    writeln!(p.screen, "Hello, world.").unwrap();
 }
