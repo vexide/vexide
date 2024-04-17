@@ -8,7 +8,6 @@ use core::{
 };
 
 use async_task::{Runnable, Task};
-use vexide_core::println;
 use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
