@@ -265,10 +265,12 @@ where
 
         let old_phase = *this.phase;
 
+        // Poll any updates to competition status.
         match this.updates.as_mut().poll_next(cx) {
             Poll::Ready(Some(new_status)) => {
                 let old_status = *this.status;
 
+                // Decide which phase we're in based on the status update.
                 *this.phase = if !old_status.is_connected() && new_status.is_connected() {
                     CompetitionRuntimePhase::Connected
                 } else if old_status.is_connected() && !new_status.is_connected() {
@@ -278,26 +280,30 @@ where
                 };
 
                 *this.status = new_status;
-            },
+            }
             Poll::Ready(None) => unreachable!(),
             _ => {}
         }
 
         if let Some(Poll::Ready(res)) = this.task.as_mut().map(|task| task.as_mut().poll(cx)) {
+            // If a task returned an error, then we stop the competition lifecycle and resolve with an error.
             if let Err(err) = res {
                 return Poll::Ready(Err(err));
             }
 
+            // Reset the current task to nothing, since we're done with the previous task.
             *this.task = None;
 
             match *this.phase {
+                // Transition into the current mode if we previously ran the connected/disconnected task and it completed.
                 CompetitionRuntimePhase::Connected | CompetitionRuntimePhase::Disconnected => {
                     *this.phase = CompetitionRuntimePhase::Mode(this.updates.last().mode());
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
 
+        // We're now in a different competition phase, so we need to start a new task.
         if old_phase != *this.phase {
             // SAFETY: Before we make a new `&mut Shared`, we ensure that the existing task is dropped.
             //         Note that although this would not normally ensure that the reference is dropped,
@@ -308,6 +314,7 @@ where
             drop(this.task.take());
             let shared = unsafe { &mut *this.shared.get() };
 
+            // Create a new task based on the new competition phase.
             *this.task = match *this.phase {
                 CompetitionRuntimePhase::Initial => None,
                 CompetitionRuntimePhase::Disconnected => Some((this.mk_disconnected)(shared)),
