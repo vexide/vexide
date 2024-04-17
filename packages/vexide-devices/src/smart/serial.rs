@@ -241,13 +241,14 @@ impl<'a> Future for SerialBufferFullFuture<'a> {
 
     fn poll(
         self: core::pin::Pin<&mut Self>,
-        _: &mut core::task::Context<'_>,
+        cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
         self.device.validate_port().map_err(|e| match e {
             PortError::Disconnected => ErrorKind::AddrNotAvailable,
             PortError::IncorrectDevice => ErrorKind::AddrInUse,
         })?;
         if unsafe { vexDeviceGenericSerialWriteFree(self.device.device) } == 0 {
+            cx.waker().wake_by_ref();
             core::task::Poll::Pending
         } else {
             core::task::Poll::Ready(Ok(()))

@@ -1,6 +1,6 @@
 use embedded_io_async::{self, ErrorKind, ErrorType, Read, Write};
 use futures_core::Future;
-use vex_sdk::{vexSerialReadChar, vexSerialWriteBuffer, vexSerialWriteFree};
+use vex_sdk::{vexSerialPeekChar, vexSerialReadChar, vexSerialWriteBuffer, vexSerialWriteFree};
 
 use crate::sync::{Mutex, MutexGuard};
 
@@ -25,8 +25,9 @@ struct BufferFullFuture {
 impl Future for BufferFullFuture {
     type Output = ();
 
-    fn poll(self: core::pin::Pin<&mut Self>, _: &mut core::task::Context<'_>) -> core::task::Poll<()> {
+    fn poll(self: core::pin::Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> core::task::Poll<()> {
         if unsafe { vexSerialWriteFree(self.channel) } == 0 {
+            cx.waker().wake_by_ref();
             core::task::Poll::Pending
         } else {
             core::task::Poll::Ready(())
@@ -111,8 +112,26 @@ struct StdinRaw;
 impl ErrorType for StdinRaw {
     type Error = ErrorKind;
 }
+
+struct BufferEmptyFuture {
+    channel: u32,
+}
+impl Future for BufferEmptyFuture {
+    type Output = ();
+
+    fn poll(self: core::pin::Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> core::task::Poll<()> {
+        if unsafe { vexSerialPeekChar(self.channel) } == -1 {
+            cx.waker().wake_by_ref();
+            core::task::Poll::Pending
+        } else {
+            core::task::Poll::Ready(())
+        }
+    }
+}
+
 impl Read for StdinRaw {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+        BufferEmptyFuture { channel: STDIO_CHANNEL }.await;
         let mut iterator = buf.iter_mut();
 
         let mut byte: i32;

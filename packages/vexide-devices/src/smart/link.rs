@@ -128,7 +128,7 @@ impl<'a> Future for RadioBufferFullFuture<'a> {
 
     fn poll(
         self: core::pin::Pin<&mut Self>,
-        _: &mut core::task::Context<'_>,
+        cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
         if !self.device.is_linked().map_err(|e| match e {
             LinkError::Port { source } => match source {
@@ -140,6 +140,7 @@ impl<'a> Future for RadioBufferFullFuture<'a> {
             return core::task::Poll::Ready(Err(ErrorKind::NotConnected));
         }
         if unsafe { vexDeviceGenericRadioWriteFree(self.device.device) } == 0 {
+            cx.waker().wake_by_ref();
             core::task::Poll::Pending
         } else {
             core::task::Poll::Ready(Ok(()))
