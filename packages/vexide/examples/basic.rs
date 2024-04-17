@@ -16,15 +16,12 @@ use vexide_devices::{
 use vexide_panic::panic;
 
 #[vexide::main]
-async fn main(peripherals: Peripherals) {
-    let mut p = peripherals;
-    // Write something to the screen to test if the program is running
-    // let test_box = Box::new(100);
-    // vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
+async fn main(_peripherals: Peripherals) {
+    // Send messages over serial
     println!("Hello, world!");
 
-    p.screen.fill(&Rect::new(0, 0, 20, 20), Rgb::RED);
-    p.screen.stroke(&Circle::new(25, 25, 20), Rgb::BLUE);
-
-    writeln!(p.screen, "Hello, world.").unwrap();
+    // Sleep to prevent the program from exiting
+    loop {
+        sleep(Duration::from_millis(100)).await;
+    }
 }

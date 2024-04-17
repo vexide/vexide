@@ -5,9 +5,12 @@ edition = "2021"
 
 [dependencies]
 vex-sdk = "0.12.0"
-vexide-core = { version = "0.1.0", path = "../vexide-core"}
+vexide-core = { version = "0.1.0", path = "../vexide-core" }
 vexide-async = { version = "0.1.0", path = "../vexide-async" }
 vexide-devices = { version = "0.1.0", path = "../vexide-devices" }
+
+[dev-dependencies]
+vexide = { path = "../vexide" }
 
 [lints]
 workspace = true
