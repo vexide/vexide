@@ -2,7 +2,9 @@
 //!
 //! Provides support for using [`SmartPort`]s as generic serial communication devices.
 
-use no_std_io::io;
+use core::future::Future;
+
+use embedded_io_async::{ErrorKind, ErrorType, Read, Write};
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericSerialBaudrate, vexDeviceGenericSerialEnable, vexDeviceGenericSerialFlush,
@@ -19,6 +21,9 @@ use crate::PortError;
 pub struct SerialPort {
     port: SmartPort,
     device: V5_DeviceT,
+}
+impl ErrorType for SerialPort {
+    type Error = ErrorKind;
 }
 
 impl SerialPort {
@@ -197,7 +202,7 @@ impl SerialPort {
     }
 }
 
-impl io::Read for SerialPort {
+impl Read for SerialPort {
     /// Read some bytes from this serial port into the specified buffer, returning
     /// how many bytes were read.
     ///
@@ -213,49 +218,52 @@ impl io::Read for SerialPort {
     ///     pros::task::delay(Duration::from_millis(10));
     /// }
     /// ```
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
         self.validate_port().map_err(|e| match e {
-            PortError::Disconnected => {
-                io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-            }
-            PortError::IncorrectDevice => io::Error::new(
-                io::ErrorKind::AddrInUse,
-                "Port is in use as another device.",
-            ),
+            PortError::Disconnected => ErrorKind::AddrNotAvailable,
+            PortError::IncorrectDevice => ErrorKind::AddrInUse,
         })?;
 
         match unsafe {
             vexDeviceGenericSerialReceive(self.device, buf.as_mut_ptr(), buf.len() as i32)
         } {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Internal read error occurred.",
-            )),
+            -1 => Err(ErrorKind::Other),
             recieved => Ok(recieved as usize),
         }
     }
 }
 
-impl io::Write for SerialPort {
-    /// Write a buffer into the serial port's output buffer, returning how many bytes
-    /// were written.
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.validate_port().map_err(|e| match e {
-            PortError::Disconnected => {
-                io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-            }
-            PortError::IncorrectDevice => io::Error::new(
-                io::ErrorKind::AddrInUse,
-                "Port is in use as another device.",
-            ),
+struct SerialBufferFullFuture<'a> {
+    device: &'a SerialPort,
+}
+impl<'a> Future for SerialBufferFullFuture<'a> {
+    type Output = Result<(), ErrorKind>;
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        _: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        self.device.validate_port().map_err(|e| match e {
+            PortError::Disconnected => ErrorKind::AddrNotAvailable,
+            PortError::IncorrectDevice => ErrorKind::AddrInUse,
         })?;
+        if unsafe { vexDeviceGenericSerialWriteFree(self.device.device) } == 0 {
+            core::task::Poll::Pending
+        } else {
+            core::task::Poll::Ready(Ok(()))
+        }
+    }
+}
+
+impl Write for SerialPort {
+    async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+        SerialBufferFullFuture {
+            device: self,
+        }.await?;
 
         match unsafe { vexDeviceGenericSerialTransmit(self.device, buf.as_ptr(), buf.len() as i32) }
         {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Internal write error occurred.",
-            )),
+            -1 => Err(ErrorKind::Other),
             written => Ok(written as usize),
         }
     }
@@ -267,7 +275,7 @@ impl io::Write for SerialPort {
     ///
     /// If you wish to *clear* both the read and write buffers, you can use
     /// `Self::clear_buffers`.
-    fn flush(&mut self) -> io::Result<()> {
+    async fn flush(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
 }

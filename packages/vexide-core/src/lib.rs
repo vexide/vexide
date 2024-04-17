@@ -10,8 +10,10 @@
 //! - FreeRTOS task management: [`task`]
 
 #![no_std]
-#![feature(error_in_core, never_type)]
+#![feature(error_in_core, never_type, noop_waker)]
 #![feature(asm_experimental_arch)]
+
+extern crate alloc;
 
 pub mod allocator;
 pub mod competition;

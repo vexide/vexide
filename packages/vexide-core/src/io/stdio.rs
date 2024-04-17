@@ -1,5 +1,6 @@
-use no_std_io::io::{self, Write};
-use vex_sdk::{vexSerialReadChar, vexSerialWriteBuffer};
+use embedded_io_async::{self, ErrorKind, ErrorType, Read, Write};
+use futures_core::Future;
+use vex_sdk::{vexSerialReadChar, vexSerialWriteBuffer, vexSerialWriteFree};
 
 use crate::sync::{Mutex, MutexGuard};
 
@@ -13,25 +14,42 @@ static STDIN: Mutex<StdinRaw> = Mutex::new(StdinRaw);
 /// This handle is not synchronized or buffered in any fashion. Constructed via
 /// the `stdout_raw` function.
 struct StdoutRaw;
+impl ErrorType for StdoutRaw {
+    type Error = ErrorKind;
+}
 
-impl io::Write for StdoutRaw {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+
+struct BufferFullFuture {
+    channel: u32,
+}
+impl Future for BufferFullFuture {
+    type Output = ();
+
+    fn poll(self: core::pin::Pin<&mut Self>, _: &mut core::task::Context<'_>) -> core::task::Poll<()> {
+        if unsafe { vexSerialWriteFree(self.channel) } == 0 {
+            core::task::Poll::Pending
+        } else {
+            core::task::Poll::Ready(())
+        }
+    }
+}
+
+impl Write for StdoutRaw {
+    async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+        BufferFullFuture { channel: STDIO_CHANNEL }.await;
         let written =
             unsafe { vexSerialWriteBuffer(STDIO_CHANNEL, buf.as_ptr(), buf.len() as u32) };
 
         if written == -1 {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Internal write error occurred.",
-            ));
+            return Err(ErrorKind::Other);
         }
 
-        self.flush()?;
+        self.flush().await?;
 
         Ok(written as usize)
     }
 
-    fn flush(&mut self) -> io::Result<()> {
+    async fn flush(&mut self) -> Result<(), Self::Error> {
         // Serial buffers are automatically flushed every 2mS by vexTasksRun
         // in our background processing task.
         Ok(())
@@ -43,32 +61,36 @@ impl io::Write for StdoutRaw {
 pub struct StdoutLock<'a> {
     inner: MutexGuard<'a, StdoutRaw>,
 }
-
+impl ErrorType for StdoutLock<'_> {
+    type Error = ErrorKind;
+}
 impl Write for StdoutLock<'_> {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.inner.write(buf)
+    async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+        self.inner.write(buf).await
     }
 
-    fn flush(&mut self) -> io::Result<()> {
-        self.inner.flush()
+    async fn flush(&mut self) -> Result<(), Self::Error> {
+        self.inner.flush().await
     }
 }
 
 /// A handle to the serial output stream of this program.
 pub struct Stdout;
-
+impl ErrorType for Stdout {
+    type Error = ErrorKind;
+}
 /// Contstructs a handle to the serial output stream
 pub const fn stdout() -> Stdout {
     Stdout
 }
 
 impl Write for Stdout {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.lock().write(buf)
+    async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+        self.lock().await.write(buf).await
     }
 
-    fn flush(&mut self) -> io::Result<()> {
-        self.lock().flush()
+    async fn flush(&mut self) -> Result<(), Self::Error> {
+        self.lock().await.flush().await
     }
 }
 
@@ -78,17 +100,19 @@ impl Stdout {
 
     /// Locks the stdout for writing.
     /// This function is blocking and will wait until the lock is acquired.
-    pub fn lock(&self) -> StdoutLock<'static> {
+    pub async fn lock(&self) -> StdoutLock<'static> {
         StdoutLock {
-            inner: STDOUT.lock_blocking(),
+            inner: STDOUT.lock().await,
         }
     }
 }
 
 struct StdinRaw;
-
-impl io::Read for StdinRaw {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+impl ErrorType for StdinRaw {
+    type Error = ErrorKind;
+}
+impl Read for StdinRaw {
+    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
         let mut iterator = buf.iter_mut();
 
         let mut byte: i32;
@@ -116,19 +140,23 @@ impl io::Read for StdinRaw {
 pub struct StdinLock<'a> {
     inner: MutexGuard<'a, StdinRaw>,
 }
-
-impl io::Read for StdinLock<'_> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.inner.read(buf)
+impl ErrorType for StdinLock<'_> {
+    type Error = ErrorKind;
+}
+impl Read for StdinLock<'_> {
+    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+        self.inner.read(buf).await
     }
 }
 
 /// A handle to the serial input stream of this program.
 pub struct Stdin;
-
-impl io::Read for Stdin {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.lock().read(buf)
+impl ErrorType for Stdin {
+    type Error = ErrorKind;
+}
+impl Read for Stdin {
+    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+        self.lock().await.read(buf).await
     }
 }
 
@@ -138,9 +166,9 @@ impl Stdin {
 
     /// Locks the stdin for reading.
     /// This function is blocking and will wait until the lock is acquired.
-    pub fn lock(&self) -> StdinLock<'static> {
+    pub async fn lock(&self) -> StdinLock<'static> {
         StdinLock {
-            inner: STDIN.lock_blocking(),
+            inner: STDIN.lock().await,
         }
     }
 }
@@ -167,7 +195,7 @@ pub use println;
 macro_rules! print {
     ($($arg:tt)*) => {{
 		{
-			use $crate::io::Write;
+			use $crate::io::WriteExt;
 			if let Err(e) = $crate::io::stdout().write_fmt(format_args!($($arg)*)) {
 				panic!("failed printing to stdout: {e}");
 			}

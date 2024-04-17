@@ -3,8 +3,9 @@
 //! Provides support for using [`SmartPort`]s as generic serial communication devices.
 
 use alloc::ffi::CString;
+use core::future::Future;
 
-use no_std_io::io;
+use embedded_io_async::{ErrorKind, ErrorType, Read, Write};
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus, vexDeviceGenericRadioReceive,
@@ -23,6 +24,9 @@ use crate::PortError;
 pub struct RadioLink {
     port: SmartPort,
     device: V5_DeviceT,
+}
+impl ErrorType for RadioLink {
+    type Error = ErrorKind;
 }
 
 impl RadioLink {
@@ -91,72 +95,68 @@ impl RadioLink {
     }
 }
 
-impl io::Read for RadioLink {
+impl Read for RadioLink {
     /// Read some bytes sent to the radio into the specified buffer, returning
     /// how many bytes were read.
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
         let is_linked = self.is_linked().map_err(|e| match e {
             LinkError::Port { source } => match source {
-                PortError::Disconnected => {
-                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-                }
-                PortError::IncorrectDevice => io::Error::new(
-                    io::ErrorKind::AddrInUse,
-                    "Port is in use as another device.",
-                ),
+                PortError::Disconnected => ErrorKind::AddrNotAvailable,
+                PortError::IncorrectDevice => ErrorKind::AddrInUse,
             },
             _ => unreachable!(),
         })?;
 
         if !is_linked {
-            return Err(io::Error::new(
-                io::ErrorKind::NotConnected,
-                "Radio is not linked!",
-            ));
+            return Err(ErrorKind::NotConnected);
         }
 
         match unsafe {
             vexDeviceGenericRadioReceive(self.device, buf.as_mut_ptr(), buf.len() as u16)
         } {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Internal read error occurred.",
-            )),
+            -1 => Err(ErrorKind::InvalidData),
             recieved => Ok(recieved as usize),
         }
     }
 }
 
-impl io::Write for RadioLink {
-    /// Write a buffer into the radio's output buffer, returning how many bytes
-    /// were written.
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let is_linked = self.is_linked().map_err(|e| match e {
+struct RadioBufferFullFuture<'a> {
+    device: &'a RadioLink,
+}
+impl<'a> Future for RadioBufferFullFuture<'a> {
+    type Output = Result<(), ErrorKind>;
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        _: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        if !self.device.is_linked().map_err(|e| match e {
             LinkError::Port { source } => match source {
-                PortError::Disconnected => {
-                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-                }
-                PortError::IncorrectDevice => io::Error::new(
-                    io::ErrorKind::AddrInUse,
-                    "Port is in use as another device.",
-                ),
+                PortError::Disconnected => ErrorKind::AddrNotAvailable,
+                PortError::IncorrectDevice => ErrorKind::AddrInUse,
             },
             _ => unreachable!(),
-        })?;
-
-        if !is_linked {
-            return Err(io::Error::new(
-                io::ErrorKind::NotConnected,
-                "Radio is not linked!",
-            ));
+        })? {
+            return core::task::Poll::Ready(Err(ErrorKind::NotConnected));
         }
+        if unsafe { vexDeviceGenericRadioWriteFree(self.device.device) } == 0 {
+            core::task::Poll::Pending
+        } else {
+            core::task::Poll::Ready(Ok(()))
+        }
+    }
+}
+
+impl Write for RadioLink {
+    async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+        RadioBufferFullFuture {
+            device: self,
+        }
+        .await?;
 
         match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), buf.len() as u16) }
         {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Internal write error occurred.",
-            )),
+            -1 => Err(ErrorKind::Other),
             written => Ok(written as usize),
         }
     }
@@ -164,23 +164,15 @@ impl io::Write for RadioLink {
     /// This function does nothing.
     ///
     /// VEXLink immediately sends and clears data sent into the write buffer.
-    fn flush(&mut self) -> io::Result<()> {
+    async fn flush(&mut self) -> Result<(), Self::Error> {
         if !self.is_linked().map_err(|e| match e {
             LinkError::Port { source } => match source {
-                PortError::Disconnected => {
-                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-                }
-                PortError::IncorrectDevice => io::Error::new(
-                    io::ErrorKind::AddrInUse,
-                    "Port is in use as another device.",
-                ),
+                PortError::Disconnected => ErrorKind::AddrNotAvailable,
+                PortError::IncorrectDevice => ErrorKind::AddrInUse,
             },
             _ => unreachable!(),
         })? {
-            return Err(io::Error::new(
-                io::ErrorKind::NotConnected,
-                "Radio is not linked!",
-            ));
+            return Err(ErrorKind::NotConnected);
         }
 
         Ok(())

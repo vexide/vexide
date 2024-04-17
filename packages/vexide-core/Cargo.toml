@@ -22,7 +22,7 @@ authors = [
 
 [dependencies]
 vex-sdk = "0.12.0"
-no_std_io = { version = "0.6.0", features = ["alloc"] }
+embedded-io-async = { version = "0.6.1", features = ["alloc"] }
 snafu = { version = "0.8.0", default-features = false, features = [
     "rust_1_61",
     "unstable-core-error",
