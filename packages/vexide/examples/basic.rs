@@ -1,19 +1,9 @@
 #![no_main]
 #![no_std]
 
-extern crate alloc;
-use alloc::boxed::Box;
-use core::{fmt::Write, time::Duration};
+use core::time::Duration;
 
 use vexide::prelude::*;
-use vexide_async::sleep;
-use vexide_core::{allocator, println};
-use vexide_devices::{
-    color::Rgb,
-    peripherals::Peripherals,
-    screen::{Circle, Rect},
-};
-use vexide_panic::panic;
 
 #[vexide::main]
 async fn main(_peripherals: Peripherals) {
