@@ -2,12 +2,20 @@ OUTPUT_FORMAT("elf32-littlearm")
 
 ENTRY(_entry)
 
+__cold_start = 0x03800000;
+__cold_length = 0x04800000;
+__cold_end = __cold_start + __cold_length;
+
 MEMORY {
-    COLD : ORIGIN = 0x03800000, LENGTH = 0x04800000
+    COLD : ORIGIN = __cold_start, LENGTH = __cold_length
 }
 
-__heap_end = 0x7800000;
-__stack_length = 0x204000;
+__stack_length = 0x400000;
+/*
+I'm not sure why subtracting anything is necessary, but it fixes memory permission errors.
+0x100 is an arbitrary number that works.
+*/
+__heap_end = __cold_end - __stack_length - 0x100;
 
 SECTIONS {
     .text : {
