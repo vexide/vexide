@@ -271,7 +271,9 @@ where
                 let old_status = *this.status;
 
                 // Connected and Disconnected should not be interrupted by other changes.
-                if *this.phase != CompetitionRuntimePhase::Connected && *this.phase != CompetitionRuntimePhase::Disconnected {
+                if *this.phase != CompetitionRuntimePhase::Connected
+                    && *this.phase != CompetitionRuntimePhase::Disconnected
+                {
                     // Decide which phase we're in based on the status update.
                     *this.phase = if !old_status.is_connected() && new_status.is_connected() {
                         CompetitionRuntimePhase::Connected
