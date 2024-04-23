@@ -236,7 +236,7 @@ pub struct Competition<
     _pin: PhantomPinned,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum CompetitionRuntimePhase {
     Initial,
     Disconnected,
@@ -270,14 +270,17 @@ where
             Poll::Ready(Some(new_status)) => {
                 let old_status = *this.status;
 
-                // Decide which phase we're in based on the status update.
-                *this.phase = if !old_status.is_connected() && new_status.is_connected() {
-                    CompetitionRuntimePhase::Connected
-                } else if old_status.is_connected() && !new_status.is_connected() {
-                    CompetitionRuntimePhase::Disconnected
-                } else {
-                    CompetitionRuntimePhase::Mode(new_status.mode())
-                };
+                // Connected and Disconnected should not be interrupted by other changes.
+                if *this.phase != CompetitionRuntimePhase::Connected && *this.phase != CompetitionRuntimePhase::Disconnected {
+                    // Decide which phase we're in based on the status update.
+                    *this.phase = if !old_status.is_connected() && new_status.is_connected() {
+                        CompetitionRuntimePhase::Connected
+                    } else if old_status.is_connected() && !new_status.is_connected() {
+                        CompetitionRuntimePhase::Disconnected
+                    } else {
+                        CompetitionRuntimePhase::Mode(new_status.mode())
+                    };
+                }
 
                 *this.status = new_status;
             }
