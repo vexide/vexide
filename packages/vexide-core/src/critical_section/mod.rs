@@ -1,6 +1,4 @@
-//! A protected section that cannot be entered by more than one "thread" of execution at a time.
-//!
-//! Provides implementations for the `critical_section` crate on various platforms.
+//! Provides implementations for the `critical_section` crate on the V5 brain and in WASM environments.
 
 #[cfg(all(target_arch = "arm", target_os = "none"))]
 mod zynq;
