@@ -1,17 +1,16 @@
-#![no_main]
 #![no_std]
+#![no_main]
 
-use core::time::Duration;
+use pros::prelude::*;
 
-use vexide::prelude::*;
+#[derive(Default)]
+pub struct Robot;
 
-#[vexide::main]
-async fn main(_peripherals: Peripherals) {
-    // Send messages over serial
-    println!("Hello, world!");
+impl AsyncRobot for Robot {
+    async fn opcontrol(&mut self) -> Result {
+        println!("basic example");
 
-    // Sleep to prevent the program from exiting
-    loop {
-        sleep(Duration::from_millis(100)).await;
+        Ok(())
     }
 }
+async_robot!(Robot);
