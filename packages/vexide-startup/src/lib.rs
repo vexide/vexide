@@ -13,8 +13,6 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
-use core::{arch::asm, ptr::addr_of_mut};
-
 use vexide_core::print;
 
 extern "C" {
@@ -62,7 +60,9 @@ extern "Rust" {
 /// This function MUST only be called once and should only be called at the very start of program initialization.
 /// Calling this function more than one time will seriously mess up both your stack and your heap.
 pub unsafe fn program_entry() {
+    #[cfg(target_arch = "arm")]
     unsafe {
+        use core::arch::asm;
         asm!(
             "
             // Load the user stack
@@ -72,7 +72,9 @@ pub unsafe fn program_entry() {
     }
 
     // Clear the BSS section
+    #[cfg(target_arch = "arm")]
     unsafe {
+        use core::ptr::addr_of_mut;
         let mut bss_start = addr_of_mut!(__bss_start);
         while bss_start < addr_of_mut!(__bss_end) {
             core::ptr::write_volatile(bss_start, 0);
