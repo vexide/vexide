@@ -66,7 +66,7 @@ pub unsafe fn program_entry() {
         asm!(
             "
             // Load the user stack
-            ldr sp, =__user_stack_start
+            ldr sp, =__stack_start
             "
         );
     }
