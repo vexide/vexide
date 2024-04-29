@@ -1,4 +1,4 @@
-# vex-devices
+# vexide-devices
 
 Functionality for accessing hardware connected to the V5 brain.
 
@@ -8,7 +8,8 @@ The V5 brain features 21 RJ9 4p4c connector ports (known as "Smart ports") for c
 
 ## Organization
 
-- `smart` contains abstractions and types for smart port connected ices.
-- `adi` contains abstractions for three wire ADI connected devices.
-- `battery` provides functions for getting information about the battery.
-- `controller` provides types for interacting with the V5 controller.
+- [`smart`] contains abstractions and types for smart port connected devices.
+- [`adi`] contains abstractions for three wire ADI connected devices.
+- [`battery`] provides functions for getting information about the currently connected
+  battery.
+- [`controller`] provides types for interacting with the V5 controller.
