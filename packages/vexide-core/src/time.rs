@@ -1,4 +1,6 @@
 //! Temporal quantification.
+//!
+//! This module provides an implementation of [`Instant`] built on the VEXos high-resolution timer.
 
 use core::{
     fmt,
