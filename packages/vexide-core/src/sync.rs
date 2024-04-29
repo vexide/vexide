@@ -6,7 +6,8 @@ use core::{
     cell::UnsafeCell,
     fmt::Debug,
     future::Future,
-    sync::atomic::{AtomicU8, Ordering},
+    mem::MaybeUninit,
+    sync::atomic::{AtomicBool, AtomicU8, Ordering},
 };
 
 use lock_api::RawMutex as _;
@@ -202,5 +203,64 @@ impl<T> core::ops::DerefMut for MutexGuard<'_, T> {
 impl<T> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
         unsafe { self.mutex.raw.unlock() };
+    }
+}
+
+const ONCE_LOCKED: bool = true;
+const ONCE_UNLOCKED: bool = false;
+
+/// A synchronization primitive which can be used to run a one-time global
+/// initialization. Useful for one-time initialization for FFI or related
+/// functionality. This type can only be constructed with [`Once::new()`].
+///
+/// # Examples
+///
+/// ```
+/// use vexide::core::sync::Once;
+///
+/// static START: Once = Once::new();
+///
+/// START.call_once(|| {
+///     // run initialization here
+/// });
+/// ```
+pub struct Once {
+    state: AtomicBool,
+}
+impl Once {
+    /// Create a new uncompleted Once
+    pub const fn new() -> Self {
+        Self {
+            state: AtomicBool::new(false),
+        }
+    }
+
+    /// Returns true if call_once has been run.
+    pub fn is_complete(&self) -> bool {
+        critical_section::with(|_| self.state.load(Ordering::Acquire) == ONCE_UNLOCKED)
+    }
+
+    /// Runs a closure if and only if this is the first time that call_once has been run.
+    /// This is useful for making sure that expensive initialization is only run once.
+    pub fn call_once<F: FnOnce()>(&self, fun: F) {
+        critical_section::with(|_| {
+            if self.state.swap(ONCE_LOCKED, Ordering::SeqCst) == ONCE_UNLOCKED {
+                fun()
+            }
+        })
+    }
+}
+
+pub struct OnceLock<T> {
+    inner: Once,
+    data: Mutex<MaybeUninit<T>>,
+}
+
+impl<T> OnceLock<T> {
+    pub const fn new() -> Self {
+        Self {
+            inner: Once::new(),
+            data: Mutex::new(MaybeUninit::uninit()),
+        }
     }
 }
