@@ -257,12 +257,15 @@ impl Once {
     }
 }
 
+/// A synchronization primitive which can be used to run initialization code once.
+/// This type is thread safe and can be used in statics.
+/// All functions that can block are async.
 pub struct OnceLock<T> {
     inner: Once,
     data: UnsafeCell<MaybeUninit<T>>,
 }
-
 impl<T> OnceLock<T> {
+    /// Creates a new uninitialized [`OnceLock`].
     pub const fn new() -> Self {
         Self {
             inner: Once::new(),
@@ -270,6 +273,7 @@ impl<T> OnceLock<T> {
         }
     }
 
+    /// Get a reference to the data in the [`OnceLock`] if it has been initialized.
     pub fn get(&self) -> Option<&T> {
         if self.inner.is_complete() {
             Some(unsafe { &*(*self.data.get()).as_ptr() })
@@ -278,6 +282,7 @@ impl<T> OnceLock<T> {
         }
     }
 
+    /// Get a mutable reference to the data in the [`OnceLock`] if it has been initialized.
     pub fn get_mut(&mut self) -> Option<&mut T> {
         if self.inner.is_complete() {
             Some(unsafe { &mut *(*self.data.get()).as_mut_ptr() })
@@ -286,6 +291,8 @@ impl<T> OnceLock<T> {
         }
     }
 
+    /// Attempt to set the data in the [`OnceLock`] if it has not been initialized.
+    /// If already initialized, the data is returned in an [`Err`](Result::Err)` variant.
     pub async fn set(&self, data: T) -> Result<(), T> {
         if self.inner.is_complete() {
             return Err(data);
@@ -294,6 +301,7 @@ impl<T> OnceLock<T> {
         Ok(())
     }
 
+    /// Consumes the [`OnceLock`] and returns the inner data if it has been initialized.
     pub fn into_inner(self) -> Option<T> {
         if self.inner.is_complete() {
             Some(unsafe { (*self.data.get()).as_ptr().read() })
@@ -302,6 +310,8 @@ impl<T> OnceLock<T> {
         }
     }
 
+    /// Move the data out of the [`OnceLock`] if it has been initialized.
+    /// This will leave the [`OnceLock`] in an uninitialized state.
     pub fn take(&mut self) -> Option<T> {
         let data = if self.inner.is_complete() {
             Some(unsafe { (*self.data.get()).as_ptr().read() })
@@ -314,6 +324,8 @@ impl<T> OnceLock<T> {
         data
     }
 
+    /// Attempt to set the data in the [`OnceLock`] if it has not been initialized.
+    /// This is similar to [`OnceLock::set`] but always returns the data in the [`OnceLock`].
     pub async fn try_insert(&self, data: T) -> Result<&T, (&T, T)> {
         match self.set(data).await {
             Ok(()) => Ok(self.get().unwrap()),
@@ -321,6 +333,8 @@ impl<T> OnceLock<T> {
         }
     }
 
+    /// Get or initialize the data in the [`OnceLock`].
+    /// This function will always return the value stored.
     pub async fn get_or_init(&self, init: impl FnOnce() -> T) -> &T {
         if let Some(data) = self.get() {
             return data;
@@ -329,6 +343,8 @@ impl<T> OnceLock<T> {
         unsafe { &*(*self.data.get()).as_ptr() }
     }
 
+    /// Get or try to initialize the data in the [`OnceLock`].
+    /// If the initialization function is run and returns an error, the error is returned and no value is set.
     pub async fn get_or_try_init<E: Error>(
         &self,
         init: impl FnOnce() -> Result<T, E>,
