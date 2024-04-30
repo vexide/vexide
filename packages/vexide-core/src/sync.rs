@@ -7,7 +7,7 @@ use core::{
     fmt::Debug,
     future::Future,
     mem::MaybeUninit,
-    sync::atomic::{AtomicBool, AtomicU8, Ordering},
+    sync::atomic::{AtomicBool, AtomicU8, Ordering}, task::Poll,
 };
 
 use lock_api::RawMutex as _;
@@ -206,8 +206,8 @@ impl<T> Drop for MutexGuard<'_, T> {
     }
 }
 
-const ONCE_LOCKED: bool = true;
-const ONCE_UNLOCKED: bool = false;
+const ONCE_COMPLETE: bool = true;
+const ONCE_INCOMPLETE: bool = false;
 
 /// A synchronization primitive which can be used to run a one-time global
 /// initialization. Useful for one-time initialization for FFI or related
@@ -225,29 +225,34 @@ const ONCE_UNLOCKED: bool = false;
 /// });
 /// ```
 pub struct Once {
-    state: AtomicBool,
+    state: Mutex<bool>,
 }
 impl Once {
     /// Create a new uncompleted Once
     pub const fn new() -> Self {
         Self {
-            state: AtomicBool::new(false),
+            state: Mutex::new(false),
         }
     }
 
     /// Returns true if call_once has been run.
     pub fn is_complete(&self) -> bool {
-        critical_section::with(|_| self.state.load(Ordering::Acquire) == ONCE_UNLOCKED)
+        if let Some(state) = self.state.try_lock() {
+            *state == ONCE_COMPLETE
+        } else {
+            false
+        }
     }
 
     /// Runs a closure if and only if this is the first time that call_once has been run.
     /// This is useful for making sure that expensive initialization is only run once.
-    pub fn call_once<F: FnOnce()>(&self, fun: F) {
-        critical_section::with(|_| {
-            if self.state.swap(ONCE_LOCKED, Ordering::SeqCst) == ONCE_UNLOCKED {
-                fun()
-            }
-        })
+    /// This will block if another task is running a different initialization routine.
+    pub async fn call_once<F: FnOnce()>(&self, fun: F) {
+        let mut state = self.state.lock().await;
+        if *state == ONCE_INCOMPLETE {
+            fun();
+            *state = true;
+        }
     }
 }
 
