@@ -9,6 +9,7 @@ use core::{
     mem::MaybeUninit,
     sync::atomic::{AtomicBool, AtomicU8, Ordering}, task::Poll,
 };
+use core::error::Error;
 
 use lock_api::RawMutex as _;
 
@@ -258,14 +259,86 @@ impl Once {
 
 pub struct OnceLock<T> {
     inner: Once,
-    data: Mutex<MaybeUninit<T>>,
+    data: UnsafeCell<MaybeUninit<T>>,
 }
 
 impl<T> OnceLock<T> {
     pub const fn new() -> Self {
         Self {
             inner: Once::new(),
-            data: Mutex::new(MaybeUninit::uninit()),
+            data: UnsafeCell::new(MaybeUninit::uninit()),
+        }
+    }
+
+    pub fn get(&self) -> Option<&T> {
+        if self.inner.is_complete() {
+            Some(unsafe { &*(*self.data.get()).as_ptr() })
+        } else {
+            None
+        }
+    }
+
+    pub fn get_mut(&mut self) -> Option<&mut T> {
+        if self.inner.is_complete() {
+            Some(unsafe { &mut *(*self.data.get()).as_mut_ptr() })
+        } else {
+            None
+        }
+    }
+
+    pub async fn set(&self, data: T) -> Result<(), T> {
+        if self.inner.is_complete()  {
+            return Err(data);
+        }
+
+        Ok(())
+    }
+
+    pub fn into_inner(self) -> Option<T> {
+        if self.inner.is_complete() {
+            Some(unsafe { (*self.data.get()).as_ptr().read() })
+        } else {
+            None
+        }
+    }
+
+    pub async fn get_or_init(&self, init: impl FnOnce() -> T) -> &T {
+        if let Some(data) = self.get() {
+            return data;
+        }
+        self.init(init).await;
+        unsafe { &*(*self.data.get()).as_ptr() }
+    }
+
+    pub async fn get_or_try_init<E: Error>(&self, init: impl FnOnce() -> Result<T, E>) -> Result<&T, E> {
+        if let Some(data) = self.get() {
+            return Ok(data);
+        }
+        self.try_init(init).await?;
+        debug_assert!(self.inner.is_complete());
+        Ok(unsafe { &*(*self.data.get()).as_ptr() })
+    }
+
+    async fn init(&self, init: impl FnOnce() -> T) {
+        self.inner.call_once(|| {
+            unsafe {
+                (*self.data.get()).write(init());
+            }
+        }).await;
+        debug_assert!(self.inner.is_complete());
+    }
+
+    async fn try_init<E: Error>(&self, init: impl FnOnce() -> Result<T, E>) -> Result<(), E> {
+        match init() {
+            Ok(data) => {
+                self.inner.call_once(|| {
+                    unsafe {
+                        (*self.data.get()).write(data);
+                    }
+                }).await;
+                Ok(())
+            }
+            Err(e) => Err(e),
         }
     }
 }
