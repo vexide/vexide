@@ -264,6 +264,8 @@ pub struct OnceLock<T> {
     inner: Once,
     data: UnsafeCell<MaybeUninit<T>>,
 }
+unsafe impl<T: Send> Send for OnceLock<T> {}
+unsafe impl<T: Send + Sync> Sync for OnceLock<T> {}
 impl<T> OnceLock<T> {
     /// Creates a new uninitialized [`OnceLock`].
     pub const fn new() -> Self {
