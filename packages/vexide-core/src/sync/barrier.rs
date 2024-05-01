@@ -28,7 +28,6 @@ impl<'a> Future for BarrierWaitFuture<'a> {
     }
 }
 
-
 /// Allows for multiple tasks to reach the same point in execution before continuing.
 ///
 /// # Examples
