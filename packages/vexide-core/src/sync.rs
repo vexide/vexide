@@ -258,6 +258,8 @@ impl RwLockState {
     }
 }
 
+/// Allows for gaining immutable access to the data in an [`RwLock`]`.
+/// Multiple readers can access the data at the same time.
 pub struct RwLockReadGuard<'a, T> {
     lock: &'a RwLock<T>,
 }
@@ -273,6 +275,7 @@ impl<T> Drop for RwLockReadGuard<'_, T> {
     }
 }
 
+/// A future that resolves to a read guard.
 pub struct RwLockReadFuture<'a, T> {
     lock: &'a RwLock<T>,
 }
@@ -292,6 +295,8 @@ impl<'a, T> Future for RwLockReadFuture<'a, T> {
     }
 }
 
+/// Allows for gaining mutable access to the data in an [`RwLock`]`.
+/// Only one writer can access the data at a time.
 pub struct RwLockWriteGuard<'a, T> {
     lock: &'a RwLock<T>,
 }
@@ -312,6 +317,7 @@ impl<T> Drop for RwLockWriteGuard<'_, T> {
     }
 }
 
+/// A future that resolves to a write guard.
 pub struct RwLockWriteFuture<'a, T> {
     lock: &'a RwLock<T>,
 }
@@ -331,11 +337,16 @@ impl<'a, T> Future for RwLockWriteFuture<'a, T> {
     }
 }
 
+/// A reader-writer lock synchronization primitive.
+/// This type allows multiple readers or one writer at a time.
+///
+/// This is different from a [`Mutex`] because it allows for multiple readers at the same time.
 pub struct RwLock<T> {
     state: RwLockState,
     data: UnsafeCell<T>,
 }
 impl<T> RwLock<T> {
+    /// Creates a new reader-writer lock.
     pub const fn new(data: T) -> Self {
         Self {
             state: RwLockState::new(),
@@ -343,14 +354,19 @@ impl<T> RwLock<T> {
         }
     }
 
+    /// Obtains a read lock on the data.
+    /// Multiple read locks can be held at the same time.
     pub fn read(&self) -> RwLockReadFuture<'_, T> {
         RwLockReadFuture { lock: self }
     }
 
+    /// Obtains a write lock on the data.
+    /// Only one write lock can be held at a time.
     pub fn write(&self) -> RwLockWriteFuture<'_, T> {
         RwLockWriteFuture { lock: self }
     }
 
+    /// Attempt to gain a read lock on the data.
     pub fn try_read(&self) -> Option<RwLockReadGuard<'_, T>> {
         if critical_section::with(|_| self.state.try_lock_shared()) {
             Some(RwLockReadGuard { lock: self })
@@ -359,6 +375,7 @@ impl<T> RwLock<T> {
         }
     }
 
+    /// Attempt to gain a write lock on the data.
     pub fn try_write(&self) -> Option<RwLockWriteGuard<'_, T>> {
         if critical_section::with(|_| self.state.try_lock_exclusive()) {
             Some(RwLockWriteGuard { lock: self })
@@ -367,11 +384,14 @@ impl<T> RwLock<T> {
         }
     }
 
+    /// Get mutable access to the data stored in the read-write lock.
+    /// This doesn't require a lock to be acquired because the borrow checker guarentees exclusive access because self is a mutable reference.
     pub fn get_mut(&mut self) -> &mut T {
         //SAFETY: This is safe because we have exclusive access to the data thanks to taking a mutable reference to self.
         unsafe { &mut *self.data.get() }
     }
 
+    /// Consumes the read-write lock and returns the inner data.
     pub fn into_inner(self) -> T {
         self.data.into_inner()
     }
