@@ -5,7 +5,9 @@
 pub mod mutex;
 pub mod once;
 pub mod rwlock;
+pub mod barrier;
 
 pub use mutex::{Mutex, MutexGuard, RawMutex};
 pub use once::{Once, OnceLock};
 pub use rwlock::RwLock;
+pub use barrier::{Barrier, BarrierWaitFuture};
