@@ -356,13 +356,13 @@ impl<T> RwLock<T> {
 
     /// Obtains a read lock on the data.
     /// Multiple read locks can be held at the same time.
-    pub fn read(&self) -> RwLockReadFuture<'_, T> {
+    pub const fn read(&self) -> RwLockReadFuture<'_, T> {
         RwLockReadFuture { lock: self }
     }
 
     /// Obtains a write lock on the data.
     /// Only one write lock can be held at a time.
-    pub fn write(&self) -> RwLockWriteFuture<'_, T> {
+    pub const fn write(&self) -> RwLockWriteFuture<'_, T> {
         RwLockWriteFuture { lock: self }
     }
 
