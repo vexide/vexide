@@ -27,6 +27,7 @@ impl<'a, T> Future for CondVarWaitFuture<'a, T> {
                 self.condvar
                     .state
                     .store(CondVar::WAITING, Ordering::Release);
+                self.condvar.waiting.fetch_sub(1, Ordering::AcqRel);
                 core::task::Poll::Ready(gaurd)
             }
             CondVar::NOTIFIED_ALL => {
