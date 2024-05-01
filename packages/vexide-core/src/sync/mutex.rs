@@ -1,5 +1,8 @@
-
-use core::{fmt::Debug, cell::UnsafeCell, sync::atomic::{AtomicU8, Ordering}};
+use core::{
+    cell::UnsafeCell,
+    fmt::Debug,
+    sync::atomic::{AtomicU8, Ordering},
+};
 
 use futures_core::Future;
 use lock_api::RawMutex as _;

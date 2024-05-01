@@ -2,12 +2,12 @@
 //!
 //! Types implemented here are specifically designed to mimic the standard library.
 
+pub mod barrier;
 pub mod mutex;
 pub mod once;
 pub mod rwlock;
-pub mod barrier;
 
+pub use barrier::{Barrier, BarrierWaitFuture};
 pub use mutex::{Mutex, MutexGuard, RawMutex};
 pub use once::{Once, OnceLock};
 pub use rwlock::RwLock;
-pub use barrier::{Barrier, BarrierWaitFuture};

@@ -1,7 +1,9 @@
-use core::{cell::UnsafeCell, sync::atomic::{AtomicU8, AtomicUsize, Ordering}};
+use core::{
+    cell::UnsafeCell,
+    sync::atomic::{AtomicU8, AtomicUsize, Ordering},
+};
 
 use futures_core::Future;
-
 
 struct RwLockState {
     lock_status: AtomicU8,
