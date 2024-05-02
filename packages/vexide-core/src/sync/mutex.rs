@@ -180,6 +180,19 @@ impl<'a, T> MutexGuard<'a, T> {
     const fn new(mutex: &'a Mutex<T>) -> Self {
         Self { mutex }
     }
+
+    pub(crate) unsafe fn unlock(&self) {
+        // SAFETY: caller must ensure that this is safe
+        unsafe {
+            self.mutex.raw.unlock();
+        }
+    }
+
+    pub(crate) fn relock(self) -> MutexLockFuture<'a, T> {
+        let lock = self.mutex.lock();
+        drop(self);
+        lock
+    }
 }
 
 impl<T> core::ops::Deref for MutexGuard<'_, T> {
