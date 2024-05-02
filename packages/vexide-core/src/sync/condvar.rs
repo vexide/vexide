@@ -9,12 +9,18 @@ use replace_with::replace_with;
 
 use super::{MutexGuard, MutexLockFuture};
 
+/// A future that resolves once a condition variable is notified.
 pub enum CondvarWaitFuture<'a, T> {
+    /// The future is waiting for a notification.
     WaitingForNotification {
+        /// The condition variable to wait on.
         condvar: &'a Condvar,
+        /// The mutex guard that was unlocked.
         gaurd: MutexGuard<'a, T>,
     },
+    /// The future is waiting for a [`Mutex`] to lock
     WaitingForMutex {
+        /// The mutex lock future.
         gaurd: MutexLockFuture<'a, T>,
     },
 }
@@ -30,7 +36,7 @@ impl<'a, T> Future for CondvarWaitFuture<'a, T> {
             &mut *self,
             || panic!("Failed to replace"),
             |self_| match self_ {
-                Self::WaitingForNotification { condvar, mut gaurd } => {
+                Self::WaitingForNotification { condvar, gaurd } => {
                     let state = condvar.state.load(Ordering::Acquire);
                     critical_section::with(|_| match state {
                         Condvar::NOTIFIED_ONE => {
@@ -74,6 +80,27 @@ impl<'a, T> Future for CondvarWaitFuture<'a, T> {
     }
 }
 
+/// A condition variable.
+/// Condition variables allow for tasks to wait until a notification is received.
+///
+/// # Examples
+/// ```rust
+/// let pair = Arc::new((Mutex::new(false), Condvar::new()));
+/// let pair2 = pair.clone();
+///
+/// spawn(async move {
+///     let (lock, cvar) = &*pair2;
+///     let mut started = lock.lock().await;
+///     *started = true;
+///     cvar.notify_one();
+/// }).detach();
+///
+/// let (lock, cvar) = &*pair;
+/// let mut started = lock.lock().await;
+/// while !*started {
+///     started = cvar.wait(started).await;
+/// }
+/// ```
 pub struct Condvar {
     state: AtomicU8,
     waiting: AtomicUsize,
@@ -91,6 +118,7 @@ impl Condvar {
         }
     }
 
+    /// Waits for a notification on the condition variable.
     pub fn wait<'a, T>(&'a self, gaurd: MutexGuard<'a, T>) -> CondvarWaitFuture<'a, T> {
         // SAFETY: we can unlock the mutex because we gaurentee that it will not be used again until we safely lock it again.
         unsafe {
@@ -103,10 +131,12 @@ impl Condvar {
         }
     }
 
+    /// Notify one task waiting on the condition variable.
     pub fn notify_one(&self) {
         critical_section::with(|_| self.state.store(Self::NOTIFIED_ONE, Ordering::Release));
     }
 
+    /// Notify all tasks waiting on the condition variable.
     pub fn notify_all(&self) {
         critical_section::with(|_| self.state.store(Self::NOTIFIED_ALL, Ordering::Release));
     }
