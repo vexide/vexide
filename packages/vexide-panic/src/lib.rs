@@ -11,9 +11,9 @@ use alloc::string::{String, ToString};
 use vexide_core::println;
 #[cfg(feature = "display_panics")]
 use vexide_devices::{
-    screen::{Screen, ScreenError, Rect, Text, TextSize},
-    geometry::Point2,
     color::Rgb,
+    geometry::Point2,
+    screen::{Rect, Screen, ScreenError, Text, TextSize},
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -27,10 +27,7 @@ extern "C" {
 /// This function is internally used by the vexide panic handler for displaying
 /// panic messages graphically before exiting.
 #[cfg(feature = "display_panics")]
-fn draw_error(
-    screen: &mut Screen,
-    msg: &str,
-) -> Result<(), ScreenError> {
+fn draw_error(screen: &mut Screen, msg: &str) -> Result<(), ScreenError> {
     const ERROR_BOX_MARGIN: i16 = 16;
     const ERROR_BOX_PADDING: i16 = 16;
     const LINE_HEIGHT: i16 = 20;
@@ -39,11 +36,11 @@ fn draw_error(
     let error_box_rect = Rect::new(
         Point2 {
             x: ERROR_BOX_MARGIN,
-            y: ERROR_BOX_MARGIN
+            y: ERROR_BOX_MARGIN,
         },
         Point2 {
             x: Screen::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
-            y: Screen::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN
+            y: Screen::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
         },
     );
 

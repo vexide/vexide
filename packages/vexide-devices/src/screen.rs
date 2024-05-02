@@ -15,10 +15,7 @@ use vex_sdk::{
     vexDisplayStringAt, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
 
-use crate::{
-    color::IntoRgb,
-    geometry::Point2,
-};
+use crate::{color::IntoRgb, geometry::Point2};
 
 /// Represents the physical display on the V5 Brain.
 #[derive(Debug, Eq, PartialEq)]
@@ -127,10 +124,7 @@ pub struct Line {
 
 impl Line {
     /// Create a new line with a given start and end coordinate.
-    pub fn new(
-        start: impl Into<Point2<i16>>,
-        end: impl Into<Point2<i16>>,
-    ) -> Self {
+    pub fn new(start: impl Into<Point2<i16>>, end: impl Into<Point2<i16>>) -> Self {
         Self {
             start: start.into(),
             end: end.into(),
@@ -172,10 +166,7 @@ pub struct Rect {
 
 impl Rect {
     /// Create a new rectangle with the given coordinates.
-    pub fn new(
-        start: impl Into<Point2<i16>>,
-        end: impl Into<Point2<i16>>,
-    ) -> Self {
+    pub fn new(start: impl Into<Point2<i16>>, end: impl Into<Point2<i16>>) -> Self {
         Self {
             start: start.into(),
             end: end.into(),
@@ -183,11 +174,7 @@ impl Rect {
     }
 
     /// Create a new rectangle from a given origin point (top-left) and dimensions (width/height).
-    pub fn from_dimensions(
-        origin: impl Into<Point2<i16>>,
-        width: u16,
-        height: u16,
-    ) -> Self {
+    pub fn from_dimensions(origin: impl Into<Point2<i16>>, width: u16, height: u16) -> Self {
         let origin = origin.into();
         Self {
             start: origin,
@@ -249,11 +236,7 @@ pub struct Text {
 
 impl Text {
     /// Create a new text with a given position and format
-    pub fn new(
-        text: &str,
-        position: impl Into<Point2<i16>>,
-        size: TextSize,
-    ) -> Self {
+    pub fn new(text: &str, position: impl Into<Point2<i16>>, size: TextSize) -> Self {
         Self {
             text: CString::new(text)
                 .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
