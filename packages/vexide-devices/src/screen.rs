@@ -8,29 +8,31 @@ use core::{mem, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
-    vexDisplayBackgroundColor, vexDisplayBigCenteredString, vexDisplayBigString,
-    vexDisplayBigStringAt, vexDisplayCenteredString, vexDisplayCircleDraw, vexDisplayCircleFill,
+    vexDisplayBackgroundColor, vexDisplayBigStringAt, vexDisplayCircleDraw, vexDisplayCircleFill,
     vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
-    vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
-    vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
-    vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
+    vexDisplayPenSizeSet, vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill,
+    vexDisplayScroll, vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString,
+    vexDisplayStringAt, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
 
-use crate::color::{IntoRgb, Rgb};
+use crate::{
+    color::IntoRgb,
+    geometry::Point2,
+};
 
 /// Represents the physical display on the V5 Brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Screen {
     writer_buffer: String,
     render_mode: RenderMode,
-    current_line: i16,
+    current_line: usize,
 }
 
 impl core::fmt::Write for Screen {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
         for character in text.chars() {
             if character == '\n' {
-                if self.current_line > (Self::MAX_VISIBLE_LINES as i16 - 2) {
+                if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
                     self.scroll(0, Self::LINE_HEIGHT);
                 } else {
                     self.current_line += 1;
@@ -42,14 +44,17 @@ impl core::fmt::Write for Screen {
             }
         }
 
-        self.fill(
-            &Text::new(
-                self.writer_buffer.as_str(),
-                TextPosition::Line(self.current_line),
-                TextFormat::Medium,
-            ),
-            Rgb::WHITE,
-        );
+        unsafe {
+            vexDisplayForegroundColor(0xffffff);
+            vexDisplayString(
+                self.current_line as i32,
+                CString::new(self.writer_buffer.clone())
+                    .expect(
+                        "CString::new encountered NUL (U+0000) byte in non-terminating position.",
+                    )
+                    .into_raw(),
+            );
+        }
 
         Ok(())
     }
@@ -64,24 +69,22 @@ pub trait Fill {
 /// A type implementing this trait can draw an outlined shape to the display.
 pub trait Stroke {
     /// Draw an outlined shape to the display.
-    fn stroke(&self, screen: &mut Screen, color: impl IntoRgb);
+    fn stroke(&self, screen: &mut Screen, color: impl IntoRgb, width: u32);
 }
 
 /// A circle that can be drawn on the screen.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Circle {
-    x: i16,
-    y: i16,
-    radius: i16,
+    center: Point2<i16>,
+    radius: u16,
 }
 
 impl Circle {
     /// Create a circle with the given coordinates and radius.
     /// The coordinates are the center of the circle.
-    pub const fn new(x: i16, y: i16, radius: i16) -> Self {
+    pub fn new(center: impl Into<Point2<i16>>, radius: u16) -> Self {
         Self {
-            x,
-            y: y + 0x20,
+            center: center.into(),
             radius,
         }
     }
@@ -91,16 +94,25 @@ impl Fill for Circle {
     fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
         unsafe {
             vexDisplayForegroundColor(color.into_rgb().into());
-            vexDisplayCircleFill(self.x as _, self.y as _, self.radius as _);
+            vexDisplayCircleFill(
+                self.center.x as _,
+                (self.center.y + Screen::HEADER_HEIGHT) as _,
+                self.radius as i32,
+            );
         }
     }
 }
 
 impl Stroke for Circle {
-    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) {
+    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb, width: u32) {
         unsafe {
+            vexDisplayPenSizeSet(width);
             vexDisplayForegroundColor(color.into_rgb().into());
-            vexDisplayCircleDraw(self.x as _, self.y as _, self.radius as _);
+            vexDisplayCircleDraw(
+                self.center.x as _,
+                (self.center.y + Screen::HEADER_HEIGHT) as _,
+                self.radius as i32,
+            );
         }
     }
 }
@@ -109,20 +121,19 @@ impl Stroke for Circle {
 /// The width is the same as the pen width.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Line {
-    x0: i16,
-    y0: i16,
-    x1: i16,
-    y1: i16,
+    start: Point2<i16>,
+    end: Point2<i16>,
 }
 
 impl Line {
-    /// Create a new line with the given coordinates.
-    pub const fn new(x0: i16, y0: i16, x1: i16, y1: i16) -> Self {
+    /// Create a new line with a given start and end coordinate.
+    pub fn new(
+        start: impl Into<Point2<i16>>,
+        end: impl Into<Point2<i16>>,
+    ) -> Self {
         Self {
-            x0,
-            y0: y0 + 0x20,
-            x1,
-            y1: y1 + 0x20,
+            start: start.into(),
+            end: end.into(),
         }
     }
 }
@@ -131,37 +142,69 @@ impl Fill for Line {
     fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
         unsafe {
             vexDisplayForegroundColor(color.into_rgb().into());
-            vexDisplayLineDraw(self.x0 as _, self.y0 as _, self.x1 as _, self.y1 as _);
+            vexDisplayLineDraw(
+                self.start.x as _,
+                (self.start.y + Screen::HEADER_HEIGHT) as _,
+                self.end.x as _,
+                (self.end.y + Screen::HEADER_HEIGHT) as _,
+            );
         }
     }
 }
 
-/// A rectangle that can be drawn on the screen.
+impl Fill for Point2<i16> {
+    fn fill(&self, screen: &mut Screen, color: impl IntoRgb) {
+        screen.draw_pixel(*self, color);
+    }
+}
+
+/// A rectangular region of the screen.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
-    x0: i16,
-    y0: i16,
-    x1: i16,
-    y1: i16,
+    pub(crate) start: Point2<i16>,
+    pub(crate) end: Point2<i16>,
 }
 
 impl Rect {
     /// Create a new rectangle with the given coordinates.
-    pub const fn new(start_x: i16, start_y: i16, end_x: i16, end_y: i16) -> Self {
+    pub fn new(
+        start: impl Into<Point2<i16>>,
+        end: impl Into<Point2<i16>>,
+    ) -> Self {
         Self {
-            x0: start_x,
-            y0: start_y + 0x20,
-            x1: end_x,
-            y1: end_y + 0x20,
+            start: start.into(),
+            end: end.into(),
+        }
+    }
+
+    /// Create a new rectangle from a given origin point (top-left) and dimensions (width/height).
+    pub fn from_dimensions(
+        origin: impl Into<Point2<i16>>,
+        width: u16,
+        height: u16,
+    ) -> Self {
+        let origin = origin.into();
+        Self {
+            start: origin,
+            end: Point2 {
+                x: origin.x + (width as i16),
+                y: origin.y + (height as i16),
+            },
         }
     }
 }
 
 impl Stroke for Rect {
-    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) {
+    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb, width: u32) {
         unsafe {
+            vexDisplayPenSizeSet(width);
             vexDisplayForegroundColor(color.into_rgb().into());
-            vexDisplayRectDraw(self.x0 as _, self.y0 as _, self.x1 as _, self.y1 as _);
+            vexDisplayRectDraw(
+                self.start.x as _,
+                self.start.y as _,
+                self.end.x as _,
+                self.end.y as _,
+            );
         }
     }
 }
@@ -170,51 +213,47 @@ impl Fill for Rect {
     fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
         unsafe {
             vexDisplayForegroundColor(color.into_rgb().into());
-            vexDisplayRectFill(self.x0 as _, self.y0 as _, self.x1 as _, self.y1 as _)
+            vexDisplayRectFill(
+                self.start.x as _,
+                self.start.y as _,
+                self.end.x as _,
+                self.end.y as _,
+            );
         }
     }
 }
 
 /// Options for how a text object should be formatted.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum TextFormat {
+pub enum TextSize {
     /// Small text.
     Small,
     /// Medium text.
     Medium,
     /// Large text.
     Large,
-    /// Medium horizontally centered text.
-    MediumCenter,
-    /// Large horizontally centered text.
-    LargeCenter,
-}
-
-/// The position of a text object on the screen.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum TextPosition {
-    /// A point to draw the text at.
-    Point(i16, i16),
-    /// A line number to draw the text at.
-    Line(i16),
 }
 
 /// A peice of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text {
-    position: TextPosition,
+    position: Point2<i16>,
     text: CString,
-    format: TextFormat,
+    size: TextSize,
 }
 
 impl Text {
     /// Create a new text with a given position and format
-    pub fn new(text: &str, position: TextPosition, format: TextFormat) -> Self {
+    pub fn new(
+        text: &str,
+        position: impl Into<Point2<i16>>,
+        size: TextSize,
+    ) -> Self {
         Self {
             text: CString::new(text)
                 .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
-            position,
-            format,
+            position: position.into(),
+            size,
         }
     }
 }
@@ -226,31 +265,23 @@ impl Fill for Text {
         unsafe {
             vexDisplayForegroundColor(color.into_rgb().into());
 
-            match self.position {
-                TextPosition::Point(x, y) => match self.format {
-                    TextFormat::Small | TextFormat::LargeCenter => {
-                        vexDisplaySmallStringAt(x as i32, (y + 0x20) as i32, self.text.as_ptr())
-                    }
-                    TextFormat::Medium | TextFormat::MediumCenter => {
-                        vexDisplayStringAt(x as i32, (y + 0x20) as i32, self.text.as_ptr())
-                    }
-                    TextFormat::Large => {
-                        vexDisplayBigStringAt(x as i32, (y + 0x20) as i32, self.text.as_ptr())
-                    }
-                },
-                TextPosition::Line(line) => match self.format {
-                    TextFormat::Small | TextFormat::Medium => {
-                        vexDisplayString(line as i32, self.text.as_ptr())
-                    }
-                    TextFormat::Large => vexDisplayBigString(line as i32, self.text.as_ptr()),
-                    TextFormat::MediumCenter => {
-                        vexDisplayCenteredString(line as i32, self.text.as_ptr())
-                    }
-                    TextFormat::LargeCenter => {
-                        vexDisplayBigCenteredString(line as i32, self.text.as_ptr())
-                    }
-                },
-            };
+            match self.size {
+                TextSize::Small => vexDisplaySmallStringAt(
+                    self.position.x as _,
+                    (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    self.text.as_ptr(),
+                ),
+                TextSize::Medium => vexDisplayStringAt(
+                    self.position.x as _,
+                    (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    self.text.as_ptr(),
+                ),
+                TextSize::Large => vexDisplayBigStringAt(
+                    self.position.x as _,
+                    (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    self.text.as_ptr(),
+                ),
+            }
         }
     }
 }
@@ -311,10 +342,13 @@ pub enum RenderMode {
 
 impl Screen {
     /// The maximum number of lines that can be visible on the screen at once.
-    pub const MAX_VISIBLE_LINES: usize = 12;
+    pub(crate) const MAX_VISIBLE_LINES: usize = 12;
 
     /// The height of a single line of text on the screen.
-    pub const LINE_HEIGHT: i16 = 20;
+    pub(crate) const LINE_HEIGHT: i16 = 20;
+
+    /// Vertical height taken by the user program header when visible.
+    pub const HEADER_HEIGHT: i16 = 32;
 
     /// The horizontal resolution of the display.
     pub const HORIZONTAL_RESOLUTION: i16 = 480;
@@ -342,14 +376,17 @@ impl Screen {
     }
 
     fn flush_writer(&mut self) {
-        self.fill(
-            &Text::new(
-                self.writer_buffer.as_str(),
-                TextPosition::Line(self.current_line),
-                TextFormat::Medium,
-            ),
-            Rgb::WHITE,
-        );
+        unsafe {
+            vexDisplayForegroundColor(0xffffff);
+            vexDisplayString(
+                self.current_line as i32,
+                CString::new(self.writer_buffer.clone())
+                    .expect(
+                        "CString::new encountered NUL (U+0000) byte in non-terminating position.",
+                    )
+                    .into_raw(),
+            );
+        }
 
         self.writer_buffer.clear();
     }
@@ -385,24 +422,24 @@ impl Screen {
 
     /// Scroll the entire display buffer.
     ///
-    /// This function effectively y-offsets all pixels drawn to the display buffer by
+    /// This function effectively y-offsets all pixels drawn to the display buffer below a given start point by
     /// a number (`offset`) of pixels.
     pub fn scroll(&mut self, start: i16, offset: i16) {
-        unsafe { vexDisplayScroll(start as i32, offset as i32) }
+        unsafe { vexDisplayScroll(start.into(), offset.into()) }
     }
 
     /// Scroll a region of the screen.
     ///
     /// This will effectively y-offset the display buffer in this area by
     /// `offset` pixels.
-    pub fn scroll_area(&mut self, x0: i16, y0: i16, x1: i16, y1: i16, offset: i16) {
+    pub fn scroll_region(&mut self, region: Rect, offset: i16) {
         unsafe {
             vexDisplayScrollRect(
-                x0 as i32,
-                (y0 + 0x20) as i32,
-                x1 as i32,
-                (y1 + 0x20) as i32,
-                offset as i32,
+                region.start.x as _,
+                (region.start.y + Self::HEADER_HEIGHT) as _,
+                (region.end.x).into(),
+                (region.end.y + Self::HEADER_HEIGHT) as _,
+                offset as _,
             )
         }
     }
@@ -413,12 +450,12 @@ impl Screen {
     }
 
     /// Draw an outlined object to the screen.
-    pub fn stroke(&mut self, shape: &impl Stroke, color: impl IntoRgb) {
-        shape.stroke(self, color)
+    pub fn stroke(&mut self, shape: &impl Stroke, color: impl IntoRgb, width: u32) {
+        shape.stroke(self, color, width)
     }
 
     /// Wipe the entire display buffer, filling it with a specified color.
-    pub fn erase(color: impl IntoRgb) {
+    pub fn erase(&mut self, color: impl IntoRgb) {
         unsafe {
             vexDisplayBackgroundColor(color.into_rgb().into());
             vexDisplayErase();
@@ -426,19 +463,19 @@ impl Screen {
     }
 
     /// Draw a color to a specified pixel position on the screen.
-    pub fn draw_pixel(x: i16, y: i16) {
+    pub fn draw_pixel(&mut self, point: impl Into<Point2<i16>>, color: impl IntoRgb) {
+        let point = point.into();
+
         unsafe {
-            vexDisplayPixelSet(x as _, (y + 0x20) as _);
+            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayPixelSet(point.x as _, (point.y + Self::HEADER_HEIGHT) as _);
         }
     }
 
     /// Draw a buffer of pixel colors to a specified region of the screen.
     pub fn draw_buffer<T, I>(
         &mut self,
-        x0: i16,
-        y0: i16,
-        x1: i16,
-        y1: i16,
+        region: Rect,
         buf: T,
         src_stride: i32,
     ) -> Result<(), ScreenError>
@@ -451,7 +488,8 @@ impl Screen {
             .map(|i| i.into_rgb().into())
             .collect::<Vec<_>>();
         // Convert the coordinates to u32 to avoid overflows when multiplying.
-        let expected_size = ((x1 - x0) as u32 * (y1 - y0) as u32) as usize;
+        let expected_size = ((region.end.x - region.start.x) as u32
+            * (region.end.y - region.start.y) as u32) as usize;
         if raw_buf.len() != expected_size {
             return Err(ScreenError::BufferSize {
                 buffer_size: raw_buf.len(),
@@ -462,10 +500,10 @@ impl Screen {
         // SAFETY: The buffer is guaranteed to be the correct size.
         unsafe {
             vexDisplayCopyRect(
-                x0 as _,
-                y0 as _,
-                x1 as _,
-                y1 as _,
+                region.start.x as _,
+                (region.start.y + Self::HEADER_HEIGHT) as _,
+                region.end.x as _,
+                (region.start.y + Self::HEADER_HEIGHT) as _,
                 raw_buf.as_mut_ptr(),
                 src_stride,
             );
@@ -474,7 +512,7 @@ impl Screen {
         Ok(())
     }
 
-    /// Get the csurrent touch status of the screen.
+    /// Get the current touch status of the screen.
     pub fn touch_status(&self) -> TouchEvent {
         // vexTouchDataGet (probably) doesn't read from the given status pointer so this is fine.
         let mut touch_status: V5_TouchStatus = unsafe { mem::zeroed() };

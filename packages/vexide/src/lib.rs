@@ -91,7 +91,7 @@ pub mod prelude {
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
-        screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
+        screen::{Circle, Line, Rect, Screen, Text, TextSize, TouchState},
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,

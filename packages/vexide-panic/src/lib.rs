@@ -10,7 +10,11 @@ use alloc::string::{String, ToString};
 
 use vexide_core::println;
 #[cfg(feature = "display_panics")]
-use vexide_devices::Screen;
+use vexide_devices::{
+    screen::{Screen, ScreenError, Rect, Text, TextSize},
+    geometry::Point2,
+    color::Rgb,
+};
 
 #[cfg(target_arch = "wasm32")]
 extern "C" {
@@ -24,22 +28,27 @@ extern "C" {
 /// panic messages graphically before exiting.
 #[cfg(feature = "display_panics")]
 fn draw_error(
-    screen: &mut vexide_devices::screen::Screen,
+    screen: &mut Screen,
     msg: &str,
-) -> Result<(), vexide_devices::screen::ScreenError> {
+) -> Result<(), ScreenError> {
     const ERROR_BOX_MARGIN: i16 = 16;
     const ERROR_BOX_PADDING: i16 = 16;
+    const LINE_HEIGHT: i16 = 20;
     const LINE_MAX_WIDTH: usize = 52;
 
-    let error_box_rect = vexide_devices::screen::Rect::new(
-        ERROR_BOX_MARGIN,
-        ERROR_BOX_MARGIN,
-        Screen::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
-        Screen::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
+    let error_box_rect = Rect::new(
+        Point2 {
+            x: ERROR_BOX_MARGIN,
+            y: ERROR_BOX_MARGIN
+        },
+        Point2 {
+            x: Screen::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
+            y: Screen::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN
+        },
     );
 
-    screen.fill(&error_box_rect, vexide_devices::color::Rgb::RED);
-    screen.stroke(&error_box_rect, vexide_devices::color::Rgb::WHITE);
+    screen.fill(&error_box_rect, Rgb::RED);
+    screen.stroke(&error_box_rect, Rgb::WHITE, 1);
 
     let mut buffer = String::new();
     let mut line: i16 = 0;
@@ -51,15 +60,15 @@ fn draw_error(
 
         if character == '\n' || ((buffer.len() % LINE_MAX_WIDTH == 0) && (i > 0)) {
             screen.fill(
-                &vexide_devices::screen::Text::new(
+                &Text::new(
                     buffer.as_str(),
-                    vexide_devices::screen::TextPosition::Point(
-                        ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                        ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Screen::LINE_HEIGHT),
-                    ),
-                    vexide_devices::screen::TextFormat::Small,
+                    Point2 {
+                        x: ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
+                        y: ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * LINE_HEIGHT),
+                    },
+                    TextSize::Small,
                 ),
-                vexide_devices::color::Rgb::WHITE,
+                Rgb::WHITE,
             );
 
             line += 1;
@@ -68,15 +77,15 @@ fn draw_error(
     }
 
     screen.fill(
-        &vexide_devices::screen::Text::new(
+        &Text::new(
             buffer.as_str(),
-            vexide_devices::screen::TextPosition::Point(
-                ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * Screen::LINE_HEIGHT),
-            ),
-            vexide_devices::screen::TextFormat::Small,
+            Point2 {
+                x: ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
+                y: ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * LINE_HEIGHT),
+            },
+            TextSize::Small,
         ),
-        vexide_devices::color::Rgb::WHITE,
+        Rgb::WHITE,
     );
 
     Ok(())
