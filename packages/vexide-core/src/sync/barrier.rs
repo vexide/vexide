@@ -1,4 +1,4 @@
-use core::sync::atomic::AtomicUsize;
+use core::sync::atomic::{AtomicUsize, Ordering};
 
 use futures_core::Future;
 
@@ -63,15 +63,14 @@ impl Barrier {
     }
 
     /// Wait for the barrier to be reached by every thread.
-    /// Currently [`Barrier`]s are not reusable.
     ///
     /// A single task will get a [`BarrierWaitFuture`] that resolves to true.
     /// This is the equivalent of the standard library method [`BarrierWaitResult::is_leader`](https://doc.rust-lang.org/std/sync/struct.BarrierWaitResult.html#method.is_leader)
     pub fn wait(&self) -> BarrierWaitFuture<'_> {
         let leader = critical_section::with(|_| {
-            self.current
-                .fetch_add(1, core::sync::atomic::Ordering::SeqCst)
-                == 0
+            let current = self.current.load(core::sync::atomic::Ordering::Acquire) + 1 % self.count;
+            self.current.store(current, Ordering::SeqCst);
+            current == 1
         });
         BarrierWaitFuture {
             leader,
