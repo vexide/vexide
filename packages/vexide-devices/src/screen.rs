@@ -152,9 +152,14 @@ impl Fill for Line {
     }
 }
 
-impl Fill for Point2<i16> {
-    fn fill(&self, screen: &mut Screen, color: impl IntoRgb) {
-        screen.draw_pixel(*self, color);
+impl<T: Into<Point2<i16>> + Copy> Fill for T {
+    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+        let point: Point2<i16> = (*self).into();
+
+        unsafe {
+            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayPixelSet(point.x as _, (point.y + Screen::HEADER_HEIGHT) as _);
+        }
     }
 }
 
@@ -460,16 +465,6 @@ impl Screen {
             vexDisplayBackgroundColor(color.into_rgb().into());
             vexDisplayErase();
         };
-    }
-
-    /// Draw a color to a specified pixel position on the screen.
-    pub fn draw_pixel(&mut self, point: impl Into<Point2<i16>>, color: impl IntoRgb) {
-        let point = point.into();
-
-        unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
-            vexDisplayPixelSet(point.x as _, (point.y + Self::HEADER_HEIGHT) as _);
-        }
     }
 
     /// Draw a buffer of pixel colors to a specified region of the screen.
