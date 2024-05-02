@@ -50,6 +50,14 @@ impl Once {
             *state = true;
         }
     }
+
+    pub(crate) fn call_once_blocking<F: FnOnce()>(&self, fun: F) {
+        let mut state = self.state.lock_blocking();
+        if *state == Self::ONCE_INCOMPLETE {
+            fun();
+            *state = true;
+        }
+    }
 }
 
 /// A synchronization primitive which can be used to run initialization code once.

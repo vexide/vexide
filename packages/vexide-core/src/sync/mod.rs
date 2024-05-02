@@ -7,9 +7,11 @@ mod condvar;
 mod mutex;
 mod once;
 mod rwlock;
+mod lazy;
 
 pub use barrier::{Barrier, BarrierWaitFuture};
 pub use condvar::{Condvar, CondvarWaitFuture};
 pub use mutex::{Mutex, MutexGuard, MutexLockFuture, RawMutex};
 pub use once::{Once, OnceLock};
 pub use rwlock::{RwLock, RwLockReadFuture, RwLockReadGuard, RwLockWriteFuture, RwLockWriteGuard};
+pub use lazy::LazyLock;
