@@ -8,7 +8,7 @@ use core::{
 pub use mint::{EulerAngles, Quaternion, Vector3};
 
 /// A point in 2D cartesian space.
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Point2<T> {
     /// The x component of the point.
     pub x: T,
