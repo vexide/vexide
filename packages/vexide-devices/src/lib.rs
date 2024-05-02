@@ -28,10 +28,12 @@ pub mod peripherals;
 pub mod position;
 pub mod screen;
 pub mod usd;
+pub mod geometry;
 
 pub use controller::Controller;
 pub use position::Position;
 pub use screen::Screen;
+pub use geometry::Point2;
 use snafu::Snafu;
 
 #[derive(Debug, Snafu)]
