@@ -1,10 +1,10 @@
-use core::{cell::UnsafeCell, fmt::Debug, mem::MaybeUninit, ops::Deref};
+use core::{cell::UnsafeCell, fmt::Debug, mem::ManuallyDrop, ops::Deref};
 
 use super::Once;
 
-struct Data<T, I> {
-    data: MaybeUninit<T>,
-    init: MaybeUninit<I>,
+union Data<T, I> {
+    data: ManuallyDrop<T>,
+    init: ManuallyDrop<I>,
 }
 /// A thread safe lazy initialized value.
 pub struct LazyLock<T, I = fn() -> T> {
@@ -17,8 +17,7 @@ impl<T, I: FnOnce() -> T> LazyLock<T, I> {
     pub const fn new(init: I) -> Self {
         Self {
             data: UnsafeCell::new(Data {
-                data: MaybeUninit::uninit(),
-                init: MaybeUninit::new(init),
+                init: ManuallyDrop::new(init),
             }),
             once: Once::new(),
         }
@@ -26,21 +25,22 @@ impl<T, I: FnOnce() -> T> LazyLock<T, I> {
 
     /// Consume the [`LazyLock`] and return the inner value if it has been initialized.
     pub fn into_inner(self) -> Result<T, I> {
-        let data = self.data.into_inner();
+        let mut data = unsafe { core::ptr::read(&self.data).into_inner() };
         match self.once.is_complete() {
-            true => Ok(unsafe { data.data.assume_init() }),
-            false => Err(unsafe { data.init.assume_init() }),
+            true => Ok(unsafe { ManuallyDrop::take(&mut data.data) }),
+            false => Err(unsafe { ManuallyDrop::take(&mut data.init) }),
         }
     }
 
     /// # Safety
     /// Caller must ensure this function is only called once.
     unsafe fn lazy_init(&self) {
-        let data = unsafe { &mut *self.data.get() };
-        let init = unsafe { data.init.assume_init_read() };
-        data.data = MaybeUninit::new((init)());
+        let initializer = unsafe { ManuallyDrop::take(&mut (*self.data.get()).init) };
+        let initialized = initializer();
         unsafe {
-            data.init.assume_init_drop();
+            self.data.get().write(Data {
+                data: ManuallyDrop::new(initialized),
+            });
         }
     }
 
@@ -48,20 +48,19 @@ impl<T, I: FnOnce() -> T> LazyLock<T, I> {
     /// It has been renamed to get because it is the only way to asynchronously get the value.
     pub async fn get(&self) -> &T {
         self.once.call_once(|| unsafe { self.lazy_init() }).await;
-        unsafe { &(*self.data.get()).data.assume_init_ref() }
+        unsafe { &(*self.data.get()).data }
     }
 
     fn force(&self) -> &T {
         self.once.call_once_blocking(|| unsafe { self.lazy_init() });
-        unsafe { (*self.data.get()).data.assume_init_ref() }
+        unsafe { &(*self.data.get()).data }
     }
 }
-impl<T, I: Default> Default for LazyLock<T, I> {
+impl<T: Default> Default for LazyLock<T> {
     fn default() -> Self {
         Self {
             data: UnsafeCell::new(Data {
-                data: MaybeUninit::uninit(),
-                init: MaybeUninit::new(I::default()),
+                init: ManuallyDrop::new(T::default),
             }),
             once: Once::new(),
         }
@@ -78,10 +77,22 @@ impl<T: Debug, I> Debug for LazyLock<T, I> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut struct_ = f.debug_struct("LazyLock");
         if self.once.is_complete() {
-            struct_.field("data", unsafe { (*self.data.get()).data.assume_init_ref() });
+            struct_.field("data", unsafe { &(*self.data.get()).data });
         } else {
             struct_.field("data", &"Uninitialized");
         }
-        struct_.finish()
+        struct_.finish_non_exhaustive()
+    }
+}
+impl<T, I> Drop for LazyLock<T, I> {
+    fn drop(&mut self) {
+        match self.once.is_complete() {
+            true => unsafe {
+                ManuallyDrop::drop(&mut (*self.data.get()).data);
+            },
+            false => unsafe {
+                ManuallyDrop::drop(&mut (*self.data.get()).init);
+            },
+        }
     }
 }

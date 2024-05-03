@@ -1,4 +1,4 @@
-use core::{cell::UnsafeCell, error::Error, mem::MaybeUninit};
+use core::{cell::UnsafeCell, error::Error, fmt::Debug, mem::MaybeUninit};
 
 use super::mutex::Mutex;
 
@@ -59,7 +59,11 @@ impl Once {
         }
     }
 }
-
+impl Debug for Once {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Once").finish_non_exhaustive()
+    }
+}
 /// A synchronization primitive which can be used to run initialization code once.
 /// This type is thread safe and can be used in statics.
 /// All functions that can block are async.
@@ -98,7 +102,7 @@ impl<T> OnceLock<T> {
 
     /// Attempt to set the data in the [`OnceLock`] if it has not been initialized.
     /// If already initialized, the data is returned in an [`Err`](Result::Err)` variant.
-    pub async fn set(&self, data: T) -> Result<(), T> {
+    pub fn set(&self, data: T) -> Result<(), T> {
         if self.inner.is_complete() {
             return Err(data);
         }
@@ -131,8 +135,8 @@ impl<T> OnceLock<T> {
 
     /// Attempt to set the data in the [`OnceLock`] if it has not been initialized.
     /// This is similar to [`OnceLock::set`] but always returns the data in the [`OnceLock`].
-    pub async fn try_insert(&self, data: T) -> Result<&T, (&T, T)> {
-        match self.set(data).await {
+    pub fn try_insert(&self, data: T) -> Result<&T, (&T, T)> {
+        match self.set(data) {
             Ok(()) => Ok(self.get().unwrap()),
             Err(data) => Err((self.get().unwrap(), data)),
         }
@@ -185,3 +189,45 @@ impl<T> OnceLock<T> {
         }
     }
 }
+impl<T: Clone> Clone for OnceLock<T> {
+    fn clone(&self) -> Self {
+        let new = Self::new();
+        if let Some(data) = self.get() {
+            unsafe { new.set(data.clone()).unwrap_unchecked() };
+        }
+        new
+    }
+}
+impl<T: Debug> Debug for OnceLock<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("OnceLock")
+            .field("data", &self.get())
+            .finish_non_exhaustive()
+    }
+}
+impl<T> Default for OnceLock<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+impl<T> Drop for OnceLock<T> {
+    fn drop(&mut self) {
+        if self.inner.is_complete() {
+            unsafe { (*self.data.get()).assume_init_drop() }
+        }
+    }
+}
+impl<T> From<T> for OnceLock<T> {
+    fn from(data: T) -> Self {
+        let lock = Self::new();
+        unsafe { lock.set(data).unwrap_unchecked() };
+        lock
+    }
+}
+
+impl<T: PartialEq> PartialEq for OnceLock<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.get() == other.get()
+    }
+}
+impl<T: Eq> Eq for OnceLock<T> {}

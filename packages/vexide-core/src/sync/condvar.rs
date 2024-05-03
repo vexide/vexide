@@ -1,4 +1,5 @@
 use core::{
+    fmt::Debug,
     panic,
     sync::atomic::{AtomicU8, AtomicUsize, Ordering},
     task::Poll,
@@ -139,5 +140,15 @@ impl Condvar {
     /// Notify all tasks waiting on the condition variable.
     pub fn notify_all(&self) {
         critical_section::with(|_| self.state.store(Self::NOTIFIED_ALL, Ordering::Release));
+    }
+}
+impl Default for Condvar {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+impl Debug for Condvar {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Condvar").finish_non_exhaustive()
     }
 }

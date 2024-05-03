@@ -1,5 +1,6 @@
 use core::{
     cell::UnsafeCell,
+    fmt::Debug,
     sync::atomic::{AtomicU8, AtomicUsize, Ordering},
 };
 
@@ -192,5 +193,26 @@ impl<T> RwLock<T> {
     /// Consumes the read-write lock and returns the inner data.
     pub fn into_inner(self) -> T {
         self.data.into_inner()
+    }
+}
+
+impl<T: Debug> Debug for RwLock<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut debug = f.debug_struct("RwLock");
+        match self.try_read() {
+            Some(data) => debug.field("data", &*data),
+            None => debug.field("data", &format_args!("<locked>")),
+        };
+        debug.finish_non_exhaustive()
+    }
+}
+impl<T: Default> Default for RwLock<T> {
+    fn default() -> Self {
+        Self::new(T::default())
+    }
+}
+impl<T> From<T> for RwLock<T> {
+    fn from(data: T) -> Self {
+        Self::new(data)
     }
 }

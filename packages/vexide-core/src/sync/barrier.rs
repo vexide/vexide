@@ -1,4 +1,7 @@
-use core::sync::atomic::{AtomicUsize, Ordering};
+use core::{
+    fmt::Debug,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 use futures_core::Future;
 
@@ -76,5 +79,12 @@ impl Barrier {
             leader,
             barrier: self,
         }
+    }
+}
+impl Debug for Barrier {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Barrier")
+            .field("count", &self.count)
+            .finish_non_exhaustive()
     }
 }
