@@ -18,23 +18,23 @@ struct ClawBot {
     arm: Motor,
 }
 
-impl Competition for Clawbot {
+impl CompetitionRobot for ClawBot {
     type Error = PortError;
 
-    fn driver(&mut self) -> Result<(), PortError> {
+    async fn driver(&mut self) -> Result<(), PortError> {
         loop {
             sleep(Controller::UPDATE_RATE).await;
         }
     }
 }
 
-#[vexide_startup::main]
+#[vexide::main]
 async fn main(peripherals: Peripherals) {
     ClawBot {
-        left_motor: Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward).unwrap(),
-        right_motor: Motor::new(peripherals.port_10, Gearset::Green, Direction::Reverse).unwrap(),
-        claw: Motor::new(peripherals.port_3, Gearset::Green, Direction::Forward).unwrap(),
-        arm: Motor::new(peripherals.port_8, Gearset::Green, Direction::Forward).unwrap(),
+        left_motor: Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward),
+        right_motor: Motor::new(peripherals.port_10, Gearset::Green, Direction::Reverse),
+        claw: Motor::new(peripherals.port_3, Gearset::Green, Direction::Forward),
+        arm: Motor::new(peripherals.port_8, Gearset::Green, Direction::Forward),
     }
     .compete()
     .await

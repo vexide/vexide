@@ -5,14 +5,14 @@ use core::time::Duration;
 
 use vexide::prelude::*;
 
-#[vexide_startup::main]
+#[vexide::main]
 async fn main(peripherals: Peripherals) {
     let controller = peripherals.primary_controller;
     // Create two new motors on smart ports 1 and 10.
     let mut left_motor =
-        Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward).unwrap();
+        Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     let mut right_motor =
-        Motor::new(peripherals.port_10, Gearset::Green, Direction::Forward).unwrap();
+        Motor::new(peripherals.port_10, Gearset::Green, Direction::Forward);
 
     // Create a new inertial sensor (IMU) on smart port 6.
     // We don't have to handle a result because this constructor is infallible.

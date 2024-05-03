@@ -8,7 +8,7 @@ use alloc::boxed::Box;
 
 use vexide::prelude::*;
 
-#[vexide_startup::main]
+#[vexide::main]
 async fn main(_peripherals: Peripherals) {
     Competition::builder(())
         .on_connect(|_| {

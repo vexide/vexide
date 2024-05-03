@@ -3,7 +3,7 @@
 
 use vexide::prelude::*;
 
-#[vexide_startup::main]
+#[vexide::main]
 async fn main(_peripherals: Peripherals) {
     println!("Hello, world!");
 }

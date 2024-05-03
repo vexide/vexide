@@ -5,7 +5,7 @@ use core::{fmt::Write, time::Duration};
 
 use vexide::prelude::*;
 
-#[vexide_startup::main]
+#[vexide::main]
 async fn main(peripherals: Peripherals) {
     // We can get the screen directly from peripherals becuase it is always connected to the Brain.
     let mut screen = peripherals.screen;

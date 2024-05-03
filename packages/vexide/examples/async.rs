@@ -5,7 +5,7 @@ use core::time::Duration;
 
 use vexide::prelude::*;
 
-#[vexide_startup::main]
+#[vexide::main]
 async fn main(_peripherals: Peripherals) {
     // Async tasks can be spawned using the spawn function.
     // The spawn function returns a handle to the spawned task.

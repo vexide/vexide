@@ -96,7 +96,6 @@ pub mod prelude {
             potentiometer::{AdiPotentiometer, PotentiometerType},
             pwm::AdiPwmOut,
             solenoid::AdiSolenoid,
-            ultrasonic::AdiUltrasonic,
             AdiDevice, AdiPort,
         },
         battery,

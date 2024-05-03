@@ -9,7 +9,7 @@ use vexide_async::sleep;
 use vexide_core::println;
 use vexide_devices::peripherals::Peripherals;
 
-#[vexide_startup::main]
+#[vexide::main]
 async fn main(peripherals: Peripherals) {
     unsafe {
         // Write something to the screen to test if the program is running
@@ -21,9 +21,4 @@ async fn main(peripherals: Peripherals) {
             sleep(Duration::from_millis(100)).await;
         }
     }
-}
-
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
-    loop {}
 }
