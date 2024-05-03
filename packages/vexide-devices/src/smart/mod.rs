@@ -98,23 +98,26 @@ pub trait SmartDevice {
             vexDeviceGetTimestamp(vexDeviceGetByIndex((self.port_index() - 1) as u32))
         }))
     }
-}
 
-/// Internal helper functions for port validation, error handling, and interaction with
-/// vex-sys on various smart devices.
-pub(crate) trait SmartDeviceInternal: SmartDevice {
-    /// Get the raw device handle connected to this port.
-    fn device_handle(&self) -> V5_DeviceT {
-        unsafe { vexDeviceGetByIndex((self.port_index() - 1) as u32) }
-    }
-
-    /// Verify that the device type is currently plugged into this port.
+    /// Verify that the device type is currently plugged into this port, returning an appropriate
+    /// [`PortError`] if not available.
     fn validate_port(&self) -> Result<(), PortError> {
         validate_port(self.port_index(), self.device_type())
     }
 }
 
+impl<T: SmartDevice> From<T> for SmartPort {
+    fn from(device: T) -> Self {
+        // SAFETY: We can do this, since we ensure that the old smartport was disposed of.
+        // This can effectively be thought as a move out of the device's private `port` field.
+        unsafe { Self::new(device.port_index()) }
+    }
+}
+
 /// Verify that the device type is currently plugged into this port.
+///
+/// This function provides the internal implementations of [`SmartDevice::validate_port`], [`SmartPort::validate_type`],
+/// and [`AdiPort::validate_expander`].
 pub(crate) fn validate_port(index: u8, device_type: SmartDeviceType) -> Result<(), PortError> {
     let device = unsafe { *vexDeviceGetByIndex((index - 1) as u32) };
     let plugged_type: SmartDeviceType = device.device_type.into();
@@ -129,8 +132,6 @@ pub(crate) fn validate_port(index: u8, device_type: SmartDeviceType) -> Result<(
 
     Ok(())
 }
-
-impl<T: SmartDevice> SmartDeviceInternal for T {}
 
 /// Represents a smart port on a V5 Brain
 #[derive(Debug, Eq, PartialEq)]
@@ -191,6 +192,17 @@ impl SmartPort {
         Ok(unsafe { *vexDeviceGetByIndex((self.index() - 1) as u32) }
             .device_type
             .into())
+    }
+
+    /// Verify that a device type is currently plugged into this port, returning an appropriate
+    /// [`PortError`] if not available.
+    pub fn validate_type(&self, device_type: SmartDeviceType) -> Result<(), PortError> {
+        validate_port(self.index(), device_type)
+    }
+
+    /// Get the raw handle of the underlying smart device connected to this port.
+    pub(crate) unsafe fn device_handle(&self) -> V5_DeviceT {
+        unsafe { vexDeviceGetByIndex((self.index() - 1) as u32) }
     }
 }
 

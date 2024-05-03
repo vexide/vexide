@@ -14,12 +14,12 @@ use vex_sdk::{
     vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet, vexDeviceMotorVelocityGet,
     vexDeviceMotorVelocitySet, vexDeviceMotorVelocityUpdate, vexDeviceMotorVoltageGet,
     vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet,
-    V5MotorBrakeMode, V5MotorGearset,
+    V5MotorBrakeMode, V5MotorGearset, V5_DeviceT,
 };
 #[cfg(feature = "dangerous_motor_tuning")]
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
-use super::{SmartDevice, SmartDeviceInternal, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
 use crate::{PortError, Position};
 
 /// The basic motor struct.
@@ -27,6 +27,7 @@ use crate::{PortError, Position};
 pub struct Motor {
     port: SmartPort,
     target: MotorControl,
+    device: V5_DeviceT,
 }
 
 /// Represents a possible target for a [`Motor`].
@@ -73,6 +74,17 @@ impl Direction {
     }
 }
 
+impl core::ops::Not for Direction {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Self::Forward => Self::Reverse,
+            Self::Reverse => Self::Forward,
+        }
+    }
+}
+
 impl Motor {
     /// The maximum voltage value that can be sent to a [`Motor`].
     pub const MAX_VOLTAGE: f64 = 12.0;
@@ -84,27 +96,26 @@ impl Motor {
     pub const DATA_WRITE_RATE: Duration = Duration::from_millis(5);
 
     /// Create a new motor from a smart port index.
-    pub fn new(
-        port: SmartPort,
-        gearset: Gearset,
-        direction: Direction,
-    ) -> Result<Self, MotorError> {
-        let mut motor = Self {
-            port,
-            target: MotorControl::Voltage(0.0),
-        };
+    pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
+        let device = unsafe { port.device_handle() }; // SAFETY: This function is only called once on this port.
 
-        motor.set_gearset(gearset)?;
-        motor.set_direction(direction)?;
-
+        // NOTE: SDK properly stores device state when unplugged, meaning that we can safely
+        // set these without consequence even if the device is not available. This is an edge
+        // case for the SDK though, and seems to just be a thing for motors and rotation sensors.
         unsafe {
             vexDeviceMotorEncoderUnitsSet(
-                motor.device_handle(),
+                device,
                 vex_sdk::V5MotorEncoderUnits::kMotorEncoderDegrees,
             );
+            vexDeviceMotorGearingSet(device, gearset.into());
+            vexDeviceMotorReverseFlagSet(device, direction.is_reverse());
         }
 
-        Ok(motor)
+        Self {
+            port,
+            target: MotorControl::Voltage(0.0),
+            device,
+        }
     }
 
     /// Sets the target that the motor should attempt to reach.
@@ -116,34 +127,30 @@ impl Motor {
 
         match target {
             MotorControl::Brake(mode) => unsafe {
-                vexDeviceMotorBrakeModeSet(self.device_handle(), mode.into());
+                vexDeviceMotorBrakeModeSet(self.device, mode.into());
                 // Force motor into braking by putting it into velocity control with a 0rpm setpoint.
-                vexDeviceMotorVelocitySet(self.device_handle(), 0);
+                vexDeviceMotorVelocitySet(self.device, 0);
             },
             MotorControl::Velocity(rpm) => unsafe {
                 vexDeviceMotorBrakeModeSet(
-                    self.device_handle(),
+                    self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                vexDeviceMotorVelocitySet(self.device_handle(), rpm);
+                vexDeviceMotorVelocitySet(self.device, rpm);
             },
             MotorControl::Voltage(volts) => unsafe {
                 vexDeviceMotorBrakeModeSet(
-                    self.device_handle(),
+                    self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                vexDeviceMotorVoltageSet(self.device_handle(), (volts * 1000.0) as i32);
+                vexDeviceMotorVoltageSet(self.device, (volts * 1000.0) as i32);
             },
             MotorControl::Position(position, velocity) => unsafe {
                 vexDeviceMotorBrakeModeSet(
-                    self.device_handle(),
+                    self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                vexDeviceMotorAbsoluteTargetSet(
-                    self.device_handle(),
-                    position.into_degrees(),
-                    velocity,
-                );
+                vexDeviceMotorAbsoluteTargetSet(self.device, position.into_degrees(), velocity);
             },
         }
 
@@ -188,7 +195,7 @@ impl Motor {
         self.validate_port()?;
 
         unsafe {
-            vexDeviceMotorVelocityUpdate(self.device_handle(), velocity);
+            vexDeviceMotorVelocityUpdate(self.device, velocity);
         }
 
         if let MotorControl::Position(position, _) = self.target {
@@ -208,7 +215,7 @@ impl Motor {
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
         self.validate_port()?;
         unsafe {
-            vexDeviceMotorGearingSet(self.device_handle(), gearset.into());
+            vexDeviceMotorGearingSet(self.device, gearset.into());
         }
         Ok(())
     }
@@ -216,38 +223,38 @@ impl Motor {
     /// Gets the gearset of the motor.
     pub fn gearset(&self) -> Result<Gearset, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorGearingGet(self.device_handle()) }.into())
+        Ok(unsafe { vexDeviceMotorGearingGet(self.device) }.into())
     }
 
     /// Gets the estimated angular velocity (RPM) of the motor.
     pub fn velocity(&self) -> Result<i32, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorVelocityGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceMotorVelocityGet(self.device) })
     }
 
     /// Returns the power drawn by the motor in Watts.
     pub fn power(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorPowerGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceMotorPowerGet(self.device) })
     }
 
     /// Returns the torque output of the motor in Nm.
     pub fn torque(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorTorqueGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceMotorTorqueGet(self.device) })
     }
 
     /// Returns the voltage the motor is drawing in volts.
     pub fn voltage(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorVoltageGet(self.device_handle()) } as f64 / 1000.0)
+        Ok(unsafe { vexDeviceMotorVoltageGet(self.device) } as f64 / 1000.0)
     }
 
     /// Returns the current position of the motor.
     pub fn position(&self) -> Result<Position, MotorError> {
         self.validate_port()?;
         Ok(Position::from_degrees(unsafe {
-            vexDeviceMotorPositionGet(self.device_handle())
+            vexDeviceMotorPositionGet(self.device)
         }))
     }
 
@@ -258,7 +265,7 @@ impl Motor {
         self.validate_port()?;
 
         let mut timestamp: u32 = 0;
-        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device_handle(), &mut timestamp) };
+        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device, &mut timestamp) };
 
         Ok((ticks, SmartDeviceTimestamp(timestamp)))
     }
@@ -266,7 +273,7 @@ impl Motor {
     /// Returns the electrical current draw of the motor in amps.
     pub fn current(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorCurrentGet(self.device_handle()) } as f64 / 1000.0)
+        Ok(unsafe { vexDeviceMotorCurrentGet(self.device) } as f64 / 1000.0)
     }
 
     /// Gets the efficiency of the motor from a range of [0.0, 1.0].
@@ -277,14 +284,14 @@ impl Motor {
     pub fn efficiency(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceMotorEfficiencyGet(self.device_handle()) } / 100.0)
+        Ok(unsafe { vexDeviceMotorEfficiencyGet(self.device) } / 100.0)
     }
 
     /// Sets the current encoder position to zero without moving the motor.
     /// Analogous to taring or resetting the encoder to the current position.
     pub fn reset_position(&mut self) -> Result<(), MotorError> {
         self.validate_port()?;
-        unsafe { vexDeviceMotorPositionReset(self.device_handle()) }
+        unsafe { vexDeviceMotorPositionReset(self.device) }
         Ok(())
     }
 
@@ -292,14 +299,14 @@ impl Motor {
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
     pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
         self.validate_port()?;
-        unsafe { vexDeviceMotorPositionSet(self.device_handle(), position.into_degrees()) }
+        unsafe { vexDeviceMotorPositionSet(self.device, position.into_degrees()) }
         Ok(())
     }
 
     /// Sets the current limit for the motor in amps.
     pub fn set_current_limit(&mut self, limit: f64) -> Result<(), MotorError> {
         self.validate_port()?;
-        unsafe { vexDeviceMotorCurrentLimitSet(self.device_handle(), (limit * 1000.0) as i32) }
+        unsafe { vexDeviceMotorCurrentLimitSet(self.device, (limit * 1000.0) as i32) }
         Ok(())
     }
 
@@ -308,7 +315,7 @@ impl Motor {
         self.validate_port()?;
 
         unsafe {
-            vexDeviceMotorVoltageLimitSet(self.device_handle(), (limit * 1000.0) as i32);
+            vexDeviceMotorVoltageLimitSet(self.device, (limit * 1000.0) as i32);
         }
 
         Ok(())
@@ -317,27 +324,26 @@ impl Motor {
     /// Gets the current limit for the motor in amps.
     pub fn current_limit(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorCurrentLimitGet(self.device_handle()) } as f64 / 1000.0)
+        Ok(unsafe { vexDeviceMotorCurrentLimitGet(self.device) } as f64 / 1000.0)
     }
 
     /// Gets the voltage limit for the motor if one has been explicitly set.
     pub fn voltage_limit(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorVoltageLimitGet(self.device_handle()) } as f64 / 1000.0)
+        Ok(unsafe { vexDeviceMotorVoltageLimitGet(self.device) } as f64 / 1000.0)
     }
 
     /// Returns the internal teperature recorded by the motor in increments of 5°C.
     pub fn temperature(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorTemperatureGet(self.device_handle()) })
+        Ok(unsafe { vexDeviceMotorTemperatureGet(self.device) })
     }
 
     /// Get the status flags of a motor.
     pub fn status(&self) -> Result<MotorStatus, MotorError> {
         self.validate_port()?;
 
-        let status =
-            MotorStatus::from_bits_retain(unsafe { vexDeviceMotorFlagsGet(self.device_handle()) });
+        let status = MotorStatus::from_bits_retain(unsafe { vexDeviceMotorFlagsGet(self.device) });
 
         // This is technically just a flag, but it indicates that an error occurred when trying
         // to get the flags, so we return early here.
@@ -353,7 +359,7 @@ impl Motor {
         self.validate_port()?;
 
         Ok(MotorFaults::from_bits_retain(unsafe {
-            vexDeviceMotorFaultsGet(self.device_handle())
+            vexDeviceMotorFaultsGet(self.device)
         }))
     }
 
@@ -382,7 +388,7 @@ impl Motor {
         self.validate_port()?;
 
         unsafe {
-            vexDeviceMotorReverseFlagSet(self.device_handle(), direction.is_reverse());
+            vexDeviceMotorReverseFlagSet(self.device, direction.is_reverse());
         }
 
         Ok(())
@@ -392,12 +398,10 @@ impl Motor {
     pub fn direction(&self) -> Result<Direction, MotorError> {
         self.validate_port()?;
 
-        Ok(
-            match unsafe { vexDeviceMotorReverseFlagGet(self.device_handle()) } {
-                false => Direction::Forward,
-                true => Direction::Reverse,
-            },
-        )
+        Ok(match unsafe { vexDeviceMotorReverseFlagGet(self.device) } {
+            false => Direction::Forward,
+            true => Direction::Reverse,
+        })
     }
 
     /// Adjusts the internal tuning constants of the motor when using velocity control.
@@ -418,7 +422,7 @@ impl Motor {
     ) -> Result<(), MotorError> {
         self.validate_port()?;
 
-        unsafe { vexDeviceMotorVelocityPidSet(self.device_handle(), constants.into()) }
+        unsafe { vexDeviceMotorVelocityPidSet(self.device, constants.into()) }
 
         Ok(())
     }
@@ -441,7 +445,7 @@ impl Motor {
     ) -> Result<(), MotorError> {
         self.validate_port()?;
 
-        unsafe { vexDeviceMotorPositionPidSet(self.device_handle(), constants.into()) }
+        unsafe { vexDeviceMotorPositionPidSet(self.device, constants.into()) }
 
         Ok(())
     }

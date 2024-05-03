@@ -16,7 +16,7 @@
         "ld.lld": [
             "--gc-sections",
             "--nostdlib",
-            "-Tcold.ld",
+            "-Tv5.ld",
             "-znorelro"
         ]
     },

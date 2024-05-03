@@ -16,7 +16,7 @@ use crate::adi::digital::LogicLevel;
 
 fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     if unsafe {
-        vexControllerConnectionStatusGet(id.into()) != V5_ControllerStatus::kV5ControllerOffline
+        vexControllerConnectionStatusGet(id.into()) == V5_ControllerStatus::kV5ControllerOffline
     } {
         return Err(ControllerError::Offline);
     }

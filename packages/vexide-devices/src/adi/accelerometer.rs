@@ -14,14 +14,15 @@ pub struct AdiAccelerometer {
 
 impl AdiAccelerometer {
     /// Create a new accelerometer from an [`AdiPort`].
-    pub fn new(mut port: AdiPort, sensitivity: Sensitivity) -> Result<Self, PortError> {
-        port.configure(AdiDeviceType::Accelerometer)?;
+    pub fn new(port: AdiPort, sensitivity: Sensitivity) -> Self {
+        port.configure(AdiDeviceType::Accelerometer);
 
-        Ok(Self { port, sensitivity })
+        Self { port, sensitivity }
     }
 
     /// Get the type of ADI accelerometer device.
     pub fn sensitivity(&self) -> Result<Sensitivity, PortError> {
+        // Configuration check not required here since we don't access the SDK.
         self.port.validate_expander()?;
 
         Ok(self.sensitivity)
@@ -50,6 +51,7 @@ impl AdiAccelerometer {
     /// would instead represent a 2g reading ([`Sensitivity::LOW_MAX_ACCELERATION`]).
     pub fn raw_acceleration(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
+        self.port.configure(self.device_type());
 
         Ok(
             unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
@@ -60,7 +62,6 @@ impl AdiAccelerometer {
 
 /// The jumper state of the accelerometer.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-#[repr(i32)]
 pub enum Sensitivity {
     /// 0-2g sensitivity
     Low,

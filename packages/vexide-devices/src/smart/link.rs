@@ -9,10 +9,10 @@ use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus, vexDeviceGenericRadioReceive,
     vexDeviceGenericRadioReceiveAvail, vexDeviceGenericRadioTransmit,
-    vexDeviceGenericRadioWriteFree,
+    vexDeviceGenericRadioWriteFree, V5_DeviceT,
 };
 
-use super::{validate_port, SmartDevice, SmartDeviceInternal, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
 /// Represents a smart port configured as a VEXLink radio.
@@ -22,6 +22,7 @@ use crate::PortError;
 #[derive(Debug, Eq, PartialEq)]
 pub struct RadioLink {
     port: SmartPort,
+    device: V5_DeviceT,
 }
 
 impl RadioLink {
@@ -35,18 +36,17 @@ impl RadioLink {
     /// let link = RadioLink::open(port_1, "643A", LinkType::Manager)?;
     /// ```
     pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, LinkError> {
-        let link = Self { port };
-
         // Ensure that a radio is plugged into the requested port.
         //
         // Once we call [`vexDeviceGenericRadioConnection`], this type
         // will be changed to be generic serial, but we haven't called
         // it yet.
-        validate_port(link.port_index(), SmartDeviceType::Radio)?;
+        port.validate_type(SmartDeviceType::Radio)?;
 
+        // That this constructor literally has to be fallible unlike others.
         unsafe {
             vexDeviceGenericRadioConnection(
-                link.device_handle(),
+                port.device_handle(),
                 CString::new(id)
                     .map_err(|_| LinkError::NonTerminatingNul)?
                     .into_raw(),
@@ -58,21 +58,24 @@ impl RadioLink {
             );
         }
 
-        Ok(link)
+        Ok(Self {
+            device: unsafe { port.device_handle() },
+            port,
+        })
     }
 
     /// Returns the number of bytes available to be read in the the radio's input buffer.
     pub fn unread_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceGenericRadioReceiveAvail(self.device_handle()) } as usize)
+        Ok(unsafe { vexDeviceGenericRadioReceiveAvail(self.device) } as usize)
     }
 
     /// Returns the number of bytes free in the radio's output buffer.
     pub fn available_write_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
 
-        match unsafe { vexDeviceGenericRadioWriteFree(self.device_handle()) } {
+        match unsafe { vexDeviceGenericRadioWriteFree(self.device) } {
             // TODO: This check may not be necessary, since PROS doesn't do it,
             //		 but we do it just to be safe.
             -1 => Err(LinkError::ReadFailed),
@@ -84,7 +87,7 @@ impl RadioLink {
     pub fn is_linked(&self) -> Result<bool, LinkError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceGenericRadioLinkStatus(self.device_handle()) })
+        Ok(unsafe { vexDeviceGenericRadioLinkStatus(self.device) })
     }
 }
 
@@ -113,7 +116,7 @@ impl io::Read for RadioLink {
         }
 
         match unsafe {
-            vexDeviceGenericRadioReceive(self.device_handle(), buf.as_mut_ptr(), buf.len() as u16)
+            vexDeviceGenericRadioReceive(self.device, buf.as_mut_ptr(), buf.len() as u16)
         } {
             -1 => Err(io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -148,9 +151,8 @@ impl io::Write for RadioLink {
             ));
         }
 
-        match unsafe {
-            vexDeviceGenericRadioTransmit(self.device_handle(), buf.as_ptr(), buf.len() as u16)
-        } {
+        match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), buf.len() as u16) }
+        {
             -1 => Err(io::Error::new(
                 io::ErrorKind::Other,
                 "Internal write error occurred.",

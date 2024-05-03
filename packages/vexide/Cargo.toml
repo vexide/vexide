@@ -25,9 +25,13 @@ vexide-panic = { version = "0.1.0", path = "../vexide-panic", optional = true }
 vexide-core = { version = "0.1.0", path = "../vexide-core", optional = true }
 vexide-math = { version = "0.1.0", path = "../vexide-math", optional = true }
 vexide-startup = { version = "0.1.0", path = "../vexide-startup", optional = true }
+vexide-macro = { version = "0.1.0", path = "../vexide-macro", optional = true }
+vex-sdk = "0.12.0"
 
 [features]
-default = ["async", "devices", "panic", "display_panics", "core", "math", "startup"]
+default = ["async", "devices", "panic", "display_panics", "core", "math", "startup", "macro"]
+
+macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 
 core = ["dep:vexide-core"]
 startup = ["dep:vexide-startup"]
@@ -41,4 +45,5 @@ math = ["dep:vexide-math"]
 panic = ["dep:vexide-panic"]
 display_panics = ["vexide-panic/display_panics"]
 
-dangerous-motor-tuning = ["vexide-devices/dangerous_motor_tuning"]
+dangerous_motor_tuning = ["vexide-devices/dangerous_motor_tuning"]
+smart_leds_trait = ["vexide-devices/smart_leds_trait"]

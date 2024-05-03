@@ -13,10 +13,7 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
-use core::{arch::asm, hint, ptr::addr_of_mut};
-
 use vexide_core::print;
-pub use vexide_startup_macro::main;
 
 extern "C" {
     // These symbols don't have real types so this is a little bit of a hack
@@ -63,17 +60,21 @@ extern "Rust" {
 /// This function MUST only be called once and should only be called at the very start of program initialization.
 /// Calling this function more than one time will seriously mess up both your stack and your heap.
 pub unsafe fn program_entry() {
+    #[cfg(target_arch = "arm")]
     unsafe {
+        use core::arch::asm;
         asm!(
             "
             // Load the user stack
-            ldr sp, =__user_stack_start
+            ldr sp, =__stack_start
             "
         );
     }
 
     // Clear the BSS section
+    #[cfg(target_arch = "arm")]
     unsafe {
+        use core::ptr::addr_of_mut;
         let mut bss_start = addr_of_mut!(__bss_start);
         while bss_start < addr_of_mut!(__bss_end) {
             core::ptr::write_volatile(bss_start, 0);
@@ -115,11 +116,6 @@ Running user code...
         // Call the user code
         main();
         // Exit the program
-        vex_sdk::vexSystemExitRequest();
-    }
-
-    // Technically unreachable, but the compiler doesn't know that
-    loop {
-        hint::spin_loop();
+        vexide_core::program::exit();
     }
 }
