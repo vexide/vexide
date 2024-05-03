@@ -45,7 +45,7 @@ fn draw_error(screen: &mut Screen, msg: &str) -> Result<(), ScreenError> {
     );
 
     screen.fill(&error_box_rect, Rgb::RED);
-    screen.stroke(&error_box_rect, Rgb::WHITE, 1);
+    screen.stroke(&error_box_rect, Rgb::WHITE);
 
     let mut buffer = String::new();
     let mut line: i16 = 0;

@@ -66,7 +66,7 @@ pub trait Fill {
 /// A type implementing this trait can draw an outlined shape to the display.
 pub trait Stroke {
     /// Draw an outlined shape to the display.
-    fn stroke(&self, screen: &mut Screen, color: impl IntoRgb, width: u32);
+    fn stroke(&self, screen: &mut Screen, color: impl IntoRgb);
 }
 
 /// A circle that can be drawn on the screen.
@@ -101,9 +101,8 @@ impl Fill for Circle {
 }
 
 impl Stroke for Circle {
-    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb, width: u32) {
+    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) {
         unsafe {
-            vexDisplayPenSizeSet(width);
             vexDisplayForegroundColor(color.into_rgb().into());
             vexDisplayCircleDraw(
                 self.center.x as _,
@@ -187,15 +186,14 @@ impl Rect {
 }
 
 impl Stroke for Rect {
-    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb, width: u32) {
+    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) {
         unsafe {
-            vexDisplayPenSizeSet(width);
             vexDisplayForegroundColor(color.into_rgb().into());
             vexDisplayRectDraw(
                 self.start.x as _,
-                self.start.y as _,
+                (self.start.y + Screen::HEADER_HEIGHT) as _,
                 self.end.x as _,
-                self.end.y as _,
+                (self.end.y + Screen::HEADER_HEIGHT) as _,
             );
         }
     }
@@ -207,9 +205,9 @@ impl Fill for Rect {
             vexDisplayForegroundColor(color.into_rgb().into());
             vexDisplayRectFill(
                 self.start.x as _,
-                self.start.y as _,
+                (self.start.y + Screen::HEADER_HEIGHT) as _,
                 self.end.x as _,
-                self.end.y as _,
+                (self.end.y + Screen::HEADER_HEIGHT) as _,
             );
         }
     }
@@ -438,8 +436,8 @@ impl Screen {
     }
 
     /// Draw an outlined object to the screen.
-    pub fn stroke(&mut self, shape: &impl Stroke, color: impl IntoRgb, width: u32) {
-        shape.stroke(self, color, width)
+    pub fn stroke(&mut self, shape: &impl Stroke, color: impl IntoRgb) {
+        shape.stroke(self, color)
     }
 
     /// Wipe the entire display buffer, filling it with a specified color.

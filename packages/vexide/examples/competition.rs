@@ -5,42 +5,21 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
+use core::time::Duration;
 
 use vexide::prelude::*;
+use vexide_devices::screen::Rect;
 
-#[vexide_startup::main]
-async fn main(_peripherals: Peripherals) {
-    Competition::builder(())
-        .on_connected(|_| {
-            Box::pin(async {
-                println!("Connected");
-                Ok::<_, !>(())
-            })
-        })
-        .on_disconnected(|_| {
-            Box::pin(async {
-                println!("Disconnected");
-                Ok(())
-            })
-        })
-        .while_disabled(|_| {
-            Box::pin(async {
-                println!("Disabled");
-                Ok(())
-            })
-        })
-        .while_driver_controlled(|_| {
-            Box::pin(async {
-                println!("Driver");
-                Ok(())
-            })
-        })
-        .while_in_autonomous(|_| {
-            Box::pin(async {
-                println!("Autonomous");
-                Ok(())
-            })
-        })
-        .await
-        .unwrap();
+#[vexide::main]
+async fn main(peripherals: Peripherals) {
+    let mut screen = peripherals.screen;
+
+    println!("Hi");
+    screen.stroke(&Rect::new((0, 0), (30, 30)), Rgb::RED);
+
+    screen.fill(&(30, 30), Rgb::BLUE);
+
+    loop {
+        sleep(Duration::from_millis(10)).await;
+    }
 }
