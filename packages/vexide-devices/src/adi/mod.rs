@@ -36,7 +36,7 @@ use vex_sdk::{
 use crate::smart::{validate_port, SmartDeviceType};
 
 /// Update rate for all ADI devices and ports.
-pub const ADI_UPDATE_RATE: Duration = Duration::from_millis(10);
+pub const ADI_UPDATE_INTERVAL: Duration = Duration::from_millis(10);
 
 /// Represents an ADI (three wire) port on a V5 Brain or V5 Three Wire Expander.
 #[derive(Debug, Eq, PartialEq)]
@@ -158,7 +158,7 @@ impl From<AdiEncoder> for (AdiPort, AdiPort) {
 /// Common functionality for a ADI (three-wire) devices.
 pub trait AdiDevice {
     /// Update rate of ADI devices.
-    const UPDATE_RATE: Duration = ADI_UPDATE_RATE;
+    const UPDATE_INTERVAL: Duration = ADI_UPDATE_INTERVAL;
 
     /// The type that port_index should return. This is usually `u8`, but occasionally `(u8, u8)`.
     type PortIndexOutput;
