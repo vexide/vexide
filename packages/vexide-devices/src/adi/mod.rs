@@ -3,24 +3,27 @@
 use crate::PortError;
 
 pub mod accelerometer;
+pub mod addrled;
 pub mod analog;
 pub mod digital;
+pub mod encoder;
 pub mod light_sensor;
 pub mod line_tracker;
 pub mod motor;
 pub mod potentiometer;
 pub mod pwm;
+pub mod range_finder;
 pub mod solenoid;
-pub mod ultrasonic;
 
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
+pub use encoder::AdiEncoder;
 pub use light_sensor::AdiLightSensor;
 pub use line_tracker::AdiLineTracker;
 pub use motor::AdiMotor;
 pub use potentiometer::{AdiPotentiometer, PotentiometerType};
+pub use range_finder::AdiRangeFinder;
 pub use solenoid::AdiSolenoid;
-pub use ultrasonic::AdiUltrasonic;
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
@@ -117,8 +120,22 @@ impl<T: AdiDevice<PortIndexOutput = u8>> From<T> for AdiPort {
     }
 }
 
-impl From<AdiUltrasonic> for (AdiPort, AdiPort) {
-    fn from(device: AdiUltrasonic) -> Self {
+impl From<AdiRangeFinder> for (AdiPort, AdiPort) {
+    fn from(device: AdiRangeFinder) -> Self {
+        let indexes = device.port_index();
+        let expander_index = device.expander_port_index();
+
+        unsafe {
+            (
+                AdiPort::new(indexes.0, expander_index),
+                AdiPort::new(indexes.1, expander_index),
+            )
+        }
+    }
+}
+
+impl From<AdiEncoder> for (AdiPort, AdiPort) {
+    fn from(device: AdiEncoder) -> Self {
         let indexes = device.port_index();
         let expander_index = device.expander_port_index();
 
@@ -195,7 +212,7 @@ pub enum AdiDeviceType {
     Encoder,
 
     /// Ultrasonic Sensor/Sonar
-    Ultrasonic,
+    RangeFinder,
 
     /// Cortex-era Line Tracker
     LineTracker,
@@ -236,7 +253,7 @@ impl From<V5_AdiPortConfiguration> for AdiDeviceType {
             V5_AdiPortConfiguration::kAdiPortTypeLegacyGyro => Self::Gyro,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyServo => Self::Servo,
             V5_AdiPortConfiguration::kAdiPortTypeQuadEncoder => Self::Encoder,
-            V5_AdiPortConfiguration::kAdiPortTypeSonar => Self::Ultrasonic,
+            V5_AdiPortConfiguration::kAdiPortTypeSonar => Self::RangeFinder,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyLineSensor => Self::LineTracker,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyLightSensor => Self::LightSensor,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyAccelerometer => Self::Accelerometer,
@@ -263,7 +280,7 @@ impl From<AdiDeviceType> for V5_AdiPortConfiguration {
             AdiDeviceType::Gyro => Self::kAdiPortTypeLegacyGyro,
             AdiDeviceType::Servo => Self::kAdiPortTypeLegacyServo,
             AdiDeviceType::Encoder => Self::kAdiPortTypeQuadEncoder,
-            AdiDeviceType::Ultrasonic => Self::kAdiPortTypeSonar,
+            AdiDeviceType::RangeFinder => Self::kAdiPortTypeSonar,
             AdiDeviceType::LineTracker => Self::kAdiPortTypeLegacyLineSensor,
             AdiDeviceType::LightSensor => Self::kAdiPortTypeLegacyLightSensor,
             AdiDeviceType::Accelerometer => Self::kAdiPortTypeLegacyAccelerometer,

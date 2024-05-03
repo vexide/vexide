@@ -54,27 +54,32 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
         return err;
     };
     let peripherals_ident = &peripherals_pat.ident;
+    let ret_type = match &item.sig.output {
+        syn::ReturnType::Default => quote! { () },
+        syn::ReturnType::Type(_, ty) => quote! { #ty },
+    };
 
     let block = item.block;
 
     quote! {
         #[no_mangle]
         extern "Rust" fn main() {
-            let #peripherals_ident = ::vexide_devices::peripherals::Peripherals::take().unwrap();
+            let #peripherals_ident = ::vexide::devices::peripherals::Peripherals::take().unwrap();
 
-            ::vexide_async::block_on(async #block);
+            let termination: #ret_type = ::vexide::async_runtime::block_on(async #block);
+            ::vexide::core::program::Termination::report(termination);
         }
 
         #[no_mangle]
         #[link_section = ".boot"]
         unsafe extern "C" fn _entry() {
             unsafe {
-                ::vexide_startup::program_entry()
+                ::vexide::startup::program_entry()
             }
         }
 
         #[link_section = ".cold_magic"]
         #[used] // This is needed to prevent the linker from removing this object in release builds
-        static COLD_HEADER: ::vexide_startup::ColdHeader = ::vexide_startup::ColdHeader::new(2, 0, 0);
+        static COLD_HEADER: ::vexide::startup::ColdHeader = ::vexide::startup::ColdHeader::new(2, 0, 0);
     }.into()
 }
