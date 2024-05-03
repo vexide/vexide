@@ -36,8 +36,8 @@ impl CompetitionRobot for ClawBot {
             // Simple arcade drive
             let forward = self.controller.left_stick.y()? as f64;
             let turn = self.controller.right_stick.x()? as f64;
-            let left = forward + turn;
-            let right = forward - turn;
+            let mut left = forward + turn;
+            let mut right = forward - turn;
 
             // If we are pressing the bumpers, don't allow the motors to go in reverse
             if self.left_bumper.is_high()? || self.right_bumper.is_high()? {
