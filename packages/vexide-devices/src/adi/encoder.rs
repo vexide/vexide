@@ -4,7 +4,7 @@ use snafu::Snafu;
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::{PortError, Position};
+use crate::{position::Position, PortError};
 
 /// ADI Range Finders.
 #[derive(Debug, Eq, PartialEq)]
@@ -46,12 +46,12 @@ impl AdiEncoder {
         self.top_port.validate_expander()?;
         self.top_port.configure(self.device_type());
 
-        Ok(Position::from_degrees(unsafe {
+        Ok(Position::from_ticks(unsafe {
             vexDeviceAdiValueGet(
                 self.top_port.device_handle(),
                 self.top_port.internal_index(),
-            ) as f64
-        }))
+            ) as i64
+        }, 360))
     }
 
     /// Sets the current encoder position to the given position without moving the motor.
@@ -64,7 +64,7 @@ impl AdiEncoder {
             vexDeviceAdiValueSet(
                 self.top_port.device_handle(),
                 self.top_port.internal_index(),
-                position.into_degrees() as i32,
+                position.as_ticks(360) as i32,
             )
         }
 

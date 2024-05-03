@@ -20,7 +20,7 @@ use vex_sdk::{
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
-use crate::{PortError, Position};
+use crate::{position::Position, PortError};
 
 /// The basic motor struct.
 #[derive(Debug, PartialEq)]
@@ -150,7 +150,7 @@ impl Motor {
                     self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                vexDeviceMotorAbsoluteTargetSet(self.device, position.into_degrees(), velocity);
+                vexDeviceMotorAbsoluteTargetSet(self.device, position.as_degrees(), velocity);
             },
         }
 
@@ -299,7 +299,7 @@ impl Motor {
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
     pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
         self.validate_port()?;
-        unsafe { vexDeviceMotorPositionSet(self.device, position.into_degrees()) }
+        unsafe { vexDeviceMotorPositionSet(self.device, position.as_degrees()) }
         Ok(())
     }
 
@@ -509,7 +509,7 @@ bitflags! {
         const DRIVER_FAULT = 0x02;
 
         /// The motor's H-bridge is over current.
-        const DRIVER_OVER_CURRENT = 0x08 ;
+        const DRIVER_OVER_CURRENT = 0x08;
     }
 }
 

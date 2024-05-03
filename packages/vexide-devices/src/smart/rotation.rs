@@ -25,15 +25,18 @@ pub struct RotationSensor {
     direction: Direction,
 
     /// The position data recorded by [`Self::position`] at the time the sensor is reversed.
-    direction_offset: f64,
+    direction_offset: Position,
 
     /// The raw position data recorded by the SDK at the time the sensor is reversed.
-    raw_direction_offset: i32,
+    raw_direction_offset: Position,
 }
 
 impl RotationSensor {
     /// The minimum data rate that you can set a rotation sensor to.
     pub const MIN_DATA_RATE: Duration = Duration::from_millis(5);
+
+    /// The amount of unique sensor readings per one revolution of the sensor.
+    pub const TICKS_PER_REVOLUTION: u32 = 36000;
 
     /// Creates a new rotation sensor on the given port.
     /// Whether or not the sensor should be reversed on creation can be specified.
@@ -44,8 +47,8 @@ impl RotationSensor {
             device,
             port,
             direction,
-            direction_offset: 0.0,
-            raw_direction_offset: 0,
+            direction_offset: Position::default(),
+            raw_direction_offset: Position::default(),
         }
     }
 
@@ -53,23 +56,22 @@ impl RotationSensor {
     pub fn reset_position(&mut self) -> Result<(), PortError> {
         // NOTE: We don't use vexDeviceAbsEncReset, since that doesn't actually
         // zero position. It sets position to whatever the angle value is.
-        self.set_position(Position::from_degrees(0.0))
+        self.set_position(Position::default())
     }
 
     /// Sets the position.
-    pub fn set_position(&mut self, position: Position) -> Result<(), PortError> {
+    pub fn set_position(&mut self, mut position: Position) -> Result<(), PortError> {
         self.validate_port()?;
 
-        let mut raw_position = (position.into_degrees() * 1000.0) as i32;
-
         if self.direction == Direction::Reverse {
-            raw_position *= -1;
+            position = -position;
         }
 
         unsafe {
-            self.direction_offset = 0.0;
-            self.raw_direction_offset = 0;
-            vexDeviceAbsEncPositionSet(self.device, raw_position)
+            self.direction_offset = Position::default();
+            self.raw_direction_offset = Position::default();
+
+            vexDeviceAbsEncPositionSet(self.device, position.as_ticks(36000) as i32)
         }
 
         Ok(())
@@ -99,8 +101,11 @@ impl RotationSensor {
         //
         // For more information: <https://www.vexforum.com/t/rotation-sensor-bug-workaround-on-vexos-1-1-0/96577/2>
         if new_direction != self.direction()? {
-            self.direction_offset = self.position()?.into_degrees();
-            self.raw_direction_offset = unsafe { vexDeviceAbsEncPositionGet(self.device) };
+            self.direction_offset = self.position()?;
+            self.raw_direction_offset = Position::from_ticks(
+                unsafe { vexDeviceAbsEncPositionGet(self.device) } as i64,
+                Self::TICKS_PER_REVOLUTION,
+            );
             self.direction = new_direction;
         }
 
@@ -132,17 +137,16 @@ impl RotationSensor {
     pub fn position(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
-        let mut delta_position = (unsafe { vexDeviceAbsEncPositionGet(self.device) }
-            - self.raw_direction_offset) as f64
-            / 100.0;
+        let mut delta_position = Position::from_ticks(
+            unsafe { vexDeviceAbsEncPositionGet(self.device) } as i64,
+            Self::TICKS_PER_REVOLUTION,
+        ) - self.raw_direction_offset;
 
         if self.direction == Direction::Reverse {
-            delta_position *= -1.0;
+            delta_position = -delta_position;
         }
 
-        Ok(Position::from_degrees(
-            self.direction_offset + delta_position,
-        ))
+        Ok(self.direction_offset + delta_position)
     }
 
     /// Get the angle of rotation measured by the sensor.
@@ -154,10 +158,10 @@ impl RotationSensor {
         let mut raw_angle = unsafe { vexDeviceAbsEncAngleGet(self.device) };
 
         if self.direction == Direction::Reverse {
-            raw_angle = 36000 - raw_angle;
+            raw_angle = (Self::TICKS_PER_REVOLUTION as i32) - raw_angle;
         }
 
-        Ok(Position::from_degrees(raw_angle as f64 / 100.0))
+        Ok(Position::from_ticks(raw_angle as i64, Self::TICKS_PER_REVOLUTION))
     }
 
     /// Get the sensor's current velocity in degrees per second
