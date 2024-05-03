@@ -1,8 +1,6 @@
 #![no_main]
 #![no_std]
 
-use core::time::Duration;
-
 use vexide::prelude::*;
 use vexide_devices::adi::AdiRangeFinder;
 

@@ -12,10 +12,9 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
-use core::error::Error;
+use core::{error::Error, time::Duration};
 
 use vexide::prelude::*;
-use vexide_devices::PortError;
 
 struct ClawBot {
     left_motor: Motor,
@@ -30,6 +29,17 @@ struct ClawBot {
 
 impl CompetitionRobot for ClawBot {
     type Error = Box<dyn Error>;
+
+    async fn autonomous(&mut self) -> Result<(), Self::Error> {
+        self.left_motor
+            .set_target(MotorControl::Position(Position::Rotations(10.0), 100))?;
+        self.right_motor
+            .set_target(MotorControl::Position(Position::Rotations(10.0), 100))?;
+
+        loop {
+            sleep(Duration::from_millis(10)).await;
+        }
+    }
 
     async fn driver(&mut self) -> Result<(), Self::Error> {
         loop {
@@ -46,7 +56,7 @@ impl CompetitionRobot for ClawBot {
             }
 
             self.left_motor.set_voltage(left * 12.0)?;
-            self.right_motor.set_voltage(left * 12.0)?;
+            self.right_motor.set_voltage(right * 12.0)?;
 
             if self.controller.right_trigger_1.is_pressed()? {
                 self.arm.set_voltage(12.0)?;

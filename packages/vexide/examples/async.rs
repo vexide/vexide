@@ -23,8 +23,8 @@ async fn main(_peripherals: Peripherals) {
     });
     handle.detach();
 
-    /// The sleep function can be used to pause the current task for a given duration.
-    /// This is the easiest way to pass execution to other tasks.
+    // The sleep function can be used to pause the current task for a given duration.
+    // This is the easiest way to pass execution to other tasks.
     sleep(Duration::from_secs(1)).await;
 
     // Tight loops must have sleeps for other tasks to be run.

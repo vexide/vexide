@@ -7,10 +7,9 @@ use core::time::Duration;
 
 use vexide_async::sleep;
 use vexide_core::println;
-use vexide_devices::peripherals::Peripherals;
 
 #[vexide::main]
-async fn main(peripherals: Peripherals) {
+async fn main(_peripherals: Peripherals) {
     unsafe {
         // Write something to the screen to test if the program is running
         let test_box = Box::new(100);
