@@ -20,7 +20,7 @@ use vex_sdk::{
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
-use crate::{PortError, Position};
+use crate::{PortError, position::Position};
 
 /// The basic motor struct.
 #[derive(Debug, PartialEq)]

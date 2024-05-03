@@ -4,7 +4,7 @@ use snafu::Snafu;
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::{PortError, Position};
+use crate::{PortError, position::Position};
 
 /// ADI Range Finders.
 #[derive(Debug, Eq, PartialEq)]
