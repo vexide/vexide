@@ -20,7 +20,7 @@ pub struct DistanceSensor {
 }
 
 // SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
-// SDK each device function. Simply sharing a raw pointer across threads is not inherent unsafe.
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
 unsafe impl Send for DistanceSensor {}
 unsafe impl Sync for DistanceSensor {}
 
