@@ -59,11 +59,11 @@ fn draw_error(screen: &mut Screen, msg: &str) -> Result<(), ScreenError> {
             screen.fill(
                 &Text::new(
                     buffer.as_str(),
+                    TextSize::Small,
                     Point2 {
                         x: ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
                         y: ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * LINE_HEIGHT),
                     },
-                    TextSize::Small,
                 ),
                 Rgb::WHITE,
             );
@@ -76,11 +76,11 @@ fn draw_error(screen: &mut Screen, msg: &str) -> Result<(), ScreenError> {
     screen.fill(
         &Text::new(
             buffer.as_str(),
+            TextSize::Small,
             Point2 {
                 x: ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
                 y: ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * LINE_HEIGHT),
             },
-            TextSize::Small,
         ),
         Rgb::WHITE,
     );

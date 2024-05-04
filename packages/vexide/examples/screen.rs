@@ -3,7 +3,10 @@
 
 use core::{fmt::Write, time::Duration};
 
-use vexide::prelude::*;
+use vexide::{
+    devices::screen::{Rect, Text, TextSize},
+    prelude::*,
+};
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
@@ -14,7 +17,8 @@ async fn main(peripherals: Peripherals) {
     write!(screen, "Hello, world!").unwrap();
 
     // Create a rectangle to be drawn on the screen.
-    let rect = Rect::new(20, 20, 100, 100);
+    let rect = Rect::new((20, 20), (100, 100));
+
     // Fill in the entire rectangle with white.
     screen.fill(&rect, Rgb::new(255, 255, 255));
     // Draw a thin magenta border of the same dimensions.
@@ -22,11 +26,7 @@ async fn main(peripherals: Peripherals) {
     screen.stroke(&rect, Rgb::new(255, 0, 255));
 
     // Create a piece of text to draw on the screen at a specific position.
-    let text = Text::new(
-        "Nice to see you!",
-        TextPosition::Point(80, 80),
-        TextFormat::MediumCenter,
-    );
+    let text = Text::new("Nice to see you!", TextSize::Medium, (80, 80));
     // Fill in the text with cyan.
     screen.fill(&text, Rgb::new(0, 255, 255));
 

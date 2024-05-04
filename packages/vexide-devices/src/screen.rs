@@ -234,7 +234,7 @@ pub struct Text {
 
 impl Text {
     /// Create a new text with a given position and format
-    pub fn new(text: &str, position: impl Into<Point2<i16>>, size: TextSize) -> Self {
+    pub fn new(text: &str, size: TextSize, position: impl Into<Point2<i16>>) -> Self {
         Self {
             text: CString::new(text)
                 .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
