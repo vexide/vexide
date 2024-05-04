@@ -30,6 +30,11 @@ pub struct Motor {
     device: V5_DeviceT,
 }
 
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
+unsafe impl Send for Motor {}
+unsafe impl Sync for Motor {}
+
 /// Represents a possible target for a [`Motor`].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MotorControl {

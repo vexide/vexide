@@ -21,6 +21,11 @@ pub struct OpticalSensor {
     device: V5_DeviceT,
 }
 
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
+unsafe impl Send for OpticalSensor {}
+unsafe impl Sync for OpticalSensor {}
+
 impl OpticalSensor {
     /// The smallest integration time you can set on an optical sensor.
     ///

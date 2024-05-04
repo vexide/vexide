@@ -50,6 +50,11 @@ pub struct VisionSensor {
     device: V5_DeviceT,
 }
 
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
+unsafe impl Send for VisionSensor {}
+unsafe impl Sync for VisionSensor {}
+
 impl VisionSensor {
     /// The horizontal resolution of the vision sensor.
     ///
