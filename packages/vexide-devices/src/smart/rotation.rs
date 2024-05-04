@@ -161,7 +161,10 @@ impl RotationSensor {
             raw_angle = (Self::TICKS_PER_REVOLUTION as i32) - raw_angle;
         }
 
-        Ok(Position::from_ticks(raw_angle as i64, Self::TICKS_PER_REVOLUTION))
+        Ok(Position::from_ticks(
+            raw_angle as i64,
+            Self::TICKS_PER_REVOLUTION,
+        ))
     }
 
     /// Get the sensor's current velocity in degrees per second

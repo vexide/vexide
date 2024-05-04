@@ -40,7 +40,7 @@ impl Position {
 
     /// Returns the number of degrees rotated in this position.
     pub fn as_degrees(&self) -> f64 {
-        (self.0 * 360) as f64 /  Self::INTERNAL_TPR as f64
+        (self.0 * 360) as f64 / Self::INTERNAL_TPR as f64
     }
 
     /// Returns the number of radians rotated in this position.
