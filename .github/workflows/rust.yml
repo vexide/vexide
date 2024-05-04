@@ -21,7 +21,25 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
+  check-examples:
+    name: Check Examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2
 
+      - name: Setup | Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly-2024-02-07
+          override: true
+
+      - name: Check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --examples
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest

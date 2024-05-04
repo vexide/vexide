@@ -102,6 +102,7 @@ pub mod prelude {
             solenoid::AdiSolenoid,
             AdiDevice, AdiPort,
         },
+        battery,
         color::Rgb,
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
@@ -115,7 +116,11 @@ pub mod prelude {
             motor::{BrakeMode, Direction, Gearset, Motor, MotorControl},
             optical::OpticalSensor,
             rotation::RotationSensor,
-            vision::VisionSensor,
+            serial::SerialPort,
+            vision::{
+                LedMode, VisionCode, VisionMode, VisionObject, VisionSensor, VisionSignature,
+                WhiteBalance,
+            },
             SmartDevice, SmartPort,
         },
     };
