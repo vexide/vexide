@@ -29,6 +29,11 @@ pub struct InertialSensor {
     heading_offset: f64,
 }
 
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherent unsafe.
+unsafe impl Send for InertialSensor {}
+unsafe impl Sync for InertialSensor {}
+
 impl InertialSensor {
     /// The time limit used by the PROS kernel for bailing out of calibration. In theory, this
     /// could be as low as 2s, but is kept at 3s for margin-of-error.
