@@ -1,5 +1,7 @@
 //! ADI (Triport) devices on the Vex V5.
 
+use core::time::Duration;
+
 use crate::PortError;
 
 pub mod accelerometer;
@@ -15,6 +17,7 @@ pub mod pwm;
 pub mod range_finder;
 pub mod solenoid;
 
+pub use accelerometer::{AdiAccelerometer, Sensitivity};
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
 pub use encoder::AdiEncoder;
@@ -22,6 +25,7 @@ pub use light_sensor::AdiLightSensor;
 pub use line_tracker::AdiLineTracker;
 pub use motor::AdiMotor;
 pub use potentiometer::{AdiPotentiometer, PotentiometerType};
+pub use pwm::AdiPwmOut;
 pub use range_finder::AdiRangeFinder;
 pub use solenoid::AdiSolenoid;
 use vex_sdk::{
@@ -30,6 +34,9 @@ use vex_sdk::{
 };
 
 use crate::smart::{validate_port, SmartDeviceType};
+
+/// Update rate for all ADI devices and ports.
+pub const ADI_UPDATE_INTERVAL: Duration = Duration::from_millis(10);
 
 /// Represents an ADI (three wire) port on a V5 Brain or V5 Three Wire Expander.
 #[derive(Debug, Eq, PartialEq)]
@@ -150,6 +157,9 @@ impl From<AdiEncoder> for (AdiPort, AdiPort) {
 
 /// Common functionality for a ADI (three-wire) devices.
 pub trait AdiDevice {
+    /// Update rate of ADI devices.
+    const UPDATE_INTERVAL: Duration = ADI_UPDATE_INTERVAL;
+
     /// The type that port_index should return. This is usually `u8`, but occasionally `(u8, u8)`.
     type PortIndexOutput;
 
