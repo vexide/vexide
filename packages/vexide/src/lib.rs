@@ -88,13 +88,17 @@ pub mod prelude {
     #[cfg(feature = "devices")]
     pub use vexide_devices::{
         adi::{
+            accelerometer::{AdiAccelerometer, Sensitivity},
+            addrled::AdiAddrLed,
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},
+            encoder::AdiEncoder,
             light_sensor::AdiLightSensor,
             line_tracker::AdiLineTracker,
             motor::AdiMotor,
             potentiometer::{AdiPotentiometer, PotentiometerType},
             pwm::AdiPwmOut,
+            range_finder::AdiRangeFinder,
             solenoid::AdiSolenoid,
             AdiDevice, AdiPort,
         },
@@ -103,14 +107,12 @@ pub mod prelude {
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
-        screen::{
-            Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchEvent, TouchState,
-        },
+        screen::Screen,
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
             imu::InertialSensor,
-            link::RadioLink,
+            link::{LinkType, RadioLink},
             motor::{BrakeMode, Direction, Gearset, Motor, MotorControl},
             optical::OpticalSensor,
             rotation::RotationSensor,

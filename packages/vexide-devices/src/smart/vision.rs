@@ -38,7 +38,7 @@ use vex_sdk::{
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::{color::Rgb, PortError};
+use crate::{color::Rgb, geometry::Point2, PortError};
 
 /// VEX Vision Sensor
 ///
@@ -738,11 +738,11 @@ pub struct VisionObject {
 
     /// The top-left coordinate of the detected object relative to the top-left
     /// of the camera's field of view.
-    pub offset: mint::Point2<u16>,
+    pub offset: Point2<u16>,
 
     /// The center coordinate of the detected object relative to the top-left
     /// of the camera's field of view.
-    pub center: mint::Point2<u16>,
+    pub center: Point2<u16>,
 
     /// The approximate degrees of rotation of the detected object's bounding box.
     pub angle: u16,
@@ -763,11 +763,11 @@ impl From<V5_DeviceVisionObject> for VisionObject {
             },
             width: value.width,
             height: value.height,
-            offset: mint::Point2 {
+            offset: Point2 {
                 x: value.xoffset,
                 y: value.yoffset,
             },
-            center: mint::Point2 {
+            center: Point2 {
                 x: value.xoffset + (value.width / 2),
                 y: value.yoffset + (value.height / 2),
             },
