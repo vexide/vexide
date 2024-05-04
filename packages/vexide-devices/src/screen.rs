@@ -10,9 +10,9 @@ use snafu::Snafu;
 use vex_sdk::{
     vexDisplayBackgroundColor, vexDisplayBigStringAt, vexDisplayCircleDraw, vexDisplayCircleFill,
     vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
-    vexDisplayPenSizeSet, vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill,
-    vexDisplayScroll, vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString,
-    vexDisplayStringAt, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
+    vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
+    vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
+    vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
 
 use crate::{color::IntoRgb, geometry::Point2};
@@ -182,6 +182,24 @@ impl Rect {
                 y: origin.y + (height as i16),
             },
         }
+    }
+
+    /// Create a new rectangle from a given origin point (top-left) and dimensions (width/height).
+    pub fn from_dimensions_centered(
+        center: impl Into<Point2<i16>>,
+        width: u16,
+        height: u16,
+    ) -> Self {
+        let center = center.into();
+
+        Self::from_dimensions(
+            Point2 {
+                x: center.x - (width as i16) / 2,
+                y: center.y - (height as i16) / 2,
+            },
+            width,
+            height,
+        )
     }
 }
 
