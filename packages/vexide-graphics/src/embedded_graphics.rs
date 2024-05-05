@@ -1,7 +1,7 @@
 //! Embedded-graphics driver for the V5 Brain screen.
 
 use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*, primitives::Rectangle};
-use vexide_devices::{color::Rgb, Screen};
+use vexide_devices::{color::Rgb, screen::Screen};
 
 /// An embedded-graphics draw target for the V5 brain screen
 /// Currently, this does not support touch detection like the regular [`Screen`] API.

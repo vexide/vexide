@@ -12,13 +12,16 @@ use slint::{
     LogicalPosition, PhysicalPosition, PhysicalSize, Rgb8Pixel,
 };
 use vexide_core::time::Instant;
-use vexide_devices::{color::Rgb, Screen};
+use vexide_devices::{
+    color::Rgb,
+    screen::{Rect, Screen},
+};
 
 /// A Slint platform implementation for the V5 Brain screen.
 pub struct V5Platform {
     start: Instant,
     window: Rc<MinimalSoftwareWindow>,
-    screen: RefCell<vexide_devices::Screen>,
+    screen: RefCell<Screen>,
     screen_pressed: RefCell<bool>,
 
     buffer: RefCell<
@@ -27,7 +30,7 @@ pub struct V5Platform {
 }
 impl V5Platform {
     /// Create a new [`V5Platform`] from a [`Screen`].
-    pub fn new(screen: vexide_devices::Screen) -> Self {
+    pub fn new(screen: Screen) -> Self {
         let window = MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
         window.set_size(PhysicalSize::new(
             Screen::HORIZONTAL_RESOLUTION as _,
@@ -92,10 +95,11 @@ impl Platform for V5Platform {
                 self.screen
                     .borrow_mut()
                     .draw_buffer(
-                        0,
-                        0,
-                        Screen::HORIZONTAL_RESOLUTION,
-                        Screen::VERTICAL_RESOLUTION,
+                        Rect::from_dimensions(
+                            (0, 0),
+                            Screen::HORIZONTAL_RESOLUTION as _,
+                            Screen::VERTICAL_RESOLUTION as _,
+                        ),
                         buf.into_iter().map(|p| Rgb::new(p.r, p.g, p.b)),
                         Screen::HORIZONTAL_RESOLUTION as _,
                     )
