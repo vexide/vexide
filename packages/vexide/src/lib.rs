@@ -62,6 +62,8 @@ pub use vexide_async as async_runtime;
 pub use vexide_core as core;
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
+#[cfg(feature = "graphics")]
+pub use vexide_graphics as graphics;
 #[cfg(feature = "macro")]
 pub use vexide_macro as r#macro;
 #[cfg(feature = "macro")]
@@ -124,6 +126,10 @@ pub mod prelude {
             SmartDevice, SmartPort,
         },
     };
+    #[cfg(all(feature = "graphics", feature = "emdedded-graphics"))]
+    pub use vexide_graphics::embedded_graphics::BrainDisplay;
+    #[cfg(all(feature = "graphics", feature = "slint"))]
+    pub use vexide_graphics::slint::initialize_slint_platform;
     #[cfg(feature = "math")]
     pub use vexide_math::{feedforward::MotorFeedforwardController, pid::PidController};
 }

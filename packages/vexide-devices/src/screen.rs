@@ -408,7 +408,7 @@ impl Screen {
     }
 
     /// Gets the [`RenderMode`] of the screen.
-    pub fn render_mode(&self) -> RenderMode {
+    pub const fn render_mode(&self) -> RenderMode {
         self.render_mode
     }
 
