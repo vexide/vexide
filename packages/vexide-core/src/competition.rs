@@ -206,6 +206,9 @@ pub struct Competition<
     #[pin]
     updates: CompetitionUpdates,
 
+    /// The current status bits of the competition.
+    status: CompetitionStatus,
+
     /// The current phase of the competition runtime.
     phase: CompetitionRuntimePhase,
 
@@ -233,32 +236,12 @@ pub struct Competition<
     _pin: PhantomPinned,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum CompetitionRuntimePhase {
-    NeverConnected,
+    Initial,
     Disconnected,
     Connected,
-    InMode(CompetitionMode),
-}
-
-impl CompetitionRuntimePhase {
-    /// Process a status update, modifying the phase accordingly.
-    pub fn process_status_update(&mut self, status: CompetitionStatus) {
-        *self = match *self {
-            Self::NeverConnected | Self::Disconnected if status.is_connected() => Self::Connected,
-            Self::Connected | Self::InMode(_) if !status.is_connected() => Self::Disconnected,
-            Self::InMode(_) => Self::InMode(status.mode()),
-            old => old,
-        }
-    }
-
-    /// Finish the task corresponding to this phase, modifying the phase accordingly.
-    pub fn finish_task(&mut self, status: CompetitionStatus) {
-        *self = match *self {
-            Self::Connected => Self::InMode(status.mode()),
-            old => old,
-        };
-    }
+    Mode(CompetitionMode),
 }
 
 impl<Shared, Error, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver> Future
@@ -282,21 +265,50 @@ where
 
         let old_phase = *this.phase;
 
+        // Poll any updates to competition status.
         match this.updates.as_mut().poll_next(cx) {
-            Poll::Ready(Some(update)) => this.phase.process_status_update(update),
+            Poll::Ready(Some(new_status)) => {
+                let old_status = *this.status;
+
+                // Connected and Disconnected should not be interrupted by other changes.
+                if *this.phase != CompetitionRuntimePhase::Connected
+                    && *this.phase != CompetitionRuntimePhase::Disconnected
+                {
+                    // Decide which phase we're in based on the status update.
+                    *this.phase = if !old_status.is_connected() && new_status.is_connected() {
+                        CompetitionRuntimePhase::Connected
+                    } else if old_status.is_connected() && !new_status.is_connected() {
+                        CompetitionRuntimePhase::Disconnected
+                    } else {
+                        CompetitionRuntimePhase::Mode(new_status.mode())
+                    };
+                }
+
+                *this.status = new_status;
+            }
             Poll::Ready(None) => unreachable!(),
             _ => {}
         }
 
         if let Some(Poll::Ready(res)) = this.task.as_mut().map(|task| task.as_mut().poll(cx)) {
+            // If a task returned an error, then we stop the competition lifecycle and resolve with an error.
             if let Err(err) = res {
                 return Poll::Ready(Err(err));
             }
 
+            // Reset the current task to nothing, since we're done with the previous task.
             *this.task = None;
-            this.phase.finish_task(this.updates.last());
+
+            match *this.phase {
+                // Transition into the current mode if we previously ran the connected/disconnected task and it completed.
+                CompetitionRuntimePhase::Connected | CompetitionRuntimePhase::Disconnected => {
+                    *this.phase = CompetitionRuntimePhase::Mode(this.updates.last().mode());
+                }
+                _ => {}
+            }
         }
 
+        // We're now in a different competition phase, so we need to start a new task.
         if old_phase != *this.phase {
             // SAFETY: Before we make a new `&mut Shared`, we ensure that the existing task is dropped.
             //         Note that although this would not normally ensure that the reference is dropped,
@@ -307,17 +319,18 @@ where
             drop(this.task.take());
             let shared = unsafe { &mut *this.shared.get() };
 
+            // Create a new task based on the new competition phase.
             *this.task = match *this.phase {
-                CompetitionRuntimePhase::NeverConnected => None,
+                CompetitionRuntimePhase::Initial => None,
                 CompetitionRuntimePhase::Disconnected => Some((this.mk_disconnected)(shared)),
                 CompetitionRuntimePhase::Connected => Some((this.mk_connected)(shared)),
-                CompetitionRuntimePhase::InMode(CompetitionMode::Disabled) => {
+                CompetitionRuntimePhase::Mode(CompetitionMode::Disabled) => {
                     Some((this.mk_disabled)(shared))
                 }
-                CompetitionRuntimePhase::InMode(CompetitionMode::Autonomous) => {
+                CompetitionRuntimePhase::Mode(CompetitionMode::Autonomous) => {
                     Some((this.mk_autonomous)(shared))
                 }
-                CompetitionRuntimePhase::InMode(CompetitionMode::Driver) => {
+                CompetitionRuntimePhase::Mode(CompetitionMode::Driver) => {
                     Some((this.mk_driver)(shared))
                 }
             };
@@ -417,8 +430,9 @@ where
             mk_disabled: self.mk_disabled,
             mk_autonomous: self.mk_autonomous,
             mk_driver: self.mk_driver,
+            status: status(),
             updates: updates(),
-            phase: CompetitionRuntimePhase::NeverConnected,
+            phase: CompetitionRuntimePhase::Initial,
             task: None,
             shared: UnsafeCell::new(self.shared),
             _pin: PhantomPinned,

@@ -19,6 +19,11 @@ pub struct DistanceSensor {
     device: V5_DeviceT,
 }
 
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
+unsafe impl Send for DistanceSensor {}
+unsafe impl Sync for DistanceSensor {}
+
 impl DistanceSensor {
     /// Create a new distance sensor from a smart port index.
     pub fn new(port: SmartPort) -> Self {
