@@ -6,9 +6,7 @@ pub use async_task::{FallibleTask, Task};
 
 use crate::executor::EXECUTOR;
 
-/// Runs a future in the background without having to await it.
-///
-/// To get the the return value you can await a task.
+/// Spawns a new async task that can be controlled with the returned task handle.
 pub fn spawn<T>(future: impl Future<Output = T> + 'static) -> Task<T> {
     EXECUTOR.spawn(future)
 }

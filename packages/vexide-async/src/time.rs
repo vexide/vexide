@@ -4,6 +4,9 @@
 //!
 //! * [`Sleep`] is a future that does no work and completes at a specific [`Instant`]
 //!   in time.
+//!
+//! * [`sleep`] and [`sleep_for`] provide ways to yield control away from a future for
+//!   or until amount of time.
 
 use core::{
     future::Future,
