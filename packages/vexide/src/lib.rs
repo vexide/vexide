@@ -78,6 +78,7 @@ pub use vexide_startup as startup;
 pub mod prelude {
     #[cfg(feature = "async")]
     pub use vexide_async::{
+        block_on,
         task::{spawn, Task},
         time::{sleep, sleep_until},
     };
