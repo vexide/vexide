@@ -1,33 +1,22 @@
-#![no_std]
 #![no_main]
+#![no_std]
 
-use core::time::Duration;
+use vexide::prelude::*;
 
-use pros::prelude::*;
+#[vexide::main]
+async fn main(peripherals: Peripherals) {
+    // Create an ADI expander on smart port 1.
+    let expander = AdiExpander::new(peripherals.port_1);
 
-pub struct Robot {
-    encoder: AdiEncoder,
-}
-impl Robot {
-    fn new(peripherals: Peripherals) -> Self {
-        // Create an expander on smart port 1
-        let expander = AdiExpander::new(peripherals.port_1);
+    // Create a potentiometer on the expander.
+    // The AdiExpander api is almost identical to that of Peripherals.
+    // AdiPorts can be moved out of the struct to create ADI devices.
+    let potentiometer = AdiPotentiometer::new(expander.adi_a, PotentiometerType::V2);
 
-        Self {
-            // Create an encoder on the expander's A and B ports.
-            encoder: AdiEncoder::new((expander.adi_a, expander.adi_b), false).unwrap(),
-        }
+    loop {
+        // Print out the sensor values to stdout every 10ms (the update rate of ADI devices).
+        println!("Potentiometer Angle: {}", potentiometer.angle().unwrap(),);
+
+        sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
     }
 }
-
-impl AsyncRobot for Robot {
-    async fn opcontrol(&mut self) -> Result {
-        // Read from the encoder every second.
-        loop {
-            println!("Encoder position: {}", self.encoder.position()?);
-
-            delay(Duration::from_secs(1));
-        }
-    }
-}
-async_robot!(Robot, Robot::new(Peripherals::take().unwrap()));

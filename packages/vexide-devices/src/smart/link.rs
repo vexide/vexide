@@ -25,6 +25,11 @@ pub struct RadioLink {
     device: V5_DeviceT,
 }
 
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
+unsafe impl Send for RadioLink {}
+unsafe impl Sync for RadioLink {}
+
 impl RadioLink {
     /// Opens a radio link from a VEXNet radio plugged into a smart port. Once
     /// opened, other VEXNet functionality such as controller tethering on this

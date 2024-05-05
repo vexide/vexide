@@ -24,7 +24,12 @@
 
 use core::sync::atomic::AtomicBool;
 
-use crate::{adi::AdiPort, controller::ControllerId, screen::Screen, smart::SmartPort, Controller};
+use crate::{
+    adi::AdiPort,
+    controller::{Controller, ControllerId},
+    screen::Screen,
+    smart::SmartPort,
+};
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 

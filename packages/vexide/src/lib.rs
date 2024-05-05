@@ -30,6 +30,8 @@ pub use vexide_async as async_runtime;
 pub use vexide_core as core;
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
+#[cfg(feature = "graphics")]
+pub use vexide_graphics as graphics;
 #[cfg(feature = "macro")]
 pub use vexide_macro as r#macro;
 #[cfg(feature = "macro")]
@@ -56,28 +58,46 @@ pub mod prelude {
     #[cfg(feature = "devices")]
     pub use vexide_devices::{
         adi::{
+            accelerometer::{AdiAccelerometer, Sensitivity},
+            addrled::AdiAddrLed,
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},
+            encoder::AdiEncoder,
+            light_sensor::AdiLightSensor,
+            line_tracker::AdiLineTracker,
+            motor::AdiMotor,
+            potentiometer::{AdiPotentiometer, PotentiometerType},
             pwm::AdiPwmOut,
+            range_finder::AdiRangeFinder,
+            solenoid::AdiSolenoid,
             AdiDevice, AdiPort,
         },
+        battery,
         color::Rgb,
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
-        screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
+        screen::Screen,
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
             imu::InertialSensor,
-            link::RadioLink,
+            link::{LinkType, RadioLink},
             motor::{BrakeMode, Direction, Gearset, Motor, MotorControl},
             optical::OpticalSensor,
             rotation::RotationSensor,
-            vision::VisionSensor,
+            serial::SerialPort,
+            vision::{
+                LedMode, VisionCode, VisionMode, VisionObject, VisionSensor, VisionSignature,
+                WhiteBalance,
+            },
             SmartDevice, SmartPort,
         },
     };
+    #[cfg(all(feature = "graphics", feature = "emdedded-graphics"))]
+    pub use vexide_graphics::embedded_graphics::BrainDisplay;
+    #[cfg(all(feature = "graphics", feature = "slint"))]
+    pub use vexide_graphics::slint::initialize_slint_platform;
     #[cfg(feature = "math")]
     pub use vexide_math::{feedforward::MotorFeedforwardController, pid::PidController};
 }

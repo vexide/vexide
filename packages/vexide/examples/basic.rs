@@ -1,16 +1,9 @@
-#![no_std]
 #![no_main]
+#![no_std]
 
-use pros::prelude::*;
+use vexide::prelude::*;
 
-#[derive(Default)]
-pub struct Robot;
-
-impl AsyncRobot for Robot {
-    async fn opcontrol(&mut self) -> Result {
-        println!("basic example");
-
-        Ok(())
-    }
+#[vexide::main]
+async fn main(_peripherals: Peripherals) {
+    println!("Hello, world!");
 }
-async_robot!(Robot);

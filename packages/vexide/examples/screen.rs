@@ -1,30 +1,36 @@
-#![no_std]
 #![no_main]
+#![no_std]
 
-use core::fmt::Write;
+use core::{fmt::Write, time::Duration};
 
-use pros::prelude::*;
+use vexide::{
+    devices::screen::{Rect, Text, TextSize},
+    prelude::*,
+};
 
-pub struct Robot {
-    screen: Screen,
-}
+#[vexide::main]
+async fn main(peripherals: Peripherals) {
+    // We can get the screen directly from peripherals becuase it is always connected to the Brain.
+    let mut screen = peripherals.screen;
 
-impl Robot {
-    fn new(peripherals: Peripherals) -> Self {
-        Self {
-            screen: peripherals.screen,
-        }
+    // Print a message to the screen
+    write!(screen, "Hello, world!").unwrap();
+
+    // Create a rectangle to be drawn on the screen.
+    let rect = Rect::new((20, 20), (100, 100));
+
+    // Fill in the entire rectangle with white.
+    screen.fill(&rect, Rgb::new(255, 255, 255));
+    // Draw a thin magenta border of the same dimensions.
+    // This will appear on top of the white fill because it is called later.
+    screen.stroke(&rect, Rgb::new(255, 0, 255));
+
+    // Create a piece of text to draw on the screen at a specific position.
+    let text = Text::new("Nice to see you!", TextSize::Medium, (80, 80));
+    // Fill in the text with cyan.
+    screen.fill(&text, Rgb::new(0, 255, 255));
+
+    loop {
+        sleep(Duration::from_secs(1)).await;
     }
 }
-
-impl AsyncRobot for Robot {
-    async fn opcontrol(&mut self) -> Result {
-        self.screen.fill(&Rect::new(0, 0, 20, 20), Rgb::RED)?;
-        self.screen.stroke(&Circle::new(25, 25, 20), Rgb::BLUE)?;
-
-        writeln!(self.screen, "Hello, world.")?;
-
-        Ok(())
-    }
-}
-async_robot!(Robot, Robot::new(Peripherals::take().unwrap()));
