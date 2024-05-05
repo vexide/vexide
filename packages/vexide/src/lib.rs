@@ -62,6 +62,8 @@ pub use vexide_async as async_runtime;
 pub use vexide_core as core;
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
+#[cfg(feature = "graphics")]
+pub use vexide_graphics as graphics;
 #[cfg(feature = "macro")]
 pub use vexide_macro as r#macro;
 #[cfg(feature = "macro")]
