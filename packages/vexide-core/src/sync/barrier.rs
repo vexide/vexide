@@ -40,7 +40,7 @@ impl<'a> Future for BarrierWaitFuture<'a> {
 /// let handles = Vec::new();
 /// let barrier = Barrier::new(N);
 /// for i in 0..N {
-///     spawn(async {
+///     task::spawn(async {
 ///         // Every "Before barrier" will be printed before any "After Barrier".
 ///         println!("Before Barrier");
 ///         barrier.wait().await;

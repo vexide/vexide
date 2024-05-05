@@ -106,10 +106,10 @@ Running user code...
         );
         // Run vexos background processing at a regular 2ms interval.
         // This is necessary for serial and devices to work properly.
-        vexide_async::spawn(async {
+        vexide_async::task::spawn(async {
             loop {
                 vex_sdk::vexTasksRun();
-                vexide_async::sleep(::core::time::Duration::from_millis(2)).await;
+                vexide_async::time::sleep(::core::time::Duration::from_millis(2)).await;
             }
         })
         .detach();
