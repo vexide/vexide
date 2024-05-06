@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "Commonly used mathematical formulas for vexide"
-keywords = ["PROS", "Robotics", "vex", "v5"]
+keywords = ["Robotics", "vex", "v5"]
 categories = [
     "no-std",
     "science::robotics",

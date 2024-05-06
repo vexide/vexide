@@ -2,10 +2,10 @@
 //!
 //! # Usage
 //!
-//! The `vexide_startup` crate provides a `#[main]` attribute that can be used to define the entrypoint for your program.
-//! Your entrypoint function should be an async function that takes a single argument of type [`Peripherals`](vexide_devices::Peripherals).
+//! Your entrypoint function should be an async function that takes a single argument of type [`Peripherals`](vexide_devices::peripherals::Peripherals).
+//! It can return any type implementing [`Termination`](vexide_core::program::Termination).
 //! ```rust
-//! #[vexide_startup::main]
+//! #[vexide::main]
 //! async fn main(peripherals: Peripherals) { ... }
 //! ```
 

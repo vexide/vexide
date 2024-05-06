@@ -15,9 +15,6 @@
 //! device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
 //! using the [`peripherals`](crate::peripherals) API.
 //!
-//! In cases where PROS gives the option of a blocking or non-blocking API,
-//! the blocking API is used for a synchronous method and the non-blocking API is used to create a future.
-//!
 //! More specific info for each device is availible in their respective modules.
 
 pub mod distance;

@@ -1,4 +1,4 @@
-//! USD api.
+//! USD API.
 //!
 //! The USD API provides functions for interacting with the SD card slot on the V5 Brain.
 

@@ -19,7 +19,7 @@ pub enum CondvarWaitFuture<'a, T> {
         /// The mutex guard that was unlocked.
         gaurd: MutexGuard<'a, T>,
     },
-    /// The future is waiting for a [`Mutex`] to lock
+    /// The future is waiting for a [`Mutex`](super::Mutex) to lock
     WaitingForMutex {
         /// The mutex lock future.
         gaurd: MutexLockFuture<'a, T>,

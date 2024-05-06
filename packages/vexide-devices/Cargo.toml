@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "High level device bindings for vexide"
-keywords = ["PROS", "Robotics", "bindings", "vex", "v5"]
+keywords = ["Robotics", "bindings", "vex", "v5"]
 categories = [
     "api-bindings",
     "no-std",

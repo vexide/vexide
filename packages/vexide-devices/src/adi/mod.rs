@@ -46,9 +46,9 @@ pub struct AdiPort {
     /// Ports are indexed starting from 1.
     index: u8,
 
-    /// The index of this port's associated [`AdiExpander`].
+    /// The index of this port's associated [`AdiExpander`](super::smart::AdiExpander).
     ///
-    /// If this port is not associated with an [`AdiExpander`] it should be set to `None`.
+    /// If this port is not associated with an [`AdiExpander`](super::smart::AdiExpander) it should be set to `None`.
     expander_index: Option<u8>,
 }
 
@@ -76,7 +76,7 @@ impl AdiPort {
         self.index
     }
 
-    /// Get the index of this port's associated [`AdiExpander`] smart port, or `None` if this port is not
+    /// Get the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) smart port, or `None` if this port is not
     /// associated with an expander.
     pub const fn expander_index(&self) -> Option<u8> {
         self.expander_index

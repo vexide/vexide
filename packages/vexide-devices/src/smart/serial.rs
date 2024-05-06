@@ -101,7 +101,7 @@ impl SerialPort {
     ///     if let Some(byte) = serial.read_byte()? {
     ///         println!("Got byte: {}", byte);
     ///     }
-    ///     pros::task::delay(Duration::from_millis(10));
+    ///     sleep(core::time::Duration::from_millis(10)).await;
     /// }
     /// ```
     pub fn read_byte(&self) -> Result<Option<u8>, SerialError> {
@@ -215,7 +215,7 @@ impl io::Read for SerialPort {
     ///
     /// loop {
     ///     serial.read(&mut buffer);
-    ///     pros::task::delay(Duration::from_millis(10));
+    ///     sleep(core::time::Duration::from_millis(10)).await;
     /// }
     /// ```
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
