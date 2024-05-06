@@ -89,7 +89,7 @@ impl VisionSensor {
     /// identify objects when using [`VisionSensor::objects`].
     ///
     /// The sensor can store up to 7 unique signatures, with each signature slot denoted by the
-    /// [`VisionSignature::id`] field. If a signature with an ID matching an existing signature
+    /// id parameter. If a signature with an ID matching an existing signature
     /// on the sensor is added, then the existing signature will be overwritten with the new one.
     ///
     /// # Volatile Memory
@@ -495,11 +495,6 @@ impl VisionSignature {
 
     /// Create a [`VisionSignature`] using the same format as VEX's Vision Utility tool.
     ///
-    /// # Panics
-    ///
-    /// Panics if the provided `id` is equal to 0. Signature IDs are internally stored as
-    /// [`NonZeroU8`], and the IDs given by Vision Utility should always be from 1-7.
-    ///
     /// # Examples
     ///
     /// ````
@@ -634,21 +629,21 @@ impl VisionCode {
 }
 
 impl From<(u8, u8)> for VisionCode {
-    /// Convert a tuple of two [`VisionSignatures`] into a [`VisionCode`].
+    /// Convert a tuple of two [`VisionSignature`]s into a [`VisionCode`].
     fn from(signatures: (u8, u8)) -> Self {
         Self(signatures.0, signatures.1, None, None, None)
     }
 }
 
 impl From<(u8, u8, u8)> for VisionCode {
-    /// Convert a tuple of three [`VisionSignatures`] into a [`VisionCode`].
+    /// Convert a tuple of three [`VisionSignature`]s into a [`VisionCode`].
     fn from(signatures: (u8, u8, u8)) -> Self {
         Self(signatures.0, signatures.1, Some(signatures.2), None, None)
     }
 }
 
 impl From<(u8, u8, u8, u8)> for VisionCode {
-    /// Convert a tuple of four [`VisionSignatures`] into a [`VisionCode`].
+    /// Convert a tuple of four [`VisionSignature`]s into a [`VisionCode`].
     fn from(signatures: (u8, u8, u8, u8)) -> Self {
         Self(
             signatures.0,
@@ -661,7 +656,7 @@ impl From<(u8, u8, u8, u8)> for VisionCode {
 }
 
 impl From<(u8, u8, u8, u8, u8)> for VisionCode {
-    /// Convert a tuple of five [`VisionSignatures`] into a [`VisionCode`].
+    /// Convert a tuple of five [`VisionSignature`]s into a [`VisionCode`].
     fn from(signatures: (u8, u8, u8, u8, u8)) -> Self {
         Self(
             signatures.0,

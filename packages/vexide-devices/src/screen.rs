@@ -1,7 +1,8 @@
 //! Brain screen display and touch functions.
 //!
-//! Contains user calls to the v5 screen for touching and displaying graphics.
-//! The [`Fill`] trait can be used to draw shapes and text to the screen.
+//! Contains user calls to the V5 Brain screen for touching and displaying graphics.
+//! The [`Fill`] trait can be used to draw filled in shapes to the screen
+//! and the [`Stroke`] trait can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
 use core::{mem, time::Duration};
@@ -408,7 +409,7 @@ impl Screen {
     }
 
     /// Gets the [`RenderMode`] of the screen.
-    pub fn render_mode(&self) -> RenderMode {
+    pub const fn render_mode(&self) -> RenderMode {
         self.render_mode
     }
 

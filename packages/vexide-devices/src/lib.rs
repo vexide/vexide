@@ -1,4 +1,4 @@
-//! # vex-devices
+//! # vexide-devices
 //!
 //! Functionality for accessing hardware connected to the V5 brain.
 //!

@@ -139,7 +139,7 @@ impl<'a, T> Future for RwLockWriteFuture<'a, T> {
 /// A reader-writer lock synchronization primitive.
 /// This type allows multiple readers or one writer at a time.
 ///
-/// This is different from a [`Mutex`] because it allows for multiple readers at the same time.
+/// This is different from a [`Mutex`](super::Mutex) because it allows for multiple readers at the same time.
 pub struct RwLock<T> {
     state: RwLockState,
     data: UnsafeCell<T>,

@@ -1,6 +1,4 @@
 //! Distance sensor device.
-//!
-//! Pretty much one to one with the PROS C and CPP API, except Result is used instead of ERRNO values.
 
 use snafu::Snafu;
 use vex_sdk::{
