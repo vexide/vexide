@@ -2,7 +2,7 @@
 //!
 //! # Usage
 //!
-//! Your entrypoint function should be an async function that takes a single argument of type [`Peripherals`](vexide_devices::Peripherals).
+//! Your entrypoint function should be an async function that takes a single argument of type [`Peripherals`](vexide_devices::peripherals::Peripherals).
 //! It can return any type implementing [`Termination`](vexide_core::program::Termination).
 //! ```rust
 //! #[vexide::main]

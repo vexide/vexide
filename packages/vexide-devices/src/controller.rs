@@ -1,7 +1,6 @@
-//! Read from the buttons and joysticks on the controller and write to the controller's display.
+//! Controller support.
 //!
-//! Controllers are identified by their id, which is either 0 (master) or 1 (partner).
-//! State of a controller can be checked by calling [`Controller::state`] which will return a struct with all of the buttons' and joysticks' state.
+//! This module allows you to read from the buttons and joysticks on the controller and write to the controller's display.
 
 use alloc::ffi::CString;
 use core::time::Duration;
