@@ -1,13 +1,15 @@
 use alloc::collections::BTreeMap;
 use core::task::Waker;
 
+use vexide_core::time::Instant;
+
 pub struct Sleepers {
-    sleepers: BTreeMap<u32, Waker>,
+    sleepers: BTreeMap<Instant, Waker>,
 }
 
 impl Sleepers {
-    pub fn push(&mut self, waker: Waker, target: u32) {
-        self.sleepers.insert(target, waker);
+    pub fn push(&mut self, waker: Waker, instant: Instant) {
+        self.sleepers.insert(instant, waker);
     }
 
     pub fn pop(&mut self) -> Option<Waker> {

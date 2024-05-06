@@ -47,7 +47,11 @@ pub use vexide_startup as startup;
 /// This module is meant to be glob imported.
 pub mod prelude {
     #[cfg(feature = "async")]
-    pub use vexide_async::{block_on, sleep, spawn};
+    pub use vexide_async::{
+        block_on,
+        task::{spawn, Task},
+        time::{sleep, sleep_until},
+    };
     #[cfg(feature = "core")]
     pub use vexide_core::{
         competition::{Competition, CompetitionRobot, CompetitionRobotExt},
