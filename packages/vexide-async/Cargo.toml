@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "The async executor at the core of vexide"
-keywords = ["PROS", "Robotics", "bindings", "async", "vex", "v5"]
+keywords = ["Robotics", "bindings", "async", "vex", "v5"]
 categories = [
     "no-std",
     "science::robotics",
@@ -24,7 +24,7 @@ authors = [
 async-task = { version = "4.5.0", default-features = false }
 vexide-core = { version = "0.1.0", path = "../vexide-core" }
 waker-fn = "1.1.1"
-vex-sdk = "0.12.0"
+vex-sdk = "0.12.2"
 critical-section = { version = "1.1.2", features = ["restore-state-bool"] }
 
 [lints]

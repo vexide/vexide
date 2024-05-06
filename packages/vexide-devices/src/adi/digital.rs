@@ -7,7 +7,7 @@ use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
 /// Represents the logic level of a digital pin.
 ///
 /// On digital devices, logic levels represent the two possible voltage signals that define
-/// the state of a pin. This value is either [`High`] or [`Low`], depending on the intended
+/// the state of a pin. This value is either [`High`](LogicLevel::High) or [`Low`](LogicLevel::Low), depending on the intended
 /// state of the device.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogicLevel {
@@ -23,7 +23,7 @@ pub enum LogicLevel {
 }
 
 impl LogicLevel {
-    /// Returns `true` if the level is [`High`].
+    /// Returns `true` if the level is [`High`](LogicLevel::High).
     pub const fn is_high(&self) -> bool {
         match self {
             Self::High => true,
@@ -31,7 +31,7 @@ impl LogicLevel {
         }
     }
 
-    /// Returns `true` if the level is [`Low`].
+    /// Returns `true` if the level is [`Low`](LogicLevel::Low).
     pub const fn is_low(&self) -> bool {
         match self {
             Self::High => false,

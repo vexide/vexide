@@ -2,20 +2,20 @@
 //! The core crate is used in all other crates in the vexide ecosystem.
 //!
 //! Included in this crate:
-//! - Global allocator: [`pros_alloc`]
-//! - Errno handling: [`error`]
+//! - Global allocator: [`allocator`]
+//! - Competition state handling: [`competition`]
+//! - Critical-section implementation: [`critical_section`]
 //! - Serial terminal printing: [`io`]
 //! - No-std [`Instant`](time::Instant)s: [`time`]
 //! - Synchronization primitives: [`sync`]
-//! - FreeRTOS task management: [`task`]
+//! - Program control: [`program`]
 
 #![no_std]
-#![feature(error_in_core)]
-#![cfg_attr(feature = "critical-section", feature(asm_experimental_arch))]
+#![feature(error_in_core, never_type)]
+#![feature(asm_experimental_arch)]
 
 pub mod allocator;
 pub mod competition;
-#[cfg(feature = "critical-section")]
 pub mod critical_section;
 pub mod io;
 pub mod program;

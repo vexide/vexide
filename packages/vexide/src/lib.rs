@@ -8,52 +8,20 @@
 //! - vexide has an [`Async executor`](async_runtime) which allows for easy and performant asynchronous code.
 //! - Active development. vexide is actively developed and maintained.
 //! - vexide is a real crate on crates.io instead of a template, or similar. This allows for dependency management with cargo.
+//! - vexide has no external dependencies. It's 100% Rust and every line of code is yours to see.
+//! - vexide produces tiny and fast binaries.
 //!
 //! # Usage
 //!
-//! When using pros, you have a few options for how you want to get started.
-//! You have two options: `async` and `sync`.
-//! When using async, an async executor is started and you can use it to run code asynchronously without any FreeRTOS tasks.
-//! When using sync, if you want to run code asynchronously you must create a FreeRTOS task.
-//!
-//! Here are some examples of both:
-//!
+//! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
 //! ```rust
 //! // Async
-//! use pros::prelude::*;
-//!
-//! #[derive(Default)]
-//! struct Robot;
-//! impl AsyncRobot for Robot {
-//!    async fn opcontrol(&mut self) -> Result {
-//!       loop {
-//!         // Do something
-//!        sleep(Duration::from_millis(20)).await;
-//!       }
-//!    }
+//! use vexide::prelude::*;
+//! #[vexide::main]
+//! async fn main() {
+//!     println!("Hello, world!");
 //! }
-//! async_robot!(Robot);
-//! ```
-//!
-//!```rust
-//! // Sync
-//! use pros::prelude::*;
-//!
-//! #[derive(Default)]
-//! struct Robot;
-//! impl SyncRobot for Robot {
-//!   fn opcontrol(&mut self) -> Result {
-//!      loop {
-//!       // Do something
-//!      delay(Duration::from_millis(20));
-//!      }
-//!    }
-//! }
-//! sync_robot!(Robot);
-//! ```
-//!
-//! You may have noticed the `#[derive(Default)]` attribute on these Robot structs.
-//! If you want to learn why, look at the docs for [`vexide_async::async_robot`] or [`pros_sync::sync_robot`].
+//!```
 #![no_std]
 
 #[cfg(feature = "async")]
@@ -62,16 +30,28 @@ pub use vexide_async as async_runtime;
 pub use vexide_core as core;
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
+#[cfg(feature = "graphics")]
+pub use vexide_graphics as graphics;
+#[cfg(feature = "macro")]
+pub use vexide_macro as r#macro;
+#[cfg(feature = "macro")]
+pub use vexide_macro::main;
 #[cfg(feature = "math")]
 pub use vexide_math as math;
 #[cfg(feature = "panic")]
 pub use vexide_panic as panic;
+#[cfg(feature = "startup")]
+pub use vexide_startup as startup;
 
 /// Commonly used features of vexide.
 /// This module is meant to be glob imported.
 pub mod prelude {
     #[cfg(feature = "async")]
-    pub use vexide_async::{block_on, sleep, spawn};
+    pub use vexide_async::{
+        block_on,
+        task::{spawn, Task},
+        time::{sleep, sleep_until},
+    };
     #[cfg(feature = "core")]
     pub use vexide_core::{
         competition::{Competition, CompetitionRobot, CompetitionRobotExt},
@@ -82,28 +62,46 @@ pub mod prelude {
     #[cfg(feature = "devices")]
     pub use vexide_devices::{
         adi::{
+            accelerometer::{AdiAccelerometer, Sensitivity},
+            addrled::AdiAddrLed,
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},
+            encoder::AdiEncoder,
+            light_sensor::AdiLightSensor,
+            line_tracker::AdiLineTracker,
+            motor::AdiMotor,
+            potentiometer::{AdiPotentiometer, PotentiometerType},
             pwm::AdiPwmOut,
+            range_finder::AdiRangeFinder,
+            solenoid::AdiSolenoid,
             AdiDevice, AdiPort,
         },
+        battery,
         color::Rgb,
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
-        screen::{Circle, Line, Rect, Screen, Text, TextFormat, TextPosition, TouchState},
+        screen::Screen,
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
             imu::InertialSensor,
-            link::RadioLink,
+            link::{LinkType, RadioLink},
             motor::{BrakeMode, Direction, Gearset, Motor, MotorControl},
             optical::OpticalSensor,
             rotation::RotationSensor,
-            vision::VisionSensor,
+            serial::SerialPort,
+            vision::{
+                LedMode, VisionCode, VisionMode, VisionObject, VisionSensor, VisionSignature,
+                WhiteBalance,
+            },
             SmartDevice, SmartPort,
         },
     };
+    #[cfg(all(feature = "graphics", feature = "emdedded-graphics"))]
+    pub use vexide_graphics::embedded_graphics::BrainDisplay;
+    #[cfg(all(feature = "graphics", feature = "slint"))]
+    pub use vexide_graphics::slint::initialize_slint_platform;
     #[cfg(feature = "math")]
     pub use vexide_math::{feedforward::MotorFeedforwardController, pid::PidController};
 }

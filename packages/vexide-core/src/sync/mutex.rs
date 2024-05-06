@@ -1,14 +1,10 @@
-//! Synchronization types for FreeRTOS tasks.
-//!
-//! Types implemented here are specifically designed to mimic the standard library.
-
 use core::{
     cell::UnsafeCell,
     fmt::Debug,
-    future::Future,
     sync::atomic::{AtomicU8, Ordering},
 };
 
+use futures_core::Future;
 use lock_api::RawMutex as _;
 
 struct MutexState(AtomicU8);
@@ -183,6 +179,19 @@ pub struct MutexGuard<'a, T> {
 impl<'a, T> MutexGuard<'a, T> {
     const fn new(mutex: &'a Mutex<T>) -> Self {
         Self { mutex }
+    }
+
+    pub(crate) unsafe fn unlock(&self) {
+        // SAFETY: caller must ensure that this is safe
+        unsafe {
+            self.mutex.raw.unlock();
+        }
+    }
+
+    pub(crate) fn relock(self) -> MutexLockFuture<'a, T> {
+        let lock = self.mutex.lock();
+        drop(self);
+        lock
     }
 }
 

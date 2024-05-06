@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vex-sdk = "0.12.0"
-vexide-startup-macro = { path = "../vexide-startup-macro" }
+vex-sdk = "0.12.2"
 vexide-core = { version = "0.1.0", path = "../vexide-core"}
 vexide-async = { version = "0.1.0", path = "../vexide-async" }
 vexide-devices = { version = "0.1.0", path = "../vexide-devices" }

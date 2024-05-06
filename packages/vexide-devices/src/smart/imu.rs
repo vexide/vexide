@@ -18,7 +18,10 @@ use vex_sdk::{
 use vexide_core::time::Instant;
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
-use crate::PortError;
+use crate::{
+    geometry::{EulerAngles, Quaternion, Vector3},
+    PortError,
+};
 
 /// Represents a smart port configured as a V5 inertial sensor (IMU)
 #[derive(Debug, PartialEq)]
@@ -28,6 +31,11 @@ pub struct InertialSensor {
     rotation_offset: f64,
     heading_offset: f64,
 }
+
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
+unsafe impl Send for InertialSensor {}
+unsafe impl Sync for InertialSensor {}
 
 impl InertialSensor {
     /// The time limit used by the PROS kernel for bailing out of calibration. In theory, this
@@ -120,7 +128,7 @@ impl InertialSensor {
     }
 
     /// Get a quaternion representing the Inertial Sensor’s orientation.
-    pub fn quaternion(&self) -> Result<mint::Quaternion<f64>, InertialError> {
+    pub fn quaternion(&self) -> Result<Quaternion<f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuQuaternion::default();
@@ -128,8 +136,8 @@ impl InertialSensor {
             vexDeviceImuQuaternionGet(self.device, &mut data);
         }
 
-        Ok(mint::Quaternion {
-            v: mint::Vector3 {
+        Ok(Quaternion {
+            v: Vector3 {
                 x: data.a,
                 y: data.b,
                 z: data.c,
@@ -139,7 +147,7 @@ impl InertialSensor {
     }
 
     /// Get the Euler angles (pitch, yaw, roll) representing the Inertial Sensor’s orientation.
-    pub fn euler(&self) -> Result<mint::EulerAngles<f64, f64>, InertialError> {
+    pub fn euler(&self) -> Result<EulerAngles<f64, f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuAttitude::default();
@@ -147,7 +155,7 @@ impl InertialSensor {
             vexDeviceImuAttitudeGet(self.device, &mut data);
         }
 
-        Ok(mint::EulerAngles {
+        Ok(EulerAngles {
             a: data.pitch.to_radians(),
             b: data.yaw.to_radians(),
             c: data.roll.to_radians(),
@@ -156,7 +164,7 @@ impl InertialSensor {
     }
 
     /// Get the Inertial Sensor’s raw gyroscope values.
-    pub fn gyro_rate(&self) -> Result<mint::Vector3<f64>, InertialError> {
+    pub fn gyro_rate(&self) -> Result<Vector3<f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuRaw::default();
@@ -164,7 +172,7 @@ impl InertialSensor {
             vexDeviceImuRawGyroGet(self.device, &mut data);
         }
 
-        Ok(mint::Vector3 {
+        Ok(Vector3 {
             x: data.x,
             y: data.y,
             z: data.z,
@@ -174,7 +182,7 @@ impl InertialSensor {
     }
 
     /// Get the Inertial Sensor’s raw accelerometer values.
-    pub fn accel(&self) -> Result<mint::Vector3<f64>, InertialError> {
+    pub fn accel(&self) -> Result<Vector3<f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuRaw::default();
@@ -182,7 +190,7 @@ impl InertialSensor {
             vexDeviceImuRawAccelGet(self.device, &mut data);
         }
 
-        Ok(mint::Vector3 {
+        Ok(Vector3 {
             x: data.x,
             y: data.y,
             z: data.z,
