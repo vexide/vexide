@@ -79,7 +79,7 @@ impl AdiEncoder {
     /// Analogous to taring or resetting the encoder so that the new position is equal
     /// to the given position.
     pub fn reset_position(&mut self) -> Result<(), EncoderError> {
-        self.set_position(Position::from_degrees(0.0))
+        self.set_position(Position::default())
     }
 }
 
