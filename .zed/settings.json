@@ -1,0 +1,15 @@
+{
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        "check": {
+          "allTargets": false,
+          "targets": [
+            "../armv7a-vexos-eabi.json",
+            "wasm32-unknown-unknown"
+          ]
+        }
+      }
+    }
+  }
+}
