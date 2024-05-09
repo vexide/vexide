@@ -30,6 +30,11 @@ pub struct Motor {
     device: V5_DeviceT,
 }
 
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
+unsafe impl Send for Motor {}
+unsafe impl Sync for Motor {}
+
 /// Represents a possible target for a [`Motor`].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MotorControl {
@@ -57,7 +62,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    /// Returns `true` if the level is [`Forward`].
+    /// Returns `true` if the level is [`Forward`](Direction::Forward).
     pub const fn is_forward(&self) -> bool {
         match self {
             Self::Forward => true,
@@ -65,7 +70,7 @@ impl Direction {
         }
     }
 
-    /// Returns `true` if the level is [`Reverse`].
+    /// Returns `true` if the level is [`Reverse`](Direction::Reverse).
     pub const fn is_reverse(&self) -> bool {
         match self {
             Self::Forward => false,
@@ -567,18 +572,18 @@ impl Gearset {
     /// 600 rpm (alias to `Self::Blue`)
     pub const RPM_600: Gearset = Self::Blue;
 
-    /// Rated max speed for a smart motor with a [`Red`] gearset.
+    /// Rated max speed for a smart motor with a [`Red`](Gearset::Red) gearset.
     pub const MAX_RED_RPM: f64 = 100.0;
-    /// Rated speed for a smart motor with a [`Green`] gearset.
+    /// Rated speed for a smart motor with a [`Green`](Gearset::Green) gearset.
     pub const MAX_GREEN_RPM: f64 = 200.0;
-    /// Rated speed for a smart motor with a [`Blue`] gearset.
+    /// Rated speed for a smart motor with a [`Blue`](Gearset::Blue) gearset.
     pub const MAX_BLUE_RPM: f64 = 600.0;
 
-    /// Number of encoder ticks per revolution for the [`Red`] gearset.
+    /// Number of encoder ticks per revolution for the [`Red`](Gearset::Red) gearset.
     pub const RED_TICKS_PER_REVOLUTION: u32 = 1800;
-    /// Number of encoder ticks per revolution for the [`Green`] gearset.
+    /// Number of encoder ticks per revolution for the [`Green`](Gearset::Green) gearset.
     pub const GREEN_TICKS_PER_REVOLUTION: u32 = 900;
-    /// Number of encoder ticks per revolution for the [`Blue`] gearset.
+    /// Number of encoder ticks per revolution for the [`Blue`](Gearset::Blue) gearset.
     pub const BLUE_TICKS_PER_REVOLUTION: u32 = 300;
 
     /// Get the rated maximum speed for this motor gearset.

@@ -33,7 +33,7 @@ impl CompetitionRobot for Robot {
     }
 }
 
-#[vexide_startup::main]
+#[vexide::main]
 async fn main(_peripherals: Peripherals) {
     Robot.compete().await.unwrap();
 }

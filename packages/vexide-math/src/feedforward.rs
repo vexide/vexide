@@ -21,7 +21,7 @@ pub struct MotorFeedforwardController {
 }
 
 impl MotorFeedforwardController {
-    /// Creates a new [`FeedforwardMotorController`] with the given constants and target.
+    /// Creates a new [`MotorFeedforwardController`] with the given constants and target.
     ///
     /// # Arguments
     ///
@@ -32,7 +32,7 @@ impl MotorFeedforwardController {
     ///
     /// # Returns
     ///
-    /// A new [`FeedforwardMotorController`].
+    /// A new [`MotorFeedforwardController`].
     pub const fn new(ks: f32, kv: f32, ka: f32, target_acceleration: f32) -> Self {
         Self {
             ks,

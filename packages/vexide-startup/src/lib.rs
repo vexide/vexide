@@ -2,10 +2,10 @@
 //!
 //! # Usage
 //!
-//! The `vexide_startup` crate provides a `#[main]` attribute that can be used to define the entrypoint for your program.
-//! Your entrypoint function should be an async function that takes a single argument of type [`Peripherals`](vexide_devices::Peripherals).
+//! Your entrypoint function should be an async function that takes a single argument of type [`Peripherals`](vexide_devices::peripherals::Peripherals).
+//! It can return any type implementing [`Termination`](vexide_core::program::Termination).
 //! ```rust
-//! #[vexide_startup::main]
+//! #[vexide::main]
 //! async fn main(peripherals: Peripherals) { ... }
 //! ```
 
@@ -106,10 +106,10 @@ Running user code...
         );
         // Run vexos background processing at a regular 2ms interval.
         // This is necessary for serial and devices to work properly.
-        vexide_async::spawn(async {
+        vexide_async::task::spawn(async {
             loop {
                 vex_sdk::vexTasksRun();
-                vexide_async::sleep(::core::time::Duration::from_millis(2)).await;
+                vexide_async::time::sleep(::core::time::Duration::from_millis(2)).await;
             }
         })
         .detach();
