@@ -31,6 +31,11 @@ pub struct RotationSensor {
     raw_direction_offset: Position,
 }
 
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
+unsafe impl Send for RotationSensor {}
+unsafe impl Sync for RotationSensor {}
+
 impl RotationSensor {
     /// The minimum data rate that you can set a rotation sensor to.
     pub const MIN_DATA_RATE: Duration = Duration::from_millis(5);

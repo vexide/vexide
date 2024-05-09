@@ -9,14 +9,14 @@
 //!
 //! ### Using [`Peripherals`]
 //! ```rust
-//! # use pros::prelude::*;
+//! # use vexide::prelude::*;
 //! let mut peripherals = Peripherals::take().unwrap();
 //! let motor = Motor::new(peripherals.port_1);
 //! let adi_digital_in = AdiDigitalIn::new(peripherals.adi_d);
 //! ```
 //! ### Using [`DynamicPeripherals`]
 //! ```rust
-//! # use pros::prelude::*;
+//! # use vexide::prelude::*;
 //! let mut peripherals = DynamicPeripherals::new(Peripherals::take().unwrap());
 //! let motor = peripherals.take_smart_port(1).unwrap();
 //! let adi_digital_in = peripherals.take_adi_port(4).unwrap();
@@ -24,7 +24,12 @@
 
 use core::sync::atomic::AtomicBool;
 
-use crate::{adi::AdiPort, controller::ControllerId, screen::Screen, smart::SmartPort, Controller};
+use crate::{
+    adi::AdiPort,
+    controller::{Controller, ControllerId},
+    screen::Screen,
+    smart::SmartPort,
+};
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 

@@ -3,8 +3,11 @@
 
 use alloc::{boxed::Box, sync::Arc, vec::Vec};
 
-use vexide::{core::sync::Barrier, prelude::*};
-use vexide_core::sync::{Condvar, LazyLock, Mutex, RwLock};
+use vexide::{
+    core::sync::{Barrier, Condvar, LazyLock, Mutex, RwLock},
+    prelude::*,
+};
+
 extern crate alloc;
 
 static LAZY: LazyLock<Box<u32>> = LazyLock::new(|| Box::new(42));

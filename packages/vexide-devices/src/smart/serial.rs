@@ -21,6 +21,11 @@ pub struct SerialPort {
     device: V5_DeviceT,
 }
 
+// SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
+// SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
+unsafe impl Send for SerialPort {}
+unsafe impl Sync for SerialPort {}
+
 impl SerialPort {
     /// The maximum allowed baud rate that generic serial can be configured to
     /// use by user programs.
@@ -96,7 +101,7 @@ impl SerialPort {
     ///     if let Some(byte) = serial.read_byte()? {
     ///         println!("Got byte: {}", byte);
     ///     }
-    ///     pros::task::delay(Duration::from_millis(10));
+    ///     sleep(core::time::Duration::from_millis(10)).await;
     /// }
     /// ```
     pub fn read_byte(&self) -> Result<Option<u8>, SerialError> {
@@ -210,7 +215,7 @@ impl io::Read for SerialPort {
     ///
     /// loop {
     ///     serial.read(&mut buffer);
-    ///     pros::task::delay(Duration::from_millis(10));
+    ///     sleep(core::time::Duration::from_millis(10)).await;
     /// }
     /// ```
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {

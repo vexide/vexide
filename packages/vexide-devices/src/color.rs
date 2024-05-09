@@ -1,5 +1,7 @@
 //! Generic RGB8 color type and conversion trait.
 //! The [`Rgb`] and [`IntoRgb`] types are used in multiple places in the library to represent colors.
+//!
+//! [`IntoRgb`] is a trait that allows for easy conversion between [`Rgb`] and the VEXos 0rgb format.
 
 /// A trait for types that can be converted into an RGB8 color.
 pub trait IntoRgb {

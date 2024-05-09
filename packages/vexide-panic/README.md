@@ -1,4 +1,4 @@
-# pros-panic
+# vexide-panic
 
 Panic handler implementation for [`vexide`](https://crates.io/crates/vexide).
 Supports printing a backtrace when running in the simulator.

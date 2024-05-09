@@ -1,6 +1,4 @@
-//! User Program Module
-//!
-//! This module contains functions for accessing/modifying the state of the current
+//! Functions for modifying the state of the current
 //! user program.
 
 use core::{convert::Infallible, fmt::Debug, time::Duration};
