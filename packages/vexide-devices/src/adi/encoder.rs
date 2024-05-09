@@ -46,12 +46,15 @@ impl AdiEncoder {
         self.top_port.validate_expander()?;
         self.top_port.configure(self.device_type());
 
-        Ok(Position::from_degrees(unsafe {
-            vexDeviceAdiValueGet(
-                self.top_port.device_handle(),
-                self.top_port.internal_index(),
-            ) as f64
-        }))
+        Ok(Position::from_ticks(
+            unsafe {
+                vexDeviceAdiValueGet(
+                    self.top_port.device_handle(),
+                    self.top_port.internal_index(),
+                ) as i64
+            },
+            360,
+        ))
     }
 
     /// Sets the current encoder position to the given position without moving the motor.
@@ -64,7 +67,7 @@ impl AdiEncoder {
             vexDeviceAdiValueSet(
                 self.top_port.device_handle(),
                 self.top_port.internal_index(),
-                position.into_degrees() as i32,
+                position.as_ticks(360) as i32,
             )
         }
 
@@ -76,7 +79,7 @@ impl AdiEncoder {
     /// Analogous to taring or resetting the encoder so that the new position is equal
     /// to the given position.
     pub fn reset_position(&mut self) -> Result<(), EncoderError> {
-        self.set_position(Position::from_degrees(0.0))
+        self.set_position(Position::default())
     }
 }
 

@@ -31,10 +31,14 @@ impl CompetitionRobot for ClawBot {
     type Error = Box<dyn Error>;
 
     async fn autonomous(&mut self) -> Result<(), Self::Error> {
-        self.left_motor
-            .set_target(MotorControl::Position(Position::Rotations(10.0), 100))?;
-        self.right_motor
-            .set_target(MotorControl::Position(Position::Rotations(10.0), 100))?;
+        self.left_motor.set_target(MotorControl::Position(
+            Position::from_revolutions(10.0),
+            100,
+        ))?;
+        self.right_motor.set_target(MotorControl::Position(
+            Position::from_revolutions(10.0),
+            100,
+        ))?;
 
         loop {
             sleep(Duration::from_millis(10)).await;

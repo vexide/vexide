@@ -110,7 +110,7 @@ impl Motor {
         unsafe {
             vexDeviceMotorEncoderUnitsSet(
                 device,
-                vex_sdk::V5MotorEncoderUnits::kMotorEncoderDegrees,
+                vex_sdk::V5MotorEncoderUnits::kMotorEncoderCounts,
             );
             vexDeviceMotorGearingSet(device, gearset.into());
             vexDeviceMotorReverseFlagSet(device, direction.is_reverse());
@@ -127,7 +127,7 @@ impl Motor {
     ///
     /// This could be a voltage, velocity, position, or even brake mode.
     pub fn set_target(&mut self, target: MotorControl) -> Result<(), MotorError> {
-        self.validate_port()?;
+        let gearset = self.gearset()?;
         self.target = target;
 
         match target {
@@ -155,7 +155,11 @@ impl Motor {
                     self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                vexDeviceMotorAbsoluteTargetSet(self.device, position.into_degrees(), velocity);
+                vexDeviceMotorAbsoluteTargetSet(
+                    self.device,
+                    position.as_ticks(gearset.ticks_per_revolution()) as f64,
+                    velocity,
+                );
             },
         }
 
@@ -257,10 +261,11 @@ impl Motor {
 
     /// Returns the current position of the motor.
     pub fn position(&self) -> Result<Position, MotorError> {
-        self.validate_port()?;
-        Ok(Position::from_degrees(unsafe {
-            vexDeviceMotorPositionGet(self.device)
-        }))
+        let gearset = self.gearset()?;
+        Ok(Position::from_ticks(
+            unsafe { vexDeviceMotorPositionGet(self.device) } as i64,
+            gearset.ticks_per_revolution(),
+        ))
     }
 
     /// Returns the most recently recorded raw encoder tick data from the motor's IME
@@ -304,7 +309,7 @@ impl Motor {
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
     pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
         self.validate_port()?;
-        unsafe { vexDeviceMotorPositionSet(self.device, position.into_degrees()) }
+        unsafe { vexDeviceMotorPositionSet(self.device, position.as_degrees()) }
         Ok(())
     }
 
@@ -514,7 +519,7 @@ bitflags! {
         const DRIVER_FAULT = 0x02;
 
         /// The motor's H-bridge is over current.
-        const DRIVER_OVER_CURRENT = 0x08 ;
+        const DRIVER_OVER_CURRENT = 0x08;
     }
 }
 

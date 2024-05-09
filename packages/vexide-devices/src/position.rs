@@ -1,132 +1,117 @@
-//! Generic angular position type for motors and sensors.
-//!
-//! Positions have many conversion functions as well as common operator implementations for ease of use.
+//! Standard return type for sensors measuring rotational position
 
-use core::{cmp::Ordering, ops::*};
+use core::{
+    f64::consts::TAU,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
-//TODO: Add more unit types to this.
-/// Represents an angular position.
-#[derive(Clone, Copy, Debug)]
-pub enum Position {
-    /// Degrees of rotation.
-    Degrees(f64),
-    /// Counts of full rotations, 360 degrees.
-    Rotations(f64),
-    /// Raw encoder ticks.
-    Counts(i64),
-}
+/// A opaque fixed-point raw angular position reading from a sensor.
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+pub struct Position(i64);
 
 impl Position {
+    /// Arbitrary number that's large enough to represent all VEX sensors without precision loss.
+    ///
+    /// At this time, this represents the least common multiple between the rotation sensor's TPR and
+    /// an ungeared motor encoder's TPR.
+    const INTERNAL_TPR: u32 = 4608000; // LCM of 36000 and 4096
+
+    /// Creates a position from a custom tick reading with a given ticks-per-revolution value.
+    ///
+    /// Essentially scales this value to the internal 36000 ticks per revolution.
+    pub fn from_ticks(ticks: i64, tpr: u32) -> Self {
+        Self(ticks * Self::INTERNAL_TPR as i64 / tpr as i64)
+    }
+
     /// Creates a position from a specified number of degrees.
-    pub const fn from_degrees(position: f64) -> Self {
-        Self::Degrees(position)
+    pub fn from_degrees(degrees: f64) -> Self {
+        Self(((degrees / 360.0) * Self::INTERNAL_TPR as f64) as i64)
     }
 
-    /// Creates a position from a specified number of rotations.
-    pub const fn from_rotations(position: f64) -> Self {
-        Self::Rotations(position)
+    /// Creates a position from a specified number of radians.
+    pub fn from_radians(radians: f64) -> Self {
+        Self(((radians / TAU) * Self::INTERNAL_TPR as f64) as i64)
     }
 
-    /// Creates a position from a specified number of counts (raw encoder tics).
-    pub const fn from_counts(position: i64) -> Self {
-        Self::Counts(position)
+    /// Creates a position from a specified number of revolutions.
+    pub fn from_revolutions(revolutions: f64) -> Self {
+        Self((revolutions * Self::INTERNAL_TPR as f64) as i64)
     }
 
-    /// Converts a position into degrees.
-    pub fn into_degrees(self) -> f64 {
-        match self {
-            Self::Degrees(num) => num,
-            Self::Rotations(num) => num * 360.0,
-            Self::Counts(num) => num as f64 * (360.0 / 4096.0),
-        }
+    /// Returns the number of degrees rotated in this position.
+    pub fn as_degrees(&self) -> f64 {
+        (self.0 * 360) as f64 / Self::INTERNAL_TPR as f64
     }
 
-    /// Converts a position into rotations.
-    pub fn into_rotations(self) -> f64 {
-        match self {
-            Self::Degrees(num) => num / 360.0,
-            Self::Rotations(num) => num,
-            Self::Counts(num) => num as f64 * 4096.0,
-        }
+    /// Returns the number of radians rotated in this position.
+    pub fn as_radians(&self) -> f64 {
+        self.0 as f64 / Self::INTERNAL_TPR as f64 * TAU
     }
 
-    /// Converts a position into counts (raw encoder ticks).
-    pub fn into_counts(self) -> i64 {
-        match self {
-            Self::Degrees(num) => (num * 4096.0 / 360.0) as i64,
-            Self::Rotations(num) => (num * 4096.0) as i64,
-            Self::Counts(num) => num,
-        }
+    /// Returns the number of revolutions rotated in this position.
+    pub fn as_revolutions(&self) -> f64 {
+        self.0 as f64 / Self::INTERNAL_TPR as f64
+    }
+
+    /// Returns this position's value scaled to another tick value with a different TPR.
+    pub fn as_ticks(&self, tpr: u32) -> i64 {
+        (self.0 * tpr as i64) / Self::INTERNAL_TPR as i64
     }
 }
 
-impl Add for Position {
+impl Add<Position> for Position {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Self::from_degrees(self.into_degrees() + rhs.into_degrees())
+        Self(self.0 + rhs.0)
     }
 }
 
-impl AddAssign for Position {
-    fn add_assign(&mut self, rhs: Self) {
-        *self = *self + rhs;
-    }
-}
-
-impl Sub for Position {
+impl Sub<Position> for Position {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Self::from_degrees(self.into_degrees() - rhs.into_degrees())
+        Self(self.0 - rhs.0)
     }
 }
 
-impl SubAssign for Position {
-    fn sub_assign(&mut self, rhs: Self) {
-        *self = *self - rhs;
-    }
-}
-
-impl Mul<Self> for Position {
+impl Mul<Position> for Position {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        Self::from_degrees(self.into_degrees() * rhs.into_degrees())
+        Self(self.0 * rhs.0)
     }
 }
 
-impl MulAssign<Self> for Position {
-    fn mul_assign(&mut self, rhs: Self) {
-        *self = *self * rhs;
-    }
-}
-
-impl Div<Self> for Position {
+impl Div<Position> for Position {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
-        Self::from_degrees(self.into_degrees() / rhs.into_degrees())
+        Self(self.0 / rhs.0)
     }
 }
 
-impl DivAssign<Self> for Position {
+impl AddAssign<Position> for Position {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+    }
+}
+
+impl SubAssign<Position> for Position {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.0 -= rhs.0;
+    }
+}
+
+impl MulAssign<Position> for Position {
+    fn mul_assign(&mut self, rhs: Self) {
+        self.0 *= rhs.0;
+    }
+}
+
+impl DivAssign<Position> for Position {
     fn div_assign(&mut self, rhs: Self) {
-        *self = *self / rhs;
-    }
-}
-
-impl Rem<Self> for Position {
-    type Output = Self;
-
-    fn rem(self, rhs: Self) -> Self::Output {
-        Self::from_degrees(self.into_degrees() % rhs.into_degrees())
-    }
-}
-
-impl RemAssign<Self> for Position {
-    fn rem_assign(&mut self, rhs: Self) {
-        *self = *self % rhs;
+        self.0 /= rhs.0;
     }
 }
 
@@ -134,18 +119,6 @@ impl Neg for Position {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Self::from_degrees(-self.into_degrees())
-    }
-}
-
-impl PartialEq for Position {
-    fn eq(&self, other: &Self) -> bool {
-        self.into_degrees() == other.into_degrees()
-    }
-}
-
-impl PartialOrd for Position {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.into_degrees().partial_cmp(&other.into_degrees())
+        Self(-self.0)
     }
 }
