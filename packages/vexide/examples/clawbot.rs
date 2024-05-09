@@ -80,7 +80,7 @@ impl CompetitionRobot for ClawBot {
                 self.claw.set_voltage(0.0)?;
             }
 
-            sleep(Controller::UPDATE_RATE).await;
+            sleep(Controller::UPDATE_INTERVAL).await;
         }
     }
 }

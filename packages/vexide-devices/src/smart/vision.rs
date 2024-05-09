@@ -59,15 +59,15 @@ impl VisionSensor {
     /// The horizontal resolution of the vision sensor.
     ///
     /// This value is based on the `VISION_FOV_WIDTH` macro constant in PROS.
-    pub const RESOLUTION_WIDTH: u16 = 316;
+    pub const HORIZONTAL_RESOLUTION: u16 = 316;
 
     /// The vertical resolution of the vision sensor.
     ///
     /// This value is based on the `VISION_FOV_HEIGHT` msacro constant in PROS.
-    pub const RESOLUTION_HEIGHT: u16 = 212;
+    pub const VERTICAL_RESOLUTION: u16 = 212;
 
     /// The update rate of the vision sensor.
-    pub const UPDATE_RATE: Duration = Duration::from_millis(50);
+    pub const UPDATE_INTERVAL: Duration = Duration::from_millis(50);
 
     /// Creates a new vision sensor on a smart port.
     ///

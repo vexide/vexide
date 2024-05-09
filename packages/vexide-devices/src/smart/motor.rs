@@ -95,10 +95,10 @@ impl Motor {
     pub const MAX_VOLTAGE: f64 = 12.0;
 
     /// The rate at which data can be read from a [`Motor`].
-    pub const DATA_READ_RATE: Duration = Duration::from_millis(10);
+    pub const DATA_READ_INTERVAL: Duration = Duration::from_millis(10);
 
     /// The rate at which data can be written to a [`Motor`].
-    pub const DATA_WRITE_RATE: Duration = Duration::from_millis(5);
+    pub const DATA_WRITE_INTERVAL: Duration = Duration::from_millis(5);
 
     /// Create a new motor from a smart port index.
     pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
