@@ -40,6 +40,9 @@ impl RotationSensor {
     /// The minimum data rate that you can set a rotation sensor to.
     pub const MIN_DATA_RATE: Duration = Duration::from_millis(5);
 
+    /// Number of encoder ticks per revolution for the sensor.
+    pub const TICKS_PER_REVOLUTION: u32 = 36000;
+
     /// Creates a new rotation sensor on the given port.
     /// Whether or not the sensor should be reversed on creation can be specified.
     pub fn new(port: SmartPort, direction: Direction) -> Self {
