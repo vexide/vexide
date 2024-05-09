@@ -105,7 +105,7 @@ impl Motor {
         unsafe {
             vexDeviceMotorEncoderUnitsSet(
                 device,
-                vex_sdk::V5MotorEncoderUnits::kMotorEncoderDegrees,
+                vex_sdk::V5MotorEncoderUnits::kMotorEncoderCounts,
             );
             vexDeviceMotorGearingSet(device, gearset.into());
             vexDeviceMotorReverseFlagSet(device, direction.is_reverse());
@@ -122,7 +122,7 @@ impl Motor {
     ///
     /// This could be a voltage, velocity, position, or even brake mode.
     pub fn set_target(&mut self, target: MotorControl) -> Result<(), MotorError> {
-        self.validate_port()?;
+        let gearset = self.gearset()?;
         self.target = target;
 
         match target {
@@ -150,7 +150,11 @@ impl Motor {
                     self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                vexDeviceMotorAbsoluteTargetSet(self.device, position.as_degrees(), velocity);
+                vexDeviceMotorAbsoluteTargetSet(
+                    self.device,
+                    position.as_ticks(gearset.ticks_per_revolution()) as f64,
+                    velocity,
+                );
             },
         }
 
@@ -252,10 +256,11 @@ impl Motor {
 
     /// Returns the current position of the motor.
     pub fn position(&self) -> Result<Position, MotorError> {
-        self.validate_port()?;
-        Ok(Position::from_degrees(unsafe {
-            vexDeviceMotorPositionGet(self.device)
-        }))
+        let gearset = self.gearset()?;
+        Ok(Position::from_ticks(
+            unsafe { vexDeviceMotorPositionGet(self.device) } as i64,
+            gearset.ticks_per_revolution(),
+        ))
     }
 
     /// Returns the most recently recorded raw encoder tick data from the motor's IME
