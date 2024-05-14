@@ -2,6 +2,16 @@
 name = "vexide-graphics"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Graphics driver implementations for vexide"
+keywords = ["Robotics", "graphics", "vex", "v5"]
+authors = [
+    "vexide",
+    "Gavin Niederman <gavinniederman@gmail.com>",
+    "doinkythederp <doinkythederp@icloud.com>",
+    "Tropical"
+]
+repository = "https://github.com/vexide/vexide"
 
 [dependencies]
 embedded-graphics-core = { version = "0.4.0", optional = true }
