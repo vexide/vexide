@@ -6,8 +6,6 @@
 //! Advantages over similar libraries like PROS include:
 //! - vexide is a real crate on crates.io instead of a template, or similar. This allows for dependency management with cargo.
 //! - vexide has an [`Async executor`](async_runtime) which allows for easy and performant asynchronous code.
-//! - Active development. vexide is actively developed and maintained.
-//! - vexide is a real crate on crates.io instead of a template, or similar. This allows for dependency management with cargo.
 //! - vexide has no external dependencies. It's 100% Rust and every line of code is yours to see.
 //! - vexide produces tiny and fast binaries.
 //!
