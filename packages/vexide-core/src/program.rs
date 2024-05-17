@@ -3,9 +3,8 @@
 
 use core::{convert::Infallible, fmt::Debug, time::Duration};
 
-pub use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
-
-pub use crate::{io, time::Instant};
+use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
+use crate::{io, time::Instant};
 
 /// A that can be implemented for arbitrary return types in the main function.
 pub trait Termination {
