@@ -31,4 +31,23 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/HEAD...HEAD
+## [0.2.0]
+
+### Added
+
+- Added `TICKS_PER_ROTATION` constant to `AdiEncoder` for use with `Position`.
+
+### Fixed
+
+- Removed unintentional re-exports from `vexide-core` program module. (**Breaking Change**)
+- Fixed vision panicking after getting garbage data from vex-sdk.
+- Corrected incorrect axis getters in the `Controller` API.
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+[unreleased]: https://github.com/vexide/vexide/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...HEAD

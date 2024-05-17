@@ -1,6 +1,6 @@
 [package]
 name = "vexide-math"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 description = "Commonly used mathematical formulas for vexide"
@@ -20,7 +20,7 @@ authors = [
 
 [dependencies]
 num = { version = "0.4.1", default-features = false }
-vexide-core = { version = "0.1.0", path = "../vexide-core" }
+vexide-core = { version = "0.2.0", path = "../vexide-core" }
 
 [lints]
 workspace = true
