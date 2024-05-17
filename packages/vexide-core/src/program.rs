@@ -4,6 +4,7 @@
 use core::{convert::Infallible, fmt::Debug, time::Duration};
 
 use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
+
 use crate::{io, time::Instant};
 
 /// A that can be implemented for arbitrary return types in the main function.
