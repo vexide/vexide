@@ -16,7 +16,7 @@ repository = "https://github.com/vexide/vexide"
 [dependencies]
 embedded-graphics-core = { version = "0.4.0", optional = true }
 slint = { version = "1.5.1", default-features = false, optional = true, features = ["compat-1-2", "unsafe-single-threaded", "libm", "renderer-software"] }
-vex-sdk = "0.12.2"
+vex-sdk = "0.14.0"
 vexide-async = { version = "0.1.0", path = "../vexide-async" }
 vexide-core = { version = "0.1.0", path = "../vexide-core" }
 vexide-devices = { version = "0.1.0", path = "../vexide-devices" }
