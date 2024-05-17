@@ -39,7 +39,7 @@ Before releasing:
 
 ### Fixed
 
-- Removed unintentional re-exports from `vexide-core` program module.
+- Removed unintentional re-exports from `vexide-core` program module. (**Breaking Change**)
 - Fixed vision panicking after getting garbage data from vex-sdk.
 - Corrected incorrect axis getters in the `Controller` API.
 
