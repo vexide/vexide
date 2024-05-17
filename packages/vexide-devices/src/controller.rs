@@ -203,7 +203,7 @@ impl ControllerScreen {
             .into_raw();
 
         unsafe {
-            vexControllerTextSet(id.0, (line + 1) as _, (col + 1) as _, text as *const _);
+            vexControllerTextSet(id.0 as _, (line + 1) as _, (col + 1) as _, text as *const _);
         }
 
         // stop rust from leaking the CString

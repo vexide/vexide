@@ -759,7 +759,7 @@ impl From<V5_DeviceVisionObject> for VisionObject {
                     DetectionSource::Signature(value.signature as u8)
                 }
                 V5VisionBlockType::kVisionTypeLineDetect => DetectionSource::Line,
-                _ => unreachable!(),
+                x => panic!("Unknown vision block type: {x:?}"),
             },
             width: value.width,
             height: value.height,
