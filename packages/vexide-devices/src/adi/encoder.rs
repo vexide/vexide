@@ -14,6 +14,9 @@ pub struct AdiEncoder {
 }
 
 impl AdiEncoder {
+    /// Number of encoder ticks (unique sensor readings) per revolution for the encoder.
+    pub const TICKS_PER_REVOLUTION: u32 = 360;
+
     /// Create a new encoder sensor from a top and bottom [`AdiPort`].
     pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, EncoderError> {
         let top_port = ports.0;
