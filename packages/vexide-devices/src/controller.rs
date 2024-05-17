@@ -250,13 +250,13 @@ impl Controller {
             screen: ControllerScreen { id },
             left_stick: Joystick {
                 id,
-                x_channel: V5_ControllerIndex::Axis1,
-                y_channel: V5_ControllerIndex::Axis2,
+                x_channel: V5_ControllerIndex::Axis4,
+                y_channel: V5_ControllerIndex::Axis3,
             },
             right_stick: Joystick {
                 id,
-                x_channel: V5_ControllerIndex::Axis3,
-                y_channel: V5_ControllerIndex::Axis4,
+                x_channel: V5_ControllerIndex::Axis1,
+                y_channel: V5_ControllerIndex::Axis2,
             },
             button_a: Button {
                 id,
