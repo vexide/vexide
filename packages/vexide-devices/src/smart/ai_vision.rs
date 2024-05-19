@@ -35,9 +35,70 @@ impl From<u8> for ObjectType {
     }
 }
 
-pub enum AiVisionObject {
+pub struct AiVisionObject {
+    id: u8,
+    data: AiVisionObjectData,
+}
+
+impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
+    type Error = AiVisionError;
+
+    fn try_from(value: V5_DeviceAiVisionObject) -> Result<Self, Self::Error> {
+        let object = value.object;
+        let id = value.id;
+        let data = unsafe {
+            match id.into() {
+                ObjectType::Color => {
+                    let data = object.color;
+                    AiVisionObjectData::Color {
+                        x_pos: data.xoffset,
+                        y_pos: data.yoffset,
+                        width: data.width,
+                        height: data.height,
+                        angle: data.angle as f64 / 10.0,
+                    }
+                }
+                ObjectType::Model => {
+                    let data = object.model;
+                    AiVisionObjectData::Model {
+                        x_pos: data.xoffset,
+                        y_pos: data.yoffset,
+                        width: data.width,
+                        height: data.height,
+                        confidence: data.score,
+                    }
+                }
+                ObjectType::AprilTag => {
+                    let data = object.tag;
+                    AiVisionObjectData::AprilTag {
+                        point1: mint::Point2 {
+                            x: data.x0,
+                            y: data.y0,
+                        },
+                        point2: mint::Point2 {
+                            x: data.x1,
+                            y: data.y1,
+                        },
+                        point3: mint::Point2 {
+                            x: data.x2,
+                            y: data.y2,
+                        },
+                        point4: mint::Point2 {
+                            x: data.x3,
+                            y: data.y3,
+                        },
+                    }
+                }
+                _ => return Err(AiVisionError::InvalidObject),
+            }
+        };
+
+        Ok(Self { id, data })
+    }
+}
+
+pub enum AiVisionObjectData {
     Color {
-        id: u8,
         x_pos: u16,
         y_pos: u16,
 
@@ -46,14 +107,12 @@ pub enum AiVisionObject {
         angle: f64,
     },
     AprilTag {
-        id: u8,
         point1: mint::Point2<i16>,
         point2: mint::Point2<i16>,
         point3: mint::Point2<i16>,
         point4: mint::Point2<i16>,
     },
     Model {
-        id: u8,
         x_pos: u16,
         y_pos: u16,
         width: u16,
@@ -61,57 +120,11 @@ pub enum AiVisionObject {
         confidence: u16,
     },
 }
-impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
-    type Error = AiVisionError;
-
-    fn try_from(value: V5_DeviceAiVisionObject) -> Result<Self, Self::Error> {
-        let data = value.object;
-        unsafe {
-            match value.r#type.into() {
-                ObjectType::Color => Ok(AiVisionObject::Color {
-                    id: value.id,
-                    x_pos: data.color.xoffset,
-                    y_pos: data.color.yoffset,
-                    width: data.color.width,
-                    height: data.color.height,
-                    angle: data.color.angle as f64 / 10.0,
-                }),
-                ObjectType::Model => Ok(AiVisionObject::Model {
-                    id: value.id,
-                    x_pos: data.model.xoffset,
-                    y_pos: data.model.yoffset,
-                    width: data.model.width,
-                    height: data.model.height,
-                    confidence: data.model.score,
-                }),
-                ObjectType::AprilTag => Ok(AiVisionObject::AprilTag {
-                    id: value.id,
-                    point1: mint::Point2 {
-                        x: data.tag.x0,
-                        y: data.tag.y0,
-                    },
-                    point2: mint::Point2 {
-                        x: data.tag.x1,
-                        y: data.tag.y1,
-                    },
-                    point3: mint::Point2 {
-                        x: data.tag.x2,
-                        y: data.tag.y2,
-                    },
-                    point4: mint::Point2 {
-                        x: data.tag.x3,
-                        y: data.tag.y3,
-                    },
-                }),
-                _ => Err(AiVisionError::InvalidObject),
-            }
-        }
-    }
-}
-
 pub struct AiVisionSensor {
     port: SmartPort,
     device: V5_DeviceT,
+    brightness: f64,
+    contrast: f64,
 }
 
 // SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
@@ -124,6 +137,8 @@ impl AiVisionSensor {
         Self {
             device: unsafe { port.device_handle() },
             port,
+            brightness: 0.0,
+            contrast: 0.0,
         }
     }
 
