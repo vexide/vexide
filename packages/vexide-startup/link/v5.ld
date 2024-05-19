@@ -19,9 +19,10 @@ __heap_end = __cold_end - __stack_length - 0x100;
 
 SECTIONS {
     .text : {
+        __text_start = .;
         KEEP(*(.cold_magic))
         /* Size of cold header */
-        . += 0x20;
+        . = __text_start + 0x20;
         *(.boot)
         *(.text .text.*)
     } > COLD

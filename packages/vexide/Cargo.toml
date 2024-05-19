@@ -1,6 +1,6 @@
 [package]
 name = "vexide"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "async/await powered Rust library for VEX V5 Brains"
 keywords = ["Robotics", "bindings", "vex", "v5"]
@@ -24,7 +24,7 @@ vexide-devices = { version = "0.2.0", path = "../vexide-devices", optional = tru
 vexide-panic = { version = "0.1.1", path = "../vexide-panic", optional = true }
 vexide-core = { version = "0.2.0", path = "../vexide-core", optional = true }
 vexide-math = { version = "0.1.1", path = "../vexide-math", optional = true }
-vexide-startup = { version = "0.1.1", path = "../vexide-startup", optional = true }
+vexide-startup = { version = "0.1.2", path = "../vexide-startup", optional = true }
 vexide-graphics = { version = "0.1.1", path = "../vexide-graphics", optional = true }
 vexide-macro = { version = "0.1.0", path = "../vexide-macro", optional = true }
 vex-sdk = "0.14.0"
