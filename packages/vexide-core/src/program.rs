@@ -3,6 +3,7 @@
 
 use core::{convert::Infallible, fmt::Debug, time::Duration};
 
+use bitflags::bitflags;
 use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
 
 use crate::{io, time::Instant};
@@ -33,6 +34,72 @@ impl<T: Termination, E: Debug> Termination for Result<T, E> {
         }
     }
 }
+
+/// Identifies the type of binary to VEXos.
+#[repr(u32)]
+#[non_exhaustive]
+pub enum ProgramType {
+    /// User program binary.
+    User = 0,
+}
+
+/// The owner (originator) of the user program
+#[repr(u32)]
+pub enum ProgramOwner {
+    /// Program is a system binary.
+    System = 0,
+
+    /// Program originated from VEX.
+    Vex = 1,
+
+    /// Program originated from a partner developer.
+    Partner = 2,
+}
+
+bitflags! {
+    /// Program Flags
+    ///
+    /// These bitflags are part of the [`CodeSignature`] that determine some small
+    /// aspects of program behavior when running under VEXos. This struct contains
+    /// the flags with publicly documented behavior.
+    #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+    pub struct ProgramFlags: u32 {
+        /// Default graphics colors (foreground/background) will be inverted.
+        const INVERT_DEFAULT_GRAPHICS = (1 << 0);
+
+        /// Default graphics colors (foreground/background) will invert based on
+        /// the selected system theme.
+        const THEMED_DEFAULT_GRAPHICS = (1 << 1);
+
+        /// VEXos scheduler simple tasks will be killed when the program requests exit.
+        const KILL_TASKS_ON_EXIT = (1 << 2);
+    }
+}
+
+/// Program Code Signature
+///
+/// The first 16 bytes of a VEX user code binary contain a user code signature,
+/// containing some basic metadata and startup flags about the program. This
+/// signature must be at the start of the binary for booting to occur.
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+pub struct CodeSignature(vex_sdk::vcodesig);
+
+impl CodeSignature {
+    /// Creates a new signature given a program type, owner, and flags.
+    pub const fn new(
+        program_type: ProgramType,
+        owner: ProgramOwner,
+        flags: ProgramFlags
+    ) -> Self {
+        Self(vex_sdk::vcodesig {
+            magic: vex_sdk::V5_SIG_MAGIC,
+            r#type: program_type as _,
+            owner: owner as _,
+            options: flags.bits(),
+        })
+    }
+}
+
 
 /// Exits the program using vexSystemExitRequest.
 /// This function will not instantly exit the program,

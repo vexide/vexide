@@ -13,39 +13,10 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
-use vexide_core::print;
-
 extern "C" {
     // These symbols don't have real types so this is a little bit of a hack
     static mut __bss_start: u32;
     static mut __bss_end: u32;
-}
-
-#[repr(C, packed)]
-/// The cold header is a structure that is placed at the beginning of cold memory and tells VexOS details abuot the program.
-pub struct ColdHeader {
-    /// The magic number for the cold header. This should always be "XVX5".
-    pub magic: [u8; 4],
-    /// The program type. PROS sets this to 0.
-    pub program_type: u32,
-    /// The owner of the program. PROS sets this to 2.
-    pub owner: u32,
-    /// Padding before the options.
-    pub padding: [u32; 2],
-    /// A bitfield of program options that change the behavior of some jumptable functions.
-    pub options: u32,
-}
-impl ColdHeader {
-    /// Creates a new cold header with the correct magic number and options.
-    pub const fn new(program_type: u32, owner: u32, options: u32) -> Self {
-        Self {
-            magic: *b"XVX5",
-            program_type,
-            owner,
-            padding: [0; 2],
-            options,
-        }
-    }
 }
 
 extern "Rust" {
@@ -91,7 +62,7 @@ pub unsafe fn program_entry() {
         vexide_core::allocator::vexos::init_heap();
         // Print the banner
         #[cfg(not(feature = "no-banner"))]
-        print!(
+        vexide_core::io::print!(
             "
 \x1B[1;38;5;196m=%%%%%#-  \x1B[38;5;254m-#%%%%-\x1B[1;38;5;196m  :*%%%%%+.
 \x1B[38;5;208m  -#%%%%#-  \x1B[38;5;254m:%-\x1B[1;38;5;208m  -*%%%%#
@@ -104,6 +75,7 @@ vexide startup successful!
 Running user code...
 "
         );
+        vex_sdk::vexTasksRun();
         // Run vexos background processing at a regular 2ms interval.
         // This is necessary for serial and devices to work properly.
         vexide_async::task::spawn(async {

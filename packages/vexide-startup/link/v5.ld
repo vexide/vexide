@@ -20,9 +20,9 @@ __heap_end = __cold_end - __stack_length - 0x100;
 SECTIONS {
     .text : {
         __text_start = .;
-        KEEP(*(.cold_magic))
-        /* Size of cold header */
-        . = __text_start + 0x20;
+        KEEP(*(.boot_data))
+        /* Size of program signature */
+        . += 0x20;
         *(.boot)
         *(.text .text.*)
     } > COLD

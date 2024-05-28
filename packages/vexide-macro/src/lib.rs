@@ -78,8 +78,12 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
             }
         }
 
-        #[link_section = ".cold_magic"]
+        #[link_section = ".boot_data"]
         #[used] // This is needed to prevent the linker from removing this object in release builds
-        static COLD_HEADER: ::vexide::startup::ColdHeader = ::vexide::startup::ColdHeader::new(2, 0, 0);
+        static CODE_SIGNATURE: ::vexide::core::program::CodeSignature = ::vexide::core::program::CodeSignature::new(
+            ::vexide::core::program::ProgramType::User,
+            ::vexide::core::program::ProgramOwner::Partner,
+            ::vexide::core::program::ProgramFlags::defualt,
+        );
     }.into()
 }

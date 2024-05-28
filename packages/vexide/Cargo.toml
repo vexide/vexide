@@ -27,7 +27,7 @@ vexide-math = { version = "0.1.1", path = "../vexide-math", optional = true }
 vexide-startup = { version = "0.1.2", path = "../vexide-startup", optional = true }
 vexide-graphics = { version = "0.1.1", path = "../vexide-graphics", optional = true }
 vexide-macro = { version = "0.1.0", path = "../vexide-macro", optional = true }
-vex-sdk = "0.14.0"
+vex-sdk = "0.17.0"
 
 [features]
 default = ["async", "devices", "panic", "display_panics", "core", "math", "startup", "macro"]

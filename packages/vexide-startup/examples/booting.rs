@@ -5,6 +5,7 @@
 
 extern crate alloc;
 use alloc::boxed::Box;
+use vex_sdk::{vcodesig, vexTasksRun};
 
 use vexide_core::println;
 
@@ -15,6 +16,7 @@ extern "Rust" fn main() {
         let test_box = Box::new(100);
         vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
         println!("Hello, world!");
+        vexTasksRun(); // Flush serial
     }
 }
 
@@ -24,9 +26,9 @@ unsafe extern "C" fn _entry() {
     unsafe { vexide_startup::program_entry() }
 }
 
-#[link_section = ".cold_magic"]
+#[link_section = ".boot_data"]
 #[used] // This is needed to prevent the linker from removing this object in release builds
-static COLD_HEADER: vexide_startup::ColdHeader = vexide_startup::ColdHeader::new(2, 0, 0);
+static CODE_SIGNATURE: vcodesig = vcodesig::default();
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
