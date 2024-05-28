@@ -22,7 +22,7 @@ SECTIONS {
         __text_start = .;
         KEEP(*(.boot_data))
         /* Size of program signature */
-        . += 0x20;
+        . = __text_start + 0x20;
         *(.boot)
         *(.text .text.*)
     } > COLD
