@@ -62,17 +62,17 @@ bitflags! {
     /// These bitflags are part of the [`CodeSignature`] that determine some small
     /// aspects of program behavior when running under VEXos. This struct contains
     /// the flags with publicly documented behavior.
-    #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+    #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
     pub struct ProgramFlags: u32 {
         /// Default graphics colors (foreground/background) will be inverted.
-        const INVERT_DEFAULT_GRAPHICS = (1 << 0);
+        const INVERT_DEFAULT_GRAPHICS = 1 << 0;
+
+        /// VEXos scheduler simple tasks will be killed when the program requests exit.
+        const KILL_TASKS_ON_EXIT = 1 << 1;
 
         /// Default graphics colors (foreground/background) will invert based on
         /// the selected system theme.
-        const THEMED_DEFAULT_GRAPHICS = (1 << 1);
-
-        /// VEXos scheduler simple tasks will be killed when the program requests exit.
-        const KILL_TASKS_ON_EXIT = (1 << 2);
+        const THEMED_DEFAULT_GRAPHICS = 1 << 2;
     }
 }
 
@@ -82,7 +82,7 @@ bitflags! {
 /// containing some basic metadata and startup flags about the program. This
 /// signature must be at the start of the binary for booting to occur.
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
-pub struct CodeSignature(vex_sdk::vcodesig);
+pub struct CodeSignature(vex_sdk::vcodesig, [u32; 4]);
 
 impl CodeSignature {
     /// Creates a new signature given a program type, owner, and flags.
@@ -91,12 +91,13 @@ impl CodeSignature {
         owner: ProgramOwner,
         flags: ProgramFlags
     ) -> Self {
+
         Self(vex_sdk::vcodesig {
             magic: vex_sdk::V5_SIG_MAGIC,
             r#type: program_type as _,
             owner: owner as _,
             options: flags.bits(),
-        })
+        }, [0; 4])
     }
 }
 

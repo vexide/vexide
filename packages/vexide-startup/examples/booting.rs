@@ -26,7 +26,7 @@ unsafe extern "C" fn _entry() {
     unsafe { vexide_startup::program_entry() }
 }
 
-#[link_section = ".boot_data"]
+#[link_section = ".code_signature"]
 #[used] // This is needed to prevent the linker from removing this object in release builds
 static CODE_SIGNATURE: vcodesig = vcodesig::default();
 

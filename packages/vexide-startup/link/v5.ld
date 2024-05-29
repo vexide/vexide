@@ -20,7 +20,7 @@ __heap_end = __cold_end - __stack_length - 0x100;
 SECTIONS {
     .text : {
         __text_start = .;
-        KEEP(*(.boot_data))
+        KEEP(*(.code_signature))
         /* Size of program signature */
         . = __text_start + 0x20;
         *(.boot)
