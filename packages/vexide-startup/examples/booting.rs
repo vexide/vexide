@@ -5,8 +5,8 @@
 
 extern crate alloc;
 use alloc::boxed::Box;
-use vex_sdk::{vcodesig, vexTasksRun};
 
+use vex_sdk::{vcodesig, vexTasksRun};
 use vexide_core::println;
 
 #[no_mangle]
