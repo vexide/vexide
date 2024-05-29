@@ -80,10 +80,10 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
         #[link_section = ".code_signature"]
         #[used] // This is needed to prevent the linker from removing this object in release builds
-        static CODE_SIGNATURE: ::vexide::core::program::CodeSignature = ::vexide::core::program::CodeSignature::new(
-            ::vexide::core::program::ProgramType::User,
-            ::vexide::core::program::ProgramOwner::Partner,
-            ::vexide::core::program::ProgramFlags::empty(),
+        static CODE_SIGNATURE: ::vexide::startup::CodeSignature = ::vexide::startup::CodeSignature::new(
+            ::vexide::startup::ProgramType::User,
+            ::vexide::startup::ProgramOwner::Partner,
+            ::vexide::startup::ProgramFlags::empty(),
         );
     }.into()
 }

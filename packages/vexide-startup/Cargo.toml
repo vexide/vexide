@@ -18,10 +18,12 @@ authors = [
 ]
 
 [dependencies]
+bitflags = "2.4.2"
 vex-sdk = "0.17.0"
 vexide-core = { version = "0.2.0", path = "../vexide-core"}
 vexide-async = { version = "0.1.1", path = "../vexide-async" }
 vexide-devices = { version = "0.2.0", path = "../vexide-devices" }
+
 
 [lints]
 workspace = true

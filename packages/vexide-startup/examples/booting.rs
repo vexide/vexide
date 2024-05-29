@@ -8,6 +8,7 @@ use alloc::boxed::Box;
 
 use vex_sdk::{vcodesig, vexTasksRun};
 use vexide_core::println;
+use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
 #[no_mangle]
 extern "Rust" fn main() {
@@ -28,7 +29,11 @@ unsafe extern "C" fn _entry() {
 
 #[link_section = ".code_signature"]
 #[used] // This is needed to prevent the linker from removing this object in release builds
-static CODE_SIGNATURE: vcodesig = vcodesig::default();
+static CODE_SIGNATURE: CodeSignature = CodeSignature::new(
+    ProgramType::User,
+    ProgramOwner::Partner,
+    ProgramFlags::empty(),
+);
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
