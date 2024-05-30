@@ -1,7 +1,7 @@
 //! Floating Point Numbers
 //!
 //! This module provides implementations of math functions of floating point
-//! primitive types (`f32`, `f64`)useuse core::ffi::{c_int, c_double, c_float};
+//! primitive types (`f32`, `f64`).
 
 use core::ffi::{c_double, c_float, c_int};
 
