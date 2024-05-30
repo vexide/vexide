@@ -1,9 +1,13 @@
 //! Floating Point Numbers
 //!
 //! This module provides implementations of math functions of floating point
-//! primitive types (`f32`, `f64`).
+//! primitive types (`f32`, `f64`)useuse core::ffi::{c_int, c_double, c_float};
 
 use core::ffi::{c_double, c_float, c_int};
+
+trait One {
+    const ONE: Self;
+}
 
 /// Floating-point math functions
 ///
@@ -434,52 +438,26 @@ extern "C" {
 /// Implementation of an integer power function using exponentiation by squaring.
 ///
 /// Adapted from <https://github.com/rust-num/num-traits/blob/7ec3d41d39b28190ec1d42db38021107b3951f3a/src/pow.rs#L23>
-fn powif32_impl(mut base: f32, mut exp: usize) -> f32 {
+#[inline]
+fn powi_impl<T: One + Copy + core::ops::Mul<T, Output = T>>(mut base: T, mut exp: usize) -> T {
     if exp == 0 {
-        return 1.0;
+        return T::ONE;
     }
 
     while exp & 1 == 0 {
-        base = base.clone() * base;
+        base = base * base;
         exp >>= 1;
     }
     if exp == 1 {
         return base;
     }
 
-    let mut acc = base.clone();
+    let mut acc = base;
     while exp > 1 {
         exp >>= 1;
-        base = base.clone() * base;
+        base = base * base;
         if exp & 1 == 1 {
-            acc = acc * base.clone();
-        }
-    }
-    acc
-}
-
-/// Implementation of an integer power function using exponentiation by squaring.
-///
-/// Adapted from <https://github.com/rust-num/num-traits/blob/7ec3d41d39b28190ec1d42db38021107b3951f3a/src/pow.rs#L23>
-fn powif64_impl(mut base: f64, mut exp: usize) -> f64 {
-    if exp == 0 {
-        return 1.0;
-    }
-
-    while exp & 1 == 0 {
-        base = base.clone() * base;
-        exp >>= 1;
-    }
-    if exp == 1 {
-        return base;
-    }
-
-    let mut acc = base.clone();
-    while exp > 1 {
-        exp >>= 1;
-        base = base.clone() * base;
-        if exp & 1 == 1 {
-            acc = acc * base.clone();
+            acc = acc * base;
         }
     }
     acc
@@ -568,7 +546,7 @@ impl Float for f32 {
         // It should always be possible to convert a positive `i32` to a `usize`.
         // Note, `i32::MIN` will wrap and still be negative, so we need to convert
         // to `u32` without sign-extension before growing to `usize`.
-        powif32_impl(self, exp as usize)
+        powi_impl(self, exp as usize)
     }
 
     #[inline]
@@ -707,6 +685,10 @@ impl Float for f32 {
     }
 }
 
+impl One for f32 {
+    const ONE: Self = 1.0;
+}
+
 impl Float for f64 {
     #[inline]
     fn floor(self) -> Self {
@@ -790,7 +772,7 @@ impl Float for f64 {
         // It should always be possible to convert a positive `i32` to a `usize`.
         // Note, `i32::MIN` will wrap and still be negative, so we need to convert
         // to `u32` without sign-extension before growing to `usize`.
-        powif64_impl(self, exp as usize)
+        powi_impl(self, exp as usize)
     }
 
     #[inline]
@@ -927,4 +909,8 @@ impl Float for f64 {
     fn atanh(self) -> Self {
         unsafe { atanh(self) }
     }
+}
+
+impl One for f64 {
+    const ONE: Self = 1.0;
 }
