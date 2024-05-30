@@ -3,7 +3,7 @@
 //! This module provides implementations of math functions of floating point
 //! primitive types (`f32`, `f64`).
 
-use core::ffi::{c_int, c_double, c_float};
+use core::ffi::{c_double, c_float, c_int};
 
 /// Floating-point math functions
 ///
@@ -352,9 +352,7 @@ static mut errno: c_int = 0;
 /// See above for why this has to exist.
 #[no_mangle]
 pub unsafe extern "C" fn __errno() -> *mut c_int {
-    unsafe {
-        core::ptr::addr_of_mut!(errno)
-    }
+    unsafe { core::ptr::addr_of_mut!(errno) }
 }
 
 extern "C" {
@@ -922,7 +920,7 @@ impl Float for f64 {
 
     #[inline]
     fn acosh(self) -> Self {
-        unsafe {acosh(self)}
+        unsafe { acosh(self) }
     }
 
     #[inline]
