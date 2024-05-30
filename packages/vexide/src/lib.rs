@@ -54,6 +54,7 @@ pub mod prelude {
     pub use vexide_core::{
         competition::{Competition, CompetitionRobot, CompetitionRobotExt},
         dbg,
+        float::Float,
         io::{BufRead, Read, Seek, Write},
         print, println,
     };

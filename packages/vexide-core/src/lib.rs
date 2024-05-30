@@ -21,3 +21,4 @@ pub mod io;
 pub mod program;
 pub mod sync;
 pub mod time;
+pub mod float;
