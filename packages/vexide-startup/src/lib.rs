@@ -108,7 +108,9 @@ pub unsafe fn program_entry() {
         );
     }
 
-    // Clear the BSS section
+    // Clear the BSS section (used for storing uninitialized data).
+    //
+    // VEXos doesn't do this for us on program start, so it's necessary here.
     #[cfg(target_arch = "arm")]
     unsafe {
         use core::ptr::addr_of_mut;
@@ -118,8 +120,6 @@ pub unsafe fn program_entry() {
             bss_start = bss_start.offset(1);
         }
     }
-    // vexPrivateApiDisable
-    // (unsafe { *(0x37fc020 as *const extern "C" fn(u32)) })(COLD_HEADER.options);
 
     unsafe {
         // Initialize the heap allocator
@@ -143,10 +143,15 @@ Running user code...
         );
         vex_sdk::vexTasksRun();
         // Run vexos background processing at a regular 2ms interval.
-        // This is necessary for serial and devices to work properly.
+        // This is necessary for serial and device reads to work properly.
         vexide_async::task::spawn(async {
             loop {
                 vex_sdk::vexTasksRun();
+
+                // In VEXCode programs, this is ran in a tight loop with no delays, since they
+                // don't need to worry about running two schedulers on top of each other, but
+                // doing this in our case would cause this task to hog all the CPU time, which
+                // wouldn't allow futures to be polled in the async runtime.
                 vexide_async::time::sleep(::core::time::Duration::from_millis(2)).await;
             }
         })
