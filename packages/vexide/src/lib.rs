@@ -34,8 +34,6 @@ pub use vexide_graphics as graphics;
 pub use vexide_macro as r#macro;
 #[cfg(feature = "macro")]
 pub use vexide_macro::main;
-#[cfg(feature = "math")]
-pub use vexide_math as math;
 #[cfg(feature = "panic")]
 pub use vexide_panic as panic;
 #[cfg(feature = "startup")]
@@ -100,6 +98,4 @@ pub mod prelude {
     pub use vexide_graphics::embedded_graphics::BrainDisplay;
     #[cfg(all(feature = "graphics", feature = "slint"))]
     pub use vexide_graphics::slint::initialize_slint_platform;
-    #[cfg(feature = "math")]
-    pub use vexide_math::{feedforward::MotorFeedforwardController, pid::PidController};
 }
