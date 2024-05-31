@@ -5,7 +5,7 @@
 
 //! Provides implementations for the `critical_section` crate on the V5 brain and in WASM environments.
 
-#[cfg(target_arch = "arm")]
+#[cfg(all(target_arch = "arm", target_os = "none"))]
 mod vexos;
 
 #[cfg(target_arch = "wasm32")]
