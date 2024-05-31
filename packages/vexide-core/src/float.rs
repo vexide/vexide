@@ -189,7 +189,7 @@ pub trait Float: Sized {
     /// This function currently corresponds to the `fdim` from libc on Unix and
     /// Windows. Note that this might change in the future.
     #[deprecated(
-        since = "0.1.0",
+        since = "0.2.0",
         note = "you probably meant `(self - other).abs()`: \
                 this operation is `(self - other).max(0.0)` \
                 except that `abs_sub` also propagates NaNs (also \
@@ -354,8 +354,13 @@ static mut errno: c_int = 0;
 /// Returns the a pointer to errno in memory
 ///
 /// See above for why this has to exist.
+///
+/// # Safety
+///
+/// This function returns a raw pointer to a mutable static. It is intended for
+/// interoptability with libm.
 #[no_mangle]
-pub unsafe extern "C" fn __errno() -> *mut c_int {
+unsafe extern "C" fn __errno() -> *mut c_int {
     unsafe { core::ptr::addr_of_mut!(errno) }
 }
 
@@ -641,7 +646,7 @@ impl Float for f32 {
 
     #[inline]
     fn sin_cos(self) -> (Self, Self) {
-        (self.sin(), self.cos()) // TODO: Benchmark this against sincosf in libm
+        (self.sin(), self.cos())
     }
 
     #[inline]
@@ -867,7 +872,7 @@ impl Float for f64 {
 
     #[inline]
     fn sin_cos(self) -> (Self, Self) {
-        (self.sin(), self.cos()) // TODO: Benchmark this against sincos in libm
+        (self.sin(), self.cos())
     }
 
     #[inline]
