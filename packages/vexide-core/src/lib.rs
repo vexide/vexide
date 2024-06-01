@@ -17,6 +17,7 @@
 pub mod allocator;
 pub mod competition;
 pub mod critical_section;
+pub mod float;
 pub mod io;
 pub mod program;
 pub mod sync;
