@@ -240,8 +240,7 @@ pub trait Float: Sized {
                 except that `abs_sub` also propagates NaNs (also \
                 known as `fdim` in C). If you truly need the positive \
                 difference, consider using that expression or the C function \
-                `fdim`, depending on how you wish to handle NaN (please consider \
-                filing an issue describing your use-case too)."
+                `fdim`, depending on how you wish to handle NaN."
     )]
     fn abs_sub(self, other: Self) -> Self;
 
