@@ -232,8 +232,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    /// This function currently corresponds to the `fdim` from libc on Unix and
-    /// Windows. Note that this might change in the future.
+    /// This function currently corresponds to the `fdim` function from libm.
     #[deprecated(
         since = "0.2.0",
         note = "you probably meant `(self - other).abs()`: \
