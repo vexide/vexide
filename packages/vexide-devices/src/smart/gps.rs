@@ -1,20 +1,16 @@
 //! GPS sensor device.
 
-use core::marker::PhantomData;
+use core::{marker::PhantomData, time::Duration};
 
 use vex_sdk::{
-    vexDeviceGpsAttitudeGet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet, vexDeviceGpsHeadingGet,
-    vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet, vexDeviceGpsOriginSet,
-    vexDeviceGpsQuaternionGet, vexDeviceGpsRawAccelGet, vexDeviceGpsRawGyroGet,
-    vexDeviceGpsRotationGet, vexDeviceGpsStatusGet, vexDeviceGpsTemperatureGet,
-    V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
+    vexDeviceGpsAttitudeGet, vexDeviceGpsDataRateSet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet, vexDeviceGpsHeadingGet, vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet, vexDeviceGpsOriginSet, vexDeviceGpsQuaternionGet, vexDeviceGpsRawAccelGet, vexDeviceGpsRawGyroGet, vexDeviceGpsRotationGet, vexDeviceGpsStatusGet, vexDeviceGpsTemperatureGet, V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{geometry::Point2, PortError};
 
 /// GPS Sensor Devices
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct GpsSensor {
     port: SmartPort,
     device: V5_DeviceT,
@@ -55,7 +51,7 @@ impl GpsSensor {
         Ok(Self {
             device,
             port,
-            imu: GpsImu { device },
+            imu: GpsImu { device, rotation_offset: Default::default(), heading_offset: Default::default() },
         })
     }
 
@@ -123,9 +119,11 @@ impl SmartDevice for GpsSensor {
 }
 
 /// GPS Sensor Internal IMU
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct GpsImu {
     device: V5_DeviceT,
+    rotation_offset: f64,
+    heading_offset: f64,
 }
 
 // I'm sure you know the drill at this point...
@@ -133,6 +131,8 @@ unsafe impl Send for GpsImu {}
 unsafe impl Sync for GpsImu {}
 
 impl GpsImu {
+    pub const MAX_HEADING: f64 = 360.0;
+
     fn validate_port(&self) -> Result<(), PortError> {
         validate_port(
             unsafe { (*self.device).zero_indexed_port },
@@ -142,12 +142,15 @@ impl GpsImu {
 
     pub fn heading(&self) -> Result<f64, PortError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceGpsDegreesGet(self.device) })
+        Ok(
+            (unsafe { vexDeviceGpsDegreesGet(self.device) } - self.heading_offset)
+                % Self::MAX_HEADING,
+        )
     }
 
     pub fn rotation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) })
+        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } - self.rotation_offset)
     }
 
     pub fn euler(&self) -> Result<mint::EulerAngles<f64, f64>, PortError> {
@@ -212,5 +215,39 @@ impl GpsImu {
             y: data.y,
             z: data.z,
         })
+    }
+
+    pub fn reset_heading(&mut self) -> Result<(), PortError> {
+        self.set_heading(Default::default())
+    }
+
+    pub fn reset_rotation(&mut self) -> Result<(), PortError> {
+        self.set_rotation(Default::default())
+    }
+
+    pub fn set_rotation(&mut self, rotation: f64) -> Result<(), PortError> {
+        self.validate_port()?;
+
+        self.rotation_offset = rotation - unsafe { vexDeviceGpsHeadingGet(self.device) };
+
+        Ok(())
+    }
+
+    pub fn set_heading(&mut self, heading: f64) -> Result<(), PortError> {
+        self.validate_port()?;
+
+        self.heading_offset = heading - unsafe { vexDeviceGpsDegreesGet(self.device) };
+
+        Ok(())
+    }
+
+    pub fn set_data_rate(&mut self, interval: Duration) -> Result<(), PortError> {
+        self.validate_port()?;
+
+        unsafe {
+            vexDeviceGpsDataRateSet(self.device, interval.as_millis() as u32);
+        }
+
+        Ok(())
     }
 }
