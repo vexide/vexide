@@ -280,16 +280,31 @@ impl GpsImu {
     }
 
     /// Resets the current reading of the IMU's heading to zero.
+    ///
+    /// # Important
+    ///
+    /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
+    /// on that function for more information.
     pub fn reset_heading(&mut self) -> Result<(), PortError> {
         self.set_heading(Default::default())
     }
 
     /// Resets the current reading of the IMU's rotation to zero.
+    ///
+    /// # Important
+    ///
+    /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
+    /// on that function for more information.
     pub fn reset_rotation(&mut self) -> Result<(), PortError> {
         self.set_rotation(Default::default())
     }
 
     /// Sets the current reading of the IMU's rotation to target value.
+    ///
+    /// # Important
+    ///
+    /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
+    /// on that function for more information.
     pub fn set_rotation(&mut self, rotation: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -301,6 +316,11 @@ impl GpsImu {
     /// Sets the current reading of the IMU's heading to target value.
     ///
     /// Target will default to 360 if above 360 and default to 0 if below 0.
+    ///
+    /// # Important
+    ///
+    /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
+    /// on that function for more information.
     pub fn set_heading(&mut self, heading: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
