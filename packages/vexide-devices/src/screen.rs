@@ -73,8 +73,11 @@ pub trait Stroke {
 /// A circle that can be drawn on the screen.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Circle {
-    center: Point2<i16>,
-    radius: u16,
+    /// Center point(coordinates) of the circle
+    pub center: Point2<i16>,
+
+    /// Radius of the circle
+    pub radius: u16,
 }
 
 impl Circle {
@@ -118,8 +121,11 @@ impl Stroke for Circle {
 /// The width is the same as the pen width.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Line {
-    start: Point2<i16>,
-    end: Point2<i16>,
+    /// Start point(coordinate) of the line
+    pub start: Point2<i16>,
+
+    /// End point(coordinate) of the line
+    pub end: Point2<i16>,
 }
 
 impl Line {
@@ -160,8 +166,11 @@ impl<T: Into<Point2<i16>> + Copy> Fill for T {
 /// A rectangular region of the screen.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
-    pub(crate) start: Point2<i16>,
-    pub(crate) end: Point2<i16>,
+    /// First point(coordinate) of the rectangle
+    pub start: Point2<i16>,
+
+    /// Second point(coordinate) of the rectangle
+    pub end: Point2<i16>,
 }
 
 impl Rect {
@@ -243,16 +252,19 @@ pub enum TextSize {
     Large,
 }
 
-/// A peice of text that can be drawn on the display.
+/// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text {
-    position: Point2<i16>,
-    text: CString,
-    size: TextSize,
+    /// Top left corner coordinates of text on the screen
+    pub position: Point2<i16>,
+    /// C-String of the desired text to be displayed on the screen
+    pub text: CString,
+    /// Size of text to be displayed on the screen
+    pub size: TextSize,
 }
 
 impl Text {
-    /// Create a new text with a given position and format
+    /// Create a new text with a given position(top left corner) and format
     pub fn new(text: &str, size: TextSize, position: impl Into<Point2<i16>>) -> Self {
         Self {
             text: CString::new(text)
