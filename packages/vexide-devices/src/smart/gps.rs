@@ -3,10 +3,11 @@
 use core::marker::PhantomData;
 
 use vex_sdk::{
-    vexDeviceGpsAttitudeGet, vexDeviceGpsDegreesGet, vexDeviceGpsHeadingGet,
+    vexDeviceGpsAttitudeGet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet, vexDeviceGpsHeadingGet,
     vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet, vexDeviceGpsOriginSet,
     vexDeviceGpsQuaternionGet, vexDeviceGpsRawAccelGet, vexDeviceGpsRawGyroGet,
-    V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
+    vexDeviceGpsStatusGet, vexDeviceGpsTemperatureGet, V5_DeviceGpsAttitude,
+    V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
@@ -22,18 +23,10 @@ pub struct GpsSensor {
     pub imu: GpsImu,
 }
 
-/// GPS Sensor Internal IMU
-#[derive(Debug, Eq, PartialEq)]
-pub struct GpsImu {
-    device: V5_DeviceT,
-}
-
 // SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
 // SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
 unsafe impl Send for GpsSensor {}
 unsafe impl Sync for GpsSensor {}
-unsafe impl Send for GpsImu {}
-unsafe impl Sync for GpsImu {}
 
 impl GpsSensor {
     /// Create a new GPS sensor.
@@ -66,6 +59,7 @@ impl GpsSensor {
         })
     }
 
+    /// Get the physical offset of the sensor from the robot's center of rotation
     pub fn offset(&self) -> Result<Point2<f64>, PortError> {
         self.validate_port()?;
 
@@ -75,6 +69,7 @@ impl GpsSensor {
         Ok(data)
     }
 
+    /// Get the currently computer pose (heading and position) from the sensor.
     pub fn pose(&self) -> Result<(Point2<f64>, f64), PortError> {
         self.validate_port()?;
 
@@ -90,6 +85,26 @@ impl GpsSensor {
             heading,
         ))
     }
+
+    pub fn error(&self) -> Result<f64, PortError> {
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceGpsErrorGet(self.device) })
+    }
+
+    /// Returns the sensor's current status bits.
+    pub fn status(&self) -> Result<u32, PortError> {
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceGpsStatusGet(self.device) })
+    }
+
+    /// Returns the internal temperature of the sensor.
+    pub fn temperature(&self) -> Result<f64, PortError> {
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceGpsTemperatureGet(self.device) })
+    }
 }
 
 impl SmartDevice for GpsSensor {
@@ -101,6 +116,16 @@ impl SmartDevice for GpsSensor {
         SmartDeviceType::Gps
     }
 }
+
+/// GPS Sensor Internal IMU
+#[derive(Debug, Eq, PartialEq)]
+pub struct GpsImu {
+    device: V5_DeviceT,
+}
+
+// I'm sure you know the drill at this point...
+unsafe impl Send for GpsImu {}
+unsafe impl Sync for GpsImu {}
 
 impl GpsImu {
     fn validate_port(&self) -> Result<(), PortError> {
