@@ -6,14 +6,14 @@ use vex_sdk::{
     vexDeviceGpsAttitudeGet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet, vexDeviceGpsHeadingGet,
     vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet, vexDeviceGpsOriginSet,
     vexDeviceGpsQuaternionGet, vexDeviceGpsRawAccelGet, vexDeviceGpsRawGyroGet,
-    vexDeviceGpsStatusGet, vexDeviceGpsTemperatureGet, V5_DeviceGpsAttitude,
-    V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
+    vexDeviceGpsRotationGet, vexDeviceGpsStatusGet, vexDeviceGpsTemperatureGet,
+    V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{geometry::Point2, PortError};
 
-/// GPS Sensor Device
+/// GPS Sensor Devices
 #[derive(Debug, Eq, PartialEq)]
 pub struct GpsSensor {
     port: SmartPort,
@@ -48,7 +48,7 @@ impl GpsSensor {
                 device,
                 initial_position.x,
                 initial_position.y,
-                initial_pose.1,
+                360.0 - initial_pose.1,
             );
         }
 
@@ -78,7 +78,11 @@ impl GpsSensor {
             vexDeviceGpsAttitudeGet(self.device, &mut attitude, false);
         }
 
-        let heading = unsafe { vexDeviceGpsDegreesGet(self.device) };
+        let heading = (360.0
+            - unsafe {
+                vexDeviceGpsRotationGet(self.device) + vexDeviceGpsDegreesGet(self.device)
+            })
+            % 360.0;
 
         Ok((
             Point2::<f64>::new(attitude.position_x, attitude.position_y),
@@ -86,6 +90,7 @@ impl GpsSensor {
         ))
     }
 
+    /// Returns the RMS (Root Mean Squared) error for the GPS position reading in meters.
     pub fn error(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
