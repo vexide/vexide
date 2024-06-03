@@ -3,7 +3,12 @@
 use core::{marker::PhantomData, time::Duration};
 
 use vex_sdk::{
-    vexDeviceGpsAttitudeGet, vexDeviceGpsDataRateSet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet, vexDeviceGpsHeadingGet, vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet, vexDeviceGpsOriginSet, vexDeviceGpsQuaternionGet, vexDeviceGpsRawAccelGet, vexDeviceGpsRawGyroGet, vexDeviceGpsRotationGet, vexDeviceGpsStatusGet, vexDeviceGpsTemperatureGet, V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT
+    vexDeviceGpsAttitudeGet, vexDeviceGpsDataRateSet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet,
+    vexDeviceGpsHeadingGet, vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet,
+    vexDeviceGpsOriginSet, vexDeviceGpsQuaternionGet, vexDeviceGpsRawAccelGet,
+    vexDeviceGpsRawGyroGet, vexDeviceGpsRotationGet, vexDeviceGpsStatusGet,
+    vexDeviceGpsTemperatureGet, V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion, V5_DeviceGpsRaw,
+    V5_DeviceT,
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
@@ -51,7 +56,11 @@ impl GpsSensor {
         Ok(Self {
             device,
             port,
-            imu: GpsImu { device, rotation_offset: Default::default(), heading_offset: Default::default() },
+            imu: GpsImu {
+                device,
+                rotation_offset: Default::default(),
+                heading_offset: Default::default(),
+            },
         })
     }
 
@@ -65,7 +74,19 @@ impl GpsSensor {
         Ok(data)
     }
 
-    /// Get the currently computer pose (heading and position) from the sensor.
+    /// Get the currently computed pose (heading and position) from the sensor.
+    ///
+    /// # Important note about heading!
+    ///
+    /// The heading returned here is in a different angle system from [`GpsImu::heading`]! The heading
+    /// returned by this function increases as the sensor turns **counterclockwise**, while the opposite
+    /// is true for [`GpsImu`]. This is done to make it easier to use trig functions with the coordinates
+    /// returned by the sensor, as anything involving cartesian coordinates are expected to be in standard
+    /// unit circle angles. In addition, this function is not affected by [`GpsImu::reset_heading`] or
+    /// [`GpsImu::set_heading`].
+    ///
+    /// > You should **never** attempt to use the [`GpsImu`] angles when dealing with position data from this sensor
+    /// > unless you understand exactly what you're doing.
     pub fn pose(&self) -> Result<(Point2<f64>, f64), PortError> {
         self.validate_port()?;
 
@@ -131,6 +152,7 @@ unsafe impl Send for GpsImu {}
 unsafe impl Sync for GpsImu {}
 
 impl GpsImu {
+    /// The maximum value that can be returned by [`Self::heading`].
     pub const MAX_HEADING: f64 = 360.0;
 
     fn validate_port(&self) -> Result<(), PortError> {
@@ -140,6 +162,17 @@ impl GpsImu {
         )
     }
 
+    /// Returns the IMU's yaw angle bounded by [0, 360) degrees.
+    ///
+    /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
+    /// represented with negative ones.
+    ///
+    /// # Important
+    ///
+    /// This value does not take into account the initial heading passed into [`GpsSensor::new`], and additionally
+    /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
+    /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
+    /// position readings. Prefer using [`GpsSensor::pose`] for that.
     pub fn heading(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(
@@ -148,11 +181,30 @@ impl GpsImu {
         )
     }
 
+    /// Returns the total number of degrees the IMU has spun about the z-axis.
+    ///
+    /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
+    /// while counterclockwise rotations are represented with negative ones.
+    ///
+    /// # Important
+    ///
+    /// This value does not take into account the initial heading passed into [`GpsSensor::new`], and additionally
+    /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
+    /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
+    /// position readings. Prefer using [`GpsSensor::pose`] for that.
     pub fn rotation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } - self.rotation_offset)
     }
 
+    /// Returns the Euler angles (pitch, yaw, roll) representing the IMU's orientation.
+    ///
+    /// # Important
+    ///
+    /// This value does not take into account the initial heading passed into [`GpsSensor::new`], and additionally
+    /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
+    /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
+    /// position readings. Prefer using [`GpsSensor::pose`] for that.
     pub fn euler(&self) -> Result<mint::EulerAngles<f64, f64>, PortError> {
         self.validate_port()?;
 
@@ -169,6 +221,14 @@ impl GpsImu {
         })
     }
 
+    /// Returns a quaternion representing the IMU's orientation.
+    ///
+    /// # Important
+    ///
+    /// This value does not take into account the initial heading passed into [`GpsSensor::new`], and additionally
+    /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
+    /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
+    /// position readings. Prefer using [`GpsSensor::pose`] for that.
     pub fn quaternion(&self) -> Result<mint::Quaternion<f64>, PortError> {
         self.validate_port()?;
 
@@ -187,6 +247,7 @@ impl GpsImu {
         })
     }
 
+    /// Returns the IMU's raw accelerometer values.
     pub fn accel(&self) -> Result<mint::Vector3<f64>, PortError> {
         self.validate_port()?;
 
@@ -202,6 +263,7 @@ impl GpsImu {
         })
     }
 
+    /// Returns the IMU's raw gyroscope values.
     pub fn gyro_rate(&self) -> Result<mint::Vector3<f64>, PortError> {
         self.validate_port()?;
 
@@ -217,14 +279,17 @@ impl GpsImu {
         })
     }
 
+    /// Resets the current reading of the IMU's heading to zero.
     pub fn reset_heading(&mut self) -> Result<(), PortError> {
         self.set_heading(Default::default())
     }
 
+    /// Resets the current reading of the IMU's rotation to zero.
     pub fn reset_rotation(&mut self) -> Result<(), PortError> {
         self.set_rotation(Default::default())
     }
 
+    /// Sets the current reading of the IMU's rotation to target value.
     pub fn set_rotation(&mut self, rotation: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -233,6 +298,9 @@ impl GpsImu {
         Ok(())
     }
 
+    /// Sets the current reading of the IMU's heading to target value.
+    ///
+    /// Target will default to 360 if above 360 and default to 0 if below 0.
     pub fn set_heading(&mut self, heading: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -241,6 +309,7 @@ impl GpsImu {
         Ok(())
     }
 
+    /// Sets the computation speed of the IMU.
     pub fn set_data_rate(&mut self, interval: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 

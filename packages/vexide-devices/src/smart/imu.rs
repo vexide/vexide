@@ -229,7 +229,7 @@ impl InertialSensor {
         Ok(())
     }
 
-    /// Sets the update rate of the IMU.
+    /// Sets the computation speed of the IMU.
     ///
     /// This duration should be above [`Self::MIN_DATA_RATE`] (5 milliseconds).
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
