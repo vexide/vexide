@@ -13,7 +13,8 @@ use vex_sdk::{
     vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
     vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
     vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
-    vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
+    vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexTouchDataGet, V5_TouchEvent,
+    V5_TouchStatus,
 };
 
 use crate::{color::IntoRgb, geometry::Point2};
@@ -271,6 +272,48 @@ impl Text {
                 .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
             position: position.into(),
             size,
+        }
+    }
+
+    /// Get the height of the text widget in pixels
+    pub fn height(&self) -> u16 {
+        unsafe {
+            // Display blank string(no-op function) to set last used text size
+            // vexDisplayString(Height/Width)Get uses the last text size to determine text size
+            match self.size {
+                TextSize::Small => {
+                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Medium => {
+                    vexDisplayStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Large => {
+                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
+                }
+            }
+
+            vexDisplayStringHeightGet(self.text.as_ptr()) as _
+        }
+    }
+
+    /// Get the width of the text widget in pixels
+    pub fn width(&self) -> u16 {
+        unsafe {
+            match self.size {
+                // Display blank string(no-op function) to set last used text size
+                // vexDisplayString(Height/Width)Get uses the last text size to determine text size
+                TextSize::Small => {
+                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Medium => {
+                    vexDisplayStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Large => {
+                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
+                }
+            }
+
+            vexDisplayStringWidthGet(self.text.as_ptr()) as _
         }
     }
 }
