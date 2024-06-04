@@ -275,8 +275,11 @@ impl Text {
         }
     }
 
+    /// Get the height of the text widget in pixels
     pub fn height(&self) -> i32 {
         unsafe {
+            // Display blank string(no-op function) to set last used text size
+            // vexDisplayString(Height/Width)Get uses the last text size to determine text size
             match self.size {
                 TextSize::Small => {
                     vexDisplaySmallStringAt(0, 0, c"".as_ptr());
@@ -293,9 +296,12 @@ impl Text {
         }
     }
 
+    /// Get the width of the text widget in pixels
     pub fn width(&self) -> i32 {
         unsafe {
             match self.size {
+                // Display blank string(no-op function) to set last used text size
+                // vexDisplayString(Height/Width)Get uses the last text size to determine text size
                 TextSize::Small => {
                     vexDisplaySmallStringAt(0, 0, c"".as_ptr());
                 }
