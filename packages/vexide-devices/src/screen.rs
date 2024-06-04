@@ -5,7 +5,7 @@
 //! and the [`Stroke`] trait can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{mem, time::Duration};
+use core::{ffi::VaList, mem, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -13,7 +13,8 @@ use vex_sdk::{
     vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
     vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
     vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
-    vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
+    vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexDisplayVBigStringAt,
+    vexDisplayVSmallStringAt, vexDisplayVStringAt, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
 
 use crate::{color::IntoRgb, geometry::Point2};
@@ -271,6 +272,42 @@ impl Text {
                 .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
             position: position.into(),
             size,
+        }
+    }
+
+    pub fn height(&self) -> i32 {
+        unsafe {
+            match self.size {
+                TextSize::Small => {
+                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Medium => {
+                    vexDisplayStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Large => {
+                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
+                }
+            }
+
+            vexDisplayStringHeightGet(self.text.as_ptr())
+        }
+    }
+
+    pub fn width(&self) -> i32 {
+        unsafe {
+            match self.size {
+                TextSize::Small => {
+                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Medium => {
+                    vexDisplayStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Large => {
+                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
+                }
+            }
+
+            vexDisplayStringWidthGet(self.text.as_ptr())
         }
     }
 }
