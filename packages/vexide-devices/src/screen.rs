@@ -276,7 +276,7 @@ impl Text {
     }
 
     /// Get the height of the text widget in pixels
-    pub fn height(&self) -> i32 {
+    pub fn height(&self) -> u16 {
         unsafe {
             // Display blank string(no-op function) to set last used text size
             // vexDisplayString(Height/Width)Get uses the last text size to determine text size
@@ -292,12 +292,12 @@ impl Text {
                 }
             }
 
-            vexDisplayStringHeightGet(self.text.as_ptr())
+            vexDisplayStringHeightGet(self.text.as_ptr()) as _
         }
     }
 
     /// Get the width of the text widget in pixels
-    pub fn width(&self) -> i32 {
+    pub fn width(&self) -> u16 {
         unsafe {
             match self.size {
                 // Display blank string(no-op function) to set last used text size
@@ -313,7 +313,7 @@ impl Text {
                 }
             }
 
-            vexDisplayStringWidthGet(self.text.as_ptr())
+            vexDisplayStringWidthGet(self.text.as_ptr()) as _
         }
     }
 }
