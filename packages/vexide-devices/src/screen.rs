@@ -5,7 +5,7 @@
 //! and the [`Stroke`] trait can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{ffi::VaList, mem, time::Duration};
+use core::{mem, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -13,8 +13,8 @@ use vex_sdk::{
     vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
     vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
     vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
-    vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexDisplayVBigStringAt,
-    vexDisplayVSmallStringAt, vexDisplayVStringAt, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
+    vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexTouchDataGet, V5_TouchEvent,
+    V5_TouchStatus,
 };
 
 use crate::{color::IntoRgb, geometry::Point2};
