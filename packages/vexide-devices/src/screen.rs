@@ -325,20 +325,24 @@ impl Fill for Text {
         unsafe {
             vexDisplayForegroundColor(color.into_rgb().into());
 
+            // Use %s and varargs to escape the string to stop undefined and unsafe behavior
             match self.size {
                 TextSize::Small => vexDisplaySmallStringAt(
                     self.position.x as _,
                     (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
                 TextSize::Medium => vexDisplayStringAt(
                     self.position.x as _,
                     (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
                 TextSize::Large => vexDisplayBigStringAt(
                     self.position.x as _,
                     (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
             }
