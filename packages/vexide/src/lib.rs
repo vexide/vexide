@@ -50,7 +50,7 @@ pub mod prelude {
     };
     #[cfg(feature = "core")]
     pub use vexide_core::{
-        competition::{Competition, CompetitionRobot, CompetitionRobotExt},
+        competition::{CompetitionRuntime, Competition, CompetitionExt},
         dbg,
         float::Float,
         io::{BufRead, Read, Seek, Write},
