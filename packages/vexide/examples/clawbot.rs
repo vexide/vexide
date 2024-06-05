@@ -85,8 +85,8 @@ impl Competition for ClawBot {
 
             // If we are pressing the bumpers, don't allow the motors to go in reverse
             if left_bumper_pressed || right_bumper_pressed {
-                left_voltage = left.max(0.0);
-                right_voltage = right.max(0.0);
+                left_voltage = left_voltage.max(0.0);
+                right_voltage = right_voltage.max(0.0);
             }
 
             // Set the drive motors to our arcade control values.
