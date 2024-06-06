@@ -559,7 +559,7 @@ impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
 
 /// A set of tasks to run when the competition is in a particular mode.
 #[allow(async_fn_in_trait)]
-pub trait Competition: Sized {
+pub trait Compete: Sized {
     /// Runs when the competition system is connected.
     ///
     /// See [`CompetitionBuilder::on_connect`] for more information.
@@ -588,7 +588,7 @@ pub trait Competition: Sized {
 
 /// Extension methods for [`Competition`].
 /// Automatically implemented for any type implementing [`Competition`].
-pub trait CompetitionExt: Competition {
+pub trait CompeteExt: Compete {
     /// Build a competition runtime that competes with this robot.
     fn compete(
         self,
@@ -610,4 +610,4 @@ pub trait CompetitionExt: Competition {
     }
 }
 
-impl<R: Competition> CompetitionExt for R {}
+impl<R: Compete> CompeteExt for R {}
