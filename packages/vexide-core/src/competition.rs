@@ -226,7 +226,7 @@ pub struct CompetitionRuntime<
     ///         during task creation.
     shared: UnsafeCell<Shared>,
 
-    /// Keep `self.current` in place while `self.current` references it.
+    /// Keep `self.shared` in place while `self.task` references it.
     _pin: PhantomPinned,
 }
 
