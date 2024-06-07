@@ -5,7 +5,7 @@
 //! and the [`Stroke`] trait can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{mem, time::Duration};
+use core::{default, mem, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -254,9 +254,10 @@ pub enum TextSize {
 }
 
 /// Horizontal alignment for text on the screen
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
 pub enum HAlign {
-    /// Input coordinate is at the left of the text box; default for text displaying
+    /// Input coordinate is at the left of the text box
+    #[default]
     Left,
     /// Input coordinate is at the center of the text box
     Center,
@@ -265,9 +266,10 @@ pub enum HAlign {
 }
 
 /// Vertical alignment for text on the screen
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
 pub enum VAlign {
-    /// Input coordinate is at the top of the text box; default for text displaying
+    /// Input coordinate is at the top of the text box
+    #[default]
     Top,
     /// Input coordinate is at the center of the text box
     Center,
@@ -291,16 +293,9 @@ pub struct Text {
 }
 
 impl Text {
-    /// Create a new text with a given position(top left corner) and format
+    /// Create a new text with a given position(defaults to top left corner alignment) and format
     pub fn new(text: &str, size: TextSize, position: impl Into<Point2<i16>>) -> Self {
-        Self {
-            text: CString::new(text)
-                .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
-            position: position.into(),
-            size,
-            horizontal_align: HAlign::Left,
-            vertical_align: VAlign::Top,
-        }
+        Self::new_aligned(text, size, position, HAlign::default(), VAlign::default())
     }
 
     /// Create a new text with a given position(based on alignment) and format
