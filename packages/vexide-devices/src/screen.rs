@@ -5,7 +5,7 @@
 //! and the [`Stroke`] trait can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{default, mem, time::Duration};
+use core::{mem, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -367,21 +367,18 @@ impl Text {
 
 impl Fill for Text {
     fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
-        let width = self.width();
-        let height = self.height();
-
         // Horizontally align text
         let x = match self.horizontal_align {
             HAlign::Left => self.position.x,
-            HAlign::Center => self.position.x - (width / 2) as i16,
-            HAlign::Right => self.position.x - width as i16,
+            HAlign::Center => self.position.x - (self.width() / 2) as i16,
+            HAlign::Right => self.position.x - self.width() as i16,
         };
 
         // Vertically align text
         let y = match self.vertical_align {
             VAlign::Top => self.position.y,
-            VAlign::Center => self.position.y - (height / 2) as i16,
-            VAlign::Bottom => self.position.y - height as i16,
+            VAlign::Center => self.position.y - (self.height() / 2) as i16,
+            VAlign::Bottom => self.position.y - self.height() as i16,
         };
 
         // This implementation is technically broken because it doesn't account errno.
