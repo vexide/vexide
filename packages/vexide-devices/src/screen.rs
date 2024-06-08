@@ -253,6 +253,30 @@ pub enum TextSize {
     Large,
 }
 
+/// Horizontal alignment for text on the screen
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
+pub enum HAlign {
+    /// Input coordinate is at the left of the text box
+    #[default]
+    Left,
+    /// Input coordinate is at the center of the text box
+    Center,
+    /// Input coordinate is at the right of the text box
+    Right,
+}
+
+/// Vertical alignment for text on the screen
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
+pub enum VAlign {
+    /// Input coordinate is at the top of the text box
+    #[default]
+    Top,
+    /// Input coordinate is at the center of the text box
+    Center,
+    /// Input coordinate is at the bottom of the text box
+    Bottom,
+}
+
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text {
@@ -262,17 +286,40 @@ pub struct Text {
     pub text: CString,
     /// Size of text to be displayed on the screen
     pub size: TextSize,
+    /// Horizontal alignment of text displayed on the screen
+    pub horizontal_align: HAlign,
+    /// Vertical alignment of text displayed on the screen
+    pub vertical_align: VAlign,
 }
 
 impl Text {
-    /// Create a new text with a given position(top left corner) and format
+    /// Create a new text with a given position(defaults to top left corner alignment) and format
     pub fn new(text: &str, size: TextSize, position: impl Into<Point2<i16>>) -> Self {
+        Self::new_aligned(text, size, position, HAlign::default(), VAlign::default())
+    }
+
+    /// Create a new text with a given position(based on alignment) and format
+    pub fn new_aligned(
+        text: &str,
+        size: TextSize,
+        position: impl Into<Point2<i16>>,
+        horizontal_align: HAlign,
+        vertical_align: VAlign,
+    ) -> Self {
         Self {
             text: CString::new(text)
                 .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
             position: position.into(),
             size,
+            horizontal_align,
+            vertical_align,
         }
+    }
+
+    /// Change text alignment
+    pub fn align(&mut self, horizontal_align: HAlign, vertical_align: VAlign) {
+        self.horizontal_align = horizontal_align;
+        self.vertical_align = vertical_align;
     }
 
     /// Get the height of the text widget in pixels
@@ -320,6 +367,20 @@ impl Text {
 
 impl Fill for Text {
     fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+        // Horizontally align text
+        let x = match self.horizontal_align {
+            HAlign::Left => self.position.x,
+            HAlign::Center => self.position.x - (self.width() / 2) as i16,
+            HAlign::Right => self.position.x - self.width() as i16,
+        };
+
+        // Vertically align text
+        let y = match self.vertical_align {
+            VAlign::Top => self.position.y,
+            VAlign::Center => self.position.y - (self.height() / 2) as i16,
+            VAlign::Bottom => self.position.y - self.height() as i16,
+        };
+
         // This implementation is technically broken because it doesn't account errno.
         // This will be fixed once we have switched to vex-sdk.
         unsafe {
@@ -327,18 +388,16 @@ impl Fill for Text {
 
             match self.size {
                 TextSize::Small => vexDisplaySmallStringAt(
-                    self.position.x as _,
-                    (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    x as _,
+                    (y + Screen::HEADER_HEIGHT) as _,
                     self.text.as_ptr(),
                 ),
-                TextSize::Medium => vexDisplayStringAt(
-                    self.position.x as _,
-                    (self.position.y + Screen::HEADER_HEIGHT) as _,
-                    self.text.as_ptr(),
-                ),
+                TextSize::Medium => {
+                    vexDisplayStringAt(x as _, (y + Screen::HEADER_HEIGHT) as _, self.text.as_ptr())
+                }
                 TextSize::Large => vexDisplayBigStringAt(
-                    self.position.x as _,
-                    (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    x as _,
+                    (y + Screen::HEADER_HEIGHT) as _,
                     self.text.as_ptr(),
                 ),
             }
