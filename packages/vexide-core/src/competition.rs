@@ -6,7 +6,8 @@ use alloc::boxed::Box;
 use core::{
     cell::UnsafeCell,
     future::{Future, IntoFuture},
-    marker::PhantomPinned,
+    marker::{PhantomData, PhantomPinned},
+    ops::ControlFlow,
     pin::{pin, Pin},
     task::{self, Poll},
 };
@@ -177,17 +178,23 @@ pub const fn updates() -> CompetitionUpdates {
 #[pin_project]
 pub struct CompetitionRuntime<
     Shared: 'static,
+    Return,
     MkConnected,
     MkDisconnected,
     MkDisabled,
     MkAutonomous,
     MkDriver,
 > where
-    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkConnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDisconnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDisabled:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkAutonomous:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDriver:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
 {
     // Functions to generate tasks for each mode.
     mk_connected: MkConnected,
@@ -215,7 +222,7 @@ pub struct CompetitionRuntime<
     ///   We rely on lifetime parametricity of the `mk_*` functions for this (see the HRTBs above).
     /// - This field MUST come before `shared`, as struct fields are dropped in declaration order.
     #[allow(clippy::type_complexity)]
-    task: Option<Pin<Box<dyn Future<Output = ()> + 'static>>>,
+    task: Option<Pin<Box<dyn Future<Output = ControlFlow<Return>> + 'static>>>,
 
     /// A cell containing the data shared between all tasks.
     ///
@@ -238,16 +245,29 @@ enum CompetitionRuntimePhase {
     Mode(CompetitionMode),
 }
 
-impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver> Future
-    for CompetitionRuntime<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver> Future
+    for CompetitionRuntime<
+        Shared,
+        Return,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    >
 where
-    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkConnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDisconnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDisabled:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkAutonomous:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDriver:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
 {
-    type Output = ();
+    type Output = Return;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         let mut this = self.as_mut().project();
@@ -279,7 +299,12 @@ where
             _ => {}
         }
 
-        if let Some(Poll::Ready(_)) = this.task.as_mut().map(|task| task.as_mut().poll(cx)) {
+        if let Some(Poll::Ready(res)) = this.task.as_mut().map(|task| task.as_mut().poll(cx)) {
+            // If a task says to break out of the competition lifecycle, then we pass the return value up.
+            if let ControlFlow::Break(val) = res {
+                return Poll::Ready(val);
+            }
+
             // Reset the current task to nothing, since we're done with the previous task.
             *this.task = None;
 
@@ -324,21 +349,24 @@ where
     }
 }
 
-impl<Shared>
+impl<Shared, Return>
     CompetitionRuntime<
         Shared,
-        DefaultMk<Shared>,
-        DefaultMk<Shared>,
-        DefaultMk<Shared>,
-        DefaultMk<Shared>,
-        DefaultMk<Shared>,
+        Return,
+        DefaultMk<Shared, Return>,
+        DefaultMk<Shared, Return>,
+        DefaultMk<Shared, Return>,
+        DefaultMk<Shared, Return>,
+        DefaultMk<Shared, Return>,
     >
 {
     /// Create a typed builder for a competition runtime with the given `shared` data.
     /// The default tasks simply do nothing, so you do not need to supply them if you don't want to.
-    pub const fn builder(shared: Shared) -> CompetitionBuilder<Shared> {
-        fn default_mk<Shared>(_: &mut Shared) -> Pin<Box<dyn Future<Output = ()>>> {
-            Box::pin(async {})
+    pub const fn builder(shared: Shared) -> CompetitionBuilder<Shared, Return> {
+        fn default_mk<Shared, Return>(
+            _: &mut Shared,
+        ) -> Pin<Box<dyn Future<Output = ControlFlow<Return>>>> {
+            Box::pin(async { ControlFlow::Continue(()) })
         }
 
         CompetitionBuilder {
@@ -348,20 +376,23 @@ impl<Shared>
             mk_disabled: default_mk,
             mk_autonomous: default_mk,
             mk_driver: default_mk,
+            _return: PhantomData,
         }
     }
 }
 
-type DefaultMk<Shared> = for<'t> fn(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>;
+type DefaultMk<Shared, Return> =
+    for<'t> fn(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>;
 
 /// A typed builder for [`Competition`] instances.
 pub struct CompetitionBuilder<
     Shared,
-    MkConnected = DefaultMk<Shared>,
-    MkDisconnected = DefaultMk<Shared>,
-    MkDisabled = DefaultMk<Shared>,
-    MkAutonomous = DefaultMk<Shared>,
-    MkDriver = DefaultMk<Shared>,
+    Return,
+    MkConnected = DefaultMk<Shared, Return>,
+    MkDisconnected = DefaultMk<Shared, Return>,
+    MkDisabled = DefaultMk<Shared, Return>,
+    MkAutonomous = DefaultMk<Shared, Return>,
+    MkDriver = DefaultMk<Shared, Return>,
 > {
     shared: Shared,
 
@@ -370,22 +401,45 @@ pub struct CompetitionBuilder<
     mk_disabled: MkDisabled,
     mk_autonomous: MkAutonomous,
     mk_driver: MkDriver,
+
+    // We're invariant in the return type.
+    _return: PhantomData<fn(Return) -> Return>,
 }
 
-impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
-    CompetitionBuilder<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+    CompetitionBuilder<
+        Shared,
+        Return,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    >
 where
-    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkConnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDisconnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDisabled:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkAutonomous:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDriver:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
 {
     /// Finish the builder, returning a [`Competition`] instance.
     pub fn finish(
         self,
-    ) -> CompetitionRuntime<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
-    {
+    ) -> CompetitionRuntime<
+        Shared,
+        Return,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    > {
         CompetitionRuntime {
             mk_connected: self.mk_connected,
             mk_disconnected: self.mk_disconnected,
@@ -402,29 +456,51 @@ where
     }
 }
 
-impl<Shared: 'static, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver> IntoFuture
-    for CompetitionBuilder<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+impl<Shared: 'static, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+    IntoFuture
+    for CompetitionBuilder<
+        Shared,
+        Return,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    >
 where
-    MkConnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisconnected: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDisabled: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkAutonomous: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
-    MkDriver: for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ()> + 't>>,
+    MkConnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDisconnected:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDisabled:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkAutonomous:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
+    MkDriver:
+        for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
 {
-    type Output = ();
+    type Output = Return;
 
-    type IntoFuture =
-        CompetitionRuntime<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>;
+    type IntoFuture = CompetitionRuntime<
+        Shared,
+        Return,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    >;
 
     fn into_future(self) -> Self::IntoFuture {
         self.finish()
     }
 }
 
-impl<Shared, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+impl<Shared, Return, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
     CompetitionBuilder<
         Shared,
-        DefaultMk<Shared>,
+        Return,
+        DefaultMk<Shared, Return>,
         MkDisconnected,
         MkDisabled,
         MkAutonomous,
@@ -436,9 +512,11 @@ impl<Shared, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
     pub fn on_connect<Mk>(
         self,
         mk_connected: Mk,
-    ) -> CompetitionBuilder<Shared, Mk, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
+    ) -> CompetitionBuilder<Shared, Return, Mk, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
     where
-        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        Mk: for<'s> FnMut(
+            &'s mut Shared,
+        ) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 's>>,
     {
         CompetitionBuilder {
             shared: self.shared,
@@ -447,21 +525,32 @@ impl<Shared, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
             mk_disabled: self.mk_disabled,
             mk_autonomous: self.mk_autonomous,
             mk_driver: self.mk_driver,
+            _return: self._return,
         }
     }
 }
 
-impl<Shared, MkConnected, MkDisabled, MkAutonomous, MkDriver>
-    CompetitionBuilder<Shared, MkConnected, DefaultMk<Shared>, MkDisabled, MkAutonomous, MkDriver>
+impl<Shared, Return, MkConnected, MkDisabled, MkAutonomous, MkDriver>
+    CompetitionBuilder<
+        Shared,
+        Return,
+        MkConnected,
+        DefaultMk<Shared, Return>,
+        MkDisabled,
+        MkAutonomous,
+        MkDriver,
+    >
 {
     /// Use the given function to create a task that runs when the robot is disconnected from a competition system.
     /// This task will run until termination before any other tasks (connected, disabled, autonomous, driver) are run.
     pub fn on_disconnect<Mk>(
         self,
         mk_disconnected: Mk,
-    ) -> CompetitionBuilder<Shared, MkConnected, Mk, MkDisabled, MkAutonomous, MkDriver>
+    ) -> CompetitionBuilder<Shared, Return, MkConnected, Mk, MkDisabled, MkAutonomous, MkDriver>
     where
-        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        Mk: for<'s> FnMut(
+            &'s mut Shared,
+        ) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 's>>,
     {
         CompetitionBuilder {
             shared: self.shared,
@@ -470,16 +559,18 @@ impl<Shared, MkConnected, MkDisabled, MkAutonomous, MkDriver>
             mk_disabled: self.mk_disabled,
             mk_autonomous: self.mk_autonomous,
             mk_driver: self.mk_driver,
+            _return: self._return,
         }
     }
 }
 
-impl<Shared, MkConnected, MkDisconnected, MkAutonomous, MkDriver>
+impl<Shared, Return, MkConnected, MkDisconnected, MkAutonomous, MkDriver>
     CompetitionBuilder<
         Shared,
+        Return,
         MkConnected,
         MkDisconnected,
-        DefaultMk<Shared>,
+        DefaultMk<Shared, Return>,
         MkAutonomous,
         MkDriver,
     >
@@ -489,9 +580,11 @@ impl<Shared, MkConnected, MkDisconnected, MkAutonomous, MkDriver>
     pub fn while_disabled<Mk>(
         self,
         mk_disabled: Mk,
-    ) -> CompetitionBuilder<Shared, MkConnected, MkDisconnected, Mk, MkAutonomous, MkDriver>
+    ) -> CompetitionBuilder<Shared, Return, MkConnected, MkDisconnected, Mk, MkAutonomous, MkDriver>
     where
-        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        Mk: for<'s> FnMut(
+            &'s mut Shared,
+        ) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 's>>,
     {
         CompetitionBuilder {
             shared: self.shared,
@@ -500,21 +593,32 @@ impl<Shared, MkConnected, MkDisconnected, MkAutonomous, MkDriver>
             mk_disabled,
             mk_autonomous: self.mk_autonomous,
             mk_driver: self.mk_driver,
+            _return: self._return,
         }
     }
 }
 
-impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkDriver>
-    CompetitionBuilder<Shared, MkConnected, MkDisconnected, MkDisabled, DefaultMk<Shared>, MkDriver>
+impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkDriver>
+    CompetitionBuilder<
+        Shared,
+        Return,
+        MkConnected,
+        MkDisconnected,
+        MkDisabled,
+        DefaultMk<Shared, Return>,
+        MkDriver,
+    >
 {
     /// Use the given function to create a task that runs while the robot is autonomously controlled.
     /// If the task terminates before the end of the autonomous period, it will NOT be restarted.
     pub fn while_autonomous<Mk>(
         self,
         mk_autonomous: Mk,
-    ) -> CompetitionBuilder<Shared, MkConnected, MkDisconnected, MkDisabled, Mk, MkDriver>
+    ) -> CompetitionBuilder<Shared, Return, MkConnected, MkDisconnected, MkDisabled, Mk, MkDriver>
     where
-        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        Mk: for<'s> FnMut(
+            &'s mut Shared,
+        ) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 's>>,
     {
         CompetitionBuilder {
             shared: self.shared,
@@ -523,18 +627,20 @@ impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkDriver>
             mk_disabled: self.mk_disabled,
             mk_autonomous,
             mk_driver: self.mk_driver,
+            _return: self._return,
         }
     }
 }
 
-impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
+impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
     CompetitionBuilder<
         Shared,
+        Return,
         MkConnected,
         MkDisconnected,
         MkDisabled,
         MkAutonomous,
-        DefaultMk<Shared>,
+        DefaultMk<Shared, Return>,
     >
 {
     /// Use the given function to create a task that runs while the robot is driver controlled.
@@ -542,9 +648,11 @@ impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
     pub fn while_driving<Mk>(
         self,
         mk_driver: Mk,
-    ) -> CompetitionBuilder<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, Mk>
+    ) -> CompetitionBuilder<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous, Mk>
     where
-        Mk: for<'s> FnMut(&'s mut Shared) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        Mk: for<'s> FnMut(
+            &'s mut Shared,
+        ) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 's>>,
     {
         CompetitionBuilder {
             shared: self.shared,
@@ -553,6 +661,7 @@ impl<Shared, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
             mk_disabled: self.mk_disabled,
             mk_autonomous: self.mk_autonomous,
             mk_driver,
+            _return: self._return,
         }
     }
 }
@@ -594,18 +703,20 @@ pub trait CompetitionExt: Competition {
         self,
     ) -> CompetitionRuntime<
         Self,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
-        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ()> + 's>>,
+        !,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ControlFlow<!>> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ControlFlow<!>> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ControlFlow<!>> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ControlFlow<!>> + 's>>,
+        impl for<'s> FnMut(&'s mut Self) -> Pin<Box<dyn Future<Output = ControlFlow<!>> + 's>>,
     > {
+        #[allow(clippy::unit_arg)]
         CompetitionRuntime::builder(self)
-            .on_connect(|s| Box::pin(s.connected()))
-            .on_disconnect(|s| Box::pin(s.disconnected()))
-            .while_disabled(|s| Box::pin(s.disabled()))
-            .while_autonomous(|s| Box::pin(s.autonomous()))
-            .while_driving(|s| Box::pin(s.driver()))
+            .on_connect(|s| Box::pin(async { ControlFlow::Continue(s.connected().await) }))
+            .on_disconnect(|s| Box::pin(async { ControlFlow::Continue(s.disconnected().await) }))
+            .while_disabled(|s| Box::pin(async { ControlFlow::Continue(s.disabled().await) }))
+            .while_autonomous(|s| Box::pin(async { ControlFlow::Continue(s.autonomous().await) }))
+            .while_driving(|s| Box::pin(async { ControlFlow::Continue(s.driver().await) }))
             .finish()
     }
 }
