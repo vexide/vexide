@@ -7,6 +7,9 @@ use core::{
 
 pub use mint::{EulerAngles, Quaternion, Vector3};
 
+#[cfg(feature = "nalgebra")]
+mod nalgebra;
+
 /// A point in 2D cartesian space.
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Point2<T> {
@@ -19,7 +22,7 @@ pub struct Point2<T> {
 
 impl<T> Point2<T> {
     /// Creates a new point.
-    pub fn new(x: T, y: T) -> Self {
+    pub const fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
 
@@ -36,12 +39,12 @@ impl<T> Point2<T> {
 
 impl<T: Copy> Point2<T> {
     /// Gets the point's x component.
-    pub fn x(&self) -> T {
+    pub const fn x(&self) -> T {
         self.x
     }
 
     /// Gets the point's y component.
-    pub fn y(&self) -> T {
+    pub const fn y(&self) -> T {
         self.y
     }
 }
@@ -185,6 +188,10 @@ impl<T: Neg<Output = T>> Neg for Point2<T> {
 
 // Mint conversions
 
+impl<T> mint::IntoMint for Point2<T> {
+    type MintType = mint::Point2<T>;
+}
+
 impl<T> From<mint::Point2<T>> for Point2<T> {
     fn from(mint: mint::Point2<T>) -> Self {
         Self {
@@ -193,6 +200,7 @@ impl<T> From<mint::Point2<T>> for Point2<T> {
         }
     }
 }
+
 impl<T> From<Point2<T>> for mint::Point2<T> {
     fn from(point: Point2<T>) -> Self {
         Self {
