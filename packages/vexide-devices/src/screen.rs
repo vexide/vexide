@@ -47,6 +47,7 @@ impl core::fmt::Write for Screen {
             vexDisplayForegroundColor(0xffffff);
             vexDisplayString(
                 self.current_line as i32,
+                c"%s".as_ptr(),
                 CString::new(self.writer_buffer.clone())
                     .expect(
                         "CString::new encountered NUL (U+0000) byte in non-terminating position.",
@@ -394,9 +395,12 @@ impl Fill for Text {
                     c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
-                TextSize::Medium => {
-                    vexDisplayStringAt(x as _, (y + Screen::HEADER_HEIGHT) as _, c"%s".as_ptr(), self.text.as_ptr())
-                }
+                TextSize::Medium => vexDisplayStringAt(
+                    x as _,
+                    (y + Screen::HEADER_HEIGHT) as _,
+                    c"%s".as_ptr(),
+                    self.text.as_ptr(),
+                ),
                 TextSize::Large => vexDisplayBigStringAt(
                     x as _,
                     (y + Screen::HEADER_HEIGHT) as _,
@@ -502,6 +506,7 @@ impl Screen {
             vexDisplayForegroundColor(0xffffff);
             vexDisplayString(
                 self.current_line as i32,
+                c"%s".as_ptr(),
                 CString::new(self.writer_buffer.clone())
                     .expect(
                         "CString::new encountered NUL (U+0000) byte in non-terminating position.",
