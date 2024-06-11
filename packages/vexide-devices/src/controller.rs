@@ -2,8 +2,8 @@
 //!
 //! This module allows you to read from the buttons and joysticks on the controller and write to the controller's display.
 
-use alloc::ffi::CString;
-use core::time::Duration;
+use alloc::{boxed::Box, ffi::CString};
+use core::{future::Future, pin::Pin, task::Poll, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -22,6 +22,102 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     }
 
     Ok(())
+}
+
+pub struct ButtonBinding<'a> {
+    button: &'a Button,
+
+    on_press: Box<dyn FnMut()>,
+    on_release: Box<dyn FnMut()>,
+    while_pressed: Box<dyn FnMut()>,
+    while_released: Box<dyn FnMut()>,
+
+    last_level: Option<LogicLevel>,
+}
+impl<'a> ButtonBinding<'a> {
+    pub fn builder(button: &'a Button) -> ButtonBindingBuilder<'a> {
+        ButtonBindingBuilder::new(button)
+    }
+}
+impl<'a> Future for ButtonBinding<'a> {
+    type Output = !;
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+    ) -> Poll<Self::Output> {
+        let this = Pin::into_inner(self);
+        let current_level = this.button.level().unwrap_or(LogicLevel::Low);
+        match current_level {
+            LogicLevel::High => {
+                if let Some(last_level) = this.last_level {
+                    if last_level.is_low() {
+                        (this.on_press)();
+                    }
+                }
+                (this.while_pressed)();
+            }
+            LogicLevel::Low => {
+                if let Some(last_level) = this.last_level {
+                    if last_level.is_high() {
+                        (this.on_release)();
+                    }
+                }
+                (this.while_released)();
+            }
+        }
+
+        cx.waker().wake_by_ref();
+        Poll::Pending
+    }
+}
+
+pub struct ButtonBindingBuilder<'a> {
+    on_press: Option<Box<dyn FnMut()>>,
+    on_release: Option<Box<dyn FnMut()>>,
+    while_pressed: Option<Box<dyn FnMut()>>,
+    while_released: Option<Box<dyn FnMut()>>,
+    button: &'a Button,
+}
+impl<'a> ButtonBindingBuilder<'a> {
+    pub fn new(button: &'a Button) -> Self {
+        Self {
+            on_press: None,
+            on_release: None,
+            while_pressed: None,
+            while_released: None,
+            button,
+        }
+    }
+
+    pub fn on_press<F: FnMut() + 'static>(mut self, binding: F) -> Self {
+        self.on_press = Some(Box::new(binding));
+        self
+    }
+    pub fn on_release<F: FnMut() + 'static>(mut self, binding: F) -> Self {
+        self.on_press = Some(Box::new(binding));
+        self
+    }
+    pub fn while_pressed<F: FnMut() + 'static>(mut self, binding: F) -> Self {
+        self.while_pressed = Some(Box::new(binding));
+        self
+    }
+    pub fn while_released<F: FnMut() + 'static>(mut self, binding: F) -> Self {
+        self.while_released = Some(Box::new(binding));
+        self
+    }
+
+    pub fn build(self) -> ButtonBinding<'a> {
+        fn noop() {}
+        ButtonBinding {
+            button: self.button,
+            on_press: self.on_press.unwrap_or_else(|| Box::new(noop)),
+            on_release: self.on_release.unwrap_or_else(|| Box::new(noop)),
+            while_pressed: self.while_pressed.unwrap_or_else(|| Box::new(noop)),
+            while_released: self.while_released.unwrap_or_else(|| Box::new(noop)),
+            last_level: None,
+        }
+    }
 }
 
 /// Digital Controller Button
@@ -69,6 +165,10 @@ impl Button {
         }
 
         Ok(false)
+    }
+
+    pub fn build_binding(&self) -> ButtonBindingBuilder<'_> {
+        ButtonBinding::builder(self)
     }
 }
 

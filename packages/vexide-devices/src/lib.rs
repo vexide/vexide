@@ -15,6 +15,7 @@
 //! - [`controller`] provides types for interacting with the V5 controller.
 
 #![no_std]
+#![feature(never_type)]
 
 extern crate alloc;
 
