@@ -37,10 +37,10 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use vexide::core::{time::Instant, task::delay};
+    /// use vexide::core::time::Instant;
     ///
     /// let now = Instant::now();
-    /// delay(Duration::new(1, 0));
+    /// sleep(Duration::new(1, 0)).await;
     /// let new_now = Instant::now();
     /// println!("{:?}", new_now.duration_since(now));
     /// println!("{:?}", now.duration_since(new_now)); // 0ns
@@ -56,10 +56,10 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use vexide::core::{time::Instant, task::delay};
+    /// use vexide::core::time::Instant;
     ///
     /// let now = Instant::now();
-    /// delay(Duration::new(1, 0));
+    /// sleep(Duration::new(1, 0)).await;
     /// let new_now = Instant::now();
     /// println!("{:?}", new_now.checked_duration_since(now));
     /// println!("{:?}", now.checked_duration_since(new_now)); // None
@@ -97,11 +97,11 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use vexide::core::{time::Instant, task::delay};
+    /// use vexide::core::time::Instant;
     ///
     /// let instant = Instant::now();
     /// let three_secs = Duration::from_secs(3);
-    /// delay(three_secs);
+    /// sleep(three_secs).await;
     /// assert!(instant.elapsed() >= three_secs);
     /// ```
     pub fn elapsed(&self) -> Duration {
