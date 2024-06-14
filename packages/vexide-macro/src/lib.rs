@@ -1,6 +1,9 @@
+use parse::{Attrs, MacroOpts};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, ItemFn, Signature};
+
+mod parse;
 
 const NO_SYNC_ERR: &str = "The vexide entrypoint must be marked `async`.";
 const NO_UNSAFE_ERR: &str = "The vexide entrypoint must be not marked `unsafe`.";
@@ -61,30 +64,54 @@ fn create_main_wrapper(inner: ItemFn) -> proc_macro2::TokenStream {
     }
 }
 
+fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
+    let banner_arg = if opts.banner {
+        quote! { true }
+    } else {
+        quote! { false }
+    };
+    let cold_header = if let Some(code_sig) = opts.code_sig {
+        quote! { #code_sig }
+    } else {
+        quote! { ::vexide::startup::ColdHeader::new(2, 0, 0) }
+    };
+
+    quote! {
+        const _: () = {
+            #[no_mangle]
+            #[link_section = ".boot"]
+            unsafe extern "C" fn _entry() {
+                unsafe {
+                    ::vexide::startup::program_entry::<#banner_arg>()
+                }
+            }
+
+            #[link_section = ".cold_magic"]
+            #[used] // This is needed to prevent the linker from removing this object in release builds
+            static COLD_HEADER: ::vexide::startup::ColdHeader = #cold_header;
+        };
+    }
+}
+
 #[proc_macro_attribute]
-pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     let item = parse_macro_input!(item as ItemFn);
+    let attrs = parse_macro_input!(attrs as Attrs);
+    let opts = MacroOpts::from(attrs);
     let main_fn = create_main_wrapper(item);
+    let entrypoint = make_entrypoint(opts);
 
     quote! {
         #main_fn
-
-        #[no_mangle]
-        #[link_section = ".boot"]
-        unsafe extern "C" fn _entry() {
-            unsafe {
-                ::vexide::startup::program_entry()
-            }
-        }
-
-        #[link_section = ".cold_magic"]
-        #[used] // This is needed to prevent the linker from removing this object in release builds
-        static COLD_HEADER: ::vexide::startup::ColdHeader = ::vexide::startup::ColdHeader::new(2, 0, 0);
-    }.into()
+        #entrypoint
+    }
+    .into()
 }
 
 #[cfg(test)]
 mod test {
+    use syn::Ident;
+
     use super::*;
 
     #[test]
@@ -112,6 +139,37 @@ mod test {
             }
             .to_string()
         );
+    }
+
+    #[test]
+    fn toggles_banner_using_parsed_opts() {
+        let entrypoint = make_entrypoint(MacroOpts {
+            banner: false,
+            code_sig: None,
+        });
+        assert!(entrypoint.to_string().contains("false"));
+        assert!(!entrypoint.to_string().contains("true"));
+        let entrypoint = make_entrypoint(MacroOpts {
+            banner: true,
+            code_sig: None,
+        });
+        assert!(entrypoint.to_string().contains("true"));
+        assert!(!entrypoint.to_string().contains("false"));
+    }
+
+    #[test]
+    fn uses_custom_code_sig_from_parsed_opts() {
+        let entrypoint = make_entrypoint(MacroOpts {
+            banner: false,
+            code_sig: Some(Ident::new(
+                "__custom_code_sig_ident__",
+                proc_macro2::Span::call_site(),
+            )),
+        });
+        println!("{}", entrypoint.to_string());
+        assert!(entrypoint.to_string().contains(
+            "static COLD_HEADER : :: vexide :: startup :: ColdHeader = __custom_code_sig_ident__ ;"
+        ));
     }
 
     #[test]
