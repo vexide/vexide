@@ -10,7 +10,7 @@ use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
     V5_ControllerIndex, V5_ControllerStatus,
 };
-use vexide_core::{competition, competition::CompetitionMode};
+use vexide_core::{competition::{self, CompetitionMode}, time::Instant};
 
 use crate::adi::digital::LogicLevel;
 
@@ -29,7 +29,8 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
 pub struct Button {
     id: ControllerId,
     channel: V5_ControllerIndex,
-    was_pressed: bool,
+    prev_level: LogicLevel,
+    press_timestamp: Option<Instant>,
 }
 
 impl Button {
@@ -58,18 +59,44 @@ impl Button {
         Ok(self.level()?.is_high())
     }
 
-    /// Returns `true` if the button has been pressed again since the last time this
-    /// function was called.
-    pub fn was_pressed(&mut self) -> Result<bool, ControllerError> {
-        if self.is_pressed()? {
-            self.was_pressed = false;
-        } else if !self.was_pressed {
-            self.was_pressed = true;
-            return Ok(true);
-        }
+    /// Returns a list of changes to button state since the last time this
+    /// function was called. For example, if the button was previously pressed
+    /// but is now not, then this function will return [`ButtonEvent::Released`].
+    ///
+    /// This is useful when called in a loop for handling things like one-time
+    /// presses or releases, and acts like an "event loop".
+    pub fn event(&mut self) -> Result<ButtonEvent, ControllerError> {
+        let level = self.level()?;
+        let event = if self.prev_level.is_low() && level.is_high() {
+            // CASE: Previous level was low, but is now high, so the button's been
+            // pressed.
+            ButtonEvent::Press
+        } else if level.is_low() && self.prev_level.is_high() {
+            // CASE: Previous level was high, but is now low, so the button's been
+            // released
+            ButtonEvent::Release
+        } else {
+            // Nothing has changed
+            ButtonEvent::None
+        };
 
-        Ok(false)
+        self.prev_level = level;
+        Ok(event)
     }
+}
+
+/// A possible event for a [`Button`].
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+pub enum ButtonEvent {
+    /// No new events
+    #[default]
+    None,
+
+    /// Button was pressed
+    Press,
+
+    /// Button was released
+    Release,
 }
 
 /// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
@@ -174,8 +201,8 @@ impl ControllerScreen {
 
     /// Clear the contents of a specific text line.
     pub fn clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
-        //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
-        //TODO: We should check the version and change behavior based on it.
+        // TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
+        // TODO: We should check the version and change behavior based on it.
         self.set_text("", line, 0)?;
 
         Ok(())
@@ -244,7 +271,7 @@ impl Controller {
     /// Creating new `Controller`s is inherently unsafe due to the possibility of constructing
     /// more than one screen at once allowing multiple mutable references to the same
     /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
-    pub const unsafe fn new(id: ControllerId) -> Self {
+    pub unsafe fn new(id: ControllerId) -> Self {
         Self {
             id,
             screen: ControllerScreen { id },
@@ -261,62 +288,74 @@ impl Controller {
             button_a: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonA,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             button_b: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonB,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             button_x: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonX,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             button_y: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonY,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             button_up: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonUp,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             button_down: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonDown,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             button_left: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonLeft,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             button_right: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonRight,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             left_trigger_1: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonL1,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             left_trigger_2: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonL2,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             right_trigger_1: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonR1,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
             right_trigger_2: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonR2,
-                was_pressed: false,
+                prev_level: LogicLevel::Low,
+                press_timestamp: None,
             },
         }
     }

@@ -8,20 +8,15 @@ use vexide::prelude::*;
 struct Robot;
 
 impl Competition for Robot {
-    async fn connected(&mut self) {
-        println!("Connected");
-    }
-    async fn disconnected(&mut self) {
-        println!("Disconnected");
-    }
-    async fn disabled(&mut self) {
-        println!("Disabled");
-    }
     async fn driver(&mut self) {
-        println!("Driver");
-    }
-    async fn autonomous(&mut self) {
-        println!("Autonomous");
+        loop {
+            match self.controller.button_a.event().unwrap_or_default() {
+                ButtonEvent::Press | ButtonEvent::Release => self.solenoid.toggle().unwrap(),
+                _ => ()
+            }
+
+            sleep(Controller::UPDATE_INTERVAL).await;
+        }
     }
 }
 
