@@ -23,7 +23,7 @@ extern "Rust" fn main() {
 
 #[no_mangle]
 #[link_section = ".boot"]
-unsafe extern "C" fn _entry() {
+unsafe extern "C" fn _start() {
     unsafe { vexide_startup::program_entry() }
 }
 

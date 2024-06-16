@@ -72,7 +72,7 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
         #[no_mangle]
         #[link_section = ".boot"]
-        unsafe extern "C" fn _entry() {
+        unsafe extern "C" fn _start() {
             unsafe {
                 ::vexide::startup::program_entry()
             }
