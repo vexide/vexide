@@ -93,6 +93,62 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
     }
 }
 
+/// Marks a function as the entrypoint for a vexide program. When the program is started,
+/// the `main` function will be called with a single argument of type `Peripherals` which
+/// allows access to device peripherals like motors, sensors, and the display.
+///
+/// The `main` function must be marked `async` and must not be marked `unsafe`. It may
+/// return any type that implements `Termination`, which includes `()`, `!`, and `Result`.
+///
+/// # Parameters
+///
+/// The `main` attribute can be provided with parameters that alter the behavior of the program.
+///
+/// - `banner`: A boolean value that toggles the vexide startup banner printed over serial.
+///   When `false`, the banner will be not displayed.
+/// - `code_sig`: Allows using a custom `ColdHeader` struct to configure program behavior.
+///
+/// # Examples
+///
+/// The most basic usage of the `main` attribute is to mark an async function as the entrypoint
+/// for a vexide program. The function must take a single argument of type `Peripherals`.
+///
+/// ```ignore
+/// # #![no_std]
+/// # #![no_main]
+/// # use vexide::prelude::*;
+/// # use core::fmt::Write;
+/// #[vexide::main]
+/// async fn main(mut peripherals: Peripherals) {
+///     write!(peripherals.screen, "Hello, vexide!").unwrap();
+/// }
+/// ```
+///
+/// The `main` attribute can also be provided with parameters to customize the behavior of the program.
+///
+/// ```ignore
+/// # #![no_std]
+/// # #![no_main]
+/// # use vexide::prelude::*;
+/// #[vexide::main(banner = false)]
+/// async fn main(_p: Peripherals) {
+///    println!("This is the only serial output from this program!")
+/// }
+/// ```
+///
+/// A custom code signature may be used to further configure the behavior of the program.
+///
+/// ```ignore
+/// # #![no_std]
+/// # #![no_main]
+/// # use vexide::prelude::*;
+/// # use vexide::startup::ColdHeader;
+/// static CODE_SIG: ColdHeader = ColdHeader::new(2, 0, 0);
+/// #[vexide::main(code_sig = CODE_SIG)]
+/// async fn main(_p: Peripherals) {
+///    println!("This is the only serial output from this program!")
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     let item = parse_macro_input!(item as ItemFn);
