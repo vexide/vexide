@@ -146,7 +146,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 /// static CODE_SIG: ColdHeader = ColdHeader::new(2, 0, 0);
 /// #[vexide::main(code_sig = CODE_SIG)]
 /// async fn main(_p: Peripherals) {
-///    println!("This is the only serial output from this program!")
+///    println!("Hello world!")
 /// }
 /// ```
 #[proc_macro_attribute]
