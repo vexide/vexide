@@ -37,10 +37,10 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use vexide::core::{time::Instant, task::delay};
+    /// use vexide::core::time::Instant;
     ///
     /// let now = Instant::now();
-    /// delay(Duration::new(1, 0));
+    /// sleep(Duration::new(1, 0)).await;
     /// let new_now = Instant::now();
     /// println!("{:?}", new_now.duration_since(now));
     /// println!("{:?}", now.duration_since(new_now)); // 0ns
@@ -56,10 +56,10 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use vexide::core::{time::Instant, task::delay};
+    /// use vexide::core::time::Instant;
     ///
     /// let now = Instant::now();
-    /// delay(Duration::new(1, 0));
+    /// sleep(Duration::new(1, 0)).await;
     /// let new_now = Instant::now();
     /// println!("{:?}", new_now.checked_duration_since(now));
     /// println!("{:?}", now.checked_duration_since(new_now)); // None
@@ -79,12 +79,13 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use vexide::core::{time::Instant, task::delay};
+    /// use vexide::core::time::Instant;
     ///
-    /// let instant = Instant::now();
-    /// let three_secs = Duration::from_secs(3);
-    /// delay(three_secs);
-    /// assert!(instant.elapsed() >= three_secs);
+    /// let now = Instant::now();
+    /// sleep(Duration::new(1, 0)).await;
+    /// let new_now = Instant::now();
+    /// println!("{:?}", new_now.saturating_duration_since(now));
+    /// println!("{:?}", now.saturating_duration_since(new_now)); // 0ns
     /// ```
     pub fn saturating_duration_since(&self, earlier: Instant) -> Duration {
         self.checked_duration_since(earlier).unwrap_or_default()
@@ -96,11 +97,11 @@ impl Instant {
     ///
     /// ```no_run
     /// use core::time::Duration;
-    /// use vexide::core::{time::Instant, task::delay};
+    /// use vexide::core::time::Instant;
     ///
     /// let instant = Instant::now();
     /// let three_secs = Duration::from_secs(3);
-    /// delay(three_secs);
+    /// sleep(three_secs).await;
     /// assert!(instant.elapsed() >= three_secs);
     /// ```
     pub fn elapsed(&self) -> Duration {
