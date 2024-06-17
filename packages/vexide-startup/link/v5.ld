@@ -14,12 +14,12 @@ __stack_length = 0x400000;
 __heap_end = __user_ram_end - __stack_length - 64;
 
 SECTIONS {
-    .code_signature __user_ram_start : {
+    .text : {
+        __text_start = .;
         KEEP(*(.code_signature))
-    } > USER_RAM = 0
-
-    .text __user_ram_start + 0x20 : {
-        *(.text.boot)
+        /* Size of cold header */
+        . = __text_start + 0x20;
+        *(.boot)
         *(.text .text.*)
     } > USER_RAM
 
