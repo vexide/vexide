@@ -5,21 +5,18 @@ edition = "2021"
 license = "MIT"
 description = "Support code for V5 Brain user program booting"
 keywords = ["Robotics", "startup", "vex", "v5"]
-categories = [
-    "no-std",
-    "science::robotics",
-]
+categories = ["no-std", "science::robotics"]
 repository = "https://github.com/vexide/vexide"
 authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
-    "Tropical"
+    "Tropical",
 ]
 
 [dependencies]
 vex-sdk = "0.14.0"
-vexide-core = { version = "0.2.0", path = "../vexide-core"}
+vexide-core = { version = "0.2.0", path = "../vexide-core" }
 vexide-async = { version = "0.1.1", path = "../vexide-async" }
 vexide-devices = { version = "0.2.0", path = "../vexide-devices" }
 
@@ -28,5 +25,3 @@ workspace = true
 
 [features]
 default = []
-
-no-banner = []

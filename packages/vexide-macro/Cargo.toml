@@ -9,7 +9,7 @@ authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
-    "Tropical"
+    "Tropical",
 ]
 repository = "https://github.com/vexide/vexide"
 
@@ -20,3 +20,6 @@ syn = { version = "^2.0.57", features = ["full"] }
 
 [lib]
 proc-macro = true
+
+[lints]
+workspace = true

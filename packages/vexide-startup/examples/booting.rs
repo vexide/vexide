@@ -21,7 +21,7 @@ extern "Rust" fn main() {
 #[no_mangle]
 #[link_section = ".boot"]
 unsafe extern "C" fn _entry() {
-    unsafe { vexide_startup::program_entry() }
+    unsafe { vexide_startup::program_entry::<true>() }
 }
 
 #[link_section = ".cold_magic"]
@@ -29,6 +29,6 @@ unsafe extern "C" fn _entry() {
 static COLD_HEADER: vexide_startup::ColdHeader = vexide_startup::ColdHeader::new(2, 0, 0);
 
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
+const fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
     loop {}
 }

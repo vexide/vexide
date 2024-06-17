@@ -7,7 +7,7 @@ use vexide::prelude::*;
 
 struct Robot;
 
-impl Competition for Robot {
+impl Compete for Robot {
     async fn connected(&mut self) {
         println!("Connected");
     }

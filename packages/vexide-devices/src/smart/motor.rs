@@ -432,7 +432,8 @@ impl Motor {
     ) -> Result<(), MotorError> {
         self.validate_port()?;
 
-        unsafe { vexDeviceMotorVelocityPidSet(self.device, constants.into()) }
+        let mut constants = V5_DeviceMotorPid::from(constants);
+        unsafe { vexDeviceMotorVelocityPidSet(self.device, &mut constants) }
 
         Ok(())
     }
@@ -455,7 +456,8 @@ impl Motor {
     ) -> Result<(), MotorError> {
         self.validate_port()?;
 
-        unsafe { vexDeviceMotorPositionPidSet(self.device, constants.into()) }
+        let mut constants = V5_DeviceMotorPid::from(constants);
+        unsafe { vexDeviceMotorPositionPidSet(self.device, &mut constants) }
 
         Ok(())
     }

@@ -21,8 +21,9 @@ extern "C" {
     static mut __bss_end: u32;
 }
 
+/// The cold header is a structure that is placed at the beginning of cold memory and tells VEXos details about the program.
 #[repr(C, packed)]
-/// The cold header is a structure that is placed at the beginning of cold memory and tells VexOS details abuot the program.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ColdHeader {
     /// The magic number for the cold header. This should always be "XVX5".
     pub magic: [u8; 4],
@@ -55,11 +56,15 @@ extern "Rust" {
 /// Sets up the user stack, zeroes the BSS section, and calls the user code.
 /// This function is designed to be used as an entrypoint for programs on the VEX V5 Brain.
 ///
+/// # Const Parameters
+///
+/// - `BANNER`: Enables the vexide startup banner, which prints the vexide logo ASCII art and a startup message.
+///
 /// # Safety
 ///
 /// This function MUST only be called once and should only be called at the very start of program initialization.
 /// Calling this function more than one time will seriously mess up both your stack and your heap.
-pub unsafe fn program_entry() {
+pub unsafe fn program_entry<const BANNER: bool>() {
     #[cfg(target_arch = "arm")]
     unsafe {
         use core::arch::asm;
@@ -90,9 +95,9 @@ pub unsafe fn program_entry() {
         #[cfg(target_arch = "arm")]
         vexide_core::allocator::vexos::init_heap();
         // Print the banner
-        #[cfg(not(feature = "no-banner"))]
-        print!(
-            "
+        if BANNER {
+            print!(
+                "
 \x1B[1;38;5;196m=%%%%%#-  \x1B[38;5;254m-#%%%%-\x1B[1;38;5;196m  :*%%%%%+.
 \x1B[38;5;208m  -#%%%%#-  \x1B[38;5;254m:%-\x1B[1;38;5;208m  -*%%%%#
 \x1B[38;5;226m    *%%%%#=   -#%%%%%+
@@ -103,7 +108,8 @@ pub unsafe fn program_entry() {
 vexide startup successful!
 Running user code...
 "
-        );
+            );
+        }
         // Run vexos background processing at a regular 2ms interval.
         // This is necessary for serial and devices to work properly.
         vexide_async::task::spawn(async {

@@ -63,7 +63,7 @@ impl AdiAddrLed {
             self.update();
             Ok(())
         } else {
-            return Err(AddrLedError::OutOfRange);
+            Err(AddrLedError::OutOfRange)
         }
     }
 
