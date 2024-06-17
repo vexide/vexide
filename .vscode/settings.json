@@ -15,6 +15,7 @@
         "${workspaceFolder}/armv7a-vexos-eabi.json",
         "wasm32-unknown-unknown"
     ],
+    "rust-analyzer.check.command": "clippy",
     "rust-analyzer.showUnlinkedFileNotification": false,
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
