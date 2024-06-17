@@ -1,3 +1,5 @@
+//! This crate provides a procedural macro for marking the entrypoint of a [vexide](https://vexide.dev) program.
+
 use parse::{Attrs, MacroOpts};
 use proc_macro::TokenStream;
 use quote::quote;

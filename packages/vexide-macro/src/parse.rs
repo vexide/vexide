@@ -45,7 +45,7 @@ pub struct Attrs {
 }
 
 impl Parse for Attrs {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
         Ok(Self {
             attr_list: Punctuated::parse_terminated(input)?,
         })
@@ -58,7 +58,7 @@ pub enum Attribute {
 }
 
 impl Parse for Attribute {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(kw::banner) {
             input.parse().map(Attribute::Banner)
@@ -77,13 +77,13 @@ pub struct Banner {
 }
 
 impl Banner {
-    pub fn as_bool(&self) -> bool {
+    pub const fn as_bool(&self) -> bool {
         self.arg.value
     }
 }
 
 impl Parse for Banner {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
         Ok(Self {
             token: input.parse()?,
             eq: input.parse()?,
@@ -113,7 +113,7 @@ impl CodeSig {
 }
 
 impl Parse for CodeSig {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
         Ok(Self {
             token: input.parse()?,
             eq: input.parse()?,
