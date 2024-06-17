@@ -25,7 +25,7 @@ struct ClawBot {
     controller: Controller,
 }
 
-impl Competition for ClawBot {
+impl Compete for ClawBot {
     async fn autonomous(&mut self) {
         // Basic example autonomous that moves the drivetrain 10 revolutions forwards.
         self.left_motor
