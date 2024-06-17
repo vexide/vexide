@@ -21,7 +21,7 @@ extern "Rust" fn main() {
 #[no_mangle]
 #[link_section = ".boot"]
 unsafe extern "C" fn _entry() {
-    unsafe { vexide_startup::program_entry() }
+    unsafe { vexide_startup::program_entry::<true>() }
 }
 
 #[link_section = ".cold_magic"]
