@@ -108,7 +108,7 @@ impl Compete for ClawBot {
             } else if l2_pressed && !limit_switch_pressed {
                 self.claw.set_voltage(-12.0).ok();
             } else {
-                self.arm.brake(BrakeMode::Hold).ok();
+                self.claw.brake(BrakeMode::Hold).ok();
             }
 
             // Sleep some time, since we're limited by how fast the controller updates.
