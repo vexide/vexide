@@ -19,7 +19,7 @@ impl Position {
     /// Creates a position from a custom tick reading with a given ticks-per-revolution value.
     ///
     /// Essentially scales this value to the internal 36000 ticks per revolution.
-    pub fn from_ticks(ticks: i64, tpr: u32) -> Self {
+    pub const fn from_ticks(ticks: i64, tpr: u32) -> Self {
         Self(ticks * Self::INTERNAL_TPR as i64 / tpr as i64)
     }
 
@@ -54,7 +54,7 @@ impl Position {
     }
 
     /// Returns this position's value scaled to another tick value with a different TPR.
-    pub fn as_ticks(&self, tpr: u32) -> i64 {
+    pub const fn as_ticks(&self, tpr: u32) -> i64 {
         (self.0 * tpr as i64) / Self::INTERNAL_TPR as i64
     }
 }
