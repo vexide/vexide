@@ -21,7 +21,7 @@ extern "C" {
     static mut __bss_end: u32;
 }
 
-/// The cold header is a structure that is placed at the beginning of cold memory and tells VexOS details about the program.
+/// The cold header is a structure that is placed at the beginning of cold memory and tells VEXos details about the program.
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ColdHeader {
