@@ -18,9 +18,9 @@
     "rust-analyzer.cargo.extraArgs": [
         "--examples",
         "--lib",
-        "--bins",
-        "--all-features"
+        "--bins"
     ],
+    "rust-analyzer.cargo.features": "all",
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.showUnlinkedFileNotification": false,
     "files.trimTrailingWhitespace": true,
