@@ -10,10 +10,16 @@
         "opcontrol",
         "vexlink"
     ],
-    "rust-analyzer.check.allTargets": false,
+    "rust-analyzer.cargo.allTargets": false,
     "rust-analyzer.check.targets": [
         "${workspaceFolder}/armv7a-vexos-eabi.json",
         "wasm32-unknown-unknown"
+    ],
+    "rust-analyzer.cargo.extraArgs": [
+        "--examples",
+        "--lib",
+        "--bins",
+        "--all-features"
     ],
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.showUnlinkedFileNotification": false,
