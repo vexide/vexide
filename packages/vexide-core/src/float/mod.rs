@@ -5,7 +5,11 @@
 
 //! Provides implementations for the `critical_section` crate on the V5 brain and in WASM environments.
 
-#[cfg(all(target_arch = "arm", target_os = "none", not(feature = "force_rust_libm")))]
+#[cfg(all(
+    target_arch = "arm",
+    target_os = "none",
+    not(feature = "force_rust_libm")
+))]
 mod newlib;
 
 #[cfg(any(target_arch = "wasm32", feature = "force_rust_libm"))]
