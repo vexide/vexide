@@ -37,6 +37,7 @@ replace_with = { version = "0.1.7", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 dlmalloc = { version = "0.2.4", features = ["global"] }
+libm = "0.2.8"
 
 [lints]
 workspace = true

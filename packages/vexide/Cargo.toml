@@ -23,14 +23,13 @@ vexide-async = { version = "0.1.1", path = "../vexide-async", optional = true }
 vexide-devices = { version = "0.2.0", path = "../vexide-devices", optional = true }
 vexide-panic = { version = "0.1.1", path = "../vexide-panic", optional = true }
 vexide-core = { version = "0.2.0", path = "../vexide-core", optional = true }
-vexide-math = { version = "0.1.1", path = "../vexide-math", optional = true }
 vexide-startup = { version = "0.1.2", path = "../vexide-startup", optional = true }
 vexide-graphics = { version = "0.1.1", path = "../vexide-graphics", optional = true }
 vexide-macro = { version = "0.1.0", path = "../vexide-macro", optional = true }
 vex-sdk = "0.17.0"
 
 [features]
-default = ["async", "devices", "panic", "display_panics", "core", "math", "startup", "macro"]
+default = ["async", "devices", "panic", "display_panics", "core", "startup", "macro"]
 
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 
@@ -40,8 +39,6 @@ startup = ["dep:vexide-startup"]
 async = ["dep:vexide-async"]
 
 devices = ["dep:vexide-devices"]
-
-math = ["dep:vexide-math"]
 
 graphics = ["dep:vexide-graphics"]
 slint = ["vexide-graphics/slint", "graphics"]

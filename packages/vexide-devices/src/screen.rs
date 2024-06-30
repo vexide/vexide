@@ -13,7 +13,8 @@ use vex_sdk::{
     vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
     vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
     vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
-    vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
+    vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexTouchDataGet, V5_TouchEvent,
+    V5_TouchStatus,
 };
 
 use crate::{color::IntoRgb, geometry::Point2};
@@ -46,6 +47,7 @@ impl core::fmt::Write for Screen {
             vexDisplayForegroundColor(0xffffff);
             vexDisplayString(
                 self.current_line as i32,
+                c"%s".as_ptr(),
                 CString::new(self.writer_buffer.clone())
                     .expect(
                         "CString::new encountered NUL (U+0000) byte in non-terminating position.",
@@ -73,8 +75,11 @@ pub trait Stroke {
 /// A circle that can be drawn on the screen.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Circle {
-    center: Point2<i16>,
-    radius: u16,
+    /// Center point(coordinates) of the circle
+    pub center: Point2<i16>,
+
+    /// Radius of the circle
+    pub radius: u16,
 }
 
 impl Circle {
@@ -118,8 +123,11 @@ impl Stroke for Circle {
 /// The width is the same as the pen width.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Line {
-    start: Point2<i16>,
-    end: Point2<i16>,
+    /// Start point(coordinate) of the line
+    pub start: Point2<i16>,
+
+    /// End point(coordinate) of the line
+    pub end: Point2<i16>,
 }
 
 impl Line {
@@ -160,8 +168,11 @@ impl<T: Into<Point2<i16>> + Copy> Fill for T {
 /// A rectangular region of the screen.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
-    pub(crate) start: Point2<i16>,
-    pub(crate) end: Point2<i16>,
+    /// First point(coordinate) of the rectangle
+    pub start: Point2<i16>,
+
+    /// Second point(coordinate) of the rectangle
+    pub end: Point2<i16>,
 }
 
 impl Rect {
@@ -243,47 +254,157 @@ pub enum TextSize {
     Large,
 }
 
-/// A peice of text that can be drawn on the display.
+/// Horizontal alignment for text on the screen
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
+pub enum HAlign {
+    /// Input coordinate is at the left of the text box
+    #[default]
+    Left,
+    /// Input coordinate is at the center of the text box
+    Center,
+    /// Input coordinate is at the right of the text box
+    Right,
+}
+
+/// Vertical alignment for text on the screen
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
+pub enum VAlign {
+    /// Input coordinate is at the top of the text box
+    #[default]
+    Top,
+    /// Input coordinate is at the center of the text box
+    Center,
+    /// Input coordinate is at the bottom of the text box
+    Bottom,
+}
+
+/// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text {
-    position: Point2<i16>,
-    text: CString,
-    size: TextSize,
+    /// Top left corner coordinates of text on the screen
+    pub position: Point2<i16>,
+    /// C-String of the desired text to be displayed on the screen
+    pub text: CString,
+    /// Size of text to be displayed on the screen
+    pub size: TextSize,
+    /// Horizontal alignment of text displayed on the screen
+    pub horizontal_align: HAlign,
+    /// Vertical alignment of text displayed on the screen
+    pub vertical_align: VAlign,
 }
 
 impl Text {
-    /// Create a new text with a given position and format
+    /// Create a new text with a given position(defaults to top left corner alignment) and format
     pub fn new(text: &str, size: TextSize, position: impl Into<Point2<i16>>) -> Self {
+        Self::new_aligned(text, size, position, HAlign::default(), VAlign::default())
+    }
+
+    /// Create a new text with a given position(based on alignment) and format
+    pub fn new_aligned(
+        text: &str,
+        size: TextSize,
+        position: impl Into<Point2<i16>>,
+        horizontal_align: HAlign,
+        vertical_align: VAlign,
+    ) -> Self {
         Self {
             text: CString::new(text)
                 .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
             position: position.into(),
             size,
+            horizontal_align,
+            vertical_align,
+        }
+    }
+
+    /// Change text alignment
+    pub fn align(&mut self, horizontal_align: HAlign, vertical_align: VAlign) {
+        self.horizontal_align = horizontal_align;
+        self.vertical_align = vertical_align;
+    }
+
+    /// Get the height of the text widget in pixels
+    pub fn height(&self) -> u16 {
+        unsafe {
+            // Display blank string(no-op function) to set last used text size
+            // vexDisplayString(Height/Width)Get uses the last text size to determine text size
+            match self.size {
+                TextSize::Small => {
+                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Medium => {
+                    vexDisplayStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Large => {
+                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
+                }
+            }
+
+            vexDisplayStringHeightGet(self.text.as_ptr()) as _
+        }
+    }
+
+    /// Get the width of the text widget in pixels
+    pub fn width(&self) -> u16 {
+        unsafe {
+            match self.size {
+                // Display blank string(no-op function) to set last used text size
+                // vexDisplayString(Height/Width)Get uses the last text size to determine text size
+                TextSize::Small => {
+                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Medium => {
+                    vexDisplayStringAt(0, 0, c"".as_ptr());
+                }
+                TextSize::Large => {
+                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
+                }
+            }
+
+            vexDisplayStringWidthGet(self.text.as_ptr()) as _
         }
     }
 }
 
 impl Fill for Text {
     fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+        // Horizontally align text
+        let x = match self.horizontal_align {
+            HAlign::Left => self.position.x,
+            HAlign::Center => self.position.x - (self.width() / 2) as i16,
+            HAlign::Right => self.position.x - self.width() as i16,
+        };
+
+        // Vertically align text
+        let y = match self.vertical_align {
+            VAlign::Top => self.position.y,
+            VAlign::Center => self.position.y - (self.height() / 2) as i16,
+            VAlign::Bottom => self.position.y - self.height() as i16,
+        };
+
         // This implementation is technically broken because it doesn't account errno.
         // This will be fixed once we have switched to vex-sdk.
         unsafe {
             vexDisplayForegroundColor(color.into_rgb().into());
 
+            // Use %s and varargs to escape the string to stop undefined and unsafe behavior
             match self.size {
                 TextSize::Small => vexDisplaySmallStringAt(
-                    self.position.x as _,
-                    (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    x as _,
+                    (y + Screen::HEADER_HEIGHT) as _,
+                    c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
                 TextSize::Medium => vexDisplayStringAt(
-                    self.position.x as _,
-                    (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    x as _,
+                    (y + Screen::HEADER_HEIGHT) as _,
+                    c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
                 TextSize::Large => vexDisplayBigStringAt(
-                    self.position.x as _,
-                    (self.position.y + Screen::HEADER_HEIGHT) as _,
+                    x as _,
+                    (y + Screen::HEADER_HEIGHT) as _,
+                    c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
             }
@@ -385,6 +506,7 @@ impl Screen {
             vexDisplayForegroundColor(0xffffff);
             vexDisplayString(
                 self.current_line as i32,
+                c"%s".as_ptr(),
                 CString::new(self.writer_buffer.clone())
                     .expect(
                         "CString::new encountered NUL (U+0000) byte in non-terminating position.",

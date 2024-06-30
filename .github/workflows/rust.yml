@@ -3,76 +3,83 @@ name: Rust
 on: [push, pull_request]
 
 jobs:
-  check:
-    name: Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup | Checkout
-        uses: actions/checkout@v2
+    # Check and lint are separated because linting doesn't seem to fail
+    # if there are errors are outside of the PR's changes.
+    check:
+        name: Check
+        runs-on: ubuntu-latest
+        steps:
+            - name: Setup | Checkout
+              uses: actions/checkout@v2
 
-      - name: Setup | Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly-2024-02-07
-          override: true
+            - name: Setup | Toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  profile: minimal
+                  toolchain: nightly-2024-02-07
+                  override: true
 
-      - name: Check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-  check-examples:
-    name: Check Examples
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup | Checkout
-        uses: actions/checkout@v2
+            - name: Check
+              uses: actions-rs/cargo@v1
+              with:
+                  command: check
+                  args: --lib --bins --examples --all-features
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: dtolnay/rust-toolchain@nightly
+              with:
+                  components: clippy
+            - uses: giraffate/clippy-action@v1
+              with:
+                  reporter: "github-pr-check"
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  clippy_flags: --lib --bins --examples --all-features
+    test:
+        name: Test
+        runs-on: ubuntu-latest
+        steps:
+            - name: Setup | Checkout
+              uses: actions/checkout@v2
 
-      - name: Setup | Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly-2024-02-07
-          override: true
+            - name: Setup | Toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  profile: minimal
+                  toolchain: nightly-2024-02-07
+                  override: true
 
-      - name: Check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --examples
-  fmt:
-    name: Rustfmt
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup | Checkout
-        uses: actions/checkout@v2
+            # Currently other crates do not compile in test mode as
+            # `cargo test` doesn't work with our target. `vexide-macro`
+            # is an exception because it is a proc-macro crate.
+            # This isn't actually a big issue at the time of writing because
+            # those crates don't have tests.
+            - name: Test vexide-macro
+              uses: actions-rs/cargo@v1
+              with:
+                  command: test
+                  args: --lib --bins --examples --all-features -p vexide-macro
+    fmt:
+        name: Rustfmt
+        runs-on: ubuntu-latest
+        steps:
+            - name: Setup | Checkout
+              uses: actions/checkout@v2
 
-      - name: Setup | Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly-2024-02-07
-          override: true
+            - name: Setup | Toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  profile: minimal
+                  toolchain: nightly-2024-02-07
+                  override: true
 
-      - name: Setup | Install Rustfmt
-        run: rustup component add rustfmt
+            - name: Setup | Install Rustfmt
+              run: rustup component add rustfmt
 
-      - name: Format
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
-      with:
-        components: clippy
-    - uses: giraffate/clippy-action@v1
-      with:
-        reporter: 'github-pr-check'
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        clippy_flags: --all-targets --all-features
+            - name: Format
+              uses: actions-rs/cargo@v1
+              with:
+                  command: fmt
+                  args: --all -- --check

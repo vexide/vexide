@@ -23,11 +23,15 @@ Before releasing:
 
 ### Added
 
+- The startup banner and code signature may now be configured using parameters passed to `vexide::main`. (#102)
+
 ### Fixed
 
 ### Changed
 
 ### Removed
+
+- The `no-banner` feature has been removed from `vexide-startup` and must now be toggled through the `vexide:main` attribute. (#102)
 
 ### New Contributors
 

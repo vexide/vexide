@@ -24,7 +24,7 @@ extern "Rust" fn main() {
 #[no_mangle]
 #[link_section = ".boot"]
 unsafe extern "C" fn _start() {
-    unsafe { vexide_startup::program_entry() }
+    unsafe { vexide_startup::program_entry::<true>() }
 }
 
 #[link_section = ".code_signature"]
@@ -36,6 +36,6 @@ static CODE_SIGNATURE: CodeSignature = CodeSignature::new(
 );
 
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
+const fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
     loop {}
 }

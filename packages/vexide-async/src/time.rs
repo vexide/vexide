@@ -43,6 +43,6 @@ pub fn sleep(duration: Duration) -> Sleep {
 }
 
 /// Returns a future that waits until a deadline is reached.
-pub fn sleep_until(deadline: Instant) -> Sleep {
+pub const fn sleep_until(deadline: Instant) -> Sleep {
     Sleep(deadline)
 }
