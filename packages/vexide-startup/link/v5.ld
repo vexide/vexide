@@ -11,7 +11,7 @@ MEMORY {
 }
 
 __stack_length = 0x400000;
-__heap_end = __user_ram_end - __stack_length - 512;
+__heap_end = __user_ram_end - __stack_length - 0x100;
 
 SECTIONS {
     .text : {
