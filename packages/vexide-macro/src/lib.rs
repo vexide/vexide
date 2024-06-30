@@ -234,7 +234,7 @@ mod test {
         });
         println!("{}", entrypoint.to_string());
         assert!(entrypoint.to_string().contains(
-            "static COLD_HEADER : :: vexide :: startup :: CodeSignature = __custom_code_sig_ident__ ;"
+            "static CODE_SIG : :: vexide :: startup :: CodeSignature = __custom_code_sig_ident__ ;"
         ));
     }
 

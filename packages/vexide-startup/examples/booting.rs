@@ -6,7 +6,7 @@
 extern crate alloc;
 use alloc::boxed::Box;
 
-use vex_sdk::{vcodesig, vexTasksRun};
+use vex_sdk::vexTasksRun;
 use vexide_core::println;
 use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
@@ -29,7 +29,7 @@ unsafe extern "C" fn _start() {
 
 #[link_section = ".code_signature"]
 #[used] // This is needed to prevent the linker from removing this object in release builds
-static CODE_SIGNATURE: CodeSignature = CodeSignature::new(
+static CODE_SIG: CodeSignature = CodeSignature::new(
     ProgramType::User,
     ProgramOwner::Partner,
     ProgramFlags::empty(),
