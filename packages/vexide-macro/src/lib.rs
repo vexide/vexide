@@ -94,7 +94,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 
             #[link_section = ".code_signature"]
             #[used] // This is needed to prevent the linker from removing this object in release builds
-            static CODE_SIGNATURE: ::vexide::startup::CodeSignature = #code_signature;
+            static CODE_SIG: ::vexide::startup::CodeSignature = #code_signature;
         };
     }
 }
