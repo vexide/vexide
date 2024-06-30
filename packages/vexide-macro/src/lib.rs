@@ -112,7 +112,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 ///
 /// - `banner`: A boolean value that toggles the vexide startup banner printed over serial.
 ///   When `false`, the banner will be not displayed.
-/// - `code_sig`: Allows using a custom `ColdHeader` struct to configure program behavior.
+/// - `code_sig`: Allows using a custom `CodeSignature` struct to configure program behavior.
 ///
 /// # Examples
 ///
@@ -148,8 +148,12 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 /// # #![no_std]
 /// # #![no_main]
 /// # use vexide::prelude::*;
-/// # use vexide::startup::ColdHeader;
-/// static CODE_SIG: ColdHeader = ColdHeader::new(2, 0, 0);
+/// # use vexide::startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+/// static CODE_SIG: CodeSignature = CodeSignature::new(
+///     ProgramType::User,
+///     ProgramOwner::Partner,
+///     ProgramFlags::empty(),
+/// );
 /// #[vexide::main(code_sig = CODE_SIG)]
 /// async fn main(_p: Peripherals) {
 ///    println!("Hello world!")
@@ -230,7 +234,7 @@ mod test {
         });
         println!("{}", entrypoint.to_string());
         assert!(entrypoint.to_string().contains(
-            "static COLD_HEADER : :: vexide :: startup :: ColdHeader = __custom_code_sig_ident__ ;"
+            "static COLD_HEADER : :: vexide :: startup :: CodeSignature = __custom_code_sig_ident__ ;"
         ));
     }
 

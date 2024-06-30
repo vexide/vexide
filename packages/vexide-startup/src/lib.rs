@@ -61,7 +61,7 @@ bitflags! {
 /// The first 16 bytes of a VEX user code binary contain a user code signature,
 /// containing some basic metadata and startup flags about the program. This
 /// signature must be at the start of the binary for booting to occur.
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct CodeSignature(vex_sdk::vcodesig, [u32; 4]);
 
 impl CodeSignature {
