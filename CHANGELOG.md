@@ -23,11 +23,23 @@ Before releasing:
 
 ### Added
 
+- The startup banner and code signature may now be configured using parameters passed to `vexide::main`. (#102)
+- Added the ``ProgramOwner``, ``ProgramType``, and ``ProgramFlags`` types for code signature configuration. (#76)
+
 ### Fixed
 
 ### Changed
 
+- Updated ``vex-sdk`` to version 0.17.0. (#76)
+- Renamed ``ColdHeader`` to ``CodeSignature``. (#76) (**Breaking Change**)
+- Renamed the entrypoint symbol from ``_entry`` to ``_start``. (#76) (**Breaking Change**)
+- Renamed ``__stack_start`` and ``__stack_end`` symbols to ``__stack_top`` and ``__stack_bottom`` respectively. (#76) (**Breaking Change**)
+- Renamed the ``.cold_magic`` section to ``.code_signature``. (#76) (**Breaking Change**)
+
 ### Removed
+
+- The `no-banner` feature has been removed from `vexide-startup` and must now be toggled through the `vexide:main` attribute. (#102)
+- Removed the useless ``__rodata_start`` and ``__rodata_end`` symbols.
 
 ### New Contributors
 

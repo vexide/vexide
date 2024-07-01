@@ -1,4 +1,11 @@
 //! VEXos implementation of floating-point math.
+//!
+//! This file leverages and links the newlib's libm implementation compiled
+//! for an ARMv7a target using the softfp ABI as part of the ARM's
+//! arm-none-eabi-gcc toolchain.
+//!
+//! More information (and source code) regarding newlib can be found here:
+//! <https://sourceware.org/newlib/>
 
 use core::ffi::{c_double, c_float, c_int};
 
