@@ -24,7 +24,7 @@ authors = [
 async-task = { version = "4.5.0", default-features = false }
 vexide-core = { version = "0.2.0", path = "../vexide-core" }
 waker-fn = "1.1.1"
-vex-sdk = "0.14.0"
+vex-sdk = "0.17.0"
 critical-section = { version = "1.1.2", features = ["restore-state-bool"] }
 
 [lints]
