@@ -34,6 +34,8 @@ default = ["async", "devices", "panic", "display_panics", "core", "startup", "ma
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 
 core = ["dep:vexide-core"]
+force_rust_libm = ["vexide-core/force_rust_libm"]
+
 startup = ["dep:vexide-startup"]
 
 async = ["dep:vexide-async"]
