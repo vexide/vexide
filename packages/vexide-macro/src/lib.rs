@@ -72,25 +72,29 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
     } else {
         quote! { false }
     };
-    let cold_header = if let Some(code_sig) = opts.code_sig {
+    let code_signature = if let Some(code_sig) = opts.code_sig {
         quote! { #code_sig }
     } else {
-        quote! { ::vexide::startup::ColdHeader::new(2, 0, 0) }
+        quote! {  ::vexide::startup::CodeSignature::new(
+            ::vexide::startup::ProgramType::User,
+            ::vexide::startup::ProgramOwner::Partner,
+            ::vexide::startup::ProgramFlags::empty(),
+        ) }
     };
 
     quote! {
         const _: () = {
             #[no_mangle]
             #[link_section = ".boot"]
-            unsafe extern "C" fn _entry() {
+            unsafe extern "C" fn _start() {
                 unsafe {
                     ::vexide::startup::program_entry::<#banner_arg>()
                 }
             }
 
-            #[link_section = ".cold_magic"]
+            #[link_section = ".code_signature"]
             #[used] // This is needed to prevent the linker from removing this object in release builds
-            static COLD_HEADER: ::vexide::startup::ColdHeader = #cold_header;
+            static __CODE_SIGNATURE: ::vexide::startup::CodeSignature = #code_signature;
         };
     }
 }
@@ -108,7 +112,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 ///
 /// - `banner`: A boolean value that toggles the vexide startup banner printed over serial.
 ///   When `false`, the banner will be not displayed.
-/// - `code_sig`: Allows using a custom `ColdHeader` struct to configure program behavior.
+/// - `code_sig`: Allows using a custom `CodeSignature` struct to configure program behavior.
 ///
 /// # Examples
 ///
@@ -144,8 +148,12 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 /// # #![no_std]
 /// # #![no_main]
 /// # use vexide::prelude::*;
-/// # use vexide::startup::ColdHeader;
-/// static CODE_SIG: ColdHeader = ColdHeader::new(2, 0, 0);
+/// # use vexide::startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+/// static CODE_SIG: CodeSignature = CodeSignature::new(
+///     ProgramType::User,
+///     ProgramOwner::Partner,
+///     ProgramFlags::empty(),
+/// );
 /// #[vexide::main(code_sig = CODE_SIG)]
 /// async fn main(_p: Peripherals) {
 ///    println!("Hello world!")
@@ -226,7 +234,7 @@ mod test {
         });
         println!("{}", entrypoint.to_string());
         assert!(entrypoint.to_string().contains(
-            "static COLD_HEADER : :: vexide :: startup :: ColdHeader = __custom_code_sig_ident__ ;"
+            "static __CODE_SIGNATURE : :: vexide :: startup :: CodeSignature = __custom_code_sig_ident__ ;"
         ));
     }
 
