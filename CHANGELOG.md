@@ -25,7 +25,7 @@ Before releasing:
 
 - The startup banner and code signature may now be configured using parameters passed to `vexide::main`. (#102)
 - Added the ``ProgramOwner``, ``ProgramType``, and ``ProgramFlags`` types for code signature configuration. (#76)
-- Created new ``force_rust_libm`` feature to force the use of a slower, 100% Rust, libm implementation. This is useful for building on WASM. (#76)
+- Created new ``force_rust_libm`` feature to force the use of a slower, 100% Rust, libm implementation. This is useful for building on WASM. (#106)
 
 ### Fixed
 
