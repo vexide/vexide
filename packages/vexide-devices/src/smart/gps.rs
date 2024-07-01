@@ -6,9 +6,8 @@ use vex_sdk::{
     vexDeviceGpsAttitudeGet, vexDeviceGpsDataRateSet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet,
     vexDeviceGpsHeadingGet, vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet,
     vexDeviceGpsOriginSet, vexDeviceGpsQuaternionGet, vexDeviceGpsRawAccelGet,
-    vexDeviceGpsRawGyroGet, vexDeviceGpsRotationGet, vexDeviceGpsStatusGet,
-    vexDeviceGpsTemperatureGet, V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion, V5_DeviceGpsRaw,
-    V5_DeviceT,
+    vexDeviceGpsRawGyroGet, vexDeviceGpsRotationGet, vexDeviceGpsStatusGet, V5_DeviceGpsAttitude,
+    V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
@@ -119,13 +118,6 @@ impl GpsSensor {
         self.validate_port()?;
 
         Ok(unsafe { vexDeviceGpsStatusGet(self.device) })
-    }
-
-    /// Returns the internal temperature of the sensor.
-    pub fn temperature(&self) -> Result<f64, PortError> {
-        self.validate_port()?;
-
-        Ok(unsafe { vexDeviceGpsTemperatureGet(self.device) })
     }
 }
 
