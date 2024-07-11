@@ -28,7 +28,6 @@ SECTIONS {
     } > USER_RAM
 
     .rodata : {
-        *(.rodata .rodata.*)
         *(.rodata1 .rodata1.*)
     } > USER_RAM
 
