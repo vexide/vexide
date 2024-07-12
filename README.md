@@ -4,39 +4,34 @@ Work in progress high level bindings for the V5 Brain VEX SDK.
 Unlike other libraries for the V5 Brain, vexide doesn't use an RTOS.
 Instead, vexide leverages Rust's powerful async/await (cooperative multitasking) to allow faster and more user friendly code.
 
-vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which now serves as a slightly more stable, but unmaintained api using bindings over [PROS](https://github.com/purduesigbots/pros).
+vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which now serves as a slightly more stable, but unmaintained API using bindings over [PROS](https://github.com/purduesigbots/pros).
 
 vexide is still in development but we are quickly moving towards competition readiness.
 
-## Usage
+## Setup
 
-## Compiling
-
-The vexide library itself has no external dependencies, but cargo-pros depends on pros-cli for uploading and cargo-binutils for necessary binary modification.
+The only tool you will need to install in order to build, upload, and view to output of vexide programs is `cargo-v5`.
 Read the installation guide for your OS to see how to get things set up.
 
 ### Windows
-Steps:
-1. Install the pros cli, instructions are [here](https://pros.cs.purdue.edu/v5/getting-started/windows.html)
-2. Install cargo pros with ``cargo install cargo-pros``
-3. Install cargo-binutils with ``cargo install cargo-binutils``
 
-To compile the project just run ``cargo pros build``.
+Install `cargo-v5` with ``cargo install cargo-v5``
+
 
 ### Linux
 
+In order to upload programs without superuser permissions you may have to add your user to the `dialout` group.
 The steps for getting vexide compiling are slightly different based on if you use Nix or not.
 
 #### With Nix
 
-The Nix flake contains the Arm GNU Toolchain, cargo pros, and pros-cli.
+The Nix flake contains cargo-v5 and a working Rust toolchain.
 
 There is a ``.envrc`` file included for Nix + Direnv users.
 
 #### Without Nix
 
-Install cargo-binutils and pros-cli from your package manager of choice.
-Cargo pros can be installed with ``cargo install cargo-pros``.
+Cargo v5 can be installed with ``cargo install cargo-v5``.
 
 ### MacOS
 
@@ -52,6 +47,12 @@ Install pros-cli with
 `brew install purduesigbots/pros/pros-cli`.
 
 And you are done! Compile the project with `cargo build`.
+
+## Usage
+
+To upload your project run `cargo v5 upload --release`.
+To build your project without uploading it you can run `cargo v5 build --release`.
+To view the output of your program run `cargo v5 terminal`.
 
 ## Compiling for WASM
 
