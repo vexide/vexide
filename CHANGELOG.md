@@ -29,6 +29,8 @@ Before releasing:
 
 ### Fixed
 
+- Fixed a typo in some conditional compilation for the `smart_leds_trait` and `embedded_graphics` features that prevented them from being enabled.
+
 ### Changed
 
 - Updated ``vex-sdk`` to version 0.17.0. (#76)
