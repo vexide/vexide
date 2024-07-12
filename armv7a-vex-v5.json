@@ -1,0 +1,27 @@
+{
+    "cpu": "cortex-a9",
+    "arch": "arm",
+    "data-layout": "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64",
+    "disable-redzone": true,
+    "emit-debug-gdb-scripts": false,
+    "env": "newlib",
+    "executables": true,
+    "features": "+thumb2,+neon,+vfp3",
+    "linker": "rust-lld",
+    "linker-flavor": "ld.lld",
+    "llvm-target": "armv7a-none-eabi",
+    "max-atomic-width": 64,
+    "panic-strategy": "abort",
+    "post-link-args": {
+        "ld.lld": [
+            "--gc-sections",
+            "--nostdlib",
+            "-Tv5.ld",
+            "-znorelro"
+        ]
+    },
+    "relocation-model": "static",
+    "target-pointer-width": "32",
+    "os": "none",
+    "vendor": "vex"
+}

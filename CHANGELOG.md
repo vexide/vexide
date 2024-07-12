@@ -35,6 +35,7 @@ Before releasing:
 ### Fixed
 
 - Peripherals can now be mutated in the main function (#75)
+- Panic messages now output over serial even on `display_panics` feature.
 
 ### Changed
 
