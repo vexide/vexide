@@ -10,13 +10,17 @@ vexide is still in development but we are quickly moving towards competition rea
 
 ## Usage
 
+After setting up your development environment, connect to a VEX V5 via USB and run `cargo run --example basic` to execute the basic example on the V5 brain. Try the other examples like `screen` or `clawbot`, or create your own vexide project by following by the instructions in the [template](https://github.com/vexide/vexide-template).
+
 ## Compiling
 
 The vexide library itself has no external dependencies, but cargo-pros depends on pros-cli for uploading and cargo-binutils for necessary binary modification.
 Read the installation guide for your OS to see how to get things set up.
 
 ### Windows
+
 Steps:
+
 1. Install the pros cli, instructions are [here](https://pros.cs.purdue.edu/v5/getting-started/windows.html)
 2. Install cargo pros with ``cargo install cargo-pros``
 3. Install cargo-binutils with ``cargo install cargo-binutils``
