@@ -95,7 +95,7 @@ pub mod prelude {
             SmartDevice, SmartPort,
         },
     };
-    #[cfg(all(feature = "graphics", feature = "emdedded-graphics"))]
+    #[cfg(all(feature = "graphics", feature = "embedded-graphics"))]
     pub use vexide_graphics::embedded_graphics::BrainDisplay;
     #[cfg(all(feature = "graphics", feature = "slint"))]
     pub use vexide_graphics::slint::initialize_slint_platform;

@@ -9,7 +9,7 @@ use snafu::Snafu;
 use vex_sdk::vexDeviceAdiAddrLedSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-#[cfg(feature = "smart-leds-trait")]
+#[cfg(feature = "smart_leds_trait")]
 use crate::color::Rgb;
 use crate::{color::IntoRgb, PortError};
 
@@ -107,7 +107,7 @@ impl AdiDevice for AdiAddrLed {
     }
 }
 
-#[cfg(feature = "smart-leds-trait")]
+#[cfg(feature = "smart_leds_trait")]
 impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
     type Error = AddrLedError;
     type Color = Rgb;
