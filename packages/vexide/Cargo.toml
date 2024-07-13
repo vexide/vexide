@@ -16,6 +16,11 @@ authors = [
 ]
 rust-version = "1.75.0"
 
+[package.metadata.v5]
+slot = 1
+icon = "cool-x"
+compress = true
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
