@@ -1,5 +1,5 @@
 [build]
-target = "./armv7a-vexos-eabi.json"
+target = "./armv7a-vex-v5.json"
 
 [target.wasm32-unknown-unknown]
 rustflags = ["-Clink-arg=--export-memory", "-Clink-arg=--import-table"]
