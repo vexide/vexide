@@ -11,7 +11,7 @@ vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which ar
 
 vexide is published on [crates.io](https://crates.io/crates/vexide) and can be used like a normal embedded Rust crate.
 
-If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development enviornment with [vexide-template](https://github.com/vexide/vexide-template).
+If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment with [vexide-template](https://github.com/vexide/vexide-template).
 
 ## Project Structure
 
@@ -60,7 +60,7 @@ cargo v5 build --example=basic --release
 
 ## Building for WASM
 
-The vexide runtime is also designed in a way that it can be compiled for the `wasm32-unknown-unknown` target (along with the existing bare metal ARM target). This is done to allow for simulating programs in a [WASM enviornment](https://github.com/vexide/v5wasm).
+The vexide runtime is also designed in a way that it can be compiled for the `wasm32-unknown-unknown` target (along with the existing bare metal ARM target). This is done to allow for simulating programs in a [WASM environment](https://github.com/vexide/v5wasm).
 
 To build projects in this repository for WebAssembly, run `cargo v5 build -s`
 This will automatically pass all of the correct arguments to cargo.
