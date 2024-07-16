@@ -26,8 +26,16 @@ Before releasing:
 - The startup banner and code signature may now be configured using parameters passed to `vexide::main`. (#102)
 - Added the ``ProgramOwner``, ``ProgramType``, and ``ProgramFlags`` types for code signature configuration. (#76)
 - Created new ``force_rust_libm`` feature to force the use of a slower, 100% Rust, libm implementation. This is useful for building on WASM. (#106)
+- Optimized floating point math operations available through the `Float` extension trait. (#77)
+- Added text metrics getters to the `Text` widget. (#83)
+- Added alignment support for the `Text` widget. (#85)
+- `CompetitonBuilder` functions can now return a `ControlFlow` in order to explicitly end execution. (#89)
+- `Point2` can now be converted to mint when using the `nalgebra` feature. (#91)
 
 ### Fixed
+
+- Peripherals can now be mutated in the main function (#75)
+- Panic messages now output over serial even on `display_panics` feature.
 
 ### Changed
 
@@ -36,11 +44,15 @@ Before releasing:
 - Renamed the entrypoint symbol from ``_entry`` to ``_start``. (#76) (**Breaking Change**)
 - Renamed ``__stack_start`` and ``__stack_end`` symbols to ``__stack_top`` and ``__stack_bottom`` respectively. (#76) (**Breaking Change**)
 - Renamed the ``.cold_magic`` section to ``.code_signature``. (#76) (**Breaking Change**)
+- Made fields on screen widgets public. (#81)
+- Renamed `Competition` to `CompetitionRuntime`, `CompetitionRobotExt` to `CompetitionExt`, and `CompetitionRobot` to `Competition`. (#87) (**Breaking Change**)
+- Removed the `Error` associated type from the `Competition` trait and made all methods infallible. (#87) (**Breaking Change**)
 
 ### Removed
 
-- The `no-banner` feature has been removed from `vexide-startup` and must now be toggled through the `vexide:main` attribute. (#102)
+- The `no-banner` feature has been removed from `vexide-startup` and must now be toggled through the `vexide:main` attribute. (#102) (**Breaking Change**)
 - Removed the useless ``__rodata_start`` and ``__rodata_end`` symbols.
+- Support for `vexide-math` has been dropped. (#78) (**Breaking Change**)
 
 ### New Contributors
 

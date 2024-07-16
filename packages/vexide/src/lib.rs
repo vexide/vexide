@@ -1,25 +1,41 @@
 //! # vexide
-//! Work in progress high level bindings for the V5 Brain VEX SDK.
-//! Unlike other libraries for the V5 Brain, vexide doesn't use an RTOS.
-//! Instead, vexide leverages Rust's powerful async/await (cooperative multitasking) to allow faster and more user friendly 3dfcode.
 //!
-//! Advantages over similar libraries like PROS include:
-//! - vexide is a real crate on crates.io instead of a template, or similar. This allows for dependency management with cargo.
-//! - vexide has an [`Async executor`](async_runtime) which allows for easy and performant asynchronous code.
-//! - vexide has no external dependencies. It's 100% Rust and every line of code is yours to see.
-//! - vexide produces tiny and fast binaries.
+//! Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime,
+//! async executor, device API, and more for the VEX V5 brain!
+//!
+//! vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which are a set of unmaintained API using bindings over [PROS](https://github.com/purduesigbots/pros).
+//!
+//! ## Getting Started
+//!
+//! If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment
+//! with [vexide-template](https://github.com/vexide/vexide-template).
+//!
+//! ## Project Structure
+//!
+//! The vexide runtime is split into 7 subcrates. The one you're looking at right now re-exports
+//! each of these crates into a single package. You can view the respective docs for each of them below:
+//!
+//! - [`vexide-core`](https://docs.rs/vexide_core) provides lowlevel core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
+//! - [`vexide-devices`](https://docs.rs/vexide_devices) contains all device-related bindings for things like motors and sensors.
+//! - [`vexide-async`](https://docs.rs/vexide_async) implements our cooperative async runtime as well as several important async futures.
+//! - [`vexide-startup`](https://docs.rs/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.
+//! - [`vexide-panic`](https://docs.rs/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
+//! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [Slint] and [`embedded-graphics`].
+//! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 //!
 //! # Usage
 //!
 //! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
 //! ```rust
-//! // Async
 //! use vexide::prelude::*;
 //! #[vexide::main]
 //! async fn main() {
 //!     println!("Hello, world!");
 //! }
 //!```
+//!
+//! Check out our [docs](https://vexide.dev/docs/) for more in-depth usage guides.
+
 #![no_std]
 
 #[cfg(feature = "async")]
