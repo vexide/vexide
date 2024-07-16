@@ -1,4 +1,5 @@
 //! # vexide
+//!
 //! Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime,
 //! async executor, device API, and more for the VEX V5 brain!
 //!
