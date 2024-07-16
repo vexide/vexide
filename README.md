@@ -53,11 +53,19 @@ cargo v5 build --release
 Examples can similarly be built this way:
 
 ```sh
-cargo v5 build --example=basic --release
+cargo v5 build --example basic --release
 ```
 
 > [!NOTE]
-> If you don't want to use `cargo-v5`, you can effectively do the same thing that it's doing by running `cargo build --target ./armv7a-vex-v5.json -Zbuild-std=core,alloc,compiler_builtins`
+> If you don't want to use `cargo-v5` to build your project, you can effectively do the same thing that it's doing by running `cargo build --target ./armv7a-vex-v5.json -Zbuild-std=core,alloc,compiler_builtins`
+
+## Testing Your Changes
+
+When making changes to vexide, it's a good idea to test them. The easiest way to do this is by running one of our examples. `cargo-v5` can be used to upload an example by running a command like this:
+```sh
+cargo v5 upload --example basic --release
+```
+Depending on what you have changed, the basic example may not be the best example to test. We have many examples covering different parts of vexide, so choose the one that applies to your changes. If there isn't one, feel free to add it!
 
 ## Building for WASM
 
