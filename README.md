@@ -1,65 +1,66 @@
 # vexide
 
-Work in progress high level bindings for the V5 Brain VEX SDK.
-Unlike other libraries for the V5 Brain, vexide doesn't use an RTOS.
-Instead, vexide leverages Rust's powerful async/await (cooperative multitasking) to allow faster and more user friendly code.
+Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime, async executor, device API, and more for the VEX V5 brain!
 
-vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which now serves as a slightly more stable, but unmaintained API using bindings over [PROS](https://github.com/purduesigbots/pros).
+vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which are a set of unmaintained API using bindings over [PROS](https://github.com/purduesigbots/pros).
 
-vexide is still in development but we are quickly moving towards competition readiness.
+> [!WARNING]
+> vexide is still considered experimental, but can be used today. Check out our [docs](https://vexide.dev/docs) on how to get started.
 
-## Setup
+## Getting Started
 
-The only tool you will need to install in order to build, upload, and view to output of vexide programs is `cargo-v5`.
-Read the installation guide for your OS to see how to get things set up.
+vexide is published on [crates.io](https://crates.io/crates/vexide) and can be used like a normal embedded Rust crate.
 
-### Windows
+If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development enviornment with [vexide-template](https://github.com/vexide/vexide-template).
 
-Install `cargo-v5` with ``cargo install cargo-v5``
+## Project Structure
 
+The vexide runtime is a fairly standard rust monorepo split into 7 subcrates:
+- [`vexide-core`](https://crates.io/crates/vexide_core) provides lowlevel core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
+- [`vexide-devices`](https://crates.io/crates/vexide_devices) contains all device-related bindings for things like motors and sensors.
+- [`vexide-async`](https://crates.io/crates/vexide_async) implements our cooperative async runtime as well as several important async futures.
+- [`vexide-startup`](https://crates.io/crates/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.
+- [`vexide-panic`](https://crates.io/crates/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
+- [`vexide-graphics`](https://crates.io/crates/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [Slint] and [`embedded-graphics`].
+- [`vexide-macro`](https://crates.io/crates/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 
-### Linux
+These subcrates are exported from a single [`vexide`](https://github.com/vexide/vexide/blob/main/packages/vexide/src/lib.rs) crate intended to be used as a complete package.
 
-In order to upload programs without superuser permissions you may have to add your user to the `dialout` group.
-The steps for getting vexide compiling are slightly different based on if you use Nix or not.
+## Building
 
-#### With Nix
+vexide relies on some features that are only availble in Rust’s nightly release channel, so you’ll need to switch to using nightly:
 
-The Nix flake contains cargo-v5 and a working Rust toolchain.
+```sh
+rustup toolchain install nightly
+rustup override set nightly
+```
 
-There is a ``.envrc`` file included for Nix + Direnv users.
+This project is compiled like any other Rust project with one caveat: when building for the V5 brain, we have our own dedicated wrapper over cargo called `cargo-v5`, which passes some additional arguments to `cargo` to correctly build for the platform.
 
-#### Without Nix
+You can install that tool with the following command:
 
-Cargo v5 can be installed with ``cargo install cargo-v5``.
+```sh
+cargo install cargo-v5
+```
 
-### MacOS
+From there, the project can be built like any other rust library through `cargo-v5`:
 
-This project depends on the Xcode Command Line Tools.
-Chances are that if you develop on MacOS you have them already, but if not you can install them with `xcode-select --install`.
+```sh
+cargo v5 build --release
+```
 
-Most of the other dependencies can easily be installed with Homebrew.
+Examples can similarly be built this way:
 
-Install the Arm GNU Toolchain with
-`brew install osx-cross/arm/arm-gcc-bin`.
+```sh
+cargo v5 build --example=basic --release
+```
 
-Install pros-cli with
-`brew install purduesigbots/pros/pros-cli`.
+> [!NOTE]
+> If you don't want to use `cargo-v5`, you can effectively do the same thing that it's doing by running `cargo build --target ./armv7a-vex-v5.json -Zbuild-std=core,alloc,compiler_builtins`
 
-And you are done! Compile the project with `cargo build`.
+## Building for WASM
 
-## Usage
+The vexide runtime is also designed in a way that it can be compiled for the `wasm32-unknown-unknown` target (along with the existing bare metal ARM target). This is done to allow for simulating programs in a [WASM enviornment](https://github.com/vexide/v5wasm).
 
-To upload your project run `cargo v5 upload --release`.
-To build your project without uploading it you can run `cargo v5 build --release`.
-To view the output of your program run `cargo v5 terminal`.
-
-## Compiling for WASM
-
-To build projects in this repository for WebAssembly, run ``cargo pros build -s``
+To build projects in this repository for WebAssembly, run `cargo v5 build -s`
 This will automatically pass all of the correct arguments to cargo.
-
-If, for some reason, you want to do it manually, this is the command:
-`cargo build --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort`.
-
-The extra build-std argument is neccesary because this repository's `.cargo/config.toml` enables build-std but only for core, alloc, and compiler_builtins. WebAssembly does come with `std` but there is [currently](https://github.com/rust-lang/cargo/issues/8733) no way to conditionally enable build-std.
