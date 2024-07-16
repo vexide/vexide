@@ -23,6 +23,18 @@ Before releasing:
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+## [0.3.0]
+
+### Added
+
 - The startup banner and code signature may now be configured using parameters passed to `vexide::main`. (#102)
 - Added the ``ProgramOwner``, ``ProgramType``, and ``ProgramFlags`` types for code signature configuration. (#76)
 - Created new ``force_rust_libm`` feature to force the use of a slower, 100% Rust, libm implementation. This is useful for building on WASM. (#106)
@@ -88,6 +100,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.2.1...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.3.0...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
+[0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
