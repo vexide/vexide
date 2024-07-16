@@ -28,14 +28,15 @@ These subcrates are exported from a single [`vexide`](https://github.com/vexide/
 
 ## Building
 
-vexide relies on some features that are only availble in Rust’s nightly release channel, so you’ll need to switch to using nightly:
+vexide relies on some features that are only availble in Rust’s nightly release channel, so you’ll need to switch to using nightly. We also depend on the `rust-src` component due to our embedded target requiring a build of `core`.
 
 ```sh
+rustup component add rust-src
 rustup toolchain install nightly
 rustup override set nightly
 ```
 
-This project is compiled like any other Rust project with one caveat: when building for the V5 brain, we have our own dedicated wrapper over cargo called `cargo-v5`, which passes some additional arguments to `cargo` to correctly build for the platform.
+This project is compiled like any other Rust project with one caveat - we have our own dedicated wrapper over `cargo` called `cargo-v5`, which passes some additional arguments to `cargo` to correctly build for the platform.
 
 You can install that tool with the following command:
 
