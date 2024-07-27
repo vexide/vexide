@@ -14,6 +14,7 @@
 #![feature(error_in_core, never_type)]
 #![feature(asm_experimental_arch)]
 
+#[cfg(feature = "allocator")]
 pub mod allocator;
 pub mod competition;
 pub mod critical_section;
