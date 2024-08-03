@@ -1,6 +1,6 @@
 [package]
 name = "vexide"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 description = "async/await powered Rust library for VEX V5 Brains"
 keywords = ["Robotics", "bindings", "vex", "v5"]
@@ -16,16 +16,21 @@ authors = [
 ]
 rust-version = "1.75.0"
 
+[package.metadata.v5]
+slot = 1
+icon = "cool-x"
+compress = true
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vexide-async = { version = "0.1.1", path = "../vexide-async", optional = true }
-vexide-devices = { version = "0.2.0", path = "../vexide-devices", optional = true }
-vexide-panic = { version = "0.1.1", path = "../vexide-panic", optional = true }
-vexide-core = { version = "0.2.0", path = "../vexide-core", optional = true }
-vexide-startup = { version = "0.1.2", path = "../vexide-startup", optional = true }
-vexide-graphics = { version = "0.1.1", path = "../vexide-graphics", optional = true }
-vexide-macro = { version = "0.1.0", path = "../vexide-macro", optional = true }
+vexide-async = { version = "0.1.2", path = "../vexide-async", optional = true }
+vexide-devices = { version = "0.3.0", path = "../vexide-devices", optional = true }
+vexide-panic = { version = "0.1.2", path = "../vexide-panic", optional = true }
+vexide-core = { version = "0.3.0", path = "../vexide-core", optional = true }
+vexide-startup = { version = "0.2.0", path = "../vexide-startup", optional = true }
+vexide-graphics = { version = "0.1.2", path = "../vexide-graphics", optional = true }
+vexide-macro = { version = "0.2.0", path = "../vexide-macro", optional = true }
 vex-sdk = "0.17.0"
 
 [features]

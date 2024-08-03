@@ -1,6 +1,6 @@
 [package]
 name = "vexide-async"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license = "MIT"
 description = "The async executor at the core of vexide"
@@ -22,7 +22,7 @@ authors = [
 
 [dependencies]
 async-task = { version = "4.5.0", default-features = false }
-vexide-core = { version = "0.2.0", path = "../vexide-core" }
+vexide-core = { version = "0.3.0", path = "../vexide-core" }
 waker-fn = "1.1.1"
 vex-sdk = "0.17.0"
 critical-section = { version = "1.1.2", features = ["restore-state-bool"] }

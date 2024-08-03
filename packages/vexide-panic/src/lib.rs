@@ -105,7 +105,7 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
         #[cfg(not(feature = "display_panics"))]
         vexide_core::program::exit();
         // unreachable without display_panics
-        #[cfg_attr(not(feature = "display_panics"), allow(unreachable_code))]
+        #[cfg(feature = "display_panics")]
         loop {
             // Flush the serial buffer so that the panic message is printed
             vex_sdk::vexTasksRun();
