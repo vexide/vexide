@@ -40,16 +40,23 @@ impl DistanceSensor {
     /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_distance.c#L20>
     fn validate(&self) -> Result<(), DistanceError> {
         match self.status()? {
+            0x00 => Err(DistanceError::StillInitializing),
             0x82 | 0x86 => Ok(()),
             _ => Err(DistanceError::BadStatusCode),
         }
     }
 
-    /// Returns the distance to the object the sensor detects in millimeters.
-    pub fn distance(&self) -> Result<u32, DistanceError> {
+    /// Returns the distance to the object the sensor detects in millimeters or None if the
+    /// distance is out of range.
+    pub fn distance(&self) -> Result<Option<u32>, DistanceError> {
         self.validate()?;
 
-        Ok(unsafe { vexDeviceDistanceDistanceGet(self.device) })
+        let distance_raw = unsafe { vexDeviceDistanceDistanceGet(self.device) };
+
+        match distance_raw {
+            9999 => Ok(None),
+            _ => Ok(Some(distance_raw)),
+        }
     }
 
     /// Returns the velocity of the object the sensor detects in m/s
@@ -104,6 +111,10 @@ impl SmartDevice for DistanceSensor {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when using a distance sensor.
 pub enum DistanceError {
+    /// The sensor's status code is 0x00
+    /// Need to wait for the sensor to finish initializing
+    StillInitializing,
+
     /// The sensor's status code is not 0x82 or 0x86.
     BadStatusCode,
 
