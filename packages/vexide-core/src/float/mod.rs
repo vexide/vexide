@@ -5,11 +5,15 @@
 
 //! Provides implementations for the `critical_section` crate on the V5 brain and in WASM environments.
 
-#[cfg(all(target_arch = "arm", target_os = "none"))]
-mod vexos;
+#[cfg(all(
+    target_arch = "arm",
+    target_os = "none",
+    not(feature = "force_rust_libm")
+))]
+mod newlib;
 
-#[cfg(target_arch = "wasm32")]
-mod wasm;
+#[cfg(any(target_arch = "wasm32", feature = "force_rust_libm"))]
+mod rust;
 
 /// Used to make [`powi_impl`] generic across f32 and f64.
 pub(crate) trait One {
