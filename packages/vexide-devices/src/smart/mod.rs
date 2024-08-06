@@ -19,6 +19,7 @@
 
 pub mod distance;
 pub mod expander;
+pub mod gps;
 pub mod imu;
 pub mod link;
 pub mod motor;
@@ -31,6 +32,7 @@ use core::fmt;
 
 pub use distance::DistanceSensor;
 pub use expander::AdiExpander;
+pub use gps::GpsSensor;
 pub use imu::InertialSensor;
 pub use link::RadioLink;
 pub use motor::Motor;
