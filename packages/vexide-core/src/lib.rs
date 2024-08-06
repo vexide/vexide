@@ -18,6 +18,4 @@ pub mod backtrace;
 pub mod competition;
 pub mod critical_section;
 pub mod io;
-pub mod path;
-pub mod program;
 pub mod sync;

@@ -4,5 +4,4 @@
 
 mod stdio;
 
-pub(crate) use stdio::STDIO_CHANNEL;
 pub use stdio::{stdin, stdout, Stdin, StdinLock, Stdout, StdoutLock};
