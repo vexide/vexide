@@ -47,10 +47,10 @@ fn make_code_sig(opts: MacroOpts) -> proc_macro2::TokenStream {
     let sig = if let Some(code_sig) = opts.code_sig {
         quote! { #code_sig }
     } else {
-        quote! {  ::vexide::startup::CodeSignature::new(
-            ::vexide::startup::ProgramType::User,
-            ::vexide::startup::ProgramOwner::Partner,
-            ::vexide::startup::ProgramFlags::empty(),
+        quote! {  ::vexide::core::program::CodeSignature::new(
+            ::vexide::core::program::ProgramType::User,
+            ::vexide::core::program::ProgramOwner::Partner,
+            ::vexide::core::program::ProgramFlags::empty(),
         ) }
     };
 

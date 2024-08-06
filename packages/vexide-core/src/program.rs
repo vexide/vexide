@@ -63,7 +63,3 @@ pub fn exit() -> ! {
         }
     }
 }
-
-extern "Rust" {
-    fn main();
-}
