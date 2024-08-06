@@ -17,9 +17,7 @@
 //! - [`vexide-core`](https://docs.rs/vexide_core) provides low-level core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
 //! - [`vexide-devices`](https://docs.rs/vexide_devices) contains all device-related bindings for things like motors and sensors.
 //! - [`vexide-async`](https://docs.rs/vexide_async) implements our cooperative async runtime as well as several important async futures.
-//! - [`vexide-startup`](https://docs.rs/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.
-//! - [`vexide-panic`](https://docs.rs/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
-//! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [`slint`] and [`embedded-graphics`].
+//! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [Slint] and [`embedded-graphics`].
 //! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 //!
 //! [`slint`]: https://slint.rs/
@@ -60,12 +58,6 @@ pub use vexide_macro as r#macro;
 #[doc(inline)]
 #[cfg(feature = "macro")]
 pub use vexide_macro::main;
-#[doc(inline)]
-#[cfg(feature = "panic")]
-pub use vexide_panic as panic;
-#[doc(inline)]
-#[cfg(feature = "startup")]
-pub use vexide_startup as startup;
 
 /// Commonly used features of vexide.
 /// This module is meant to be glob imported.
@@ -79,7 +71,6 @@ pub mod prelude {
     #[cfg(feature = "core")]
     pub use vexide_core::{
         competition::{Compete, CompeteExt, CompetitionRuntime},
-        float::Float,
         io::{BufRead, Read, Seek, Write},
     };
     #[cfg(feature = "devices")]

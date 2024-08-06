@@ -3,7 +3,8 @@
 
 use core::{convert::Infallible, fmt::Debug, time::Duration};
 
-use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
+use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun, vcodesig};
+use bitflags::bitflags;
 
 use crate::{io::{self, stdout, Write}, time::Instant};
 
@@ -61,4 +62,8 @@ pub fn exit() -> ! {
             vexTasksRun();
         }
     }
+}
+
+extern "Rust" {
+    fn main();
 }

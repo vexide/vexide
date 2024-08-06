@@ -27,21 +27,18 @@ compress = true
 vexide-async = { version = "0.1.2", path = "../vexide-async", optional = true }
 vexide-devices = { version = "0.3.0", path = "../vexide-devices", optional = true }
 vexide-core = { version = "0.3.0", path = "../vexide-core", optional = true }
-vexide-startup = { version = "0.2.0", path = "../vexide-startup", optional = true }
 vexide-graphics = { version = "0.1.2", path = "../vexide-graphics", optional = true }
 vexide-macro = { version = "0.2.0", path = "../vexide-macro", optional = true }
 vex-sdk = "0.17.0"
 
 [features]
-default = ["async", "devices", "core", "startup", "macro"]
+default = ["async", "devices", "core", "macro"]
 
-macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
+macro = ["dep:vexide-macro", "async", "core", "devices"]
 
 core = ["dep:vexide-core"]
 backtraces = ["core", "vexide-core/backtraces"]
 force_rust_libm = ["core", "vexide-core/force_rust_libm"]
-
-startup = ["dep:vexide-startup"]
 
 async = ["dep:vexide-async"]
 

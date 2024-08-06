@@ -1,8 +1,5 @@
-#![no_main]
-
 use vexide::prelude::*;
 
-#[vexide::main]
-async fn main(_peripherals: Peripherals) {
+fn main() {
     println!("Hello, world!");
 }
