@@ -110,7 +110,7 @@ impl Platform for V5Platform {
             self.window.dispatch_event(self.get_touch_event());
 
             if !self.window.has_active_animations() {
-                vexide_async::block_on(vexide_async::time::sleep(Duration::from_millis(1)));
+                vexide_runtime::block_on(vexide_runtime::time::sleep(Duration::from_millis(1)));
             }
         }
     }

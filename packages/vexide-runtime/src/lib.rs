@@ -1,17 +1,26 @@
-//! Tiny async runtime for `vexide`.
+//! Low level core functionality for [`vexide`](https://crates.io/crates/vexide).
+//! The core crate is used in all other crates in the vexide ecosystem.
 //!
-//! The async executor supports spawning tasks and blocking on futures.
-//! It has a reactor to improve the performance of some futures.
+//! Included in this crate:
+//! - Competition state handling: [`competition`]
+//! - Critical-section implementation: [`critical_section`]
+//! - Serial terminal printing: [`io`]
+//! - Synchronization primitives: [`sync`]
+//! - Program control: [`program`]
 
-mod executor;
-mod reactor;
+#![feature(never_type, asm_experimental_arch)]
 
+pub mod competition;
+pub mod critical_section;
+pub mod sync;
 pub mod task;
 pub mod time;
 
-use core::future::Future;
+mod rt;
 
-use executor::EXECUTOR;
+use core::future::Future;
+use rt::executor::EXECUTOR;
+
 pub use task::spawn;
 
 /// Blocks the current task untill a return value can be extracted from the provided future.
@@ -24,11 +33,8 @@ pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
 
 #[doc(hidden)]
 pub fn __internal_entrypoint_task<const BANNER: bool>() {
-    use no_std_io::io::Write;
-
     if BANNER {
-        write!(
-            vexide_core::io::stdout(),
+        println!(
             "
 \x1B[1;38;5;196m=%%%%%#-  \x1B[38;5;254m-#%%%%-\x1B[1;38;5;196m  :*%%%%%+.
 \x1B[38;5;208m  -#%%%%#-  \x1B[38;5;254m:%-\x1B[1;38;5;208m  -*%%%%#
@@ -40,7 +46,7 @@ pub fn __internal_entrypoint_task<const BANNER: bool>() {
 vexide startup successful!
 Running user code...
 "
-        ).ok();
+        );
     }
 
     // Run vexos background processing at a regular 2ms interval.
@@ -55,7 +61,7 @@ Running user code...
             // don't need to worry about running two schedulers on top of each other, but
             // doing this in our case would cause this task to hog all the CPU time, which
             // wouldn't allow futures to be polled in the async runtime.
-            crate::time::sleep(::core::time::Duration::from_millis(2)).await;
+            crate::time::sleep(::std::time::Duration::from_millis(2)).await;
         }
     })
     .detach();

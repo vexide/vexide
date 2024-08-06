@@ -19,7 +19,7 @@ The vexide runtime is a fairly standard rust monorepo split into 7 subcrates:
 
 - [`vexide-core`](https://crates.io/crates/vexide_core) provides lowlevel core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
 - [`vexide-devices`](https://crates.io/crates/vexide_devices) contains all device-related bindings for things like motors and sensors.
-- [`vexide-async`](https://crates.io/crates/vexide_async) implements our cooperative async runtime as well as several important async futures.
+- [`vexide-async`](https://crates.io/crates/vexide_runtime) implements our cooperative async runtime as well as several important async futures.
 - [`vexide-graphics`](https://crates.io/crates/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [Slint] and [`embedded-graphics`].
 - [`vexide-macro`](https://crates.io/crates/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 

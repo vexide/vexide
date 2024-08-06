@@ -16,7 +16,7 @@
 //!
 //! - [`vexide-core`](https://docs.rs/vexide_core) provides low-level core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
 //! - [`vexide-devices`](https://docs.rs/vexide_devices) contains all device-related bindings for things like motors and sensors.
-//! - [`vexide-async`](https://docs.rs/vexide_async) implements our cooperative async runtime as well as several important async futures.
+//! - [`vexide-async`](https://docs.rs/vexide_runtime) implements our cooperative async runtime as well as several important async futures.
 //! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [Slint] and [`embedded-graphics`].
 //! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 //!
@@ -42,8 +42,7 @@
 
 #[doc(inline)]
 #[cfg(feature = "async")]
-pub use vexide_async as async_runtime;
-#[doc(inline)]
+pub use vexide_runtime as async_runtime;
 #[cfg(feature = "core")]
 pub use vexide_core as core;
 #[doc(inline)]
@@ -63,7 +62,7 @@ pub use vexide_macro::main;
 /// This module is meant to be glob imported.
 pub mod prelude {
     #[cfg(feature = "async")]
-    pub use vexide_async::{
+    pub use vexide_runtime::{
         block_on,
         task::{spawn, Task},
         time::{sleep, sleep_until},
