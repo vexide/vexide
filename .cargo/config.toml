@@ -1,9 +1,9 @@
 [build]
-target = "./armv7a-vex-v5.json"
+target = "armv7a-vex-v5"
 
 [target."cfg(target_vendor = \"vex\")"]
 runner = "cargo v5 run --file"
 
 [unstable]
-build-std = ["core", "compiler_builtins", "alloc"]
+build-std = ["std"]
 build-std-features = ["compiler-builtins-mem"]
