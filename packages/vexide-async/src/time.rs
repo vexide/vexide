@@ -15,7 +15,7 @@ use core::{
     time::Duration,
 };
 
-use vexide_core::time::Instant;
+use std::time::Instant;
 
 use crate::executor::EXECUTOR;
 

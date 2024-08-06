@@ -18,55 +18,18 @@ pub struct Instant(u64);
 
 impl Instant {
     /// Returns an instant corresponding to "now".
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::core::time::Instant;
-    ///
-    /// let now = Instant::now();
-    /// ```
-    #[must_use]
     pub fn now() -> Self {
         Self(unsafe { vex_sdk::vexSystemHighResTimeGet() })
     }
 
     /// Returns the amount of time elapsed from another instant to this one,
     /// or zero duration if that instant is later than this one.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use core::time::Duration;
-    /// use vexide::core::time::Instant;
-    ///
-    /// let now = Instant::now();
-    /// sleep(Duration::new(1, 0)).await;
-    /// let new_now = Instant::now();
-    /// println!("{:?}", new_now.duration_since(now));
-    /// println!("{:?}", now.duration_since(new_now)); // 0ns
-    /// ```
-    #[must_use]
     pub fn duration_since(&self, earlier: Instant) -> Duration {
         self.checked_duration_since(earlier).unwrap_or_default()
     }
 
     /// Returns the amount of time elapsed from another instant to this one,
     /// or None if that instant is later than this one.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use core::time::Duration;
-    /// use vexide::core::time::Instant;
-    ///
-    /// let now = Instant::now();
-    /// sleep(Duration::new(1, 0)).await;
-    /// let new_now = Instant::now();
-    /// println!("{:?}", new_now.checked_duration_since(now));
-    /// println!("{:?}", now.checked_duration_since(new_now)); // None
-    /// ```
-    #[must_use]
     pub const fn checked_duration_since(&self, earlier: Instant) -> Option<Duration> {
         if earlier.0 < self.0 {
             Some(Duration::from_micros(self.0 - earlier.0))
@@ -77,38 +40,11 @@ impl Instant {
 
     /// Returns the amount of time elapsed from another instant to this one,
     /// or zero duration if that instant is later than this one.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use core::time::Duration;
-    /// use vexide::core::time::Instant;
-    ///
-    /// let now = Instant::now();
-    /// sleep(Duration::new(1, 0)).await;
-    /// let new_now = Instant::now();
-    /// println!("{:?}", new_now.saturating_duration_since(now));
-    /// println!("{:?}", now.saturating_duration_since(new_now)); // 0ns
-    /// ```
-    #[must_use]
     pub fn saturating_duration_since(&self, earlier: Instant) -> Duration {
         self.checked_duration_since(earlier).unwrap_or_default()
     }
 
     /// Returns the amount of time elapsed since this instant.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use core::time::Duration;
-    /// use vexide::core::time::Instant;
-    ///
-    /// let instant = Instant::now();
-    /// let three_secs = Duration::from_secs(3);
-    /// sleep(three_secs).await;
-    /// assert!(instant.elapsed() >= three_secs);
-    /// ```
-    #[must_use]
     pub fn elapsed(&self) -> Duration {
         Instant::now() - *self
     }

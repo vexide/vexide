@@ -53,6 +53,8 @@ pub mod rgb;
 pub mod smart;
 
 use smart::SmartDeviceType;
+pub(crate) mod internal;
+
 use snafu::Snafu;
 use vexide_core::io;
 

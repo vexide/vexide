@@ -2,6 +2,7 @@
 
 extern crate alloc;
 use alloc::{boxed::Box, rc::Rc};
+use vex_sdk::vexSystemHighResTimeGet;
 use core::{cell::RefCell, time::Duration};
 
 use slint::{
@@ -16,7 +17,7 @@ use vexide_devices::display::{Display, Rect};
 
 /// A Slint platform implementation for the V5 Brain screen.
 pub struct V5Platform {
-    start: Instant,
+    start: u64,
     window: Rc<MinimalSoftwareWindow>,
     display: RefCell<Display>,
     display_pressed: RefCell<bool>,
@@ -36,7 +37,7 @@ impl V5Platform {
             Display::VERTICAL_RESOLUTION as _,
         ));
         Self {
-            start: Instant::now(),
+            start: unsafe { vexSystemHighResTimeGet() },
             window,
             display: RefCell::new(display),
             display_pressed: RefCell::new(false),
@@ -82,7 +83,7 @@ impl Platform for V5Platform {
         Ok(self.window.clone())
     }
     fn duration_since_start(&self) -> core::time::Duration {
-        self.start.elapsed()
+        Duration::from_micros(self.start)
     }
     fn run_event_loop(&self) -> Result<(), slint::PlatformError> {
         loop {

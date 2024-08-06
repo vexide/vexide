@@ -1,7 +1,6 @@
-use alloc::collections::BTreeMap;
-use core::task::Waker;
-
-use vexide_core::time::Instant;
+use std::collections::BTreeMap;
+use std::task::Waker;
+use std::time::Instant;
 
 pub struct Sleepers {
     sleepers: BTreeMap<Instant, Waker>,

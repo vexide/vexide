@@ -4,7 +4,6 @@
 //! Included in this crate:
 //! - Competition state handling: [`competition`]
 //! - Serial terminal printing: [`io`]
-//! - No-std [`Instant`](time::Instant)s: [`time`]
 //! - Synchronization primitives: [`sync`]
 //! - Program control: [`program`]
 
@@ -22,4 +21,3 @@ pub mod io;
 pub mod path;
 pub mod program;
 pub mod sync;
-pub mod time;

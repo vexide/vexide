@@ -67,7 +67,8 @@ use vex_sdk::{
     vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode,
     V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw, V5_DeviceT,
 };
-use vexide_core::{float::Float, time::Instant};
+
+use crate::internal::time::Instant;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
