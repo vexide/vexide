@@ -69,10 +69,7 @@ pub mod prelude {
         time::{sleep, sleep_until},
     };
     #[cfg(feature = "core")]
-    pub use vexide_core::{
-        competition::{Compete, CompeteExt, CompetitionRuntime},
-        io::{BufRead, Read, Seek, Write},
-    };
+    pub use vexide_core::competition::{Compete, CompeteExt, CompetitionRuntime};
     #[cfg(feature = "devices")]
     pub use vexide_devices::{
         adi::{

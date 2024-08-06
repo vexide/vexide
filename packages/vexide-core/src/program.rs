@@ -6,7 +6,9 @@ use core::{convert::Infallible, fmt::Debug, time::Duration};
 use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun, vcodesig};
 use bitflags::bitflags;
 
-use crate::{io::{self, stdout, Write}, time::Instant};
+use no_std_io::io::Write;
+
+use crate::{io::{self, stdout}, time::Instant};
 
 /// A trait that can be implemented for arbitrary return types in the main function.
 pub trait Termination {
