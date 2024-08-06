@@ -11,7 +11,6 @@
 #![feature(never_type, asm_experimental_arch)]
 
 pub mod competition;
-pub mod critical_section;
 pub mod sync;
 pub mod task;
 pub mod time;
@@ -31,8 +30,12 @@ pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
     EXECUTOR.block_on(task)
 }
 
-#[doc(hidden)]
-pub fn __internal_entrypoint_task<const BANNER: bool>() {
+/// Sets up the vexide async runtime.
+///
+/// # Safety
+///
+/// This function should only be called once.
+pub unsafe fn init_runtime<const BANNER: bool>() {
     if BANNER {
         println!(
             "

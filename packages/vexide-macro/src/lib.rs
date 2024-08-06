@@ -157,8 +157,11 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
         fn main() -> #ret_type {
             #inner
 
-            ::vexide::runtime::__internal_entrypoint_task::<#banner_arg>();
-            ::vexide::runtime::block_on(
+            unsafe {
+                ::vexide::init_runtime::<#banner_arg>();
+            }
+
+            ::vexide::block_on(
                 #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
             )
         }
