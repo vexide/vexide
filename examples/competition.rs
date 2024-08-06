@@ -1,8 +1,3 @@
-#![no_std]
-#![no_main]
-
-extern crate alloc;
-
 use vexide::prelude::*;
 
 struct Robot;
@@ -26,6 +21,6 @@ impl Compete for Robot {
 }
 
 #[vexide::main]
-async fn main(_peripherals: Peripherals) {
+async fn main(_p: Peripherals) {
     Robot.compete().await;
 }

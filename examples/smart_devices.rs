@@ -1,9 +1,6 @@
-#![no_std]
-#![no_main]
-
-use core::time::Duration;
-
 use vexide::prelude::*;
+
+use std::time::Duration;
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {

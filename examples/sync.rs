@@ -1,14 +1,9 @@
-#![no_std]
-#![no_main]
-
-use alloc::{boxed::Box, sync::Arc, vec::Vec};
-
 use vexide::{
     core::sync::{Barrier, Condvar, LazyLock, Mutex, RwLock},
     prelude::*,
 };
 
-extern crate alloc;
+use std::{boxed::Box, sync::Arc, vec::Vec};
 
 // A lazily initialized static.
 // Lazy locks don't need to be used on statics, but they can be.

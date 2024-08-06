@@ -1,12 +1,9 @@
-#![no_main]
-#![no_std]
-
-use core::time::Duration;
-
 use vexide::prelude::*;
 
+use std::time::Duration;
+
 #[vexide::main]
-async fn main(_peripherals: Peripherals) {
+async fn main(_p: Peripherals) {
     // Async tasks can be spawned using the spawn function.
     // The spawn function returns a handle to the spawned task.
     let handle = spawn(async {

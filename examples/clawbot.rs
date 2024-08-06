@@ -5,14 +5,9 @@
 //!
 //! [`v5-drivecode`]: https://github.com/jpearman/v5-drivecode
 
-#![no_main]
-#![no_std]
-
-extern crate alloc;
-
-use core::time::Duration;
-
 use vexide::prelude::*;
+
+use std::time::Duration;
 
 struct ClawBot {
     left_motor: Motor,
