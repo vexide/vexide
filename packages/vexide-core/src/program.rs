@@ -5,7 +5,7 @@ use core::{convert::Infallible, fmt::Debug, time::Duration};
 
 use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
 
-use crate::{io, time::Instant};
+use crate::{io::{self, stdout, Write}, time::Instant};
 
 /// A trait that can be implemented for arbitrary return types in the main function.
 pub trait Termination {
@@ -26,7 +26,10 @@ impl<T: Termination, E: Debug> Termination for Result<T, E> {
     fn report(self) {
         match self {
             Ok(t) => t.report(),
-            Err(e) => io::println!("Error: {e:?}"),
+            Err(e) => {
+                write!(stdout(), "Error: {e:?}").unwrap();
+                exit();
+            }
         }
     }
 }
@@ -45,7 +48,7 @@ pub fn exit() -> ! {
             vexTasksRun();
 
             // If the buffer has been fully flushed, exit the loop
-            if vexSerialWriteFree(io::STDIO_CHANNEL) == (io::Stdout::INTERNAL_BUFFER_SIZE as i32) {
+            if vexSerialWriteFree(io::STDIO_CHANNEL) == (crate::io::Stdout::INTERNAL_BUFFER_SIZE as i32) {
                 break;
             }
         }
