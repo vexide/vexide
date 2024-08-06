@@ -3,7 +3,7 @@ name = "vexide-devices"
 version = "0.5.1"
 edition = "2021"
 license = "MIT"
-description = "High level device bindings for vexide"
+description = "High level V5 hardware bindings for vexide"
 keywords = ["Robotics", "bindings", "vex", "v5"]
 categories = ["api-bindings", "no-std", "science::robotics"]
 repository = "https://github.com/vexide/vexide"
@@ -31,6 +31,7 @@ workspace = true
 
 [features]
 dangerous_motor_tuning = []
+std = []
 smart_leds_trait = ["dep:smart-leds-trait"]
 
 [package.metadata.docs.rs]

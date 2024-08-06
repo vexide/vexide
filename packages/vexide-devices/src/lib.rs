@@ -38,7 +38,7 @@
 //!
 //! For more information on peripheral access, see the [`peripherals`] module.
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
 

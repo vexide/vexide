@@ -157,8 +157,8 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
         fn main() -> #ret_type {
             #inner
 
-            ::vexide::async_runtime::__internal_entrypoint_task::<#banner_arg>();
-            ::vexide::async_runtime::block_on(
+            ::vexide::runtime::__internal_entrypoint_task::<#banner_arg>();
+            ::vexide::runtime::block_on(
                 #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
             )
         }

@@ -25,7 +25,7 @@ compress = true
 
 [dependencies]
 vexide-runtime = { version = "0.3.0", path = "../vexide-runtime", optional = true }
-vexide-devices = { version = "0.3.0", path = "../vexide-devices", optional = true }
+vexide-devices = { version = "0.3.0", path = "../vexide-devices", optional = true, features = ["std"] }
 vexide-graphics = { version = "0.1.2", path = "../vexide-graphics", optional = true }
 vexide-macro = { version = "0.2.0", path = "../vexide-macro", optional = true }
 vex-sdk = "0.17.0"

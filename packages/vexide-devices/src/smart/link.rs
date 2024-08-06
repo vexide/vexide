@@ -24,7 +24,7 @@
 use alloc::ffi::{CString, NulError};
 use core::time::Duration;
 
-use no_std_io::io;
+use embedded_io::{ErrorType, Read, Write};
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus, vexDeviceGenericRadioReceive,
@@ -214,8 +214,8 @@ impl io::Read for RadioLink {
         match unsafe {
             vexDeviceGenericRadioReceive(self.device, buf.as_mut_ptr(), buf.len() as u16)
         } {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::InvalidData,
+            -1 => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
                 "Internal read error occurred.",
             )),
             received => Ok(received as usize),
@@ -254,8 +254,8 @@ impl io::Write for RadioLink {
 
         match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), buf.len() as u16) }
         {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::Other,
+            -1 => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
                 "Internal write error occurred.",
             )),
             written => Ok(written as usize),
@@ -330,4 +330,11 @@ pub enum LinkError {
 
     /// Internal read error occurred.
     ReadFailed,
+}
+
+
+impl embedded_io::Error for LinkError {
+    fn kind(&self) -> embedded_io::ErrorKind {
+        embedded_io::ErrorKind::Other
+    }
 }
