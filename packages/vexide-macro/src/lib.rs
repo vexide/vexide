@@ -112,8 +112,8 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 ///
 /// The `main` attribute can be provided with parameters that alter the behavior of the program.
 ///
-/// - `banner`: Allows for disabling or using a custom banner theme. When `enabled = false` the banner will be disabled. `theme` can be set to a custom `BannerTheme` struct.
-/// - `code_sig`: Allows using a custom `CodeSignature` struct to configure program behavior.
+/// - `banner`: A boolean value that toggles the vexide startup banner printed over serial.
+///   When `false`, the banner will be not displayed.
 ///
 /// # Examples
 ///
@@ -144,51 +144,25 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 ///    println!("This is the only serial output from this program!")
 /// }
 /// ```
-///
-/// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
-/// use vexide::startup::banner::themes::THEME_SYNTHWAVE;
-/// #[vexide::main(banner(theme = THEME_SYNTHWAVE))]
-/// async fn main(_p: Peripherals) {
-///    println!("This program has a synthwave themed banner!")
-/// }
-/// ```
-///
-/// A custom code signature may be used to further configure the behavior of the program.
-///
-/// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
-/// # use vexide::startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
-/// static CODE_SIG: CodeSignature = CodeSignature::new(
-///     ProgramType::User,
-///     ProgramOwner::Partner,
-///     ProgramFlags::empty(),
-/// );
-/// #[vexide::main(code_sig = CODE_SIG)]
-/// async fn main(_p: Peripherals) {
-///    println!("Hello world!")
-/// }
-/// ```
 #[proc_macro_attribute]
 pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(item as ItemFn);
-    let opts = MacroOpts::from(parse_macro_input!(attrs as Attrs));
+    let inner = parse_macro_input!(item as ItemFn);
+    let attrs = parse_macro_input!(attrs as Attrs);
+    let opts = MacroOpts::from(attrs);
 
     let entrypoint = make_entrypoint(&item, opts.clone());
     let code_signature = make_code_sig(opts);
 
     quote! {
-        const _: () = {
-            #code_signature
+        fn main() -> #ret_type {
+            #inner
 
-            #entrypoint
-        };
-    }
-    .into()
+            ::vexide::async_runtime::__internal_entrypoint_task::<#banner_arg>();
+            ::vexide::async_runtime::block_on(
+                #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
+            )
+        }
+    }.into()
 }
 
 #[cfg(test)]
@@ -242,7 +216,6 @@ mod test {
             MacroOpts {
                 banner_enabled: false,
                 banner_theme: None,
-                code_sig: None,
             },
         );
         assert!(entrypoint.to_string().contains("false"));
@@ -253,7 +226,6 @@ mod test {
             MacroOpts {
                 banner_enabled: true,
                 banner_theme: None,
-                code_sig: None,
             },
         );
         assert!(entrypoint.to_string().contains("true"));

@@ -4,7 +4,7 @@ use syn::{
     parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    token, Ident, LitBool, Result, Token,
+    Result, Token,
 };
 
 mod kw {
@@ -14,15 +14,12 @@ mod kw {
 
     custom_keyword!(enabled);
     custom_keyword!(theme);
-
-    custom_keyword!(code_sig);
 }
 
 #[derive(Clone)]
 pub struct MacroOpts {
     pub banner_enabled: bool,
     pub banner_theme: Option<Ident>,
-    pub code_sig: Option<Ident>,
 }
 
 impl Default for MacroOpts {
@@ -30,7 +27,6 @@ impl Default for MacroOpts {
         Self {
             banner_enabled: true,
             banner_theme: None,
-            code_sig: None,
         }
     }
 }
@@ -52,7 +48,6 @@ impl From<Attrs> for MacroOpts {
                         }
                     }
                 }
-                Attribute::CodeSig(code_sig) => opts.code_sig = Some(code_sig.into_ident()),
             }
         }
         opts
@@ -73,7 +68,6 @@ impl Parse for Attrs {
 
 pub enum Attribute {
     Banner(Banner),
-    CodeSig(CodeSig),
 }
 
 impl Parse for Attribute {
@@ -81,8 +75,6 @@ impl Parse for Attribute {
         let lookahead = input.lookahead1();
         if lookahead.peek(kw::banner) {
             input.parse().map(Attribute::Banner)
-        } else if lookahead.peek(kw::code_sig) {
-            input.parse().map(Attribute::CodeSig)
         } else {
             Err(lookahead.error())
         }
@@ -200,36 +192,6 @@ impl ToTokens for BannerTheme {
     }
 }
 
-pub struct CodeSig {
-    token: kw::code_sig,
-    eq: Token![=],
-    ident: Ident,
-}
-
-impl CodeSig {
-    pub fn into_ident(self) -> Ident {
-        self.ident
-    }
-}
-
-impl Parse for CodeSig {
-    fn parse(input: ParseStream<'_>) -> Result<Self> {
-        Ok(Self {
-            token: input.parse()?,
-            eq: input.parse()?,
-            ident: input.parse()?,
-        })
-    }
-}
-
-impl ToTokens for CodeSig {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.token.to_tokens(tokens);
-        self.eq.to_tokens(tokens);
-        self.ident.to_tokens(tokens);
-    }
-}
-
 #[cfg(test)]
 mod test {
     use quote::quote;
@@ -258,25 +220,14 @@ mod test {
     }
 
     #[test]
-    fn parses_code_sig_attribute() {
-        let ident = Ident::new("my_code_sig", proc_macro2::Span::call_site());
-        let source = quote! {
-            code_sig = #ident
-        };
-        let input = syn::parse2::<CodeSig>(source).unwrap();
-        assert_eq!(input.into_ident(), ident);
-    }
-
-    #[test]
     fn parses_attrs_into_macro_opts() {
         let source = quote! {
-            banner(enabled = true, theme = THEME), code_sig = my_code_sig
+            banner(enabled = true, theme = THEME)
         };
         let input = syn::parse2::<Attrs>(source).unwrap();
-        assert_eq!(input.attr_list.len(), 2);
+        assert_eq!(input.attr_list.len(), 1);
         let opts = MacroOpts::from(input);
         assert!(opts.banner_enabled);
-        assert_eq!(opts.code_sig.unwrap().to_string(), "my_code_sig");
     }
 
     #[test]

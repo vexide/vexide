@@ -4,7 +4,6 @@
 use core::{convert::Infallible, fmt::Debug, time::Duration};
 
 use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun, vcodesig};
-use bitflags::bitflags;
 
 use no_std_io::io::Write;
 
