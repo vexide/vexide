@@ -5,5 +5,5 @@ target = "armv7a-vex-v5"
 runner = "cargo v5 run --file"
 
 [unstable]
-build-std = ["std"]
+build-std = ["std", "panic_abort"]
 build-std-features = ["compiler-builtins-mem"]

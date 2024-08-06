@@ -2,7 +2,6 @@
 //! The core crate is used in all other crates in the vexide ecosystem.
 //!
 //! Included in this crate:
-//! - Global allocator: [`allocator`]
 //! - Competition state handling: [`competition`]
 //! - Serial terminal printing: [`io`]
 //! - No-std [`Instant`](time::Instant)s: [`time`]

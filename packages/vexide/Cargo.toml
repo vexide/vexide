@@ -24,26 +24,16 @@ compress = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vexide-async = { workspace = true, optional = true }
-vexide-devices = { workspace = true, optional = true }
-vexide-panic = { workspace = true, optional = true }
-vexide-core = { workspace = true, optional = true }
-vexide-startup = { workspace = true, optional = true }
-vexide-graphics = { workspace = true, optional = true }
-vexide-macro = { workspace = true, optional = true }
-vex-sdk = { workspace = true }
+vexide-async = { version = "0.1.2", path = "../vexide-async", optional = true }
+vexide-devices = { version = "0.3.0", path = "../vexide-devices", optional = true }
+vexide-core = { version = "0.3.0", path = "../vexide-core", optional = true }
+vexide-startup = { version = "0.2.0", path = "../vexide-startup", optional = true }
+vexide-graphics = { version = "0.1.2", path = "../vexide-graphics", optional = true }
+vexide-macro = { version = "0.2.0", path = "../vexide-macro", optional = true }
+vex-sdk = "0.17.0"
 
 [features]
-default = [
-    "async",
-    "devices",
-    "panic",
-    "display_panics",
-    "core",
-    "startup",
-    "macro",
-    "backtraces",
-]
+default = ["async", "devices", "core", "startup", "macro"]
 
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 
