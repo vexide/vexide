@@ -9,6 +9,8 @@ mod mutex;
 mod once;
 mod rwlock;
 
+pub mod critical_section;
+
 pub use barrier::{Barrier, BarrierWaitFuture};
 pub use condvar::{Condvar, CondvarWaitFuture};
 pub use lazy::LazyLock;
