@@ -23,6 +23,8 @@ Before releasing:
 
 ### Added
 
+- Added support for the V5 GPS Sensor (#79)
+
 ### Fixed
 
 ### Changed
