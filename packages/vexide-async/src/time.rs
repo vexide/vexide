@@ -21,6 +21,7 @@ use crate::executor::EXECUTOR;
 
 /// A future that will complete after a certain instant is reached in time.
 #[derive(Debug)]
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub struct Sleep(Instant);
 
 impl Future for Sleep {
