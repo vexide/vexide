@@ -43,7 +43,7 @@ async fn main(peripherals: Peripherals) {
         println!("IMU Euler angles: {:?}", imu.euler().unwrap());
         println!(
             "Distance: {}. Confidence: {}",
-            distance.distance().unwrap(),
+            distance.distance().unwrap().unwrap_or(9999),
             distance.distance_confidence().unwrap()
         );
 

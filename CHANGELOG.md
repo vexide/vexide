@@ -23,9 +23,14 @@ Before releasing:
 
 ### Added
 
+- Added support for the V5 GPS Sensor (#79)
+
 ### Fixed
 
 ### Changed
+
+- `DistanceSensor::distance` now returns an `Option` that will be `None` if the sensor is out of range.
+- Adjusted distance sensor status code errors to be more clear.
 
 ### Removed
 
@@ -46,6 +51,7 @@ Before releasing:
 
 ### Fixed
 
+- Fixed a typo in some conditional compilation for the `smart_leds_trait` and `embedded_graphics` features that prevented them from being enabled.
 - Peripherals can now be mutated in the main function (#75)
 - Panic messages now output over serial even on `display_panics` feature.
 
