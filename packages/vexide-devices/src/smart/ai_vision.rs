@@ -5,8 +5,7 @@ use core::mem;
 
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet,
-    vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionObject, V5_DeviceT,
+    vexDeviceAiVisionCodeSet, vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -128,6 +127,24 @@ pub enum AiVisionObjectData {
     },
 }
 
+/// The mode of the AI Vision sensor.
+#[repr(u8)]
+#[derive(Debug, Copy, Clone)]
+pub enum AiVisionMode {
+    Code = 0,
+    Model = 1,
+    AprilTag = 2,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct AiVisionColor {
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
+    pub hue: f32,
+    pub saturation: f32,
+}
+
 /// An AI Vision sensor.
 pub struct AiVisionSensor {
     port: SmartPort,
@@ -192,9 +209,36 @@ impl AiVisionSensor {
         Ok(())
     }
 
-    pub fn set_mode(&mut self) -> Result<()> {
+    pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
+        if !(1..7).contains(&id) {
+            return Err(AiVisionError::InvalidId);
+        }
+
+        let mut color = V5_DeviceAiVisionColor  {
+            id,
+            red: color.red,
+            grn: color.green,
+            blu: color.blue,
+            hangle: color.hue,
+            hdsat: color.saturation,
+            reserved: 0,
+        };
+
+        //TODO: Make sure that the color is not modified by this function
+        unsafe {
+            vexDeviceAiVisionColorSet(self.device, &mut color as *mut _)
+        }
+
         self.validate_port()?;
-        todo!()
+
+        Ok(())
+    }
+
+    pub fn set_mode(&mut self, mode: AiVisionMode) -> Result<()> {
+        self.validate_port()?;
+        unsafe { vexDeviceAiVisionModeSet(self.device, mode as u32) }
+
+        Ok(())
     }
 
     /// Returns all objects detected by the AI Vision sensor.
@@ -236,6 +280,8 @@ impl SmartDevice for AiVisionSensor {
 pub enum AiVisionError {
     /// An object created by VEXos failed to be converted.
     InvalidObject,
+    /// The given signature ID or argument is out of range.
+    InvalidId,
     /// Generic port related error.
     #[snafu(display("{source}"), context(false))]
     Port {
