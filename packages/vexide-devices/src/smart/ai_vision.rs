@@ -6,7 +6,11 @@ use core::mem;
 use bitflags::bitflags;
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceAiVisionCodeSet, vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionStatusGet, vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionCode, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT
+    vexDeviceAiVisionCodeGet, vexDeviceAiVisionCodeSet, vexDeviceAiVisionColorGet,
+    vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet,
+    vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionStatusGet,
+    vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionCode, V5_DeviceAiVisionColor,
+    V5_DeviceAiVisionObject, V5_DeviceT,
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -192,21 +196,116 @@ pub struct AiVisionColor {
 /// A color code used by an AI Vision Sensor to detect groups of color blobs.
 /// The color code can have up to 7 color signatures.
 /// When the colors in a color code are detected next to eachother, the sensor will detect the color code.
-pub struct AiVisionColorCode<const N: usize>([u8; N]);
-macro_rules! code_impl {
-    ($($n:literal),+) => {
+pub struct AiVisionColorCode([Option<u8>; 7]);
+impl AiVisionColorCode {
+    /// Creates a new color code with the given color signature ids.
+    pub const fn new<const N: usize>(code: [Option<u8>; 7]) -> Self {
+        Self(code)
+    }
+
+    /// Returns the color signature ids in the color code.
+    pub fn colors(&self) -> Vec<u8> {
+        self.0.iter().flatten().copied().collect()
+    }
+}
+impl From<(u8,)> for AiVisionColorCode {
+    fn from(value: (u8,)) -> Self {
+        Self([Some(value.0), None, None, None, None, None, None])
+    }
+}
+impl From<(u8, u8)> for AiVisionColorCode {
+    fn from(value: (u8, u8)) -> Self {
+        Self([Some(value.0), Some(value.1), None, None, None, None, None])
+    }
+}
+impl From<(u8, u8, u8)> for AiVisionColorCode {
+    fn from(value: (u8, u8, u8)) -> Self {
+        Self([
+            Some(value.0),
+            Some(value.1),
+            Some(value.2),
+            None,
+            None,
+            None,
+            None,
+        ])
+    }
+}
+impl From<(u8, u8, u8, u8)> for AiVisionColorCode {
+    fn from(value: (u8, u8, u8, u8)) -> Self {
+        Self([
+            Some(value.0),
+            Some(value.1),
+            Some(value.2),
+            Some(value.3),
+            None,
+            None,
+            None,
+        ])
+    }
+}
+impl From<(u8, u8, u8, u8, u8)> for AiVisionColorCode {
+    fn from(value: (u8, u8, u8, u8, u8)) -> Self {
+        Self([
+            Some(value.0),
+            Some(value.1),
+            Some(value.2),
+            Some(value.3),
+            Some(value.4),
+            None,
+            None,
+        ])
+    }
+}
+impl From<(u8, u8, u8, u8, u8, u8)> for AiVisionColorCode {
+    fn from(value: (u8, u8, u8, u8, u8, u8)) -> Self {
+        Self([
+            Some(value.0),
+            Some(value.1),
+            Some(value.2),
+            Some(value.3),
+            Some(value.4),
+            Some(value.5),
+            None,
+        ])
+    }
+}
+impl From<(u8, u8, u8, u8, u8, u8, u8)> for AiVisionColorCode {
+    fn from(value: (u8, u8, u8, u8, u8, u8, u8)) -> Self {
+        Self([
+            Some(value.0),
+            Some(value.1),
+            Some(value.2),
+            Some(value.3),
+            Some(value.4),
+            Some(value.5),
+            Some(value.6),
+        ])
+    }
+}
+macro_rules! impl_code_from_array {
+    ($($size:literal),*) => {
         $(
-            impl AiVisionColorCode<$n> {
-                /// Creates a new color code with the given color signature ids.
-                /// An array with at most 7 elements can be given
-                pub const fn new(code: [u8; $n]) -> Self {
+            impl From<[Option<u8>; $size]> for AiVisionColorCode {
+                fn from(value: [Option<u8>; $size]) -> Self {
+                    let mut code = [None; 7];
+                    code[..$size].copy_from_slice(&value[..]);
                     Self(code)
                 }
             }
-        )+
+            impl From<[u8; $size]> for AiVisionColorCode {
+                fn from(value: [u8; $size]) -> Self {
+                    let mut code = [None; 7];
+                    for (i, id) in value.iter().enumerate() {
+                        code[i] = Some(*id);
+                    }
+                    Self(code)
+                }
+            }
+        )*
     };
 }
-code_impl!(1, 2, 3, 4, 5, 6, 7);
+impl_code_from_array!(1, 2, 3, 4, 5, 6, 7);
 
 /// An AI Vision sensor.
 pub struct AiVisionSensor {
@@ -275,7 +374,7 @@ impl AiVisionSensor {
     /// Sets a color code used to detect groups of colors.
     /// # Note
     /// This function will return an error if the given ID is not in the range [1, 8].
-    pub fn set_code<const N: usize>(&mut self, id: u8, code: AiVisionColorCode<N>) -> Result<()> {
+    pub fn set_color_code(&mut self, id: u8, code: AiVisionColorCode) -> Result<()> {
         if !(1..=8).contains(&id) {
             return Err(AiVisionError::InvalidId);
         }
@@ -283,9 +382,20 @@ impl AiVisionSensor {
 
         // Copy the color code into the V5_DeviceAiVisionCode struct
         let mut ids = [0u8; 7];
-        ids[..N].copy_from_slice(code.0.as_ref());
+        for (i, id) in code.0.iter().flatten().enumerate() {
+            ids[i] = *id;
+        }
 
-        let len = N as u8;
+        // Calculate the length of the color code color ids
+        let mut len = 0;
+        for id in &ids {
+            if *id != 0 {
+                len += 1;
+            } else {
+                break;
+            }
+        }
+
         let mut code = V5_DeviceAiVisionCode {
             id,
             len,
@@ -302,6 +412,48 @@ impl AiVisionSensor {
         }
 
         Ok(())
+    }
+
+    /// Returns the color code set on the AI Vision sensor with the given ID if it exists.
+    pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>> {
+        if !(1..=8).contains(&id) {
+            return Err(AiVisionError::InvalidId);
+        }
+        self.validate_port()?;
+
+        // Get the color code from the sensor
+        let mut code: V5_DeviceAiVisionCode = unsafe { mem::zeroed() };
+        let read = unsafe { vexDeviceAiVisionCodeGet(self.device, id as _, &mut code as *mut _) };
+        if !read {
+            return Ok(None);
+        }
+
+        // Get the valid (hopefully) color ids from the color code
+        let ids = [
+            code.c1, code.c2, code.c3, code.c4, code.c5, code.c6, code.c7,
+        ];
+        let mut color_ids = [None; 7];
+        for i in 0..code.len as usize {
+            color_ids[i] = Some(ids[i] as u8);
+        }
+
+        let signature = AiVisionColorCode::from(color_ids);
+
+        Ok(Some(signature))
+    }
+
+    /// Returns all color codes set on the AI Vision sensor.
+    pub fn color_codes(&self) -> Result<[Option<AiVisionColorCode>; 8]> {
+        Ok([
+            self.color_code(1)?,
+            self.color_code(2)?,
+            self.color_code(3)?,
+            self.color_code(4)?,
+            self.color_code(5)?,
+            self.color_code(6)?,
+            self.color_code(7)?,
+            self.color_code(8)?,
+        ])
     }
 
     /// Sets a color signature for the AI Vision sensor.
@@ -327,6 +479,43 @@ impl AiVisionSensor {
         unsafe { vexDeviceAiVisionColorSet(self.device, &mut color as *mut _) }
 
         Ok(())
+    }
+
+    /// Returns the color signature set on the AI Vision sensor with the given ID if it exists.
+    pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>> {
+        if !(1..=7).contains(&id) {
+            return Err(AiVisionError::InvalidId);
+        }
+        self.validate_port()?;
+
+        let mut color: V5_DeviceAiVisionColor = unsafe { mem::zeroed() };
+
+        let read =
+            unsafe { vexDeviceAiVisionColorGet(self.device, id as u32, &mut color as *mut _) };
+        if !read {
+            return Ok(None);
+        }
+
+        Ok(Some(AiVisionColor {
+            red: color.red,
+            green: color.grn,
+            blue: color.blu,
+            hue: color.hangle,
+            saturation: color.hdsat,
+        }))
+    }
+
+    /// Returns all color signatures set on the AI Vision sensor.
+    pub fn colors(&self) -> Result<[Option<AiVisionColor>; 7]> {
+        Ok([
+            self.color(1)?,
+            self.color(2)?,
+            self.color(3)?,
+            self.color(4)?,
+            self.color(5)?,
+            self.color(6)?,
+            self.color(7)?,
+        ])
     }
 
     fn status(&self) -> Result<u32> {
