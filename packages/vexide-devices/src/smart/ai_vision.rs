@@ -1,10 +1,12 @@
+//! AI Vision sensor device.
+
 use alloc::vec::Vec;
 use core::mem;
 
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionTemperatureGet,
-    V5_DeviceAiVisionObject, V5_DeviceT,
+    vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet,
+    vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionObject, V5_DeviceT,
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -35,9 +37,12 @@ impl From<u8> for ObjectType {
     }
 }
 
+/// An object detected by the AI Vision sensor.
 pub struct AiVisionObject {
-    id: u8,
-    data: AiVisionObjectData,
+    /// The ID of the object.
+    pub id: u8,
+    /// The data associated with the object.
+    pub data: AiVisionObjectData,
 }
 
 impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
@@ -97,6 +102,8 @@ impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
     }
 }
 
+/// The data associated with an AI Vision object.
+/// The data is different depending on the type of object detected.
 pub enum AiVisionObjectData {
     Color {
         x_pos: u16,
@@ -120,6 +127,8 @@ pub enum AiVisionObjectData {
         confidence: u16,
     },
 }
+
+/// An AI Vision sensor.
 pub struct AiVisionSensor {
     port: SmartPort,
     device: V5_DeviceT,
@@ -133,18 +142,54 @@ unsafe impl Send for AiVisionSensor {}
 unsafe impl Sync for AiVisionSensor {}
 
 impl AiVisionSensor {
-    pub fn new(port: SmartPort) -> Self {
+    /// Create a new AI Vision sensor from a smart port.
+    pub fn new(port: SmartPort, brightness: f64, contrast: f64) -> Self {
+        let device = unsafe { port.device_handle() };
+        // Configure the AI Vision sensor with the given brightness and contrast.
+        // SAFETY: The device handle is valid because it was created from a valid port.
+        unsafe { vexDeviceAiVisionSensorSet(device, brightness, contrast) }
         Self {
-            device: unsafe { port.device_handle() },
+            device,
             port,
-            brightness: 0.0,
-            contrast: 0.0,
+            brightness,
+            contrast,
         }
     }
 
+    /// Returns the current temperature of the AI Vision sensor.
     pub fn temperature(&self) -> Result<f64> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionTemperatureGet(self.device) })
+    }
+
+    /// Returns the contrast of the AI Vision sensor.
+    /// # Note
+    /// This method does not query the device for the current contrast.
+    /// If the sensor is not connected, this function will not error.
+    pub const fn contrast(&self) -> f64 {
+        self.contrast
+    }
+    /// Sets the contrast of the AI Vision sensor.
+    pub fn set_contrast(&mut self, contrast: f64) -> Result<()> {
+        self.validate_port()?;
+        self.contrast = contrast;
+        unsafe { vexDeviceAiVisionSensorSet(self.device, self.brightness, contrast) }
+        Ok(())
+    }
+
+    /// Returns the brightness of the AI Vision sensor.
+    /// # Note
+    /// This method does not query the device for the current brightness.
+    /// If the sensor is not connected, this function will not error.
+    pub const fn brightness(&self) -> f64 {
+        self.brightness
+    }
+    /// Sets the brightness of the AI Vision sensor.
+    pub fn set_brightness(&mut self, brightness: f64) -> Result<()> {
+        self.validate_port()?;
+        self.brightness = brightness;
+        unsafe { vexDeviceAiVisionSensorSet(self.device, brightness, self.contrast) }
+        Ok(())
     }
 
     pub fn set_mode(&mut self) -> Result<()> {
@@ -152,6 +197,7 @@ impl AiVisionSensor {
         todo!()
     }
 
+    /// Returns all objects detected by the AI Vision sensor.
     pub fn objects(&self) -> Result<Vec<AiVisionObject>> {
         let num_objects = self.num_objects()?;
 
@@ -168,6 +214,7 @@ impl AiVisionSensor {
         Ok(objects)
     }
 
+    /// Returns the number of objects currently detected by the AI Vision sensor.
     pub fn num_objects(&self) -> Result<u32> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionObjectCountGet(self.device) as _ })
