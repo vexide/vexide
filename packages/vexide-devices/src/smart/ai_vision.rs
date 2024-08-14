@@ -398,6 +398,9 @@ impl AiVisionSensor {
         // Copy the color code into the V5_DeviceAiVisionCode struct
         let mut ids = [0u8; 7];
         for (i, id) in code.0.iter().flatten().enumerate() {
+            if !(1..=7).contains(id) {
+                return Err(AiVisionError::InvalidIdInCode);
+            }
             ids[i] = *id;
         }
 
@@ -613,6 +616,8 @@ pub enum AiVisionError {
     InvalidObject,
     /// The given signature ID or argument is out of range.
     InvalidId,
+    /// A color signature ID in a given color code is out of range.
+    InvalidIdInCode,
     /// Generic port related error.
     #[snafu(display("{source}"), context(false))]
     Port {
