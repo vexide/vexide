@@ -5,7 +5,7 @@ use core::mem;
 
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceAiVisionCodeSet, vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT
+    vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
