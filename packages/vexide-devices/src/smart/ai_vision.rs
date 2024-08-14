@@ -6,9 +6,7 @@ use core::mem;
 use bitflags::bitflags;
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet,
-    vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionStatusGet,
-    vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT,
+    vexDeviceAiVisionCodeSet, vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionStatusGet, vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionCode, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -107,25 +105,39 @@ impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
 /// The data associated with an AI Vision object.
 /// The data is different depending on the type of object detected.
 pub enum AiVisionObjectData {
+    /// An object detected by color blob detection.
     Color {
+        /// The x position of the object.
         x_pos: u16,
+        /// The y position of the object.
         y_pos: u16,
 
+        /// The width of the object.
         width: u16,
+        /// The height of the object.
         height: u16,
+        /// The angle of the object.
         angle: f64,
     },
+    /// An object detected by apriltag detection.
     AprilTag {
+        //TODO: figure out what corners these points represent
         point1: mint::Point2<i16>,
         point2: mint::Point2<i16>,
         point3: mint::Point2<i16>,
         point4: mint::Point2<i16>,
     },
+    /// An object detected by an onboard model.
     Model {
+        /// The x position of the object.
         x_pos: u16,
+        /// The y position of the object.
         y_pos: u16,
+        /// The width of the object.
         width: u16,
+        /// The height of the object.
         height: u16,
+        /// The confidence reported by the model.
         confidence: u16,
     },
 }
@@ -163,13 +175,38 @@ bitflags! {
 const MODE_MAGIC_BIT: u32 = 0x20000000;
 
 #[derive(Debug, Copy, Clone)]
+/// A color signature used by an AI Vision Sensor to detect color blobs.
 pub struct AiVisionColor {
+    /// The red value of the color.
     pub red: u8,
+    /// The green value of the color.
     pub green: u8,
+    /// The blue value of the color.
     pub blue: u8,
+    /// The accepted hue range of the color. VEXcode limits this value to [0, 20]
     pub hue: f32,
+    /// The accepted saturation range of the color.
     pub saturation: f32,
 }
+
+/// A color code used by an AI Vision Sensor to detect groups of color blobs.
+/// The color code can have up to 7 color signatures.
+/// When the colors in a color code are detected next to eachother, the sensor will detect the color code.
+pub struct AiVisionColorCode<const N: usize>([u8; N]);
+macro_rules! code_impl {
+    ($($n:literal),+) => {
+        $(
+            impl AiVisionColorCode<$n> {
+                /// Creates a new color code with the given color signature ids.
+                /// An array with at most 7 elements can be given
+                pub const fn new(code: [u8; $n]) -> Self {
+                    Self(code)
+                }
+            }
+        )+
+    };
+}
+code_impl!(1, 2, 3, 4, 5, 6, 7);
 
 /// An AI Vision sensor.
 pub struct AiVisionSensor {
@@ -235,10 +272,46 @@ impl AiVisionSensor {
         Ok(())
     }
 
-    pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
-        if !(1..7).contains(&id) {
+    /// Sets a color code used to detect groups of colors.
+    /// # Note
+    /// This function will return an error if the given ID is not in the range [1, 8].
+    pub fn set_code<const N: usize>(&mut self, id: u8, code: AiVisionColorCode<N>) -> Result<()> {
+        if !(1..=8).contains(&id) {
             return Err(AiVisionError::InvalidId);
         }
+        self.validate_port()?;
+
+        // Copy the color code into the V5_DeviceAiVisionCode struct
+        let mut ids = [0u8; 7];
+        ids[..N].copy_from_slice(code.0.as_ref());
+
+        let len = N as u8;
+        let mut code = V5_DeviceAiVisionCode {
+            id,
+            len,
+            c1: ids[0] as i16,
+            c2: ids[1] as i16,
+            c3: ids[2] as i16,
+            c4: ids[3] as i16,
+            c5: ids[4] as i16,
+            c6: ids[5] as i16,
+            c7: ids[6] as i16,
+        };
+        unsafe {
+            vexDeviceAiVisionCodeSet(self.device, &mut code as *mut _);
+        }
+
+        Ok(())
+    }
+
+    /// Sets a color signature for the AI Vision sensor.
+    /// # Note
+    /// This function will return an error if the given ID is not in the range [1, 7].
+    pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
+        if !(1..=7).contains(&id) {
+            return Err(AiVisionError::InvalidId);
+        }
+        self.validate_port()?;
 
         let mut color = V5_DeviceAiVisionColor {
             id,
@@ -253,8 +326,6 @@ impl AiVisionSensor {
         //TODO: Make sure that the color is not modified by this function
         unsafe { vexDeviceAiVisionColorSet(self.device, &mut color as *mut _) }
 
-        self.validate_port()?;
-
         Ok(())
     }
 
@@ -264,6 +335,14 @@ impl AiVisionSensor {
         Ok(status)
     }
 
+    /// Returns the current detection mode of the AI Vision sensor.
+    /// # Note
+    /// This function currently cannot detect if the sensor is in color code detection mode.
+    pub fn detection_mode(&self) -> Result<AiVisionDetectionMode> {
+        let status = self.status()?;
+        let mode = status & 0b111;
+        Ok(AiVisionDetectionMode::from_bits_truncate(mode))
+    }
     /// Set the type of objects that will be detected
     pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
         // Mask out the current detection mode
