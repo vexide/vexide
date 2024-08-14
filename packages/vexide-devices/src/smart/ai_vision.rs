@@ -136,7 +136,7 @@ pub enum AiVisionObjectData {
 pub enum AiVisionAprilTagFamily {
     /// Circle21h7 family
     Circle21h7 = 0,
-    // 16h5 family
+    /// 16h5 family
     Tag16h5 = 1,
     /// 25h9 family
     Tag25h9 = 2,
