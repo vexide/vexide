@@ -3,9 +3,12 @@
 use alloc::vec::Vec;
 use core::mem;
 
+use bitflags::bitflags;
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT
+    vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet,
+    vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionStatusGet,
+    vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT,
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -127,14 +130,37 @@ pub enum AiVisionObjectData {
     },
 }
 
-/// The mode of the AI Vision sensor.
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
-pub enum AiVisionMode {
-    Code = 0,
-    Model = 1,
-    AprilTag = 2,
+/// Possible april tag families to be detected by the sensor.
+pub enum AiVisionAprilTagFamily {
+    /// Circle21h7 family
+    Circle21h7 = 0,
+    // 16h5 family
+    Tag16h5 = 1,
+    /// 25h9 family
+    Tag25h9 = 2,
+    /// 36h11 family
+    Tag36h11 = 3,
 }
+
+bitflags! {
+    /// The mode of the AI Vision sensor.
+    #[derive(Debug, Copy, Clone)]
+    pub struct AiVisionDetectionMode: u32 {
+        /// Objects will be detected by an onboard model
+        const MODEL = 0b1;
+        /// Color blobs will be detected
+        const COLOR = 0b10;
+        /// Color codes will be detected
+        /// This only functions while color detection is enabled.
+        const COLOR_CODE = 0b10000;
+        /// April tags will be detected
+        const APRIL_TAG = 0b100;
+    }
+}
+
+const MODE_MAGIC_BIT: u32 = 0x20000000;
 
 #[derive(Debug, Copy, Clone)]
 pub struct AiVisionColor {
@@ -214,7 +240,7 @@ impl AiVisionSensor {
             return Err(AiVisionError::InvalidId);
         }
 
-        let mut color = V5_DeviceAiVisionColor  {
+        let mut color = V5_DeviceAiVisionColor {
             id,
             red: color.red,
             grn: color.green,
@@ -225,19 +251,41 @@ impl AiVisionSensor {
         };
 
         //TODO: Make sure that the color is not modified by this function
-        unsafe {
-            vexDeviceAiVisionColorSet(self.device, &mut color as *mut _)
-        }
+        unsafe { vexDeviceAiVisionColorSet(self.device, &mut color as *mut _) }
 
         self.validate_port()?;
 
         Ok(())
     }
 
-    pub fn set_mode(&mut self, mode: AiVisionMode) -> Result<()> {
+    fn status(&self) -> Result<u32> {
         self.validate_port()?;
-        unsafe { vexDeviceAiVisionModeSet(self.device, mode as u32) }
+        let status = unsafe { vexDeviceAiVisionStatusGet(self.device) };
+        Ok(status)
+    }
 
+    /// Set the type of objects that will be detected
+    pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
+        // Mask out the current detection mode
+        let mode_mask = 0b11111000;
+        let current_mode = self.status()? & mode_mask as u32;
+
+        let new_mode = current_mode | mode.bits();
+
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | MODE_MAGIC_BIT) }
+
+        Ok(())
+    }
+
+    /// Sets the family of apriltag that will be detected
+    pub fn set_apriltag_family(&mut self, family: AiVisionAprilTagFamily) -> Result<()> {
+        self.validate_port()?;
+
+        let new_mode = (family as u32) << 16;
+
+        //TODO: This should overwrite all of the other settings?
+        //TODO: Testing required. This is what vexcode does...
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | MODE_MAGIC_BIT) }
         Ok(())
     }
 
