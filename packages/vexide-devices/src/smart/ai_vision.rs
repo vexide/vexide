@@ -321,6 +321,21 @@ unsafe impl Send for AiVisionSensor {}
 unsafe impl Sync for AiVisionSensor {}
 
 impl AiVisionSensor {
+    /// The horizontal resolution of the AI Vision sensor.
+    pub const HORIZONTAL_RESOLUTION: u16 = 320;
+
+    /// The vertical resolution of the AI Vision sensor.
+    pub const VERTICAL_RESOLUTION: u16 = 240;
+
+    /// The horizontal FOV of the vision sensor in degrees.
+    pub const HORIZONTAL_FOV: f32 = 74.0;
+
+    /// The vertical FOV of the vision sensor in degrees.
+    pub const VERTICAL_FOV: f32 = 63.0;
+
+    /// The diagonal FOV of the vision sensor in degrees.
+    pub const DIAGONAL_FOV: f32 = 87.0;
+
     /// Create a new AI Vision sensor from a smart port.
     pub fn new(port: SmartPort, brightness: f64, contrast: f64) -> Self {
         let device = unsafe { port.device_handle() };

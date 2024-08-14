@@ -54,6 +54,7 @@ Before releasing:
   for opaque scaling (#230)
 - Added panic hook support comparable to the Rust standard library through `vexide::panic::set_hook` and `vexide::panic::take_hook` (#234)
 - Added support for the V5 AI Vision Sensor (#58)
+- Added FOV constants to the Vision Sensor (#58)
 
 ### Fixed
 
