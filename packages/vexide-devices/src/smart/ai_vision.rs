@@ -176,6 +176,15 @@ bitflags! {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+/// Represents the state of the AI Vision sensor's USB overlay.
+pub enum AiVisionUsbOverlay {
+    /// The USB overlay is enabled.
+    Enabled,
+    /// The USB overlay is disabled.
+    Disabled,
+}
+
 const MODE_MAGIC_BIT: u32 = 0x20000000;
 
 #[derive(Debug, Copy, Clone)]
@@ -342,12 +351,14 @@ impl AiVisionSensor {
         // Configure the AI Vision sensor with the given brightness and contrast.
         // SAFETY: The device handle is valid because it was created from a valid port.
         unsafe { vexDeviceAiVisionSensorSet(device, brightness, contrast) }
-        Self {
+        let mut this = Self {
             device,
             port,
             brightness,
             contrast,
-        }
+        };
+        let _ = this.set_usb_overlay(AiVisionUsbOverlay::Disabled);
+        this
     }
 
     /// Returns the current temperature of the AI Vision sensor.
@@ -596,6 +607,28 @@ impl AiVisionSensor {
     pub fn num_objects(&self) -> Result<u32> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionObjectCountGet(self.device) as _ })
+    }
+
+    /// Sets state of the AI Vision sensor's USB overlay.
+    pub fn set_usb_overlay(&mut self, state: AiVisionUsbOverlay) -> Result<()> {
+        let status = self.status()?;
+        let new_mode = match state {
+            AiVisionUsbOverlay::Enabled => status & 0b01111111,
+            AiVisionUsbOverlay::Disabled => status & u8::MAX as u32 | 0b10000000,
+        };
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | MODE_MAGIC_BIT) }
+        Ok(())
+    }
+
+    /// Returns the state of the AI Vision sensor's USB overlay.
+    pub fn usb_overlay(&self) -> Result<AiVisionUsbOverlay> {
+        let status = self.status()?;
+        let state = status & 0b10000000;
+        match state {
+            1 => Ok(AiVisionUsbOverlay::Disabled),
+            0 => Ok(AiVisionUsbOverlay::Enabled),
+            _ => unreachable!(),
+        }
     }
 }
 
