@@ -31,6 +31,7 @@ Before releasing:
 
 ### Changed
 
+- Overhauled the design of the startup banner.
 - `DistanceSensor::distance` now returns an `Option` that will be `None` if the sensor is out of range.
 - Adjusted distance sensor status code errors to be more clear.
 
