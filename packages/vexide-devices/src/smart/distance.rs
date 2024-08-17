@@ -69,7 +69,7 @@ impl DistanceSensor {
     /// Get the current guess at relative "object size".
     ///
     /// This is a value that has a range of 0 to 400. A 18" x 30" grey card will return
-    /// a value of approximately 75 in typical room lighting.
+    /// a value of approximately 75 in typical room lighting. If the sensor is not able to detect an object, None is returned.
     ///
     /// This sensor reading is unusual, as it is entirely unitless with the seemingly arbitrary
     /// range of 0-400 existing due to VEXCode's [`vex::sizeType`] enum having four variants. It's
@@ -77,10 +77,15 @@ impl DistanceSensor {
     /// of salt.
     ///
     /// [`vex::sizeType`]: https://api.vexcode.cloud/v5/search/sizeType/sizeType/enum
-    pub fn relative_size(&self) -> Result<u32, DistanceError> {
+    pub fn relative_size(&self) -> Result<Option<u32>, DistanceError> {
         self.validate()?;
 
-        Ok(unsafe { vexDeviceDistanceObjectSizeGet(self.device) as u32 })
+        let size = unsafe { vexDeviceDistanceObjectSizeGet(self.device) as i32 };
+        if size >= 0 {
+            Ok(Some(size as u32))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Returns the confidence in the distance measurement from 0.0 to 1.0.
