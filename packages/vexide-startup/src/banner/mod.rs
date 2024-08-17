@@ -3,14 +3,14 @@ use core::time::Duration;
 use vex_sdk::{vexBatteryCapacityGet, vexSystemPowerupTimeGet, vexSystemVersion};
 use vexide_core::println;
 
-mod themes;
+pub mod themes;
 
-use themes::{theme, BannerTheme};
+use themes::BannerTheme;
 
 #[inline]
-pub fn print() {
+pub(crate) fn print() {
     const VEXIDE_VERSION: &str = "0.3.0";
-    const THEME: BannerTheme = theme();
+    const THEME: BannerTheme = themes::THEME_DEFAULT;
 
     let system_version = unsafe { vexSystemVersion() }.to_be_bytes();
 
@@ -22,7 +22,7 @@ pub fn print() {
 {lp5}        *%%%%%%%*-+%%%%%+\x1B[0m      ├─\x1B{mk}🔨 Compiled:\x1B[0m {compile_date}
 {lp6}          +%%%*:   .+###%#\x1B[0m     ├─\x1B{mk}🔋 Battery:\x1B[0m {battery}%
 {lp7}           .%:\x1B[0m                 ╰─\x1B{mk}⌚ Uptime:\x1B[0m {uptime:?}
-    ",
+",
         lp1 = THEME.logo_primary[0],
         lp2 = THEME.logo_primary[1],
         lp3 = THEME.logo_primary[2],

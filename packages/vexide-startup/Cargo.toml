@@ -21,7 +21,6 @@ vexide-core = { version = "0.3.0", path = "../vexide-core"}
 vexide-async = { version = "0.1.2", path = "../vexide-async" }
 vexide-devices = { version = "0.3.0", path = "../vexide-devices" }
 compile-time = "0.2.0"
-time = { version = "0.3.36", default-features = false }
 
 [lints]
 workspace = true

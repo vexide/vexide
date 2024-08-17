@@ -1,5 +1,3 @@
-use time::{Date, Month};
-
 macro_rules! ansi_rgb {
     ($r:expr, $g:expr, $b:expr) => {
         concat!("\x1B[38;2;", $r, ";", $g, ";", $b, "m")
@@ -12,18 +10,6 @@ macro_rules! ansi_rgb_bold {
     };
 }
 
-macro_rules! date_matches {
-    ($date:expr, $year:expr, $month:expr, $day:expr) => {
-        ($date.year() == $year) && ($date.month() as u8 == $month as u8) && $date.day() == $day
-    };
-    ($date:expr, $month:expr, $day:expr) => {
-        ($date.month() as u8 == $month as u8) && $date.day() == $day
-    };
-    ($date:expr, $month:expr) => {
-        ($date.month() as u8 == $month as u8)
-    };
-}
-
 #[derive(Clone, Copy, Debug)]
 pub struct BannerTheme {
     pub emoji: &'static str,
@@ -33,7 +19,7 @@ pub struct BannerTheme {
     pub metadata_key: &'static str,
 }
 
-const THEME_DEFAULT: BannerTheme = BannerTheme {
+pub const THEME_DEFAULT: BannerTheme = BannerTheme {
     emoji: "🦀",
     logo_primary: [
         ansi_rgb_bold!(243, 139, 168),
@@ -49,7 +35,7 @@ const THEME_DEFAULT: BannerTheme = BannerTheme {
     metadata_key: "[1;33m",
 };
 
-const THEME_PRIDE: BannerTheme = BannerTheme {
+pub const THEME_PRIDE: BannerTheme = BannerTheme {
     emoji: "🌈",
     logo_primary: [
         ansi_rgb_bold!(243, 139, 168),
@@ -65,7 +51,7 @@ const THEME_PRIDE: BannerTheme = BannerTheme {
     metadata_key: "[1;33m",
 };
 
-const THEME_TRANS_REMEMBERANCE: BannerTheme = {
+pub const THEME_TRANS_REMEMBERANCE: BannerTheme = {
     const BLUE: &str = ansi_rgb_bold!(137, 180, 250);
     const PINK: &str = ansi_rgb_bold!(245, 194, 231);
     const WHITE: &str = "\x1B[1;38;5;254m";
@@ -79,7 +65,7 @@ const THEME_TRANS_REMEMBERANCE: BannerTheme = {
     }
 };
 
-const THEME_HOLIDAYS: BannerTheme = {
+pub const THEME_HOLIDAYS: BannerTheme = {
     const GREEN: &str = ansi_rgb!(166, 227, 161);
     const GREEN_BOLD: &str = ansi_rgb_bold!(166, 227, 161);
     const RED: &str = ansi_rgb_bold!(243, 139, 168);
@@ -93,7 +79,7 @@ const THEME_HOLIDAYS: BannerTheme = {
     }
 };
 
-const THEME_SAINT_PATRICKS: BannerTheme = {
+pub const THEME_SAINT_PATRICKS: BannerTheme = {
     const GREEN: &str = ansi_rgb_bold!(166, 227, 161);
 
     BannerTheme {
@@ -105,7 +91,7 @@ const THEME_SAINT_PATRICKS: BannerTheme = {
     }
 };
 
-const THEME_NEW_YEARS: BannerTheme = BannerTheme {
+pub const THEME_NEW_YEARS: BannerTheme = BannerTheme {
     emoji: "🎆",
     logo_primary: [
         ansi_rgb_bold!(249, 226, 175),
@@ -121,7 +107,7 @@ const THEME_NEW_YEARS: BannerTheme = BannerTheme {
     metadata_key: ansi_rgb_bold!(242, 205, 205),
 };
 
-const THEME_VALENTINES: BannerTheme = {
+pub const THEME_VALENTINES: BannerTheme = {
     const RED: &str = ansi_rgb_bold!(243, 139, 168);
     const PINK: &str = ansi_rgb_bold!(245, 194, 231);
     const WHITE: &str = "\x1B[1;38;5;254m";
@@ -134,23 +120,3 @@ const THEME_VALENTINES: BannerTheme = {
         metadata_key: RED,
     }
 };
-
-pub const fn theme() -> BannerTheme {
-    const COMPILE_DATE: Date = compile_time::date!();
-
-    if date_matches!(COMPILE_DATE, Month::June) {
-        THEME_PRIDE
-    } else if date_matches!(COMPILE_DATE, Month::November, 20) {
-        THEME_TRANS_REMEMBERANCE
-    } else if date_matches!(COMPILE_DATE, Month::February, 14) {
-        THEME_VALENTINES
-    } else if date_matches!(COMPILE_DATE, Month::March, 17) {
-        THEME_SAINT_PATRICKS
-    } else if date_matches!(COMPILE_DATE, Month::December, 25) {
-        THEME_HOLIDAYS
-    } else if date_matches!(COMPILE_DATE, Month::December, 31) {
-        THEME_NEW_YEARS
-    } else {
-        THEME_DEFAULT
-    }
-}
