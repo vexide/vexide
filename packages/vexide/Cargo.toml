@@ -31,7 +31,7 @@ vexide-core = { version = "0.3.0", path = "../vexide-core", optional = true }
 vexide-startup = { version = "0.2.0", path = "../vexide-startup", optional = true }
 vexide-graphics = { version = "0.1.2", path = "../vexide-graphics", optional = true }
 vexide-macro = { version = "0.2.0", path = "../vexide-macro", optional = true }
-vex-sdk = "0.17.0"
+vex-sdk = "0.18.0"
 
 [features]
 default = ["async", "devices", "panic", "display_panics", "core", "startup", "macro"]
