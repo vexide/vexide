@@ -36,7 +36,7 @@ pub(crate) fn print() {
         emoji = THEME.emoji,
         vexide_version = VEXIDE_VERSION,
         vexos_version = format_args!(
-            "{}.{}.{} r{}",
+            "{}.{}.{}-r{}",
             system_version[0],
             system_version[1],
             system_version[2],
