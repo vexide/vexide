@@ -2,6 +2,7 @@
 #![no_std]
 
 use core::time::Duration;
+
 use vexide::prelude::*;
 use vexide_devices::controller::ControllerId;
 use vexide_panic::set_panic_hook;

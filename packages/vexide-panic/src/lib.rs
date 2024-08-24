@@ -7,10 +7,12 @@
 
 extern crate alloc;
 
-use alloc::boxed::Box;
-use alloc::string::{String, ToString};
-use vexide_core::println;
-use vexide_core::sync::Mutex;
+use alloc::{
+    boxed::Box,
+    string::{String, ToString},
+};
+
+use vexide_core::{println, sync::Mutex};
 #[cfg(feature = "display_panics")]
 use vexide_devices::{
     color::Rgb,
@@ -99,7 +101,10 @@ static HOOK: Mutex<Option<Box<dyn Fn(&core::panic::PanicInfo<'_>)>>> = Mutex::ne
 ///
 /// set_panic_hook(|info| println!("{:?}", info));
 /// ```
-pub fn set_panic_hook<F>(hook: F) where F: Fn(&core::panic::PanicInfo<'_>) + 'static {
+pub fn set_panic_hook<F>(hook: F)
+where
+    F: Fn(&core::panic::PanicInfo<'_>) + 'static,
+{
     loop {
         if let Some(mut hook_lock) = HOOK.try_lock() {
             *hook_lock = Some(Box::new(hook));
@@ -117,7 +122,7 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
         if let Some(hook) = HOOK.try_lock() {
             match *hook {
                 None => {}
-                Some(ref hook) => { hook(info) }
+                Some(ref hook) => hook(info),
             }
             break;
         }
