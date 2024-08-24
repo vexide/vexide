@@ -3,12 +3,14 @@
 //! If the `display_panics` feature is enabled, it will also display the panic message on the V5 Brain display.
 
 #![no_std]
+#![feature(fn_traits)]
 
 extern crate alloc;
 
+use alloc::boxed::Box;
 use alloc::string::{String, ToString};
-
 use vexide_core::println;
+use vexide_core::sync::Mutex;
 #[cfg(feature = "display_panics")]
 use vexide_devices::{
     color::Rgb,
@@ -88,10 +90,38 @@ fn draw_error(screen: &mut Screen, msg: &str) -> Result<(), ScreenError> {
     Ok(())
 }
 
+static HOOK: Mutex<Option<Box<dyn Fn(&core::panic::PanicInfo<'_>)>>> = Mutex::new(None);
+
+/// Set a panic hook to run before vexide panic
+///
+/// ```
+/// use vexide_panic::set_panic_hook;
+///
+/// set_panic_hook(|info| println!("{:?}", info));
+/// ```
+pub fn set_panic_hook<F>(hook: F) where F: Fn(&core::panic::PanicInfo<'_>) + 'static {
+    loop {
+        if let Some(mut hook_lock) = HOOK.try_lock() {
+            *hook_lock = Some(Box::new(hook));
+            return;
+        }
+    }
+}
+
 #[panic_handler]
 /// The panic handler for vexide.
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     println!("{info}");
+
+    loop {
+        if let Some(hook) = HOOK.try_lock() {
+            match *hook {
+                None => {}
+                Some(ref hook) => { hook(info) }
+            }
+            break;
+        }
+    }
 
     unsafe {
         #[cfg(feature = "display_panics")]
