@@ -27,6 +27,8 @@ Before releasing:
 
 ### Fixed
 
+- Fixed an issue where the distance sensor relative_size returned a u32 when it can be negative. (#116)
+
 ### Changed
 
 - `DistanceSensor::distance` now returns an `Option` that will be `None` if the sensor is out of range.
