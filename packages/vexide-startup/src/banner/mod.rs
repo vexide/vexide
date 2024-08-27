@@ -1,6 +1,8 @@
 use core::time::Duration;
 
-use vex_sdk::{vexBatteryCapacityGet, vexSystemPowerupTimeGet, vexSystemVersion, vexCompetitionStatus};
+use vex_sdk::{
+    vexBatteryCapacityGet, vexCompetitionStatus, vexSystemPowerupTimeGet, vexSystemVersion,
+};
 use vexide_core::println;
 
 pub mod themes;
