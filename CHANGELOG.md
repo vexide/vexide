@@ -31,7 +31,7 @@ Before releasing:
 
 ### Changed
 
-- `DistanceSensor::distance` now returns an `Option` that will be `None` if the sensor is out of range.
+- Refactored the distance sensor API. All readings from the sensor are now read at once in a `object` method that can be possibly `None` if no object was detected. (#122) (**Breaking Change**)
 - Adjusted distance sensor status code errors to be more clear.
 
 ### Removed
