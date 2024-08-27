@@ -32,7 +32,7 @@ impl AdiSolenoid {
         unsafe {
             vexDeviceAdiValueSet(
                 self.port.device_handle(),
-                self.port.internal_index(),
+                self.port.index(),
                 level.is_high() as i32,
             );
         }
@@ -77,14 +77,14 @@ impl AdiSolenoid {
 }
 
 impl AdiDevice for AdiSolenoid {
-    type PortIndexOutput = u8;
+    type PortNumberOutput = u8;
 
-    fn port_index(&self) -> Self::PortIndexOutput {
-        self.port.index()
+    fn port_number(&self) -> Self::PortNumberOutput {
+        self.port.number()
     }
 
-    fn expander_port_index(&self) -> Option<u8> {
-        self.port.expander_index()
+    fn expander_port_number(&self) -> Option<u8> {
+        self.port.expander_number()
     }
 
     fn device_type(&self) -> AdiDeviceType {
