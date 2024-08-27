@@ -33,6 +33,9 @@ Before releasing:
 
 - `DistanceSensor::distance` now returns an `Option` that will be `None` if the sensor is out of range.
 - Adjusted distance sensor status code errors to be more clear.
+- Renamed `SmartDevice::port_index` and `SmartPort::index` to `SmartDevice::port_number` and `SmartPort::port_number`.
+- Renamed `AdiDevice::port_index` and `AdiPort::index` to `AdiDevice::port_number` and `AdiDevice::port_number`.
+- `SmartPort::device_type` now no longer returns a `Result`.
 
 ### Removed
 
