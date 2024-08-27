@@ -33,6 +33,7 @@ Before releasing:
 
 - `DistanceSensor::distance` now returns an `Option` that will be `None` if the sensor is out of range.
 - Adjusted distance sensor status code errors to be more clear.
+- Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them.
 
 ### Removed
 
