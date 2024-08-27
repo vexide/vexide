@@ -163,12 +163,12 @@ pub trait AdiDevice {
 
     /// Get the index of the [`AdiPort`] this device is registered on.
     ///
-    /// Ports are indexed starting from 1.
+    /// Ports are numbered starting from 1.
     fn port_number(&self) -> Self::PortNumberOutput;
 
     /// Get the index of the [`AdiPort`] this device is registered on.
     ///
-    /// Ports are indexed starting from 1.
+    /// Ports are numbered starting from 1.
     fn expander_port_number(&self) -> Option<u8>;
 
     /// Get the variant of [`AdiDeviceType`] that this device is associated with.

@@ -48,7 +48,7 @@ use crate::PortError;
 pub trait SmartDevice {
     /// Get the index of the [`SmartPort`] this device is registered on.
     ///
-    /// Ports are indexed starting from 1.
+    /// Ports are numbered starting from 1.
     ///
     /// # Examples
     ///
@@ -137,7 +137,7 @@ pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<
 pub struct SmartPort {
     /// The index of the port (port number).
     ///
-    /// Ports are indexed starting from 1.
+    /// Ports are numbered starting from 1.
     number: u8,
 }
 
