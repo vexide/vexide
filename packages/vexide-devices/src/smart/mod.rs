@@ -46,7 +46,7 @@ use crate::PortError;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {
-    /// Get the index of the [`SmartPort`] this device is registered on.
+    /// Get the number of the [`SmartPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
     ///
@@ -135,7 +135,7 @@ pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<
 /// Represents a smart port on a V5 Brain
 #[derive(Debug, Eq, PartialEq)]
 pub struct SmartPort {
-    /// The index of the port (port number).
+    /// The number of the port (port number).
     ///
     /// Ports are numbered starting from 1.
     number: u8,

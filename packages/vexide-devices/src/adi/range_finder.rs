@@ -80,7 +80,7 @@ pub enum RangeFinderError {
     /// The sensor is unable to return a valid reading.
     NoReading,
 
-    /// The index of the output wire must be on an odd numbered port (A, C, E, G).
+    /// The number of the output wire must be odd (A, C, E, G).
     BadOutputPort,
 
     /// The input  wire must be plugged in directly above the output wire.

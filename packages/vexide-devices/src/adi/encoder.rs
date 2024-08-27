@@ -102,7 +102,7 @@ impl AdiDevice for AdiEncoder {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an encoder range finder.
 pub enum EncoderError {
-    /// The index of the top wire must be on an odd numbered port (A, C, E, G).
+    /// The number of the top wire must be on an odd numbered port (A, C, E, G).
     BadTopPort,
 
     /// The bottom wire must be plugged in directly above the top wire.
