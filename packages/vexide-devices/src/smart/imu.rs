@@ -336,6 +336,7 @@ pub enum CalibrationPhase {
 
 /// Future that calibrates an IMU
 /// created with [`InertialSensor::calibrate`].
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 #[derive(Debug, Clone, Copy)]
 pub enum InertialCalibrateFuture {
     /// Calibrate the IMU

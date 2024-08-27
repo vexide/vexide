@@ -11,6 +11,7 @@ use replace_with::replace_with;
 use super::{MutexGuard, MutexLockFuture};
 
 /// A future that resolves once a condition variable is notified.
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub enum CondvarWaitFuture<'a, T> {
     /// The future is waiting for a notification.
     WaitingForNotification {

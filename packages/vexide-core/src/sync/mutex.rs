@@ -64,6 +64,7 @@ unsafe impl lock_api::RawMutex for RawMutex {
 }
 
 /// A future that resolves to a mutex guard.
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub struct MutexLockFuture<'a, T> {
     mutex: &'a Mutex<T>,
 }
