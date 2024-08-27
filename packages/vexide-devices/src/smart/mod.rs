@@ -46,7 +46,7 @@ use crate::PortError;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {
-    /// Get the number of the [`SmartPort`] this device is registered on.
+    /// Get the port number of the [`SmartPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
     ///

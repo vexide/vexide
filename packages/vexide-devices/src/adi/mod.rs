@@ -161,12 +161,12 @@ pub trait AdiDevice {
     /// occasionally `(u8, u8)` if the device has two ADI wires.
     type PortNumberOutput;
 
-    /// Get the number of the [`AdiPort`] this device is registered on.
+    /// Get the port number of the [`AdiPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
     fn port_number(&self) -> Self::PortNumberOutput;
 
-    /// Get the number of the [`AdiPort`] this device is registered on.
+    /// Get the port number of the [`AdiPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
     fn expander_port_number(&self) -> Option<u8>;
