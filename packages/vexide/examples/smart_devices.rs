@@ -41,10 +41,7 @@ async fn main(peripherals: Peripherals) {
         right_motor.set_voltage(12.0 * right).unwrap();
 
         println!("IMU Euler angles: {:?}", imu.euler().unwrap());
-        println!(
-            "Distance Sensor Object: {:?}",
-            distance.object().unwrap(),
-        );
+        println!("Distance Sensor Object: {:?}", distance.object().unwrap(),);
 
         // Don't hog the CPU
         sleep(Duration::from_millis(5)).await;
