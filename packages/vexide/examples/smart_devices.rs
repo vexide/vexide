@@ -42,9 +42,8 @@ async fn main(peripherals: Peripherals) {
 
         println!("IMU Euler angles: {:?}", imu.euler().unwrap());
         println!(
-            "Distance: {}. Confidence: {}",
-            distance.distance().unwrap().unwrap_or(9999),
-            distance.distance_confidence().unwrap()
+            "Distance Sensor Object: {:?}",
+            distance.object().unwrap(),
         );
 
         // Don't hog the CPU
