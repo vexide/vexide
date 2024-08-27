@@ -46,17 +46,17 @@ use crate::PortError;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {
-    /// Get the index of the [`SmartPort`] this device is registered on.
+    /// Get the port number of the [`SmartPort`] this device is registered on.
     ///
-    /// Ports are indexed starting from 1.
+    /// Ports are numbered starting from 1.
     ///
     /// # Examples
     ///
     /// ```
     /// let sensor = InertialSensor::new(peripherals.port_1)?;
-    /// assert_eq!(sensor.port_index(), 1);
+    /// assert_eq!(sensor.port_number(), 1);
     /// ```
-    fn port_index(&self) -> u8;
+    fn port_number(&self) -> u8;
 
     /// Get the variant of [`SmartDeviceType`] that this device is associated with.
     ///
@@ -84,7 +84,7 @@ pub trait SmartDevice {
     /// ```
     fn is_connected(&self) -> bool {
         let connected_type: SmartDeviceType =
-            unsafe { *vexDeviceGetByIndex((self.port_index() - 1) as u32) }
+            unsafe { *vexDeviceGetByIndex((self.port_number() - 1) as u32) }
                 .device_type
                 .into();
 
@@ -94,14 +94,14 @@ pub trait SmartDevice {
     /// Get the timestamp recorded by this device's internal clock.
     fn timestamp(&self) -> Result<SmartDeviceTimestamp, PortError> {
         Ok(SmartDeviceTimestamp(unsafe {
-            vexDeviceGetTimestamp(vexDeviceGetByIndex((self.port_index() - 1) as u32))
+            vexDeviceGetTimestamp(vexDeviceGetByIndex((self.port_number() - 1) as u32))
         }))
     }
 
     /// Verify that the device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
     fn validate_port(&self) -> Result<(), PortError> {
-        validate_port(self.port_index(), self.device_type())
+        validate_port(self.port_number(), self.device_type())
     }
 }
 
@@ -109,7 +109,7 @@ impl<T: SmartDevice> From<T> for SmartPort {
     fn from(device: T) -> Self {
         // SAFETY: We can do this, since we ensure that the old smartport was disposed of.
         // This can effectively be thought as a move out of the device's private `port` field.
-        unsafe { Self::new(device.port_index()) }
+        unsafe { Self::new(device.port_number()) }
     }
 }
 
@@ -117,8 +117,8 @@ impl<T: SmartDevice> From<T> for SmartPort {
 ///
 /// This function provides the internal implementations of [`SmartDevice::validate_port`], [`SmartPort::validate_type`],
 /// and [`AdiPort::validate_expander`].
-pub(crate) fn validate_port(index: u8, device_type: SmartDeviceType) -> Result<(), PortError> {
-    let device = unsafe { *vexDeviceGetByIndex((index - 1) as u32) };
+pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<(), PortError> {
+    let device = unsafe { *vexDeviceGetByIndex((number - 1) as u32) };
     let plugged_type: SmartDeviceType = device.device_type.into();
 
     if !device.installed {
@@ -135,10 +135,10 @@ pub(crate) fn validate_port(index: u8, device_type: SmartDeviceType) -> Result<(
 /// Represents a smart port on a V5 Brain
 #[derive(Debug, Eq, PartialEq)]
 pub struct SmartPort {
-    /// The index of the port (port number).
+    /// The number of the port (port number).
     ///
-    /// Ports are indexed starting from 1.
-    index: u8,
+    /// Ports are numbered starting from 1.
+    number: u8,
 }
 
 impl SmartPort {
@@ -159,23 +159,27 @@ impl SmartPort {
     /// // single port index.
     /// let my_port = unsafe { SmartPort::new(1) };
     /// ```
-    pub const unsafe fn new(index: u8) -> Self {
-        Self { index }
+    pub const unsafe fn new(number: u8) -> Self {
+        Self { number }
     }
 
-    /// Get the index of the port (port number).
+    /// Get the number of the port.
     ///
-    /// Ports are indexed starting from 1.
+    /// Ports are numbered starting from 1.
     ///
     /// # Examples
     ///
     /// ```
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
-    /// assert_eq!(my_port.index(), 1);
+    /// assert_eq!(my_port.number(), 1);
     /// ```
-    pub const fn index(&self) -> u8 {
-        self.index
+    pub const fn number(&self) -> u8 {
+        self.number
+    }
+
+    pub(crate) const fn index(&self) -> u32 {
+        (self.number - 1) as u32
     }
 
     /// Get the type of device currently connected to this port.
@@ -185,23 +189,23 @@ impl SmartPort {
     /// ```
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
-    /// println!("Type of device connected to port 1: {:?}", my_port.connected_type()?);
+    /// println!("Type of device connected to port 1: {:?}", my_port.device_type());
     /// ```
-    pub fn device_type(&self) -> Result<SmartDeviceType, PortError> {
-        Ok(unsafe { *vexDeviceGetByIndex((self.index() - 1) as u32) }
+    pub fn device_type(&self) -> SmartDeviceType {
+        unsafe { *vexDeviceGetByIndex(self.index()) }
             .device_type
-            .into())
+            .into()
     }
 
     /// Verify that a device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
     pub fn validate_type(&self, device_type: SmartDeviceType) -> Result<(), PortError> {
-        validate_port(self.index(), device_type)
+        validate_port(self.number(), device_type)
     }
 
     /// Get the raw handle of the underlying smart device connected to this port.
     pub(crate) unsafe fn device_handle(&self) -> V5_DeviceT {
-        unsafe { vexDeviceGetByIndex((self.index() - 1) as u32) }
+        unsafe { vexDeviceGetByIndex(self.index()) }
     }
 }
 

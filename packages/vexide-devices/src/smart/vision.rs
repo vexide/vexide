@@ -418,8 +418,8 @@ impl VisionSensor {
 }
 
 impl SmartDevice for VisionSensor {
-    fn port_index(&self) -> u8 {
-        self.port.index()
+    fn port_number(&self) -> u8 {
+        self.port.number()
     }
 
     fn device_type(&self) -> SmartDeviceType {

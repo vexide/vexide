@@ -50,8 +50,7 @@ impl AdiPotentiometer {
         self.port.configure(self.device_type());
 
         Ok(
-            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
-                as f64
+            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } as f64
                 * self.potentiometer_type.max_angle()
                 / analog::ADC_MAX_VALUE as f64,
         )
@@ -86,14 +85,14 @@ impl PotentiometerType {
 }
 
 impl AdiDevice for AdiPotentiometer {
-    type PortIndexOutput = u8;
+    type PortNumberOutput = u8;
 
-    fn port_index(&self) -> Self::PortIndexOutput {
-        self.port.index()
+    fn port_number(&self) -> Self::PortNumberOutput {
+        self.port.number()
     }
 
-    fn expander_port_index(&self) -> Option<u8> {
-        self.port.expander_index()
+    fn expander_port_number(&self) -> Option<u8> {
+        self.port.expander_number()
     }
 
     fn device_type(&self) -> AdiDeviceType {
