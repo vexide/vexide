@@ -27,11 +27,7 @@ impl AdiPwmOut {
         self.port.configure(self.device_type());
 
         unsafe {
-            vexDeviceAdiValueSet(
-                self.port.device_handle(),
-                self.port.internal_index(),
-                value as i32,
-            );
+            vexDeviceAdiValueSet(self.port.device_handle(), self.port.index(), value as i32);
         }
 
         Ok(())
@@ -39,14 +35,14 @@ impl AdiPwmOut {
 }
 
 impl AdiDevice for AdiPwmOut {
-    type PortIndexOutput = u8;
+    type PortNumberOutput = u8;
 
-    fn port_index(&self) -> Self::PortIndexOutput {
-        self.port.index()
+    fn port_number(&self) -> Self::PortNumberOutput {
+        self.port.number()
     }
 
-    fn expander_port_index(&self) -> Option<u8> {
-        self.port.expander_index()
+    fn expander_port_number(&self) -> Option<u8> {
+        self.port.expander_number()
     }
 
     fn device_type(&self) -> AdiDeviceType {

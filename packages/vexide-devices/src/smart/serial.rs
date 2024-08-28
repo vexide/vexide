@@ -278,8 +278,8 @@ impl io::Write for SerialPort {
 }
 
 impl SmartDevice for SerialPort {
-    fn port_index(&self) -> u8 {
-        self.port.index()
+    fn port_number(&self) -> u8 {
+        self.port.number()
     }
 
     fn device_type(&self) -> SmartDeviceType {

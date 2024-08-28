@@ -23,7 +23,7 @@ impl AdiRangeFinder {
         let input_port = ports.1;
 
         // Port error handling - two-wire devices are a little weird with this sort of thing.
-        if output_port.internal_expander_index() != input_port.internal_expander_index() {
+        if output_port.expander_index() != input_port.expander_index() {
             // Output and input must be plugged into the same ADI expander.
             return Err(RangeFinderError::ExpanderPortMismatch);
         } else if output_port.index() % 2 == 0 {
@@ -50,10 +50,7 @@ impl AdiRangeFinder {
         self.output_port.configure(self.device_type());
 
         match unsafe {
-            vexDeviceAdiValueGet(
-                self.output_port.device_handle(),
-                self.output_port.internal_index(),
-            )
+            vexDeviceAdiValueGet(self.output_port.device_handle(), self.output_port.index())
         } {
             -1 => Err(RangeFinderError::NoReading),
             val => Ok(val as u16),
@@ -62,14 +59,14 @@ impl AdiRangeFinder {
 }
 
 impl AdiDevice for AdiRangeFinder {
-    type PortIndexOutput = (u8, u8);
+    type PortNumberOutput = (u8, u8);
 
-    fn port_index(&self) -> Self::PortIndexOutput {
-        (self.output_port.index(), self.input_port.index())
+    fn port_number(&self) -> Self::PortNumberOutput {
+        (self.output_port.number(), self.input_port.number())
     }
 
-    fn expander_port_index(&self) -> Option<u8> {
-        self.output_port.expander_index()
+    fn expander_port_number(&self) -> Option<u8> {
+        self.output_port.expander_number()
     }
 
     fn device_type(&self) -> AdiDeviceType {
@@ -83,7 +80,7 @@ pub enum RangeFinderError {
     /// The sensor is unable to return a valid reading.
     NoReading,
 
-    /// The index of the output wire must be on an odd numbered port (A, C, E, G).
+    /// The port number of the output wire must be odd (A, C, E, G).
     BadOutputPort,
 
     /// The input  wire must be plugged in directly above the output wire.
