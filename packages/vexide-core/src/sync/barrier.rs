@@ -7,6 +7,7 @@ use futures_core::Future;
 
 /// A future that resolves once all tasks have arrived at a [`Barrier`].
 /// This is created by [`Barrier::wait`].
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub struct BarrierWaitFuture<'a> {
     leader: bool,
     barrier: &'a Barrier,

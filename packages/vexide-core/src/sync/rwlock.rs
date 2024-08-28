@@ -75,6 +75,7 @@ impl<T> Drop for RwLockReadGuard<'_, T> {
 }
 
 /// A future that resolves to a read guard.
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub struct RwLockReadFuture<'a, T> {
     lock: &'a RwLock<T>,
 }
@@ -117,6 +118,7 @@ impl<T> Drop for RwLockWriteGuard<'_, T> {
 }
 
 /// A future that resolves to a write guard.
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub struct RwLockWriteFuture<'a, T> {
     lock: &'a RwLock<T>,
 }
