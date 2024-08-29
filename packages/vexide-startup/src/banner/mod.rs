@@ -20,7 +20,8 @@ pub(crate) fn print() {
     const DISABLED: u32 = 1 << 0;
     const AUTONOMOUS: u32 = 1 << 1;
 
-    println!("
+    println!(
+        "
 {lp1}=%%%%%#-  {ls}-#%%%%-\x1B[0m{lp1}  :*%%%%%+.\x1B{cv}   {emoji} vexide {vexide_version}\x1B[0m
 {lp2}  -#%%%%#-  {ls}:%-\x1B[0m{lp2}  -*%%%%#\x1B[0m       ---------------
 {lp3}    *%%%%#=   -#%%%%%+\x1B[0m         ╭─\x1B{mk}🔲 VEXos:\x1B[0m {vexos_version}
@@ -43,10 +44,7 @@ pub(crate) fn print() {
         vexide_version = VEXIDE_VERSION,
         vexos_version = format_args!(
             "{}.{}.{}-r{}",
-            system_version[0],
-            system_version[1],
-            system_version[2],
-            system_version[3],
+            system_version[0], system_version[1], system_version[2], system_version[3],
         ),
         battery = unsafe { vexBatteryCapacityGet() } as u8,
         rust_version = compile_time::rustc_version_str!(),
