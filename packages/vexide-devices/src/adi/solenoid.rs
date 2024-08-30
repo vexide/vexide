@@ -29,6 +29,8 @@ impl AdiSolenoid {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
 
+        self.level = level;
+
         unsafe {
             vexDeviceAdiValueSet(
                 self.port.device_handle(),
