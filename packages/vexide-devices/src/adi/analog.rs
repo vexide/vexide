@@ -43,10 +43,7 @@ impl AdiAnalogIn {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
 
-        Ok(
-            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
-                as u16,
-        )
+        Ok(unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } as u16)
     }
 
     /// Reads an analog input channel and returns the calculated voltage input (0-5V).
@@ -66,14 +63,14 @@ impl AdiAnalogIn {
 }
 
 impl AdiDevice for AdiAnalogIn {
-    type PortIndexOutput = u8;
+    type PortNumberOutput = u8;
 
-    fn port_index(&self) -> Self::PortIndexOutput {
-        self.port.index()
+    fn port_number(&self) -> Self::PortNumberOutput {
+        self.port.number()
     }
 
-    fn expander_port_index(&self) -> Option<u8> {
-        self.port.expander_index()
+    fn expander_port_number(&self) -> Option<u8> {
+        self.port.expander_number()
     }
 
     fn device_type(&self) -> AdiDeviceType {

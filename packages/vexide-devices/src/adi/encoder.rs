@@ -23,7 +23,7 @@ impl AdiEncoder {
         let bottom_port = ports.1;
 
         // Port error handling - two-wire devices are a little weird with this sort of thing.
-        if top_port.internal_expander_index() != bottom_port.internal_expander_index() {
+        if top_port.expander_index() != bottom_port.expander_index() {
             // Top and bottom must be plugged into the same ADI expander.
             return Err(EncoderError::ExpanderPortMismatch);
         } else if top_port.index() % 2 == 0 {
@@ -51,10 +51,7 @@ impl AdiEncoder {
 
         Ok(Position::from_ticks(
             unsafe {
-                vexDeviceAdiValueGet(
-                    self.top_port.device_handle(),
-                    self.top_port.internal_index(),
-                ) as i64
+                vexDeviceAdiValueGet(self.top_port.device_handle(), self.top_port.index()) as i64
             },
             360,
         ))
@@ -69,7 +66,7 @@ impl AdiEncoder {
         unsafe {
             vexDeviceAdiValueSet(
                 self.top_port.device_handle(),
-                self.top_port.internal_index(),
+                self.top_port.index(),
                 position.as_ticks(360) as i32,
             )
         }
@@ -87,14 +84,14 @@ impl AdiEncoder {
 }
 
 impl AdiDevice for AdiEncoder {
-    type PortIndexOutput = (u8, u8);
+    type PortNumberOutput = (u8, u8);
 
-    fn port_index(&self) -> Self::PortIndexOutput {
-        (self.top_port.index(), self.bottom_port.index())
+    fn port_number(&self) -> Self::PortNumberOutput {
+        (self.top_port.number(), self.bottom_port.number())
     }
 
-    fn expander_port_index(&self) -> Option<u8> {
-        self.top_port.expander_index()
+    fn expander_port_number(&self) -> Option<u8> {
+        self.top_port.expander_number()
     }
 
     fn device_type(&self) -> AdiDeviceType {
@@ -105,7 +102,7 @@ impl AdiDevice for AdiEncoder {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an encoder range finder.
 pub enum EncoderError {
-    /// The index of the top wire must be on an odd numbered port (A, C, E, G).
+    /// The number of the top wire must be on an odd numbered port (A, C, E, G).
     BadTopPort,
 
     /// The bottom wire must be plugged in directly above the top wire.

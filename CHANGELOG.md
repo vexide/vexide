@@ -33,6 +33,11 @@ Before releasing:
 
 - Refactored the distance sensor API. All readings from the sensor are now read at once in a `object` method that can be possibly `None` if no object was detected. (#122) (**Breaking Change**)
 - Adjusted distance sensor status code errors to be more clear.
+- Adjusted distance sensor error names. (#113) (**Breaking Change**)
+- Renamed `SmartDevice::port_index` and `SmartPort::index` to `SmartDevice::port_number` and `SmartPort::port_number`. (#121) (**Breaking Change**)
+- Renamed `AdiDevice::port_index` and `AdiPort::index` to `AdiDevice::port_number` and `AdiDevice::port_number`. (#121) (**Breaking Change**)
+- `SmartPort::device_type` now no longer returns a `Result`. (#121) (**Breaking Change**)
+- Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
 
 ### Removed
 

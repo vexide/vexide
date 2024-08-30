@@ -41,19 +41,19 @@ pub const ADI_UPDATE_INTERVAL: Duration = Duration::from_millis(10);
 /// Represents an ADI (three wire) port on a V5 Brain or V5 Three Wire Expander.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiPort {
-    /// The index of the port (port number).
+    /// The number of the port.
     ///
-    /// Ports are indexed starting from 1.
-    index: u8,
+    /// Ports are numbered starting from 1.
+    number: u8,
 
     /// The index of this port's associated [`AdiExpander`](super::smart::AdiExpander).
     ///
     /// If this port is not associated with an [`AdiExpander`](super::smart::AdiExpander) it should be set to `None`.
-    expander_index: Option<u8>,
+    expander_number: Option<u8>,
 }
 
 impl AdiPort {
-    pub(crate) const INTERNAL_ADI_PORT_INDEX: u8 = 22;
+    pub(crate) const INTERNAL_ADI_PORT_NUMBER: u8 = 22;
 
     /// Create a new port.
     ///
@@ -62,49 +62,49 @@ impl AdiPort {
     /// Creating new `AdiPort`s is inherently unsafe due to the possibility of constructing
     /// more than one device on the same port index allowing multiple mutable references to
     /// the same hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
-    pub const unsafe fn new(index: u8, expander_index: Option<u8>) -> Self {
+    pub const unsafe fn new(number: u8, expander_number: Option<u8>) -> Self {
         Self {
-            index,
-            expander_index,
+            number,
+            expander_number,
         }
     }
 
-    /// Get the index of the port (port number).
+    /// Get the number of the port.
     ///
-    /// Ports are indexed starting from 1.
-    pub const fn index(&self) -> u8 {
-        self.index
+    /// Ports are numbered starting from 1.
+    pub const fn number(&self) -> u8 {
+        self.number
     }
 
     /// Get the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) smart port, or `None` if this port is not
     /// associated with an expander.
-    pub const fn expander_index(&self) -> Option<u8> {
-        self.expander_index
+    pub const fn expander_number(&self) -> Option<u8> {
+        self.expander_number
     }
 
-    pub(crate) const fn internal_index(&self) -> u32 {
-        (self.index() - 1) as u32
+    pub(crate) const fn index(&self) -> u32 {
+        (self.number - 1) as u32
     }
 
-    pub(crate) fn internal_expander_index(&self) -> u32 {
-        ((self.expander_index.unwrap_or(Self::INTERNAL_ADI_PORT_INDEX)) - 1) as u32
+    pub(crate) fn expander_index(&self) -> u32 {
+        ((self
+            .expander_number
+            .unwrap_or(Self::INTERNAL_ADI_PORT_NUMBER))
+            - 1) as u32
     }
 
     pub(crate) fn device_handle(&self) -> V5_DeviceT {
-        unsafe { vexDeviceGetByIndex(self.internal_expander_index()) }
+        unsafe { vexDeviceGetByIndex(self.expander_index()) }
     }
 
     pub(crate) fn validate_expander(&self) -> Result<(), PortError> {
-        validate_port(
-            self.internal_expander_index() as u8 + 1,
-            SmartDeviceType::Adi,
-        )
+        validate_port(self.expander_index() as u8 + 1, SmartDeviceType::Adi)
     }
 
     /// Configures the ADI port to a specific type if it wasn't already configured.
     pub(crate) fn configure(&self, config: AdiDeviceType) {
         unsafe {
-            vexDeviceAdiPortConfigSet(self.device_handle(), self.internal_index(), config.into());
+            vexDeviceAdiPortConfigSet(self.device_handle(), self.index(), config.into());
         }
     }
 
@@ -112,30 +112,27 @@ impl AdiPort {
     pub fn configured_type(&self) -> Result<AdiDeviceType, PortError> {
         self.validate_expander()?;
 
-        Ok(
-            unsafe { vexDeviceAdiPortConfigGet(self.device_handle(), self.internal_index()) }
-                .into(),
-        )
+        Ok(unsafe { vexDeviceAdiPortConfigGet(self.device_handle(), self.index()) }.into())
     }
 }
 
-impl<T: AdiDevice<PortIndexOutput = u8>> From<T> for AdiPort {
+impl<T: AdiDevice<PortNumberOutput = u8>> From<T> for AdiPort {
     fn from(device: T) -> Self {
         // SAFETY: We can do this, since we ensure that the old smartport was disposed of.
         // This can effectively be thought as a move out of the device's private `port` field.
-        unsafe { Self::new(device.port_index(), device.expander_port_index()) }
+        unsafe { Self::new(device.port_number(), device.expander_port_number()) }
     }
 }
 
 impl From<AdiRangeFinder> for (AdiPort, AdiPort) {
     fn from(device: AdiRangeFinder) -> Self {
-        let indexes = device.port_index();
-        let expander_index = device.expander_port_index();
+        let numbers = device.port_number();
+        let expander_number = device.expander_port_number();
 
         unsafe {
             (
-                AdiPort::new(indexes.0, expander_index),
-                AdiPort::new(indexes.1, expander_index),
+                AdiPort::new(numbers.0, expander_number),
+                AdiPort::new(numbers.1, expander_number),
             )
         }
     }
@@ -143,13 +140,13 @@ impl From<AdiRangeFinder> for (AdiPort, AdiPort) {
 
 impl From<AdiEncoder> for (AdiPort, AdiPort) {
     fn from(device: AdiEncoder) -> Self {
-        let indexes = device.port_index();
-        let expander_index = device.expander_port_index();
+        let numbers = device.port_number();
+        let expander_number = device.expander_port_number();
 
         unsafe {
             (
-                AdiPort::new(indexes.0, expander_index),
-                AdiPort::new(indexes.1, expander_index),
+                AdiPort::new(numbers.0, expander_number),
+                AdiPort::new(numbers.1, expander_number),
             )
         }
     }
@@ -160,18 +157,19 @@ pub trait AdiDevice {
     /// Update rate of ADI devices.
     const UPDATE_INTERVAL: Duration = ADI_UPDATE_INTERVAL;
 
-    /// The type that port_index should return. This is usually `u8`, but occasionally `(u8, u8)`.
-    type PortIndexOutput;
+    /// The type that [`port_number`] should return. This is usually `u8`, but
+    /// occasionally `(u8, u8)` if the device has two ADI wires.
+    type PortNumberOutput;
 
-    /// Get the index of the [`AdiPort`] this device is registered on.
+    /// Get the port number of the [`AdiPort`] this device is registered on.
     ///
-    /// Ports are indexed starting from 1.
-    fn port_index(&self) -> Self::PortIndexOutput;
+    /// Ports are numbered starting from 1.
+    fn port_number(&self) -> Self::PortNumberOutput;
 
-    /// Get the index of the [`AdiPort`] this device is registered on.
+    /// Get the port number of the [`AdiPort`] this device is registered on.
     ///
-    /// Ports are indexed starting from 1.
-    fn expander_port_index(&self) -> Option<u8>;
+    /// Ports are numbered starting from 1.
+    fn expander_port_number(&self) -> Option<u8>;
 
     /// Get the variant of [`AdiDeviceType`] that this device is associated with.
     fn device_type(&self) -> AdiDeviceType;
