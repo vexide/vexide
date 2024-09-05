@@ -2,17 +2,15 @@ use std::collections::BTreeMap;
 use std::task::Waker;
 use std::time::Instant;
 
-pub struct Sleepers {
-    sleepers: BTreeMap<Instant, Waker>,
-}
+pub struct Sleepers(BTreeMap<Instant, Waker>);
 
 impl Sleepers {
     pub fn push(&mut self, waker: Waker, instant: Instant) {
-        self.sleepers.insert(instant, waker);
+        self.0.insert(instant, waker);
     }
 
     pub fn pop(&mut self) -> Option<Waker> {
-        self.sleepers.pop_first().map(|(_, waker)| waker)
+        self.0.pop_first().map(|(_, waker)| waker)
     }
 }
 
@@ -23,9 +21,7 @@ pub struct Reactor {
 impl Reactor {
     pub const fn new() -> Self {
         Self {
-            sleepers: Sleepers {
-                sleepers: BTreeMap::new(),
-            },
+            sleepers: Sleepers(BTreeMap::new()),
         }
     }
 

@@ -13,7 +13,11 @@ use vex_sdk::{
     vexBatteryCapacityGet, vexCompetitionStatus, vexSystemPowerupTimeGet, vexSystemVersion,
 };
 
-pub mod themes;
+macro_rules! ansi_rgb {
+    ($r:expr, $g:expr, $b:expr) => {
+        concat!("\x1B[38;2;", $r, ";", $g, ";", $b, "m")
+    };
+}
 
 /// Prints the startup banner to stdout.
 ///

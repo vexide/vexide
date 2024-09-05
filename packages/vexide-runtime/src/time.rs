@@ -17,7 +17,7 @@ use core::{
 
 use std::time::Instant;
 
-use crate::rt::executor::EXECUTOR;
+use crate::executor::EXECUTOR;
 
 /// A future that will complete after a certain instant is reached in time.
 #[derive(Debug)]

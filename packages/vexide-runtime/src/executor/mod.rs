@@ -1,3 +1,5 @@
+pub mod reactor;
+
 use std::{collections::VecDeque, sync::Arc};
 use core::{
     cell::RefCell,
@@ -10,7 +12,7 @@ use core::{
 use async_task::{Runnable, Task};
 use waker_fn::waker_fn;
 
-use super::reactor::Reactor;
+use reactor::Reactor;
 
 pub(crate) static EXECUTOR: Executor = Executor::new();
 

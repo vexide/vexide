@@ -14,12 +14,12 @@ pub mod competition;
 pub mod sync;
 pub mod task;
 pub mod time;
+pub mod banner;
 
-mod rt;
-mod banner;
+mod executor;
 
 use core::future::Future;
-use rt::executor::EXECUTOR;
+use executor::EXECUTOR;
 
 pub use task::spawn;
 
@@ -27,34 +27,5 @@ pub use task::spawn;
 ///
 /// Does not poll all futures to completion.
 pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
-    let task = spawn(future);
-    EXECUTOR.block_on(task)
-}
-
-/// Sets up the vexide async runtime.
-///
-/// # Safety
-///
-/// This function should only be called once.
-pub unsafe fn init_runtime<const BANNER: bool>() {
-    if BANNER {
-        banner::print();
-    }
-
-    // Run vexos background processing at a regular 2ms interval.
-    // This is necessary for serial and device reads to work properly.
-    crate::task::spawn(async {
-        loop {
-            unsafe {
-                vex_sdk::vexTasksRun();
-            }
-
-            // In VEXCode programs, this is ran in a tight loop with no delays, since they
-            // don't need to worry about running two schedulers on top of each other, but
-            // doing this in our case would cause this task to hog all the CPU time, which
-            // wouldn't allow futures to be polled in the async runtime.
-            crate::time::sleep(::std::time::Duration::from_millis(2)).await;
-        }
-    })
-    .detach();
+    EXECUTOR.block_on(spawn(future))
 }
