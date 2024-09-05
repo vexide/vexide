@@ -24,6 +24,7 @@ Before releasing:
 ### Added
 
 - Added support for the V5 GPS Sensor (#79)
+- Exposed `Mutex::lock_blocking` method to the public. (#126)
 
 ### Fixed
 
