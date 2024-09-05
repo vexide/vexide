@@ -31,6 +31,7 @@ Before releasing:
 
 ### Changed
 
+- Overhauled the design of the startup banner.
 - `DistanceSensor::distance` now returns an `Option` that will be `None` if the sensor is out of range. (#113) (**Breaking Change**)
 - Adjusted distance sensor error names. (#113) (**Breaking Change**)
 - Renamed `SmartDevice::port_index` and `SmartPort::index` to `SmartDevice::port_number` and `SmartPort::port_number`. (#121) (**Breaking Change**)
