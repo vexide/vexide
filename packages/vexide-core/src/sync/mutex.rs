@@ -107,9 +107,8 @@ impl<T> Mutex<T> {
         MutexLockFuture { mutex: self }
     }
 
-    /// Used internally to lock the mutex in a blocking fashion.
-    /// This is neccessary because a mutex may be created internally before the executor is ready to be initialized.
-    pub(crate) fn lock_blocking(&self) -> MutexGuard<'_, T> {
+    /// Lock the mutex in a blocking fashion.
+    pub fn lock_blocking(&self) -> MutexGuard<'_, T> {
         self.raw.lock();
         MutexGuard::new(self)
     }
