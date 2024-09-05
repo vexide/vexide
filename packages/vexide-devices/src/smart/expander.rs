@@ -41,14 +41,14 @@ impl AdiExpander {
     pub const fn new(port: SmartPort) -> Self {
         unsafe {
             Self {
-                adi_a: AdiPort::new(1, Some(port.index())),
-                adi_b: AdiPort::new(2, Some(port.index())),
-                adi_c: AdiPort::new(3, Some(port.index())),
-                adi_d: AdiPort::new(4, Some(port.index())),
-                adi_e: AdiPort::new(5, Some(port.index())),
-                adi_f: AdiPort::new(6, Some(port.index())),
-                adi_g: AdiPort::new(7, Some(port.index())),
-                adi_h: AdiPort::new(8, Some(port.index())),
+                adi_a: AdiPort::new(1, Some(port.number())),
+                adi_b: AdiPort::new(2, Some(port.number())),
+                adi_c: AdiPort::new(3, Some(port.number())),
+                adi_d: AdiPort::new(4, Some(port.number())),
+                adi_e: AdiPort::new(5, Some(port.number())),
+                adi_f: AdiPort::new(6, Some(port.number())),
+                adi_g: AdiPort::new(7, Some(port.number())),
+                adi_h: AdiPort::new(8, Some(port.number())),
                 port,
             }
         }
@@ -56,8 +56,8 @@ impl AdiExpander {
 }
 
 impl SmartDevice for AdiExpander {
-    fn port_index(&self) -> u8 {
-        self.port.index()
+    fn port_number(&self) -> u8 {
+        self.port.number()
     }
 
     fn device_type(&self) -> SmartDeviceType {

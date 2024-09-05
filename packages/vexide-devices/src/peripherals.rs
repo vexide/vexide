@@ -213,13 +213,13 @@ impl DynamicPeripherals {
     ///
     /// This function panics if the provided port is outside the range 1-21.
     /// Ports outside of this range are invalid and cannot be created.
-    pub fn take_smart_port(&mut self, port_index: u8) -> Option<SmartPort> {
-        let port_index = port_index as usize - 1;
+    pub fn take_smart_port(&mut self, port_number: u8) -> Option<SmartPort> {
+        let port_index = port_number as usize - 1;
         if self.smart_ports[port_index] {
             return None;
         };
         self.smart_ports[port_index] = true;
-        Some(unsafe { SmartPort::new(port_index as u8 + 1) })
+        Some(unsafe { SmartPort::new(port_number) })
     }
 
     /// Creates an [`AdiPort`] only if one has not been created on the given slot before.
@@ -228,13 +228,13 @@ impl DynamicPeripherals {
     ///
     /// This function panics if the provided port is outside the range 1-8.
     /// Slots outside of this range are invalid and cannot be created.
-    pub fn take_adi_port(&mut self, port_index: u8) -> Option<AdiPort> {
-        let port_index = port_index as usize - 1;
-        if self.adi_slots[port_index] {
+    pub fn take_adi_port(&mut self, port_number: u8) -> Option<AdiPort> {
+        let port_number = port_number as usize - 1;
+        if self.adi_slots[port_number] {
             return None;
         }
-        self.smart_ports[port_index] = true;
-        Some(unsafe { AdiPort::new(port_index as u8 + 1, None) })
+        self.smart_ports[port_number] = true;
+        Some(unsafe { AdiPort::new(port_number as u8 + 1, None) })
     }
 
     /// Creates a [`Screen`] only if one has not been created before.

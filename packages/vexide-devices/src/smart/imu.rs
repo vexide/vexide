@@ -103,7 +103,7 @@ impl InertialSensor {
     /// no longer calibrating.
     /// There a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
     pub fn calibrate(&mut self) -> InertialCalibrateFuture {
-        InertialCalibrateFuture::Calibrate(self.port.index())
+        InertialCalibrateFuture::Calibrate(self.port.number())
     }
 
     /// Get the total number of degrees the Inertial Sensor has spun about the z-axis.
@@ -247,8 +247,8 @@ impl InertialSensor {
 }
 
 impl SmartDevice for InertialSensor {
-    fn port_index(&self) -> u8 {
-        self.port.index()
+    fn port_number(&self) -> u8 {
+        self.port.number()
     }
 
     fn device_type(&self) -> SmartDeviceType {
@@ -336,6 +336,7 @@ pub enum CalibrationPhase {
 
 /// Future that calibrates an IMU
 /// created with [`InertialSensor::calibrate`].
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 #[derive(Debug, Clone, Copy)]
 pub enum InertialCalibrateFuture {
     /// Calibrate the IMU

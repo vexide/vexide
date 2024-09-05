@@ -72,8 +72,7 @@ impl AdiDigitalIn {
         self.port.configure(self.device_type());
 
         let value =
-            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.internal_index()) }
-                != 0;
+            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } != 0;
 
         Ok(match value {
             true => LogicLevel::High,
@@ -93,14 +92,14 @@ impl AdiDigitalIn {
 }
 
 impl AdiDevice for AdiDigitalIn {
-    type PortIndexOutput = u8;
+    type PortNumberOutput = u8;
 
-    fn port_index(&self) -> Self::PortIndexOutput {
-        self.port.index()
+    fn port_number(&self) -> Self::PortNumberOutput {
+        self.port.number()
     }
 
-    fn expander_port_index(&self) -> Option<u8> {
-        self.port.expander_index()
+    fn expander_port_number(&self) -> Option<u8> {
+        self.port.expander_number()
     }
 
     fn device_type(&self) -> AdiDeviceType {
@@ -130,7 +129,7 @@ impl AdiDigitalOut {
         unsafe {
             vexDeviceAdiValueSet(
                 self.port.device_handle(),
-                self.port.internal_index(),
+                self.port.index(),
                 level.is_high() as i32,
             );
         }
@@ -152,14 +151,14 @@ impl AdiDigitalOut {
 }
 
 impl AdiDevice for AdiDigitalOut {
-    type PortIndexOutput = u8;
+    type PortNumberOutput = u8;
 
-    fn port_index(&self) -> Self::PortIndexOutput {
-        self.port.index()
+    fn port_number(&self) -> Self::PortNumberOutput {
+        self.port.number()
     }
 
-    fn expander_port_index(&self) -> Option<u8> {
-        self.port.expander_index()
+    fn expander_port_number(&self) -> Option<u8> {
+        self.port.expander_number()
     }
 
     fn device_type(&self) -> AdiDeviceType {
