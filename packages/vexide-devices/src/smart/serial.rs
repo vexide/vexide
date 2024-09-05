@@ -324,10 +324,6 @@ impl SerialPort {
     }
 }
 
-impl ErrorType for SerialPort {
-    type Error = SerialError;
-}
-
 #[cfg(feature = "std")]
 impl std::io::Read for SerialPort {
     /// Read some bytes from this serial port into the specified buffer, returning
