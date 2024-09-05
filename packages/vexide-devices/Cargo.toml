@@ -1,6 +1,6 @@
 [package]
 name = "vexide-devices"
-version = "0.5.1"
+version = "0.4.1"
 edition = "2021"
 license = "MIT"
 description = "High level V5 hardware bindings for vexide"
@@ -21,10 +21,11 @@ vexide-core = { workspace = true }
 vex-sdk = { workspace = true }
 snafu = { workspace = true }
 mint = "0.5.9"
-rgb = "0.8.50"
-no_std_io = { version = "0.6.0", features = ["alloc"] }
 bitflags = "2.4.2"
 smart-leds-trait = { version = "0.3.0", optional = true }
+nalgebra = { version = "0.32", default-features = false, optional = true, features = [
+    "convert-mint",
+] }
 
 [lints]
 workspace = true
@@ -33,7 +34,4 @@ workspace = true
 dangerous_motor_tuning = []
 std = []
 smart_leds_trait = ["dep:smart-leds-trait"]
-
-[package.metadata.docs.rs]
-all-features = true # Show optional APIs
-targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
+nalgebra = ["dep:nalgebra"]

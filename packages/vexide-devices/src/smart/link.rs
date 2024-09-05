@@ -24,7 +24,6 @@
 use alloc::ffi::{CString, NulError};
 use core::time::Duration;
 
-use embedded_io::{ErrorType, Read, Write};
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus, vexDeviceGenericRadioReceive,
@@ -330,11 +329,4 @@ pub enum LinkError {
 
     /// Internal read error occurred.
     ReadFailed,
-}
-
-
-impl embedded_io::Error for LinkError {
-    fn kind(&self) -> embedded_io::ErrorKind {
-        embedded_io::ErrorKind::Other
-    }
 }
