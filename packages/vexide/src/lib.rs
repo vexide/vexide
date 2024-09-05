@@ -58,7 +58,7 @@ pub use vexide_graphics as graphics;
 #[cfg(feature = "macro")]
 pub use vexide_macro::main;
 #[cfg(feature = "rt")]
-pub use vexide_runtime::{banner, block_on, competition, sync, task, time};
+pub use vexide_runtime::{banner, executor, competition, sync, task, time};
 
 /// Commonly used features of vexide.
 /// This module is meant to be glob imported.
@@ -110,7 +110,7 @@ pub mod prelude {
     pub use vexide_graphics::slint::initialize_slint_platform;
     #[cfg(feature = "rt")]
     pub use vexide_runtime::{
-        block_on,
+        executor::block_on,
         competition::{Compete, CompeteExt},
         task::{spawn, Task},
         time::{sleep, sleep_until},

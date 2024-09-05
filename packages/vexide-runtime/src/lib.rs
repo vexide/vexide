@@ -15,17 +15,4 @@ pub mod competition;
 pub mod sync;
 pub mod task;
 pub mod time;
-
-mod executor;
-
-use core::future::Future;
-
-use executor::EXECUTOR;
-pub use task::spawn;
-
-/// Blocks the current task untill a return value can be extracted from the provided future.
-///
-/// Does not poll all futures to completion.
-pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
-    EXECUTOR.block_on(spawn(future))
-}
+pub mod executor;

@@ -1,4 +1,6 @@
-pub mod reactor;
+//! vexide's Async Executor
+
+mod reactor;
 
 use core::{
     cell::RefCell,
@@ -12,6 +14,8 @@ use std::{collections::VecDeque, sync::Arc};
 use async_task::{Runnable, Task};
 use reactor::Reactor;
 use waker_fn::waker_fn;
+
+use crate::task::spawn;
 
 pub(crate) static EXECUTOR: Executor = Executor::new();
 
@@ -91,4 +95,11 @@ impl Executor {
             self.tick();
         }
     }
+}
+
+/// Blocks the current task until a return value can be extracted from the provided future.
+///
+/// Does not poll all futures to completion.
+pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
+    EXECUTOR.block_on(spawn(future))
 }

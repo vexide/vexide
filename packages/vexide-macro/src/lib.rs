@@ -161,7 +161,7 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
                 ::vexide::init_runtime::<#banner_arg>();
             }
 
-            ::vexide::block_on(
+            ::vexide::executor::block_on(
                 #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
             )
         }
