@@ -57,17 +57,12 @@ pub use vexide_graphics as graphics;
 #[doc(inline)]
 #[cfg(feature = "macro")]
 pub use vexide_macro::main;
+#[cfg(feature = "rt")]
+pub use vexide_runtime::{banner, block_on, competition, sync, task, time};
 
 /// Commonly used features of vexide.
 /// This module is meant to be glob imported.
 pub mod prelude {
-    #[cfg(feature = "rt")]
-    pub use vexide_runtime::{
-        block_on,
-        competition::{Compete, CompeteExt},
-        task::{spawn, Task},
-        time::{sleep, sleep_until},
-    };
     #[cfg(feature = "devices")]
     pub use vexide_devices::{
         adi::{
@@ -113,4 +108,11 @@ pub mod prelude {
     pub use vexide_graphics::embedded_graphics::BrainDisplay;
     #[cfg(all(feature = "graphics", feature = "slint"))]
     pub use vexide_graphics::slint::initialize_slint_platform;
+    #[cfg(feature = "rt")]
+    pub use vexide_runtime::{
+        block_on,
+        competition::{Compete, CompeteExt},
+        task::{spawn, Task},
+        time::{sleep, sleep_until},
+    };
 }

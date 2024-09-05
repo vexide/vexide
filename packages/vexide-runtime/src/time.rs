@@ -14,7 +14,6 @@ use core::{
     task::{Context, Poll},
     time::Duration,
 };
-
 use std::time::Instant;
 
 use crate::executor::EXECUTOR;

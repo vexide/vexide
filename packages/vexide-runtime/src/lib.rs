@@ -10,17 +10,17 @@
 
 #![feature(never_type, asm_experimental_arch)]
 
+pub mod banner;
 pub mod competition;
 pub mod sync;
 pub mod task;
 pub mod time;
-pub mod banner;
 
 mod executor;
 
 use core::future::Future;
-use executor::EXECUTOR;
 
+use executor::EXECUTOR;
 pub use task::spawn;
 
 /// Blocks the current task untill a return value can be extracted from the provided future.

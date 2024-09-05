@@ -68,11 +68,10 @@ use vex_sdk::{
     V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw, V5_DeviceT,
 };
 
-use crate::internal::time::Instant;
-
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
     math::{EulerAngles, Quaternion, Vector3},
+    internal::time::Instant,
     PortError,
 };
 

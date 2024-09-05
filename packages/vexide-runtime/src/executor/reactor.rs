@@ -1,6 +1,4 @@
-use std::collections::BTreeMap;
-use std::task::Waker;
-use std::time::Instant;
+use std::{collections::BTreeMap, task::Waker, time::Instant};
 
 pub struct Sleepers(BTreeMap<Instant, Waker>);
 

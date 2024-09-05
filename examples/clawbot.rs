@@ -5,9 +5,9 @@
 //!
 //! [`v5-drivecode`]: https://github.com/jpearman/v5-drivecode
 
-use vexide::prelude::*;
-
 use std::time::Duration;
+
+use vexide::prelude::*;
 
 struct ClawBot {
     left_motor: Motor,
