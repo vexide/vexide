@@ -30,6 +30,7 @@ pin-project = "1.1.5"
 replace_with = { version = "0.1.7", default-features = false }
 waker-fn = "1.1.1"
 async-task = "4.7.1"
+compile-time = "0.2.0"
 
 [lints]
 workspace = true

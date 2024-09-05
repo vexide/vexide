@@ -6,13 +6,12 @@
 //!
 //! For a full list of premade themes and more theme documentation, see the [`themes`] module.
 
-use core::time::Duration;
+use std::time::Duration;
 
 use themes::BannerTheme;
 use vex_sdk::{
     vexBatteryCapacityGet, vexCompetitionStatus, vexSystemPowerupTimeGet, vexSystemVersion,
 };
-use vexide_core::println;
 
 pub mod themes;
 

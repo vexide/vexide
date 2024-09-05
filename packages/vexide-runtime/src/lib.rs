@@ -16,6 +16,7 @@ pub mod task;
 pub mod time;
 
 mod rt;
+mod banner;
 
 use core::future::Future;
 use rt::executor::EXECUTOR;
@@ -37,19 +38,7 @@ pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
 /// This function should only be called once.
 pub unsafe fn init_runtime<const BANNER: bool>() {
     if BANNER {
-        println!(
-            "
-\x1B[1;38;5;196m=%%%%%#-  \x1B[38;5;254m-#%%%%-\x1B[1;38;5;196m  :*%%%%%+.
-\x1B[38;5;208m  -#%%%%#-  \x1B[38;5;254m:%-\x1B[1;38;5;208m  -*%%%%#
-\x1B[38;5;226m    *%%%%#=   -#%%%%%+
-\x1B[38;5;226m      *%%%%%+#%%%%%%%#=
-\x1B[38;5;34m        *%%%%%%%*-+%%%%%+
-\x1B[38;5;27m          +%%%*:   .+###%#
-\x1B[38;5;93m           .%:\x1B[0m
-vexide startup successful!
-Running user code...
-"
-        );
+        banner::print();
     }
 
     // Run vexos background processing at a regular 2ms interval.
