@@ -24,6 +24,7 @@ Before releasing:
 ### Added
 
 - Added support for the V5 GPS Sensor (#79)
+- Added support for custom banner themes configurable through the `vexide::main` macro (#TODO)
 
 ### Fixed
 

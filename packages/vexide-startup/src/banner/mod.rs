@@ -1,5 +1,6 @@
 use core::time::Duration;
 
+use themes::{BannerTheme, THEME_DEFAULT};
 use vex_sdk::{
     vexBatteryCapacityGet, vexCompetitionStatus, vexSystemPowerupTimeGet, vexSystemVersion,
 };
@@ -7,12 +8,10 @@ use vexide_core::println;
 
 pub mod themes;
 
-use themes::BannerTheme;
-
 #[inline]
 pub(crate) fn print() {
     const VEXIDE_VERSION: &str = "0.3.0";
-    const THEME: BannerTheme = themes::THEME_DEFAULT;
+    const THEME: BannerTheme = THEME_DEFAULT;
 
     let system_version = unsafe { vexSystemVersion() }.to_be_bytes();
     let competition_status = unsafe { vexCompetitionStatus() };
@@ -28,7 +27,7 @@ pub(crate) fn print() {
 {lp4}      *%%%%%+#%%%%%%%#=\x1B[0m        ├─\x1B{mk}🦀 Rust:\x1B[0m {rust_version}
 {lp5}        *%%%%%%%*-+%%%%%+\x1B[0m      ├─\x1B{mk}🏆 Mode:\x1B[0m {competition_mode}
 {lp6}          +%%%*:   .+###%#\x1B[0m     ├─\x1B{mk}🔋 Battery:\x1B[0m {battery}%
-{lp7}           .%:\x1B[0m                 ╰─\x1B{mk}⌚ Uptime:\x1B[0m {uptime:?}
+{lp7}           .%:\x1B[0m                 ╰─\x1B{mk}⌚ Uptime:\x1B[0m {uptime:.2?}
 ",
         lp1 = THEME.logo_primary[0],
         lp2 = THEME.logo_primary[1],

@@ -17,6 +17,8 @@ use bitflags::bitflags;
 
 mod banner;
 
+pub use banner::themes::*;
+
 /// Identifies the type of binary to VEXos.
 #[repr(u32)]
 #[non_exhaustive]
