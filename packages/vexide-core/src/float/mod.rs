@@ -10,10 +10,10 @@
     target_os = "none",
     not(feature = "force_rust_libm")
 ))]
-mod newlib;
+pub use newlib;
 
 #[cfg(any(target_arch = "wasm32", feature = "force_rust_libm"))]
-mod rust;
+pub use rust;
 
 /// Used to make [`powi_impl`] generic across f32 and f64.
 pub(crate) trait One {
