@@ -620,7 +620,7 @@ impl Screen {
                 region.start.x as _,
                 (region.start.y + Self::HEADER_HEIGHT) as _,
                 region.end.x as _,
-                (region.start.y + Self::HEADER_HEIGHT) as _,
+                (region.end.y + Self::HEADER_HEIGHT) as _,
                 raw_buf.as_mut_ptr(),
                 src_stride,
             );
