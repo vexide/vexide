@@ -160,3 +160,20 @@ pub const THEME_BISEXUAL: BannerTheme = BannerTheme {
     crate_version: "[1;33m",
     metadata_key: "[1;33m",
 };
+
+/// Tidal wave colors (literally stolen from pictures of waves)
+pub const THEME_TIDAL_WAVE: BannerTheme = BannerTheme {
+    emoji: "🌊",
+    logo_primary: [
+        ansi_rgb_bold!(224,232,235),
+        ansi_rgb_bold!(159,191,196),
+        ansi_rgb_bold!(159,191,196),
+        ansi_rgb_bold!(67,163,165),
+        ansi_rgb_bold!(67,163,165),
+        ansi_rgb_bold!(16,113,124),
+        ansi_rgb_bold!(14,82,101),
+    ],
+    logo_secondary: ansi_rgb_bold!(250,223,192),
+    crate_version: "[1;36m",
+    metadata_key: "[1;36m",
+};
