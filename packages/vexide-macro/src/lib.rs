@@ -67,7 +67,7 @@ fn create_main_wrapper(inner: ItemFn) -> proc_macro2::TokenStream {
 }
 
 fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
-    let banner_arg = if opts.banner {
+    let banner_arg = if opts.banner_enabled {
         quote! { true }
     } else {
         quote! { false }
@@ -81,6 +81,11 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
             ::vexide::startup::ProgramFlags::empty(),
         ) }
     };
+    let theme = if let Some(theme) = opts.banner_theme {
+        quote! { #theme }
+    } else {
+        quote! { ::vexide::startup::banner_themes::THEME_DEFAULT }
+    };
 
     quote! {
         const _: () = {
@@ -88,7 +93,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
             #[link_section = ".boot"]
             unsafe extern "C" fn _start() {
                 unsafe {
-                    ::vexide::startup::program_entry::<#banner_arg>()
+                    ::vexide::startup::program_entry::<#banner_arg>(#theme)
                 }
             }
 
@@ -210,13 +215,15 @@ mod test {
     #[test]
     fn toggles_banner_using_parsed_opts() {
         let entrypoint = make_entrypoint(MacroOpts {
-            banner: false,
+            banner_enabled: false,
+            banner_theme: None,
             code_sig: None,
         });
         assert!(entrypoint.to_string().contains("false"));
         assert!(!entrypoint.to_string().contains("true"));
         let entrypoint = make_entrypoint(MacroOpts {
-            banner: true,
+            banner_enabled: true,
+            banner_theme: None,
             code_sig: None,
         });
         assert!(entrypoint.to_string().contains("true"));
@@ -226,7 +233,8 @@ mod test {
     #[test]
     fn uses_custom_code_sig_from_parsed_opts() {
         let entrypoint = make_entrypoint(MacroOpts {
-            banner: false,
+            banner_enabled: false,
+            banner_theme: None,
             code_sig: Some(Ident::new(
                 "__custom_code_sig_ident__",
                 proc_macro2::Span::call_site(),

@@ -24,7 +24,7 @@ Before releasing:
 ### Added
 
 - Added support for the V5 GPS Sensor (#79)
-- Added support for custom banner themes configurable through the `vexide::main` macro (#TODO)
+- Added support for custom banner themes configurable through the `vexide::main` macro (#127)
 
 ### Fixed
 
@@ -39,6 +39,7 @@ Before releasing:
 - Renamed `AdiDevice::port_index` and `AdiPort::index` to `AdiDevice::port_number` and `AdiDevice::port_number`. (#121) (**Breaking Change**)
 - `SmartPort::device_type` now no longer returns a `Result`. (#121) (**Breaking Change**)
 - Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
+- Changes the banner attribute syntax in the `vexide::main` macro. (#127) (**Breaking Change**)
 
 ### Removed
 

@@ -13,11 +13,12 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
+use banner::themes::BannerTheme;
 use bitflags::bitflags;
 
 mod banner;
 
-pub use banner::themes::*;
+pub use banner::themes as banner_themes;
 
 /// Identifies the type of binary to VEXos.
 #[repr(u32)]
@@ -103,7 +104,7 @@ extern "Rust" {
 ///
 /// This function MUST only be called once and should only be called at the very start of program initialization.
 /// Calling this function more than one time will seriously mess up both your stack and your heap.
-pub unsafe fn program_entry<const BANNER: bool>() {
+pub unsafe fn program_entry<const BANNER: bool>(theme: BannerTheme) {
     #[cfg(target_arch = "arm")]
     unsafe {
         use core::arch::asm;
@@ -135,7 +136,7 @@ pub unsafe fn program_entry<const BANNER: bool>() {
         vexide_core::allocator::vexos::init_heap();
         // Print the banner
         if BANNER {
-            banner::print();
+            banner::print(&theme);
         }
         // Run vexos background processing at a regular 2ms interval.
         // This is necessary for serial and device reads to work properly.

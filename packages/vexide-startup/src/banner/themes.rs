@@ -1,3 +1,43 @@
+//! Vexide banner customization.
+//!
+//! This module contains multiple premade themes including:
+//! - [The default theme](THEME_DEFAULT)
+//! - [A synthwave inspired theme](THEME_SYNTHWAVE)
+//! - [Nord aurora colors](THEME_NORD_AURORA)
+//! - [Nord frost colors](THEME_NORD)
+//! - [Aro Ace flag](THEME_ARO_ACE)
+//! - [Nonbinary flag](THEME_NONBINARY)
+//! - [Bisexual flag](THEME_BISEXUAL)
+//! - [Trans flag](THEME_TRANS)
+//! - [Tidal wave colors](THEME_TIDAL_WAVE)
+//!
+//! Custom themes can be created by defining a constant of type [`BannerTheme`] with the desired colors.
+//! This theme can then be passed to the [`vexide::main`](https://docs.rs/vexide/latest/vexide/attr.main.html).
+//!
+//! # Examples
+//! ```rust
+//! # use vexide::prelude;
+//! # use vexide::startup::banner_themes::BannerTheme;
+//! const CUSTOM_THEME: BannerTheme = BannerTheme {
+//!    emoji: "🦀",
+//!    logo_primary: [
+//!        "\u{1b}[1;38;2;136;192;208m",
+//!        "\u{1b}[1;38;2;136;192;208m",
+//!        "\u{1b}[1;38;2;136;192;208m",
+//!        "\u{1b}[1;38;2;136;192;208m",
+//!        "\u{1b}[1;38;2;136;192;208m",
+//!        "\u{1b}[1;38;2;136;192;208m",
+//!        "\u{1b}[1;38;2;136;192;208m",
+//!    ],
+//!    logo_secondary: "\x1B[38;5;254m",
+//!    crate_version: "[1;33m",
+//!    metadata_key: "[1;33m",
+//!};
+//!
+//! #[vexide::main(banner(enabled = true, theme = CUSTOM_THEME))]
+//! async fn main(peripherals: vexide::Peripherals) { }
+//! ```
+
 macro_rules! ansi_rgb {
     ($r:expr, $g:expr, $b:expr) => {
         concat!("\x1B[38;2;", $r, ";", $g, ";", $b, "m")
@@ -165,15 +205,32 @@ pub const THEME_BISEXUAL: BannerTheme = BannerTheme {
 pub const THEME_TIDAL_WAVE: BannerTheme = BannerTheme {
     emoji: "🌊",
     logo_primary: [
-        ansi_rgb_bold!(224,232,235),
-        ansi_rgb_bold!(159,191,196),
-        ansi_rgb_bold!(159,191,196),
-        ansi_rgb_bold!(67,163,165),
-        ansi_rgb_bold!(67,163,165),
-        ansi_rgb_bold!(16,113,124),
-        ansi_rgb_bold!(14,82,101),
+        ansi_rgb_bold!(224, 232, 235),
+        ansi_rgb_bold!(159, 191, 196),
+        ansi_rgb_bold!(159, 191, 196),
+        ansi_rgb_bold!(67, 163, 165),
+        ansi_rgb_bold!(67, 163, 165),
+        ansi_rgb_bold!(16, 113, 124),
+        ansi_rgb_bold!(14, 82, 101),
     ],
-    logo_secondary: ansi_rgb_bold!(250,223,192),
+    logo_secondary: ansi_rgb_bold!(250, 223, 192),
     crate_version: "[1;36m",
     metadata_key: "[1;36m",
+};
+
+/// Whitescreen inspired theme (joke theme)
+pub const THEME_WHITESCREEN: BannerTheme = BannerTheme {
+    emoji: "🏳️",
+    logo_primary: [
+        "\x1b[37;47m",
+        "\x1b[37;47m",
+        "\x1b[37;47m",
+        "\x1b[37;47m",
+        "\x1b[37;47m",
+        "\x1b[37;47m",
+        "\x1b[37;47m",
+    ],
+    logo_secondary: "\x1b[37;47m",
+    crate_version: "\x1b[37;47m",
+    metadata_key: "\x1b[37;47m",
 };
