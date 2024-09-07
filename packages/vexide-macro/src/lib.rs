@@ -240,7 +240,7 @@ mod test {
                 proc_macro2::Span::call_site(),
             )),
         });
-        println!("{}", entrypoint.to_string());
+        println!("{}", entrypoint);
         assert!(entrypoint.to_string().contains(
             "static __CODE_SIGNATURE : :: vexide :: startup :: CodeSignature = __custom_code_sig_ident__ ;"
         ));

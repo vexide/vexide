@@ -239,10 +239,21 @@ mod test {
     #[test]
     fn parses_banner_attribute() {
         let source = quote! {
-            banner = true
+            banner(enabled = true, theme = THEME)
         };
         let input = syn::parse2::<Banner>(source).unwrap();
-        assert_eq!(input.as_bool(), true);
+        assert!(input.attrs.len() == 2);
+        assert!(matches!(
+            input.attrs[0],
+            BannerAttribute::Enabled(BannerEnabled {
+                value: LitBool {
+                    value: true,
+                    span: _
+                },
+                ..
+            })
+        ));
+        assert!(matches!(input.attrs[1], BannerAttribute::Theme(_)));
     }
 
     #[test]
@@ -258,12 +269,12 @@ mod test {
     #[test]
     fn parses_attrs_into_macro_opts() {
         let source = quote! {
-            banner = true, code_sig = my_code_sig
+            banner(enabled = true, theme = THEME), code_sig = my_code_sig
         };
         let input = syn::parse2::<Attrs>(source).unwrap();
         assert_eq!(input.attr_list.len(), 2);
         let opts = MacroOpts::from(input);
-        assert_eq!(opts.banner_enabled, true);
+        assert!(opts.banner_enabled);
         assert_eq!(opts.code_sig.unwrap().to_string(), "my_code_sig");
     }
 
@@ -276,28 +287,28 @@ mod test {
 
         let source = quote! {};
         let opts = macro_opts_from(source);
-        assert_eq!(opts.banner_enabled, true);
+        assert!(opts.banner_enabled);
         assert_eq!(opts.code_sig, None);
 
         let source = quote! {
-            banner = false
+            banner(enabled = false)
         };
         let opts = macro_opts_from(source);
-        assert_eq!(opts.banner_enabled, false);
+        assert!(!opts.banner_enabled);
         assert_eq!(opts.code_sig, None);
 
         let source = quote! {
             code_sig = my_code_sig
         };
         let opts = macro_opts_from(source);
-        assert_eq!(opts.banner_enabled, true);
+        assert!(opts.banner_enabled);
         assert_eq!(opts.code_sig.unwrap().to_string(), "my_code_sig");
 
         let source = quote! {
-            banner = false, code_sig = my_code_sig
+            banner(enabled = false), code_sig = my_code_sig
         };
         let opts = macro_opts_from(source);
-        assert_eq!(opts.banner_enabled, false);
+        assert!(!opts.banner_enabled);
         assert_eq!(opts.code_sig.unwrap().to_string(), "my_code_sig");
     }
 }
