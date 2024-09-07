@@ -2,6 +2,7 @@
 //!
 //! This module contains multiple premade themes including:
 //! - [The default theme](THEME_DEFAULT)
+//! - [Official vexide logo colors](THEME_OFFICIAL_LOGO)
 //! - [A synthwave inspired theme](THEME_SYNTHWAVE)
 //! - [Nord aurora colors](THEME_NORD_AURORA)
 //! - [Nord frost colors](THEME_NORD)
@@ -10,8 +11,10 @@
 //! - [Bisexual flag](THEME_BISEXUAL)
 //! - [Trans flag](THEME_TRANS)
 //! - [Tidal wave colors](THEME_TIDAL_WAVE)
+//! - [Whitescreen theme](THEME_WHITESCREEN)
+//! - [America flavored theme](THEME_MURICA)
 //!
-//! Custom themes can be created by defining a constant of type [`BannerTheme`] with the desired colors.
+//! Custom themes can be created by defining a constant of type [`BannerTheme`] with the desired ANSI escapes.
 //! This theme can then be passed to the [`vexide::main`](https://docs.rs/vexide/latest/vexide/attr.main.html).
 //!
 //! # Examples
@@ -78,6 +81,23 @@ pub const THEME_DEFAULT: BannerTheme = BannerTheme {
         ansi_rgb_bold!(114, 135, 253),
     ],
     logo_secondary: "\x1B[38;5;254m",
+    crate_version: "[1;33m",
+    metadata_key: "[1;33m",
+};
+
+/// The official vexide logo colors
+pub const THEME_OFFICIAL_LOGO: BannerTheme = BannerTheme {
+    emoji: "🦀",
+    logo_primary: [
+        ansi_rgb_bold!(230, 200, 92),
+        ansi_rgb_bold!(230, 200, 92),
+        ansi_rgb_bold!(230, 200, 92),
+        ansi_rgb_bold!(230, 200, 92),
+        ansi_rgb_bold!(230, 200, 92),
+        ansi_rgb_bold!(230, 200, 92),
+        ansi_rgb_bold!(230, 200, 92),
+    ],
+    logo_secondary: ansi_rgb_bold!(216, 219, 233),
     crate_version: "[1;33m",
     metadata_key: "[1;33m",
 };
@@ -233,4 +253,21 @@ pub const THEME_WHITESCREEN: BannerTheme = BannerTheme {
     logo_secondary: "\x1b[37;47m",
     crate_version: "\x1b[37;47m",
     metadata_key: "\x1b[37;47m",
+};
+
+/// America flavored theme
+pub const THEME_MURICA: BannerTheme = BannerTheme {
+    emoji: "🍔",
+    logo_primary: [
+        ansi_rgb_bold!(207, 28, 57),
+        ansi_rgb_bold!(255, 255, 255),
+        ansi_rgb_bold!(39, 77, 165),
+        ansi_rgb_bold!(207, 28, 57),
+        ansi_rgb_bold!(255, 255, 255),
+        ansi_rgb_bold!(39, 77, 165),
+        ansi_rgb_bold!(207, 28, 57),
+    ],
+    logo_secondary: ansi_rgb_bold!(255, 255, 255),
+    crate_version: "[1;31m",
+    metadata_key: "[1;31m",
 };
