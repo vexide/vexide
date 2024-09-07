@@ -29,6 +29,7 @@ Before releasing:
 ### Fixed
 
 - Fixed an issue where the distance sensor relative_size returned a u32 when it can be negative. (#116)
+- Fixed an issue preventing the `Screen::draw_buffer` function from working properly. (#128)
 
 ### Changed
 
