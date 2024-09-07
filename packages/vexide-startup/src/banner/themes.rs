@@ -271,3 +271,20 @@ pub const THEME_MURICA: BannerTheme = BannerTheme {
     crate_version: "[1;31m",
     metadata_key: "[1;31m",
 };
+
+/// Theme inspired by old IBM monochrome display adapters
+pub const THEME_IBM_MONOCHROME: BannerTheme = BannerTheme {
+    emoji: "🖥️",
+    logo_primary: [
+        ansi_rgb_bold!(122, 246, 172),
+        ansi_rgb_bold!(73, 208, 141),
+        ansi_rgb_bold!(122, 246, 172),
+        ansi_rgb_bold!(73, 208, 141),
+        ansi_rgb_bold!(122, 246, 172),
+        ansi_rgb_bold!(73, 208, 141),
+        ansi_rgb_bold!(122, 246, 172),
+    ],
+    logo_secondary: ansi_rgb_bold!(205, 255, 245),
+    crate_version: "[1;32m",
+    metadata_key: "[1;32m",
+};
