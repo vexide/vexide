@@ -4,6 +4,7 @@
 #![no_std]
 
 extern crate alloc;
+extern crate vexide_panic;
 use alloc::boxed::Box;
 
 use vex_sdk::vexTasksRun;
@@ -12,6 +13,7 @@ use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
 #[no_mangle]
 extern "Rust" fn main() {
+    panic!("Uh oh!");
     unsafe {
         // Write something to the screen to test if the program is running
         let test_box = Box::new(100);
@@ -34,8 +36,3 @@ static CODE_SIG: CodeSignature = CodeSignature::new(
     ProgramOwner::Partner,
     ProgramFlags::empty(),
 );
-
-#[panic_handler]
-const fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
-    loop {}
-}
