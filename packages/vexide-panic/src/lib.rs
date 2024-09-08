@@ -13,6 +13,7 @@ pub mod unwind;
 extern crate alloc;
 
 use alloc::string::{String, ToString};
+use core::fmt::Write;
 
 use vexide_core::println;
 #[cfg(feature = "display_panics")]
@@ -21,6 +22,8 @@ use vexide_devices::{
     geometry::Point2,
     screen::{Rect, Screen, ScreenError, Text, TextSize},
 };
+
+use crate::backtrace::Backtrace;
 
 #[cfg(target_arch = "wasm32")]
 extern "C" {
@@ -33,11 +36,25 @@ extern "C" {
 /// This function is internally used by the vexide panic handler for displaying
 /// panic messages graphically before exiting.
 #[cfg(feature = "display_panics")]
-fn draw_error(screen: &mut Screen, msg: &str) -> Result<(), ScreenError> {
+fn draw_error(screen: &mut Screen, msg: &str, backtrace: &Backtrace) {
     const ERROR_BOX_MARGIN: i16 = 16;
     const ERROR_BOX_PADDING: i16 = 16;
     const LINE_HEIGHT: i16 = 20;
     const LINE_MAX_WIDTH: usize = 52;
+
+    fn draw_text(screen: &mut Screen, buffer: &str, line: i16) {
+        screen.fill(
+            &Text::new(
+                buffer,
+                TextSize::Small,
+                Point2 {
+                    x: ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
+                    y: ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * LINE_HEIGHT),
+                },
+            ),
+            Rgb::WHITE,
+        );
+    }
 
     let error_box_rect = Rect::new(
         Point2 {
@@ -62,36 +79,31 @@ fn draw_error(screen: &mut Screen, msg: &str) -> Result<(), ScreenError> {
         }
 
         if character == '\n' || ((buffer.len() % LINE_MAX_WIDTH == 0) && (i > 0)) {
-            screen.fill(
-                &Text::new(
-                    buffer.as_str(),
-                    TextSize::Small,
-                    Point2 {
-                        x: ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                        y: ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * LINE_HEIGHT),
-                    },
-                ),
-                Rgb::WHITE,
-            );
-
+            draw_text(screen, &buffer, line);
             line += 1;
             buffer.clear();
         }
     }
 
-    screen.fill(
-        &Text::new(
-            buffer.as_str(),
-            TextSize::Small,
-            Point2 {
-                x: ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
-                y: ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * LINE_HEIGHT),
-            },
-        ),
-        Rgb::WHITE,
-    );
+    if !buffer.is_empty() {
+        draw_text(screen, &buffer, line);
 
-    Ok(())
+        line += 1;
+    }
+
+    line += 1;
+    draw_text(screen, "stack backtrace:", line);
+    line += 1;
+
+    const ROW_LENGTH: usize = 3;
+    for (col, frames) in backtrace.frames.chunks(ROW_LENGTH).enumerate() {
+        let mut msg = String::new();
+        for (row, frame) in frames.iter().enumerate() {
+            write!(msg, "{:>3}: {:?}    ", col * ROW_LENGTH + row, frame).unwrap();
+        }
+        draw_text(screen, msg.trim_end(), line);
+        line += 1;
+    }
 }
 
 #[panic_handler]
@@ -99,17 +111,16 @@ fn draw_error(screen: &mut Screen, msg: &str) -> Result<(), ScreenError> {
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     println!("{info}");
 
+    let backtrace = Backtrace::capture();
+
     unsafe {
         #[cfg(feature = "display_panics")]
-        draw_error(&mut Screen::new(), &info.to_string()).unwrap_or_else(|err| {
-            println!("Failed to draw error message to screen: {err}");
-        });
+        draw_error(&mut Screen::new(), &info.to_string(), &backtrace);
 
         #[cfg(target_arch = "wasm32")]
         sim_log_backtrace();
-
         #[cfg(not(target_arch = "wasm32"))]
-        println!("{}", backtrace::Backtrace::capture());
+        println!("{backtrace}");
 
         #[cfg(not(feature = "display_panics"))]
         vexide_core::program::exit();
