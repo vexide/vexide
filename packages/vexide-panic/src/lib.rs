@@ -108,8 +108,8 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
         #[cfg(target_arch = "wasm32")]
         sim_log_backtrace();
 
-        // #[cfg(target_arch = "arm")]
-        // println!("{}", backtrace::Backtrace::capture());
+        #[cfg(not(target_arch = "wasm32"))]
+        println!("{}", backtrace::Backtrace::capture());
 
         #[cfg(not(feature = "display_panics"))]
         vexide_core::program::exit();
