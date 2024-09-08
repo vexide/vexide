@@ -19,5 +19,5 @@
     "target-pointer-width": "32",
     "os": "none",
     "vendor": "vex",
-    "requires-uwtable": true
+    "default-uwtable": true
 }
