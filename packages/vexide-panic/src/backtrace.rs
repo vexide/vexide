@@ -48,7 +48,7 @@ impl Backtrace {
     /// Captures a backtrace at the current point of execution.
     ///
     /// If a backtrace could not be captured, an empty backtrace is returned.
-    #[inline]
+    #[inline(always)] // Inlining keeps this function from appearing in backtraces
     #[allow(clippy::missing_const_for_fn)]
     pub fn capture() -> Self {
         #[cfg(target_arch = "arm")]
@@ -70,7 +70,6 @@ impl Backtrace {
 
         // Procedure on mini_backtrace crate.
 
-        // Skip the first frame by calling `step` immediately.
         while cursor.step() {
             let mut instruction_pointer = cursor.get_register(sys::UNW_REG_IP)?;
 

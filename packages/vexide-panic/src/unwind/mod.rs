@@ -68,7 +68,8 @@ pub struct UnwindContext {
 }
 
 impl UnwindContext {
-    /// Creates an new unwind context.
+    /// Creates an new unwind context for the current point of execution.
+    #[inline(always)] // Inlining keeps this function from appearing in backtraces
     pub fn new() -> Result<Self, UnwindError> {
         let mut inner = MaybeUninit::<unw_context_t>::uninit();
         // SAFETY: `unw_getcontext` initializes the context struct.
@@ -93,7 +94,7 @@ pub struct UnwindCursor<'a> {
 }
 
 impl<'a> UnwindCursor<'a> {
-    /// Creates an unwind cursor for the current point of execution.
+    /// Creates an unwind cursor for the given context.
     pub fn new(context: &'a mut UnwindContext) -> Result<Self, UnwindError> {
         let mut cursor = MaybeUninit::<unw_cursor_t>::uninit();
         // SAFETY: `unw_init_local` initializes the cursor struct.
