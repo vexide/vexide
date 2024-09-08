@@ -68,7 +68,7 @@ impl Backtrace {
 
         let mut frames = Vec::new();
 
-        // Procedure on mini_backtrace crate.
+        // Procedure based on mini_backtrace crate.
 
         while cursor.step() {
             let mut instruction_pointer = cursor.get_register(sys::UNW_REG_IP)?;
