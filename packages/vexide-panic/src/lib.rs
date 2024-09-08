@@ -1,8 +1,14 @@
-//! Panic handler implementation for [`vexide`](https://crates.io/crates/vexide).
-//! Supports printing a backtrace when running in the simulator.
+//! Panic handler implementation for [`vexide`](https://crates.io/crates/vexide)
+//!
+//! Supports capturing and printing backtraces to aid in debugging.
+//!
 //! If the `display_panics` feature is enabled, it will also display the panic message on the V5 Brain display.
 
 #![no_std]
+
+pub mod backtrace;
+#[cfg(target_arch = "arm")]
+pub mod unwind;
 
 extern crate alloc;
 
@@ -101,6 +107,9 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
 
         #[cfg(target_arch = "wasm32")]
         sim_log_backtrace();
+
+        // #[cfg(target_arch = "arm")]
+        // println!("{}", backtrace::Backtrace::capture());
 
         #[cfg(not(feature = "display_panics"))]
         vexide_core::program::exit();

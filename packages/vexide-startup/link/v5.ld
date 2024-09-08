@@ -42,6 +42,27 @@ SECTIONS {
         __bss_end = .;
     } > USER_RAM
 
+    /* The unwind tables enabled by "requires-uwtables" in the target file live here. */
+    /* __eh_frame_start and similar symbols are used by libunwind. */
+    .eh_frame : {
+        __eh_frame_start = .;
+       *(.eh_frame)
+        __eh_frame_end = .;
+    } > USER_RAM
+
+    .eh_framehdr : {
+       __eh_frame_hdr_start = .;
+       *(.eh_framehdr)
+       __eh_frame_hdr_end = .;
+    } > USER_RAM
+
+    .ARM.exidx : {
+        __exidx_start = .;
+        *(.ARM.exidx*)
+        *(.gnu.linkonce.armexidix.*.*)
+        __exidx_end = .;
+    } > USER_RAM
+
     .heap (NOLOAD) : ALIGN(4) {
         __heap_start = .;
         . = __heap_end;
@@ -52,8 +73,4 @@ SECTIONS {
         . += __stack_length;
         __stack_top = .;
     } > USER_RAM
-
-    /DISCARD/ : {
-        *(.ARM.exidx)
-    }
 }

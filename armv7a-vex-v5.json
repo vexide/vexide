@@ -13,15 +13,11 @@
     "max-atomic-width": 64,
     "panic-strategy": "abort",
     "post-link-args": {
-        "ld.lld": [
-            "--gc-sections",
-            "--nostdlib",
-            "-Tv5.ld",
-            "-znorelro"
-        ]
+        "ld.lld": ["--gc-sections", "--nostdlib", "-Tv5.ld", "-znorelro"]
     },
     "relocation-model": "static",
     "target-pointer-width": "32",
     "os": "none",
-    "vendor": "vex"
+    "vendor": "vex",
+    "requires-uwtable": true
 }
