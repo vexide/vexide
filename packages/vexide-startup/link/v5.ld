@@ -42,7 +42,7 @@ SECTIONS {
         __bss_end = .;
     } > USER_RAM
 
-    /* The unwind tables enabled by "requires-uwtables" in the target file live here. */
+    /* The unwind tables enabled by "default-uwtables" in the target file live here. */
     /* __eh_frame_start and similar symbols are used by libunwind. */
     .eh_frame : {
         __eh_frame_start = .;
