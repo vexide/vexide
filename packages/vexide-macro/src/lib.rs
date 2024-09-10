@@ -115,8 +115,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 ///
 /// The `main` attribute can be provided with parameters that alter the behavior of the program.
 ///
-/// - `banner`: A boolean value that toggles the vexide startup banner printed over serial.
-///   When `false`, the banner will be not displayed.
+/// - `banner`: Allows for disabling or using a custom banner theme. When `enabled = false` the banner will be disabled. `theme` can be set to a custom `BannerTheme` struct.
 /// - `code_sig`: Allows using a custom `CodeSignature` struct to configure program behavior.
 ///
 /// # Examples
@@ -137,6 +136,8 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 ///
 /// The `main` attribute can also be provided with parameters to customize the behavior of the program.
 ///
+/// This includes disabling the banner or using a custom banner theme:
+///
 /// ```ignore
 /// # #![no_std]
 /// # #![no_main]
@@ -144,6 +145,17 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 /// #[vexide::main(banner = false)]
 /// async fn main(_p: Peripherals) {
 ///    println!("This is the only serial output from this program!")
+/// }
+/// ```
+///
+/// ```ignore
+/// # #![no_std]
+/// # #![no_main]
+/// # use vexide::prelude::*;
+/// use vexide::startup::banner_themes::THEME_SYNTHWAVE;
+/// #[vexide::main(theme = THEME_SYNTHWAVE)]
+/// async fn main(_p: Peripherals) {
+///    println!("This program has a synthwave themed banner!")
 /// }
 /// ```
 ///
