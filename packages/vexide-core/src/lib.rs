@@ -14,7 +14,10 @@
 #![feature(error_in_core, never_type)]
 #![feature(asm_experimental_arch)]
 
+extern crate alloc;
+
 pub mod allocator;
+pub mod backtrace;
 pub mod competition;
 pub mod critical_section;
 pub mod float;

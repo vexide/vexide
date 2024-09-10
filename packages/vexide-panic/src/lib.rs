@@ -6,24 +6,20 @@
 
 #![no_std]
 
-pub mod backtrace;
-#[cfg(target_arch = "arm")]
-pub mod unwind;
-
 extern crate alloc;
 
+#[allow(unused_imports)]
 use alloc::string::{String, ToString};
+#[allow(unused_imports)]
 use core::fmt::Write;
 
-use vexide_core::println;
+use vexide_core::{backtrace::Backtrace, println};
 #[cfg(feature = "display_panics")]
 use vexide_devices::{
     color::Rgb,
     geometry::Point2,
-    screen::{Rect, Screen, ScreenError, Text, TextSize},
+    screen::{Rect, Screen, Text, TextSize},
 };
-
-use crate::backtrace::Backtrace;
 
 #[cfg(target_arch = "wasm32")]
 extern "C" {
@@ -95,14 +91,16 @@ fn draw_error(screen: &mut Screen, msg: &str, backtrace: &Backtrace) {
     draw_text(screen, "stack backtrace:", line);
     line += 1;
 
-    const ROW_LENGTH: usize = 3;
-    for (col, frames) in backtrace.frames.chunks(ROW_LENGTH).enumerate() {
-        let mut msg = String::new();
-        for (row, frame) in frames.iter().enumerate() {
-            write!(msg, "{:>3}: {:?}    ", col * ROW_LENGTH + row, frame).unwrap();
+    if !backtrace.frames.is_empty() {
+        const ROW_LENGTH: usize = 3;
+        for (col, frames) in backtrace.frames.chunks(ROW_LENGTH).enumerate() {
+            let mut msg = String::new();
+            for (row, frame) in frames.iter().enumerate() {
+                write!(msg, "{:>3}: {:?}    ", col * ROW_LENGTH + row, frame).unwrap();
+            }
+            draw_text(screen, msg.trim_end(), line);
+            line += 1;
         }
-        draw_text(screen, msg.trim_end(), line);
-        line += 1;
     }
 }
 
@@ -113,20 +111,24 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
 
     let backtrace = Backtrace::capture();
 
+    #[cfg(feature = "display_panics")]
+    draw_error(unsafe { &mut Screen::new() }, &info.to_string(), &backtrace);
+
+    #[cfg(target_arch = "wasm32")]
     unsafe {
-        #[cfg(feature = "display_panics")]
-        draw_error(&mut Screen::new(), &info.to_string(), &backtrace);
-
-        #[cfg(target_arch = "wasm32")]
         sim_log_backtrace();
-        #[cfg(not(target_arch = "wasm32"))]
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    if !backtrace.frames.is_empty() {
         println!("{backtrace}");
+    }
 
-        #[cfg(not(feature = "display_panics"))]
-        vexide_core::program::exit();
-        // unreachable without display_panics
-        #[cfg(feature = "display_panics")]
-        loop {
+    #[cfg(not(feature = "display_panics"))]
+    vexide_core::program::exit();
+    // unreachable without display_panics
+    #[cfg(feature = "display_panics")]
+    loop {
+        unsafe {
             // Flush the serial buffer so that the panic message is printed
             vex_sdk::vexTasksRun();
         }

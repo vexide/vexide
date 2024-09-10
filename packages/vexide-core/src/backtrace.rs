@@ -8,8 +8,8 @@
 use alloc::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
 
-#[cfg(target_arch = "arm")]
-use crate::unwind::*;
+#[cfg(all(target_arch = "arm", feature = "unwind"))]
+use vex_libunwind::*;
 
 /// A captured stack backtrace.
 ///
@@ -34,10 +34,6 @@ use crate::unwind::*;
 ///
 /// main at /path/to/project/src/main.rs:21:9
 /// ```
-///
-/// ## Platform Support
-///
-/// WebAssembly platforms are not supported.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Backtrace {
     /// The instruction pointers of each frame in the backtrace.
@@ -48,34 +44,42 @@ impl Backtrace {
     /// Captures a backtrace at the current point of execution.
     ///
     /// If a backtrace could not be captured, an empty backtrace is returned.
+    ///
+    /// ## Platform Support
+    ///
+    /// Backtraces will be empty on non-armv7a targets (e.g. WebAssembly) or when
+    /// the `unwind` feature is disabled.
     #[inline(always)] // Inlining keeps this function from appearing in backtraces
     #[allow(clippy::missing_const_for_fn)]
     pub fn capture() -> Self {
-        #[cfg(target_arch = "arm")]
+        #[cfg(all(target_arch = "arm", feature = "unwind"))]
         return Self::try_capture().unwrap_or(Self { frames: Vec::new() });
 
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(not(all(target_arch = "arm", feature = "unwind")))]
         return Self { frames: Vec::new() };
     }
 
     /// Captures a backtrace at the current point of execution,
     /// returning an error if the backtrace fails to capture.
     #[inline(never)] // Make sure there's alawys a frame to remove
-    #[cfg(target_arch = "arm")]
+    #[cfg(all(target_arch = "arm", feature = "unwind"))]
     pub fn try_capture() -> Result<Self, UnwindError> {
-        let mut context = UnwindContext::new()?;
-        let mut cursor = UnwindCursor::new(&mut context)?;
+        let context = UnwindContext::new()?;
+        let mut cursor = UnwindCursor::new(&context)?;
 
         let mut frames = Vec::new();
 
         // Procedure based on mini_backtrace crate.
 
-        while cursor.step() {
-            let mut instruction_pointer = cursor.get_register(sys::UNW_REG_IP)?;
+        // Step once before taking the backtrace to skip the current frame.
+        while cursor.step()? {
+            let mut instruction_pointer = cursor.register(registers::UNW_REG_IP)?;
 
             // Adjust the IP to point within the function symbol. This should
             // only be done if the frame is not a signal frame.
-            if !cursor.is_signal_frame() {
+
+            // TODO before merging: does this really affect anything?
+            if !cursor.is_signal_frame()? {
                 instruction_pointer -= 1;
             }
 
