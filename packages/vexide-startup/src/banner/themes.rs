@@ -15,7 +15,7 @@
 //! - [America flavored theme](THEME_MURICA)
 //!
 //! Custom themes can be created by defining a constant of type [`BannerTheme`] with the desired ANSI escapes.
-//! This theme can then be passed to the [`vexide::main`](https://docs.rs/vexide/latest/vexide/attr.main.html).
+//! This theme can then be passed to [`vexide::main`](https://docs.rs/vexide/latest/vexide/attr.main.html).
 //!
 //! # Examples
 //! ```rust
@@ -40,12 +40,6 @@
 //! #[vexide::main(banner(enabled = true, theme = CUSTOM_THEME))]
 //! async fn main(peripherals: vexide::Peripherals) { }
 //! ```
-
-macro_rules! ansi_rgb {
-    ($r:expr, $g:expr, $b:expr) => {
-        concat!("\x1B[38;2;", $r, ";", $g, ";", $b, "m")
-    };
-}
 
 macro_rules! ansi_rgb_bold {
     ($r:expr, $g:expr, $b:expr) => {
