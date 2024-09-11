@@ -75,10 +75,7 @@ impl Backtrace {
         while cursor.step()? {
             let mut instruction_pointer = cursor.register(registers::UNW_REG_IP)?;
 
-            // Adjust the IP to point within the function symbol. This should
-            // only be done if the frame is not a signal frame.
-
-            // TODO before merging: does this really affect anything?
+            // Adjust IP to point inside the function — this improves symbolization quality.
             if !cursor.is_signal_frame()? {
                 instruction_pointer -= 1;
             }
