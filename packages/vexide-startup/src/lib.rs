@@ -46,13 +46,13 @@ bitflags! {
     /// the flags with publicly documented behavior.
     #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
     pub struct ProgramFlags: u32 {
-        /// Default graphics colors will be inverted.
+        /// Inverts the background color to pure white.
         const INVERT_DEFAULT_GRAPHICS = 1 << 0;
 
         /// VEXos scheduler simple tasks will be killed when the program requests exit.
         const KILL_TASKS_ON_EXIT = 1 << 1;
 
-        /// Default graphics colors will invert based on the selected system theme.
+        /// If VEXos is using the Light theme, inverts the background color to pure white.
         const THEMED_DEFAULT_GRAPHICS = 1 << 2;
     }
 }
