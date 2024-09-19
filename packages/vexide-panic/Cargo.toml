@@ -5,16 +5,13 @@ edition = "2021"
 license = "MIT"
 description = "Panic handler for vexide"
 keywords = ["Robotics", "vex", "v5"]
-categories = [
-    "no-std",
-    "science::robotics",
-]
+categories = ["no-std", "science::robotics"]
 repository = "https://github.com/vexide/vexide"
 authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
-    "Tropical"
+    "Tropical",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -23,11 +20,15 @@ authors = [
 vexide-core = { version = "0.3.0", path = "../vexide-core" }
 vexide-devices = { version = "0.3.0", path = "../vexide-devices", optional = true }
 vex-sdk = "0.18.0"
+snafu = { version = "0.8.4", default-features = false, features = [
+    "unstable-core-error",
+] }
 
 [features]
-default = ["display_panics"]
+default = ["display_panics", "backtraces"]
 
 display_panics = ["dep:vexide-devices"]
+backtraces = ["vexide-core/backtraces"]
 
 [lints]
 workspace = true
