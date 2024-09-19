@@ -25,10 +25,10 @@ snafu = { version = "0.8.4", default-features = false, features = [
 ] }
 
 [features]
-default = ["display_panics", "unwind"]
+default = ["display_panics", "backtraces"]
 
 display_panics = ["dep:vexide-devices"]
-unwind = ["vexide-core/unwind"]
+backtraces = ["vexide-core/backtraces"]
 
 [lints]
 workspace = true

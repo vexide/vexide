@@ -8,7 +8,7 @@
 use alloc::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
 
-#[cfg(all(target_arch = "arm", feature = "unwind"))]
+#[cfg(all(target_arch = "arm", feature = "backtraces"))]
 use vex_libunwind::*;
 
 /// A captured stack backtrace.
@@ -52,17 +52,17 @@ impl Backtrace {
     #[inline(always)] // Inlining keeps this function from appearing in backtraces
     #[allow(clippy::missing_const_for_fn)]
     pub fn capture() -> Self {
-        #[cfg(all(target_arch = "arm", feature = "unwind"))]
+        #[cfg(all(target_arch = "arm", feature = "backtraces"))]
         return Self::try_capture().unwrap_or(Self { frames: Vec::new() });
 
-        #[cfg(not(all(target_arch = "arm", feature = "unwind")))]
+        #[cfg(not(all(target_arch = "arm", feature = "backtraces")))]
         return Self { frames: Vec::new() };
     }
 
     /// Captures a backtrace at the current point of execution,
     /// returning an error if the backtrace fails to capture.
     #[inline(never)] // Make sure there's alawys a frame to remove
-    #[cfg(all(target_arch = "arm", feature = "unwind"))]
+    #[cfg(all(target_arch = "arm", feature = "backtraces"))]
     pub fn try_capture() -> Result<Self, UnwindError> {
         let context = UnwindContext::new()?;
         let mut cursor = UnwindCursor::new(&context)?;

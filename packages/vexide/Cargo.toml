@@ -12,7 +12,7 @@ authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
-    "Tropical"
+    "Tropical",
 ]
 rust-version = "1.75.0"
 
@@ -34,12 +34,21 @@ vexide-macro = { version = "0.2.0", path = "../vexide-macro", optional = true, d
 vex-sdk = "0.18.0"
 
 [features]
-default = ["async", "devices", "panic", "display_panics", "core", "startup", "macro", "unwind"]
+default = [
+    "async",
+    "devices",
+    "panic",
+    "display_panics",
+    "core",
+    "startup",
+    "macro",
+    "backtraces",
+]
 
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 
 core = ["dep:vexide-core"]
-unwind = ["core", "vexide-core/unwind"]
+backtraces = ["core", "vexide-core/backtraces"]
 force_rust_libm = ["core", "vexide-core/force_rust_libm"]
 
 startup = ["dep:vexide-startup"]

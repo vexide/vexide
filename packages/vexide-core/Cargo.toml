@@ -5,17 +5,13 @@ edition = "2021"
 license = "MIT"
 description = "Core functionality for vexide"
 keywords = ["Robotics", "bindings", "vex", "v5"]
-categories = [
-    "api-bindings",
-    "no-std",
-    "science::robotics",
-]
+categories = ["api-bindings", "no-std", "science::robotics"]
 repository = "https://github.com/vexide/vexide"
 authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
-    "Tropical"
+    "Tropical",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -31,7 +27,9 @@ talc = "4.3.1"
 lock_api = "0.4.11"
 critical-section = { version = "1.1.2", features = ["restore-state-bool"] }
 bitflags = "2.4.2"
-futures-core = { version = "0.3.30", default-features = false, features = ["alloc"] }
+futures-core = { version = "0.3.30", default-features = false, features = [
+    "alloc",
+] }
 pin-project = "1.1.5"
 replace_with = { version = "0.1.7", default-features = false }
 libm = { version = "0.2.8", optional = true }
@@ -47,6 +45,6 @@ libm = "0.2.8"
 workspace = true
 
 [features]
-default = ["unwind"]
+default = ["backtraces"]
 force_rust_libm = ["dep:libm"]
-unwind = ["dep:vex-libunwind"]
+backtraces = ["dep:vex-libunwind"]
