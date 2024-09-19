@@ -38,16 +38,29 @@ unsafe impl Sync for Motor {}
 /// Represents a possible target for a [`Motor`].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MotorControl {
-    /// Motor is braking using a [`BrakeMode`].
+    /// The motor brakes using a specified [`BrakeMode`].
     Brake(BrakeMode),
 
-    /// Motor is outputting a raw voltage.
+    /// The motor outputs a raw voltage.
+    ///
+    /// # Fields
+    ///
+    /// - `0`: The desired output voltage of the motor
     Voltage(f64),
 
-    /// Motor is attempting to hold a velocity using internal PID control.
+    /// The motor attempts to hold a velocity using its internal PID control.
+    ///
+    /// # Fields
+    ///
+    /// - `0`: The desired speed of the motor during the movement operation
     Velocity(i32),
 
-    /// Motor is attempting to reach a position using internal PID control.
+    /// The motor attempts to reach a position using its internal PID control.
+    ///
+    /// # Fields
+    ///
+    /// - `0`: The desired position of the motor after the movement operation
+    /// - `1`: The desired speed of the motor during the movement operation
     Position(Position, i32),
 }
 
