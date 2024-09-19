@@ -6,7 +6,7 @@ use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 use super::{AdiDevice, AdiDeviceType, AdiPort};
 use crate::{position::Position, PortError};
 
-/// ADI Range Finders.
+/// VEX V5 Optical Shaft Encoder
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiEncoder {
     top_port: AdiPort,
