@@ -28,11 +28,13 @@ Before releasing:
 ### Fixed
 
 - Fixed an issue where the distance sensor relative_size returned a u32 when it can be negative. (#116)
+- Fixed an issue preventing the `Screen::draw_buffer` function from working properly. (#128)
 
 ### Changed
 
 - Refactored the distance sensor API. All readings from the sensor are now read at once in a `object` method that can be possibly `None` if no object was detected. (#122) (**Breaking Change**)
 - Adjusted distance sensor status code errors to be more clear.
+- Overhauled the design of the startup banner.
 - Adjusted distance sensor error names. (#113) (**Breaking Change**)
 - Renamed `SmartDevice::port_index` and `SmartPort::index` to `SmartDevice::port_number` and `SmartPort::port_number`. (#121) (**Breaking Change**)
 - Renamed `AdiDevice::port_index` and `AdiPort::index` to `AdiDevice::port_number` and `AdiDevice::port_number`. (#121) (**Breaking Change**)

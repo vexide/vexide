@@ -15,6 +15,8 @@
 
 use bitflags::bitflags;
 
+mod banner;
+
 /// Identifies the type of binary to VEXos.
 #[repr(u32)]
 #[non_exhaustive]
@@ -131,19 +133,7 @@ pub unsafe fn program_entry<const BANNER: bool>() {
         vexide_core::allocator::vexos::init_heap();
         // Print the banner
         if BANNER {
-            vexide_core::io::print!(
-                "
-\x1B[1;38;5;196m=%%%%%#-  \x1B[38;5;254m-#%%%%-\x1B[1;38;5;196m  :*%%%%%+.
-\x1B[38;5;208m  -#%%%%#-  \x1B[38;5;254m:%-\x1B[1;38;5;208m  -*%%%%#
-\x1B[38;5;226m    *%%%%#=   -#%%%%%+
-\x1B[38;5;226m      *%%%%%+#%%%%%%%#=
-\x1B[38;5;34m        *%%%%%%%*-+%%%%%+
-\x1B[38;5;27m          +%%%*:   .+###%#
-\x1B[38;5;93m           .%:\x1B[0m
-vexide startup successful!
-Running user code...
-"
-            );
+            banner::print();
         }
         // Run vexos background processing at a regular 2ms interval.
         // This is necessary for serial and device reads to work properly.
