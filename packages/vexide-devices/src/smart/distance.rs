@@ -46,53 +46,23 @@ impl DistanceSensor {
         }
     }
 
-    /// Returns the distance to the object the sensor detects in millimeters or None if the
-    /// distance is out of range.
-    pub fn distance(&self) -> Result<Option<u32>, DistanceError> {
+    /// Attempt to detect an object, returning `None` if no object could be found.
+    pub fn object(&self) -> Result<Option<DistanceObject>, DistanceError> {
         self.validate()?;
 
         let distance_raw = unsafe { vexDeviceDistanceDistanceGet(self.device) };
 
         match distance_raw {
-            9999 => Ok(None),
-            _ => Ok(Some(distance_raw)),
+            9999 => Ok(None), // returns 9999 if no object was found
+            _ => Ok(Some(DistanceObject {
+                distance: distance_raw,
+                relative_size: unsafe { vexDeviceDistanceObjectSizeGet(self.device) as u32 },
+                velocity: unsafe { vexDeviceDistanceObjectVelocityGet(self.device) },
+                // TODO: determine if confidence reading is separate from whether or not an object is detected.
+                confidence: unsafe { vexDeviceDistanceConfidenceGet(self.device) as u32 } as f64
+                    / 63.0,
+            })),
         }
-    }
-
-    /// Returns the velocity of the object the sensor detects in m/s
-    pub fn velocity(&self) -> Result<f64, DistanceError> {
-        self.validate()?;
-
-        Ok(unsafe { vexDeviceDistanceObjectVelocityGet(self.device) })
-    }
-
-    /// Get the current guess at relative "object size".
-    ///
-    /// This is a value that has a range of 0 to 400. A 18" x 30" grey card will return
-    /// a value of approximately 75 in typical room lighting. If the sensor is not able to detect an object, None is returned.
-    ///
-    /// This sensor reading is unusual, as it is entirely unitless with the seemingly arbitrary
-    /// range of 0-400 existing due to VEXCode's [`vex::sizeType`] enum having four variants. It's
-    /// unknown what the sensor is *actually* measuring here either, so use this data with a grain
-    /// of salt.
-    ///
-    /// [`vex::sizeType`]: https://api.vexcode.cloud/v5/search/sizeType/sizeType/enum
-    pub fn relative_size(&self) -> Result<Option<u32>, DistanceError> {
-        self.validate()?;
-
-        let size = unsafe { vexDeviceDistanceObjectSizeGet(self.device) as i32 };
-        if size >= 0 {
-            Ok(Some(size as u32))
-        } else {
-            Ok(None)
-        }
-    }
-
-    /// Returns the confidence in the distance measurement from 0.0 to 1.0.
-    pub fn distance_confidence(&self) -> Result<f64, DistanceError> {
-        self.validate()?;
-
-        Ok(unsafe { vexDeviceDistanceConfidenceGet(self.device) as u32 } as f64 / 63.0)
     }
 
     /// Gets the status code of the distance sensor
@@ -111,6 +81,33 @@ impl SmartDevice for DistanceSensor {
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::Distance
     }
+}
+
+/// Readings from a phyiscal object detected by a Distance Sensor.
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd)]
+pub struct DistanceObject {
+    /// The distance of the object from the sensor (in millimeters).
+    pub distance: u32,
+
+    /// A guess at the object's "relative size".
+    ///
+    /// This is a value that has a range of 0 to 400. A 18" x 30" grey card will return
+    /// a value of approximately 75 in typical room lighting. If the sensor is not able to
+    /// detect an object, None is returned.
+    ///
+    /// This sensor reading is unusual, as it is entirely unitless with the seemingly arbitrary
+    /// range of 0-400 existing due to VEXCode's [`vex::sizeType`] enum having four variants. It's
+    /// unknown what the sensor is *actually* measuring here either, so use this data with a grain
+    /// of salt.
+    ///
+    /// [`vex::sizeType`]: https://api.vexcode.cloud/v5/search/sizeType/sizeType/enum
+    pub relative_size: u32,
+
+    /// Observed velocity of the object in m/s.
+    pub velocity: f64,
+
+    /// Returns the confidence in the distance measurement from 0.0 to 1.0.
+    pub confidence: f64,
 }
 
 #[derive(Debug, Snafu)]
