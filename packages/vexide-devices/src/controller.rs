@@ -84,16 +84,16 @@ pub struct Joystick {
 
 impl Joystick {
     /// Gets the value of the joystick position on its x-axis from [-1, 1].
-    pub fn x(&self) -> Result<f32, ControllerError> {
+    pub fn x(&self) -> Result<f64, ControllerError> {
         validate_connection(self.id)?;
 
-        Ok(self.x_raw()? as f32 / 127.0)
+        Ok(self.x_raw()? as f64 / 127.0)
     }
 
     /// Gets the value of the joystick position on its y-axis from [-1, 1].
-    pub fn y(&self) -> Result<f32, ControllerError> {
+    pub fn y(&self) -> Result<f64, ControllerError> {
         validate_connection(self.id)?;
-        Ok(self.y_raw()? as f32 / 127.0)
+        Ok(self.y_raw()? as f64 / 127.0)
     }
 
     /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
