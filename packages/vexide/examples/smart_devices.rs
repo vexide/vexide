@@ -35,8 +35,8 @@ async fn main(peripherals: Peripherals) {
 
     loop {
         // Simple tank drive
-        let left = controller.left_stick.y().unwrap() as f64;
-        let right = controller.right_stick.y().unwrap() as f64;
+        let left = controller.left_stick.y().unwrap();
+        let right = controller.right_stick.y().unwrap();
         left_motor.set_voltage(12.0 * left).unwrap();
         right_motor.set_voltage(12.0 * right).unwrap();
 
