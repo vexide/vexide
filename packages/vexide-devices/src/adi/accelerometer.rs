@@ -34,7 +34,7 @@ impl AdiAccelerometer {
         Ok(self.sensitivity()?.max_acceleration())
     }
 
-    /// Gets the current accleration measaurement for this axis in G.
+    /// Gets the current acceleration measurement for this axis in G.
     pub fn acceleration(&self) -> Result<f64, PortError> {
         Ok(
             // Convert 0-4095 to 0-1, then scale to max accel.

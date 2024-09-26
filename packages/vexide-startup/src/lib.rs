@@ -81,7 +81,7 @@ impl CodeSignature {
 }
 
 extern "C" {
-    // These symbols don't have real types so this is a little bit of a hack
+    // These symbols don't have real types, so this is a little bit of a hack.
     static mut __bss_start: u32;
     static mut __bss_end: u32;
 }
@@ -91,7 +91,7 @@ extern "Rust" {
 }
 
 /// Sets up the user stack, zeroes the BSS section, and calls the user code.
-/// This function is designed to be used as an entrypoint for programs on the VEX V5 Brain.
+/// This function is designed to be used as an entry point for programs on the VEX V5 Brain.
 ///
 /// # Const Parameters
 ///
@@ -128,20 +128,20 @@ pub unsafe fn program_entry<const BANNER: bool>() {
 
     unsafe {
         // Initialize the heap allocator
-        // This cfg is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
+        // This `cfg` is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
         #[cfg(target_arch = "arm")]
         vexide_core::allocator::vexos::init_heap();
         // Print the banner
         if BANNER {
             banner::print();
         }
-        // Run vexos background processing at a regular 2ms interval.
+        // Run VEXos background processing at a regular 2ms interval.
         // This is necessary for serial and device reads to work properly.
         vexide_async::task::spawn(async {
             loop {
                 vex_sdk::vexTasksRun();
 
-                // In VEXCode programs, this is ran in a tight loop with no delays, since they
+                // In VEXCode programs, this is run in a tight loop with no delays, since they
                 // don't need to worry about running two schedulers on top of each other, but
                 // doing this in our case would cause this task to hog all the CPU time, which
                 // wouldn't allow futures to be polled in the async runtime.

@@ -118,7 +118,7 @@ impl AdiPort {
 
 impl<T: AdiDevice<PortNumberOutput = u8>> From<T> for AdiPort {
     fn from(device: T) -> Self {
-        // SAFETY: We can do this, since we ensure that the old smartport was disposed of.
+        // SAFETY: We can do this, since we ensure that the old smart port was disposed of.
         // This can effectively be thought as a move out of the device's private `port` field.
         unsafe { Self::new(device.port_number(), device.expander_port_number()) }
     }
@@ -208,7 +208,7 @@ pub enum AdiDeviceType {
     Potentiometer,
 
     /// V2 Potentiometer
-    PotentimeterV2,
+    PotentiometerV2,
 
     /// Cortex-era yaw-rate gyroscope
     Gyro,
@@ -257,7 +257,7 @@ impl From<V5_AdiPortConfiguration> for AdiDeviceType {
             V5_AdiPortConfiguration::kAdiPortTypeLegacyButton => Self::Switch,
             V5_AdiPortConfiguration::kAdiPortTypeSmartButton => Self::SwitchV2,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyPotentiometer => Self::Potentiometer,
-            V5_AdiPortConfiguration::kAdiPortTypeSmartPot => Self::PotentimeterV2,
+            V5_AdiPortConfiguration::kAdiPortTypeSmartPot => Self::PotentiometerV2,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyGyro => Self::Gyro,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyServo => Self::Servo,
             V5_AdiPortConfiguration::kAdiPortTypeQuadEncoder => Self::Encoder,
@@ -284,7 +284,7 @@ impl From<AdiDeviceType> for V5_AdiPortConfiguration {
             AdiDeviceType::Switch => Self::kAdiPortTypeLegacyButton,
             AdiDeviceType::SwitchV2 => Self::kAdiPortTypeSmartButton,
             AdiDeviceType::Potentiometer => Self::kAdiPortTypeLegacyPotentiometer,
-            AdiDeviceType::PotentimeterV2 => Self::kAdiPortTypeSmartPot,
+            AdiDeviceType::PotentiometerV2 => Self::kAdiPortTypeSmartPot,
             AdiDeviceType::Gyro => Self::kAdiPortTypeLegacyGyro,
             AdiDeviceType::Servo => Self::kAdiPortTypeLegacyServo,
             AdiDeviceType::Encoder => Self::kAdiPortTypeQuadEncoder,

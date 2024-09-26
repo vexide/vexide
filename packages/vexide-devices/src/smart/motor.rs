@@ -391,7 +391,7 @@ impl Motor {
         Ok(self.faults()?.contains(MotorFaults::OVER_TEMPERATURE))
     }
 
-    /// Check if the motor's overcurrent flag is set.
+    /// Check if the motor's over-current flag is set.
     pub fn is_over_current(&self) -> Result<bool, MotorError> {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
@@ -401,7 +401,7 @@ impl Motor {
         Ok(self.faults()?.contains(MotorFaults::DRIVER_FAULT))
     }
 
-    /// Check if the motor's H-bridge has an overcurrent fault.
+    /// Check if the motor's H-bridge has an over-current fault.
     pub fn is_driver_over_current(&self) -> Result<bool, MotorError> {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }

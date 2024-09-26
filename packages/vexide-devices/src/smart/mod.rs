@@ -107,7 +107,7 @@ pub trait SmartDevice {
 
 impl<T: SmartDevice> From<T> for SmartPort {
     fn from(device: T) -> Self {
-        // SAFETY: We can do this, since we ensure that the old smartport was disposed of.
+        // SAFETY: We can do this, since we ensure that the old smart port was disposed of.
         // This can effectively be thought as a move out of the device's private `port` field.
         unsafe { Self::new(device.port_number()) }
     }
@@ -317,7 +317,7 @@ impl From<SmartDeviceType> for V5_DeviceType {
 ///
 /// There is additionally no guarantee that this is in sync with other smart devices,
 /// or even the same device if a disconnect occurred causing the clock to reset. As such,
-/// this is effectively a newtype wrapper of `u32`.
+/// this is effectively a wrapper of `u32`.
 ///
 /// # Precision
 ///

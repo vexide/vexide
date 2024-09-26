@@ -10,7 +10,7 @@ use vexide::{
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
-    // We can get the screen directly from peripherals becuase it is always connected to the Brain.
+    // We can get the screen directly from peripherals because it is always connected to the Brain.
     let mut screen = peripherals.screen;
 
     // Print a message to the screen

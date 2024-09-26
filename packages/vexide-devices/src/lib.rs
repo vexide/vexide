@@ -33,7 +33,7 @@ pub mod usd;
 use snafu::Snafu;
 
 #[derive(Debug, Snafu)]
-/// Generic erros that can take place when using ports on the V5 Brain.
+/// Generic errors that can take place when using ports on the V5 Brain.
 pub enum PortError {
     /// No device is plugged into the port.
     Disconnected,
