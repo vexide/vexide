@@ -1,27 +1,34 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::{
+    parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Ident, Result, Token,
+    token, Ident, LitBool, Result, Token,
 };
 
 mod kw {
     use syn::custom_keyword;
 
     custom_keyword!(banner);
+
+    custom_keyword!(enabled);
+    custom_keyword!(theme);
+
     custom_keyword!(code_sig);
 }
 
 pub struct MacroOpts {
-    pub banner: bool,
+    pub banner_enabled: bool,
+    pub banner_theme: Option<Ident>,
     pub code_sig: Option<Ident>,
 }
 
 impl Default for MacroOpts {
     fn default() -> Self {
         Self {
-            banner: true,
+            banner_enabled: true,
+            banner_theme: None,
             code_sig: None,
         }
     }
@@ -32,7 +39,18 @@ impl From<Attrs> for MacroOpts {
         let mut opts = Self::default();
         for attr in value.attr_list {
             match attr {
-                Attribute::Banner(banner) => opts.banner = banner.as_bool(),
+                Attribute::Banner(banner) => {
+                    for attr in banner.attrs {
+                        match attr {
+                            BannerAttribute::Enabled(enabled) => {
+                                opts.banner_enabled = enabled.as_bool()
+                            }
+                            BannerAttribute::Theme(theme) => {
+                                opts.banner_theme = Some(theme.into_ident())
+                            }
+                        }
+                    }
+                }
                 Attribute::CodeSig(code_sig) => opts.code_sig = Some(code_sig.into_ident()),
             }
         }
@@ -72,22 +90,17 @@ impl Parse for Attribute {
 
 pub struct Banner {
     token: kw::banner,
-    eq: Token![=],
-    arg: syn::LitBool,
-}
-
-impl Banner {
-    pub const fn as_bool(&self) -> bool {
-        self.arg.value
-    }
+    paren: token::Paren,
+    attrs: Punctuated<BannerAttribute, Token![,]>,
 }
 
 impl Parse for Banner {
     fn parse(input: ParseStream<'_>) -> Result<Self> {
+        let attrs;
         Ok(Self {
             token: input.parse()?,
-            eq: input.parse()?,
-            arg: input.parse()?,
+            paren: parenthesized!(attrs in input),
+            attrs: attrs.parse_terminated(BannerAttribute::parse, Token![,])?,
         })
     }
 }
@@ -95,8 +108,94 @@ impl Parse for Banner {
 impl ToTokens for Banner {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.token.to_tokens(tokens);
+        self.paren.surround(tokens, |tokens| {
+            self.attrs.to_tokens(tokens);
+        });
+    }
+}
+
+pub enum BannerAttribute {
+    Enabled(BannerEnabled),
+    Theme(BannerTheme),
+}
+impl Parse for BannerAttribute {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
+        let lookahead = input.lookahead1();
+        if lookahead.peek(kw::enabled) {
+            input.parse().map(BannerAttribute::Enabled)
+        } else if lookahead.peek(kw::theme) {
+            input.parse().map(BannerAttribute::Theme)
+        } else {
+            Err(lookahead.error())
+        }
+    }
+}
+
+impl ToTokens for BannerAttribute {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            BannerAttribute::Enabled(enabled) => enabled.to_tokens(tokens),
+            BannerAttribute::Theme(theme) => theme.to_tokens(tokens),
+        }
+    }
+}
+
+pub struct BannerEnabled {
+    token: kw::enabled,
+    eq: Token![=],
+    value: LitBool,
+}
+impl Parse for BannerEnabled {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
+        Ok(Self {
+            token: input.parse()?,
+            eq: input.parse()?,
+            value: input.parse()?,
+        })
+    }
+}
+
+impl BannerEnabled {
+    pub const fn as_bool(&self) -> bool {
+        self.value.value
+    }
+}
+
+impl ToTokens for BannerEnabled {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.token.to_tokens(tokens);
         self.eq.to_tokens(tokens);
-        self.arg.to_tokens(tokens);
+        self.value.to_tokens(tokens);
+    }
+}
+
+pub struct BannerTheme {
+    token: kw::theme,
+    eq: Token![=],
+    ident: Ident,
+}
+
+impl Parse for BannerTheme {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
+        Ok(Self {
+            token: input.parse()?,
+            eq: input.parse()?,
+            ident: input.parse()?,
+        })
+    }
+}
+
+impl BannerTheme {
+    pub fn into_ident(self) -> Ident {
+        self.ident
+    }
+}
+
+impl ToTokens for BannerTheme {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.token.to_tokens(tokens);
+        self.eq.to_tokens(tokens);
+        self.ident.to_tokens(tokens);
     }
 }
 
@@ -140,10 +239,21 @@ mod test {
     #[test]
     fn parses_banner_attribute() {
         let source = quote! {
-            banner = true
+            banner(enabled = true, theme = THEME)
         };
         let input = syn::parse2::<Banner>(source).unwrap();
-        assert_eq!(input.as_bool(), true);
+        assert!(input.attrs.len() == 2);
+        assert!(matches!(
+            input.attrs[0],
+            BannerAttribute::Enabled(BannerEnabled {
+                value: LitBool {
+                    value: true,
+                    span: _
+                },
+                ..
+            })
+        ));
+        assert!(matches!(input.attrs[1], BannerAttribute::Theme(_)));
     }
 
     #[test]
@@ -159,12 +269,12 @@ mod test {
     #[test]
     fn parses_attrs_into_macro_opts() {
         let source = quote! {
-            banner = true, code_sig = my_code_sig
+            banner(enabled = true, theme = THEME), code_sig = my_code_sig
         };
         let input = syn::parse2::<Attrs>(source).unwrap();
         assert_eq!(input.attr_list.len(), 2);
         let opts = MacroOpts::from(input);
-        assert_eq!(opts.banner, true);
+        assert!(opts.banner_enabled);
         assert_eq!(opts.code_sig.unwrap().to_string(), "my_code_sig");
     }
 
@@ -177,28 +287,28 @@ mod test {
 
         let source = quote! {};
         let opts = macro_opts_from(source);
-        assert_eq!(opts.banner, true);
+        assert!(opts.banner_enabled);
         assert_eq!(opts.code_sig, None);
 
         let source = quote! {
-            banner = false
+            banner(enabled = false)
         };
         let opts = macro_opts_from(source);
-        assert_eq!(opts.banner, false);
+        assert!(!opts.banner_enabled);
         assert_eq!(opts.code_sig, None);
 
         let source = quote! {
             code_sig = my_code_sig
         };
         let opts = macro_opts_from(source);
-        assert_eq!(opts.banner, true);
+        assert!(opts.banner_enabled);
         assert_eq!(opts.code_sig.unwrap().to_string(), "my_code_sig");
 
         let source = quote! {
-            banner = false, code_sig = my_code_sig
+            banner(enabled = false), code_sig = my_code_sig
         };
         let opts = macro_opts_from(source);
-        assert_eq!(opts.banner, false);
+        assert!(!opts.banner_enabled);
         assert_eq!(opts.code_sig.unwrap().to_string(), "my_code_sig");
     }
 }
