@@ -84,7 +84,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
     let theme = if let Some(theme) = opts.banner_theme {
         quote! { #theme }
     } else {
-        quote! { ::vexide::startup::banner_themes::THEME_DEFAULT }
+        quote! { ::vexide::startup::banner::themes::THEME_DEFAULT }
     };
 
     quote! {
@@ -152,7 +152,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 /// # #![no_std]
 /// # #![no_main]
 /// # use vexide::prelude::*;
-/// use vexide::startup::banner_themes::THEME_SYNTHWAVE;
+/// use vexide::startup::banner::themes::THEME_SYNTHWAVE;
 /// #[vexide::main(banner(theme = THEME_SYNTHWAVE))]
 /// async fn main(_p: Peripherals) {
 ///    println!("This program has a synthwave themed banner!")

@@ -1,3 +1,10 @@
+//! vexide startup banner.
+//!
+//! The banner can be printed with a theme using the [`print`] function.
+//! In vexide, you can change the theme of the banner by using the banner attribute in the `vexide::main` macro.
+//!
+//! For a full list of premade themes and more theme documentation, see the [`themes`] module.
+
 use core::time::Duration;
 
 use themes::BannerTheme;
@@ -8,8 +15,11 @@ use vexide_core::println;
 
 pub mod themes;
 
+/// Prints the startup banner to stdout.
+///
+/// This function is used internally in [`program_entry`](crate::program_entry) to print the banner.
 #[inline]
-pub(crate) fn print(theme: &BannerTheme) {
+pub fn print(theme: &BannerTheme) {
     const VEXIDE_VERSION: &str = "0.3.0";
 
     let system_version = unsafe { vexSystemVersion() }.to_be_bytes();

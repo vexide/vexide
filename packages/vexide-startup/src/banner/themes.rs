@@ -5,7 +5,7 @@
 //! - [Official vexide logo colors](THEME_OFFICIAL_LOGO)
 //! - [A synthwave inspired theme](THEME_SYNTHWAVE)
 //! - [Nord aurora colors](THEME_NORD_AURORA)
-//! - [Nord frost colors](THEME_NORD)
+//! - [Nord frost colors](THEME_NORD_FROST)
 //! - [Aro Ace flag](THEME_ARO_ACE)
 //! - [Nonbinary flag](THEME_NONBINARY)
 //! - [Bisexual flag](THEME_BISEXUAL)
@@ -20,7 +20,7 @@
 //! # Examples
 //! ```rust
 //! # use vexide::prelude;
-//! # use vexide::startup::banner_themes::BannerTheme;
+//! # use vexide::startup::banner::themes::BannerTheme;
 //! const CUSTOM_THEME: BannerTheme = BannerTheme {
 //!    emoji: "🦀",
 //!    logo_primary: [
