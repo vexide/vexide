@@ -12,10 +12,10 @@
 //!
 //! ## Project Structure
 //!
-//! The vexide runtime is split into 7 subcrates. The one you're looking at right now re-exports
+//! The vexide runtime is split into 7 sub-crates. The one you're looking at right now re-exports
 //! each of these crates into a single package. You can view the respective docs for each of them below:
 //!
-//! - [`vexide-core`](https://docs.rs/vexide_core) provides lowlevel core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
+//! - [`vexide-core`](https://docs.rs/vexide_core) provides low-level core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
 //! - [`vexide-devices`](https://docs.rs/vexide_devices) contains all device-related bindings for things like motors and sensors.
 //! - [`vexide-async`](https://docs.rs/vexide_async) implements our cooperative async runtime as well as several important async futures.
 //! - [`vexide-startup`](https://docs.rs/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.

@@ -9,7 +9,7 @@ use alloc::{
 
 use dlmalloc::GlobalDlmalloc;
 
-// no multithreading in wasm
+// no multithreading in WASM
 static mut LAYOUTS: BTreeMap<*mut u8, Layout> = BTreeMap::new();
 
 #[no_mangle]

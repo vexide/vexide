@@ -9,8 +9,8 @@ async fn main(peripherals: Peripherals) {
     let expander = AdiExpander::new(peripherals.port_1);
 
     // Create a potentiometer on the expander.
-    // The AdiExpander api is almost identical to that of Peripherals.
-    // AdiPorts can be moved out of the struct to create ADI devices.
+    // The `AdiExpander` API is almost identical to that of Peripherals.
+    // `AdiPorts` can be moved out of the struct to create ADI devices.
     let potentiometer = AdiPotentiometer::new(expander.adi_a, PotentiometerType::V2);
 
     loop {

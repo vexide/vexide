@@ -18,12 +18,12 @@ pub enum CondvarWaitFuture<'a, T> {
         /// The condition variable to wait on.
         condvar: &'a Condvar,
         /// The mutex guard that was unlocked.
-        gaurd: MutexGuard<'a, T>,
+        guard: MutexGuard<'a, T>,
     },
     /// The future is waiting for a [`Mutex`](super::Mutex) to lock
     WaitingForMutex {
         /// The mutex lock future.
-        gaurd: MutexLockFuture<'a, T>,
+        guard: MutexLockFuture<'a, T>,
     },
 }
 impl<'a, T> Future for CondvarWaitFuture<'a, T> {
@@ -38,14 +38,14 @@ impl<'a, T> Future for CondvarWaitFuture<'a, T> {
             &mut *self,
             || panic!("Failed to replace"),
             |self_| match self_ {
-                Self::WaitingForNotification { condvar, gaurd } => {
+                Self::WaitingForNotification { condvar, guard } => {
                     let state = condvar.state.load(Ordering::Acquire);
                     critical_section::with(|_| match state {
                         Condvar::NOTIFIED_ONE => {
                             condvar.state.store(Condvar::WAITING, Ordering::Release);
                             condvar.waiting.fetch_sub(1, Ordering::AcqRel);
                             Self::WaitingForMutex {
-                                gaurd: gaurd.relock(),
+                                guard: guard.relock(),
                             }
                         }
                         Condvar::NOTIFIED_ALL => {
@@ -54,20 +54,20 @@ impl<'a, T> Future for CondvarWaitFuture<'a, T> {
                                 condvar.state.store(Condvar::WAITING, Ordering::Release);
                             }
                             Self::WaitingForMutex {
-                                gaurd: gaurd.relock(),
+                                guard: guard.relock(),
                             }
                         }
-                        Condvar::WAITING => Self::WaitingForNotification { condvar, gaurd },
+                        Condvar::WAITING => Self::WaitingForNotification { condvar, guard },
                         _ => unreachable!("Invalid state in CondVar::state"),
                     })
                 }
-                CondvarWaitFuture::WaitingForMutex { mut gaurd } => {
-                    match core::pin::pin!(&mut gaurd).poll(cx) {
+                CondvarWaitFuture::WaitingForMutex { mut guard } => {
+                    match core::pin::pin!(&mut guard).poll(cx) {
                         Poll::Ready(lock) => {
                             ret = Some(lock);
-                            Self::WaitingForMutex { gaurd }
+                            Self::WaitingForMutex { guard }
                         }
-                        Poll::Pending => Self::WaitingForMutex { gaurd },
+                        Poll::Pending => Self::WaitingForMutex { guard },
                     }
                 }
             },
@@ -121,15 +121,15 @@ impl Condvar {
     }
 
     /// Waits for a notification on the condition variable.
-    pub fn wait<'a, T>(&'a self, gaurd: MutexGuard<'a, T>) -> CondvarWaitFuture<'a, T> {
-        // SAFETY: we can unlock the mutex because we gaurentee that it will not be used again until we safely lock it again.
+    pub fn wait<'a, T>(&'a self, guard: MutexGuard<'a, T>) -> CondvarWaitFuture<'a, T> {
+        // SAFETY: we can unlock the mutex because we guarantee that it will not be used again until we safely lock it again.
         unsafe {
-            gaurd.unlock();
+            guard.unlock();
         }
         critical_section::with(|_| self.waiting.fetch_add(1, Ordering::AcqRel));
         CondvarWaitFuture::WaitingForNotification {
             condvar: self,
-            gaurd,
+            guard,
         }
     }
 
