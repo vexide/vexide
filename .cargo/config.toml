@@ -1,6 +1,9 @@
 [build]
 target = "./armv7a-vex-v5.json"
 
+[target."cfg(all(target_arch = \"arm\", target_os = \"none\"))"]
+runner = "cargo v5 run --file"
+
 [target.wasm32-unknown-unknown]
 rustflags = ["-Clink-arg=--export-memory", "-Clink-arg=--import-table"]
 

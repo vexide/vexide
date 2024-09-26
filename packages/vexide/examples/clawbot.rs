@@ -78,8 +78,8 @@ impl Compete for ClawBot {
                 .unwrap_or_default();
 
             // Simple arcade drive
-            let forward = self.controller.left_stick.y().unwrap_or_default() as f64;
-            let turn = self.controller.right_stick.x().unwrap_or_default() as f64;
+            let forward = self.controller.left_stick.y().unwrap_or_default();
+            let turn = self.controller.right_stick.x().unwrap_or_default();
             let mut left_voltage = (forward + turn) * Motor::MAX_VOLTAGE;
             let mut right_voltage = (forward - turn) * Motor::MAX_VOLTAGE;
 

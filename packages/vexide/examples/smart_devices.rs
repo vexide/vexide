@@ -35,17 +35,13 @@ async fn main(peripherals: Peripherals) {
 
     loop {
         // Simple tank drive
-        let left = controller.left_stick.y().unwrap() as f64;
-        let right = controller.right_stick.y().unwrap() as f64;
+        let left = controller.left_stick.y().unwrap();
+        let right = controller.right_stick.y().unwrap();
         left_motor.set_voltage(12.0 * left).unwrap();
         right_motor.set_voltage(12.0 * right).unwrap();
 
         println!("IMU Euler angles: {:?}", imu.euler().unwrap());
-        println!(
-            "Distance: {}. Confidence: {}",
-            distance.distance().unwrap().unwrap_or(9999),
-            distance.distance_confidence().unwrap()
-        );
+        println!("Distance Sensor Object: {:?}", distance.object().unwrap(),);
 
         // Don't hog the CPU
         sleep(Duration::from_millis(5)).await;
