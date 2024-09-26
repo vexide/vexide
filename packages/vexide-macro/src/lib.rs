@@ -142,7 +142,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 /// # #![no_std]
 /// # #![no_main]
 /// # use vexide::prelude::*;
-/// #[vexide::main(banner = false)]
+/// #[vexide::main(banner(enabled = false))]
 /// async fn main(_p: Peripherals) {
 ///    println!("This is the only serial output from this program!")
 /// }
@@ -153,7 +153,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 /// # #![no_main]
 /// # use vexide::prelude::*;
 /// use vexide::startup::banner_themes::THEME_SYNTHWAVE;
-/// #[vexide::main(theme = THEME_SYNTHWAVE)]
+/// #[vexide::main(banner(theme = THEME_SYNTHWAVE))]
 /// async fn main(_p: Peripherals) {
 ///    println!("This program has a synthwave themed banner!")
 /// }
