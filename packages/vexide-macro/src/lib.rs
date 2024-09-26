@@ -126,7 +126,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 /// # use core::fmt::Write;
 /// #[vexide::main]
 /// async fn main(mut peripherals: Peripherals) {
-///     write!(peripherals.screen, "Hello, vexide!").unwrap();
+///     write!(peripherals.display, "Hello, vexide!").unwrap();
 /// }
 /// ```
 ///

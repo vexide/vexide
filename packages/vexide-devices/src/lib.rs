@@ -27,7 +27,7 @@ pub mod controller;
 pub mod geometry;
 pub mod peripherals;
 pub mod position;
-pub mod screen;
+pub mod display;
 pub mod usd;
 
 use snafu::Snafu;

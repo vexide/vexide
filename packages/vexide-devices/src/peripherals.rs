@@ -27,7 +27,7 @@ use core::sync::atomic::AtomicBool;
 use crate::{
     adi::AdiPort,
     controller::{Controller, ControllerId},
-    screen::Screen,
+    display::Display,
     smart::SmartPort,
 };
 
@@ -40,8 +40,8 @@ static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 /// If you need to store a peripherals struct for use in multiple functions, use [`DynamicPeripherals`] instead.
 /// This struct is always preferred over [`DynamicPeripherals`] when possible.
 pub struct Peripherals {
-    /// Brain screen
-    pub screen: Screen,
+    /// Brain display
+    pub display: Display,
 
     /// Primary ("Master") Controller
     pub primary_controller: Controller,
@@ -116,7 +116,7 @@ impl Peripherals {
         // SAFETY: caller must ensure that this function is only called once
         unsafe {
             Self {
-                screen: Screen::new(),
+                display: Display::new(),
 
                 primary_controller: Controller::new(ControllerId::Primary),
                 partner_controller: Controller::new(ControllerId::Partner),
@@ -187,7 +187,7 @@ impl Peripherals {
 /// When possible, use [`Peripherals`] instead.
 #[derive(Debug)]
 pub struct DynamicPeripherals {
-    screen: bool,
+    display: bool,
     smart_ports: [bool; 21],
     adi_slots: [bool; 8],
 }
@@ -201,7 +201,7 @@ impl DynamicPeripherals {
         let smart_ports = [false; 21];
         let adi_slots = [false; 8];
         Self {
-            screen: false,
+            display: false,
             smart_ports,
             adi_slots,
         }
@@ -237,13 +237,13 @@ impl DynamicPeripherals {
         Some(unsafe { AdiPort::new(port_number as u8 + 1, None) })
     }
 
-    /// Creates a [`Screen`] only if one has not been created before.
-    pub fn take_screen(&mut self) -> Option<Screen> {
-        if self.screen {
+    /// Creates a [`Display`] only if one has not been created before.
+    pub fn take_display(&mut self) -> Option<Display> {
+        if self.display {
             return None;
         }
-        self.screen = true;
-        Some(unsafe { Screen::new() })
+        self.display = true;
+        Some(unsafe { Display::new() })
     }
 }
 impl From<Peripherals> for DynamicPeripherals {

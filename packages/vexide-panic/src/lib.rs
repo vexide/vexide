@@ -18,7 +18,7 @@ use vexide_core::{backtrace::Backtrace, println};
 use vexide_devices::{
     color::Rgb,
     geometry::Point2,
-    screen::{Rect, Screen, Text, TextSize},
+    display::{Rect, Display, Text, TextSize},
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -27,19 +27,19 @@ extern "C" {
     fn sim_log_backtrace();
 }
 
-/// Draw an error box to the screen.
+/// Draw an error box to the display.
 ///
 /// This function is internally used by the vexide panic handler for displaying
 /// panic messages graphically before exiting.
 #[cfg(feature = "display_panics")]
-fn draw_error(screen: &mut Screen, msg: &str, backtrace: &Backtrace) {
+fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
     const ERROR_BOX_MARGIN: i16 = 16;
     const ERROR_BOX_PADDING: i16 = 16;
     const LINE_HEIGHT: i16 = 20;
     const LINE_MAX_WIDTH: usize = 52;
 
-    fn draw_text(screen: &mut Screen, buffer: &str, line: i16) {
-        screen.fill(
+    fn draw_text(display: &mut Display, buffer: &str, line: i16) {
+        display.fill(
             &Text::new(
                 buffer,
                 TextSize::Small,
@@ -58,13 +58,13 @@ fn draw_error(screen: &mut Screen, msg: &str, backtrace: &Backtrace) {
             y: ERROR_BOX_MARGIN,
         },
         Point2 {
-            x: Screen::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
-            y: Screen::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
+            x: Display::HORIZONTAL_RESOLUTION - ERROR_BOX_MARGIN,
+            y: Display::VERTICAL_RESOLUTION - ERROR_BOX_MARGIN,
         },
     );
 
-    screen.fill(&error_box_rect, Rgb::RED);
-    screen.stroke(&error_box_rect, Rgb::WHITE);
+    display.fill(&error_box_rect, Rgb::RED);
+    display.stroke(&error_box_rect, Rgb::WHITE);
 
     let mut buffer = String::new();
     let mut line: i16 = 0;
@@ -75,20 +75,20 @@ fn draw_error(screen: &mut Screen, msg: &str, backtrace: &Backtrace) {
         }
 
         if character == '\n' || ((buffer.len() % LINE_MAX_WIDTH == 0) && (i > 0)) {
-            draw_text(screen, &buffer, line);
+            draw_text(display, &buffer, line);
             line += 1;
             buffer.clear();
         }
     }
 
     if !buffer.is_empty() {
-        draw_text(screen, &buffer, line);
+        draw_text(display, &buffer, line);
 
         line += 1;
     }
 
     line += 1;
-    draw_text(screen, "stack backtrace:", line);
+    draw_text(display, "stack backtrace:", line);
     line += 1;
 
     if !backtrace.frames.is_empty() {
@@ -98,7 +98,7 @@ fn draw_error(screen: &mut Screen, msg: &str, backtrace: &Backtrace) {
             for (row, frame) in frames.iter().enumerate() {
                 write!(msg, "{:>3}: {:?}    ", col * ROW_LENGTH + row, frame).unwrap();
             }
-            draw_text(screen, msg.trim_end(), line);
+            draw_text(display, msg.trim_end(), line);
             line += 1;
         }
     }
@@ -112,7 +112,7 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     let backtrace = Backtrace::capture();
 
     #[cfg(feature = "display_panics")]
-    draw_error(unsafe { &mut Screen::new() }, &info.to_string(), &backtrace);
+    draw_error(unsafe { &mut Display::new() }, &info.to_string(), &backtrace);
 
     #[cfg(target_arch = "wasm32")]
     unsafe {
