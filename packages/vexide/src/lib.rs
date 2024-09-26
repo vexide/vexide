@@ -94,7 +94,7 @@ pub mod prelude {
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
-        screen::Display,
+        display::Display,
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
