@@ -67,7 +67,7 @@ fn create_main_wrapper(inner: ItemFn) -> proc_macro2::TokenStream {
 }
 
 fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
-    let banner_arg = if opts.banner {
+    let banner_arg = if opts.banner_enabled {
         quote! { true }
     } else {
         quote! { false }
@@ -81,6 +81,11 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
             ::vexide::startup::ProgramFlags::empty(),
         ) }
     };
+    let theme = if let Some(theme) = opts.banner_theme {
+        quote! { #theme }
+    } else {
+        quote! { ::vexide::startup::banner::themes::THEME_DEFAULT }
+    };
 
     quote! {
         const _: () = {
@@ -88,7 +93,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
             #[link_section = ".boot"]
             unsafe extern "C" fn _start() {
                 unsafe {
-                    ::vexide::startup::program_entry::<#banner_arg>()
+                    ::vexide::startup::program_entry::<#banner_arg>(#theme)
                 }
             }
 
@@ -110,8 +115,7 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 ///
 /// The `main` attribute can be provided with parameters that alter the behavior of the program.
 ///
-/// - `banner`: A boolean value that toggles the vexide startup banner printed over serial.
-///   When `false`, the banner will be not displayed.
+/// - `banner`: Allows for disabling or using a custom banner theme. When `enabled = false` the banner will be disabled. `theme` can be set to a custom `BannerTheme` struct.
 /// - `code_sig`: Allows using a custom `CodeSignature` struct to configure program behavior.
 ///
 /// # Examples
@@ -132,13 +136,26 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 ///
 /// The `main` attribute can also be provided with parameters to customize the behavior of the program.
 ///
+/// This includes disabling the banner or using a custom banner theme:
+///
 /// ```ignore
 /// # #![no_std]
 /// # #![no_main]
 /// # use vexide::prelude::*;
-/// #[vexide::main(banner = false)]
+/// #[vexide::main(banner(enabled = false))]
 /// async fn main(_p: Peripherals) {
 ///    println!("This is the only serial output from this program!")
+/// }
+/// ```
+///
+/// ```ignore
+/// # #![no_std]
+/// # #![no_main]
+/// # use vexide::prelude::*;
+/// use vexide::startup::banner::themes::THEME_SYNTHWAVE;
+/// #[vexide::main(banner(theme = THEME_SYNTHWAVE))]
+/// async fn main(_p: Peripherals) {
+///    println!("This program has a synthwave themed banner!")
 /// }
 /// ```
 ///
@@ -210,13 +227,15 @@ mod test {
     #[test]
     fn toggles_banner_using_parsed_opts() {
         let entrypoint = make_entrypoint(MacroOpts {
-            banner: false,
+            banner_enabled: false,
+            banner_theme: None,
             code_sig: None,
         });
         assert!(entrypoint.to_string().contains("false"));
         assert!(!entrypoint.to_string().contains("true"));
         let entrypoint = make_entrypoint(MacroOpts {
-            banner: true,
+            banner_enabled: true,
+            banner_theme: None,
             code_sig: None,
         });
         assert!(entrypoint.to_string().contains("true"));
@@ -226,13 +245,14 @@ mod test {
     #[test]
     fn uses_custom_code_sig_from_parsed_opts() {
         let entrypoint = make_entrypoint(MacroOpts {
-            banner: false,
+            banner_enabled: false,
+            banner_theme: None,
             code_sig: Some(Ident::new(
                 "__custom_code_sig_ident__",
                 proc_macro2::Span::call_site(),
             )),
         });
-        println!("{}", entrypoint.to_string());
+        println!("{}", entrypoint);
         assert!(entrypoint.to_string().contains(
             "static __CODE_SIGNATURE : :: vexide :: startup :: CodeSignature = __custom_code_sig_ident__ ;"
         ));

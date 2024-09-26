@@ -24,11 +24,13 @@ Before releasing:
 ### Added
 
 - Added support for the V5 GPS Sensor (#79)
+- Added support for custom banner themes configurable through the `vexide::main` macro (#127)
 
 ### Fixed
 
 - Fixed an issue where the distance sensor relative_size returned a u32 when it can be negative. (#116)
 - Fixed an issue preventing the `Screen::draw_buffer` function from working properly. (#128)
+- Fixed an issue where panic messages would not be displayed even when the `display_panics` feature was enabled if the screens render mode was set to `DoubleBuffered`. (#134)
 
 ### Changed
 
@@ -42,6 +44,7 @@ Before releasing:
 - Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
 - Controller joystick axis getters now return `f64` instead of `f32`. (#133)
 - Renamed `Screen` and its associated structs to `Display`. (#138) (**Breaking Change**)
+- Changes the banner attribute syntax in the `vexide::main` macro. (#127) (**Breaking Change**)
 
 ### Removed
 

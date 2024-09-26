@@ -31,7 +31,7 @@ vexide-core = { version = "0.3.0", path = "../vexide-core", optional = true, def
 vexide-startup = { version = "0.2.0", path = "../vexide-startup", optional = true, default-features = false }
 vexide-graphics = { version = "0.1.2", path = "../vexide-graphics", optional = true, default-features = false }
 vexide-macro = { version = "0.2.0", path = "../vexide-macro", optional = true, default-features = false }
-vex-sdk = "0.18.0"
+vex-sdk = "0.19.0"
 
 [features]
 default = [

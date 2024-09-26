@@ -24,7 +24,7 @@ extern "Rust" fn main() {
 #[no_mangle]
 #[link_section = ".boot"]
 unsafe extern "C" fn _start() {
-    unsafe { vexide_startup::program_entry::<true>() }
+    unsafe { vexide_startup::program_entry::<true>(vexide_startup::banner::themes::THEME_DEFAULT) }
 }
 
 #[link_section = ".code_signature"]
