@@ -29,6 +29,7 @@ Before releasing:
 
 - Fixed an issue where the distance sensor relative_size returned a u32 when it can be negative. (#116)
 - Fixed an issue preventing the `Screen::draw_buffer` function from working properly. (#128)
+- Fixed an issue where panic messages would not be displayed even when the `display_panics` feature was enabled if the screens render mode was set to `DoubleBuffered`. (#134)
 
 ### Changed
 
@@ -41,6 +42,7 @@ Before releasing:
 - `SmartPort::device_type` now no longer returns a `Result`. (#121) (**Breaking Change**)
 - Updated the names of certain misspelled `enum` variants and fields. (#132) (**Breaking Change**)
 - Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
+- Controller joystick axis getters now return `f64` instead of `f32`. (#133)
 
 ### Removed
 

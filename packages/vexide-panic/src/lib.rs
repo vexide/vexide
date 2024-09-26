@@ -38,6 +38,8 @@ fn draw_error(screen: &mut Screen, msg: &str, backtrace: &Backtrace) {
     const LINE_HEIGHT: i16 = 20;
     const LINE_MAX_WIDTH: usize = 52;
 
+    screen.set_render_mode(vexide_devices::screen::RenderMode::Immediate);
+
     fn draw_text(screen: &mut Screen, buffer: &str, line: i16) {
         screen.fill(
             &Text::new(
