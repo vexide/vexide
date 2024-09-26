@@ -92,9 +92,9 @@ pub mod prelude {
         battery,
         color::Rgb,
         controller::Controller,
+        display::Display,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
-        display::Display,
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
