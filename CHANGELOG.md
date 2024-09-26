@@ -42,7 +42,7 @@ Before releasing:
 - `SmartPort::device_type` now no longer returns a `Result`. (#121) (**Breaking Change**)
 - Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
 - Changes the banner attribute syntax in the `vexide::main` macro. (#127) (**Breaking Change**)
-- Controller joystick axis getters now return `f64` instead of `f32`. (#133)
+- Controller joystick axis getters now return `f64` instead of `f32`. (#133) (**Breaking Change**)
 
 ### Removed
 
