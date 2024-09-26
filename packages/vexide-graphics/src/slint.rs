@@ -14,7 +14,7 @@ use slint::{
 use vexide_core::time::Instant;
 use vexide_devices::{
     color::Rgb,
-    display::{Rect, Display},
+    display::{Display, Rect},
 };
 
 /// A Slint platform implementation for the V5 Brain screen.
@@ -25,7 +25,8 @@ pub struct V5Platform {
     display_pressed: RefCell<bool>,
 
     buffer: RefCell<
-        [Rgb8Pixel; Display::HORIZONTAL_RESOLUTION as usize * Display::VERTICAL_RESOLUTION as usize],
+        [Rgb8Pixel;
+            Display::HORIZONTAL_RESOLUTION as usize * Display::VERTICAL_RESOLUTION as usize],
     >,
 }
 impl V5Platform {

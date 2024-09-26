@@ -41,6 +41,7 @@ Before releasing:
 - `SmartPort::device_type` now no longer returns a `Result`. (#121) (**Breaking Change**)
 - Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
 - Controller joystick axis getters now return `f64` instead of `f32`. (#133)
+- Renamed `Screen` and its associated structs to `Display`.
 
 ### Removed
 

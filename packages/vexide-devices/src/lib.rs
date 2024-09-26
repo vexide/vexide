@@ -24,10 +24,10 @@ pub mod smart;
 pub mod battery;
 pub mod color;
 pub mod controller;
+pub mod display;
 pub mod geometry;
 pub mod peripherals;
 pub mod position;
-pub mod display;
 pub mod usd;
 
 use snafu::Snafu;

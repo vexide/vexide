@@ -17,8 +17,8 @@ use vexide_core::{backtrace::Backtrace, println};
 #[cfg(feature = "display_panics")]
 use vexide_devices::{
     color::Rgb,
+    display::{Display, Rect, Text, TextSize},
     geometry::Point2,
-    display::{Rect, Display, Text, TextSize},
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -112,7 +112,11 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     let backtrace = Backtrace::capture();
 
     #[cfg(feature = "display_panics")]
-    draw_error(unsafe { &mut Display::new() }, &info.to_string(), &backtrace);
+    draw_error(
+        unsafe { &mut Display::new() },
+        &info.to_string(),
+        &backtrace,
+    );
 
     #[cfg(target_arch = "wasm32")]
     unsafe {
