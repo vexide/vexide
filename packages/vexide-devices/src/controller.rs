@@ -367,7 +367,7 @@ pub enum ControllerConnection {
     Tethered,
 
     /// Controller is wirelessly connected over a VEXNet radio
-    VEXNet,
+    VexNet,
 }
 
 impl From<V5_ControllerStatus> for ControllerConnection {
@@ -375,7 +375,7 @@ impl From<V5_ControllerStatus> for ControllerConnection {
         match value {
             V5_ControllerStatus::kV5ControllerOffline => Self::Offline,
             V5_ControllerStatus::kV5ControllerTethered => Self::Tethered,
-            V5_ControllerStatus::kV5ControllerVexnet => Self::VEXNet,
+            V5_ControllerStatus::kV5ControllerVexnet => Self::VexNet,
             _ => unreachable!(),
         }
     }
@@ -386,7 +386,7 @@ impl From<ControllerConnection> for V5_ControllerStatus {
         match value {
             ControllerConnection::Offline => Self::kV5ControllerOffline,
             ControllerConnection::Tethered => Self::kV5ControllerTethered,
-            ControllerConnection::VEXNet => Self::kV5ControllerVexnet,
+            ControllerConnection::VexNet => Self::kV5ControllerVexnet,
         }
     }
 }

@@ -219,7 +219,7 @@ pub struct CompetitionRuntime<
     /// - The `'static` lifetime is a lie to the compiler, it actually borrows `self.shared`.
     ///   Therefore, tasks MUST NOT move their `&'static mut` references, or else they will
     ///   still be around when we call a `mk_*` function with a new mutable reference to it.
-    ///   We rely on lifetime parametrically of the `mk_*` functions for this (see the HRTBs above).
+    ///   We rely on lifetime parametricity of the `mk_*` functions for this (see the HRTBs above).
     /// - This field MUST come before `shared`, as struct fields are dropped in declaration order.
     #[allow(clippy::type_complexity)]
     task: Option<Pin<Box<dyn Future<Output = ControlFlow<Return>> + 'static>>>,

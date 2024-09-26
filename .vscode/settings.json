@@ -16,6 +16,7 @@
         "loopspeed",
         "nalgebra",
         "opcontrol",
+        "parametricity",
         "photoresistor",
         "relock",
         "repr",

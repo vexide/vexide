@@ -1,7 +1,7 @@
 //! Peripherals implementations.
 //!
 //! Peripherals are the best way to create devices because they allow you to do it safely.
-//! Both kinds of peripherals (i.e [`Peripherals`] and [`DynamicPeripherals`]) guarantee that a given port is only used to create one device.
+//! Both kinds of peripherals, [`Peripherals`] and [`DynamicPeripherals`], guarantee that a given port is only used to create one device.
 //! This is important because creating multiple devices on the same port can cause bugs and unexpected behavior.
 //! Devices can still be created unsafely without using peripherals, but it isn't recommended.
 //!
