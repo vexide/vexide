@@ -136,20 +136,6 @@ pub unsafe fn program_entry<const BANNER: bool>(theme: BannerTheme) {
         if BANNER {
             banner::print(&theme);
         }
-        // Run vexos background processing at a regular 2ms interval.
-        // This is necessary for serial and device reads to work properly.
-        vexide_async::task::spawn(async {
-            loop {
-                vex_sdk::vexTasksRun();
-
-                // In VEXCode programs, this is ran in a tight loop with no delays, since they
-                // don't need to worry about running two schedulers on top of each other, but
-                // doing this in our case would cause this task to hog all the CPU time, which
-                // wouldn't allow futures to be polled in the async runtime.
-                vexide_async::time::sleep(::core::time::Duration::from_millis(2)).await;
-            }
-        })
-        .detach();
         // Call the user code
         main();
         // Exit the program
