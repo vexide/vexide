@@ -150,10 +150,7 @@ impl GpsImu {
     pub const MAX_HEADING: f64 = 360.0;
 
     fn validate_port(&self) -> Result<(), PortError> {
-        validate_port(
-            self.port_number,
-            SmartDeviceType::Gps,
-        )
+        validate_port(self.port_number, SmartDeviceType::Gps)
     }
 
     /// Returns the IMU's yaw angle bounded by [0, 360) degrees.
