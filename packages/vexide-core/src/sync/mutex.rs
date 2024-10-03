@@ -25,7 +25,7 @@ impl MutexState {
     }
 }
 
-/// A raw mutex type built on top of the critical section.
+/// A raw, synchronous, spinning mutex type.
 pub struct RawMutex {
     state: MutexState,
 }
