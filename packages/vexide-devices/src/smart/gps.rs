@@ -54,12 +54,13 @@ impl GpsSensor {
 
         Ok(Self {
             device,
-            port,
             imu: GpsImu {
                 device,
+                port_number: port.number(),
                 rotation_offset: Default::default(),
                 heading_offset: Default::default(),
             },
+            port,
         })
     }
 
@@ -134,6 +135,7 @@ impl SmartDevice for GpsSensor {
 /// GPS Sensor Internal IMU
 #[derive(Debug, PartialEq)]
 pub struct GpsImu {
+    port_number: u8,
     device: V5_DeviceT,
     rotation_offset: f64,
     heading_offset: f64,
@@ -149,7 +151,7 @@ impl GpsImu {
 
     fn validate_port(&self) -> Result<(), PortError> {
         validate_port(
-            unsafe { (*self.device).zero_indexed_port },
+            self.port_number,
             SmartDeviceType::Gps,
         )
     }
