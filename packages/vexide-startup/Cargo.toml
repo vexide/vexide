@@ -16,7 +16,7 @@ authors = [
 
 [dependencies]
 bitflags = "2.4.2"
-vex-sdk = "0.19.0"
+vex-sdk = "0.20.0"
 vexide-core = { version = "0.3.0", path = "../vexide-core" }
 vexide-async = { version = "0.1.2", path = "../vexide-async" }
 vexide-devices = { version = "0.3.0", path = "../vexide-devices" }
