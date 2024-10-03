@@ -55,6 +55,7 @@ fn make_code_sig(opts: MacroOpts) -> proc_macro2::TokenStream {
     };
 
     quote! {
+        #[used] // This is needed to prevent the linker from removing this object in release builds
         static CODE_SIGNATURE: ::vexide::startup::CodeSignature = #sig;
     }
 }
