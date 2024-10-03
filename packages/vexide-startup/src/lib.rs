@@ -146,15 +146,15 @@ where
 pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     #[cfg(target_arch = "arm")]
     unsafe {
-        // Initialize the heap allocator
-        // This cfg is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
-        vexide_core::allocator::vexos::init_heap();
-
         // Fill the `.bss` section of our program's memory with zeroes to ensure that uninitialized data is allocated properly.
         zero_bss(
             core::ptr::addr_of_mut!(__bss_start),
             core::ptr::addr_of_mut!(__bss_end),
         );
+
+        // Initialize the heap allocator
+        // This cfg is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
+        vexide_core::allocator::vexos::init_heap();
     }
 
     // Print the banner
