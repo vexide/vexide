@@ -1,6 +1,6 @@
 OUTPUT_FORMAT("elf32-littlearm")
 
-ENTRY(_start)
+ENTRY(_boot)
 
 __user_ram_start = 0x03800000;
 __user_ram_length = 0x04800000;
