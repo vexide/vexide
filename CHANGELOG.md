@@ -44,6 +44,7 @@ Before releasing:
 - Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
 - Changes the banner attribute syntax in the `vexide::main` macro. (#127) (**Breaking Change**)
 - Controller joystick axis getters now return `f64` instead of `f32`. (#133) (**Breaking Change**)
+- Fixed an issue where the async executor would block indefinetly on the first program run after a Brain reboot (#139)
 
 ### Removed
 
