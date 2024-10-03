@@ -70,24 +70,22 @@ fn make_entrypoint(inner: ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream {
         syn::ReturnType::Type(_, ty) => quote! { #ty },
     };
 
-    let banner_print = if opts.banner_enabled {
-        let theme = if let Some(theme) = opts.banner_theme {
-            quote! { #theme }
-        } else {
-            quote! { ::vexide::startup::banner::themes::THEME_DEFAULT }
-        };
-        Some(quote! { ::vexide::startup::banner::print(#theme); })
+    let banner_theme = if let Some(theme) = opts.banner_theme {
+        quote! { #theme }
     } else {
-        None
+        quote! { ::vexide::startup::banner::themes::THEME_DEFAULT }
+    };
+
+    let banner_enabled = if opts.banner_enabled {
+        quote! { true }
+    } else {
+        quote! { false }
     };
 
     quote! {
         #[no_mangle]
         unsafe extern "C" fn _start() -> ! {
-            #[cfg(target_arch = "arm")]
-            ::vexide::core::allocator::vexos::init_heap();
-
-            #banner_print
+            ::vexide::startup::startup::<#banner_enabled>(#banner_theme);
 
             #inner
             let termination: #ret_type = ::vexide::async_runtime::block_on(
@@ -186,7 +184,8 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
 
             #entrypoint
         };
-    }.into()
+    }
+    .into()
 }
 
 #[cfg(test)]
@@ -211,10 +210,7 @@ mod test {
             quote! {
                 #[no_mangle]
                 unsafe extern "C" fn _start() -> ! {
-                    #[cfg(target_arch = "arm")]
-                    ::vexide::core::allocator::vexos::init_heap();
-
-                    ::vexide::startup::banner::print(::vexide::startup::banner::themes::THEME_DEFAULT);
+                    ::vexide::startup::startup::<true>(::vexide::startup::banner::themes::THEME_DEFAULT);
 
                     #source
 
@@ -238,19 +234,27 @@ mod test {
             }
         };
         let input = syn::parse2::<ItemFn>(source.clone()).unwrap();
-        let entrypoint = make_entrypoint(input.clone(), MacroOpts {
-            banner_enabled: false,
-            banner_theme: None,
-            code_sig: None,
-        });
-        assert!(!entrypoint.to_string().contains(":: vexide :: startup :: banner :: print"));
+        let entrypoint = make_entrypoint(
+            input.clone(),
+            MacroOpts {
+                banner_enabled: false,
+                banner_theme: None,
+                code_sig: None,
+            },
+        );
+        assert!(entrypoint.to_string().contains("false"));
+        assert!(!entrypoint.to_string().contains("true"));
 
-        let entrypoint = make_entrypoint(input, MacroOpts {
-            banner_enabled: true,
-            banner_theme: None,
-            code_sig: None,
-        });
-        assert!(entrypoint.to_string().contains(":: vexide :: startup :: banner :: print"));
+        let entrypoint = make_entrypoint(
+            input,
+            MacroOpts {
+                banner_enabled: true,
+                banner_theme: None,
+                code_sig: None,
+            },
+        );
+        assert!(entrypoint.to_string().contains("true"));
+        assert!(!entrypoint.to_string().contains("false"));
     }
 
     #[test]

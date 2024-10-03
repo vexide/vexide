@@ -8,18 +8,15 @@ use alloc::boxed::Box;
 
 use vex_sdk::vexTasksRun;
 use vexide_core::println;
-use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+use vexide_startup::{
+    banner::themes::THEME_DEFAULT, CodeSignature, ProgramFlags, ProgramOwner, ProgramType,
+};
 
 #[no_mangle]
 unsafe extern "C" fn _start() -> ! {
-    #[cfg(target_arch = "arm")]
     unsafe {
-        // Setup the global heap allocator if we're on ARM.
-        // If we're on wasm32, vexide_core will have already set this up for us.
-        vexide_core::allocator::vexos::init_heap();
-    }
+        vexide_startup::startup::<true>(THEME_DEFAULT);
 
-    unsafe {
         // Write something to the screen to test if the program is running
         let test_box = Box::new(100);
         vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);

@@ -13,6 +13,7 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
+use banner::themes::BannerTheme;
 use bitflags::bitflags;
 
 pub mod banner;
@@ -80,6 +81,12 @@ impl CodeSignature {
     }
 }
 
+extern "C" {
+    // These symbols don't have real types so this is a little bit of a hack
+    static mut __bss_start: u32;
+    static mut __bss_end: u32;
+}
+
 // This is the true entrypoint of vexide, containing the first two
 // instructions of user code executed before anything else.
 //
@@ -96,3 +103,62 @@ _boot:
     b _start             @ Jump to the Rust entrypoint.
 "#
 );
+
+/// Zeroes the `.bss` section
+///
+/// # Arguments
+///
+/// - `sbss`. Pointer to the start of the `.bss` section.
+/// - `ebss`. Pointer to the open/non-inclusive end of the `.bss` section.
+///   (The value behind this pointer will not be modified)
+/// - Use `T` to indicate the alignment of the `.bss` section.
+///
+/// # Safety
+///
+/// - Must be called exactly once
+/// - `mem::size_of::<T>()` must be non-zero
+/// - `ebss >= sbss`
+/// - `sbss` and `ebss` must be `T` aligned.
+#[inline]
+unsafe fn zero_bss<T>(mut sbss: *mut T, ebss: *mut T)
+where
+    T: Copy,
+{
+    while sbss < ebss {
+        // NOTE(volatile) to prevent this from being transformed into `memclr`
+        unsafe {
+            core::ptr::write_volatile(sbss, core::mem::zeroed());
+            sbss = sbss.offset(1);
+        }
+    }
+}
+
+/// Startup Routine
+///
+/// - Sets up the heap allocator if necessary.
+/// - Zeroes the `.bss`` section if necessary.
+/// - Prints the startup banner with a specified theme, if enabled.
+///
+/// # Safety
+///
+/// Must be called once at the start of program execution after the stack has been setup.
+#[inline]
+pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
+    #[cfg(target_arch = "arm")]
+    unsafe {
+        // Initialize the heap allocator
+        // This cfg is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
+        vexide_core::allocator::vexos::init_heap();
+
+        // Fill the `.bss` section of our program's memory with zeroes to ensure that uninitialized data is allocated properly.
+        zero_bss(
+            core::ptr::addr_of_mut!(__bss_start),
+            core::ptr::addr_of_mut!(__bss_end),
+        );
+    }
+
+    // Print the banner
+    if BANNER {
+        banner::print(theme);
+    }
+}
