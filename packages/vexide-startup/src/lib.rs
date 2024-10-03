@@ -1,13 +1,14 @@
-//! This crate provides a working entrypoint for the VEX V5 Brain.
+//! This crate provides a minimal startup routine for user code on the VEX V5 Brain.
 //!
-//! # Usage
+//! - User code begins at an assembly routine called `_boot`, which sets up the stack
+//!   section before jumping to a user-provided `_start` symbol, which should be your
+//!   rust entrypointt.
 //!
-//! Your entrypoint function should be an async function that takes a single argument of type [`Peripherals`](vexide_devices::peripherals::Peripherals).
-//! It can return any type implementing [`Termination`](vexide_core::program::Termination).
-//! ```rust
-//! #[vexide::main]
-//! async fn main(peripherals: Peripherals) { ... }
-//! ```
+//! - From there, the Rust entrypoint may call the [`startup`] function to finish the
+//!   startup process by clearing the `.bss` section (intended for uninitialized data)
+//!   and initializing vexide's heap allocator.
+//!
+//! This crate is NOT a crt0 implementation. No global constructors are called.
 
 #![no_std]
 #![feature(asm_experimental_arch)]
