@@ -11,7 +11,14 @@ use vexide_core::println;
 use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
 #[no_mangle]
-extern "Rust" fn main() {
+unsafe extern "C" fn _start() -> ! {
+    #[cfg(target_arch = "arm")]
+    unsafe {
+        // Setup the global heap allocator if we're on ARM.
+        // If we're on wasm32, vexide_core will have already set this up for us.
+        vexide_core::allocator::vexos::init_heap();
+    }
+
     unsafe {
         // Write something to the screen to test if the program is running
         let test_box = Box::new(100);
@@ -19,12 +26,9 @@ extern "Rust" fn main() {
         println!("Hello, world!");
         vexTasksRun(); // Flush serial
     }
-}
 
-#[no_mangle]
-#[link_section = ".boot"]
-unsafe extern "C" fn _start() {
-    unsafe { vexide_startup::program_entry::<true>(vexide_startup::banner::themes::THEME_DEFAULT) }
+    // Exit once we're done.
+    vexide_core::program::exit();
 }
 
 #[link_section = ".code_signature"]

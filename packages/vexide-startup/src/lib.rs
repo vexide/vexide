@@ -13,7 +13,6 @@
 #![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
-use banner::themes::BannerTheme;
 use bitflags::bitflags;
 
 pub mod banner;
@@ -81,64 +80,19 @@ impl CodeSignature {
     }
 }
 
-extern "C" {
-    // These symbols don't have real types so this is a little bit of a hack
-    static mut __bss_start: u32;
-    static mut __bss_end: u32;
-}
+// This is the true entrypoint of vexide, containing the first two
+// instructions of user code executed before anything else.
+//
+// This function loads the stack pointer to the stack region specified
+// in our linkerscript, then immediately branches to the Rust entrypoint
+// created by our macro.
+core::arch::global_asm!(
+    r#"
+.section .boot, "ax"
+.global _boot
 
-extern "Rust" {
-    fn main();
-}
-
-/// Sets up the user stack, zeroes the BSS section, and calls the user code.
-/// This function is designed to be used as an entrypoint for programs on the VEX V5 Brain.
-///
-/// # Const Parameters
-///
-/// - `BANNER`: Enables the vexide startup banner, which prints the vexide logo ASCII art and a startup message.
-///
-/// # Safety
-///
-/// This function MUST only be called once and should only be called at the very start of program initialization.
-/// Calling this function more than one time will seriously mess up both your stack and your heap.
-pub unsafe fn program_entry<const BANNER: bool>(theme: BannerTheme) {
-    #[cfg(target_arch = "arm")]
-    unsafe {
-        use core::arch::asm;
-        asm!(
-            "
-            // Load the user stack
-            ldr sp, =__stack_top
-            "
-        );
-    }
-
-    // Clear the BSS section (used for storing uninitialized data).
-    //
-    // VEXos doesn't do this for us on program start, so it's necessary here.
-    #[cfg(target_arch = "arm")]
-    unsafe {
-        use core::ptr::addr_of_mut;
-        let mut bss_start = addr_of_mut!(__bss_start);
-        while bss_start < addr_of_mut!(__bss_end) {
-            core::ptr::write_volatile(bss_start, 0);
-            bss_start = bss_start.offset(1);
-        }
-    }
-
-    unsafe {
-        // Initialize the heap allocator
-        // This cfg is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
-        #[cfg(target_arch = "arm")]
-        vexide_core::allocator::vexos::init_heap();
-        // Print the banner
-        if BANNER {
-            banner::print(&theme);
-        }
-        // Call the user code
-        main();
-        // Exit the program
-        vexide_core::program::exit();
-    }
-}
+_boot:
+    ldr sp, =__stack_top @ Load the user stack.
+    b _start             @ Jump to the Rust entrypoint.
+"#
+);

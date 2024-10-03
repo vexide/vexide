@@ -26,10 +26,7 @@ impl<T: Termination, E: Debug> Termination for Result<T, E> {
     fn report(self) {
         match self {
             Ok(t) => t.report(),
-            Err(e) => {
-                io::println!("Error: {e:?}");
-                exit();
-            }
+            Err(e) => io::println!("Error: {e:?}"),
         }
     }
 }
