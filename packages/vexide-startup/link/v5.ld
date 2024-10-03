@@ -11,10 +11,6 @@ MEMORY {
 }
 
 __stack_length = 0x400000;
-/*
-It's currently unclear why subtracting anything is necessary, but it fixes memory permission errors.
-0x100 is an arbitrary number that works.
-*/
 __heap_end = __user_ram_end - __stack_length;
 
 SECTIONS {
