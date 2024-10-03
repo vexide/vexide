@@ -4,7 +4,6 @@
 //! Included in this crate:
 //! - Global allocator: [`allocator`]
 //! - Competition state handling: [`competition`]
-//! - Critical-section implementation: [`critical_section`]
 //! - Serial terminal printing: [`io`]
 //! - No-std [`Instant`](time::Instant)s: [`time`]
 //! - Synchronization primitives: [`sync`]
@@ -19,7 +18,6 @@ extern crate alloc;
 pub mod allocator;
 pub mod backtrace;
 pub mod competition;
-pub mod critical_section;
 pub mod float;
 pub mod io;
 pub mod program;
