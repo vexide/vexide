@@ -38,9 +38,8 @@ impl<'a, T> Future for CondvarWaitFuture<'a, T> {
             &mut *self,
             || panic!("Failed to replace"),
             |self_| match self_ {
-                Self::WaitingForNotification { condvar, guard } => {
-                    let state = condvar.state.load(Ordering::Acquire);
-                    critical_section::with(|_| match state {
+                Self::WaitingForNotification { condvar, gaurd } => {
+                    match condvar.state.load(Ordering::Acquire) {
                         Condvar::NOTIFIED_ONE => {
                             condvar.state.store(Condvar::WAITING, Ordering::Release);
                             condvar.waiting.fetch_sub(1, Ordering::AcqRel);
@@ -59,7 +58,7 @@ impl<'a, T> Future for CondvarWaitFuture<'a, T> {
                         }
                         Condvar::WAITING => Self::WaitingForNotification { condvar, guard },
                         _ => unreachable!("Invalid state in CondVar::state"),
-                    })
+                    }
                 }
                 CondvarWaitFuture::WaitingForMutex { mut guard } => {
                     match core::pin::pin!(&mut guard).poll(cx) {
@@ -126,7 +125,7 @@ impl Condvar {
         unsafe {
             guard.unlock();
         }
-        critical_section::with(|_| self.waiting.fetch_add(1, Ordering::AcqRel));
+        self.waiting.fetch_add(1, Ordering::AcqRel);
         CondvarWaitFuture::WaitingForNotification {
             condvar: self,
             guard,
@@ -135,12 +134,12 @@ impl Condvar {
 
     /// Notify one task waiting on the condition variable.
     pub fn notify_one(&self) {
-        critical_section::with(|_| self.state.store(Self::NOTIFIED_ONE, Ordering::Release));
+        self.state.store(Self::NOTIFIED_ONE, Ordering::Release);
     }
 
     /// Notify all tasks waiting on the condition variable.
     pub fn notify_all(&self) {
-        critical_section::with(|_| self.state.store(Self::NOTIFIED_ALL, Ordering::Release));
+        self.state.store(Self::NOTIFIED_ALL, Ordering::Release);
     }
 }
 impl Default for Condvar {
