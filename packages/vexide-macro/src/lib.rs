@@ -94,8 +94,7 @@ fn make_entrypoint(inner: ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream {
                 #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
             );
             ::vexide::core::program::Termination::report(termination);
-
-            vexide_core::program::exit();
+            ::vexide::core::program::exit();
         }
     }
 }
