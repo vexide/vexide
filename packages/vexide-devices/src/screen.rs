@@ -77,7 +77,7 @@ pub trait Stroke {
 /// Circles are not antialiased.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Circle {
-    /// Center point (coordinates) of the circle
+    /// Center point of the circle
     pub center: Point2<i16>,
 
     /// Radius of the circle
@@ -467,7 +467,9 @@ impl From<V5_TouchEvent> for TouchState {
 pub enum RenderMode {
     /// Draw operations are immediately applied to the screen without the need to call [`Screen::render`].
     Immediate,
-    /// Draw calls are affected on an intermediary display buffer which can later be applied to the screen using [`Screen::render`].
+    /// Draw calls are affected on an intermediary display buffer, rather than directly drawn to the screen.
+    /// The intermediate buffer can later be applied to the screen using [`Screen::render`].
+    ///
     /// This mode is necessary for preventing screen tearing when drawing at high speeds.
     DoubleBuffered,
 }
