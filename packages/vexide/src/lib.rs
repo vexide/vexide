@@ -19,7 +19,7 @@
 //! - [`vexide-async`](https://docs.rs/vexide_async) implements our cooperative async runtime as well as several important async futures.
 //! - [`vexide-startup`](https://docs.rs/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.
 //! - [`vexide-panic`](https://docs.rs/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
-//! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [Slint] and [`embedded-graphics`].
+//! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [`slint`] and [`embedded-graphics`].
 //! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 //!
 //! # Usage
@@ -36,6 +36,7 @@
 //! Check out our [docs](https://vexide.dev/docs/) for more in-depth usage guides.
 
 #![no_std]
+#![doc(html_logo_url = "https://vexide.dev/images/logo.svg")]
 
 #[doc(inline)]
 #[cfg(feature = "async")]

@@ -157,7 +157,7 @@ pub trait AdiDevice {
     /// Update rate of ADI devices.
     const UPDATE_INTERVAL: Duration = ADI_UPDATE_INTERVAL;
 
-    /// The type that [`port_number`] should return. This is usually `u8`, but
+    /// The type that [`Self::port_number`] should return. This is usually `u8`, but
     /// occasionally `(u8, u8)` if the device has two ADI wires.
     type PortNumberOutput;
 
