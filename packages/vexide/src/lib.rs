@@ -12,8 +12,7 @@
 //!
 //! ## Project Structure
 //!
-//! The vexide runtime is split into 7 sub-crates. The one you're looking at right now re-exports
-//! each of these crates into a single package. You can view the respective docs for each of them below:
+//! The vexide runtime is split into 7 sub-crates. The one you're looking at right now re-exports each of these crates into a single package.
 //!
 //! - [`vexide-core`](https://docs.rs/vexide_core) provides low-level core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
 //! - [`vexide-devices`](https://docs.rs/vexide_devices) contains all device-related bindings for things like motors and sensors.
