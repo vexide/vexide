@@ -21,7 +21,6 @@ async-task = { version = "4.5.0", default-features = false }
 vexide-core = { version = "0.3.0", path = "../vexide-core" }
 waker-fn = "1.1.1"
 vex-sdk = "0.20.0"
-critical-section = { version = "1.1.2", features = ["restore-state-bool"] }
 
 [lints]
 workspace = true

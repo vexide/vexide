@@ -86,7 +86,7 @@ impl<'a, T> Future for RwLockReadFuture<'a, T> {
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        if critical_section::with(|_| self.lock.state.try_lock_shared()) {
+        if self.lock.state.try_lock_shared() {
             core::task::Poll::Ready(RwLockReadGuard { lock: self.lock })
         } else {
             cx.waker().wake_by_ref();
@@ -129,7 +129,7 @@ impl<'a, T> Future for RwLockWriteFuture<'a, T> {
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        if critical_section::with(|_| self.lock.state.try_lock_exclusive()) {
+        if self.lock.state.try_lock_exclusive() {
             core::task::Poll::Ready(RwLockWriteGuard { lock: self.lock })
         } else {
             cx.waker().wake_by_ref();
@@ -169,7 +169,7 @@ impl<T> RwLock<T> {
 
     /// Attempt to gain a read lock on the data.
     pub fn try_read(&self) -> Option<RwLockReadGuard<'_, T>> {
-        if critical_section::with(|_| self.state.try_lock_shared()) {
+        if self.state.try_lock_shared() {
             Some(RwLockReadGuard { lock: self })
         } else {
             None
@@ -178,7 +178,7 @@ impl<T> RwLock<T> {
 
     /// Attempt to gain a write lock on the data.
     pub fn try_write(&self) -> Option<RwLockWriteGuard<'_, T>> {
-        if critical_section::with(|_| self.state.try_lock_exclusive()) {
+        if self.state.try_lock_exclusive() {
             Some(RwLockWriteGuard { lock: self })
         } else {
             None

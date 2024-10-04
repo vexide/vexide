@@ -3,8 +3,6 @@
 //! This module provides implementations of math functions of floating point
 //! primitive types (`f32`, `f64`).
 
-//! Provides implementations for the `critical_section` crate on the V5 brain and in WASM environments.
-
 #[cfg(all(
     target_arch = "arm",
     target_os = "none",
