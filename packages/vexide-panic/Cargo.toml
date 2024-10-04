@@ -19,7 +19,7 @@ authors = [
 [dependencies]
 vexide-core = { version = "0.3.0", path = "../vexide-core" }
 vexide-devices = { version = "0.3.0", path = "../vexide-devices", optional = true }
-vex-sdk = "0.18.0"
+vex-sdk = "0.20.0"
 snafu = { version = "0.8.4", default-features = false, features = [
     "unstable-core-error",
 ] }
