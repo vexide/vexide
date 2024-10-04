@@ -38,20 +38,28 @@
 
 #![no_std]
 
+#[doc(inline)]
 #[cfg(feature = "async")]
 pub use vexide_async as async_runtime;
+#[doc(inline)]
 #[cfg(feature = "core")]
 pub use vexide_core as core;
+#[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
+#[doc(inline)]
 #[cfg(feature = "graphics")]
 pub use vexide_graphics as graphics;
+#[doc(inline)]
 #[cfg(feature = "macro")]
 pub use vexide_macro as r#macro;
+#[doc(inline)]
 #[cfg(feature = "macro")]
 pub use vexide_macro::main;
+#[doc(inline)]
 #[cfg(feature = "panic")]
 pub use vexide_panic as panic;
+#[doc(inline)]
 #[cfg(feature = "startup")]
 pub use vexide_startup as startup;
 
