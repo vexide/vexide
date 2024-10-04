@@ -218,9 +218,9 @@ mod test {
                     let termination: () = ::vexide::async_runtime::block_on(
                         main(::vexide::devices::peripherals::Peripherals::take().unwrap())
                     );
-                    ::vexide::core::program::Termination::report(termination);
 
-                    vexide_core::program::exit();
+                    ::vexide::core::program::Termination::report(termination);
+                    ::vexide_core::program::exit();
                 }
             }
             .to_string()
