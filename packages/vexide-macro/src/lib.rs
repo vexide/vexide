@@ -220,7 +220,7 @@ mod test {
                     );
 
                     ::vexide::core::program::Termination::report(termination);
-                    ::vexide_core::program::exit();
+                    ::vexide::core::program::exit();
                 }
             }
             .to_string()
