@@ -46,6 +46,7 @@ Before releasing:
 - Changes the banner attribute syntax in the `vexide::main` macro. (#127) (**Breaking Change**)
 - Controller joystick axis getters now return `f64` instead of `f32`. (#133) (**Breaking Change**)
 - Fixed an issue where the async executor would block indefinetly on the first program run after a Brain reboot (#139)
+- Removed the `critical_section` module from `vexide_core`, since vexide doesn't use interrupts and it can potentially break VEXos operations. (#144) (**Breaking Change**)
 - Switched to a hard-float libm build with up to 6 times faster floating point operations. (#145)
 
 ### Removed
