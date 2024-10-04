@@ -1,13 +1,14 @@
-//! This crate provides a working entrypoint for the VEX V5 Brain.
+//! This crate provides a minimal startup routine for user code on the VEX V5 Brain.
 //!
-//! # Usage
+//! - User code begins at an assembly routine called `_boot`, which sets up the stack
+//!   section before jumping to a user-provided `_start` symbol, which should be your
+//!   rust entrypointt.
 //!
-//! Your entrypoint function should be an async function that takes a single argument of type [`Peripherals`](vexide_devices::peripherals::Peripherals).
-//! It can return any type implementing [`Termination`](vexide_core::program::Termination).
-//! ```rust
-//! #[vexide::main]
-//! async fn main(peripherals: Peripherals) { ... }
-//! ```
+//! - From there, the Rust entrypoint may call the [`startup`] function to finish the
+//!   startup process by clearing the `.bss` section (intended for uninitialized data)
+//!   and initializing vexide's heap allocator.
+//!
+//! This crate is NOT a crt0 implementation. No global constructors are called.
 
 #![no_std]
 #![feature(asm_experimental_arch)]
@@ -87,58 +88,78 @@ extern "C" {
     static mut __bss_end: u32;
 }
 
-extern "Rust" {
-    fn main();
-}
+// This is the true entrypoint of vexide, containing the first two
+// instructions of user code executed before anything else.
+//
+// This function loads the stack pointer to the stack region specified
+// in our linkerscript, then immediately branches to the Rust entrypoint
+// created by our macro.
+core::arch::global_asm!(
+    r#"
+.section .boot, "ax"
+.global _boot
 
-/// Sets up the user stack, zeroes the BSS section, and calls the user code.
-/// This function is designed to be used as an entrypoint for programs on the VEX V5 Brain.
+_boot:
+    ldr sp, =__stack_top @ Load the user stack.
+    b _start             @ Jump to the Rust entrypoint.
+"#
+);
+
+/// Zeroes the `.bss` section
 ///
-/// # Const Parameters
+/// # Arguments
 ///
-/// - `BANNER`: Enables the vexide startup banner, which prints the vexide logo ASCII art and a startup message.
+/// - `sbss`. Pointer to the start of the `.bss` section.
+/// - `ebss`. Pointer to the open/non-inclusive end of the `.bss` section.
+///   (The value behind this pointer will not be modified)
+/// - Use `T` to indicate the alignment of the `.bss` section.
 ///
 /// # Safety
 ///
-/// This function MUST only be called once and should only be called at the very start of program initialization.
-/// Calling this function more than one time will seriously mess up both your stack and your heap.
-pub unsafe fn program_entry<const BANNER: bool>(theme: BannerTheme) {
-    #[cfg(target_arch = "arm")]
-    unsafe {
-        use core::arch::asm;
-        asm!(
-            "
-            // Load the user stack
-            ldr sp, =__stack_top
-            "
-        );
-    }
-
-    // Clear the BSS section (used for storing uninitialized data).
-    //
-    // VEXos doesn't do this for us on program start, so it's necessary here.
-    #[cfg(target_arch = "arm")]
-    unsafe {
-        use core::ptr::addr_of_mut;
-        let mut bss_start = addr_of_mut!(__bss_start);
-        while bss_start < addr_of_mut!(__bss_end) {
-            core::ptr::write_volatile(bss_start, 0);
-            bss_start = bss_start.offset(1);
+/// - Must be called exactly once
+/// - `mem::size_of::<T>()` must be non-zero
+/// - `ebss >= sbss`
+/// - `sbss` and `ebss` must be `T` aligned.
+#[inline]
+unsafe fn zero_bss<T>(mut sbss: *mut T, ebss: *mut T)
+where
+    T: Copy,
+{
+    while sbss < ebss {
+        // NOTE(volatile) to prevent this from being transformed into `memclr`
+        unsafe {
+            core::ptr::write_volatile(sbss, core::mem::zeroed());
+            sbss = sbss.offset(1);
         }
     }
+}
 
+/// Startup Routine
+///
+/// - Sets up the heap allocator if necessary.
+/// - Zeroes the `.bss`` section if necessary.
+/// - Prints the startup banner with a specified theme, if enabled.
+///
+/// # Safety
+///
+/// Must be called once at the start of program execution after the stack has been setup.
+#[inline]
+pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
+    #[cfg(target_arch = "arm")]
     unsafe {
+        // Fill the `.bss` section of our program's memory with zeroes to ensure that uninitialized data is allocated properly.
+        zero_bss(
+            core::ptr::addr_of_mut!(__bss_start),
+            core::ptr::addr_of_mut!(__bss_end),
+        );
+
         // Initialize the heap allocator
         // This cfg is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
-        #[cfg(target_arch = "arm")]
         vexide_core::allocator::vexos::init_heap();
-        // Print the banner
-        if BANNER {
-            banner::print(&theme);
-        }
-        // Call the user code
-        main();
-        // Exit the program
-        vexide_core::program::exit();
+    }
+
+    // Print the banner
+    if BANNER {
+        banner::print(theme);
     }
 }

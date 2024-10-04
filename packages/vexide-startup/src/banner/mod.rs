@@ -20,7 +20,7 @@ pub mod themes;
 ///
 /// This function is used internally in [`program_entry`](crate::program_entry) to print the banner.
 #[inline]
-pub fn print(theme: &BannerTheme) {
+pub fn print(theme: BannerTheme) {
     const VEXIDE_VERSION: &str = "0.3.0";
 
     let system_version = unsafe { vexSystemVersion() }.to_be_bytes();

@@ -43,7 +43,25 @@ fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
     }
 }
 
-fn create_main_wrapper(inner: ItemFn) -> proc_macro2::TokenStream {
+fn make_code_sig(opts: MacroOpts) -> proc_macro2::TokenStream {
+    let sig = if let Some(code_sig) = opts.code_sig {
+        quote! { #code_sig }
+    } else {
+        quote! {  ::vexide::startup::CodeSignature::new(
+            ::vexide::startup::ProgramType::User,
+            ::vexide::startup::ProgramOwner::Partner,
+            ::vexide::startup::ProgramFlags::empty(),
+        ) }
+    };
+
+    quote! {
+        #[link_section = ".code_signature"]
+        #[used] // This is needed to prevent the linker from removing this object in release builds
+        static CODE_SIGNATURE: ::vexide::startup::CodeSignature = #sig;
+    }
+}
+
+fn make_entrypoint(inner: ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream {
     match verify_function_sig(&inner.sig) {
         Ok(_) => {}
         Err(e) => return e.to_compile_error(),
@@ -54,53 +72,31 @@ fn create_main_wrapper(inner: ItemFn) -> proc_macro2::TokenStream {
         syn::ReturnType::Type(_, ty) => quote! { #ty },
     };
 
-    quote! {
-        #[no_mangle]
-        extern "Rust" fn main() {
-            #inner
-            let termination: #ret_type = ::vexide::async_runtime::block_on(
-                #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
-            );
-            ::vexide::core::program::Termination::report(termination);
-        }
-    }
-}
-
-fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
-    let banner_arg = if opts.banner_enabled {
-        quote! { true }
-    } else {
-        quote! { false }
-    };
-    let code_signature = if let Some(code_sig) = opts.code_sig {
-        quote! { #code_sig }
-    } else {
-        quote! {  ::vexide::startup::CodeSignature::new(
-            ::vexide::startup::ProgramType::User,
-            ::vexide::startup::ProgramOwner::Partner,
-            ::vexide::startup::ProgramFlags::empty(),
-        ) }
-    };
-    let theme = if let Some(theme) = opts.banner_theme {
+    let banner_theme = if let Some(theme) = opts.banner_theme {
         quote! { #theme }
     } else {
         quote! { ::vexide::startup::banner::themes::THEME_DEFAULT }
     };
 
-    quote! {
-        const _: () = {
-            #[no_mangle]
-            #[link_section = ".boot"]
-            unsafe extern "C" fn _start() {
-                unsafe {
-                    ::vexide::startup::program_entry::<#banner_arg>(#theme)
-                }
-            }
+    let banner_enabled = if opts.banner_enabled {
+        quote! { true }
+    } else {
+        quote! { false }
+    };
 
-            #[link_section = ".code_signature"]
-            #[used] // This is needed to prevent the linker from removing this object in release builds
-            static __CODE_SIGNATURE: ::vexide::startup::CodeSignature = #code_signature;
-        };
+    quote! {
+        #[no_mangle]
+        unsafe extern "C" fn _start() -> ! {
+            ::vexide::startup::startup::<#banner_enabled>(#banner_theme);
+
+            #inner
+            let termination: #ret_type = ::vexide::async_runtime::block_on(
+                #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
+            );
+            ::vexide::core::program::Termination::report(termination);
+
+            vexide_core::program::exit();
+        }
     }
 }
 
@@ -179,14 +175,17 @@ fn make_entrypoint(opts: MacroOpts) -> proc_macro2::TokenStream {
 #[proc_macro_attribute]
 pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     let item = parse_macro_input!(item as ItemFn);
-    let attrs = parse_macro_input!(attrs as Attrs);
-    let opts = MacroOpts::from(attrs);
-    let main_fn = create_main_wrapper(item);
-    let entrypoint = make_entrypoint(opts);
+    let opts = MacroOpts::from(parse_macro_input!(attrs as Attrs));
+
+    let entrypoint = make_entrypoint(item, opts.clone());
+    let code_signature = make_code_sig(opts);
 
     quote! {
-        #main_fn
-        #entrypoint
+        const _: () = {
+            #code_signature
+
+            #entrypoint
+        };
     }
     .into()
 }
@@ -204,20 +203,25 @@ mod test {
                 println!("Hello, world!");
             }
         };
-        let input = syn::parse2::<ItemFn>(source).unwrap();
-        let output = create_main_wrapper(input);
+
+        let input = syn::parse2::<ItemFn>(source.clone()).unwrap();
+        let output = make_entrypoint(input, MacroOpts::default());
+
         assert_eq!(
             output.to_string(),
             quote! {
                 #[no_mangle]
-                extern "Rust" fn main() {
-                    async fn main(_peripherals: Peripherals) {
-                        println!("Hello, world!");
-                    }
+                unsafe extern "C" fn _start() -> ! {
+                    ::vexide::startup::startup::<true>(::vexide::startup::banner::themes::THEME_DEFAULT);
+
+                    #source
+
                     let termination: () = ::vexide::async_runtime::block_on(
                         main(::vexide::devices::peripherals::Peripherals::take().unwrap())
                     );
                     ::vexide::core::program::Termination::report(termination);
+
+                    vexide_core::program::exit();
                 }
             }
             .to_string()
@@ -226,25 +230,38 @@ mod test {
 
     #[test]
     fn toggles_banner_using_parsed_opts() {
-        let entrypoint = make_entrypoint(MacroOpts {
-            banner_enabled: false,
-            banner_theme: None,
-            code_sig: None,
-        });
+        let source = quote! {
+            async fn main(_peripherals: Peripherals) {
+                println!("Hello, world!");
+            }
+        };
+        let input = syn::parse2::<ItemFn>(source.clone()).unwrap();
+        let entrypoint = make_entrypoint(
+            input.clone(),
+            MacroOpts {
+                banner_enabled: false,
+                banner_theme: None,
+                code_sig: None,
+            },
+        );
         assert!(entrypoint.to_string().contains("false"));
         assert!(!entrypoint.to_string().contains("true"));
-        let entrypoint = make_entrypoint(MacroOpts {
-            banner_enabled: true,
-            banner_theme: None,
-            code_sig: None,
-        });
+
+        let entrypoint = make_entrypoint(
+            input,
+            MacroOpts {
+                banner_enabled: true,
+                banner_theme: None,
+                code_sig: None,
+            },
+        );
         assert!(entrypoint.to_string().contains("true"));
         assert!(!entrypoint.to_string().contains("false"));
     }
 
     #[test]
     fn uses_custom_code_sig_from_parsed_opts() {
-        let entrypoint = make_entrypoint(MacroOpts {
+        let code_sig = make_code_sig(MacroOpts {
             banner_enabled: false,
             banner_theme: None,
             code_sig: Some(Ident::new(
@@ -252,9 +269,10 @@ mod test {
                 proc_macro2::Span::call_site(),
             )),
         });
-        println!("{}", entrypoint);
-        assert!(entrypoint.to_string().contains(
-            "static __CODE_SIGNATURE : :: vexide :: startup :: CodeSignature = __custom_code_sig_ident__ ;"
+
+        println!("{}", code_sig.to_string());
+        assert!(code_sig.to_string().contains(
+            "static CODE_SIGNATURE : :: vexide :: startup :: CodeSignature = __custom_code_sig_ident__ ;"
         ));
     }
 
@@ -265,8 +283,10 @@ mod test {
                 println!("Hello, world!");
             }
         };
-        let input = syn::parse2::<ItemFn>(source).unwrap();
-        let output = create_main_wrapper(input);
+
+        let input = syn::parse2::<ItemFn>(source.clone()).unwrap();
+        let output = make_entrypoint(input, MacroOpts::default());
+
         assert!(output.to_string().contains(NO_SYNC_ERR));
     }
 
@@ -277,8 +297,10 @@ mod test {
                 println!("Hello, world!");
             }
         };
-        let input = syn::parse2::<ItemFn>(source).unwrap();
-        let output = create_main_wrapper(input);
+
+        let input = syn::parse2::<ItemFn>(source.clone()).unwrap();
+        let output = make_entrypoint(input, MacroOpts::default());
+
         assert!(output.to_string().contains(NO_UNSAFE_ERR));
     }
 
@@ -289,8 +311,10 @@ mod test {
                 println!("Hello, world!");
             }
         };
-        let input = syn::parse2::<ItemFn>(source).unwrap();
-        let output = create_main_wrapper(input);
+
+        let input = syn::parse2::<ItemFn>(source.clone()).unwrap();
+        let output = make_entrypoint(input, MacroOpts::default());
+
         assert!(output.to_string().contains(WRONG_ARGS_ERR));
     }
 
@@ -301,8 +325,10 @@ mod test {
                 println!("Hello, world!");
             }
         };
-        let input = syn::parse2::<ItemFn>(source).unwrap();
-        let output = create_main_wrapper(input);
+
+        let input = syn::parse2::<ItemFn>(source.clone()).unwrap();
+        let output = make_entrypoint(input, MacroOpts::default());
+
         assert!(output.to_string().contains(WRONG_ARGS_ERR));
     }
 }
