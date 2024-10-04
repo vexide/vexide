@@ -38,7 +38,7 @@ impl<'a, T> Future for CondvarWaitFuture<'a, T> {
             &mut *self,
             || panic!("Failed to replace"),
             |self_| match self_ {
-                Self::WaitingForNotification { condvar, gaurd } => {
+                Self::WaitingForNotification { condvar, guard } => {
                     match condvar.state.load(Ordering::Acquire) {
                         Condvar::NOTIFIED_ONE => {
                             condvar.state.store(Condvar::WAITING, Ordering::Release);
