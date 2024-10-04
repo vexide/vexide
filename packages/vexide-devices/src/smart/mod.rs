@@ -39,7 +39,10 @@ pub use motor::Motor;
 pub use optical::OpticalSensor;
 pub use rotation::RotationSensor;
 pub use serial::SerialPort;
-use vex_sdk::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
+use vex_sdk::{
+    vexDeviceGetByIndex, vexDeviceGetStatus, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType,
+    V5_MAX_DEVICE_PORTS,
+};
 pub use vision::VisionSensor;
 
 use crate::PortError;
@@ -83,12 +86,12 @@ pub trait SmartDevice {
     /// }
     /// ```
     fn is_connected(&self) -> bool {
-        let connected_type: SmartDeviceType =
-            unsafe { *vexDeviceGetByIndex((self.port_number() - 1) as u32) }
-                .device_type
-                .into();
+        let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
+        unsafe {
+            vexDeviceGetStatus(device_types.as_mut_ptr());
+        }
 
-        connected_type == self.device_type()
+        SmartDeviceType::from(device_types[(self.port_number() - 1) as usize]) == self.device_type()
     }
 
     /// Get the timestamp recorded by this device's internal clock.
@@ -118,13 +121,17 @@ impl<T: SmartDevice> From<T> for SmartPort {
 /// This function provides the internal implementations of [`SmartDevice::validate_port`], [`SmartPort::validate_type`],
 /// and [`AdiPort::validate_expander`].
 pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<(), PortError> {
-    let device = unsafe { *vexDeviceGetByIndex((number - 1) as u32) };
-    let plugged_type: SmartDeviceType = device.device_type.into();
+    let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
+    unsafe {
+        vexDeviceGetStatus(device_types.as_mut_ptr());
+    }
 
-    if !device.installed {
+    let connected_type: SmartDeviceType = device_types[(number - 1) as usize].into();
+
+    if connected_type == SmartDeviceType::None {
         // No device is plugged into the port.
         return Err(PortError::Disconnected);
-    } else if plugged_type != device_type {
+    } else if connected_type != device_type {
         // The connected device doesn't match the requested type.
         return Err(PortError::IncorrectDevice);
     }
@@ -192,9 +199,12 @@ impl SmartPort {
     /// println!("Type of device connected to port 1: {:?}", my_port.device_type());
     /// ```
     pub fn device_type(&self) -> SmartDeviceType {
-        unsafe { *vexDeviceGetByIndex(self.index()) }
-            .device_type
-            .into()
+        let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
+        unsafe {
+            vexDeviceGetStatus(device_types.as_mut_ptr());
+        }
+
+        device_types[self.index() as usize].into()
     }
 
     /// Verify that a device type is currently plugged into this port, returning an appropriate

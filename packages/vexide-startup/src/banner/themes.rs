@@ -47,7 +47,7 @@ macro_rules! ansi_rgb_bold {
     };
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 /// Banner display options
 pub struct BannerTheme {
     /// The emoji to be displayed nex to the vexide version
