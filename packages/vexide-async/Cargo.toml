@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT"
 description = "The async executor at the core of vexide"
 keywords = ["Robotics", "bindings", "async", "vex", "v5"]
-categories = ["no-std", "science::robotics", "Asynchronous"]
+categories = ["no-std", "science::robotics", "asynchronous"]
 repository = "https://github.com/vexide/vexide"
 authors = [
     "vexide",
