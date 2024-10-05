@@ -186,7 +186,7 @@ impl<T> RwLock<T> {
     }
 
     /// Get mutable access to the data stored in the read-write lock.
-    /// This doesn't require a lock to be acquired because the borrow checker guarentees exclusive access because self is a mutable reference.
+    /// This doesn't require a lock to be acquired because the borrow checker guarantees exclusive access because self is a mutable reference.
     pub fn get_mut(&mut self) -> &mut T {
         //SAFETY: This is safe because we have exclusive access to the data thanks to taking a mutable reference to self.
         unsafe { &mut *self.data.get() }

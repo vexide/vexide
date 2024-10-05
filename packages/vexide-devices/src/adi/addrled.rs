@@ -55,7 +55,7 @@ impl AdiAddrLed {
         Ok(())
     }
 
-    /// Sets an individual diode color on the strip. Returns `AddrledError::OutOfRange` if the provided
+    /// Sets an individual diode color on the strip. Returns [`AddrLedError::OutOfRange`] if the provided
     /// index is out of range of the current buffer length.
     pub fn set_pixel(&mut self, index: usize, color: impl IntoRgb) -> Result<(), AddrLedError> {
         if let Some(pixel) = self.buf.get_mut(index) {
@@ -135,7 +135,7 @@ impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
     }
 }
 
-/// Errors that can occur when interacting with an Addrled strip.
+/// Errors that can occur when interacting with an [`AdiAddrLed`] strip.
 #[derive(Debug, Snafu)]
 pub enum AddrLedError {
     /// The provided index was not in range of the current buffer's length.

@@ -17,7 +17,7 @@ impl AdiPotentiometer {
     pub fn new(port: AdiPort, potentiometer_type: PotentiometerType) -> Self {
         port.configure(match potentiometer_type {
             PotentiometerType::Legacy => AdiDeviceType::Potentiometer,
-            PotentiometerType::V2 => AdiDeviceType::PotentimeterV2,
+            PotentiometerType::V2 => AdiDeviceType::PotentiometerV2,
         });
 
         Self {
@@ -98,7 +98,7 @@ impl AdiDevice for AdiPotentiometer {
     fn device_type(&self) -> AdiDeviceType {
         match self.potentiometer_type {
             PotentiometerType::Legacy => AdiDeviceType::Potentiometer,
-            PotentiometerType::V2 => AdiDeviceType::PotentimeterV2,
+            PotentiometerType::V2 => AdiDeviceType::PotentiometerV2,
         }
     }
 }

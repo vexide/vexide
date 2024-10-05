@@ -137,13 +137,13 @@ impl AdiDigitalOut {
         Ok(())
     }
 
-    /// Set the digital logic level to [`LogicLevel::High`]. Analagous to
+    /// Set the digital logic level to [`LogicLevel::High`]. Analogous to
     /// [`Self::set_level(LogicLevel::High)`].
     pub fn set_high(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::High)
     }
 
-    /// Set the digital logic level to [`LogicLevel::Low`]. Analagous to
+    /// Set the digital logic level to [`LogicLevel::Low`]. Analogous to
     /// [`Self::set_level(LogicLevel::Low)`].
     pub fn set_low(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::Low)

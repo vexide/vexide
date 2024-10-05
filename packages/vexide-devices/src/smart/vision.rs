@@ -63,7 +63,7 @@ impl VisionSensor {
 
     /// The vertical resolution of the vision sensor.
     ///
-    /// This value is based on the `VISION_FOV_HEIGHT` msacro constant in PROS.
+    /// This value is based on the `VISION_FOV_HEIGHT` macro constant in PROS.
     pub const VERTICAL_RESOLUTION: u16 = 212;
 
     /// The update rate of the vision sensor.
@@ -453,13 +453,13 @@ pub struct VisionSignature {
     /// The (min, max, mean) values on the "U" axis.
     ///
     /// This defines a threshold of values for the sensor to match against a certain chroma in the
-    /// Y'UV color space - speciailly on the U component.
+    /// Y'UV color space - specifically on the U component.
     pub u_threshold: (i32, i32, i32),
 
     /// The (min, max, mean) values on the V axis.
     ///
     /// This defines a threshold of values for the sensor to match against a certain chroma in the
-    /// Y'UV color space - speciailly on the "V" component.
+    /// Y'UV color space - specifically on the "V" component.
     pub v_threshold: (i32, i32, i32),
 
     /// The signature range scale factor.
@@ -682,7 +682,7 @@ pub enum VisionMode {
     MixedDetection,
 
     /// Sets the sensor into "wifi mode", which disables all forms of object detection and
-    /// enables the sensor's onboard Wi-Fi hotspot for streaming camera data over a webserver.
+    /// enables the sensor's onboard Wi-Fi hotspot for streaming camera data over a web server.
     ///
     /// Once enabled, the sensor will create a wireless network with an SSID
     /// in the format of of VISION_XXXX. The sensor's camera feed is available

@@ -127,7 +127,7 @@ impl io::Read for RadioLink {
                 io::ErrorKind::InvalidData,
                 "Internal read error occurred.",
             )),
-            recieved => Ok(recieved as usize),
+            received => Ok(received as usize),
         }
     }
 }
