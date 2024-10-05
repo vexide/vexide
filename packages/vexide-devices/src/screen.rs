@@ -72,10 +72,12 @@ pub trait Stroke {
     fn stroke(&self, screen: &mut Screen, color: impl IntoRgb);
 }
 
-/// A circle that can be drawn on the screen.
+/// A circle that can be drawn on the screen
+///
+/// Circles are not antialiased.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Circle {
-    /// Center point(coordinates) of the circle
+    /// Center point of the circle
     pub center: Point2<i16>,
 
     /// Radius of the circle
@@ -123,10 +125,10 @@ impl Stroke for Circle {
 /// The width is the same as the pen width.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Line {
-    /// Start point(coordinate) of the line
+    /// Start point (coordinate) of the line
     pub start: Point2<i16>,
 
-    /// End point(coordinate) of the line
+    /// End point (coordinate) of the line
     pub end: Point2<i16>,
 }
 
@@ -165,13 +167,17 @@ impl<T: Into<Point2<i16>> + Copy> Fill for T {
     }
 }
 
-/// A rectangular region of the screen.
+/// A rectangular region of the screen
+///
+/// When drawn to the display, both the start and the end points are included inside
+/// the drawn region. Thus, the area of the drawn rectangle is
+/// `(1 + end.x - start.x) * (1 + end.y - start.y)` pixels.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
-    /// First point(coordinate) of the rectangle
+    /// First point (coordinate) of the rectangle
     pub start: Point2<i16>,
 
-    /// Second point(coordinate) of the rectangle
+    /// Second point (coordinate) of the rectangle
     pub end: Point2<i16>,
 }
 
@@ -294,12 +300,12 @@ pub struct Text {
 }
 
 impl Text {
-    /// Create a new text with a given position(defaults to top left corner alignment) and format
+    /// Create a new text with a given position (defaults to top left corner alignment) and format
     pub fn new(text: &str, size: TextSize, position: impl Into<Point2<i16>>) -> Self {
         Self::new_aligned(text, size, position, HAlign::default(), VAlign::default())
     }
 
-    /// Create a new text with a given position(based on alignment) and format
+    /// Create a new text with a given position (based on alignment) and format
     pub fn new_aligned(
         text: &str,
         size: TextSize,
@@ -387,7 +393,7 @@ impl Fill for Text {
         unsafe {
             vexDisplayForegroundColor(color.into_rgb().into());
 
-            // Use %s and varargs to escape the string to stop undefined and unsafe behavior
+            // Use `%s` and varargs to escape the string to stop undefined and unsafe behavior
             match self.size {
                 TextSize::Small => vexDisplaySmallStringAt(
                     x as _,
@@ -434,7 +440,7 @@ pub enum TouchState {
     Released,
     /// The screen has been touched.
     Pressed,
-    /// The touch is still being held.
+    /// The screen has been touched and is still being held.
     Held,
 }
 
@@ -449,20 +455,22 @@ impl From<V5_TouchEvent> for TouchState {
     }
 }
 
-/// The rendering mode for the screen.
-/// When the screen is on the [`Immediate`](RenderMode::Immediate) mode, all draw calls will immediately show up on the display.
-/// The [`DoubleBuffered`](RenderMode::DoubleBuffered) mode instead pushes all draw calls onto an intermediate buffer
-/// that can be swapped onto the screen by calling [`Screen::render`].
-/// By default the screen uses the [`Immediate`](RenderMode::Immediate) mode.
+/// The rendering mode for the VEX V5's display
+///
+/// When using the screen in the [`Immediate`](RenderMode::Immediate) mode, all draw operations will immediately show up on the display.
+/// The [`DoubleBuffered`](RenderMode::DoubleBuffered) mode instead applies draw operations onto an intermediate buffer
+/// that can be swapped onto the screen by calling [`Screen::render`], thereby preventing screen tearing.
+/// By default, the screen uses the [`Immediate`](RenderMode::Immediate) mode.
 /// # Note
 /// [`Screen::render`] **MUST** be called for anything to appear on the screen when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RenderMode {
-    /// Draw calls are immediately pushed to the screen.
-    /// This mode is more convenient because you dont have to call [`Screen::render`] to see anything on the screen.
+    /// Draw operations are immediately applied to the screen without the need to call [`Screen::render`].
     Immediate,
-    /// Draw calls are pushed to an intermediary buffer which can be pushed to the screen with [`Screen::render`].
-    /// This mode is useful for removing screen flicker when drawing at high speeds.
+    /// Draw calls are affected on an intermediary display buffer, rather than directly drawn to the screen.
+    /// The intermediate buffer can later be applied to the screen using [`Screen::render`].
+    ///
+    /// This mode is necessary for preventing screen tearing when drawing at high speeds.
     DoubleBuffered,
 }
 
@@ -537,28 +545,30 @@ impl Screen {
 
     /// Flushes the screens double buffer if it is enabled.
     /// This is a no-op with the [`Immediate`](RenderMode::Immediate) rendering mode,
-    /// but is necessary for anything to be displayed on the screen when using the  [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
+    /// but is necessary for anything to be displayed on the screen when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
     pub fn render(&mut self) {
         if let RenderMode::DoubleBuffered = self.render_mode {
             unsafe {
-                // TODO: create an async function that does the equivalent of bVsyncWait.
+                // TODO: create an async function that does the equivalent of `bVsyncWait`.
                 vex_sdk::vexDisplayRender(false, false)
             }
         }
     }
 
-    /// Scroll the entire display buffer.
+    /// Scroll the pixels at or below the specified y-coordinate.
     ///
-    /// This function effectively y-offsets all pixels drawn to the display buffer below a given start point by
-    /// a number (`offset`) of pixels.
+    /// This function y-offsets the pixels in the display buffer which are at or below the given start point (`start`) by
+    /// a number (`offset`) of pixels. Positive values move the pixels upwards, and pixels that are moved out of the scroll
+    /// region are discarded. Empty spaces are then filled with the display's background color.
     pub fn scroll(&mut self, start: i16, offset: i16) {
         unsafe { vexDisplayScroll(start.into(), offset.into()) }
     }
 
     /// Scroll a region of the screen.
     ///
-    /// This will effectively y-offset the display buffer in this area by
-    /// `offset` pixels.
+    /// This function y-offsets the pixels in the display buffer which are contained in the specified scroll region (`region`) by
+    /// a number (`offset`) of pixels. Positive values move the pixels upwards, and pixels that are moved out of the scroll
+    /// region are discarded. Empty spaces are then filled with the display's background color.
     pub fn scroll_region(&mut self, region: Rect, offset: i16) {
         unsafe {
             vexDisplayScrollRect(
@@ -589,7 +599,10 @@ impl Screen {
         };
     }
 
-    /// Draw a buffer of pixel colors to a specified region of the screen.
+    /// Draw a buffer of pixels to a specified region of the screen.
+    ///
+    /// This function copies the pixels in the specified buffer to the specified region of the screen.
+    /// The stride parameter is defined as the number of pixels per row.
     pub fn draw_buffer<T, I>(
         &mut self,
         region: Rect,
@@ -631,7 +644,7 @@ impl Screen {
 
     /// Get the current touch status of the screen.
     pub fn touch_status(&self) -> TouchEvent {
-        // vexTouchDataGet (probably) doesn't read from the given status pointer so this is fine.
+        // `vexTouchDataGet` (probably) doesn't read from the given status pointer, so this is fine.
         let mut touch_status: V5_TouchStatus = unsafe { mem::zeroed() };
 
         unsafe {

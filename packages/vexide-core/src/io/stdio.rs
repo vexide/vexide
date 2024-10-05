@@ -57,7 +57,7 @@ impl Write for StdoutLock<'_> {
 /// A handle to the serial output stream of this program.
 pub struct Stdout;
 
-/// Contstructs a handle to the serial output stream
+/// Constructs a handle to the serial output stream
 pub const fn stdout() -> Stdout {
     Stdout
 }

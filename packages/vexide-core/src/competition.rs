@@ -57,7 +57,7 @@ pub enum CompetitionMode {
     /// connecting, but are typically placed into this mode at the start of a match.
     Autonomous,
 
-    /// The drivercontrol competition mode.
+    /// The Driver Control (i.e. opcontrol) competition mode.
     ///
     /// When in opcontrol mode, all device access is available including access to
     /// controller joystick values for reading user-input from drive team members.
@@ -384,7 +384,7 @@ impl<Shared, Return>
 type DefaultMk<Shared, Return> =
     for<'t> fn(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>;
 
-/// A typed builder for [`Competition`] instances.
+/// A typed builder for [`CompetitionRuntime`] instances.
 pub struct CompetitionBuilder<
     Shared,
     Return,
@@ -428,7 +428,7 @@ where
     MkDriver:
         for<'t> FnMut(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>,
 {
-    /// Finish the builder, returning a [`Competition`] instance.
+    /// Finish the builder, returning a [`CompetitionRuntime`] instance.
     pub fn finish(
         self,
     ) -> CompetitionRuntime<
@@ -695,8 +695,8 @@ pub trait Compete: Sized {
     async fn driver(&mut self) {}
 }
 
-/// Extension methods for [`Competition`].
-/// Automatically implemented for any type implementing [`Competition`].
+/// Extension methods for [`Compete`].
+/// Automatically implemented for any type implementing [`Compete`].
 pub trait CompeteExt: Compete {
     /// Build a competition runtime that competes with this robot.
     fn compete(

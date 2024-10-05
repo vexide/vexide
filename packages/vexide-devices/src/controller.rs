@@ -51,7 +51,7 @@ impl Button {
         Ok(level)
     }
 
-    /// Returrns `true` if the button is currently being pressed.
+    /// Returns `true` if the button is currently being pressed.
     ///
     /// This is equivalent shorthand to calling `Self::level().is_high()`.
     pub fn is_pressed(&self) -> Result<bool, ControllerError> {
@@ -363,11 +363,11 @@ pub enum ControllerConnection {
     /// No controller is connected.
     Offline,
 
-    /// Controller is tethered through a wired smartport connection.
+    /// Controller is tethered through a wired smart port connection.
     Tethered,
 
     /// Controller is wirelessly connected over a VEXNet radio
-    Vexnet,
+    VexNet,
 }
 
 impl From<V5_ControllerStatus> for ControllerConnection {
@@ -375,7 +375,7 @@ impl From<V5_ControllerStatus> for ControllerConnection {
         match value {
             V5_ControllerStatus::kV5ControllerOffline => Self::Offline,
             V5_ControllerStatus::kV5ControllerTethered => Self::Tethered,
-            V5_ControllerStatus::kV5ControllerVexnet => Self::Vexnet,
+            V5_ControllerStatus::kV5ControllerVexnet => Self::VexNet,
             _ => unreachable!(),
         }
     }
@@ -386,7 +386,7 @@ impl From<ControllerConnection> for V5_ControllerStatus {
         match value {
             ControllerConnection::Offline => Self::kV5ControllerOffline,
             ControllerConnection::Tethered => Self::kV5ControllerTethered,
-            ControllerConnection::Vexnet => Self::kV5ControllerVexnet,
+            ControllerConnection::VexNet => Self::kV5ControllerVexnet,
         }
     }
 }

@@ -1,4 +1,4 @@
-//! Utilites for getting information about the robot's battery.
+//! Utilities for getting information about the robot's battery.
 
 use vex_sdk::{
     vexBatteryCapacityGet, vexBatteryCurrentGet, vexBatteryTemperatureGet, vexBatteryVoltageGet,

@@ -38,16 +38,29 @@ unsafe impl Sync for Motor {}
 /// Represents a possible target for a [`Motor`].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MotorControl {
-    /// Motor is braking using a [`BrakeMode`].
+    /// The motor brakes using a specified [`BrakeMode`].
     Brake(BrakeMode),
 
-    /// Motor is outputting a raw voltage.
+    /// The motor outputs a raw voltage.
+    ///
+    /// # Fields
+    ///
+    /// - `0`: The desired output voltage of the motor
     Voltage(f64),
 
-    /// Motor is attempting to hold a velocity using internal PID control.
+    /// The motor attempts to hold a velocity using its internal PID control.
+    ///
+    /// # Fields
+    ///
+    /// - `0`: The desired speed of the motor during the movement operation
     Velocity(i32),
 
-    /// Motor is attempting to reach a position using internal PID control.
+    /// The motor attempts to reach a position using its internal PID control.
+    ///
+    /// # Fields
+    ///
+    /// - `0`: The desired position of the motor after the movement operation
+    /// - `1`: The desired speed of the motor during the movement operation
     Position(Position, i32),
 }
 
@@ -180,7 +193,7 @@ impl Motor {
         self.set_target(MotorControl::Velocity(rpm))
     }
 
-    /// Sets the motor's ouput voltage.
+    /// Sets the motor's output voltage.
     ///
     /// This voltage value spans from -12 (fully spinning reverse) to +12 (fully spinning forwards) volts, and
     /// controls the raw output of the motor.
@@ -343,7 +356,7 @@ impl Motor {
         Ok(unsafe { vexDeviceMotorVoltageLimitGet(self.device) } as f64 / 1000.0)
     }
 
-    /// Returns the internal teperature recorded by the motor in increments of 5°C.
+    /// Returns the internal temperature recorded by the motor in increments of 5 °C.
     pub fn temperature(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorTemperatureGet(self.device) })
@@ -378,7 +391,7 @@ impl Motor {
         Ok(self.faults()?.contains(MotorFaults::OVER_TEMPERATURE))
     }
 
-    /// Check if the motor's overcurrent flag is set.
+    /// Check if the motor's over-current flag is set.
     pub fn is_over_current(&self) -> Result<bool, MotorError> {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
@@ -388,7 +401,7 @@ impl Motor {
         Ok(self.faults()?.contains(MotorFaults::DRIVER_FAULT))
     }
 
-    /// Check if the motor's H-bridge has an overucrrent fault.
+    /// Check if the motor's H-bridge has an over-current fault.
     pub fn is_driver_over_current(&self) -> Result<bool, MotorError> {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
@@ -482,7 +495,7 @@ pub enum BrakeMode {
     /// Motor uses regenerative braking to slow down faster.
     Brake,
 
-    /// Motor exerts force to hold the same position.
+    /// Motor exerts force holding itself in the same position.
     Hold,
 }
 
