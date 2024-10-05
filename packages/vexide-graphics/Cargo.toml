@@ -1,6 +1,6 @@
 [package]
 name = "vexide-graphics"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 license = "MIT"
 description = "Graphics driver implementations for vexide"
@@ -22,9 +22,9 @@ slint = { version = "1.5.1", default-features = false, optional = true, features
     "renderer-software",
 ] }
 vex-sdk = "0.20.0"
-vexide-async = { version = "0.1.2", path = "../vexide-async" }
-vexide-core = { version = "0.3.0", path = "../vexide-core" }
-vexide-devices = { version = "0.3.0", path = "../vexide-devices" }
+vexide-async = { version = "0.1.3", path = "../vexide-async" }
+vexide-core = { version = "0.4.0", path = "../vexide-core" }
+vexide-devices = { version = "0.4.0", path = "../vexide-devices" }
 
 [lints]
 workspace = true

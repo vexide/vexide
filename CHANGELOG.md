@@ -23,6 +23,18 @@ Before releasing:
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+## [0.4.0]
+
+### Added
+
 - Added support for the V5 GPS Sensor (#79)
 - Added support for custom banner themes configurable through the `vexide::main` macro (#127)
 
@@ -128,3 +140,4 @@ Before releasing:
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
+[0.4.0]: https://github.com/vexide/vexide/compare/v0.3.0...v0.4.0
