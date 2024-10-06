@@ -1,3 +1,11 @@
+[package]
+name = "examples"
+edition = "2021"
+version = "0.0.1"
+
+[dev-dependencies]
+vexide = { path = "packages/vexide" }
+
 [workspace]
 members = ["packages/*"]
 resolver = "2"
