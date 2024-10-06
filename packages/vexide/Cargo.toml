@@ -24,14 +24,14 @@ compress = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vexide-async = { workspace = true , optional = true }
-vexide-devices = { workspace = true , optional = true }
+vexide-async = { workspace = true, optional = true }
+vexide-devices = { workspace = true, optional = true }
 vexide-panic = { workspace = true, optional = true }
 vexide-core = { workspace = true, optional = true }
 vexide-startup = { workspace = true, optional = true }
 vexide-graphics = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
-vex-sdk = { workspace = true}
+vex-sdk = { workspace = true }
 
 [features]
 default = [
