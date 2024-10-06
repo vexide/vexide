@@ -26,9 +26,12 @@ The vexide runtime is a fairly standard rust monorepo split into 7 subcrates:
 
 These subcrates are exported from a single [`vexide`](https://github.com/vexide/vexide/blob/main/packages/vexide/src/lib.rs) crate intended to be used as a complete package.
 
+[Slint]: https://slint.dev/
+[`embedded-graphics`]: https://crates.io/crates/embedded-graphics
+
 ## Building
 
-vexide relies on some features that are only availble in Rust’s nightly release channel, so you’ll need to switch to using nightly. We also depend on the `rust-src` component due to our embedded target requiring a build of `core`.
+vexide relies on some features that are only available in Rust’s nightly release channel, so you’ll need to switch to using nightly. We also depend on the `rust-src` component due to our embedded target requiring a build of `core`.
 
 ```sh
 rustup override set nightly
@@ -43,7 +46,7 @@ You can install that tool with the following command:
 cargo install cargo-v5
 ```
 
-From there, the project can be built like any other rust library through `cargo-v5`:
+From there, the project can be built like any other Rust library through `cargo-v5`:
 
 ```sh
 cargo v5 build --release
