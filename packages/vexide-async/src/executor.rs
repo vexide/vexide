@@ -36,7 +36,7 @@ impl Executor {
         //   TODO: Make sure that the waker can never be sent off the thread.
         let (runnable, task) = unsafe {
             async_task::spawn_unchecked(future, |runnable| {
-                self.queue.borrow_mut().push_back(runnable)
+                self.queue.borrow_mut().push_back(runnable);
             })
         };
 

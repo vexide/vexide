@@ -14,6 +14,7 @@ pub struct AdiPotentiometer {
 
 impl AdiPotentiometer {
     /// Create a new potentiometer from an [`AdiPort`].
+    #[must_use]
     pub fn new(port: AdiPort, potentiometer_type: PotentiometerType) -> Self {
         port.configure(match potentiometer_type {
             PotentiometerType::Legacy => AdiDeviceType::Potentiometer,
@@ -21,8 +22,8 @@ impl AdiPotentiometer {
         });
 
         Self {
-            port,
             potentiometer_type,
+            port,
         }
     }
 
@@ -76,6 +77,7 @@ impl PotentiometerType {
     pub const V2_MAX_ANGLE: f64 = 330.0;
 
     /// Get the maximum angle measurement (in degrees) for this potentiometer type.
+    #[must_use]
     pub const fn max_angle(&self) -> f64 {
         match self {
             Self::Legacy => Self::LEGACY_MAX_ANGLE,

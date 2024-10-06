@@ -62,6 +62,7 @@ impl AdiPort {
     /// Creating new `AdiPort`s is inherently unsafe due to the possibility of constructing
     /// more than one device on the same port index allowing multiple mutable references to
     /// the same hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    #[must_use]
     pub const unsafe fn new(number: u8, expander_number: Option<u8>) -> Self {
         Self {
             number,
@@ -72,12 +73,14 @@ impl AdiPort {
     /// Get the number of the port.
     ///
     /// Ports are numbered starting from 1.
+    #[must_use]
     pub const fn number(&self) -> u8 {
         self.number
     }
 
     /// Get the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) smart port, or `None` if this port is not
     /// associated with an expander.
+    #[must_use]
     pub const fn expander_number(&self) -> Option<u8> {
         self.expander_number
     }
@@ -87,10 +90,12 @@ impl AdiPort {
     }
 
     pub(crate) fn expander_index(&self) -> u32 {
-        ((self
-            .expander_number
-            .unwrap_or(Self::INTERNAL_ADI_PORT_NUMBER))
-            - 1) as u32
+        u32::from(
+            (self
+                .expander_number
+                .unwrap_or(Self::INTERNAL_ADI_PORT_NUMBER))
+                - 1,
+        )
     }
 
     pub(crate) fn device_handle(&self) -> V5_DeviceT {

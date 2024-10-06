@@ -17,6 +17,7 @@ impl AdiMotor {
     ///
     /// Motors can be optionally configured to use slew rate control to prevent the internal
     /// PTC from tripping on older cortex-era 393 motors.
+    #[must_use]
     pub fn new(port: AdiPort, slew: bool) -> Self {
         port.configure(match slew {
             false => AdiDeviceType::Motor,

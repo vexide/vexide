@@ -58,6 +58,7 @@ impl Write for StdoutLock<'_> {
 pub struct Stdout;
 
 /// Constructs a handle to the serial output stream
+#[must_use]
 pub const fn stdout() -> Stdout {
     Stdout
 }
@@ -146,6 +147,7 @@ impl Stdin {
 }
 
 /// Constructs a handle to the serial input stream.
+#[must_use]
 pub const fn stdin() -> Stdin {
     Stdin
 }

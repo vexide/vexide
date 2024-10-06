@@ -4,8 +4,19 @@ resolver = "2"
 
 [workspace.lints.rust]
 rust_2018_idioms = "warn"
+rust_2024_compatibility = "warn"
+future_incompatible = "warn"
+let_underscore = "warn"
 missing_docs = "warn"
 unsafe_op_in_unsafe_fn = "deny"
 
 [workspace.lints.clippy]
 missing_const_for_fn = "warn"
+pedantic = "warn"
+module_name_repetitions = "allow"
+doc_markdown = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+missing_panics_doc = "allow"
+cast_possible_wrap = "allow"
+match_bool = "allow"

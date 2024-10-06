@@ -22,6 +22,10 @@ static ALLOCATOR: Talck<RawMutex, ErrOnOom> = Talc::new(ErrOnOom).lock();
 /// # Safety
 ///
 /// This function can only be called once.
+///
+/// # Panics
+///
+/// Panics if the `__heap_start` or `__heap_end` symbols set in the linker script are null.
 pub unsafe fn init_heap() {
     //SAFETY: User must ensure that this function is only called once.
     unsafe {

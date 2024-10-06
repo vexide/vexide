@@ -12,6 +12,7 @@ pub struct AdiPwmOut {
 
 impl AdiPwmOut {
     /// Create a pwm output from an [`AdiPort`].
+    #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::PwmOut);
 

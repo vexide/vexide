@@ -59,6 +59,7 @@ pub struct Barrier {
 }
 impl Barrier {
     /// Create a new barrier that will block `count` threads before releasing.
+    #[must_use]
     pub const fn new(count: usize) -> Self {
         Self {
             count,

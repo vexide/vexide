@@ -24,6 +24,7 @@ unsafe impl Sync for DistanceSensor {}
 
 impl DistanceSensor {
     /// Create a new distance sensor from a smart port index.
+    #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
@@ -59,7 +60,7 @@ impl DistanceSensor {
                 relative_size: unsafe { vexDeviceDistanceObjectSizeGet(self.device) as u32 },
                 velocity: unsafe { vexDeviceDistanceObjectVelocityGet(self.device) },
                 // TODO: determine if confidence reading is separate from whether or not an object is detected.
-                confidence: unsafe { vexDeviceDistanceConfidenceGet(self.device) as u32 } as f64
+                confidence: f64::from(unsafe { vexDeviceDistanceConfidenceGet(self.device) })
                     / 63.0,
             })),
         }

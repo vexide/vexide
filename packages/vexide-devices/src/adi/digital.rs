@@ -24,6 +24,7 @@ pub enum LogicLevel {
 
 impl LogicLevel {
     /// Returns `true` if the level is [`High`](LogicLevel::High).
+    #[must_use]
     pub const fn is_high(&self) -> bool {
         match self {
             Self::High => true,
@@ -32,6 +33,7 @@ impl LogicLevel {
     }
 
     /// Returns `true` if the level is [`Low`](LogicLevel::Low).
+    #[must_use]
     pub const fn is_low(&self) -> bool {
         match self {
             Self::High => false,
@@ -60,6 +62,7 @@ pub struct AdiDigitalIn {
 
 impl AdiDigitalIn {
     /// Create a digital input from an ADI port.
+    #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::DigitalIn);
 
@@ -115,6 +118,7 @@ pub struct AdiDigitalOut {
 
 impl AdiDigitalOut {
     /// Create a digital output from an [`AdiPort`].
+    #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::DigitalOut);
 

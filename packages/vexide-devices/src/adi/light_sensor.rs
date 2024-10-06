@@ -16,6 +16,7 @@ pub struct AdiLightSensor {
 
 impl AdiLightSensor {
     /// Create a light sensor from an ADI port.
+    #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::LightSensor);
 

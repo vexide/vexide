@@ -25,6 +25,7 @@ impl Once {
     const ONCE_COMPLETE: bool = true;
 
     /// Create a new uncompleted Once
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             state: Mutex::new(false),

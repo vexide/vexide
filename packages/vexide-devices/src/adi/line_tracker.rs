@@ -35,6 +35,7 @@ pub struct AdiLineTracker {
 
 impl AdiLineTracker {
     /// Create a line tracker from an ADI port.
+    #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::LineTracker);
 

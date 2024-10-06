@@ -31,6 +31,7 @@ pub struct RawMutex {
 }
 impl RawMutex {
     /// Creates a new raw mutex.
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             state: MutexState::new(),

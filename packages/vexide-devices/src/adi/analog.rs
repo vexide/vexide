@@ -24,6 +24,7 @@ pub struct AdiAnalogIn {
 
 impl AdiAnalogIn {
     /// Create a analog input from an ADI port.
+    #[must_use]
     pub fn new(port: AdiPort) -> Self {
         // NOTE: Don't care about whether or not the expander is available at this point, since
         // constructors need to be infallible. We'll ensure that we're the right configuration

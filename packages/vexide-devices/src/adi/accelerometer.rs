@@ -14,10 +14,11 @@ pub struct AdiAccelerometer {
 
 impl AdiAccelerometer {
     /// Create a new accelerometer from an [`AdiPort`].
+    #[must_use]
     pub fn new(port: AdiPort, sensitivity: Sensitivity) -> Self {
         port.configure(AdiDeviceType::Accelerometer);
 
-        Self { port, sensitivity }
+        Self { sensitivity, port }
     }
 
     /// Get the type of ADI accelerometer device.
@@ -38,7 +39,7 @@ impl AdiAccelerometer {
     pub fn acceleration(&self) -> Result<f64, PortError> {
         Ok(
             // Convert 0-4095 to 0-1, then scale to max accel.
-            self.raw_acceleration()? as f64 / analog::ADC_MAX_VALUE as f64
+            f64::from(self.raw_acceleration()?) / f64::from(analog::ADC_MAX_VALUE)
                 * self.sensitivity.max_acceleration(),
         )
     }
@@ -75,6 +76,7 @@ impl Sensitivity {
     pub const HIGH_MAX_ACCELERATION: f64 = 6.0;
 
     /// Get the maximum acceleration measurement (in G) for this sensitivity.
+    #[must_use]
     pub const fn max_acceleration(&self) -> f64 {
         match self {
             Self::Low => Self::LOW_MAX_ACCELERATION,
