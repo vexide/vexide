@@ -16,8 +16,8 @@ authors = [
 
 [dependencies]
 bitflags = "2.4.2"
-vex-sdk = "0.20.0"
-vexide-core = { version = "0.4.0", path = "../vexide-core" }
+vex-sdk = { workspace = true }
+vexide-core = { workspace = true }
 compile-time = "0.2.0"
 
 [lints]

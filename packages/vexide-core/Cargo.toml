@@ -17,12 +17,9 @@ authors = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vex-sdk = "0.20.0"
+vex-sdk = { workspace = true }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
-snafu = { version = "0.8.0", default-features = false, features = [
-    "rust_1_61",
-    "unstable-core-error",
-] }
+snafu = { workspace = true }
 talc = "4.3.1"
 lock_api = "0.4.11"
 bitflags = "2.4.2"

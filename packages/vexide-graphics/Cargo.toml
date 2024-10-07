@@ -21,10 +21,10 @@ slint = { version = "1.5.1", default-features = false, optional = true, features
     "libm",
     "renderer-software",
 ] }
-vex-sdk = "0.20.0"
-vexide-async = { version = "0.1.3", path = "../vexide-async" }
-vexide-core = { version = "0.4.0", path = "../vexide-core" }
-vexide-devices = { version = "0.4.0", path = "../vexide-devices" }
+vex-sdk = { workspace = true }
+vexide-async = { workspace = true }
+vexide-core = { workspace = true }
+vexide-devices = { workspace = true }
 
 [lints]
 workspace = true
