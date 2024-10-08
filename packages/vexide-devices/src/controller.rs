@@ -233,8 +233,9 @@ impl ControllerScreen {
         if text.as_bytes().len() > Self::MAX_LINE_LENGTH {
             return Err(ControllerError::TextTooLong);
         }
+        let text = text.into_raw();
         unsafe {
-            vexControllerTextSet(id.0 as _, (line + 1) as _, (col + 1) as _, text.into_raw() as *const _);
+            vexControllerTextSet(id.0 as _, (line + 1) as _, (col + 1) as _, text as *const _);
         }
 
         // stop rust from leaking the CString
@@ -260,9 +261,9 @@ impl ControllerScreen {
         if text.as_bytes().len() > Self::MAX_RUMBLE_LENGTH {
             return Err(ControllerError::TextTooLong);
         }
-
+        let text = text.into_raw();
         unsafe {
-            vexControllerTextSet(id.0 as _, 3 as _, 0 as _, text.into_raw() as *const _);
+            vexControllerTextSet(id.0 as _, 3 as _, 0 as _, text as *const _);
         }
 
         // stop rust from leaking the CString
