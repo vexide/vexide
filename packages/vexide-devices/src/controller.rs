@@ -159,7 +159,7 @@ pub struct Controller {
     pub right_trigger_2: Button,
 }
 
-/// Controller LCD Console
+/// Controller LCD Console and Rumble Motor
 #[derive(Debug, Eq, PartialEq)]
 pub struct ControllerScreen {
     id: ControllerId,
@@ -170,6 +170,9 @@ pub struct ControllerScreen {
 impl ControllerScreen {
     /// Maximum number of characters that can be drawn to a text line.
     pub const MAX_LINE_LENGTH: usize = 31;
+
+    /// Maximum number of characters that can be part of a rumble pattern.
+    pub const MAX_RUMBLE_LENGTH: usize = 8;
 
     /// Maximum number of columns that a line of text can be drawn at.
     pub const MAX_COLUMNS: usize = 19;
@@ -188,9 +191,10 @@ impl ControllerScreen {
     }
 
     fn validate_update_time(&mut self) -> Result<(), ControllerError> {
-        if self.get_update_duration().unwrap_or(0) > Instant::now() - self.last_update {
+        if self.get_update_duration().unwrap_or(Duration::from_millis(0)) > self.last_update.elapsed() {
             Err(ControllerError::InsufficientPrintDelay)
         } else {
+            self.last_update = Instant::now();
             Ok(())
         }
     }
@@ -225,11 +229,12 @@ impl ControllerScreen {
 
         let id: V5_ControllerId = self.id.into();
         let text = CString::new(text)
-            .map_err(|_| ControllerError::NonTerminatingNul)?
-            .into_raw();
-
+            .map_err(|_| ControllerError::NonTerminatingNul)?;
+        if text.as_bytes().len() > Self::MAX_LINE_LENGTH {
+            return Err(ControllerError::TextTooLong);
+        }
         unsafe {
-            vexControllerTextSet(id.0 as _, (line + 1) as _, (col + 1) as _, text as *const _);
+            vexControllerTextSet(id.0 as _, (line + 1) as _, (col + 1) as _, text.into_raw() as *const _);
         }
 
         // stop rust from leaking the CString
@@ -238,7 +243,12 @@ impl ControllerScreen {
         Ok(())
     }
 
-    pub fn rumble(&mut self, pattern: &str) {
+    /// Send a rumble pattern to the controller's vibration motor.
+    ///
+    /// This function takes a string consisting of the characters '.', '-', and ' ', where
+    /// dots are short rumbles, dashes are long rumbles, and spaces are pauses. Maximum
+    /// supported length is 8 characters.
+    pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
         self.validate_update_time()?;
         if let None = pattern.find(|c| c != '.' && c != '-' && c != ' ') {
@@ -246,11 +256,13 @@ impl ControllerScreen {
         }
         let id: V5_ControllerId = self.id.into();
         let text = CString::new(pattern)
-            .map_err(|_| ControllerError::NonTerminatingNul)?
-            .into_raw();
+            .map_err(|_| ControllerError::NonTerminatingNul)?;
+        if text.as_bytes().len() > Self::MAX_RUMBLE_LENGTH {
+            return Err(ControllerError::TextTooLong);
+        }
 
         unsafe {
-            vexControllerTextSet(id.0 as _, 3 as _, 0 as _, text as *const _);
+            vexControllerTextSet(id.0 as _, 3 as _, 0 as _, text.into_raw() as *const _);
         }
 
         // stop rust from leaking the CString
@@ -294,7 +306,10 @@ impl Controller {
     pub const unsafe fn new(id: ControllerId) -> Self {
         Self {
             id,
-            screen: ControllerScreen { id },
+            screen: ControllerScreen {
+                id,
+                last_update: Instant::now(),
+            },
             left_stick: Joystick {
                 id,
                 x_channel: V5_ControllerIndex::Axis4,
@@ -393,15 +408,6 @@ impl Controller {
 
         Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Flags) })
     }
-
-    /// Send a rumble pattern to the controller's vibration motor.
-    ///
-    /// This function takes a string consisting of the characters '.', '-', and ' ', where
-    /// dots are short rumbles, dashes are long rumbles, and spaces are pauses. Maximum
-    /// supported length is 8 characters.
-    pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
-        self.screen.set_text(pattern, 3, 0)
-    }
 }
 
 /// Represents the state of a controller's connection.
@@ -449,6 +455,8 @@ pub enum ControllerError {
     CompetitionControl,
     /// An invalid line number was given.
     InvalidLine,
+    /// The given text is too long.
+    TextTooLong,
     /// An invalid rumble pattern was given.
     InvalidPattern,
     /// Two consecutive controller prints were made without sufficient delay between them.
