@@ -18,10 +18,10 @@ impl AdiPwmOut {
         Self { port }
     }
 
-    /// Sets the PWM output width.
+    /// Sets the PWM output width, ranging from 0 (0% duty cycle) to 255 (100% duty cycle).
     ///
     /// This value is sent over 16ms periods with pulse widths ranging from roughly
-    /// 0.94mS to 2.03mS.
+    /// 0.94ms to 2.03ms.
     pub fn set_output(&mut self, value: u8) -> Result<(), PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());

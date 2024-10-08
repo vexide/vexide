@@ -2,6 +2,7 @@
 
 use core::time::Duration;
 
+use uom::si::{angle::degree, f64::Angle};
 use vex_sdk::{
     vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureEnable, vexDeviceOpticalGestureGet,
     vexDeviceOpticalHueGet, vexDeviceOpticalIntegrationTimeGet, vexDeviceOpticalIntegrationTimeSet,
@@ -45,14 +46,14 @@ impl OpticalSensor {
         }
     }
 
-    /// Get the PWM percentage (intensity/brightness) of the sensor's LED indicator.
+    /// Get the intensity/brightness of the sensor's LED indicator ranging in [0, 1].
     pub fn led_brightness(&self) -> Result<i32, PortError> {
         self.validate_port()?;
 
         Ok(unsafe { vexDeviceOpticalLedPwmGet(self.device) })
     }
 
-    /// Set the PWM percentage (intensity/brightness) of the sensor's LED indicator.
+    /// Set the intensity/brightness of the sensor's LED indicator ranging in [0, 1].
     pub fn set_led_brightness(&mut self, brightness: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -92,34 +93,36 @@ impl OpticalSensor {
         Ok(())
     }
 
-    /// Get the detected color hue.
+    /// Get the detected color hue in the range [0, 360) degrees.
     ///
-    /// Hue has a range of `0` to `359.999`.
-    pub fn hue(&self) -> Result<f64, PortError> {
+    /// The precise color space is not known, but is likely HSL or something similar.
+    pub fn hue(&self) -> Result<Angle, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalHueGet(self.device) })
+        Ok(Angle::new::<degree>(unsafe {
+            vexDeviceOpticalHueGet(self.device)
+        }))
     }
 
-    /// Gets the detected color saturation.
+    /// Gets the detected color saturation in the range [0, 1].
     ///
-    /// Saturation has a range `0` to `1.0`.
+    /// The precise color space is not known, but is likely HSL or something similar.
     pub fn saturation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
         Ok(unsafe { vexDeviceOpticalSatGet(self.device) })
     }
 
-    /// Get the detected color brightness.
+    /// Get the detected color brightness in the range [0, 1].
     ///
-    /// Brightness values range from `0` to `1.0`.
+    /// The precise color space is not known, but is likely HSL or something similar.
     pub fn brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
         Ok(unsafe { vexDeviceOpticalBrightnessGet(self.device) })
     }
 
-    /// Get the analog proximity value from `0` to `1.0`.
+    /// Get the analog proximity value in the range [0, 1].
     ///
     /// A reading of 1.0 indicates that the object is close to the sensor, while 0.0
     /// indicates that no object is detected in range of the sensor.

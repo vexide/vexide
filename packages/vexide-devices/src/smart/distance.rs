@@ -1,6 +1,11 @@
 //! Distance sensor device.
 
 use snafu::Snafu;
+use uom::si::{
+    f64::{Length, Velocity},
+    length::millimeter,
+    velocity::meter_per_second,
+};
 use vex_sdk::{
     vexDeviceDistanceConfidenceGet, vexDeviceDistanceDistanceGet, vexDeviceDistanceObjectSizeGet,
     vexDeviceDistanceObjectVelocityGet, vexDeviceDistanceStatusGet, V5_DeviceT,
@@ -55,9 +60,11 @@ impl DistanceSensor {
         match distance_raw {
             9999 => Ok(None), // returns 9999 if no object was found
             _ => Ok(Some(DistanceObject {
-                distance: distance_raw,
+                distance: Length::new::<millimeter>(distance_raw as _),
                 relative_size: unsafe { vexDeviceDistanceObjectSizeGet(self.device) as u32 },
-                velocity: unsafe { vexDeviceDistanceObjectVelocityGet(self.device) },
+                velocity: Velocity::new::<meter_per_second>(unsafe {
+                    vexDeviceDistanceObjectVelocityGet(self.device)
+                }),
                 // TODO: determine if confidence reading is separate from whether or not an object is detected.
                 confidence: unsafe { vexDeviceDistanceConfidenceGet(self.device) as u32 } as f64
                     / 63.0,
@@ -86,8 +93,8 @@ impl SmartDevice for DistanceSensor {
 /// Readings from a phyiscal object detected by a Distance Sensor.
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd)]
 pub struct DistanceObject {
-    /// The distance of the object from the sensor (in millimeters).
-    pub distance: u32,
+    /// The distance of the object from the sensor.
+    pub distance: Length,
 
     /// A guess at the object's "relative size".
     ///
@@ -103,8 +110,8 @@ pub struct DistanceObject {
     /// [`vex::sizeType`]: https://api.vexcode.cloud/v5/search/sizeType/sizeType/enum
     pub relative_size: u32,
 
-    /// Observed velocity of the object in m/s.
-    pub velocity: f64,
+    /// Observed velocity of the object.
+    pub velocity: Velocity,
 
     /// Returns the confidence in the distance measurement from 0.0 to 1.0.
     pub confidence: f64,

@@ -5,25 +5,25 @@ use vex_sdk::{
 };
 
 /// Get the robot's battery capacity.
-/// TODO: Determine units
+/// TODO: Determine units and use uom
 pub fn capacity() -> f64 {
     unsafe { vexBatteryCapacityGet() }
 }
 
 /// Get the current temperature of the robot's battery.
-/// TODO: Determine units
+/// TODO: Determine units and use uom
 pub fn temperature() -> f64 {
     unsafe { vexBatteryTemperatureGet() }
 }
 
 /// Get the electric current of the robot's battery.
-/// TODO: Determine units
+/// TODO: Determine units and use uom
 pub fn current() -> i32 {
     unsafe { vexBatteryCurrentGet() }
 }
 
 /// Get the robot's battery voltage.
-/// TODO: Determine units
+/// TODO: Determine units and use uom
 pub fn voltage() -> i32 {
     unsafe { vexBatteryVoltageGet() }
 }

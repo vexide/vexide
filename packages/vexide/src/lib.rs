@@ -102,7 +102,6 @@ pub mod prelude {
         color::Rgb,
         controller::Controller,
         peripherals::{DynamicPeripherals, Peripherals},
-        position::Position,
         screen::Screen,
         smart::{
             distance::DistanceSensor,
@@ -119,6 +118,7 @@ pub mod prelude {
             },
             SmartDevice, SmartPort,
         },
+        uom,
     };
     #[cfg(all(feature = "graphics", feature = "embedded-graphics"))]
     pub use vexide_graphics::embedded_graphics::BrainDisplay;

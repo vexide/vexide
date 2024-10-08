@@ -38,7 +38,7 @@ impl SerialPort {
     ///
     /// This configures a [`SmartPort`] to act as a generic serial controller capable of sending/receiving
     /// data. Providing a baud rate, or the transmission rate of bits is required. The maximum theoretical
-    /// baud rate is 921600.
+    /// baud rate is 921600Bd.
     ///
     /// # Examples
     ///

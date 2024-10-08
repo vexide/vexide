@@ -1,10 +1,14 @@
 //! ADI encoder sensor.
 
 use snafu::Snafu;
+use uom::{
+    si::{angle::degree, f64::Angle},
+    ConstZero,
+};
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::{position::Position, PortError};
+use crate::PortError;
 
 /// VEX V5 Optical Shaft Encoder
 #[derive(Debug, Eq, PartialEq)]
@@ -45,29 +49,26 @@ impl AdiEncoder {
     /// Get the distance reading of the encoder sensor in centimeters.
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
-    pub fn position(&self) -> Result<Position, EncoderError> {
+    pub fn position(&self) -> Result<Angle, EncoderError> {
         self.top_port.validate_expander()?;
         self.top_port.configure(self.device_type());
 
-        Ok(Position::from_ticks(
-            unsafe {
-                vexDeviceAdiValueGet(self.top_port.device_handle(), self.top_port.index()) as i64
-            },
-            360,
-        ))
+        Ok(Angle::new::<adi_encoder_tick>(unsafe {
+            vexDeviceAdiValueGet(self.top_port.device_handle(), self.top_port.index()) as _
+        }))
     }
 
     /// Sets the current encoder position to the given position without moving the motor.
     ///
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
-    pub fn set_position(&self, position: Position) -> Result<(), EncoderError> {
+    pub fn set_position(&self, position: Angle) -> Result<(), EncoderError> {
         self.top_port.validate_expander()?;
 
         unsafe {
             vexDeviceAdiValueSet(
                 self.top_port.device_handle(),
                 self.top_port.index(),
-                position.as_ticks(360) as i32,
+                position.get::<adi_encoder_tick>() as i32,
             )
         }
 
@@ -79,7 +80,7 @@ impl AdiEncoder {
     /// Analogous to taring or resetting the encoder so that the new position is equal
     /// to the given position.
     pub fn reset_position(&mut self) -> Result<(), EncoderError> {
-        self.set_position(Position::default())
+        self.set_position(Angle::ZERO)
     }
 }
 
@@ -98,6 +99,11 @@ impl AdiDevice for AdiEncoder {
         AdiDeviceType::Encoder
     }
 }
+
+/// Because the encoder has 360 ticks per revolution, one tick is equal to one degree.
+#[allow(non_camel_case_types)]
+pub type adi_encoder_tick = degree;
+
 
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an encoder range finder.
