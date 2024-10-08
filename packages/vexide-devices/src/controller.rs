@@ -177,8 +177,7 @@ impl ControllerScreen {
     /// Maximum number of lines that text can be drawn at after clearing the screen.
     pub const MAX_LINES: usize = 3;
 
-    /// Returns the update duration of the screen in ms. Consecutive updates that are not
-    /// this duration apart will be ignored.
+    /// Returns the update duration of the screen.
     pub fn get_update_duration(&self) -> Option<Duration> {
         let connection = unsafe { Controller::new(self.id).connection() };
         match connection {
