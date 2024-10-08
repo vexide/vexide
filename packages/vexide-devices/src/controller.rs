@@ -12,7 +12,109 @@ use vex_sdk::{
 };
 use vexide_core::{competition, competition::CompetitionMode};
 
-use crate::adi::digital::LogicLevel;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Represents the state of a button on the controller.
+pub enum ButtonState {
+    /// The button is pressed.
+    Pressed,
+    /// The button is released.
+    Released,
+}
+impl ButtonState {
+    /// Returns true if the button state is [`Pressed`](ButtonState::Pressed).
+    pub const fn is_pressed(&self) -> bool {
+        matches!(self, Self::Pressed)
+    }
+    /// Returns true if the button state is [`Released`](ButtonState::Released).
+    pub const fn is_released(&self) -> bool {
+        matches!(self, Self::Released)
+    }
+}
+
+/// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
+/// On the x axis left is negative, and right is positive.
+/// On the y axis down is negative, and up is positive.
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+pub struct Joystick {
+    x_raw: i8,
+    y_raw: i8,
+}
+impl Joystick {
+    /// Gets the value of the joystick position on its x-axis from [-1, 1].
+    pub fn x(&self) -> f64 {
+        self.x_raw as f64 / 127.0
+    }
+    /// Gets the value of the joystick position on its y-axis from [-1, 1].
+    pub fn y(&self) -> f64 {
+        self.y_raw as f64 / 127.0
+    }
+
+    /// The raw value of the joystick position on its x-axis from [-128, 127].
+    pub const fn x_raw(&self) -> i8 {
+        self.x_raw
+    }
+    /// The raw value of the joystick position on its x-axis from [-128, 127].
+    pub const fn y_raw(&self) -> i8 {
+        self.y_raw
+    }
+}
+
+/// Holds a snapshot of the state of the controller.
+/// Returned by [`Controller::state`].
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub struct ControllerState {
+    /// Left Joystick
+    pub left_stick: Joystick,
+    /// Right Joystick
+    pub right_stick: Joystick,
+
+    /// Button A
+    pub button_a: ButtonState,
+    /// Button B
+    pub button_b: ButtonState,
+    /// Button X
+    pub button_x: ButtonState,
+    /// Button Y
+    pub button_y: ButtonState,
+
+    /// Button Up
+    pub button_up: ButtonState,
+    /// Button Down
+    pub button_down: ButtonState,
+    /// Button Left
+    pub button_left: ButtonState,
+    /// Button Right
+    pub button_right: ButtonState,
+
+    /// Top Left Trigger
+    pub left_trigger_1: ButtonState,
+    /// Bottom Left Trigger
+    pub left_trigger_2: ButtonState,
+    /// Top Right Trigger
+    pub right_trigger_1: ButtonState,
+    /// Bottom Right Trigger
+    pub right_trigger_2: ButtonState,
+}
+impl Default for ControllerState {
+    fn default() -> Self {
+        Self {
+            left_stick: Default::default(),
+            right_stick: Default::default(),
+            button_a: ButtonState::Released,
+            button_b: ButtonState::Released,
+            button_x: ButtonState::Released,
+            button_y: ButtonState::Released,
+            button_up: ButtonState::Released,
+            button_down: ButtonState::Released,
+            button_left: ButtonState::Released,
+            button_right: ButtonState::Released,
+            left_trigger_1: ButtonState::Released,
+            left_trigger_2: ButtonState::Released,
+            right_trigger_1: ButtonState::Released,
+            right_trigger_2: ButtonState::Released,
+        }
+    }
+}
 
 fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     if unsafe {
@@ -24,99 +126,6 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     Ok(())
 }
 
-/// Digital Controller Button
-#[derive(Debug, Eq, PartialEq)]
-pub struct Button {
-    id: ControllerId,
-    channel: V5_ControllerIndex,
-    was_pressed: bool,
-}
-
-impl Button {
-    /// Gets the current logic level of a digital input pin.
-    pub fn level(&self) -> Result<LogicLevel, ControllerError> {
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
-
-        validate_connection(self.id)?;
-
-        let value = unsafe { vexControllerGet(self.id.into(), self.channel) != 0 };
-
-        let level = match value {
-            true => LogicLevel::High,
-            false => LogicLevel::Low,
-        };
-
-        Ok(level)
-    }
-
-    /// Returns `true` if the button is currently being pressed.
-    ///
-    /// This is equivalent shorthand to calling `Self::level().is_high()`.
-    pub fn is_pressed(&self) -> Result<bool, ControllerError> {
-        Ok(self.level()?.is_high())
-    }
-
-    /// Returns `true` if the button has been pressed again since the last time this
-    /// function was called.
-    pub fn was_pressed(&mut self) -> Result<bool, ControllerError> {
-        if self.is_pressed()? {
-            self.was_pressed = false;
-        } else if !self.was_pressed {
-            self.was_pressed = true;
-            return Ok(true);
-        }
-
-        Ok(false)
-    }
-}
-
-/// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
-/// On the x axis left is negative, and right is positive.
-/// On the y axis down is negative, and up is positive.
-#[derive(Debug, Eq, PartialEq)]
-pub struct Joystick {
-    id: ControllerId,
-    x_channel: V5_ControllerIndex,
-    y_channel: V5_ControllerIndex,
-}
-
-impl Joystick {
-    /// Gets the value of the joystick position on its x-axis from [-1, 1].
-    pub fn x(&self) -> Result<f64, ControllerError> {
-        validate_connection(self.id)?;
-
-        Ok(self.x_raw()? as f64 / 127.0)
-    }
-
-    /// Gets the value of the joystick position on its y-axis from [-1, 1].
-    pub fn y(&self) -> Result<f64, ControllerError> {
-        validate_connection(self.id)?;
-        Ok(self.y_raw()? as f64 / 127.0)
-    }
-
-    /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
-    pub fn x_raw(&self) -> Result<i8, ControllerError> {
-        validate_connection(self.id)?;
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
-
-        Ok(unsafe { vexControllerGet(self.id.into(), self.x_channel) } as _)
-    }
-
-    /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
-    pub fn y_raw(&self) -> Result<i8, ControllerError> {
-        validate_connection(self.id)?;
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
-
-        Ok(unsafe { vexControllerGet(self.id.into(), self.y_channel) } as _)
-    }
-}
-
 /// The basic type for a controller.
 /// Used to get the state of its joysticks and controllers.
 #[derive(Debug, Eq, PartialEq)]
@@ -125,38 +134,49 @@ pub struct Controller {
 
     /// Controller Screen
     pub screen: ControllerScreen,
+}
 
-    /// Left Joystick
-    pub left_stick: Joystick,
-    /// Right Joystick
-    pub right_stick: Joystick,
+impl Controller {
+    /// Returns the current state of all buttons and joysticks on the controller.
+    /// # Note
+    /// If the current competition mode is not driver control, this function will error.
+    pub fn state(&self) -> Result<ControllerState, ControllerError> {
+        if competition::mode() != CompetitionMode::Driver {
+            return Err(ControllerError::CompetitionControl);
+        }
+        validate_connection(self.id)?;
 
-    /// Button A
-    pub button_a: Button,
-    /// Button B
-    pub button_b: Button,
-    /// Button X
-    pub button_x: Button,
-    /// Button Y
-    pub button_y: Button,
+        let button_level = |channel: V5_ControllerIndex| {
+            let value = unsafe { vexControllerGet(self.id.into(), channel) != 0 };
+            match value {
+                true => ButtonState::Pressed,
+                false => ButtonState::Released,
+            }
+        };
 
-    /// Button Up
-    pub button_up: Button,
-    /// Button Down
-    pub button_down: Button,
-    /// Button Left
-    pub button_left: Button,
-    /// Button Right
-    pub button_right: Button,
-
-    /// Top Left Trigger
-    pub left_trigger_1: Button,
-    /// Bottom Left Trigger
-    pub left_trigger_2: Button,
-    /// Top Right Trigger
-    pub right_trigger_1: Button,
-    /// Bottom Right Trigger
-    pub right_trigger_2: Button,
+        Ok(ControllerState {
+            left_stick: Joystick {
+                x_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis4) as _ },
+                y_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis3) as _ },
+            },
+            right_stick: Joystick {
+                x_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis1) as _ },
+                y_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis2) as _ },
+            },
+            button_a: button_level(V5_ControllerIndex::ButtonA),
+            button_b: button_level(V5_ControllerIndex::ButtonB),
+            button_x: button_level(V5_ControllerIndex::ButtonX),
+            button_y: button_level(V5_ControllerIndex::ButtonY),
+            button_up: button_level(V5_ControllerIndex::ButtonUp),
+            button_down: button_level(V5_ControllerIndex::ButtonDown),
+            button_left: button_level(V5_ControllerIndex::ButtonLeft),
+            button_right: button_level(V5_ControllerIndex::ButtonRight),
+            left_trigger_1: button_level(V5_ControllerIndex::ButtonL1),
+            left_trigger_2: button_level(V5_ControllerIndex::ButtonL2),
+            right_trigger_1: button_level(V5_ControllerIndex::ButtonR1),
+            right_trigger_2: button_level(V5_ControllerIndex::ButtonR2),
+        })
+    }
 }
 
 /// Controller LCD Console
@@ -248,76 +268,6 @@ impl Controller {
         Self {
             id,
             screen: ControllerScreen { id },
-            left_stick: Joystick {
-                id,
-                x_channel: V5_ControllerIndex::Axis4,
-                y_channel: V5_ControllerIndex::Axis3,
-            },
-            right_stick: Joystick {
-                id,
-                x_channel: V5_ControllerIndex::Axis1,
-                y_channel: V5_ControllerIndex::Axis2,
-            },
-            button_a: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonA,
-                was_pressed: false,
-            },
-            button_b: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonB,
-                was_pressed: false,
-            },
-            button_x: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonX,
-                was_pressed: false,
-            },
-            button_y: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonY,
-                was_pressed: false,
-            },
-            button_up: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonUp,
-                was_pressed: false,
-            },
-            button_down: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonDown,
-                was_pressed: false,
-            },
-            button_left: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonLeft,
-                was_pressed: false,
-            },
-            button_right: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonRight,
-                was_pressed: false,
-            },
-            left_trigger_1: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonL1,
-                was_pressed: false,
-            },
-            left_trigger_2: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonL2,
-                was_pressed: false,
-            },
-            right_trigger_1: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonR1,
-                was_pressed: false,
-            },
-            right_trigger_2: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonR2,
-                was_pressed: false,
-            },
         }
     }
 

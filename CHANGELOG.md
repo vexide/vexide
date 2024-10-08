@@ -27,6 +27,8 @@ Before releasing:
 
 ### Changed
 
+- Controller state is now returned all at once to reduce error checking. (#todo) (**Breaking Change**)
+
 ### Removed
 
 ### New Contributors
