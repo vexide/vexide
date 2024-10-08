@@ -20,6 +20,12 @@ authors = [
 vexide-core = { workspace = true }
 vex-sdk = { workspace = true }
 snafu = { workspace = true }
+uom = { version = "0.36.0", default-features = false, features = [
+    "autoconvert",
+    "si",
+    "f32",
+    "f64",
+] }
 mint = "0.5.9"
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 bitflags = "2.4.2"
