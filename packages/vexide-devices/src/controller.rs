@@ -126,59 +126,6 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     Ok(())
 }
 
-/// The basic type for a controller.
-/// Used to get the state of its joysticks and controllers.
-#[derive(Debug, Eq, PartialEq)]
-pub struct Controller {
-    id: ControllerId,
-
-    /// Controller Screen
-    pub screen: ControllerScreen,
-}
-
-impl Controller {
-    /// Returns the current state of all buttons and joysticks on the controller.
-    /// # Note
-    /// If the current competition mode is not driver control, this function will error.
-    pub fn state(&self) -> Result<ControllerState, ControllerError> {
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
-        validate_connection(self.id)?;
-
-        let button_level = |channel: V5_ControllerIndex| {
-            let value = unsafe { vexControllerGet(self.id.into(), channel) != 0 };
-            match value {
-                true => ButtonState::Pressed,
-                false => ButtonState::Released,
-            }
-        };
-
-        Ok(ControllerState {
-            left_stick: Joystick {
-                x_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis4) as _ },
-                y_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis3) as _ },
-            },
-            right_stick: Joystick {
-                x_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis1) as _ },
-                y_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis2) as _ },
-            },
-            button_a: button_level(V5_ControllerIndex::ButtonA),
-            button_b: button_level(V5_ControllerIndex::ButtonB),
-            button_x: button_level(V5_ControllerIndex::ButtonX),
-            button_y: button_level(V5_ControllerIndex::ButtonY),
-            button_up: button_level(V5_ControllerIndex::ButtonUp),
-            button_down: button_level(V5_ControllerIndex::ButtonDown),
-            button_left: button_level(V5_ControllerIndex::ButtonLeft),
-            button_right: button_level(V5_ControllerIndex::ButtonRight),
-            left_trigger_1: button_level(V5_ControllerIndex::ButtonL1),
-            left_trigger_2: button_level(V5_ControllerIndex::ButtonL2),
-            right_trigger_1: button_level(V5_ControllerIndex::ButtonR1),
-            right_trigger_2: button_level(V5_ControllerIndex::ButtonR2),
-        })
-    }
-}
-
 /// Controller LCD Console
 #[derive(Debug, Eq, PartialEq)]
 pub struct ControllerScreen {
@@ -253,6 +200,50 @@ impl From<ControllerId> for V5_ControllerId {
     }
 }
 
+/// Represents the state of a controller's connection.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ControllerConnection {
+    /// No controller is connected.
+    Offline,
+
+    /// Controller is tethered through a wired smart port connection.
+    Tethered,
+
+    /// Controller is wirelessly connected over a VEXNet radio
+    VexNet,
+}
+
+impl From<V5_ControllerStatus> for ControllerConnection {
+    fn from(value: V5_ControllerStatus) -> Self {
+        match value {
+            V5_ControllerStatus::kV5ControllerOffline => Self::Offline,
+            V5_ControllerStatus::kV5ControllerTethered => Self::Tethered,
+            V5_ControllerStatus::kV5ControllerVexnet => Self::VexNet,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl From<ControllerConnection> for V5_ControllerStatus {
+    fn from(value: ControllerConnection) -> Self {
+        match value {
+            ControllerConnection::Offline => Self::kV5ControllerOffline,
+            ControllerConnection::Tethered => Self::kV5ControllerTethered,
+            ControllerConnection::VexNet => Self::kV5ControllerVexnet,
+        }
+    }
+}
+
+/// The basic type for a controller.
+/// Used to get the state of its joysticks and controllers.
+#[derive(Debug, Eq, PartialEq)]
+pub struct Controller {
+    id: ControllerId,
+
+    /// Controller Screen
+    pub screen: ControllerScreen,
+}
+
 impl Controller {
     /// The update rate of the controller.
     pub const UPDATE_INTERVAL: Duration = Duration::from_millis(25);
@@ -269,6 +260,47 @@ impl Controller {
             id,
             screen: ControllerScreen { id },
         }
+    }
+
+    /// Returns the current state of all buttons and joysticks on the controller.
+    /// # Note
+    /// If the current competition mode is not driver control, this function will error.
+    pub fn state(&self) -> Result<ControllerState, ControllerError> {
+        if competition::mode() != CompetitionMode::Driver {
+            return Err(ControllerError::CompetitionControl);
+        }
+        validate_connection(self.id)?;
+
+        let button_level = |channel: V5_ControllerIndex| {
+            let value = unsafe { vexControllerGet(self.id.into(), channel) != 0 };
+            match value {
+                true => ButtonState::Pressed,
+                false => ButtonState::Released,
+            }
+        };
+
+        Ok(ControllerState {
+            left_stick: Joystick {
+                x_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis4) as _ },
+                y_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis3) as _ },
+            },
+            right_stick: Joystick {
+                x_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis1) as _ },
+                y_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis2) as _ },
+            },
+            button_a: button_level(V5_ControllerIndex::ButtonA),
+            button_b: button_level(V5_ControllerIndex::ButtonB),
+            button_x: button_level(V5_ControllerIndex::ButtonX),
+            button_y: button_level(V5_ControllerIndex::ButtonY),
+            button_up: button_level(V5_ControllerIndex::ButtonUp),
+            button_down: button_level(V5_ControllerIndex::ButtonDown),
+            button_left: button_level(V5_ControllerIndex::ButtonLeft),
+            button_right: button_level(V5_ControllerIndex::ButtonRight),
+            left_trigger_1: button_level(V5_ControllerIndex::ButtonL1),
+            left_trigger_2: button_level(V5_ControllerIndex::ButtonL2),
+            right_trigger_1: button_level(V5_ControllerIndex::ButtonR1),
+            right_trigger_2: button_level(V5_ControllerIndex::ButtonR2),
+        })
     }
 
     /// Gets the controller's connection type.
@@ -304,40 +336,6 @@ impl Controller {
     /// supported length is 8 characters.
     pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
         self.screen.set_text(pattern, 3, 0)
-    }
-}
-
-/// Represents the state of a controller's connection.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ControllerConnection {
-    /// No controller is connected.
-    Offline,
-
-    /// Controller is tethered through a wired smart port connection.
-    Tethered,
-
-    /// Controller is wirelessly connected over a VEXNet radio
-    VexNet,
-}
-
-impl From<V5_ControllerStatus> for ControllerConnection {
-    fn from(value: V5_ControllerStatus) -> Self {
-        match value {
-            V5_ControllerStatus::kV5ControllerOffline => Self::Offline,
-            V5_ControllerStatus::kV5ControllerTethered => Self::Tethered,
-            V5_ControllerStatus::kV5ControllerVexnet => Self::VexNet,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl From<ControllerConnection> for V5_ControllerStatus {
-    fn from(value: ControllerConnection) -> Self {
-        match value {
-            ControllerConnection::Offline => Self::kV5ControllerOffline,
-            ControllerConnection::Tethered => Self::kV5ControllerTethered,
-            ControllerConnection::VexNet => Self::kV5ControllerVexnet,
-        }
     }
 }
 
