@@ -304,7 +304,7 @@ impl Controller {
     /// Creating new `Controller`s is inherently unsafe due to the possibility of constructing
     /// more than one screen at once allowing multiple mutable references to the same
     /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
-    pub const unsafe fn new(id: ControllerId) -> Self {
+    pub unsafe fn new(id: ControllerId) -> Self {
         Self {
             id,
             screen: ControllerScreen {
