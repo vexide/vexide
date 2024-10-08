@@ -184,9 +184,9 @@ impl ControllerScreen {
     pub fn get_update_duration(&self) -> Option<Duration> {
         let connection = unsafe { Controller::new(self.id).connection() };
         match connection {
-            ControllerConnection::Offline => None
-            ControllerConnection::Tethered => Some(Duration::from_millis(10))
-            ControllerConnection::VexNet => Some(Duration::from_millis(50))
+            ControllerConnection::Offline => None,
+            ControllerConnection::Tethered => Some(Duration::from_millis(10)),
+            ControllerConnection::VexNet => Some(Duration::from_millis(50)),
         }
     }
 
