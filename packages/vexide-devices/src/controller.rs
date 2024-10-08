@@ -10,7 +10,7 @@ use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
     V5_ControllerIndex, V5_ControllerStatus,
 };
-use vexide_core::{competition, competition::CompetitionMode};
+use vexide_core::{competition, competition::CompetitionMode, time::Instant};
 
 use crate::adi::digital::LogicLevel;
 
@@ -163,14 +163,38 @@ pub struct Controller {
 #[derive(Debug, Eq, PartialEq)]
 pub struct ControllerScreen {
     id: ControllerId,
+    // TODO: determine whether update rate is per controller or is for both controllers
+    last_update: Instant,
 }
 
 impl ControllerScreen {
     /// Maximum number of characters that can be drawn to a text line.
-    pub const MAX_LINE_LENGTH: usize = 14;
+    pub const MAX_LINE_LENGTH: usize = 31;
 
-    /// Number of available text lines on the controller before clearing the screen.
-    pub const MAX_LINES: usize = 2;
+    /// Maximum number of columns that a line of text can be drawn at.
+    pub const MAX_COLUMNS: usize = 19;
+
+    /// Maximum number of lines that text can be drawn at after clearing the screen.
+    pub const MAX_LINES: usize = 3;
+
+    /// Returns the update duration of the screen in ms. Consecutive updates that are not
+    /// this duration apart will be ignored.
+    pub fn get_update_duration(&self) -> Option<Duration> {
+        let connection = unsafe { Controller::new(self.id).connection() };
+        match connection {
+            ControllerConnection::Offline => None
+            ControllerConnection::Tethered => Some(Duration::from_millis(10))
+            ControllerConnection::VexNet => Some(Duration::from_millis(50))
+        }
+    }
+
+    fn validate_update_time(&mut self) -> Result<(), ControllerError> {
+        if self.get_update_duration().unwrap_or(0) > Instant::now() - self.last_update {
+            Err(ControllerError::InsufficientPrintDelay)
+        } else {
+            Ok(())
+        }
+    }
 
     /// Clear the contents of a specific text line.
     pub fn clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
@@ -183,8 +207,10 @@ impl ControllerScreen {
 
     /// Clear the whole screen.
     pub fn clear_screen(&mut self) -> Result<(), ControllerError> {
-        for line in 0..Self::MAX_LINES as u8 {
-            self.clear_line(line)?;
+        let id: V5_ControllerId = self.id.into();
+        self.validate_update_time()?;
+        unsafe {
+            vexControllerTextSet(id.0 as _, 255 as _, 0 as _, "".as_ptr() as *const _);
         }
 
         Ok(())
@@ -193,7 +219,8 @@ impl ControllerScreen {
     /// Set the text contents at a specific row/column offset.
     pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
-        if col >= Self::MAX_LINE_LENGTH as u8 {
+        self.validate_update_time()?;
+        if col >= Self::MAX_COLUMNS as u8 || line >= Self::MAX_LINES as u8 {
             return Err(ControllerError::InvalidLine);
         }
 
@@ -204,6 +231,27 @@ impl ControllerScreen {
 
         unsafe {
             vexControllerTextSet(id.0 as _, (line + 1) as _, (col + 1) as _, text as *const _);
+        }
+
+        // stop rust from leaking the CString
+        drop(unsafe { CString::from_raw(text) });
+
+        Ok(())
+    }
+
+    pub fn rumble(&mut self, pattern: &str) {
+        validate_connection(self.id)?;
+        self.validate_update_time()?;
+        if let None = pattern.find(|c| c != '.' && c != '-' && c != ' ') {
+            return Err(ControllerError::InvalidPattern);
+        }
+        let id: V5_ControllerId = self.id.into();
+        let text = CString::new(pattern)
+            .map_err(|_| ControllerError::NonTerminatingNul)?
+            .into_raw();
+
+        unsafe {
+            vexControllerTextSet(id.0 as _, 3 as _, 0 as _, text as *const _);
         }
 
         // stop rust from leaking the CString
@@ -402,4 +450,8 @@ pub enum ControllerError {
     CompetitionControl,
     /// An invalid line number was given.
     InvalidLine,
+    /// An invalid rumble pattern was given.
+    InvalidPattern,
+    /// Two consecutive controller prints were made without sufficient delay between them.
+    InsufficientPrintDelay
 }
