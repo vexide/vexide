@@ -19,11 +19,27 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
+
 ## [Unreleased]
 
 ### Added
 
 ### Fixed
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+
+## [0.4.1]
+
+### Added
+
+### Fixed
+
+- Fixed an issue where `vex-sdk` functions that return or take floating point values would not work correctly. (#todo)
 
 ### Changed
 
@@ -141,3 +157,4 @@ Before releasing:
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
 [0.4.0]: https://github.com/vexide/vexide/compare/v0.3.0...v0.4.0
+[0.4.1]: https://github.com/vexide/vexide/compare/v0.4.0...v0.4.1
