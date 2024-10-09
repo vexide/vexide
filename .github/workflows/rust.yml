@@ -23,7 +23,7 @@ jobs:
               uses: actions-rs/cargo@v1
               with:
                   command: check
-                  args: --lib --bins --examples --all-features
+                  args: --bins --examples --all-features
     lint:
         name: Lint
         runs-on: ubuntu-latest

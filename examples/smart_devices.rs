@@ -22,7 +22,7 @@ async fn main(peripherals: Peripherals) {
     let mut link = RadioLink::open(
         peripherals.port_15,
         "example",
-        vexide_devices::smart::link::LinkType::Manager,
+        vexide::devices::smart::link::LinkType::Manager,
     )
     .unwrap();
     // Send a message over vexlink.

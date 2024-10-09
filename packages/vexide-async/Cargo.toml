@@ -1,6 +1,6 @@
 [package]
 name = "vexide-async"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 license = "MIT"
 description = "The async executor at the core of vexide"
@@ -18,9 +18,9 @@ authors = [
 
 [dependencies]
 async-task = { version = "4.5.0", default-features = false }
-vexide-core = { version = "0.4.0", path = "../vexide-core" }
+vexide-core = { workspace = true }
 waker-fn = "1.1.1"
-vex-sdk = "0.20.0"
+vex-sdk = { workspace = true }
 
 [lints]
 workspace = true
