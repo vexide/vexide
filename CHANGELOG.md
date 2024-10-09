@@ -19,6 +19,7 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
+
 ## [Unreleased]
 
 ### Added
@@ -28,6 +29,21 @@ Before releasing:
 ### Changed
 
 - Controller state is now returned all at once to reduce error checking. (#152) (**Breaking Change**)
+
+### Removed
+
+### New Contributors
+
+
+## [0.4.1]
+
+### Added
+
+### Fixed
+
+- Updated to vex-sdk 0.21.0, fixing ABI incompatibilities between the VEXos calling convention and the hard-float ABI introduced in vexide 0.4.0. This should fix broken functions that pass floats to the SDK. (#156)
+
+### Changed
 
 ### Removed
 
@@ -143,3 +159,4 @@ Before releasing:
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
 [0.4.0]: https://github.com/vexide/vexide/compare/v0.3.0...v0.4.0
+[0.4.1]: https://github.com/vexide/vexide/compare/v0.4.0...v0.4.1
