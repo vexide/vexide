@@ -31,6 +31,20 @@ Before releasing:
 
 ### New Contributors
 
+## [0.4.1]
+
+### Added
+
+### Fixed
+
+- Updated to vex-sdk 0.21.0, fixing ABI incompatibilities between the VEXos calling convention and the hard-float ABI introduced in vexide 0.4.0. This should fix broken functions that pass floats to the SDK. (#155)
+
+### Changed
+
+### Removed
+
+### New Contributors
+
 ## [0.4.0]
 
 ### Added
