@@ -39,7 +39,7 @@ Before releasing:
 
 ### Fixed
 
-- Fixed an issue where `vex-sdk` functions that return or take floating point values would not work correctly. (#156)
+- Updated to vex-sdk 0.21.0, fixing ABI incompatibilities between the VEXos calling convention and the hard-float ABI introduced in vexide 0.4.0. This should fix broken functions that pass floats to the SDK. (#156)
 
 ### Changed
 
