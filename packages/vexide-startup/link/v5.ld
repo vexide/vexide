@@ -6,6 +6,8 @@ __user_ram_start = 0x03800000;
 __user_ram_length = 0x04800000;
 __user_ram_end = __user_ram_start + __user_ram_length;
 
+__code_signature_length = 0x20;
+
 MEMORY {
     USER_RAM : ORIGIN = __user_ram_start, LENGTH = __user_ram_length
 }
@@ -14,22 +16,22 @@ __stack_length = 0x400000;
 __heap_end = __user_ram_end - __stack_length;
 
 SECTIONS {
-    .text : {
-        __text_start = .;
+    .code_signature : {
         KEEP(*(.code_signature))
-        /* Size of cold header */
-        . = __text_start + 0x20;
+        . = __user_ram_start + __code_signature_length;
+    } > USER_RAM
+
+    .text : {
         *(.boot)
         *(.text .text.*)
     } > USER_RAM
 
-    .rodata1 : {
-        *(.rodata1 .rodata1.*)
+    .rodata : {
+        *(.rodata .rodata.*)
     } > USER_RAM
 
     .data : {
         *(.data .data.*)
-        *(.data1 .data1.*)
     } > USER_RAM
 
     .bss : {
@@ -51,6 +53,12 @@ SECTIONS {
        *(.eh_framehdr)
        __eh_frame_hdr_end = .;
     } > USER_RAM
+
+    .ARM.extab : {
+        __extab_start = .;
+		*(.ARM.extab*)
+        __extab_end = .;
+	} > USER_RAM
 
     .ARM.exidx : {
         __exidx_start = .;
