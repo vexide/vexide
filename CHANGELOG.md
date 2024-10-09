@@ -39,7 +39,7 @@ Before releasing:
 
 ### Fixed
 
-- Fixed an issue where `vex-sdk` functions that return or take floating point values would not work correctly. (#todo)
+- Fixed an issue where `vex-sdk` functions that return or take floating point values would not work correctly. (#156)
 
 ### Changed
 
