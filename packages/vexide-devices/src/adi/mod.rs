@@ -59,7 +59,7 @@ impl AdiPort {
     ///
     /// # Safety
     ///
-    /// Creating new `AdiPort`s is inherently unsafe due to the possibility of constructing
+    /// Creating new [`AdiPort`]s is inherently unsafe due to the possibility of constructing
     /// more than one device on the same port index allowing multiple mutable references to
     /// the same hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
     #[must_use]
@@ -114,6 +114,12 @@ impl AdiPort {
     }
 
     /// Get the type of device this port is currently configured as.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn configured_type(&self) -> Result<AdiDeviceType, PortError> {
         self.validate_expander()?;
 
@@ -272,7 +278,6 @@ impl From<V5_AdiPortConfiguration> for AdiDeviceType {
             V5_AdiPortConfiguration::kAdiPortTypeLegacyAccelerometer => Self::Accelerometer,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyPwm => Self::Motor,
             V5_AdiPortConfiguration::kAdiPortTypeLegacyPwmSlew => Self::MotorSlew,
-            #[allow(unreachable_patterns)]
             other => Self::Unknown(other),
         }
     }

@@ -24,6 +24,11 @@ impl<T, I: FnOnce() -> T> LazyLock<T, I> {
     }
 
     /// Consume the [`LazyLock`] and return the inner value if it has been initialized.
+    ///
+    /// # Errors
+    ///
+    /// If the inner value has not been initialized, this function returns an error
+    /// containing the initializer function.
     pub fn into_inner(self) -> Result<T, I> {
         let mut data = unsafe { core::ptr::read(&self.data).into_inner() };
         match self.once.is_complete() {

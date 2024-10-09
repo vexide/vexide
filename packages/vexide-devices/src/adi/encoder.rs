@@ -18,6 +18,20 @@ impl AdiEncoder {
     pub const TICKS_PER_REVOLUTION: u32 = 360;
 
     /// Create a new encoder sensor from a top and bottom [`AdiPort`].
+    ///
+    /// ```no_run
+    /// # fn make_encoder(peripherals: Peripherals) -> Result<(), EncoderError> {
+    /// let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b))?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s,
+    ///   returns [`EncoderError::ExpanderPortMismatch`].
+    /// - If the top port is not odd (A, C, E, G), returns [`EncoderError::BadTopPort`].
+    /// - If the bottom port is not the next after the top port, returns [`EncoderError::BadBottomPort`].
     pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, EncoderError> {
         let top_port = ports.0;
         let bottom_port = ports.1;
@@ -45,6 +59,10 @@ impl AdiEncoder {
     /// Get the distance reading of the encoder sensor in centimeters.
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
+    ///
+    /// # Errors
+    ///
+    /// If the ADI device could not be accessed, returns [`EncoderError::Port`].
     pub fn position(&self) -> Result<Position, EncoderError> {
         self.top_port.validate_expander()?;
         self.top_port.configure(self.device_type());
@@ -63,6 +81,10 @@ impl AdiEncoder {
     /// Sets the current encoder position to the given position without moving the motor.
     ///
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
+    ///
+    /// # Errors
+    ///
+    /// If the ADI device could not be accessed, returns [`EncoderError::Port`].
     pub fn set_position(&self, position: Position) -> Result<(), EncoderError> {
         self.top_port.validate_expander()?;
 
@@ -77,10 +99,14 @@ impl AdiEncoder {
         Ok(())
     }
 
-    /// Sets the current encoder position to the given position.
+    /// Sets the current encoder position to zero.
     ///
     /// Analogous to taring or resetting the encoder so that the new position is equal
     /// to the given position.
+    ///
+    /// # Errors
+    ///
+    /// If the ADI device could not be accessed, returns [`EncoderError::Port`].
     pub fn reset_position(&mut self) -> Result<(), EncoderError> {
         self.set_position(Position::default())
     }

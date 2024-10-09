@@ -25,6 +25,11 @@ impl AdiAddrLed {
     pub const MAX_LENGTH: usize = 64;
 
     /// Initialize an LED strip on an ADI port with a given number of diodes.
+    ///
+    /// # Errors
+    ///
+    /// If the `length` parameter exceeds [`Self::MAX_LENGTH`], the function returns
+    /// [`AddrLedError::BufferTooLarge`].
     pub fn new<T, I>(port: AdiPort, length: usize) -> Result<Self, AddrLedError> {
         if length > Self::MAX_LENGTH {
             return Err(AddrLedError::BufferTooLarge);
@@ -50,14 +55,24 @@ impl AdiAddrLed {
     }
 
     /// Set the entire led strip to one color.
+    ///
+    /// # Errors
+    ///
+    /// If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
     pub fn set_all(&mut self, color: impl IntoRgb) -> Result<(), AddrLedError> {
         _ = self.set_buffer(vec![u32::from(color.into_rgb()); self.buf.len()])?;
         Ok(())
     }
 
-    /// Sets an individual diode color on the strip. Returns [`AddrLedError::OutOfRange`] if the provided
-    /// index is out of range of the current buffer length.
+    /// Sets an individual diode color on the strip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AddrLedError::OutOfRange`] if the provided index is out of range
+    /// of the current buffer length.
     pub fn set_pixel(&mut self, index: usize, color: impl IntoRgb) -> Result<(), AddrLedError> {
+        self.port.validate_expander()?;
+
         if let Some(pixel) = self.buf.get_mut(index) {
             *pixel = color.into_rgb().into();
             self.update();
@@ -69,6 +84,10 @@ impl AdiAddrLed {
 
     /// Attempt to write an iterator of colors to the LED strip. Returns how many colors were
     /// actually written.
+    ///
+    /// # Errors
+    ///
+    /// If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
     pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
     where
         T: IntoIterator<Item = I>,

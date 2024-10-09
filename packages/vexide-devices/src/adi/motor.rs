@@ -27,12 +27,24 @@ impl AdiMotor {
         Self { port, slew }
     }
 
-    /// Sets the PWM output of the given motor as an f64 from [-1.0, 1.0].
+    /// Sets the PWM output of the given motor to a floating point number in the range \[-1.0, 1.0\].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn set_output(&mut self, value: f64) -> Result<(), PortError> {
         self.set_raw_output((value * 127.0) as i8)
     }
 
-    /// Sets the PWM output of the given motor as an i8 from [-127, 127].
+    /// Sets the PWM output of the given motor as an integer in the range \[-127, 127\].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn set_raw_output(&mut self, pwm: i8) -> Result<(), PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
@@ -44,12 +56,25 @@ impl AdiMotor {
         Ok(())
     }
 
-    /// Returns the last set PWM output of the motor on the given port as an f32 from [-1.0, 1.0].
+    /// Returns the last set PWM output of the motor on the given port as a floating point
+    /// number in the range \[-1.0, 1.0\].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn output(&self) -> Result<f64, PortError> {
         Ok(f64::from(self.raw_output()?) / f64::from(i8::MAX))
     }
 
-    /// Returns the last set PWM output of the motor on the given port as an i8 from [-127, 127].
+    /// Returns the last set PWM output of the motor on the given port as an integer in the range \[-127, 127\].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn raw_output(&self) -> Result<i8, PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
@@ -67,7 +92,13 @@ impl AdiMotor {
         )
     }
 
-    /// Stops the given motor.
+    /// Stops the given motor by setting its output to zero.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn stop(&mut self) -> Result<(), PortError> {
         self.set_raw_output(0)
     }

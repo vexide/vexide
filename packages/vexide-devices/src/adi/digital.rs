@@ -70,6 +70,12 @@ impl AdiDigitalIn {
     }
 
     /// Gets the current logic level of a digital input pin.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn level(&self) -> Result<LogicLevel, PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
@@ -84,11 +90,23 @@ impl AdiDigitalIn {
     }
 
     /// Returns `true` if the digital input's logic level level is [`LogicLevel::High`].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn is_high(&self) -> Result<bool, PortError> {
         Ok(self.level()?.is_high())
     }
 
     /// Returns `true` if the digital input's logic level level is [`LogicLevel::Low`].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn is_low(&self) -> Result<bool, PortError> {
         Ok(self.level()?.is_high())
     }
@@ -126,6 +144,12 @@ impl AdiDigitalOut {
     }
 
     /// Sets the digital logic level (high or low) of a pin.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
@@ -143,12 +167,24 @@ impl AdiDigitalOut {
 
     /// Set the digital logic level to [`LogicLevel::High`]. Analogous to
     /// [`Self::set_level(LogicLevel::High)`].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn set_high(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::High)
     }
 
     /// Set the digital logic level to [`LogicLevel::Low`]. Analogous to
     /// [`Self::set_level(LogicLevel::Low)`].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn set_low(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::Low)
     }
