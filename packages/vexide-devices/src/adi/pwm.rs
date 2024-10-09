@@ -28,7 +28,11 @@ impl AdiPwmOut {
         self.port.configure(self.device_type());
 
         unsafe {
-            vexDeviceAdiValueSet(self.port.device_handle(), self.port.index(), value as i32);
+            vexDeviceAdiValueSet(
+                self.port.device_handle(),
+                self.port.index(),
+                i32::from(value),
+            );
         }
 
         Ok(())

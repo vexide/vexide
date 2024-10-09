@@ -21,13 +21,13 @@ pub mod themes;
 /// This function is used internally in the [`startup`](crate::startup) function to print the banner.
 #[inline]
 pub fn print(theme: BannerTheme) {
+    const DISABLED: u32 = 1 << 0;
+    const AUTONOMOUS: u32 = 1 << 1;
+
     const VEXIDE_VERSION: &str = "0.4.0";
 
     let system_version = unsafe { vexSystemVersion() }.to_be_bytes();
     let competition_status = unsafe { vexCompetitionStatus() };
-
-    const DISABLED: u32 = 1 << 0;
-    const AUTONOMOUS: u32 = 1 << 1;
 
     println!(
         "

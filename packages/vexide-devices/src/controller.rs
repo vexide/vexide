@@ -87,13 +87,13 @@ impl Joystick {
     pub fn x(&self) -> Result<f64, ControllerError> {
         validate_connection(self.id)?;
 
-        Ok(self.x_raw()? as f64 / 127.0)
+        Ok(f64::from(self.x_raw()?) / 127.0)
     }
 
     /// Gets the value of the joystick position on its y-axis from [-1, 1].
     pub fn y(&self) -> Result<f64, ControllerError> {
         validate_connection(self.id)?;
-        Ok(self.y_raw()? as f64 / 127.0)
+        Ok(f64::from(self.y_raw()?) / 127.0)
     }
 
     /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
@@ -203,7 +203,12 @@ impl ControllerScreen {
             .into_raw();
 
         unsafe {
-            vexControllerTextSet(id.0 as _, (line + 1) as _, (col + 1) as _, text as *const _);
+            vexControllerTextSet(
+                u32::from(id.0),
+                u32::from(line + 1),
+                u32::from(col + 1),
+                text as *const _,
+            );
         }
 
         // stop rust from leaking the CString
@@ -244,6 +249,7 @@ impl Controller {
     /// Creating new `Controller`s is inherently unsafe due to the possibility of constructing
     /// more than one screen at once allowing multiple mutable references to the same
     /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    #[must_use]
     pub const unsafe fn new(id: ControllerId) -> Self {
         Self {
             id,
@@ -322,6 +328,7 @@ impl Controller {
     }
 
     /// Gets the controller's connection type.
+    #[must_use]
     pub fn connection(&self) -> ControllerConnection {
         unsafe { vexControllerConnectionStatusGet(self.id.into()) }.into()
     }

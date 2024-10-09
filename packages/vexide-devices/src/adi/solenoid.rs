@@ -36,7 +36,7 @@ impl AdiSolenoid {
             vexDeviceAdiValueSet(
                 self.port.device_handle(),
                 self.port.index(),
-                level.is_high() as i32,
+                i32::from(level.is_high()),
             );
         }
 

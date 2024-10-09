@@ -77,6 +77,7 @@ impl VisionSensor {
     /// // Register a vision sensor on port 1.
     /// let mut sensor = VisionSensor::new(peripherals.port_1);
     /// ```
+    #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
@@ -113,12 +114,14 @@ impl VisionSensor {
             vMean: signature.v_threshold.1,
             vMax: signature.v_threshold.2,
             range: signature.range,
-            mType: if self.codes.iter().any(|code| code.contains_signature(id)) {
-                V5VisionBlockType::kVisionTypeColorCode
-            } else {
-                V5VisionBlockType::kVisionTypeNormal
-            }
-            .0 as _,
+            mType: u32::from(
+                if self.codes.iter().any(|code| code.contains_signature(id)) {
+                    V5VisionBlockType::kVisionTypeColorCode
+                } else {
+                    V5VisionBlockType::kVisionTypeNormal
+                }
+                .0,
+            ),
             ..Default::default()
         };
 
@@ -134,7 +137,7 @@ impl VisionSensor {
 
         let mut raw_signature = V5_DeviceVisionSignature::default();
         let read_operation =
-            unsafe { vexDeviceVisionSignatureGet(self.device, id as u32, &mut raw_signature) };
+            unsafe { vexDeviceVisionSignatureGet(self.device, u32::from(id), &mut raw_signature) };
 
         if !read_operation {
             return Ok(None);
@@ -168,7 +171,7 @@ impl VisionSensor {
     pub fn signature(&self, id: u8) -> Result<Option<VisionSignature>, VisionError> {
         self.validate_port()?;
 
-        Ok(self.raw_signature(id)?.map(|raw| raw.into()))
+        Ok(self.raw_signature(id)?.map(Into::into))
     }
 
     /// Get all signatures currently stored on the sensor's onboard volatile memory.
@@ -200,16 +203,16 @@ impl VisionSensor {
 
         let code = code.into();
 
-        self.set_signature_type(code.0, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
-        self.set_signature_type(code.1, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
+        self.set_signature_type(code.0, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
+        self.set_signature_type(code.1, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
         if let Some(sig_3) = code.2 {
-            self.set_signature_type(sig_3, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
+            self.set_signature_type(sig_3, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
         }
         if let Some(sig_4) = code.3 {
-            self.set_signature_type(sig_4, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
+            self.set_signature_type(sig_4, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
         }
         if let Some(sig_5) = code.4 {
-            self.set_signature_type(sig_5, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
+            self.set_signature_type(sig_5, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
         }
 
         self.codes.push(code);
@@ -224,7 +227,7 @@ impl VisionSensor {
         self.validate_port()?;
 
         // SDK function gives us brightness percentage 0-100.
-        Ok(unsafe { vexDeviceVisionBrightnessGet(self.device) } as f64 / 100.0)
+        Ok(f64::from(unsafe { vexDeviceVisionBrightnessGet(self.device) }) / 100.0)
     }
 
     /// Get the current white balance of the vision sensor as an RGB color.
@@ -276,7 +279,7 @@ impl VisionSensor {
                         // here for the LED setter, which uses the same type.
                         brightness: 255,
                     },
-                )
+                );
             }
         }
 
@@ -302,7 +305,7 @@ impl VisionSensor {
                         blue: rgb.blue(),
                         brightness: (brightness * 100.0) as u8,
                     },
-                )
+                );
             }
         }
 
@@ -320,7 +323,7 @@ impl VisionSensor {
 
                 LedMode::Manual(
                     Rgb::new(led_color.red, led_color.green, led_color.blue),
-                    led_color.brightness as f64 / 100.0,
+                    f64::from(led_color.brightness) / 100.0,
                 )
             }
             _ => unreachable!(),
@@ -480,6 +483,7 @@ impl VisionSignature {
     /// Create a [`VisionSignature`].
     ///
     /// # Examples
+    #[must_use]
     pub const fn new(
         u_threshold: (i32, i32, i32),
         v_threshold: (i32, i32, i32),
@@ -504,6 +508,7 @@ impl VisionSignature {
     ///     VisionSignature::from_utility(1, 10049, 11513, 10781, -425, 1, -212, 4.1, 0);
     /// ````
     #[allow(clippy::too_many_arguments)]
+    #[must_use]
     pub const fn from_utility(
         _id: u8, // We don't store IDs in our vision signatures.
         u_min: i32,
@@ -556,6 +561,7 @@ impl VisionCode {
     ///
     /// Two signatures are required to create a vision code, with an additional three
     /// optional signatures.
+    #[must_use]
     pub const fn new(
         sig_1: u8,
         sig_2: u8,
@@ -567,6 +573,7 @@ impl VisionCode {
     }
 
     /// Creates a [`VisionCode`] from a bit representation of its signature IDs.
+    #[must_use]
     pub const fn from_id(id: u16) -> Self {
         const MASK: u16 = (1 << 3) - 1;
 
@@ -589,6 +596,7 @@ impl VisionCode {
     }
 
     /// Returns `true` if a given signature ID is stored in this code.
+    #[must_use]
     pub const fn contains_signature(&self, id: u8) -> bool {
         if self.0 == id || self.1 == id {
             return true;
@@ -615,14 +623,15 @@ impl VisionCode {
 
     /// Returns the internal ID used by the sensor to determine which signatures
     /// belong to which code.
+    #[must_use]
     pub fn id(&self) -> u16 {
         let mut id: u16 = 0;
 
-        id = (id << 3) | self.0 as u16;
-        id = (id << 3) | self.1 as u16;
-        id = (id << 3) | self.2.unwrap_or_default() as u16;
-        id = (id << 3) | self.3.unwrap_or_default() as u16;
-        id = (id << 3) | self.4.unwrap_or_default() as u16;
+        id = (id << 3) | u16::from(self.0);
+        id = (id << 3) | u16::from(self.1);
+        id = (id << 3) | u16::from(self.2.unwrap_or_default());
+        id = (id << 3) | u16::from(self.3.unwrap_or_default());
+        id = (id << 3) | u16::from(self.4.unwrap_or_default());
 
         id
     }

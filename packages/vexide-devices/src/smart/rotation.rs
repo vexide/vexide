@@ -45,6 +45,7 @@ impl RotationSensor {
 
     /// Creates a new rotation sensor on the given port.
     /// Whether or not the sensor should be reversed on creation can be specified.
+    #[must_use]
     pub fn new(port: SmartPort, direction: Direction) -> Self {
         let device = unsafe { port.device_handle() };
 
@@ -76,7 +77,7 @@ impl RotationSensor {
             self.direction_offset = Position::default();
             self.raw_direction_offset = Position::default();
 
-            vexDeviceAbsEncPositionSet(self.device, position.as_ticks(36000) as i32)
+            vexDeviceAbsEncPositionSet(self.device, position.as_ticks(36000) as i32);
         }
 
         Ok(())
@@ -108,7 +109,7 @@ impl RotationSensor {
         if new_direction != self.direction()? {
             self.direction_offset = self.position()?;
             self.raw_direction_offset = Position::from_ticks(
-                unsafe { vexDeviceAbsEncPositionGet(self.device) } as i64,
+                i64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
                 Self::TICKS_PER_REVOLUTION,
             );
             self.direction = new_direction;
@@ -145,7 +146,7 @@ impl RotationSensor {
         self.validate_port()?;
 
         let mut delta_position = Position::from_ticks(
-            unsafe { vexDeviceAbsEncPositionGet(self.device) } as i64,
+            i64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
             Self::TICKS_PER_REVOLUTION,
         ) - self.raw_direction_offset;
 
@@ -169,7 +170,7 @@ impl RotationSensor {
         }
 
         Ok(Position::from_ticks(
-            raw_angle as i64,
+            i64::from(raw_angle),
             Self::TICKS_PER_REVOLUTION,
         ))
     }
@@ -184,7 +185,7 @@ impl RotationSensor {
             raw_velocity *= -1;
         }
 
-        Ok(raw_velocity as f64 / 100.0)
+        Ok(f64::from(raw_velocity) / 100.0)
     }
 
     /// Returns the sensor's status code.

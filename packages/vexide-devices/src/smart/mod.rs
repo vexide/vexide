@@ -97,7 +97,7 @@ pub trait SmartDevice {
     /// Get the timestamp recorded by this device's internal clock.
     fn timestamp(&self) -> Result<SmartDeviceTimestamp, PortError> {
         Ok(SmartDeviceTimestamp(unsafe {
-            vexDeviceGetTimestamp(vexDeviceGetByIndex((self.port_number() - 1) as u32))
+            vexDeviceGetTimestamp(vexDeviceGetByIndex(u32::from(self.port_number() - 1)))
         }))
     }
 
@@ -166,6 +166,7 @@ impl SmartPort {
     /// // single port index.
     /// let my_port = unsafe { SmartPort::new(1) };
     /// ```
+    #[must_use]
     pub const unsafe fn new(number: u8) -> Self {
         Self { number }
     }
@@ -181,6 +182,7 @@ impl SmartPort {
     ///
     /// assert_eq!(my_port.number(), 1);
     /// ```
+    #[must_use]
     pub const fn number(&self) -> u8 {
         self.number
     }
@@ -198,6 +200,7 @@ impl SmartPort {
     ///
     /// println!("Type of device connected to port 1: {:?}", my_port.device_type());
     /// ```
+    #[must_use]
     pub fn device_type(&self) -> SmartDeviceType {
         let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
         unsafe {

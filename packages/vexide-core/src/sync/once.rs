@@ -76,6 +76,7 @@ unsafe impl<T: Send> Send for OnceLock<T> {}
 unsafe impl<T: Send + Sync> Sync for OnceLock<T> {}
 impl<T> OnceLock<T> {
     /// Creates a new uninitialized [`OnceLock`].
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             inner: Once::new(),

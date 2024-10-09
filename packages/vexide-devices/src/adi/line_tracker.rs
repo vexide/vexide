@@ -47,10 +47,8 @@ impl AdiLineTracker {
     ///
     /// This is returned as a value ranging from [0.0, 1.0].
     pub fn reflectivity(&self) -> Result<f64, PortError> {
-        Ok(
-            (analog::ADC_MAX_VALUE - self.raw_reflectivity()?) as f64
-                / analog::ADC_MAX_VALUE as f64,
-        )
+        Ok(f64::from(analog::ADC_MAX_VALUE - self.raw_reflectivity()?)
+            / f64::from(analog::ADC_MAX_VALUE))
     }
 
     /// Get the 12-bit reflectivity reading of the sensor.

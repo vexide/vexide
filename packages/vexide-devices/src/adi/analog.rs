@@ -59,7 +59,7 @@ impl AdiAnalogIn {
     /// The value returned is undefined if the analog pin has been switched to a different mode.
     /// The meaning of the returned value varies depending on the sensor attached.
     pub fn voltage(&self) -> Result<f64, PortError> {
-        Ok(self.value()? as f64 / (ADC_MAX_VALUE as f64) * 5.0)
+        Ok(f64::from(self.value()?) / f64::from(ADC_MAX_VALUE) * 5.0)
     }
 }
 

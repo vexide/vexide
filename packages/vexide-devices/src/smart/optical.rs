@@ -38,6 +38,7 @@ impl OpticalSensor {
     pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
     /// Creates a new optical sensor from a smart port index.
+    #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
@@ -76,12 +77,15 @@ impl OpticalSensor {
     /// Lower integration time results in faster update rates with lower accuracy
     /// due to less available light being read by the sensor.
     ///
-    /// Time value must be a [`Duration`] between 3 and 712 milliseconds. See
+    /// The `time` value must be a [`Duration`] between 3 and 712 milliseconds. If
+    /// the integration time is out of this range, it will be clamped to fit inside it. See
     /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for
     /// more information.
     pub fn set_integration_time(&mut self, time: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
+        // `time_ms` is clamped to a range that will not cause precision loss.
+        #[allow(clippy::cast_precision_loss)]
         let time_ms = time.as_millis().clamp(
             Self::MIN_INTEGRATION_TIME.as_millis(),
             Self::MAX_INTEGRATION_TIME.as_millis(),
@@ -126,7 +130,7 @@ impl OpticalSensor {
     pub fn proximity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalProximityGet(self.device) } as f64 / 255.0)
+        Ok(f64::from(unsafe { vexDeviceOpticalProximityGet(self.device) }) / 255.0)
     }
 
     /// Get the processed RGB data from the sensor

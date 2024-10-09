@@ -29,7 +29,7 @@ unsafe impl Sync for SerialPort {}
 impl SerialPort {
     /// The maximum allowed baud rate that generic serial can be configured to
     /// use by user programs.
-    pub const MAX_BAUD_RATE: u32 = 921600;
+    pub const MAX_BAUD_RATE: u32 = 921_600;
 
     /// The maximum length of the serial FIFO input and output buffer.
     pub const INTERNAL_BUFFER_SIZE: usize = 1024;
@@ -45,6 +45,7 @@ impl SerialPort {
     /// ```
     /// let serial = SerialPort::open(peripherals.port_1, 115200)?;
     /// ```
+    #[must_use]
     pub fn open(port: SmartPort, baud_rate: u32) -> Self {
         let device = unsafe { port.device_handle() };
 
@@ -57,7 +58,7 @@ impl SerialPort {
             vexDeviceGenericSerialBaudrate(device, baud_rate as i32);
         }
 
-        Self { device, port }
+        Self { port, device }
     }
 
     /// Clears the internal input and output FIFO buffers.

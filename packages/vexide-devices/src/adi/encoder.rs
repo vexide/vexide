@@ -51,7 +51,10 @@ impl AdiEncoder {
 
         Ok(Position::from_ticks(
             unsafe {
-                vexDeviceAdiValueGet(self.top_port.device_handle(), self.top_port.index()) as i64
+                i64::from(vexDeviceAdiValueGet(
+                    self.top_port.device_handle(),
+                    self.top_port.index(),
+                ))
             },
             360,
         ))
@@ -68,7 +71,7 @@ impl AdiEncoder {
                 self.top_port.device_handle(),
                 self.top_port.index(),
                 position.as_ticks(360) as i32,
-            )
+            );
         }
 
         Ok(())

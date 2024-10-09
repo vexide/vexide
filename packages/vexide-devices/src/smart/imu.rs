@@ -51,6 +51,7 @@ impl InertialSensor {
     pub const MAX_HEADING: f64 = 360.0;
 
     /// Create a new inertial sensor from a smart port index.
+    #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
@@ -310,6 +311,7 @@ impl InertialStatus {
     pub const STATUS_ERROR: u32 = 0xFF;
 
     /// Returns the physical orientation of the sensor measured at calibration.
+    #[must_use]
     pub fn physical_orientation(&self) -> InertialOrientation {
         match (self.bits() >> 1) & 0b111 {
             0 => InertialOrientation::ZUp,
@@ -357,7 +359,7 @@ impl core::future::Future for InertialCalibrateFuture {
                     Poll::Ready(Err(InertialError::Port { source: err }))
                 } else {
                     // Request that vexos calibrate the IMU, and transition to pending state.
-                    unsafe { vexDeviceImuReset(vexDeviceGetByIndex((port - 1) as u32)) }
+                    unsafe { vexDeviceImuReset(vexDeviceGetByIndex(u32::from(port - 1))) }
 
                     // Change to waiting for calibration to start.
                     *self = Self::Waiting(port, Instant::now(), CalibrationPhase::Start);
@@ -378,7 +380,7 @@ impl core::future::Future for InertialCalibrateFuture {
                     } else {
                         // Get status flags from vexos.
                         let flags = unsafe {
-                            vexDeviceImuStatusGet(vexDeviceGetByIndex((port - 1) as u32))
+                            vexDeviceImuStatusGet(vexDeviceGetByIndex(u32::from(port - 1)))
                         };
 
                         // 0xFF is returned when the sensor fails to report flags.

@@ -51,9 +51,10 @@ impl AdiPotentiometer {
         self.port.configure(self.device_type());
 
         Ok(
-            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } as f64
-                * self.potentiometer_type.max_angle()
-                / analog::ADC_MAX_VALUE as f64,
+            f64::from(unsafe {
+                vexDeviceAdiValueGet(self.port.device_handle(), self.port.index())
+            }) * self.potentiometer_type.max_angle()
+                / f64::from(analog::ADC_MAX_VALUE),
         )
     }
 }

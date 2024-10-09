@@ -76,6 +76,7 @@ pub enum Direction {
 
 impl Direction {
     /// Returns `true` if the level is [`Forward`](Direction::Forward).
+    #[must_use]
     pub const fn is_forward(&self) -> bool {
         match self {
             Self::Forward => true,
@@ -84,6 +85,7 @@ impl Direction {
     }
 
     /// Returns `true` if the level is [`Reverse`](Direction::Reverse).
+    #[must_use]
     pub const fn is_reverse(&self) -> bool {
         match self {
             Self::Forward => false,
@@ -114,6 +116,7 @@ impl Motor {
     pub const DATA_WRITE_INTERVAL: Duration = Duration::from_millis(5);
 
     /// Create a new motor from a smart port index.
+    #[must_use]
     pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
         let device = unsafe { port.device_handle() }; // SAFETY: This function is only called once on this port.
 
@@ -168,6 +171,8 @@ impl Motor {
                     self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
+                // position will not reach large enough values to cause loss of precision during normal operation
+                #[allow(clippy::cast_precision_loss)]
                 vexDeviceMotorAbsoluteTargetSet(
                     self.device,
                     position.as_ticks(gearset.ticks_per_revolution()) as f64,
@@ -221,7 +226,7 @@ impl Motor {
         }
 
         if let MotorControl::Position(position, _) = self.target {
-            self.target = MotorControl::Position(position, velocity)
+            self.target = MotorControl::Position(position, velocity);
         }
 
         Ok(())
@@ -269,7 +274,7 @@ impl Motor {
     /// Returns the voltage the motor is drawing in volts.
     pub fn voltage(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorVoltageGet(self.device) } as f64 / 1000.0)
+        Ok(f64::from(unsafe { vexDeviceMotorVoltageGet(self.device) }) / 1000.0)
     }
 
     /// Returns the current position of the motor.
@@ -296,7 +301,7 @@ impl Motor {
     /// Returns the electrical current draw of the motor in amps.
     pub fn current(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorCurrentGet(self.device) } as f64 / 1000.0)
+        Ok(f64::from(unsafe { vexDeviceMotorCurrentGet(self.device) }) / 1000.0)
     }
 
     /// Gets the efficiency of the motor from a range of [0.0, 1.0].
@@ -347,13 +352,13 @@ impl Motor {
     /// Gets the current limit for the motor in amps.
     pub fn current_limit(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorCurrentLimitGet(self.device) } as f64 / 1000.0)
+        Ok(f64::from(unsafe { vexDeviceMotorCurrentLimitGet(self.device) }) / 1000.0)
     }
 
     /// Gets the voltage limit for the motor if one has been explicitly set.
     pub fn voltage_limit(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorVoltageLimitGet(self.device) } as f64 / 1000.0)
+        Ok(f64::from(unsafe { vexDeviceMotorVoltageLimitGet(self.device) }) / 1000.0)
     }
 
     /// Returns the internal temperature recorded by the motor in increments of 5 °C.
@@ -602,6 +607,7 @@ impl Gearset {
     pub const BLUE_TICKS_PER_REVOLUTION: u32 = 300;
 
     /// Get the rated maximum speed for this motor gearset.
+    #[must_use]
     pub const fn max_rpm(&self) -> f64 {
         match self {
             Self::Red => Self::MAX_RED_RPM,
@@ -611,6 +617,7 @@ impl Gearset {
     }
 
     /// Get the number of encoder ticks per revolution for this motor gearset.
+    #[must_use]
     pub const fn ticks_per_revolution(&self) -> u32 {
         match self {
             Self::Red => Self::RED_TICKS_PER_REVOLUTION,

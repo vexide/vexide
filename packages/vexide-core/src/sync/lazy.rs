@@ -36,10 +36,10 @@ impl<T, I: FnOnce() -> T> LazyLock<T, I> {
     /// Caller must ensure this function is only called once.
     unsafe fn lazy_init(&self) {
         let initializer = unsafe { ManuallyDrop::take(&mut (*self.data.get()).init) };
-        let initialized = initializer();
+        let initialized_data = initializer();
         unsafe {
             self.data.get().write(Data {
-                data: ManuallyDrop::new(initialized),
+                data: ManuallyDrop::new(initialized_data),
             });
         }
     }
