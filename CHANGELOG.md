@@ -24,11 +24,14 @@ Before releasing:
 
 ### Added
 
+- You can now detect controller release occurrences with `ButtonState::is_now_released`.
+
 ### Fixed
 
 ### Changed
 
 - Controller state is now returned all at once to reduce error checking. (#152) (**Breaking Change**)
+- `Button::was_pressed` has been renamed to `ButtonState::is_now_pressed`.
 
 ### Removed
 
