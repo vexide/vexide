@@ -1,9 +1,9 @@
-//! Controller support.
+//! V5 Controller
 //!
 //! This module allows you to read from the buttons and joysticks on the controller and write to the controller's display.
 
 use alloc::ffi::CString;
-use core::time::Duration;
+use core::{cell::RefCell, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -12,7 +12,121 @@ use vex_sdk::{
 };
 use vexide_core::{competition, competition::CompetitionMode};
 
-use crate::adi::digital::LogicLevel;
+/// Represents the state of a button on the controller.
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ButtonState {
+    prev_is_pressed: bool,
+    is_pressed: bool,
+}
+
+impl ButtonState {
+    /// Returns true if the button state is [`Pressed`](ButtonState::Pressed).
+    pub const fn is_pressed(&self) -> bool {
+        self.is_pressed
+    }
+
+    /// Returns true if the button state is [`Released`](ButtonState::Released).
+    pub const fn is_released(&self) -> bool {
+        !self.is_pressed
+    }
+
+    /// Returns true if the button state was released in the previous call to [`Controller::state`], but is now pressed.
+    pub const fn is_now_pressed(&self) -> bool {
+        !self.prev_is_pressed && self.is_pressed
+    }
+
+    /// Returns true if the button state was pressed in the previous call to [`Controller::state`], but is now released.
+    pub const fn is_now_released(&self) -> bool {
+        self.prev_is_pressed && !self.is_pressed
+    }
+}
+
+/// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
+/// On the x axis left is negative, and right is positive.
+/// On the y axis down is negative, and up is positive.
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+pub struct JoystickState {
+    x_raw: i8,
+    y_raw: i8,
+}
+
+impl JoystickState {
+    /// Gets the value of the joystick position on its x-axis from [-1, 1].
+    pub fn x(&self) -> f64 {
+        self.x_raw as f64 / 127.0
+    }
+    /// Gets the value of the joystick position on its y-axis from [-1, 1].
+    pub fn y(&self) -> f64 {
+        self.y_raw as f64 / 127.0
+    }
+
+    /// The raw value of the joystick position on its x-axis from [-128, 127].
+    pub const fn x_raw(&self) -> i8 {
+        self.x_raw
+    }
+    /// The raw value of the joystick position on its x-axis from [-128, 127].
+    pub const fn y_raw(&self) -> i8 {
+        self.y_raw
+    }
+}
+
+/// Holds a snapshot of the state of the controller.
+/// Returned by [`Controller::state`].
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+pub struct ControllerState {
+    /// Left Joystick
+    pub left_stick: JoystickState,
+    /// Right Joystick
+    pub right_stick: JoystickState,
+
+    /// Button A
+    pub button_a: ButtonState,
+    /// Button B
+    pub button_b: ButtonState,
+    /// Button X
+    pub button_x: ButtonState,
+    /// Button Y
+    pub button_y: ButtonState,
+
+    /// Button Up
+    pub button_up: ButtonState,
+    /// Button Down
+    pub button_down: ButtonState,
+    /// Button Left
+    pub button_left: ButtonState,
+    /// Button Right
+    pub button_right: ButtonState,
+
+    /// Top Left Trigger
+    pub left_trigger_1: ButtonState,
+    /// Bottom Left Trigger
+    pub left_trigger_2: ButtonState,
+    /// Top Right Trigger
+    pub right_trigger_1: ButtonState,
+    /// Bottom Right Trigger
+    pub right_trigger_2: ButtonState,
+}
+
+/// This type stores the "pressed" states of every controller button.
+///
+/// This exists to efficiently cache previous button states with `Controller::update`, since
+/// each `ButtonState` needs to know about its previous state from the last `Controller::update`
+/// call in order to allow for `ButtonState::is_now_pressed` and `ButtonState::is_now_released`.
+#[derive(Default, Clone, Debug, Eq, PartialEq)]
+struct ButtonStates {
+    a: bool,
+    b: bool,
+    x: bool,
+    y: bool,
+    up: bool,
+    down: bool,
+    left: bool,
+    right: bool,
+    left_trigger_1: bool,
+    left_trigger_2: bool,
+    right_trigger_1: bool,
+    right_trigger_2: bool,
+}
 
 fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     if unsafe {
@@ -22,141 +136,6 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     }
 
     Ok(())
-}
-
-/// Digital Controller Button
-#[derive(Debug, Eq, PartialEq)]
-pub struct Button {
-    id: ControllerId,
-    channel: V5_ControllerIndex,
-    was_pressed: bool,
-}
-
-impl Button {
-    /// Gets the current logic level of a digital input pin.
-    pub fn level(&self) -> Result<LogicLevel, ControllerError> {
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
-
-        validate_connection(self.id)?;
-
-        let value = unsafe { vexControllerGet(self.id.into(), self.channel) != 0 };
-
-        let level = match value {
-            true => LogicLevel::High,
-            false => LogicLevel::Low,
-        };
-
-        Ok(level)
-    }
-
-    /// Returns `true` if the button is currently being pressed.
-    ///
-    /// This is equivalent shorthand to calling `Self::level().is_high()`.
-    pub fn is_pressed(&self) -> Result<bool, ControllerError> {
-        Ok(self.level()?.is_high())
-    }
-
-    /// Returns `true` if the button has been pressed again since the last time this
-    /// function was called.
-    pub fn was_pressed(&mut self) -> Result<bool, ControllerError> {
-        if self.is_pressed()? {
-            self.was_pressed = false;
-        } else if !self.was_pressed {
-            self.was_pressed = true;
-            return Ok(true);
-        }
-
-        Ok(false)
-    }
-}
-
-/// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
-/// On the x axis left is negative, and right is positive.
-/// On the y axis down is negative, and up is positive.
-#[derive(Debug, Eq, PartialEq)]
-pub struct Joystick {
-    id: ControllerId,
-    x_channel: V5_ControllerIndex,
-    y_channel: V5_ControllerIndex,
-}
-
-impl Joystick {
-    /// Gets the value of the joystick position on its x-axis from [-1, 1].
-    pub fn x(&self) -> Result<f64, ControllerError> {
-        validate_connection(self.id)?;
-
-        Ok(self.x_raw()? as f64 / 127.0)
-    }
-
-    /// Gets the value of the joystick position on its y-axis from [-1, 1].
-    pub fn y(&self) -> Result<f64, ControllerError> {
-        validate_connection(self.id)?;
-        Ok(self.y_raw()? as f64 / 127.0)
-    }
-
-    /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
-    pub fn x_raw(&self) -> Result<i8, ControllerError> {
-        validate_connection(self.id)?;
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
-
-        Ok(unsafe { vexControllerGet(self.id.into(), self.x_channel) } as _)
-    }
-
-    /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
-    pub fn y_raw(&self) -> Result<i8, ControllerError> {
-        validate_connection(self.id)?;
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
-
-        Ok(unsafe { vexControllerGet(self.id.into(), self.y_channel) } as _)
-    }
-}
-
-/// The basic type for a controller.
-/// Used to get the state of its joysticks and controllers.
-#[derive(Debug, Eq, PartialEq)]
-pub struct Controller {
-    id: ControllerId,
-
-    /// Controller Screen
-    pub screen: ControllerScreen,
-
-    /// Left Joystick
-    pub left_stick: Joystick,
-    /// Right Joystick
-    pub right_stick: Joystick,
-
-    /// Button A
-    pub button_a: Button,
-    /// Button B
-    pub button_b: Button,
-    /// Button X
-    pub button_x: Button,
-    /// Button Y
-    pub button_y: Button,
-
-    /// Button Up
-    pub button_up: Button,
-    /// Button Down
-    pub button_down: Button,
-    /// Button Left
-    pub button_left: Button,
-    /// Button Right
-    pub button_right: Button,
-
-    /// Top Left Trigger
-    pub left_trigger_1: Button,
-    /// Bottom Left Trigger
-    pub left_trigger_2: Button,
-    /// Top Right Trigger
-    pub right_trigger_1: Button,
-    /// Bottom Right Trigger
-    pub right_trigger_2: Button,
 }
 
 /// Controller LCD Console
@@ -233,6 +212,51 @@ impl From<ControllerId> for V5_ControllerId {
     }
 }
 
+/// Represents the state of a controller's connection.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ControllerConnection {
+    /// No controller is connected.
+    Offline,
+
+    /// Controller is tethered through a wired smart port connection.
+    Tethered,
+
+    /// Controller is wirelessly connected over a VEXNet radio
+    VexNet,
+}
+
+impl From<V5_ControllerStatus> for ControllerConnection {
+    fn from(value: V5_ControllerStatus) -> Self {
+        match value {
+            V5_ControllerStatus::kV5ControllerOffline => Self::Offline,
+            V5_ControllerStatus::kV5ControllerTethered => Self::Tethered,
+            V5_ControllerStatus::kV5ControllerVexnet => Self::VexNet,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl From<ControllerConnection> for V5_ControllerStatus {
+    fn from(value: ControllerConnection) -> Self {
+        match value {
+            ControllerConnection::Offline => Self::kV5ControllerOffline,
+            ControllerConnection::Tethered => Self::kV5ControllerTethered,
+            ControllerConnection::VexNet => Self::kV5ControllerVexnet,
+        }
+    }
+}
+
+/// The basic type for a controller.
+/// Used to get the state of its joysticks and controllers.
+#[derive(Debug, Eq, PartialEq)]
+pub struct Controller {
+    id: ControllerId,
+    prev_button_states: RefCell<ButtonStates>,
+
+    /// Controller Screen
+    pub screen: ControllerScreen,
+}
+
 impl Controller {
     /// The update rate of the controller.
     pub const UPDATE_INTERVAL: Duration = Duration::from_millis(25);
@@ -247,78 +271,121 @@ impl Controller {
     pub const unsafe fn new(id: ControllerId) -> Self {
         Self {
             id,
+            prev_button_states: RefCell::new(ButtonStates {
+                a: false,
+                b: false,
+                x: false,
+                y: false,
+                up: false,
+                down: false,
+                left: false,
+                right: false,
+                left_trigger_1: false,
+                left_trigger_2: false,
+                right_trigger_1: false,
+                right_trigger_2: false,
+            }),
             screen: ControllerScreen { id },
-            left_stick: Joystick {
-                id,
-                x_channel: V5_ControllerIndex::Axis4,
-                y_channel: V5_ControllerIndex::Axis3,
-            },
-            right_stick: Joystick {
-                id,
-                x_channel: V5_ControllerIndex::Axis1,
-                y_channel: V5_ControllerIndex::Axis2,
-            },
-            button_a: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonA,
-                was_pressed: false,
-            },
-            button_b: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonB,
-                was_pressed: false,
-            },
-            button_x: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonX,
-                was_pressed: false,
-            },
-            button_y: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonY,
-                was_pressed: false,
-            },
-            button_up: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonUp,
-                was_pressed: false,
-            },
-            button_down: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonDown,
-                was_pressed: false,
-            },
-            button_left: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonLeft,
-                was_pressed: false,
-            },
-            button_right: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonRight,
-                was_pressed: false,
-            },
-            left_trigger_1: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonL1,
-                was_pressed: false,
-            },
-            left_trigger_2: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonL2,
-                was_pressed: false,
-            },
-            right_trigger_1: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonR1,
-                was_pressed: false,
-            },
-            right_trigger_2: Button {
-                id,
-                channel: V5_ControllerIndex::ButtonR2,
-                was_pressed: false,
-            },
         }
+    }
+
+    /// Returns the current state of all buttons and joysticks on the controller.
+    ///
+    /// # Note
+    ///
+    /// If the current competition mode is not driver control, this function will error.
+    pub fn state(&self) -> Result<ControllerState, ControllerError> {
+        if competition::mode() != CompetitionMode::Driver {
+            return Err(ControllerError::CompetitionControl);
+        }
+        validate_connection(self.id)?;
+
+        // Get all current button states
+        let button_states = ButtonStates {
+            a: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonA) } != 0,
+            b: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonB) } != 0,
+            x: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonX) } != 0,
+            y: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonY) } != 0,
+            up: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonUp) } != 0,
+            down: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonDown) } != 0,
+            left: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonLeft) } != 0,
+            right: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonRight) }
+                != 0,
+            left_trigger_1: unsafe {
+                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL1)
+            } != 0,
+            left_trigger_2: unsafe {
+                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL2)
+            } != 0,
+            right_trigger_1: unsafe {
+                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR1)
+            } != 0,
+            right_trigger_2: unsafe {
+                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR2)
+            } != 0,
+        };
+
+        // Swap the current button states with the previous states, getting the previous states in the process.
+        let prev_button_states = self.prev_button_states.replace(button_states.clone());
+
+        Ok(ControllerState {
+            left_stick: JoystickState {
+                x_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis4) as _ },
+                y_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis3) as _ },
+            },
+            right_stick: JoystickState {
+                x_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis1) as _ },
+                y_raw: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Axis2) as _ },
+            },
+            button_a: ButtonState {
+                is_pressed: button_states.a,
+                prev_is_pressed: prev_button_states.a,
+            },
+            button_b: ButtonState {
+                is_pressed: button_states.b,
+                prev_is_pressed: prev_button_states.b,
+            },
+            button_x: ButtonState {
+                is_pressed: button_states.x,
+                prev_is_pressed: prev_button_states.x,
+            },
+            button_y: ButtonState {
+                is_pressed: button_states.y,
+                prev_is_pressed: prev_button_states.y,
+            },
+            button_up: ButtonState {
+                is_pressed: button_states.up,
+                prev_is_pressed: prev_button_states.up,
+            },
+            button_down: ButtonState {
+                is_pressed: button_states.down,
+                prev_is_pressed: prev_button_states.down,
+            },
+            button_left: ButtonState {
+                is_pressed: button_states.left,
+                prev_is_pressed: prev_button_states.left,
+            },
+            button_right: ButtonState {
+                is_pressed: button_states.right,
+                prev_is_pressed: prev_button_states.right,
+            },
+            left_trigger_1: ButtonState {
+                is_pressed: button_states.left_trigger_1,
+                prev_is_pressed: prev_button_states.left_trigger_1,
+            },
+            left_trigger_2: ButtonState {
+                is_pressed: button_states.left_trigger_2,
+                prev_is_pressed: prev_button_states.left_trigger_2,
+            },
+            right_trigger_1: ButtonState {
+                is_pressed: button_states.right_trigger_1,
+                prev_is_pressed: prev_button_states.right_trigger_1,
+            },
+            right_trigger_2: ButtonState {
+                is_pressed: button_states.right_trigger_2,
+                prev_is_pressed: prev_button_states.right_trigger_2,
+            },
+        })
     }
 
     /// Gets the controller's connection type.
@@ -357,49 +424,18 @@ impl Controller {
     }
 }
 
-/// Represents the state of a controller's connection.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ControllerConnection {
-    /// No controller is connected.
-    Offline,
-
-    /// Controller is tethered through a wired smart port connection.
-    Tethered,
-
-    /// Controller is wirelessly connected over a VEXNet radio
-    VexNet,
-}
-
-impl From<V5_ControllerStatus> for ControllerConnection {
-    fn from(value: V5_ControllerStatus) -> Self {
-        match value {
-            V5_ControllerStatus::kV5ControllerOffline => Self::Offline,
-            V5_ControllerStatus::kV5ControllerTethered => Self::Tethered,
-            V5_ControllerStatus::kV5ControllerVexnet => Self::VexNet,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl From<ControllerConnection> for V5_ControllerStatus {
-    fn from(value: ControllerConnection) -> Self {
-        match value {
-            ControllerConnection::Offline => Self::kV5ControllerOffline,
-            ControllerConnection::Tethered => Self::kV5ControllerTethered,
-            ControllerConnection::VexNet => Self::kV5ControllerVexnet,
-        }
-    }
-}
-
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the controller.
 pub enum ControllerError {
     /// The controller is not connected to the brain.
     Offline,
+
     /// CString::new encountered NUL (U+0000) byte in non-terminating position.
     NonTerminatingNul,
+
     /// Access to controller data is restricted by competition control.
     CompetitionControl,
+
     /// An invalid line number was given.
     InvalidLine,
 }
