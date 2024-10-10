@@ -49,5 +49,7 @@ async fn main(peripherals: Peripherals) {
             Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
             Motor::new(peripherals.port_6, Gearset::Blue, Direction::Reverse),
         ],
-    }.compete().await;
+    }
+    .compete()
+    .await;
 }

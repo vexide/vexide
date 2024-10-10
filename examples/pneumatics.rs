@@ -28,5 +28,7 @@ async fn main(peripherals: Peripherals) {
     Robot {
         controller: peripherals.primary_controller,
         solenoid: AdiSolenoid::new(peripherals.adi_a),
-    }.compete().await;
+    }
+    .compete()
+    .await;
 }

@@ -17,12 +17,16 @@ impl Compete for Robot {
 
             // Move the left motors using the left stick's y-axis
             for motor in self.left_motors.iter_mut() {
-                motor.set_voltage(controller_state.left_stick.y() * Motor::MAX_VOLTAGE).ok();
+                motor
+                    .set_voltage(controller_state.left_stick.y() * Motor::MAX_VOLTAGE)
+                    .ok();
             }
 
             // Move the right motors using the left stick's y-axis
             for motor in self.right_motors.iter_mut() {
-                motor.set_voltage(controller_state.right_stick.y() * Motor::MAX_VOLTAGE).ok();
+                motor
+                    .set_voltage(controller_state.right_stick.y() * Motor::MAX_VOLTAGE)
+                    .ok();
             }
 
             sleep(Controller::UPDATE_INTERVAL).await;
@@ -44,5 +48,7 @@ async fn main(peripherals: Peripherals) {
             Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
             Motor::new(peripherals.port_6, Gearset::Blue, Direction::Reverse),
         ],
-    }.compete().await;
+    }
+    .compete()
+    .await;
 }
