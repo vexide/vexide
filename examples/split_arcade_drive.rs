@@ -22,12 +22,16 @@ impl Compete for Robot {
 
             // Move left motors.
             for motor in self.left_motors.iter_mut() {
-                motor.set_voltage((forward + turn) * Motor::MAX_VOLTAGE).ok();
+                motor
+                    .set_voltage((forward + turn) * Motor::MAX_VOLTAGE)
+                    .ok();
             }
 
             // Move right motors.
             for motor in self.right_motors.iter_mut() {
-                motor.set_voltage((forward - turn) * Motor::MAX_VOLTAGE).ok();
+                motor
+                    .set_voltage((forward - turn) * Motor::MAX_VOLTAGE)
+                    .ok();
             }
 
             sleep(Controller::UPDATE_INTERVAL).await;
