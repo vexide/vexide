@@ -9,17 +9,17 @@ pub fn capacity() -> f64 {
     unsafe { vexBatteryCapacityGet() }
 }
 
-/// Get the current temperature of the robot's battery in degrees celsius.
+/// Get the temperature of the robot's battery in degrees celsius.
 pub fn temperature() -> f64 {
     unsafe { vexBatteryTemperatureGet() }
 }
 
-/// Get the electric current of the robot's battery.
-pub fn current() -> i32 {
-    unsafe { vexBatteryCurrentGet() }
+/// Get the electric current of the robot's battery in amps.
+pub fn current() -> f64 {
+    (unsafe { vexBatteryCurrentGet() } as f64) / 1000.0
 }
 
-/// Get the robot's battery voltage.
-pub fn voltage() -> i32 {
-    unsafe { vexBatteryVoltageGet() }
+/// Get the robot's battery voltage in volts.
+pub fn voltage() -> f64 {
+    (unsafe { vexBatteryVoltageGet() } as f64) / 1000.0
 }
