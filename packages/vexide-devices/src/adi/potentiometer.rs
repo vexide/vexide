@@ -1,5 +1,8 @@
 //! ADI Potentiometer device.
 
+use core::{f64::consts::TAU, marker::PhantomData};
+
+use uom::si::f64::Angle;
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{analog, AdiDevice, AdiDeviceType, AdiPort};
@@ -34,8 +37,8 @@ impl AdiPotentiometer {
         Ok(self.potentiometer_type)
     }
 
-    /// Get the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
-    pub fn max_angle(&self) -> Result<f64, PortError> {
+    /// Get the maximum angle measurement for the given [`PotentiometerType`].
+    pub fn max_angle(&self) -> Result<Angle, PortError> {
         Ok(self.potentiometer_type()?.max_angle())
     }
 
@@ -45,7 +48,7 @@ impl AdiPotentiometer {
     /// thus returning an angle between 0-250 degrees.
     /// Potentiometer V2 rotates 330 degrees
     /// thus returning an angle between 0-330 degrees.
-    pub fn angle(&self) -> Result<f64, PortError> {
+    pub fn angle(&self) -> Result<Angle, PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
 
@@ -70,13 +73,21 @@ pub enum PotentiometerType {
 
 impl PotentiometerType {
     /// Maxmimum angle for the older cortex-era EDR potentiometer.
-    pub const LEGACY_MAX_ANGLE: f64 = 250.0;
+    pub const LEGACY_MAX_ANGLE: Angle = Angle {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: 250.0 * TAU / 360.0, // we have to convert degrees to radians manually because we're in a const context
+    };
 
     /// Maximum angle for the V5-era potentiometer V2.
-    pub const V2_MAX_ANGLE: f64 = 330.0;
+    pub const V2_MAX_ANGLE: Angle = Angle {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: 330.0 * TAU / 360.0,
+    };
 
     /// Get the maximum angle measurement (in degrees) for this potentiometer type.
-    pub const fn max_angle(&self) -> f64 {
+    pub const fn max_angle(&self) -> Angle {
         match self {
             Self::Legacy => Self::LEGACY_MAX_ANGLE,
             Self::V2 => Self::V2_MAX_ANGLE,

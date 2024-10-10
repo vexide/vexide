@@ -1,6 +1,7 @@
 //! ADI Ultrasonic Range Finder.
 
 use snafu::Snafu;
+use uom::si::{f64::Length, length::centimeter};
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
@@ -45,7 +46,7 @@ impl AdiRangeFinder {
     /// Get the distance reading of the rangefinder sensor in centimeters.
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
-    pub fn distance(&self) -> Result<u16, RangeFinderError> {
+    pub fn distance(&self) -> Result<Length, RangeFinderError> {
         self.output_port.validate_expander()?;
         self.output_port.configure(self.device_type());
 
@@ -53,7 +54,7 @@ impl AdiRangeFinder {
             vexDeviceAdiValueGet(self.output_port.device_handle(), self.output_port.index())
         } {
             -1 => Err(RangeFinderError::NoReading),
-            val => Ok(val as u16),
+            val => Ok(Length::new::<centimeter>(val as f64)),
         }
     }
 }

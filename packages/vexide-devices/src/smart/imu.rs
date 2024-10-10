@@ -1,6 +1,7 @@
 //! Inertial sensor (IMU) device.
 
 use core::{
+    f64::consts::TAU,
     marker::PhantomData,
     pin::Pin,
     task::{Context, Poll},
@@ -9,6 +10,10 @@ use core::{
 
 use bitflags::bitflags;
 use snafu::Snafu;
+use uom::{
+    si::{angle::degree, f64::Angle},
+    ConstZero,
+};
 use vex_sdk::{
     vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
     vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
@@ -28,8 +33,8 @@ use crate::{
 pub struct InertialSensor {
     port: SmartPort,
     device: V5_DeviceT,
-    rotation_offset: f64,
-    heading_offset: f64,
+    rotation_offset: Angle,
+    heading_offset: Angle,
 }
 
 // SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
@@ -48,15 +53,19 @@ impl InertialSensor {
     pub const MIN_DATA_INTERVAL: Duration = Duration::from_millis(5);
 
     /// The maximum value that can be returned by [`Self::heading`].
-    pub const MAX_HEADING: f64 = 360.0;
+    pub const MAX_HEADING: Angle = Angle {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: TAU,
+    };
 
     /// Create a new inertial sensor from a smart port index.
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
             port,
-            rotation_offset: 0.0,
-            heading_offset: 0.0,
+            rotation_offset: Angle::ZERO,
+            heading_offset: Angle::ZERO,
         }
     }
 
@@ -108,21 +117,25 @@ impl InertialSensor {
 
     /// Get the total number of degrees the Inertial Sensor has spun about the z-axis.
     ///
-    /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
+    /// This value is theoretically unbounded. Clockwise rotations are represented with positive values,
     /// while counterclockwise rotations are represented with negative ones.
-    pub fn rotation(&self) -> Result<f64, InertialError> {
-        self.validate()?;
-        Ok(unsafe { vexDeviceImuHeadingGet(self.device) } - self.rotation_offset)
-    }
-
-    /// Get the Inertial Sensor’s yaw angle bounded by [0, 360) degrees.
-    ///
-    /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
-    /// represented with negative ones.
-    pub fn heading(&self) -> Result<f64, InertialError> {
+    pub fn rotation(&self) -> Result<Angle, InertialError> {
         self.validate()?;
         Ok(
-            (unsafe { vexDeviceImuDegreesGet(self.device) } - self.heading_offset)
+            Angle::new::<degree>(unsafe { vexDeviceImuHeadingGet(self.device) })
+                - self.rotation_offset,
+        )
+    }
+
+    /// Get the Inertial Sensor’s yaw angle bounded by [0, 1) rotations.
+    ///
+    /// Clockwise rotations are represented with positive values, while counterclockwise rotations are
+    /// represented with negative ones.
+    pub fn heading(&self) -> Result<Angle, InertialError> {
+        self.validate()?;
+        Ok(
+            (Angle::new::<degree>(unsafe { vexDeviceImuDegreesGet(self.device) })
+                - self.heading_offset)
                 % Self::MAX_HEADING,
         )
     }
@@ -210,10 +223,11 @@ impl InertialSensor {
     }
 
     /// Sets the current reading of the Inertial Sensor’s rotation to target value.
-    pub fn set_rotation(&mut self, rotation: f64) -> Result<(), InertialError> {
+    pub fn set_rotation(&mut self, rotation: Angle) -> Result<(), InertialError> {
         self.validate()?;
 
-        self.rotation_offset = rotation - unsafe { vexDeviceImuHeadingGet(self.device) };
+        self.rotation_offset =
+            rotation - Angle::new::<degree>(unsafe { vexDeviceImuHeadingGet(self.device) });
 
         Ok(())
     }
@@ -221,10 +235,11 @@ impl InertialSensor {
     /// Sets the current reading of the Inertial Sensor’s heading to target value.
     ///
     /// Target will default to 360 if above 360 and default to 0 if below 0.
-    pub fn set_heading(&mut self, heading: f64) -> Result<(), InertialError> {
+    pub fn set_heading(&mut self, heading: Angle) -> Result<(), InertialError> {
         self.validate()?;
 
-        self.heading_offset = heading - unsafe { vexDeviceImuDegreesGet(self.device) };
+        self.heading_offset =
+            heading - Angle::new::<degree>(unsafe { vexDeviceImuDegreesGet(self.device) });
 
         Ok(())
     }

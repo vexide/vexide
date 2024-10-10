@@ -8,6 +8,9 @@
 //! Analog-to-Digital Converter (ADC) in the V5 brain. The brain measures analog input
 //! using 12-bit values ranging from 0 (0V) to 4095 (5V).
 
+use core::marker::PhantomData;
+
+use uom::si::f64::ElectricPotential;
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
@@ -46,6 +49,13 @@ impl AdiAnalogIn {
         Ok(unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } as u16)
     }
 
+    /// The maximum voltage that can be read by the analog input.
+    pub const MAX_VOLTAGE: ElectricPotential = ElectricPotential {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: 5.0,
+    };
+
     /// Reads an analog input channel and returns the calculated voltage input (0-5V).
     ///
     /// # Precision
@@ -57,8 +67,8 @@ impl AdiAnalogIn {
     ///
     /// The value returned is undefined if the analog pin has been switched to a different mode.
     /// The meaning of the returned value varies depending on the sensor attached.
-    pub fn voltage(&self) -> Result<f64, PortError> {
-        Ok(self.value()? as f64 / (ADC_MAX_VALUE as f64) * 5.0)
+    pub fn voltage(&self) -> Result<ElectricPotential, PortError> {
+        Ok(self.value()? as f64 / (ADC_MAX_VALUE as f64) * Self::MAX_VOLTAGE)
     }
 }
 

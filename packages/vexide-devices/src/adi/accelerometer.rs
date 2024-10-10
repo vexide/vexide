@@ -1,5 +1,8 @@
 //! ADI Accelerometer device.
 
+use core::marker::PhantomData;
+
+use uom::si::f64::Acceleration;
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{analog, AdiDevice, AdiDeviceType, AdiPort};
@@ -30,12 +33,12 @@ impl AdiAccelerometer {
 
     /// Get the maximum acceleration measurement supported by the current [`Sensitivity`] jumper
     /// configuration.
-    pub fn max_acceleration(&self) -> Result<f64, PortError> {
+    pub fn max_acceleration(&self) -> Result<Acceleration, PortError> {
         Ok(self.sensitivity()?.max_acceleration())
     }
 
     /// Gets the current acceleration measurement for this axis in g (~9.8 m/s/s).
-    pub fn acceleration(&self) -> Result<f64, PortError> {
+    pub fn acceleration(&self) -> Result<Acceleration, PortError> {
         Ok(
             // Convert 0-4095 to 0-1, then scale to max accel.
             self.raw_acceleration()? as f64 / analog::ADC_MAX_VALUE as f64
@@ -69,13 +72,21 @@ pub enum Sensitivity {
 
 impl Sensitivity {
     /// Maxmimum acceleration measurement when in low sensitivity mode.
-    pub const LOW_MAX_ACCELERATION: f64 = 2.0;
+    pub const LOW_MAX_ACCELERATION: Acceleration = Acceleration {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: 2.0,
+    };
 
     /// Maxmimum acceleration measurement when in high sensitivity mode.
-    pub const HIGH_MAX_ACCELERATION: f64 = 6.0;
+    pub const HIGH_MAX_ACCELERATION: Acceleration = Acceleration {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: 6.0,
+    };
 
     /// Get the maximum acceleration measurement (in G) for this sensitivity.
-    pub const fn max_acceleration(&self) -> f64 {
+    pub const fn max_acceleration(&self) -> Acceleration {
         match self {
             Self::Low => Self::LOW_MAX_ACCELERATION,
             Self::High => Self::HIGH_MAX_ACCELERATION,

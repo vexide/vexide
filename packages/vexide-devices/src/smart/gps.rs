@@ -1,7 +1,12 @@
 //! GPS sensor device.
 
-use core::{marker::PhantomData, time::Duration};
+use core::{f64::consts::TAU, marker::PhantomData, time::Duration};
 
+use uom::si::{
+    angle::degree,
+    f64::{Angle, Length},
+    length::meter,
+};
 use vex_sdk::{
     vexDeviceGpsAttitudeGet, vexDeviceGpsDataRateSet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet,
     vexDeviceGpsHeadingGet, vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet,
@@ -87,7 +92,7 @@ impl GpsSensor {
     ///
     /// > You should **never** attempt to use the [`GpsImu`] angles when dealing with position data from this sensor
     /// > unless you understand exactly what you're doing.
-    pub fn pose(&self) -> Result<(Point2<f64>, f64), PortError> {
+    pub fn pose(&self) -> Result<(Point2<f64>, Angle), PortError> {
         self.validate_port()?;
 
         let mut attitude = V5_DeviceGpsAttitude::default();
@@ -95,11 +100,13 @@ impl GpsSensor {
             vexDeviceGpsAttitudeGet(self.device, &mut attitude, false);
         }
 
-        let heading = (360.0
-            - unsafe {
-                vexDeviceGpsRotationGet(self.device) + vexDeviceGpsDegreesGet(self.device)
-            })
-            % 360.0;
+        let heading = Angle::new::<degree>(
+            (360.0
+                - unsafe {
+                    vexDeviceGpsRotationGet(self.device) + vexDeviceGpsDegreesGet(self.device)
+                })
+                % 360.0,
+        );
 
         Ok((
             Point2::<f64>::new(attitude.position_x, attitude.position_y),
@@ -108,10 +115,12 @@ impl GpsSensor {
     }
 
     /// Returns the RMS (Root Mean Squared) error for the GPS position reading in meters.
-    pub fn error(&self) -> Result<f64, PortError> {
+    pub fn error(&self) -> Result<Length, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceGpsErrorGet(self.device) })
+        Ok(Length::new::<meter>(unsafe {
+            vexDeviceGpsErrorGet(self.device)
+        }))
     }
 
     /// Returns the sensor's current status bits.
@@ -137,8 +146,8 @@ impl SmartDevice for GpsSensor {
 pub struct GpsImu {
     port_number: u8,
     device: V5_DeviceT,
-    rotation_offset: f64,
-    heading_offset: f64,
+    rotation_offset: Angle,
+    heading_offset: Angle,
 }
 
 // I'm sure you know the drill at this point...
@@ -146,14 +155,18 @@ unsafe impl Send for GpsImu {}
 unsafe impl Sync for GpsImu {}
 
 impl GpsImu {
-    /// The maximum value that can be returned by [`Self::heading`].
-    pub const MAX_HEADING: f64 = 360.0;
+    /// The maximum angle that can be returned by [`Self::heading`].
+    pub const MAX_HEADING: Angle = Angle {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: TAU,
+    };
 
     fn validate_port(&self) -> Result<(), PortError> {
         validate_port(self.port_number, SmartDeviceType::Gps)
     }
 
-    /// Returns the IMU's yaw angle bounded by [0, 360) degrees.
+    /// Returns the IMU's yaw angle bounded by [0, 1) rotations.
     ///
     /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
     /// represented with negative ones.
@@ -164,10 +177,11 @@ impl GpsImu {
     /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
     /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
     /// position readings. Prefer using [`GpsSensor::pose`] for that.
-    pub fn heading(&self) -> Result<f64, PortError> {
+    pub fn heading(&self) -> Result<Angle, PortError> {
         self.validate_port()?;
         Ok(
-            (unsafe { vexDeviceGpsDegreesGet(self.device) } - self.heading_offset)
+            (Angle::new::<degree>(unsafe { vexDeviceGpsDegreesGet(self.device) })
+                - self.heading_offset)
                 % Self::MAX_HEADING,
         )
     }
@@ -183,12 +197,15 @@ impl GpsImu {
     /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
     /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
     /// position readings. Prefer using [`GpsSensor::pose`] for that.
-    pub fn rotation(&self) -> Result<f64, PortError> {
+    pub fn rotation(&self) -> Result<Angle, PortError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } - self.rotation_offset)
+        Ok(
+            Angle::new::<degree>(unsafe { vexDeviceGpsHeadingGet(self.device) })
+                - self.rotation_offset,
+        )
     }
 
-    /// Returns the Euler angles (pitch, yaw, roll) representing the IMU's orientation.
+    /// Returns the Euler angles (pitch, yaw, roll) representing the IMU's orientation in radians.
     ///
     /// # Important
     ///
@@ -296,26 +313,28 @@ impl GpsImu {
     ///
     /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
     /// on that function for more information.
-    pub fn set_rotation(&mut self, rotation: f64) -> Result<(), PortError> {
+    pub fn set_rotation(&mut self, rotation: Angle) -> Result<(), PortError> {
         self.validate_port()?;
 
-        self.rotation_offset = rotation - unsafe { vexDeviceGpsHeadingGet(self.device) };
+        self.rotation_offset =
+            rotation - Angle::new::<degree>(unsafe { vexDeviceGpsHeadingGet(self.device) });
 
         Ok(())
     }
 
     /// Sets the current reading of the IMU's heading to target value.
     ///
-    /// Target will default to 360 if above 360 and default to 0 if below 0.
+    /// Target will default to 360 degrees if above 360 degrees and default to 0 if below 0.
     ///
     /// # Important
     ///
     /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
     /// on that function for more information.
-    pub fn set_heading(&mut self, heading: f64) -> Result<(), PortError> {
+    pub fn set_heading(&mut self, heading: Angle) -> Result<(), PortError> {
         self.validate_port()?;
 
-        self.heading_offset = heading - unsafe { vexDeviceGpsDegreesGet(self.device) };
+        self.heading_offset =
+            heading - Angle::new::<degree>(unsafe { vexDeviceGpsDegreesGet(self.device) });
 
         Ok(())
     }

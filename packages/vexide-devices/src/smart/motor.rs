@@ -1,9 +1,22 @@
 //! V5 Smart Motors
 
-use core::time::Duration;
+use core::{f64::consts::TAU, marker::PhantomData, time::Duration};
 
 use bitflags::bitflags;
 use snafu::Snafu;
+use uom::{
+    si::{
+        angle::{degree, revolution},
+        angular_velocity::revolution_per_minute,
+        electric_current::milliampere,
+        electric_potential::millivolt,
+        f64::{
+            Angle, AngularVelocity, ElectricCurrent, ElectricPotential, ThermodynamicTemperature,
+        },
+        thermodynamic_temperature::degree_celsius,
+    },
+    ConstZero,
+};
 use vex_sdk::{
     vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorBrakeModeSet, vexDeviceMotorCurrentGet,
     vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet, vexDeviceMotorEfficiencyGet,
@@ -20,7 +33,7 @@ use vex_sdk::{
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
-use crate::{position::Position, PortError};
+use crate::PortError;
 
 /// The basic motor struct.
 #[derive(Debug, PartialEq)]
@@ -46,22 +59,22 @@ pub enum MotorControl {
     /// # Fields
     ///
     /// - `0`: The desired output voltage of the motor
-    Voltage(f64),
+    Voltage(ElectricPotential),
 
     /// The motor attempts to hold a velocity using its internal PID control.
     ///
     /// # Fields
     ///
     /// - `0`: The desired speed of the motor during the movement operation
-    Velocity(i32),
+    Velocity(AngularVelocity),
 
-    /// The motor attempts to reach a position using its internal PID control.
+    /// The motor attempts to reach a state (i.e. set angular position and velocity) using its internal PID control.
     ///
     /// # Fields
     ///
     /// - `0`: The desired position of the motor after the movement operation
     /// - `1`: The desired speed of the motor during the movement operation
-    Position(Position, i32),
+    State(Angle, AngularVelocity),
 }
 
 /// Represents a possible direction that a motor can be configured as.
@@ -105,7 +118,11 @@ impl core::ops::Not for Direction {
 
 impl Motor {
     /// The maximum voltage value that can be sent to a [`Motor`].
-    pub const MAX_VOLTAGE: f64 = 12.0;
+    pub const MAX_VOLTAGE: ElectricPotential = ElectricPotential {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: 12.0,
+    };
 
     /// The rate at which data can be read from a [`Motor`].
     pub const DATA_READ_INTERVAL: Duration = Duration::from_millis(10);
@@ -131,7 +148,7 @@ impl Motor {
 
         Self {
             port,
-            target: MotorControl::Voltage(0.0),
+            target: MotorControl::Voltage(ElectricPotential::ZERO),
             device,
         }
     }
@@ -149,29 +166,32 @@ impl Motor {
                 // Force motor into braking by putting it into velocity control with a 0rpm setpoint.
                 vexDeviceMotorVelocitySet(self.device, 0);
             },
-            MotorControl::Velocity(rpm) => unsafe {
+            MotorControl::Velocity(velocity) => unsafe {
                 vexDeviceMotorBrakeModeSet(
                     self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                vexDeviceMotorVelocitySet(self.device, rpm);
+                vexDeviceMotorVelocitySet(
+                    self.device,
+                    velocity.get::<revolution_per_minute>() as i32,
+                );
             },
             MotorControl::Voltage(volts) => unsafe {
                 vexDeviceMotorBrakeModeSet(
                     self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                vexDeviceMotorVoltageSet(self.device, (volts * 1000.0) as i32);
+                vexDeviceMotorVoltageSet(self.device, volts.get::<millivolt>() as i32);
             },
-            MotorControl::Position(position, velocity) => unsafe {
+            MotorControl::State(position, velocity) => unsafe {
                 vexDeviceMotorBrakeModeSet(
                     self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
                 vexDeviceMotorAbsoluteTargetSet(
                     self.device,
-                    position.as_ticks(gearset.ticks_per_revolution()) as f64,
-                    velocity,
+                    position.get::<revolution>() * gearset.ticks_per_revolution() as f64,
+                    velocity.get::<revolution_per_minute>() as i32,
                 );
             },
         }
@@ -189,39 +209,45 @@ impl Motor {
     /// This velocity corresponds to different actual speeds in RPM depending on the gearset used for the motor.
     /// Velocity is held with an internal PID controller to ensure consistent speed, as opposed to setting the
     /// motor's voltage.
-    pub fn set_velocity(&mut self, rpm: i32) -> Result<(), MotorError> {
-        self.set_target(MotorControl::Velocity(rpm))
+    pub fn set_velocity(&mut self, velocity: AngularVelocity) -> Result<(), MotorError> {
+        self.set_target(MotorControl::Velocity(velocity))
     }
 
     /// Sets the motor's output voltage.
     ///
-    /// This voltage value spans from -12 (fully spinning reverse) to +12 (fully spinning forwards) volts, and
+    /// This voltage value spans from -12V (fully spinning reverse) to +12V (fully spinning forwards), and
     /// controls the raw output of the motor.
-    pub fn set_voltage(&mut self, volts: f64) -> Result<(), MotorError> {
+    pub fn set_voltage(&mut self, volts: ElectricPotential) -> Result<(), MotorError> {
         self.set_target(MotorControl::Voltage(volts))
     }
 
     /// Sets an absolute position target for the motor to attempt to reach.
     pub fn set_position_target(
         &mut self,
-        position: Position,
-        velocity: i32,
+        position: Angle,
+        velocity: AngularVelocity,
     ) -> Result<(), MotorError> {
-        self.set_target(MotorControl::Position(position, velocity))
+        self.set_target(MotorControl::State(position, velocity))
     }
 
     /// Changes the output velocity for a profiled movement (motor_move_absolute or motor_move_relative).
     ///
     /// This will have no effect if the motor is not following a profiled movement.
-    pub fn update_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
+    pub fn update_profiled_velocity(
+        &mut self,
+        velocity: AngularVelocity,
+    ) -> Result<(), MotorError> {
         self.validate_port()?;
 
         unsafe {
-            vexDeviceMotorVelocityUpdate(self.device, velocity);
+            vexDeviceMotorVelocityUpdate(
+                self.device,
+                velocity.get::<revolution_per_minute>() as i32,
+            );
         }
 
-        if let MotorControl::Position(position, _) = self.target {
-            self.target = MotorControl::Position(position, velocity)
+        if let MotorControl::State(position, _) = self.target {
+            self.target = MotorControl::State(position, velocity)
         }
 
         Ok(())
@@ -249,9 +275,12 @@ impl Motor {
     }
 
     /// Gets the estimated angular velocity (RPM) of the motor.
-    pub fn velocity(&self) -> Result<i32, MotorError> {
+    pub fn velocity(&self) -> Result<AngularVelocity, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorVelocityGet(self.device) })
+        Ok(AngularVelocity::new::<revolution_per_minute>(unsafe {
+            vexDeviceMotorVelocityGet(self.device)
+        }
+            as f64))
     }
 
     /// Returns the power drawn by the motor in Watts.
@@ -273,12 +302,9 @@ impl Motor {
     }
 
     /// Returns the current position of the motor.
-    pub fn position(&self) -> Result<Position, MotorError> {
+    pub fn position(&self) -> Result<Angle, MotorError> {
         let gearset = self.gearset()?;
-        Ok(Position::from_ticks(
-            unsafe { vexDeviceMotorPositionGet(self.device) } as i64,
-            gearset.ticks_per_revolution(),
-        ))
+        Ok(unsafe { vexDeviceMotorPositionGet(self.device) } * gearset.tick_angle())
     }
 
     /// Returns the most recently recorded raw encoder tick data from the motor's IME
@@ -320,46 +346,52 @@ impl Motor {
 
     /// Sets the current encoder position to the given position without moving the motor.
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
-    pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
+    pub fn set_position(&mut self, position: Angle) -> Result<(), MotorError> {
         self.validate_port()?;
-        unsafe { vexDeviceMotorPositionSet(self.device, position.as_degrees()) }
+        unsafe { vexDeviceMotorPositionSet(self.device, position.get::<degree>()) }
         Ok(())
     }
 
-    /// Sets the current limit for the motor in amps.
-    pub fn set_current_limit(&mut self, limit: f64) -> Result<(), MotorError> {
+    /// Sets the current limit for the motor.
+    pub fn set_current_limit(&mut self, limit: ElectricCurrent) -> Result<(), MotorError> {
         self.validate_port()?;
-        unsafe { vexDeviceMotorCurrentLimitSet(self.device, (limit * 1000.0) as i32) }
+        unsafe { vexDeviceMotorCurrentLimitSet(self.device, limit.get::<milliampere>() as i32) }
         Ok(())
     }
 
-    /// Sets the voltage limit for the motor in volts.
-    pub fn set_voltage_limit(&mut self, limit: f64) -> Result<(), MotorError> {
+    /// Sets the voltage limit for the motor.
+    pub fn set_voltage_limit(&mut self, limit: ElectricPotential) -> Result<(), MotorError> {
         self.validate_port()?;
 
         unsafe {
-            vexDeviceMotorVoltageLimitSet(self.device, (limit * 1000.0) as i32);
+            vexDeviceMotorVoltageLimitSet(self.device, limit.get::<millivolt>() as i32);
         }
 
         Ok(())
     }
 
     /// Gets the current limit for the motor in amps.
-    pub fn current_limit(&self) -> Result<f64, MotorError> {
+    pub fn current_limit(&self) -> Result<ElectricCurrent, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorCurrentLimitGet(self.device) } as f64 / 1000.0)
+        Ok(ElectricCurrent::new::<milliampere>(
+            unsafe { vexDeviceMotorCurrentLimitGet(self.device) } as f64,
+        ))
     }
 
     /// Gets the voltage limit for the motor if one has been explicitly set.
-    pub fn voltage_limit(&self) -> Result<f64, MotorError> {
+    pub fn voltage_limit(&self) -> Result<ElectricPotential, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorVoltageLimitGet(self.device) } as f64 / 1000.0)
+        Ok(ElectricPotential::new::<millivolt>(
+            unsafe { vexDeviceMotorVoltageLimitGet(self.device) } as f64,
+        ))
     }
 
     /// Returns the internal temperature recorded by the motor in increments of 5 °C.
-    pub fn temperature(&self) -> Result<f64, MotorError> {
+    pub fn temperature(&self) -> Result<ThermodynamicTemperature, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorTemperatureGet(self.device) })
+        Ok(ThermodynamicTemperature::new::<degree_celsius>(unsafe {
+            vexDeviceMotorTemperatureGet(self.device)
+        }))
     }
 
     /// Get the status flags of a motor.
@@ -588,11 +620,23 @@ impl Gearset {
     pub const RPM_600: Gearset = Self::Blue;
 
     /// Rated max speed for a smart motor with a [`Red`](Gearset::Red) gearset.
-    pub const MAX_RED_RPM: f64 = 100.0;
+    pub const MAX_RED_SPEED: AngularVelocity = AngularVelocity {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: 100.0 * TAU / 60.0,
+    };
     /// Rated speed for a smart motor with a [`Green`](Gearset::Green) gearset.
-    pub const MAX_GREEN_RPM: f64 = 200.0;
+    pub const MAX_GREEN_SPEED: AngularVelocity = AngularVelocity {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: 200.0 * TAU / 60.0,
+    };
     /// Rated speed for a smart motor with a [`Blue`](Gearset::Blue) gearset.
-    pub const MAX_BLUE_RPM: f64 = 600.0;
+    pub const MAX_BLUE_SPEED: AngularVelocity = AngularVelocity {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: 600.0 * TAU / 60.0,
+    };
 
     /// Number of encoder ticks per revolution for the [`Red`](Gearset::Red) gearset.
     pub const RED_TICKS_PER_REVOLUTION: u32 = 1800;
@@ -602,11 +646,11 @@ impl Gearset {
     pub const BLUE_TICKS_PER_REVOLUTION: u32 = 300;
 
     /// Get the rated maximum speed for this motor gearset.
-    pub const fn max_rpm(&self) -> f64 {
+    pub const fn max_speed(&self) -> AngularVelocity {
         match self {
-            Self::Red => Self::MAX_RED_RPM,
-            Self::Green => Self::MAX_GREEN_RPM,
-            Self::Blue => Self::MAX_BLUE_RPM,
+            Self::Red => Self::MAX_RED_SPEED,
+            Self::Green => Self::MAX_GREEN_SPEED,
+            Self::Blue => Self::MAX_BLUE_SPEED,
         }
     }
 
@@ -616,6 +660,15 @@ impl Gearset {
             Self::Red => Self::RED_TICKS_PER_REVOLUTION,
             Self::Green => Self::GREEN_TICKS_PER_REVOLUTION,
             Self::Blue => Self::BLUE_TICKS_PER_REVOLUTION,
+        }
+    }
+
+    /// Get the angle measured by a single encoder tick for this motor gearset.
+    pub fn tick_angle(&self) -> Angle {
+        Angle {
+            dimension: PhantomData,
+            units: PhantomData,
+            value: TAU / self.ticks_per_revolution() as f64,
         }
     }
 }
