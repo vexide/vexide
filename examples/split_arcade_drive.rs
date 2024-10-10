@@ -15,19 +15,19 @@ impl Compete for Robot {
         loop {
             let controller_state = self.controller.state().unwrap_or_default();
 
-            // - Right stick's vertical motion dictates the robot's forward power.
-            // - Left stick's sideways motion dictates the robot's turning power.
-            let fwd = controller_state.left_stick.x();
+            // - Right stick's vertical motion dictates the robot's forward voltage.
+            // - Left stick's sideways motion dictates the robot's turning voltage.
+            let forward = controller_state.right_stick.x();
             let turn = controller_state.left_stick.y();
 
             // Move left motors.
             for motor in self.left_motors.iter_mut() {
-                motor.set_voltage((fwd + turn) * Motor::MAX_VOLTAGE).ok();
+                motor.set_voltage((forward + turn) * Motor::MAX_VOLTAGE).ok();
             }
 
             // Move right motors.
             for motor in self.right_motors.iter_mut() {
-                motor.set_voltage((fwd - turn) * Motor::MAX_VOLTAGE).ok();
+                motor.set_voltage((forward - turn) * Motor::MAX_VOLTAGE).ok();
             }
 
             sleep(Controller::UPDATE_INTERVAL).await;
