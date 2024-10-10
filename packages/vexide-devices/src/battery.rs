@@ -4,22 +4,25 @@ use vex_sdk::{
     vexBatteryCapacityGet, vexBatteryCurrentGet, vexBatteryTemperatureGet, vexBatteryVoltageGet,
 };
 
-/// Get the robot's current battery capacity as a percentage out of 100.
+/// Returns the robot's current battery capacity from [0.0, 1.0].
+///
+/// A value of `0.0` indicates a completely empty battery, while a value of`1.0`
+/// indicates a fully-charged battery.
 pub fn capacity() -> f64 {
-    unsafe { vexBatteryCapacityGet() }
+    (unsafe { vexBatteryCapacityGet() } as f64) / 100.0
 }
 
-/// Get the temperature of the robot's battery in degrees celsius.
-pub fn temperature() -> f64 {
-    unsafe { vexBatteryTemperatureGet() }
+/// Returns the internal temperature of the robot's battery in degrees celsius.
+pub fn temperature() -> u64 {
+    (unsafe { vexBatteryTemperatureGet() } as u64)
 }
 
-/// Get the electric current of the robot's battery in amps.
+/// Returns the electric current of the robot's battery in amps.
 pub fn current() -> f64 {
     (unsafe { vexBatteryCurrentGet() } as f64) / 1000.0
 }
 
-/// Get the robot's battery voltage in volts.
+/// Returns the robot's battery voltage in volts.
 pub fn voltage() -> f64 {
     (unsafe { vexBatteryVoltageGet() } as f64) / 1000.0
 }
