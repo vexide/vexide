@@ -1,4 +1,4 @@
-//! Controller support.
+//! V5 Controller
 //!
 //! This module allows you to read from the buttons and joysticks on the controller and write to the controller's display.
 
