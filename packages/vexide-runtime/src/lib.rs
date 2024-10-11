@@ -3,7 +3,6 @@
 //!
 //! Included in this crate:
 //! - Competition state handling: [`competition`]
-//! - Critical-section implementation: [`critical_section`]
 //! - Serial terminal printing: [`io`]
 //! - Synchronization primitives: [`sync`]
 //! - Program control: [`program`]
@@ -16,3 +15,4 @@ pub mod sync;
 pub mod task;
 pub mod time;
 pub mod executor;
+pub mod backtrace;

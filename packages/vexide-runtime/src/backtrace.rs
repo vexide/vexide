@@ -5,8 +5,8 @@
 //! containing information that can be used to get a chain of where an error
 //! was created.
 
-use alloc::vec::Vec;
-use core::{ffi::c_void, fmt::Display};
+use std::vec::Vec;
+use std::{ffi::c_void, fmt::Display};
 
 #[cfg(all(target_vendor = "vex", feature = "backtraces"))]
 use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};

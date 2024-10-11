@@ -1,6 +1,6 @@
 [package]
 name = "vexide-runtime"
-version = "0.3.0"
+version = "0.0.1"
 edition = "2021"
 license = "MIT"
 description = "Async executor and core runtime for vexide"
@@ -32,5 +32,12 @@ waker-fn = "1.1.1"
 async-task = "4.7.1"
 compile-time = "0.2.0"
 
+[target.'cfg(target_arch = "arm")'.dependencies]
+vex-libunwind = { version = "0.1.0", git = "https://github.com/vexide/vex-libunwind.git", optional = true }
+
 [lints]
 workspace = true
+
+[features]
+default = ["backtraces"]
+backtraces = ["dep:vex-libunwind"]

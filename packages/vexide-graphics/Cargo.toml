@@ -14,6 +14,7 @@ authors = [
 repository = "https://github.com/vexide/vexide"
 
 [dependencies]
+embedded-graphics-core = { version = "0.4.0", optional = true }
 slint = { version = "1.5.1", default-features = false, optional = true, features = ["compat-1-2", "unsafe-single-threaded", "libm", "renderer-software"] }
 vex-sdk = { workspace = true }
 vexide-runtime = { workspace = true }

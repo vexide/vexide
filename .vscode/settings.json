@@ -47,7 +47,7 @@
     ],
     "rust-analyzer.cargo.allTargets": false,
     "rust-analyzer.check.targets": [
-        "${workspaceFolder}/armv7a-vex-v5.json",
+        "armv7a-vex-v5",
     ],
     "rust-analyzer.cargo.extraArgs": [
         "--examples",

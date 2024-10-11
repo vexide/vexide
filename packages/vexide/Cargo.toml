@@ -24,11 +24,10 @@ compress = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vexide-runtime = { version = "0.3.0", path = "../vexide-runtime", optional = true }
-vexide-devices = { version = "0.3.0", path = "../vexide-devices", optional = true, features = ["std"] }
-vexide-graphics = { version = "0.1.2", path = "../vexide-graphics", optional = true }
-vexide-macro = { version = "0.2.0", path = "../vexide-macro", optional = true }
-vex-sdk = "0.17.0"
+vexide-runtime = { workspace = true, optional = true }
+vexide-devices = { workspace = true, optional = true, features = ["std"] }
+vexide-graphics = { workspace = true, optional = true }
+vexide-macro = { workspace = true, optional = true }
 
 [features]
 default = ["rt", "devices", "macro"]
@@ -36,6 +35,7 @@ default = ["rt", "devices", "macro"]
 macro = ["dep:vexide-macro", "rt", "devices"]
 
 rt = ["dep:vexide-runtime"]
+backtraces = ["rt", "vexide-runtime/backtraces"]
 
 devices = ["dep:vexide-devices"]
 dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]

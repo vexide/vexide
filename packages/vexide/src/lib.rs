@@ -41,14 +41,7 @@
 #![doc(html_logo_url = "https://vexide.dev/images/logo.svg")]
 
 #[cfg(feature = "rt")]
-pub use vexide_runtime::{
-    competition,
-    sync,
-    task,
-    time,
-    block_on,
-    banner,
-};
+pub use vexide_runtime::{banner, executor, competition, sync, task, time};
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
 #[doc(inline)]
@@ -57,8 +50,6 @@ pub use vexide_graphics as graphics;
 #[doc(inline)]
 #[cfg(feature = "macro")]
 pub use vexide_macro::main;
-#[cfg(feature = "rt")]
-pub use vexide_runtime::{banner, executor, competition, sync, task, time};
 
 /// Commonly used features of vexide.
 /// This module is meant to be glob imported.

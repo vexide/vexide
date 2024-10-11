@@ -4,7 +4,7 @@ use syn::{
     parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Result, Token,
+    token, Ident, LitBool, Result, Token,
 };
 
 mod kw {
@@ -228,39 +228,5 @@ mod test {
         assert_eq!(input.attr_list.len(), 1);
         let opts = MacroOpts::from(input);
         assert!(opts.banner_enabled);
-    }
-
-    #[test]
-    fn macro_opts_defaults_when_n_opts_missing() {
-        fn macro_opts_from(source: TokenStream) -> MacroOpts {
-            let input = syn::parse2::<Attrs>(source).unwrap();
-            MacroOpts::from(input)
-        }
-
-        let source = quote! {};
-        let opts = macro_opts_from(source);
-        assert!(opts.banner_enabled);
-        assert_eq!(opts.code_sig, None);
-
-        let source = quote! {
-            banner(enabled = false)
-        };
-        let opts = macro_opts_from(source);
-        assert!(!opts.banner_enabled);
-        assert_eq!(opts.code_sig, None);
-
-        let source = quote! {
-            code_sig = my_code_sig
-        };
-        let opts = macro_opts_from(source);
-        assert!(opts.banner_enabled);
-        assert_eq!(opts.code_sig.unwrap().to_string(), "my_code_sig");
-
-        let source = quote! {
-            banner(enabled = false), code_sig = my_code_sig
-        };
-        let opts = macro_opts_from(source);
-        assert!(!opts.banner_enabled);
-        assert_eq!(opts.code_sig.unwrap().to_string(), "my_code_sig");
     }
 }
