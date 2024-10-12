@@ -48,13 +48,13 @@ impl AdiSolenoid {
     }
 
     /// Returns `true` if the solenoid is open.
-    pub const fn is_open(&self) -> LogicLevel {
-        self.level
+    pub const fn is_open(&self) -> bool {
+        matches!(self.level, LogicLevel::High)
     }
 
     /// Returns `true` if the solenoid is closed.
-    pub const fn is_closed(&self) -> LogicLevel {
-        self.level
+    pub const fn is_closed(&self) -> bool {
+        matches!(self.level, LogicLevel::Low)
     }
 
     /// Open the solenoid, allowing air pressure through the "open" valve.
