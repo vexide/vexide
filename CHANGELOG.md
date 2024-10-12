@@ -19,11 +19,35 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
+
 ## [Unreleased]
 
 ### Added
 
+- You can now detect controller release occurrences with `ButtonState::is_now_released`.
+
 ### Fixed
+
+### Changed
+
+- Controller state is now returned all at once to reduce error checking. (#152) (**Breaking Change**)
+- `Button::was_pressed` has been renamed to `ButtonState::is_now_pressed`.
+- `battery::capacity` now returns from 0.0-1.0 rather than 0-100.
+- `battery::voltage` is now returned in volts rather than millivolts.
+- `battery::current` is now returned in amps rather than milliamps.
+
+### Removed
+
+### New Contributors
+
+
+## [0.4.1]
+
+### Added
+
+### Fixed
+
+- Updated to vex-sdk 0.21.0, fixing ABI incompatibilities between the VEXos calling convention and the hard-float ABI introduced in vexide 0.4.0. This should fix broken functions that pass floats to the SDK. (#156)
 
 ### Changed
 
@@ -141,3 +165,4 @@ Before releasing:
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
 [0.4.0]: https://github.com/vexide/vexide/compare/v0.3.0...v0.4.0
+[0.4.1]: https://github.com/vexide/vexide/compare/v0.4.0...v0.4.1

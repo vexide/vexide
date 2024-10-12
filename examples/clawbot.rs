@@ -55,31 +55,11 @@ impl Compete for ClawBot {
             // Limit Switch State
             let limit_switch_pressed = self.arm_limit_switch.is_high().unwrap_or_default();
 
-            // Controller Buttons
-            let r1_pressed = self
-                .controller
-                .right_trigger_1
-                .is_pressed()
-                .unwrap_or_default();
-            let r2_pressed = self
-                .controller
-                .right_trigger_2
-                .is_pressed()
-                .unwrap_or_default();
-            let l1_pressed = self
-                .controller
-                .left_trigger_1
-                .is_pressed()
-                .unwrap_or_default();
-            let l2_pressed = self
-                .controller
-                .left_trigger_2
-                .is_pressed()
-                .unwrap_or_default();
+            let c_state = self.controller.state().unwrap_or_default();
 
             // Simple arcade drive
-            let forward = self.controller.left_stick.y().unwrap_or_default();
-            let turn = self.controller.right_stick.x().unwrap_or_default();
+            let forward = c_state.right_stick.y();
+            let turn = c_state.right_stick.x();
             let mut left_voltage = (forward + turn) * Motor::MAX_VOLTAGE;
             let mut right_voltage = (forward - turn) * Motor::MAX_VOLTAGE;
 
@@ -94,18 +74,18 @@ impl Compete for ClawBot {
             self.right_motor.set_voltage(right_voltage).ok();
 
             // Arm control using the R1 and R2 buttons on the controller.
-            if r1_pressed {
+            if c_state.right_trigger_1.is_pressed() {
                 self.arm.set_voltage(12.0).ok();
-            } else if r2_pressed {
+            } else if c_state.right_trigger_2.is_pressed() {
                 self.arm.set_voltage(-12.0).ok();
             } else {
                 self.arm.brake(BrakeMode::Hold).ok();
             }
 
             // Claw control using the L1 and L2 buttons on the controller.
-            if l1_pressed {
+            if c_state.left_trigger_1.is_pressed() {
                 self.claw.set_voltage(12.0).ok();
-            } else if l2_pressed && !limit_switch_pressed {
+            } else if c_state.left_trigger_2.is_pressed() && !limit_switch_pressed {
                 self.claw.set_voltage(-12.0).ok();
             } else {
                 self.claw.brake(BrakeMode::Hold).ok();

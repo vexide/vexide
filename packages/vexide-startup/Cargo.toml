@@ -1,6 +1,6 @@
 [package]
 name = "vexide-startup"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 license = "MIT"
 description = "Support code for V5 Brain user program booting"
@@ -16,8 +16,8 @@ authors = [
 
 [dependencies]
 bitflags = "2.4.2"
-vex-sdk = "0.20.0"
-vexide-core = { version = "0.4.0", path = "../vexide-core" }
+vex-sdk = { workspace = true }
+vexide-core = { workspace = true }
 compile-time = "0.2.0"
 
 [lints]
