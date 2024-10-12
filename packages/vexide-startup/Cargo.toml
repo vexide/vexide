@@ -25,3 +25,6 @@ workspace = true
 
 [features]
 default = []
+
+[package.metadata.docs.rs]
+targets = [ "armv7a-none-eabi" ]
