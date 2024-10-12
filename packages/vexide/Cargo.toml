@@ -65,3 +65,6 @@ embedded-graphics = ["vexide-graphics/embedded-graphics", "graphics"]
 
 panic = ["dep:vexide-panic"]
 display_panics = ["panic", "vexide-panic/display_panics"]
+
+[package.metadata.docs.rs]
+targets = [ "armv7a-none-eabi" ]
