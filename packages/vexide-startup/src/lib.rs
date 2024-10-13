@@ -11,7 +11,6 @@
 //! This crate is NOT a crt0 implementation. No global constructors are called.
 
 #![no_std]
-#![feature(asm_experimental_arch)]
 #![allow(clippy::needless_doctest_main)]
 
 use banner::themes::BannerTheme;
