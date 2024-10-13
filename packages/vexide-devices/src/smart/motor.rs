@@ -126,23 +126,6 @@ impl MotorType {
     }
 }
 
-/// The options that can be used to configure a motor of each type.
-#[derive(Debug, PartialEq, Eq)]
-pub enum MotorOptions {
-    /// A 5.5W Smart Motor
-    Exp {
-        /// The direction of the motor.
-        direction: Direction,
-    },
-    /// An 11W Smart Motor
-    V5 {
-        /// The builtin gearset of the motor.
-        gearset: Gearset,
-        /// The direction of the motor.
-        direction: Direction,
-    },
-}
-
 impl Motor {
     /// The maximum voltage value that can be sent to a V5 [`Motor`].
     pub const MAX_VOLTAGE_V5: f64 = 12.0;
@@ -155,8 +138,9 @@ impl Motor {
     /// The rate at which data can be written to a [`Motor`].
     pub const DATA_WRITE_INTERVAL: Duration = Duration::from_millis(5);
 
+
     /// Create a new V5 or EXP motor.
-    pub fn new(port: SmartPort, options: MotorOptions) -> Self {
+    fn new_with_type(port: SmartPort, gearset: Gearset, direction: Direction, motor_type: MotorType) -> Self {
         let device = unsafe { port.device_handle() }; // SAFETY: This function is only called once on this port.
 
         // NOTE: SDK properly stores device state when unplugged, meaning that we can safely
@@ -167,21 +151,10 @@ impl Motor {
                 device,
                 vex_sdk::V5MotorEncoderUnits::kMotorEncoderCounts,
             );
-            match options {
-                MotorOptions::Exp { direction } => {
-                    vexDeviceMotorReverseFlagSet(device, direction.is_reverse())
-                }
-                MotorOptions::V5 { gearset, direction } => {
-                    vexDeviceMotorReverseFlagSet(device, direction.is_reverse());
-                    vexDeviceMotorGearingSet(device, gearset.into());
-                }
-            }
-        }
 
-        let motor_type = match options {
-            MotorOptions::Exp { .. } => MotorType::Exp,
-            MotorOptions::V5 { .. } => MotorType::V5,
-        };
+            vexDeviceMotorReverseFlagSet(device, direction.is_reverse());
+            vexDeviceMotorGearingSet(device, gearset.into());
+        }
 
         Self {
             port,
@@ -192,23 +165,21 @@ impl Motor {
     }
 
     /// Creates a new 11W (V5) Smart Motor.
-    pub fn new_v5(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
-        Self::new(port, MotorOptions::V5 { gearset, direction })
+    /// See [`Motor::new_exp`] to create a 5.5W (EXP) Smart Motor.
+    pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
+        Self::new_with_type(port, gearset, direction, MotorType::V5)
     }
     /// Creates a new 5.5W (EXP) Smart Motor.
+    /// See [`Motor::new`] to create a 11W (V5) Smart Motor.
     pub fn new_exp(port: SmartPort, direction: Direction) -> Self {
-        Self::new(port, MotorOptions::Exp { direction })
+        Self::new_with_type(port, Gearset::Green, direction, MotorType::V5)
     }
 
     /// Sets the target that the motor should attempt to reach.
     ///
     /// This could be a voltage, velocity, position, or even brake mode.
     pub fn set_target(&mut self, target: MotorControl) -> Result<(), MotorError> {
-        let gearset = if self.is_v5() {
-            self.gearset()?
-        } else {
-            Gearset::Green
-        };
+        let gearset = self.gearset()?;
         self.target = target;
 
         match target {
@@ -304,7 +275,7 @@ impl Motor {
     /// Sets the gearset of the motor.
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
         if self.motor_type.is_exp() {
-            return Err(MotorError::ExpMotorGearset);
+            return Err(MotorError::SetGearsetExp);
         }
         self.validate_port()?;
         unsafe {
@@ -316,7 +287,7 @@ impl Motor {
     /// Gets the gearset of the motor.
     pub fn gearset(&self) -> Result<Gearset, MotorError> {
         if self.motor_type.is_exp() {
-            return Err(MotorError::ExpMotorGearset);
+            return Ok(Gearset::Green);
         }
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorGearingGet(self.device) }.into())
@@ -361,11 +332,7 @@ impl Motor {
 
     /// Returns the current position of the motor.
     pub fn position(&self) -> Result<Position, MotorError> {
-        let gearset = if self.is_v5() {
-            self.gearset()?
-        } else {
-            Gearset::Green
-        };
+        let gearset =  self.gearset()?;
         Ok(Position::from_ticks(
             unsafe { vexDeviceMotorPositionGet(self.device) } as i64,
             gearset.ticks_per_revolution(),
@@ -813,6 +780,6 @@ pub enum MotorError {
         source: PortError,
     },
 
-    /// Attempted to set or get the a EXP motor's gearset.
-    ExpMotorGearset,
+    /// Attempted to set a gearset on a EXP motor.
+    SetGearsetExp,
 }
