@@ -60,8 +60,8 @@ impl Compete for ClawBot {
             // Simple arcade drive
             let forward = c_state.right_stick.y();
             let turn = c_state.right_stick.x();
-            let mut left_voltage = (forward + turn) * Motor::MAX_VOLTAGE;
-            let mut right_voltage = (forward - turn) * Motor::MAX_VOLTAGE;
+            let mut left_voltage = (forward + turn) * Motor::MAX_VOLTAGE_V5;
+            let mut right_voltage = (forward - turn) * Motor::MAX_VOLTAGE_V5;
 
             // If we are pressing the bumpers, don't allow the motors to go in reverse
             if left_bumper_pressed || right_bumper_pressed {
