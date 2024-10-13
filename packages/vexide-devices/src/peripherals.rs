@@ -33,12 +33,19 @@ use crate::{
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
-#[derive(Debug)]
-/// A struct that contains all ports on the V5 Brain
-/// and guarantees **at compile time** that each port is only used once.
-/// Because of the fact that this checks at compile time, it cannot be moved once it has been used to create a device.
+/// Contains an instance of a brain’s available I/O, including ports, hardware, and devices.
+///
+/// A brain often has many external devices attached to it. We call these devices *peripherals*, and this
+/// struct is the "gateway" to all of these. [`Peripherals`] is intended to be used as a singleton, and you
+/// will typically only get one of these in your program's execution. This guarantees **at compile time** that
+/// each port is only used once.
+///
+/// Because of the fact that this checks at compile time, it cannot be copied, cloned, or moved once
+/// it has been used to create a device.
+///
 /// If you need to store a peripherals struct for use in multiple functions, use [`DynamicPeripherals`] instead.
 /// This struct is always preferred over [`DynamicPeripherals`] when possible.
+#[derive(Debug)]
 pub struct Peripherals {
     /// Brain screen
     pub screen: Screen,
