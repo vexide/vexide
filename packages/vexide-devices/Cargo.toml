@@ -37,4 +37,4 @@ smart_leds_trait = ["dep:smart-leds-trait"]
 nalgebra = ["dep:nalgebra"]
 
 [package.metadata.docs.rs]
-targets = [ "armv7a-none-eabi" ]
+targets = ["armv7a-none-eabi"]
