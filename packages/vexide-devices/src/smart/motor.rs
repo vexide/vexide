@@ -153,7 +153,7 @@ impl Motor {
     /// The rate at which data can be written to a [`Motor`].
     pub const DATA_WRITE_INTERVAL: Duration = Duration::from_millis(5);
 
-    /// Create a new motor from a smart port index.
+    /// Create a new V5 or EXP motor.
     pub fn new(port: SmartPort, options: MotorOptions) -> Self {
         let device = unsafe { port.device_handle() }; // SAFETY: This function is only called once on this port.
 
@@ -187,6 +187,15 @@ impl Motor {
             device,
             motor_type,
         }
+    }
+
+    /// Creates a new 11W (V5) Smart Motor.
+    pub fn new_v5(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
+        Self::new(port, MotorOptions::V5 { gearset, direction })
+    }
+    /// Creates a new 5.5W (EXP) Smart Motor.
+    pub fn new_exp(port: SmartPort, direction: Direction) -> Self {
+        Self::new(port, MotorOptions::Exp { direction })
     }
 
     /// Sets the target that the motor should attempt to reach.
