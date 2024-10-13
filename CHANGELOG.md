@@ -35,11 +35,13 @@ Before releasing:
 - `battery::capacity` now returns from 0.0-1.0 rather than 0-100.
 - `battery::voltage` is now returned in volts rather than millivolts.
 - `battery::current` is now returned in amps rather than milliamps.
+- Changed the incorrect return types of `AdiSolenoid::is_open` and `AdiSolenoid::is_closed` from `LogicLevel` to `bool`. (#164) (**Breaking Change**)
 
 ### Removed
 
 ### New Contributors
 
+@zabackary made their first contribution in #164!
 
 ## [0.4.1]
 
