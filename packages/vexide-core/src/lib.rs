@@ -11,7 +11,6 @@
 
 #![no_std]
 #![feature(never_type)]
-#![feature(asm_experimental_arch)]
 
 extern crate alloc;
 
