@@ -114,15 +114,31 @@ pub enum MotorType {
     /// An 11W Smart Motor
     V5,
 }
+impl MotorType {
+    /// Returns `true` if the motor is a 5.5W (EXP) Smart Motor.
+    pub const fn is_exp(&self) -> bool {
+        matches!(self, Self::Exp)
+    }
+
+    /// Returns `true` if the motor is an 11W (V5) Smart Motor.
+    pub const fn is_v5(&self) -> bool {
+        matches!(self, Self::V5)
+    }
+}
 
 /// The options that can be used to configure a motor of each type.
 #[derive(Debug, PartialEq, Eq)]
 pub enum MotorOptions {
     /// A 5.5W Smart Motor
-    Exp { direction: Direction },
+    Exp {
+        /// The direction of the motor.
+        direction: Direction
+    },
     /// An 11W Smart Motor
     V5 {
+        /// The builtin gearset of the motor.
         gearset: Gearset,
+        /// The direction of the motor.
         direction: Direction,
     },
 }
@@ -270,6 +286,9 @@ impl Motor {
 
     /// Sets the gearset of the motor.
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
+        if self.motor_type.is_exp() {
+            return Err(MotorError::ExpMotorGearset);
+        }
         self.validate_port()?;
         unsafe {
             vexDeviceMotorGearingSet(self.device, gearset.into());
@@ -279,8 +298,16 @@ impl Motor {
 
     /// Gets the gearset of the motor.
     pub fn gearset(&self) -> Result<Gearset, MotorError> {
+        if self.motor_type.is_exp() {
+            return Err(MotorError::ExpMotorGearset);
+        }
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorGearingGet(self.device) }.into())
+    }
+
+    /// Gets the type of the motor
+    pub const fn motor_type(&self) -> MotorType {
+        self.motor_type
     }
 
     /// Gets the estimated angular velocity (RPM) of the motor.
@@ -748,4 +775,7 @@ pub enum MotorError {
         /// The source of the error.
         source: PortError,
     },
+
+    /// Attempted to set or get the a EXP motor's gearset.
+    ExpMotorGearset,
 }
