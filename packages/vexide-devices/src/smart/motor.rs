@@ -309,6 +309,14 @@ impl Motor {
     pub const fn motor_type(&self) -> MotorType {
         self.motor_type
     }
+    /// Returns `true` if the motor is a 5.5W (EXP) Smart Motor.
+    pub const fn is_exp(&self) -> bool {
+        self.motor_type.is_exp()
+    }
+    /// Returns `true` if the motor is an 11W (V5) Smart Motor.
+    pub const fn is_v5(&self) -> bool {
+        self.motor_type.is_v5()
+    }
 
     /// Gets the estimated angular velocity (RPM) of the motor.
     pub fn velocity(&self) -> Result<i32, MotorError> {
