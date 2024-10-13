@@ -28,6 +28,8 @@ pub struct Motor {
     port: SmartPort,
     target: MotorControl,
     device: V5_DeviceT,
+
+    motor_type: MotorType,
 }
 
 // SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
@@ -103,6 +105,28 @@ impl core::ops::Not for Direction {
     }
 }
 
+/// Represents the type of a smart motor.
+/// Either a 11W (V5) or 5.5W (EXP) motor.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MotorType {
+    /// A 5.5W Smart Motor
+    Exp,
+    /// An 11W Smart Motor
+    V5,
+}
+
+/// The options that can be used to configure a motor of each type.
+#[derive(Debug, PartialEq, Eq)]
+pub enum MotorOptions {
+    /// A 5.5W Smart Motor
+    Exp { direction: Direction },
+    /// An 11W Smart Motor
+    V5 {
+        gearset: Gearset,
+        direction: Direction,
+    },
+}
+
 impl Motor {
     /// The maximum voltage value that can be sent to a [`Motor`].
     pub const MAX_VOLTAGE: f64 = 12.0;
@@ -114,7 +138,7 @@ impl Motor {
     pub const DATA_WRITE_INTERVAL: Duration = Duration::from_millis(5);
 
     /// Create a new motor from a smart port index.
-    pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
+    pub fn new(port: SmartPort, options: MotorOptions) -> Self {
         let device = unsafe { port.device_handle() }; // SAFETY: This function is only called once on this port.
 
         // NOTE: SDK properly stores device state when unplugged, meaning that we can safely
@@ -125,14 +149,25 @@ impl Motor {
                 device,
                 vex_sdk::V5MotorEncoderUnits::kMotorEncoderCounts,
             );
-            vexDeviceMotorGearingSet(device, gearset.into());
-            vexDeviceMotorReverseFlagSet(device, direction.is_reverse());
+            match options {
+                MotorOptions::Exp { direction } => vexDeviceMotorReverseFlagSet(device, direction.is_reverse()),
+                MotorOptions::V5 { gearset, direction } => {
+                    vexDeviceMotorReverseFlagSet(device, direction.is_reverse());
+                    vexDeviceMotorGearingSet(device, gearset.into());
+                },
+            }
         }
+
+        let motor_type = match options {
+            MotorOptions::Exp { .. } => MotorType::Exp,
+            MotorOptions::V5 { .. } => MotorType::V5,
+        };
 
         Self {
             port,
             target: MotorControl::Voltage(0.0),
             device,
+            motor_type,
         }
     }
 
