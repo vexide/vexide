@@ -18,7 +18,7 @@
           buildInputs = [
             cargo-v5'
             pkgs.cargo-binutils
-            (pkgs.rust-bin.nightly.default.override {
+            (pkgs.rust-bin.nightly.latest.default.override {
               extensions = [ "rust-analyzer" "rust-src" "clippy" "llvm-tools" ];
             })
           ];
