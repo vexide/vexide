@@ -11,7 +11,7 @@ members = ["packages/*"]
 resolver = "2"
 
 [workspace.lints.rust]
-rust_2018_idioms = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
 missing_docs = "warn"
 unsafe_op_in_unsafe_fn = "deny"
 

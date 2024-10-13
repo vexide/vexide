@@ -32,4 +32,4 @@ backtraces = ["vexide-core/backtraces"]
 workspace = true
 
 [package.metadata.docs.rs]
-targets = [ "armv7a-none-eabi" ]
+targets = ["armv7a-none-eabi"]

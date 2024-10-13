@@ -62,7 +62,7 @@ impl RwLockState {
 pub struct RwLockReadGuard<'a, T> {
     lock: &'a RwLock<T>,
 }
-impl<'a, T> core::ops::Deref for RwLockReadGuard<'a, T> {
+impl<T> core::ops::Deref for RwLockReadGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { &*self.lock.data.get() }
@@ -100,13 +100,13 @@ impl<'a, T> Future for RwLockReadFuture<'a, T> {
 pub struct RwLockWriteGuard<'a, T> {
     lock: &'a RwLock<T>,
 }
-impl<'a, T> core::ops::Deref for RwLockWriteGuard<'a, T> {
+impl<T> core::ops::Deref for RwLockWriteGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { &*self.lock.data.get() }
     }
 }
-impl<'a, T> core::ops::DerefMut for RwLockWriteGuard<'a, T> {
+impl<T> core::ops::DerefMut for RwLockWriteGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
         unsafe { &mut *self.lock.data.get() }
     }
