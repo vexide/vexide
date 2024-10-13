@@ -132,7 +132,7 @@ pub enum MotorOptions {
     /// A 5.5W Smart Motor
     Exp {
         /// The direction of the motor.
-        direction: Direction
+        direction: Direction,
     },
     /// An 11W Smart Motor
     V5 {
@@ -166,11 +166,13 @@ impl Motor {
                 vex_sdk::V5MotorEncoderUnits::kMotorEncoderCounts,
             );
             match options {
-                MotorOptions::Exp { direction } => vexDeviceMotorReverseFlagSet(device, direction.is_reverse()),
+                MotorOptions::Exp { direction } => {
+                    vexDeviceMotorReverseFlagSet(device, direction.is_reverse())
+                }
                 MotorOptions::V5 { gearset, direction } => {
                     vexDeviceMotorReverseFlagSet(device, direction.is_reverse());
                     vexDeviceMotorGearingSet(device, gearset.into());
-                },
+                }
             }
         }
 
@@ -191,7 +193,11 @@ impl Motor {
     ///
     /// This could be a voltage, velocity, position, or even brake mode.
     pub fn set_target(&mut self, target: MotorControl) -> Result<(), MotorError> {
-        let gearset = self.gearset()?;
+        let gearset = if self.is_v5() {
+            self.gearset()?
+        } else {
+            Gearset::Green
+        };
         self.target = target;
 
         match target {
@@ -344,7 +350,11 @@ impl Motor {
 
     /// Returns the current position of the motor.
     pub fn position(&self) -> Result<Position, MotorError> {
-        let gearset = self.gearset()?;
+        let gearset = if self.is_v5() {
+            self.gearset()?
+        } else {
+            Gearset::Green
+        };
         Ok(Position::from_ticks(
             unsafe { vexDeviceMotorPositionGet(self.device) } as i64,
             gearset.ticks_per_revolution(),
