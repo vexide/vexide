@@ -44,3 +44,6 @@ workspace = true
 default = ["backtraces"]
 force_rust_libm = ["dep:libm"]
 backtraces = ["dep:vex-libunwind"]
+
+[package.metadata.docs.rs]
+targets = [ "armv7a-none-eabi" ]
