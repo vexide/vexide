@@ -103,10 +103,10 @@ impl Compete for ClawBot {
 async fn main(peripherals: Peripherals) {
     // Configuring devices and handing off control to the [`Competition`] API.
     ClawBot {
-        left_motor: Motor::new_v5(peripherals.port_1, Gearset::Green, Direction::Forward),
-        right_motor: Motor::new_v5(peripherals.port_10, Gearset::Green, Direction::Reverse),
-        claw: Motor::new_v5(peripherals.port_3, Gearset::Green, Direction::Forward),
-        arm: Motor::new_v5(peripherals.port_8, Gearset::Green, Direction::Forward),
+        left_motor: Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward),
+        right_motor: Motor::new(peripherals.port_10, Gearset::Green, Direction::Reverse),
+        claw: Motor::new(peripherals.port_3, Gearset::Green, Direction::Forward),
+        arm: Motor::new(peripherals.port_8, Gearset::Green, Direction::Forward),
         left_bumper: AdiDigitalIn::new(peripherals.adi_a),
         right_bumper: AdiDigitalIn::new(peripherals.adi_b),
         arm_limit_switch: AdiDigitalIn::new(peripherals.adi_h),

@@ -39,14 +39,14 @@ async fn main(peripherals: Peripherals) {
     Robot {
         controller: peripherals.primary_controller,
         left_motors: [
-            Motor::new_v5(peripherals.port_1, Gearset::Blue, Direction::Reverse),
-            Motor::new_v5(peripherals.port_2, Gearset::Blue, Direction::Reverse),
-            Motor::new_v5(peripherals.port_3, Gearset::Blue, Direction::Forward),
+            Motor::new(peripherals.port_1, Gearset::Blue, Direction::Reverse),
+            Motor::new(peripherals.port_2, Gearset::Blue, Direction::Reverse),
+            Motor::new(peripherals.port_3, Gearset::Blue, Direction::Forward),
         ],
         right_motors: [
-            Motor::new_v5(peripherals.port_4, Gearset::Blue, Direction::Forward),
-            Motor::new_v5(peripherals.port_5, Gearset::Blue, Direction::Forward),
-            Motor::new_v5(peripherals.port_6, Gearset::Blue, Direction::Reverse),
+            Motor::new(peripherals.port_4, Gearset::Blue, Direction::Forward),
+            Motor::new(peripherals.port_5, Gearset::Blue, Direction::Forward),
+            Motor::new(peripherals.port_6, Gearset::Blue, Direction::Reverse),
         ],
     }
     .compete()
