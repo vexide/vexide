@@ -4,7 +4,7 @@ target = "./armv7a-vex-v5.json"
 [target."cfg(all(target_arch = \"arm\", target_os = \"none\"))"]
 runner = "cargo v5 run --file"
 
-[target."cfg(any(all(target_arch = \"arm\", target_os = \"none\"), target_arch = \"wasm32\"))".unstable]
+[unstable]
 build-std = ["core", "compiler_builtins", "alloc"]
 build-std-features = ["compiler-builtins-mem"]
 

@@ -16,7 +16,7 @@ jobs:
               uses: actions-rs/toolchain@v1
               with:
                   profile: minimal
-                  toolchain: nightly
+                  toolchain: nightly-2024-08-20
                   override: true
 
             - name: Check
@@ -48,7 +48,7 @@ jobs:
               uses: actions-rs/toolchain@v1
               with:
                   profile: minimal
-                  toolchain: nightly
+                  toolchain: nightly-2024-08-20
                   override: true
 
             # Currently other crates do not compile in test mode as
@@ -72,7 +72,7 @@ jobs:
               uses: actions-rs/toolchain@v1
               with:
                   profile: minimal
-                  toolchain: nightly
+                  toolchain: nightly-2024-08-20
                   override: true
 
             - name: Setup | Install Rustfmt
