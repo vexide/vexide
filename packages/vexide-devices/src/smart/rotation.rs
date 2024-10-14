@@ -59,6 +59,10 @@ impl RotationSensor {
     }
 
     /// Sets the position to zero.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn reset_position(&mut self) -> Result<(), PortError> {
         // NOTE: We don't use vexDeviceAbsEncReset, since that doesn't actually
         // zero position. It sets position to whatever the angle value is.
@@ -66,6 +70,10 @@ impl RotationSensor {
     }
 
     /// Sets the position.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn set_position(&mut self, mut position: Position) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -83,7 +91,11 @@ impl RotationSensor {
         Ok(())
     }
 
-    /// Sets whether or not the rotation sensor should be reversed.
+    /// Sets whether the rotation sensor should be reversed.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn set_direction(&mut self, new_direction: Direction) -> Result<(), PortError> {
         // You're probably wondering why I don't use [`vexDeviceAbsEncReverseFlagSet`] here. So about that...
         //
@@ -121,6 +133,11 @@ impl RotationSensor {
     /// Sets the update rate of the sensor.
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
+    /// The data rate will be transformed to be a multiple of 5 milliseconds.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -134,7 +151,11 @@ impl RotationSensor {
         Ok(())
     }
 
-    /// Sets whether or not the rotation sensor should be reversed.
+    /// Gets whether the rotation sensor is reversed.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn direction(&self) -> Result<Direction, PortError> {
         self.validate_port()?;
 
@@ -142,6 +163,10 @@ impl RotationSensor {
     }
 
     /// Get the total number of degrees rotated by the sensor based on direction.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn position(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
@@ -160,6 +185,10 @@ impl RotationSensor {
     /// Get the angle of rotation measured by the sensor.
     ///
     /// This value is reported from 0-360 degrees.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn angle(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
@@ -176,6 +205,10 @@ impl RotationSensor {
     }
 
     /// Get the sensor's current velocity in degrees per second
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn velocity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -189,6 +222,10 @@ impl RotationSensor {
     }
 
     /// Returns the sensor's status code.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 

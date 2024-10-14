@@ -34,6 +34,13 @@ pub struct Button {
 
 impl Button {
     /// Gets the current logic level of a digital input pin.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access
+    ///   to the controller's data is restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn level(&self) -> Result<LogicLevel, ControllerError> {
         if competition::mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
@@ -51,15 +58,29 @@ impl Button {
         Ok(level)
     }
 
-    /// Returns `true` if the button is currently being pressed.
+    /// Returns `true` if this button is currently being pressed.
     ///
     /// This is equivalent shorthand to calling `Self::level().is_high()`.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access
+    ///   to the controller's data is restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn is_pressed(&self) -> Result<bool, ControllerError> {
         Ok(self.level()?.is_high())
     }
 
-    /// Returns `true` if the button has been pressed again since the last time this
+    /// Returns `true` if this button has been pressed again since the last time this
     /// function was called.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access
+    ///   to the controller's data is restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn was_pressed(&mut self) -> Result<bool, ControllerError> {
         if self.is_pressed()? {
             self.was_pressed = false;
@@ -73,8 +94,8 @@ impl Button {
 }
 
 /// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
-/// On the x axis left is negative, and right is positive.
-/// On the y axis down is negative, and up is positive.
+/// On the x-axis left is negative, and right is positive.
+/// On the y-axis down is negative, and up is positive.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Joystick {
     id: ControllerId,
@@ -84,6 +105,13 @@ pub struct Joystick {
 
 impl Joystick {
     /// Gets the value of the joystick position on its x-axis from [-1, 1].
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access
+    ///   to the controller's data is restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn x(&self) -> Result<f64, ControllerError> {
         validate_connection(self.id)?;
 
@@ -91,12 +119,26 @@ impl Joystick {
     }
 
     /// Gets the value of the joystick position on its y-axis from [-1, 1].
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access
+    ///   to the controller's data is restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn y(&self) -> Result<f64, ControllerError> {
         validate_connection(self.id)?;
         Ok(f64::from(self.y_raw()?) / 127.0)
     }
 
     /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access
+    ///   to the controller's data is restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn x_raw(&self) -> Result<i8, ControllerError> {
         validate_connection(self.id)?;
         if competition::mode() != CompetitionMode::Driver {
@@ -107,6 +149,13 @@ impl Joystick {
     }
 
     /// Gets the raw value of the joystick position on its x-axis from [-128, 127].
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access
+    ///   to the controller's data is restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn y_raw(&self) -> Result<i8, ControllerError> {
         validate_connection(self.id)?;
         if competition::mode() != CompetitionMode::Driver {
@@ -173,6 +222,11 @@ impl ControllerScreen {
     pub const MAX_LINES: usize = 2;
 
     /// Clear the contents of a specific text line.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
         //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
         //TODO: We should check the version and change behavior based on it.
@@ -182,6 +236,11 @@ impl ControllerScreen {
     }
 
     /// Clear the whole screen.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn clear_screen(&mut self) -> Result<(), ControllerError> {
         for line in 0..Self::MAX_LINES as u8 {
             self.clear_line(line)?;
@@ -191,6 +250,15 @@ impl ControllerScreen {
     }
 
     /// Set the text contents at a specific row/column offset.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
+    ///   greater than or equal to [`Self::MAX_LINE_LENGTH`].
+    /// - A [`ControllerError::NonTerminatingNul`] error if a NUL (0x00) character was
+    ///   found anywhere in the specified text.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
         if col >= Self::MAX_LINE_LENGTH as u8 {
@@ -334,6 +402,11 @@ impl Controller {
     }
 
     /// Gets the controller's battery capacity.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn battery_capacity(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
@@ -341,6 +414,11 @@ impl Controller {
     }
 
     /// Gets the controller's battery level.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn battery_level(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
@@ -348,6 +426,11 @@ impl Controller {
     }
 
     /// Gets the controller's flags.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn flags(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
@@ -359,6 +442,13 @@ impl Controller {
     /// This function takes a string consisting of the characters '.', '-', and ' ', where
     /// dots are short rumbles, dashes are long rumbles, and spaces are pauses. Maximum
     /// supported length is 8 characters.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::NonTerminatingNul`] error if a NUL (0x00) character was
+    ///   found anywhere in the specified text.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
         self.screen.set_text(pattern, 3, 0)
     }
@@ -403,7 +493,7 @@ impl From<ControllerConnection> for V5_ControllerStatus {
 pub enum ControllerError {
     /// The controller is not connected to the brain.
     Offline,
-    /// CString::new encountered NUL (U+0000) byte in non-terminating position.
+    /// A NUL (0x00) character was found in a string that may not contain NUL characters.
     NonTerminatingNul,
     /// Access to controller data is restricted by competition control.
     CompetitionControl,

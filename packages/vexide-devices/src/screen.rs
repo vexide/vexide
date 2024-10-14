@@ -607,6 +607,11 @@ impl Screen {
     ///
     /// This function copies the pixels in the specified buffer to the specified region of the screen.
     /// The stride parameter is defined as the number of pixels per row.
+    ///
+    /// # Errors
+    ///
+    /// A [`ScreenError::BufferSize`] error is returned if `buf` does not have the correct number of bytes
+    /// to fill the specified region.
     pub fn draw_buffer<T, I>(
         &mut self,
         region: Rect,

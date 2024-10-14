@@ -15,7 +15,7 @@
 //! device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
 //! using the [`peripherals`](crate::peripherals) API.
 //!
-//! More specific info for each device is availible in their respective modules.
+//! More specific info for each device is available in their respective modules.
 
 pub mod distance;
 pub mod expander;
@@ -95,6 +95,10 @@ pub trait SmartDevice {
     }
 
     /// Get the timestamp recorded by this device's internal clock.
+    ///
+    /// # Errors
+    ///
+    /// Currently, this function never returns an error. This behavior should be considered unstable.
     fn timestamp(&self) -> Result<SmartDeviceTimestamp, PortError> {
         Ok(SmartDeviceTimestamp(unsafe {
             vexDeviceGetTimestamp(vexDeviceGetByIndex(u32::from(self.port_number() - 1)))
@@ -103,6 +107,10 @@ pub trait SmartDevice {
 
     /// Verify that the device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PortError`] if there is not a physical device of type [`SmartDevice::device_type`] in this [`SmartDevice`]'s port.
     fn validate_port(&self) -> Result<(), PortError> {
         validate_port(self.port_number(), self.device_type())
     }
@@ -212,6 +220,10 @@ impl SmartPort {
 
     /// Verify that a device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PortError`] if there is not a device of the specified type in this port.
     pub fn validate_type(&self, device_type: SmartDeviceType) -> Result<(), PortError> {
         validate_port(self.number(), device_type)
     }

@@ -89,7 +89,7 @@ impl AdiDigitalIn {
         })
     }
 
-    /// Returns `true` if the digital input's logic level level is [`LogicLevel::High`].
+    /// Returns `true` if the digital input's logic level is [`LogicLevel::High`].
     ///
     /// # Errors
     ///
@@ -100,7 +100,7 @@ impl AdiDigitalIn {
         Ok(self.level()?.is_high())
     }
 
-    /// Returns `true` if the digital input's logic level level is [`LogicLevel::Low`].
+    /// Returns `true` if the digital input's logic level is [`LogicLevel::Low`].
     ///
     /// # Errors
     ///

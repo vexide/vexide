@@ -48,6 +48,12 @@ impl DistanceSensor {
     }
 
     /// Attempt to detect an object, returning `None` if no object could be found.
+    ///
+    /// # Errors
+    ///
+    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
+    /// - A [`DistanceError::StillInitializing`] error is returned if the distance sensor is still initializing.
+    /// - A [`DistanceError::BadStatusCode`] error is returned if the distance sensor has an unknown status code.
     pub fn object(&self) -> Result<Option<DistanceObject>, DistanceError> {
         self.validate()?;
 
@@ -66,7 +72,13 @@ impl DistanceSensor {
         }
     }
 
-    /// Gets the status code of the distance sensor
+    /// Get the internal status code of the distance sensor.
+    ///
+    /// Vexide uses the status code internally to detect whether the distance sensor is initialized.
+    ///
+    /// # Errors
+    ///
+    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
     pub fn status(&self) -> Result<u32, DistanceError> {
         self.validate_port()?;
 
@@ -84,7 +96,7 @@ impl SmartDevice for DistanceSensor {
     }
 }
 
-/// Readings from a phyiscal object detected by a Distance Sensor.
+/// Readings from a physical object detected by a Distance Sensor.
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd)]
 pub struct DistanceObject {
     /// The distance of the object from the sensor (in millimeters).
@@ -118,7 +130,7 @@ pub enum DistanceError {
     /// Need to wait for the sensor to finish initializing
     StillInitializing,
 
-    /// The sensor's status code is not 0x82 or 0x86.
+    /// The sensor has an unknown status code.
     BadStatusCode,
 
     /// Generic port related error.
