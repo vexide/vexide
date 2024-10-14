@@ -326,6 +326,11 @@ impl SmartDevice for SerialPort {
         SmartDeviceType::GenericSerial
     }
 }
+impl From<SerialPort> for SmartPort {
+    fn from(device: SerialPort) -> Self {
+        device.port
+    }
+}
 
 /// Errors that can occur when interacting with a [`SerialPort`].
 #[derive(Debug, Snafu)]

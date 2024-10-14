@@ -151,6 +151,11 @@ impl SmartDevice for GpsSensor {
         SmartDeviceType::Gps
     }
 }
+impl From<GpsSensor> for SmartPort {
+    fn from(device: GpsSensor) -> Self {
+        device.port
+    }
+}
 
 /// GPS Sensor Internal IMU
 #[derive(Debug, PartialEq)]

@@ -1,4 +1,5 @@
-//! VexOS heap allocator implemented with the `talc` crate.
+//! VEXos heap allocator implemented with the `talc` crate.
+//!
 //! [`init_heap`] must be called before any heap allocations are made.
 //! This is done automatically in the `vex-startup` crate,
 //! so you should not need to call it yourself unless you are writing your own startup implementation.
@@ -9,7 +10,7 @@ use talc::{ErrOnOom, Span, Talc, Talck};
 
 use crate::sync::RawMutex;
 
-extern "C" {
+unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
 }

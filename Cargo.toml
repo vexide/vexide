@@ -11,10 +11,10 @@ members = ["packages/*"]
 resolver = "2"
 
 [workspace.lints.rust]
-rust_2018_idioms = "warn"
-rust_2024_compatibility = "warn"
-future_incompatible = "warn"
-let_underscore = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+rust_2024_compatibility = { level = "warn", priority = -1 }
+future_incompatible = { level = "warn", priority = -1 }
+let_underscore = { level = "warn", priority = -1 }
 missing_docs = "warn"
 unsafe_op_in_unsafe_fn = "deny"
 
@@ -30,7 +30,7 @@ vexide-panic = { version = "0.1.4", path = "packages/vexide-panic", default-feat
 vexide-startup = { version = "0.3.1", path = "packages/vexide-startup", default-features = false }
 vexide-graphics = { version = "0.1.4", path = "packages/vexide-graphics", default-features = false }
 vexide-macro = { version = "0.3.0", path = "packages/vexide-macro", default-features = false }
-vex-sdk = "0.21.0"
+vex-sdk = "0.22.0"
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 
 [workspace.lints.clippy]

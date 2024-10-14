@@ -242,3 +242,8 @@ impl SmartDevice for RotationSensor {
         SmartDeviceType::Rotation
     }
 }
+impl From<RotationSensor> for SmartPort {
+    fn from(device: RotationSensor) -> Self {
+        device.port
+    }
+}

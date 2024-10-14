@@ -99,6 +99,8 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
     }
 }
 
+/// vexide's entrypoint macro
+///
 /// Marks a function as the entrypoint for a vexide program. When the program is started,
 /// the `main` function will be called with a single argument of type `Peripherals` which
 /// allows access to device peripherals like motors, sensors, and the display.

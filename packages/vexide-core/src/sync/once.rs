@@ -2,9 +2,10 @@ use core::{cell::UnsafeCell, error::Error, fmt::Debug, mem::MaybeUninit};
 
 use super::mutex::Mutex;
 
-/// A synchronization primitive which can be used to run a one-time global
-/// initialization. Useful for one-time initialization for FFI or related
-/// functionality. This type can only be constructed with [`Once::new()`].
+/// A low-level synchronization primitive for one-time global execution.
+///
+/// Useful for one-time initialization for FFI or related functionality.
+/// This type can only be constructed with [`Once::new()`].
 ///
 /// # Examples
 ///
@@ -24,7 +25,8 @@ impl Once {
     const ONCE_INCOMPLETE: bool = false;
     const ONCE_COMPLETE: bool = true;
 
-    /// Create a new uncompleted Once
+    /// Create a new uncompleted [`Once`]
+    #[allow(clippy::new_without_default)]
     #[must_use]
     pub const fn new() -> Self {
         Self {

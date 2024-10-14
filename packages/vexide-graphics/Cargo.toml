@@ -34,3 +34,6 @@ default = []
 
 embedded-graphics = ["dep:embedded-graphics-core"]
 slint = ["dep:slint"]
+
+[package.metadata.docs.rs]
+targets = ["armv7a-none-eabi"]

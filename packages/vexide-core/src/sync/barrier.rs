@@ -12,7 +12,7 @@ pub struct BarrierWaitFuture<'a> {
     leader: bool,
     barrier: &'a Barrier,
 }
-impl<'a> Future for BarrierWaitFuture<'a> {
+impl Future for BarrierWaitFuture<'_> {
     type Output = bool;
     fn poll(
         self: core::pin::Pin<&mut Self>,

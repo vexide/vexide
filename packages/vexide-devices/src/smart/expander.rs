@@ -65,3 +65,8 @@ impl SmartDevice for AdiExpander {
         SmartDeviceType::Adi
     }
 }
+impl From<AdiExpander> for SmartPort {
+    fn from(device: AdiExpander) -> Self {
+        device.port
+    }
+}

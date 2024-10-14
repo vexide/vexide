@@ -95,6 +95,11 @@ impl SmartDevice for DistanceSensor {
         SmartDeviceType::Distance
     }
 }
+impl From<DistanceSensor> for SmartPort {
+    fn from(device: DistanceSensor) -> Self {
+        device.port
+    }
+}
 
 /// Readings from a physical object detected by a Distance Sensor.
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd)]

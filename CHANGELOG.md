@@ -24,14 +24,27 @@ Before releasing:
 
 ### Added
 
+- You can now detect controller release occurrences with `ButtonState::is_now_released`.
+- Added support for 5.5W motors with a new constructor (`Motor::new_exp`) and four new getters (`Motor::max_voltage`, `Motor::motor_type`, `Motor::is_v5`, and `Motor::is_exp`) for `Motor`. (#167)
+
 ### Fixed
 
 ### Changed
+
+- Controller state is now returned all at once to reduce error checking. (#152) (**Breaking Change**)
+- `Button::was_pressed` has been renamed to `ButtonState::is_now_pressed`.
+- `battery::capacity` now returns from 0.0-1.0 rather than 0-100.
+- `battery::voltage` is now returned in volts rather than millivolts.
+- `battery::current` is now returned in amps rather than milliamps.
+- Changed the incorrect return types of `AdiSolenoid::is_open` and `AdiSolenoid::is_closed` from `LogicLevel` to `bool`. (#164) (**Breaking Change**)
+- Renamed `Motor::MAX_VOLTAGE` to `Motor::V5_MAX_VOLTAGE` and added `Motor::EXP_MAX_VOLTAGE`. (#167) (**Breaking Change**)
+- Moved the ability to convert Smart devices to `SmartPorts` out of the `SmartDevice` trait and into the devices themselves. (#171) (**Breaking Change**)
 
 ### Removed
 
 ### New Contributors
 
+@zabackary made their first contribution in #164!
 
 ## [0.4.1]
 
