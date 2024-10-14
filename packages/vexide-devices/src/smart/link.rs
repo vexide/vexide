@@ -201,6 +201,13 @@ impl SmartDevice for RadioLink {
         SmartDeviceType::GenericSerial
     }
 }
+impl From<RadioLink> for SmartPort {
+    fn from(device: RadioLink) -> Self {
+        // SAFETY: We can do this, since we ensure that the old smart port was disposed of.
+        // This can effectively be thought as a move out of the device's private `port` field.
+        unsafe { Self::new(device.port_number()) }
+    }
+}
 
 /// The type of a radio link being established.
 ///
