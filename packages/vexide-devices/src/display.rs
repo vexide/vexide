@@ -440,7 +440,7 @@ pub enum TouchState {
     Released,
     /// The display has been touched.
     Pressed,
-    /// The screen has been touched and is still being held.
+    /// The display has been touched and is still being held.
     Held,
 }
 
@@ -457,10 +457,10 @@ impl From<V5_TouchEvent> for TouchState {
 
 /// The rendering mode for the VEX V5's display
 ///
-/// When using the screen in the [`Immediate`](RenderMode::Immediate) mode, all draw operations will immediately show up on the display.
+/// When using the display in the [`Immediate`](RenderMode::Immediate) mode, all draw operations will immediately show up on the display.
 /// The [`DoubleBuffered`](RenderMode::DoubleBuffered) mode instead applies draw operations onto an intermediate buffer
-/// that can be swapped onto the screen by calling [`Screen::render`], thereby preventing screen tearing.
-/// By default, the screen uses the [`Immediate`](RenderMode::Immediate) mode.
+/// that can be swapped onto the display by calling [`Display::render`], thereby preventing screen tearing.
+/// By default, the display uses the [`Immediate`](RenderMode::Immediate) mode.
 /// # Note
 /// [`Display::render`] **MUST** be called for anything to appear on the display when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -468,7 +468,7 @@ pub enum RenderMode {
     /// Draw operations are immediately applied to the display without the need to call [`Display::render`].
     Immediate,
     /// Draw calls are affected on an intermediary display buffer, rather than directly drawn to the display.
-    /// The intermediate buffer can later be applied to the screen using [`Display::render`]
+    /// The intermediate buffer can later be applied to the display using [`Display::render`]
     ///
     /// This mode is necessary for preventing screen tearing when drawing at high speeds.
     DoubleBuffered,
