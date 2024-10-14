@@ -82,7 +82,7 @@ impl CodeSignature {
     }
 }
 
-extern "C" {
+unsafe extern "C" {
     // These symbols don't have real types, so this is a little bit of a hack.
     static mut __bss_start: u32;
     static mut __bss_end: u32;

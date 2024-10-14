@@ -40,7 +40,10 @@
 //! #[vexide::main(banner(enabled = true, theme = CUSTOM_THEME))]
 //! async fn main(peripherals: vexide::Peripherals) { }
 //! ```
-
+#[expect(
+    edition_2024_expr_fragment_specifier,
+    reason = "OK for this macro to accept `const {}` expressions"
+)]
 macro_rules! ansi_rgb_bold {
     ($r:expr, $g:expr, $b:expr) => {
         concat!("\x1B[1;38;2;", $r, ";", $g, ";", $b, "m")
