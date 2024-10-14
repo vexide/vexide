@@ -118,16 +118,19 @@ pub enum MotorType {
 }
 impl MotorType {
     /// Returns `true` if the motor is a 5.5W (EXP) Smart Motor.
+    #[must_use]
     pub const fn is_exp(&self) -> bool {
         matches!(self, Self::Exp)
     }
 
     /// Returns `true` if the motor is an 11W (V5) Smart Motor.
+    #[must_use]
     pub const fn is_v5(&self) -> bool {
         matches!(self, Self::V5)
     }
 
     /// Gets the maximum voltage for a motor of this type.
+    #[must_use]
     pub const fn max_voltage(&self) -> f64 {
         match self {
             MotorType::Exp => Motor::V5_MAX_VOLTAGE,
@@ -354,10 +357,12 @@ impl Motor {
         self.motor_type
     }
     /// Returns `true` if the motor is a 5.5W (EXP) Smart Motor.
+    #[must_use]
     pub const fn is_exp(&self) -> bool {
         self.motor_type.is_exp()
     }
     /// Returns `true` if the motor is an 11W (V5) Smart Motor.
+    #[must_use]
     pub const fn is_v5(&self) -> bool {
         self.motor_type.is_v5()
     }

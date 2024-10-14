@@ -22,11 +22,11 @@ pub fn temperature() -> u64 {
 /// Returns the electric current of the robot's battery in amps.
 #[must_use]
 pub fn current() -> f64 {
-    (unsafe { vexBatteryCurrentGet() } as f64) / 1000.0
+    f64::from(unsafe { vexBatteryCurrentGet() }) / 1000.0
 }
 
 /// Returns the robot's battery voltage in volts.
 #[must_use]
 pub fn voltage() -> f64 {
-    (unsafe { vexBatteryVoltageGet() } as f64) / 1000.0
+    f64::from(unsafe { vexBatteryVoltageGet() }) / 1000.0
 }

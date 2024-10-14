@@ -21,21 +21,25 @@ pub struct ButtonState {
 
 impl ButtonState {
     /// Returns true if the button state is [`Pressed`](ButtonState::Pressed).
+    #[must_use]
     pub const fn is_pressed(&self) -> bool {
         self.is_pressed
     }
 
     /// Returns true if the button state is [`Released`](ButtonState::Released).
+    #[must_use]
     pub const fn is_released(&self) -> bool {
         !self.is_pressed
     }
 
     /// Returns true if the button state was released in the previous call to [`Controller::state`], but is now pressed.
+    #[must_use]
     pub const fn is_now_pressed(&self) -> bool {
         !self.prev_is_pressed && self.is_pressed
     }
 
     /// Returns true if the button state was pressed in the previous call to [`Controller::state`], but is now released.
+    #[must_use]
     pub const fn is_now_released(&self) -> bool {
         self.prev_is_pressed && !self.is_pressed
     }
@@ -52,19 +56,23 @@ pub struct JoystickState {
 
 impl JoystickState {
     /// Gets the value of the joystick position on its x-axis from [-1, 1].
+    #[must_use]
     pub fn x(&self) -> f64 {
-        self.x_raw as f64 / 127.0
+        f64::from(self.x_raw) / 127.0
     }
     /// Gets the value of the joystick position on its y-axis from [-1, 1].
+    #[must_use]
     pub fn y(&self) -> f64 {
-        self.y_raw as f64 / 127.0
+        f64::from(self.y_raw) / 127.0
     }
 
     /// The raw value of the joystick position on its x-axis from [-128, 127].
+    #[must_use]
     pub const fn x_raw(&self) -> i8 {
         self.x_raw
     }
     /// The raw value of the joystick position on its x-axis from [-128, 127].
+    #[must_use]
     pub const fn y_raw(&self) -> i8 {
         self.y_raw
     }
@@ -113,6 +121,10 @@ pub struct ControllerState {
 /// each `ButtonState` needs to know about its previous state from the last `Controller::update`
 /// call in order to allow for `ButtonState::is_now_pressed` and `ButtonState::is_now_released`.
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
+#[allow(
+    clippy::struct_excessive_bools,
+    reason = "not being used as state machine"
+)]
 struct ButtonStates {
     a: bool,
     b: bool,
@@ -319,6 +331,13 @@ impl Controller {
     /// # Note
     ///
     /// If the current competition mode is not driver control, this function will error.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access to
+    ///   the controller data is being restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn state(&self) -> Result<ControllerState, ControllerError> {
         if competition::mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
