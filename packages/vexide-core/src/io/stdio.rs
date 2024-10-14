@@ -179,6 +179,10 @@ macro_rules! print {
 pub use print;
 
 #[macro_export]
+#[expect(
+    edition_2024_expr_fragment_specifier,
+    reason = "OK for this macro to accept `const {}` expressions"
+)]
 /// Prints and returns the value of a given expression for quick and dirty debugging.
 macro_rules! dbg {
     () => {
