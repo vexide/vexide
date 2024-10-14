@@ -426,6 +426,11 @@ impl SmartDevice for VisionSensor {
         SmartDeviceType::Vision
     }
 }
+impl From<VisionSensor> for SmartPort {
+    fn from(device: VisionSensor) -> Self {
+        device.port
+    }
+}
 
 /// A vision detection color signature.
 ///

@@ -560,6 +560,11 @@ impl SmartDevice for Motor {
         SmartDeviceType::Motor
     }
 }
+impl From<Motor> for SmartPort {
+    fn from(device: Motor) -> Self {
+        device.port
+    }
+}
 
 /// Determines how a motor should act when braking.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

@@ -201,6 +201,11 @@ impl SmartDevice for RadioLink {
         SmartDeviceType::GenericSerial
     }
 }
+impl From<RadioLink> for SmartPort {
+    fn from(device: RadioLink) -> Self {
+        device.port
+    }
+}
 
 /// The type of a radio link being established.
 ///
