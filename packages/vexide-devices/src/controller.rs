@@ -198,16 +198,16 @@ impl ControllerScreen {
         }
 
         let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text)
-            .map_err(|_| ControllerError::NonTerminatingNul)?
-            .into_raw();
+        let text = CString::new(text).map_err(|_| ControllerError::NonTerminatingNul)?;
 
         unsafe {
-            vexControllerTextSet(id.0 as _, (line + 1) as _, (col + 1) as _, text as *const _);
+            vexControllerTextSet(
+                id.0 as _,
+                (line + 1) as _,
+                (col + 1) as _,
+                text.as_ptr() as *const u8,
+            );
         }
-
-        // stop rust from leaking the CString
-        drop(unsafe { CString::from_raw(text) });
 
         Ok(())
     }
