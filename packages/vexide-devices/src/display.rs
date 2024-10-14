@@ -72,7 +72,6 @@ pub trait Stroke {
     fn stroke(&self, display: &mut Display, color: impl IntoRgb);
 }
 
-
 /// A circle that can be drawn on the  display.
 ///
 /// Circles are not antialiased.
