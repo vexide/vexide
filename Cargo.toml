@@ -10,14 +10,6 @@ vexide = { path = "packages/vexide" }
 members = ["packages/*"]
 resolver = "2"
 
-[workspace.lints.rust]
-rust_2018_idioms = { level = "warn", priority = -1 }
-rust_2024_compatibility = { level = "warn", priority = -1 }
-future_incompatible = { level = "warn", priority = -1 }
-let_underscore = { level = "warn", priority = -1 }
-missing_docs = "warn"
-unsafe_op_in_unsafe_fn = "deny"
-
 [workspace.dependencies]
 snafu = { version = "0.8.0", default-features = false, features = [
     "rust_1_61",
@@ -33,9 +25,17 @@ vexide-macro = { version = "0.3.0", path = "packages/vexide-macro", default-feat
 vex-sdk = "0.22.0"
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 
+[workspace.lints.rust]
+rust_2018_idioms = { level = "warn", priority = -1 }
+rust_2024_compatibility = { level = "warn", priority = -1 }
+future_incompatible = { level = "warn", priority = -1 }
+let_underscore = { level = "warn", priority = -1 }
+missing_docs = "warn"
+unsafe_op_in_unsafe_fn = "deny"
+
 [workspace.lints.clippy]
 missing_const_for_fn = "warn"
-pedantic = "warn"
+pedantic = { level = "warn", priority = -1 }
 module_name_repetitions = "allow"
 doc_markdown = "allow"
 cast_possible_truncation = "allow"
