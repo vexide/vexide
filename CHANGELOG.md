@@ -25,6 +25,7 @@ Before releasing:
 ### Added
 
 - You can now detect controller release occurrences with `ButtonState::is_now_released`.
+- Added support for 5.5W motors with a new constructor (`Motor::new_exp`) and four new getters (`Motor::max_voltage`, `Motor::motor_type`, `Motor::is_v5`, and `Motor::is_exp`) for `Motor`. (#167)
 
 ### Fixed
 
@@ -36,6 +37,7 @@ Before releasing:
 - `battery::voltage` is now returned in volts rather than millivolts.
 - `battery::current` is now returned in amps rather than milliamps.
 - Changed the incorrect return types of `AdiSolenoid::is_open` and `AdiSolenoid::is_closed` from `LogicLevel` to `bool`. (#164) (**Breaking Change**)
+- Renamed `Motor::MAX_VOLTAGE` to `Motor::V5_MAX_VOLTAGE` and added `Motor::EXP_MAX_VOLTAGE`. (#167) (**Breaking Change**)
 
 ### Removed
 
