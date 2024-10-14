@@ -37,7 +37,7 @@ Before releasing:
 - `battery::voltage` is now returned in volts rather than millivolts.
 - `battery::current` is now returned in amps rather than milliamps.
 - Changed the incorrect return types of `AdiSolenoid::is_open` and `AdiSolenoid::is_closed` from `LogicLevel` to `bool`. (#164) (**Breaking Change**)
-- Renamed `Motor::MAX_VOLTAGE` to `Motor::MAX_VOLTAGE_V5` and added `Motor::MAX_VOLTAGE_EXP`. (#167) (**Breaking Change**)
+- Renamed `Motor::MAX_VOLTAGE` to `Motor::V5_MAX_VOLTAGE` and added `Motor::EXP_MAX_VOLTAGE`. (#167) (**Breaking Change**)
 
 ### Removed
 

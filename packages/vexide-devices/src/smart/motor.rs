@@ -124,13 +124,21 @@ impl MotorType {
     pub const fn is_v5(&self) -> bool {
         matches!(self, Self::V5)
     }
+
+    /// Gets the maximum voltage for a motor of this type.
+    pub const fn max_voltage(&self) -> f64 {
+        match self {
+            MotorType::Exp => Motor::V5_MAX_VOLTAGE,
+            MotorType::V5 => Motor::EXP_MAX_VOLTAGE,
+        }
+    }
 }
 
 impl Motor {
     /// The maximum voltage value that can be sent to a V5 [`Motor`].
-    pub const MAX_VOLTAGE_V5: f64 = 12.0;
+    pub const V5_MAX_VOLTAGE: f64 = 12.0;
     /// The maximum voltage value that can be sent to a EXP [`Motor`].
-    pub const MAX_VOLTAGE_EXP: f64 = 10.0;
+    pub const EXP_MAX_VOLTAGE: f64 = 10.0;
 
     /// The rate at which data can be read from a [`Motor`].
     pub const DATA_READ_INTERVAL: Duration = Duration::from_millis(10);
@@ -310,6 +318,11 @@ impl Motor {
         self.motor_type.is_v5()
     }
 
+    /// Gets the maximum voltage for the motor based off of its [motor type](Motor::motor_type).
+    pub const fn max_voltage(&self) -> f64 {
+        self.motor_type.max_voltage()
+    }
+
     /// Gets the estimated angular velocity (RPM) of the motor.
     pub fn velocity(&self) -> Result<i32, MotorError> {
         self.validate_port()?;
@@ -487,14 +500,6 @@ impl Motor {
             false => Direction::Forward,
             true => Direction::Reverse,
         })
-    }
-
-    /// Gets the maximum voltage for the motor based off of its [motor type](Motor::motor_type).
-    pub const fn max_voltage(&self) -> f64 {
-        match self.motor_type {
-            MotorType::Exp => Self::MAX_VOLTAGE_EXP,
-            MotorType::V5 => Self::MAX_VOLTAGE_V5,
-        }
     }
 
     /// Adjusts the internal tuning constants of the motor when using velocity control.
