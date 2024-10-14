@@ -206,8 +206,6 @@ impl SmartDevice for RotationSensor {
 }
 impl From<RotationSensor> for SmartPort {
     fn from(device: RotationSensor) -> Self {
-        // SAFETY: We can do this, since we ensure that the old smart port was disposed of.
-        // This can effectively be thought as a move out of the device's private `port` field.
-        unsafe { Self::new(device.port_number()) }
+        device.port
     }
 }
