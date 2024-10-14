@@ -30,6 +30,10 @@ unsafe impl Sync for GpsSensor {}
 
 impl GpsSensor {
     /// Create a new GPS sensor.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the specified port.
     pub fn new(
         port: SmartPort,
         offset: impl Into<Point2<f64>>,
@@ -65,6 +69,10 @@ impl GpsSensor {
     }
 
     /// Get the physical offset of the sensor from the robot's center of rotation
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn offset(&self) -> Result<Point2<f64>, PortError> {
         self.validate_port()?;
 
@@ -87,6 +95,10 @@ impl GpsSensor {
     ///
     /// > You should **never** attempt to use the [`GpsImu`] angles when dealing with position data from this sensor
     /// > unless you understand exactly what you're doing.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn pose(&self) -> Result<(Point2<f64>, f64), PortError> {
         self.validate_port()?;
 
@@ -108,6 +120,10 @@ impl GpsSensor {
     }
 
     /// Returns the RMS (Root Mean Squared) error for the GPS position reading in meters.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn error(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -115,6 +131,10 @@ impl GpsSensor {
     }
 
     /// Returns the sensor's current status bits.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 
@@ -169,6 +189,10 @@ impl GpsImu {
     /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
     /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
     /// position readings. Prefer using [`GpsSensor::pose`] for that.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn heading(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(
@@ -188,6 +212,10 @@ impl GpsImu {
     /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
     /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
     /// position readings. Prefer using [`GpsSensor::pose`] for that.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn rotation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } - self.rotation_offset)
@@ -201,6 +229,10 @@ impl GpsImu {
     /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
     /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
     /// position readings. Prefer using [`GpsSensor::pose`] for that.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn euler(&self) -> Result<mint::EulerAngles<f64, f64>, PortError> {
         self.validate_port()?;
 
@@ -225,6 +257,10 @@ impl GpsImu {
     /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
     /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
     /// position readings. Prefer using [`GpsSensor::pose`] for that.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn quaternion(&self) -> Result<mint::Quaternion<f64>, PortError> {
         self.validate_port()?;
 
@@ -244,6 +280,10 @@ impl GpsImu {
     }
 
     /// Returns the IMU's raw accelerometer values.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn accel(&self) -> Result<mint::Vector3<f64>, PortError> {
         self.validate_port()?;
 
@@ -260,6 +300,10 @@ impl GpsImu {
     }
 
     /// Returns the IMU's raw gyroscope values.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn gyro_rate(&self) -> Result<mint::Vector3<f64>, PortError> {
         self.validate_port()?;
 
@@ -281,6 +325,10 @@ impl GpsImu {
     ///
     /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
     /// on that function for more information.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn reset_heading(&mut self) -> Result<(), PortError> {
         self.set_heading(Default::default())
     }
@@ -291,6 +339,10 @@ impl GpsImu {
     ///
     /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
     /// on that function for more information.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn reset_rotation(&mut self) -> Result<(), PortError> {
         self.set_rotation(Default::default())
     }
@@ -301,6 +353,10 @@ impl GpsImu {
     ///
     /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
     /// on that function for more information.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn set_rotation(&mut self, rotation: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -317,6 +373,10 @@ impl GpsImu {
     ///
     /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
     /// on that function for more information.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn set_heading(&mut self, heading: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -326,6 +386,10 @@ impl GpsImu {
     }
 
     /// Sets the computation speed of the IMU.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the smart port.
     pub fn set_data_rate(&mut self, interval: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 

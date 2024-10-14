@@ -15,7 +15,7 @@
 //! device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
 //! using the [`peripherals`](crate::peripherals) API.
 //!
-//! More specific info for each device is availible in their respective modules.
+//! More specific info for each device is available in their respective modules.
 
 pub mod distance;
 pub mod expander;
@@ -95,14 +95,22 @@ pub trait SmartDevice {
     }
 
     /// Get the timestamp recorded by this device's internal clock.
+    ///
+    /// # Errors
+    ///
+    /// Currently, this function never returns an error. This behavior should be considered unstable.
     fn timestamp(&self) -> Result<SmartDeviceTimestamp, PortError> {
         Ok(SmartDeviceTimestamp(unsafe {
-            vexDeviceGetTimestamp(vexDeviceGetByIndex((self.port_number() - 1) as u32))
+            vexDeviceGetTimestamp(vexDeviceGetByIndex(u32::from(self.port_number() - 1)))
         }))
     }
 
     /// Verify that the device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PortError`] if there is not a physical device of type [`SmartDevice::device_type`] in this [`SmartDevice`]'s port.
     fn validate_port(&self) -> Result<(), PortError> {
         validate_port(self.port_number(), self.device_type())
     }
@@ -158,6 +166,7 @@ impl SmartPort {
     /// // single port index.
     /// let my_port = unsafe { SmartPort::new(1) };
     /// ```
+    #[must_use]
     pub const unsafe fn new(number: u8) -> Self {
         Self { number }
     }
@@ -173,6 +182,7 @@ impl SmartPort {
     ///
     /// assert_eq!(my_port.number(), 1);
     /// ```
+    #[must_use]
     pub const fn number(&self) -> u8 {
         self.number
     }
@@ -190,6 +200,7 @@ impl SmartPort {
     ///
     /// println!("Type of device connected to port 1: {:?}", my_port.device_type());
     /// ```
+    #[must_use]
     pub fn device_type(&self) -> SmartDeviceType {
         let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
         unsafe {
@@ -201,6 +212,10 @@ impl SmartPort {
 
     /// Verify that a device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PortError`] if there is not a device of the specified type in this port.
     pub fn validate_type(&self, device_type: SmartDeviceType) -> Result<(), PortError> {
         validate_port(self.number(), device_type)
     }

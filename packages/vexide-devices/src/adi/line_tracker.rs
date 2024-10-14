@@ -35,6 +35,7 @@ pub struct AdiLineTracker {
 
 impl AdiLineTracker {
     /// Create a line tracker from an ADI port.
+    #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::LineTracker);
 
@@ -45,11 +46,15 @@ impl AdiLineTracker {
     /// a more reflective object.
     ///
     /// This is returned as a value ranging from [0.0, 1.0].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn reflectivity(&self) -> Result<f64, PortError> {
-        Ok(
-            (analog::ADC_MAX_VALUE - self.raw_reflectivity()?) as f64
-                / analog::ADC_MAX_VALUE as f64,
-        )
+        Ok(f64::from(analog::ADC_MAX_VALUE - self.raw_reflectivity()?)
+            / f64::from(analog::ADC_MAX_VALUE))
     }
 
     /// Get the 12-bit reflectivity reading of the sensor.
@@ -58,6 +63,12 @@ impl AdiLineTracker {
     /// 0-5V measured by the V5 brain's ADC.
     ///
     /// A low number (less voltage) represents a **more** reflective object.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn raw_reflectivity(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());

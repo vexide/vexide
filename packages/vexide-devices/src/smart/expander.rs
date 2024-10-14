@@ -38,6 +38,7 @@ pub struct AdiExpander {
 
 impl AdiExpander {
     /// Create a new expander from a smart port index.
+    #[must_use]
     pub const fn new(port: SmartPort) -> Self {
         unsafe {
             Self {

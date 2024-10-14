@@ -24,6 +24,7 @@ pub struct AdiAnalogIn {
 
 impl AdiAnalogIn {
     /// Create a analog input from an ADI port.
+    #[must_use]
     pub fn new(port: AdiPort) -> Self {
         // NOTE: Don't care about whether or not the expander is available at this point, since
         // constructors need to be infallible. We'll ensure that we're the right configuration
@@ -39,6 +40,12 @@ impl AdiAnalogIn {
     ///
     /// The value returned is undefined if the analog pin has been switched to a different mode.
     /// The meaning of the returned value varies depending on the sensor attached.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn value(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
@@ -57,8 +64,14 @@ impl AdiAnalogIn {
     ///
     /// The value returned is undefined if the analog pin has been switched to a different mode.
     /// The meaning of the returned value varies depending on the sensor attached.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn voltage(&self) -> Result<f64, PortError> {
-        Ok(self.value()? as f64 / (ADC_MAX_VALUE as f64) * 5.0)
+        Ok(f64::from(self.value()?) / f64::from(ADC_MAX_VALUE) * 5.0)
     }
 }
 

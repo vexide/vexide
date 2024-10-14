@@ -40,6 +40,11 @@ impl RadioLink {
     /// ```
     /// let link = RadioLink::open(port_1, "643A", LinkType::Manager)?;
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the specified port.
+    /// - A [`LinkError::NonTerminatingNul`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
     pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, LinkError> {
         // Ensure that a radio is plugged into the requested port.
         //
@@ -69,7 +74,11 @@ impl RadioLink {
         })
     }
 
-    /// Returns the number of bytes available to be read in the the radio's input buffer.
+    /// Returns the number of bytes that are waiting to be read from the radio's input buffer.
+    ///
+    /// # Errors
+    ///
+    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the smart port.
     pub fn unread_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
 
@@ -77,6 +86,11 @@ impl RadioLink {
     }
 
     /// Returns the number of bytes free in the radio's output buffer.
+    ///
+    /// # Errors
+    ///
+    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the smart port.
+    /// - A [`LinkError::ReadFailed`] error is returned if the output buffer could not be accessed.
     pub fn available_write_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
 
@@ -89,6 +103,10 @@ impl RadioLink {
     }
 
     /// Returns `true` if there is a link established with another radio.
+    ///
+    /// # Errors
+    ///
+    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the smart port.
     pub fn is_linked(&self) -> Result<bool, LinkError> {
         self.validate_port()?;
 
@@ -207,7 +225,7 @@ impl From<RadioLink> for SmartPort {
     }
 }
 
-/// The type of a radio link being established.
+/// The type of radio link being established.
 ///
 /// VEXLink is a point-to-point connection, with one "manager" robot and
 /// one "worker" robot.
@@ -215,13 +233,13 @@ impl From<RadioLink> for SmartPort {
 pub enum LinkType {
     /// Manager Radio
     ///
-    /// This end of the link has a 1040 bytes/sec data rate when
+    /// This end of the link has a 1040-bytes/sec data rate when
     /// communicating with a worker radio.
     Manager,
 
     /// Worker Radio
     ///
-    /// This end of the link has a 520 bytes/sec data rate when
+    /// This end of the link has a 520-bytes/sec data rate when
     /// communicating with a manager radio.
     Worker,
 }
@@ -238,7 +256,7 @@ pub enum LinkError {
     /// Internal read error occurred.
     ReadFailed,
 
-    /// CString::new encountered NUL (U+0000) byte in non-terminating position.
+    /// A NUL (0x00) character was found in a string that may not contain NUL characters.
     NonTerminatingNul,
 
     /// Generic port related error.

@@ -26,6 +26,7 @@ impl Instant {
     ///
     /// let now = Instant::now();
     /// ```
+    #[must_use]
     pub fn now() -> Self {
         Self(unsafe { vex_sdk::vexSystemHighResTimeGet() })
     }
@@ -45,6 +46,7 @@ impl Instant {
     /// println!("{:?}", new_now.duration_since(now));
     /// println!("{:?}", now.duration_since(new_now)); // 0ns
     /// ```
+    #[must_use]
     pub fn duration_since(&self, earlier: Instant) -> Duration {
         self.checked_duration_since(earlier).unwrap_or_default()
     }
@@ -64,6 +66,7 @@ impl Instant {
     /// println!("{:?}", new_now.checked_duration_since(now));
     /// println!("{:?}", now.checked_duration_since(new_now)); // None
     /// ```
+    #[must_use]
     pub const fn checked_duration_since(&self, earlier: Instant) -> Option<Duration> {
         if earlier.0 < self.0 {
             Some(Duration::from_micros(self.0 - earlier.0))
@@ -87,6 +90,7 @@ impl Instant {
     /// println!("{:?}", new_now.saturating_duration_since(now));
     /// println!("{:?}", now.saturating_duration_since(new_now)); // 0ns
     /// ```
+    #[must_use]
     pub fn saturating_duration_since(&self, earlier: Instant) -> Duration {
         self.checked_duration_since(earlier).unwrap_or_default()
     }
@@ -104,6 +108,7 @@ impl Instant {
     /// sleep(three_secs).await;
     /// assert!(instant.elapsed() >= three_secs);
     /// ```
+    #[must_use]
     pub fn elapsed(&self) -> Duration {
         Instant::now() - *self
     }
@@ -111,6 +116,7 @@ impl Instant {
     /// Returns `Some(t)` where `t` is the time `self + duration` if `t` can be represented as
     /// `Instant` (which means it's inside the bounds of the underlying data structure), `None`
     /// otherwise.
+    #[must_use]
     pub fn checked_add(self, rhs: Duration) -> Option<Instant> {
         Some(Self(self.0.checked_add(rhs.as_micros().try_into().ok()?)?))
     }
@@ -118,6 +124,7 @@ impl Instant {
     /// Returns `Some(t)` where `t` is the time `self - duration` if `t` can be represented as
     /// `Instant` (which means it's inside the bounds of the underlying data structure), `None`
     /// otherwise.
+    #[must_use]
     pub fn checked_sub(self, rhs: Duration) -> Option<Instant> {
         Some(Self(self.0.checked_sub(rhs.as_micros().try_into().ok()?)?))
     }

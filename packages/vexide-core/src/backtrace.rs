@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
 
 #[cfg(all(target_arch = "arm", feature = "backtraces"))]
-use vex_libunwind::*;
+use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 
 /// A captured stack backtrace.
 ///
@@ -49,8 +49,10 @@ impl Backtrace {
     ///
     /// Backtraces will be empty on non-armv7a targets (e.g. WebAssembly) or when
     /// the `unwind` feature is disabled.
+    #[allow(clippy::inline_always)]
     #[inline(always)] // Inlining keeps this function from appearing in backtraces
     #[allow(clippy::missing_const_for_fn)]
+    #[must_use]
     pub fn capture() -> Self {
         #[cfg(all(target_arch = "arm", feature = "backtraces"))]
         return Self::try_capture().unwrap_or(Self { frames: Vec::new() });
@@ -61,7 +63,11 @@ impl Backtrace {
 
     /// Captures a backtrace at the current point of execution,
     /// returning an error if the backtrace fails to capture.
-    #[inline(never)] // Make sure there's alawys a frame to remove
+    ///
+    /// # Errors
+    ///
+    /// This function errors when the program's unwind info is corrupted.
+    #[inline(never)] // Make sure there's always a frame to remove
     #[cfg(all(target_arch = "arm", feature = "backtraces"))]
     pub fn try_capture() -> Result<Self, UnwindError> {
         let context = UnwindContext::new()?;
@@ -91,7 +97,7 @@ impl Display for Backtrace {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "stack backtrace:")?;
         for (i, frame) in self.frames.iter().enumerate() {
-            writeln!(f, "{i:>3}: {:?}", frame)?;
+            writeln!(f, "{i:>3}: {frame:?}")?;
         }
         write!(
             f,

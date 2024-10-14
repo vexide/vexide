@@ -24,6 +24,7 @@ unsafe impl Sync for DistanceSensor {}
 
 impl DistanceSensor {
     /// Create a new distance sensor from a smart port index.
+    #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
@@ -47,6 +48,12 @@ impl DistanceSensor {
     }
 
     /// Attempt to detect an object, returning `None` if no object could be found.
+    ///
+    /// # Errors
+    ///
+    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
+    /// - A [`DistanceError::StillInitializing`] error is returned if the distance sensor is still initializing.
+    /// - A [`DistanceError::BadStatusCode`] error is returned if the distance sensor has an unknown status code.
     pub fn object(&self) -> Result<Option<DistanceObject>, DistanceError> {
         self.validate()?;
 
@@ -59,13 +66,19 @@ impl DistanceSensor {
                 relative_size: unsafe { vexDeviceDistanceObjectSizeGet(self.device) as u32 },
                 velocity: unsafe { vexDeviceDistanceObjectVelocityGet(self.device) },
                 // TODO: determine if confidence reading is separate from whether or not an object is detected.
-                confidence: unsafe { vexDeviceDistanceConfidenceGet(self.device) as u32 } as f64
+                confidence: f64::from(unsafe { vexDeviceDistanceConfidenceGet(self.device) })
                     / 63.0,
             })),
         }
     }
 
-    /// Gets the status code of the distance sensor
+    /// Get the internal status code of the distance sensor.
+    ///
+    /// Vexide uses the status code internally to detect whether the distance sensor is initialized.
+    ///
+    /// # Errors
+    ///
+    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
     pub fn status(&self) -> Result<u32, DistanceError> {
         self.validate_port()?;
 
@@ -88,7 +101,7 @@ impl From<DistanceSensor> for SmartPort {
     }
 }
 
-/// Readings from a phyiscal object detected by a Distance Sensor.
+/// Readings from a physical object detected by a Distance Sensor.
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd)]
 pub struct DistanceObject {
     /// The distance of the object from the sensor (in millimeters).
@@ -122,7 +135,7 @@ pub enum DistanceError {
     /// Need to wait for the sensor to finish initializing
     StillInitializing,
 
-    /// The sensor's status code is not 0x82 or 0x86.
+    /// The sensor has an unknown status code.
     BadStatusCode,
 
     /// Generic port related error.

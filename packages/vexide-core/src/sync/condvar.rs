@@ -112,6 +112,7 @@ impl Condvar {
     const NOTIFIED_ALL: u8 = 2;
 
     /// Creates a new condition variable.
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             state: AtomicU8::new(Self::WAITING),

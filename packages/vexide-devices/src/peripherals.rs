@@ -204,6 +204,8 @@ impl DynamicPeripherals {
     /// this function takes a [`Peripherals`].
     /// This guarantees safety because [`Peripherals`] cannot be passed by value
     /// after they have been used to create devices.
+    #[must_use]
+    #[allow(clippy::needless_pass_by_value)]
     pub fn new(_peripherals: Peripherals) -> Self {
         let smart_ports = [false; 21];
         let adi_slots = [false; 8];

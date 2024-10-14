@@ -32,7 +32,7 @@ impl Reactor {
 
     pub fn tick(&mut self) {
         if let Some(sleeper) = self.sleepers.pop() {
-            sleeper.wake()
+            sleeper.wake();
         }
     }
 }

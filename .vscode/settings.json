@@ -40,6 +40,11 @@
         "zynq"
     ],
     "ltex.language": "en-US",
+    "ltex.enabled": [
+        "latex",
+        "markdown",
+        "rust"
+    ],
     "rust-analyzer.cargo.allTargets": false,
     "rust-analyzer.check.targets": [
         "${workspaceFolder}/armv7a-vex-v5.json",

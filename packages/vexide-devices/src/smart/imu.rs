@@ -51,6 +51,7 @@ impl InertialSensor {
     pub const MAX_HEADING: f64 = 360.0;
 
     /// Create a new inertial sensor from a smart port index.
+    #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
@@ -70,6 +71,11 @@ impl InertialSensor {
     }
 
     /// Read the inertial sensor's status code.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
     pub fn status(&self) -> Result<InertialStatus, InertialError> {
         self.validate_port()?;
 
@@ -83,25 +89,42 @@ impl InertialSensor {
     }
 
     /// Check if the Inertial Sensor is currently calibrating.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
     pub fn is_calibrating(&self) -> Result<bool, InertialError> {
         Ok(self.status()?.contains(InertialStatus::CALIBRATING))
     }
 
     /// Check if the Inertial Sensor was calibrated using auto-calibration.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
     pub fn is_auto_calibrated(&self) -> Result<bool, InertialError> {
         Ok(self.status()?.contains(InertialStatus::AUTO_CALIBRATED))
     }
 
-    /// Check if the Inertial Sensor was calibrated using auto-calibration.
+    /// Check the physical orientation of the sensor as it was measured during calibration.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
     pub fn physical_orientation(&self) -> Result<InertialOrientation, InertialError> {
         Ok(self.status()?.physical_orientation())
     }
 
     /// Calibrate IMU asynchronously.
     ///
-    /// Returns an [`InertialCalibrateFuture`] that is be polled until the IMU status flag reports the sensor as
-    /// no longer calibrating.
-    /// There a 3 second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
+    /// Returns an [`InertialCalibrateFuture`] that resolves once the calibration operation has finished.
+    ///
+    /// # Errors
+    ///
+    /// There is a 3-second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
     pub fn calibrate(&mut self) -> InertialCalibrateFuture {
         InertialCalibrateFuture::Calibrate(self.port.number())
     }
@@ -110,6 +133,12 @@ impl InertialSensor {
     ///
     /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
     /// while counterclockwise rotations are represented with negative ones.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn rotation(&self) -> Result<f64, InertialError> {
         self.validate()?;
         Ok(unsafe { vexDeviceImuHeadingGet(self.device) } - self.rotation_offset)
@@ -119,6 +148,12 @@ impl InertialSensor {
     ///
     /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
     /// represented with negative ones.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn heading(&self) -> Result<f64, InertialError> {
         self.validate()?;
         Ok(
@@ -128,6 +163,12 @@ impl InertialSensor {
     }
 
     /// Get a quaternion representing the Inertial Sensor’s orientation.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn quaternion(&self) -> Result<Quaternion<f64>, InertialError> {
         self.validate()?;
 
@@ -147,6 +188,12 @@ impl InertialSensor {
     }
 
     /// Get the Euler angles (pitch, yaw, roll) representing the Inertial Sensor’s orientation.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn euler(&self) -> Result<EulerAngles<f64, f64>, InertialError> {
         self.validate()?;
 
@@ -164,6 +211,12 @@ impl InertialSensor {
     }
 
     /// Get the Inertial Sensor’s raw gyroscope values.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn gyro_rate(&self) -> Result<Vector3<f64>, InertialError> {
         self.validate()?;
 
@@ -182,6 +235,12 @@ impl InertialSensor {
     }
 
     /// Get the Inertial Sensor’s raw accelerometer values.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn accel(&self) -> Result<Vector3<f64>, InertialError> {
         self.validate()?;
 
@@ -200,16 +259,34 @@ impl InertialSensor {
     }
 
     /// Resets the current reading of the Inertial Sensor’s heading to zero.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn reset_heading(&mut self) -> Result<(), InertialError> {
         self.set_heading(Default::default())
     }
 
     /// Resets the current reading of the Inertial Sensor’s rotation to zero.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn reset_rotation(&mut self) -> Result<(), InertialError> {
         self.set_rotation(Default::default())
     }
 
     /// Sets the current reading of the Inertial Sensor’s rotation to target value.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn set_rotation(&mut self, rotation: f64) -> Result<(), InertialError> {
         self.validate()?;
 
@@ -221,6 +298,12 @@ impl InertialSensor {
     /// Sets the current reading of the Inertial Sensor’s heading to target value.
     ///
     /// Target will default to 360 if above 360 and default to 0 if below 0.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn set_heading(&mut self, heading: f64) -> Result<(), InertialError> {
         self.validate()?;
 
@@ -232,6 +315,12 @@ impl InertialSensor {
     /// Sets the computation speed of the IMU.
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
         self.validate()?;
 
@@ -315,6 +404,7 @@ impl InertialStatus {
     pub const STATUS_ERROR: u32 = 0xFF;
 
     /// Returns the physical orientation of the sensor measured at calibration.
+    #[must_use]
     pub fn physical_orientation(&self) -> InertialOrientation {
         match (self.bits() >> 1) & 0b111 {
             0 => InertialOrientation::ZUp,
@@ -361,8 +451,8 @@ impl core::future::Future for InertialCalibrateFuture {
                     // IMU isn't plugged in, no need to go any further.
                     Poll::Ready(Err(InertialError::Port { source: err }))
                 } else {
-                    // Request that vexos calibrate the IMU, and transition to pending state.
-                    unsafe { vexDeviceImuReset(vexDeviceGetByIndex((port - 1) as u32)) }
+                    // Request that VEXos calibrate the IMU, and transition to pending state.
+                    unsafe { vexDeviceImuReset(vexDeviceGetByIndex(u32::from(port - 1))) }
 
                     // Change to waiting for calibration to start.
                     *self = Self::Waiting(port, Instant::now(), CalibrationPhase::Start);
@@ -381,9 +471,9 @@ impl core::future::Future for InertialCalibrateFuture {
                         // IMU got unplugged, so we'll resolve early.
                         return Poll::Ready(Err(InertialError::Port { source: err }));
                     } else {
-                        // Get status flags from vexos.
+                        // Get status flags from VEXos.
                         let flags = unsafe {
-                            vexDeviceImuStatusGet(vexDeviceGetByIndex((port - 1) as u32))
+                            vexDeviceImuStatusGet(vexDeviceGetByIndex(u32::from(port - 1)))
                         };
 
                         // 0xFF is returned when the sensor fails to report flags.

@@ -38,6 +38,7 @@ impl OpticalSensor {
     pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
     /// Creates a new optical sensor from a smart port index.
+    #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
@@ -46,6 +47,10 @@ impl OpticalSensor {
     }
 
     /// Get the PWM percentage (intensity/brightness) of the sensor's LED indicator.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn led_brightness(&self) -> Result<i32, PortError> {
         self.validate_port()?;
 
@@ -53,6 +58,10 @@ impl OpticalSensor {
     }
 
     /// Set the PWM percentage (intensity/brightness) of the sensor's LED indicator.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn set_led_brightness(&mut self, brightness: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -63,6 +72,10 @@ impl OpticalSensor {
 
     /// Get integration time (update rate) of the optical sensor in milliseconds, with
     /// minimum time being 3ms and the maximum time being 712ms.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn integration_time(&self) -> Result<Duration, PortError> {
         self.validate_port()?;
 
@@ -76,12 +89,19 @@ impl OpticalSensor {
     /// Lower integration time results in faster update rates with lower accuracy
     /// due to less available light being read by the sensor.
     ///
-    /// Time value must be a [`Duration`] between 3 and 712 milliseconds. See
+    /// The `time` value must be a [`Duration`] between 3 and 712 milliseconds. If
+    /// the integration time is out of this range, it will be clamped to fit inside it. See
     /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for
     /// more information.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn set_integration_time(&mut self, time: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
+        // `time_ms` is clamped to a range that will not cause precision loss.
+        #[allow(clippy::cast_precision_loss)]
         let time_ms = time.as_millis().clamp(
             Self::MIN_INTEGRATION_TIME.as_millis(),
             Self::MAX_INTEGRATION_TIME.as_millis(),
@@ -95,6 +115,10 @@ impl OpticalSensor {
     /// Get the detected color hue.
     ///
     /// Hue has a range of `0` to `359.999`.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn hue(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -104,6 +128,10 @@ impl OpticalSensor {
     /// Gets the detected color saturation.
     ///
     /// Saturation has a range `0` to `1.0`.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn saturation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -113,6 +141,10 @@ impl OpticalSensor {
     /// Get the detected color brightness.
     ///
     /// Brightness values range from `0` to `1.0`.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -123,13 +155,21 @@ impl OpticalSensor {
     ///
     /// A reading of 1.0 indicates that the object is close to the sensor, while 0.0
     /// indicates that no object is detected in range of the sensor.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn proximity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalProximityGet(self.device) } as f64 / 255.0)
+        Ok(f64::from(unsafe { vexDeviceOpticalProximityGet(self.device) }) / 255.0)
     }
 
     /// Get the processed RGB data from the sensor
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn rgb(&self) -> Result<OpticalRgb, PortError> {
         self.validate_port()?;
 
@@ -140,6 +180,10 @@ impl OpticalSensor {
     }
 
     /// Get the raw, unprocessed RGBC data from the sensor
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn raw(&self) -> Result<OpticalRaw, PortError> {
         self.validate_port()?;
 
@@ -150,6 +194,10 @@ impl OpticalSensor {
     }
 
     /// Get the most recent gesture data from the sensor. Gestures will be cleared after 500mS.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn last_gesture(&self) -> Result<Gesture, PortError> {
         self.validate_port()?;
 
@@ -176,6 +224,10 @@ impl OpticalSensor {
     }
 
     /// Gets the status code of the distance sensor
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an optical sensor is not currently connected to the smart port.
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 

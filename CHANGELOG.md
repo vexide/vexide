@@ -19,15 +19,18 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
-
 ## [Unreleased]
 
 ### Added
 
 - You can now detect controller release occurrences with `ButtonState::is_now_released`.
 - Added support for 5.5W motors with a new constructor (`Motor::new_exp`) and four new getters (`Motor::max_voltage`, `Motor::motor_type`, `Motor::is_v5`, and `Motor::is_exp`) for `Motor`. (#167)
+- The conditions upon which functions return errors are now documented. (#155).
+- Implemented the `Copy` trait for `BannerTheme`.
 
 ### Fixed
+
+- `AdiAddrLed::set_pixel` will now correctly return an error if the device's ADI expander is disconnected. (#155)
 
 ### Changed
 
@@ -39,6 +42,7 @@ Before releasing:
 - Changed the incorrect return types of `AdiSolenoid::is_open` and `AdiSolenoid::is_closed` from `LogicLevel` to `bool`. (#164) (**Breaking Change**)
 - Renamed `Motor::MAX_VOLTAGE` to `Motor::V5_MAX_VOLTAGE` and added `Motor::EXP_MAX_VOLTAGE`. (#167) (**Breaking Change**)
 - Moved the ability to convert Smart devices to `SmartPorts` out of the `SmartDevice` trait and into the devices themselves. (#171) (**Breaking Change**)
+- Getters and constructors will now create warnings when their return values are not used. (#155)
 
 ### Removed
 

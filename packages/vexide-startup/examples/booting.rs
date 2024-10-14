@@ -12,7 +12,8 @@ use vexide_startup::{
     banner::themes::THEME_DEFAULT, CodeSignature, ProgramFlags, ProgramOwner, ProgramType,
 };
 
-#[no_mangle]
+// SAFETY: This symbol is unique and is being used to start the vexide runtime.
+#[unsafe(no_mangle)]
 unsafe extern "C" fn _start() -> ! {
     unsafe {
         vexide_startup::startup::<true>(THEME_DEFAULT);
@@ -28,7 +29,8 @@ unsafe extern "C" fn _start() -> ! {
     vexide_core::program::exit();
 }
 
-#[link_section = ".code_signature"]
+// SAFETY: The code signature needs to be in this section so it may be found by VEXos.
+#[unsafe(link_section = ".code_signature")]
 #[used] // This is needed to prevent the linker from removing this object in release builds
 static CODE_SIG: CodeSignature = CodeSignature::new(
     ProgramType::User,

@@ -2,7 +2,7 @@
 //!
 //! - User code begins at an assembly routine called `_boot`, which sets up the stack
 //!   section before jumping to a user-provided `_start` symbol, which should be your
-//!   rust entrypointt.
+//!   rust entrypoint.
 //!
 //! - From there, the Rust entrypoint may call the [`startup`] function to finish the
 //!   startup process by clearing the `.bss` section (intended for uninitialized data)
@@ -68,6 +68,7 @@ pub struct CodeSignature(vex_sdk::vcodesig, [u32; 4]);
 
 impl CodeSignature {
     /// Creates a new signature given a program type, owner, and flags.
+    #[must_use]
     pub const fn new(program_type: ProgramType, owner: ProgramOwner, flags: ProgramFlags) -> Self {
         Self(
             vex_sdk::vcodesig {
@@ -81,7 +82,7 @@ impl CodeSignature {
     }
 }
 
-extern "C" {
+unsafe extern "C" {
     // These symbols don't have real types, so this is a little bit of a hack.
     static mut __bss_start: u32;
     static mut __bss_end: u32;
@@ -120,12 +121,14 @@ _boot:
 /// - `ebss >= sbss`
 /// - `sbss` and `ebss` must be `T` aligned.
 #[inline]
+#[allow(clippy::similar_names)]
+#[cfg(target_arch = "arm")]
 unsafe fn zero_bss<T>(mut sbss: *mut T, ebss: *mut T)
 where
     T: Copy,
 {
     while sbss < ebss {
-        // NOTE(volatile) to prevent this from being transformed into `memclr`
+        // NOTE: volatile to prevent this from being transformed into `memclr`
         unsafe {
             core::ptr::write_volatile(sbss, core::mem::zeroed());
             sbss = sbss.offset(1);
@@ -136,7 +139,7 @@ where
 /// Startup Routine
 ///
 /// - Sets up the heap allocator if necessary.
-/// - Zeroes the `.bss`` section if necessary.
+/// - Zeroes the `.bss` section if necessary.
 /// - Prints the startup banner with a specified theme, if enabled.
 ///
 /// # Safety
