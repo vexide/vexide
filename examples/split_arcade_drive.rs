@@ -23,14 +23,14 @@ impl Compete for Robot {
             // Move left motors.
             for motor in self.left_motors.iter_mut() {
                 motor
-                    .set_voltage((forward + turn) * Motor::MAX_VOLTAGE_V5)
+                    .set_voltage((forward + turn) * Motor::V5_MAX_VOLTAGE)
                     .ok();
             }
 
             // Move right motors.
             for motor in self.right_motors.iter_mut() {
                 motor
-                    .set_voltage((forward - turn) * Motor::MAX_VOLTAGE_V5)
+                    .set_voltage((forward - turn) * Motor::V5_MAX_VOLTAGE)
                     .ok();
             }
 
