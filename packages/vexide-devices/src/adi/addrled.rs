@@ -68,8 +68,9 @@ impl AdiAddrLed {
     ///
     /// # Errors
     ///
-    /// Returns [`AddrLedError::OutOfRange`] if the provided index is out of range
-    /// of the current buffer length.
+    /// - Returns [`AddrLedError::OutOfRange`] if the provided index is out of range
+    ///   of the current buffer length.
+    /// - If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
     pub fn set_pixel(&mut self, index: usize, color: impl IntoRgb) -> Result<(), AddrLedError> {
         self.port.validate_expander()?;
 
