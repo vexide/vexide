@@ -127,7 +127,7 @@ impl io::Read for RadioLink {
                 io::ErrorKind::InvalidData,
                 "Internal read error occurred.",
             )),
-            recieved => Ok(recieved as usize),
+            received => Ok(received as usize),
         }
     }
 }
@@ -199,6 +199,11 @@ impl SmartDevice for RadioLink {
 
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::GenericSerial
+    }
+}
+impl From<RadioLink> for SmartPort {
+    fn from(device: RadioLink) -> Self {
+        device.port
     }
 }
 

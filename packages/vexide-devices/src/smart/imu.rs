@@ -82,17 +82,17 @@ impl InertialSensor {
         Ok(InertialStatus::from_bits_retain(bits))
     }
 
-    /// Check if the Intertial Sensor is currently calibrating.
+    /// Check if the Inertial Sensor is currently calibrating.
     pub fn is_calibrating(&self) -> Result<bool, InertialError> {
         Ok(self.status()?.contains(InertialStatus::CALIBRATING))
     }
 
-    /// Check if the Intertial Sensor was calibrated using auto-calibration.
+    /// Check if the Inertial Sensor was calibrated using auto-calibration.
     pub fn is_auto_calibrated(&self) -> Result<bool, InertialError> {
-        Ok(self.status()?.contains(InertialStatus::AUTO_CALIBRTED))
+        Ok(self.status()?.contains(InertialStatus::AUTO_CALIBRATED))
     }
 
-    /// Check if the Intertial Sensor was calibrated using auto-calibration.
+    /// Check if the Inertial Sensor was calibrated using auto-calibration.
     pub fn physical_orientation(&self) -> Result<InertialOrientation, InertialError> {
         Ok(self.status()?.physical_orientation())
     }
@@ -231,7 +231,7 @@ impl InertialSensor {
 
     /// Sets the computation speed of the IMU.
     ///
-    /// This duration should be above [`Self::MIN_DATA_RATE`] (5 milliseconds).
+    /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
         self.validate()?;
 
@@ -253,6 +253,11 @@ impl SmartDevice for InertialSensor {
 
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::Imu
+    }
+}
+impl From<InertialSensor> for SmartPort {
+    fn from(device: InertialSensor) -> Self {
+        device.port
     }
 }
 
@@ -300,7 +305,7 @@ bitflags! {
         const CALIBRATING = 0b00001;
 
         /// The sensor is calibrated using auto-calibration.
-        const AUTO_CALIBRTED = 0b10000;
+        const AUTO_CALIBRATED = 0b10000;
     }
 }
 

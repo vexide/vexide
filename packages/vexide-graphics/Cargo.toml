@@ -1,6 +1,6 @@
 [package]
 name = "vexide-graphics"
-version = "0.1.2"
+version = "0.1.4"
 edition = "2021"
 license = "MIT"
 description = "Graphics driver implementations for vexide"
@@ -21,10 +21,10 @@ slint = { version = "1.5.1", default-features = false, optional = true, features
     "libm",
     "renderer-software",
 ] }
-vex-sdk = "0.19.0"
-vexide-async = { version = "0.1.2", path = "../vexide-async" }
-vexide-core = { version = "0.3.0", path = "../vexide-core" }
-vexide-devices = { version = "0.3.0", path = "../vexide-devices" }
+vex-sdk = { workspace = true }
+vexide-async = { workspace = true }
+vexide-core = { workspace = true }
+vexide-devices = { workspace = true }
 
 [lints]
 workspace = true
@@ -34,3 +34,6 @@ default = []
 
 embedded-graphics = ["dep:embedded-graphics-core"]
 slint = ["dep:slint"]
+
+[package.metadata.docs.rs]
+targets = ["armv7a-none-eabi"]

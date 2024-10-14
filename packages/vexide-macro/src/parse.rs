@@ -18,6 +18,7 @@ mod kw {
     custom_keyword!(code_sig);
 }
 
+#[derive(Clone)]
 pub struct MacroOpts {
     pub banner_enabled: bool,
     pub banner_theme: Option<Ident>,

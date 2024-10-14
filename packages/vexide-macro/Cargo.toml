@@ -1,6 +1,6 @@
 [package]
 name = "vexide-macro"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 license = "MIT"
 description = "Proc macros for vexide"
@@ -23,3 +23,6 @@ proc-macro = true
 
 [lints]
 workspace = true
+
+[package.metadata.docs.rs]
+targets = ["armv7a-none-eabi"]

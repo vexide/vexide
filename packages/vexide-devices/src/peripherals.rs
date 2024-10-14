@@ -1,7 +1,7 @@
 //! Peripherals implementations.
 //!
 //! Peripherals are the best way to create devices because they allow you to do it safely.
-//! Both kinds of peripherals, [`Peripherals`] and [`DynamicPeripherals`], guarentee that a given port is only used to create one device.
+//! Both kinds of peripherals, [`Peripherals`] and [`DynamicPeripherals`], guarantee that a given port is only used to create one device.
 //! This is important because creating multiple devices on the same port can cause bugs and unexpected behavior.
 //! Devices can still be created unsafely without using peripherals, but it isn't recommended.
 //!
@@ -33,12 +33,19 @@ use crate::{
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
-#[derive(Debug)]
-/// A struct that contains all ports on the V5 Brain
-/// and guarentees **at compile time** that each port is only used once.
-/// Because of the fact that this checks at compile time, it cannot be moved once it has been used to create a device.
+/// Contains an instance of a brain’s available I/O, including ports, hardware, and devices.
+///
+/// A brain often has many external devices attached to it. We call these devices *peripherals*, and this
+/// struct is the "gateway" to all of these. [`Peripherals`] is intended to be used as a singleton, and you
+/// will typically only get one of these in your program's execution. This guarantees **at compile time** that
+/// each port is only used once.
+///
+/// Because of the fact that this checks at compile time, it cannot be copied, cloned, or moved once
+/// it has been used to create a device.
+///
 /// If you need to store a peripherals struct for use in multiple functions, use [`DynamicPeripherals`] instead.
 /// This struct is always preferred over [`DynamicPeripherals`] when possible.
+#[derive(Debug)]
 pub struct Peripherals {
     /// Brain display
     pub display: Display,
@@ -182,7 +189,7 @@ impl Peripherals {
     }
 }
 
-/// Guarentees that ports are only used once **at runtime**
+/// Guarantees that ports are only used once **at runtime**
 /// This is useful for when you want to store a peripherals struct for use in multiple functions.
 /// When possible, use [`Peripherals`] instead.
 #[derive(Debug)]
@@ -193,9 +200,9 @@ pub struct DynamicPeripherals {
 }
 impl DynamicPeripherals {
     /// Creates a new dynamic peripherals
-    /// In order to guarentee that no ports created by this struct,
+    /// In order to guarantee that no ports created by this struct,
     /// this function takes a [`Peripherals`].
-    /// This guarentees safety because [`Peripherals`] cannot be passed by value
+    /// This guarantees safety because [`Peripherals`] cannot be passed by value
     /// after they have been used to create devices.
     pub fn new(_peripherals: Peripherals) -> Self {
         let smart_ports = [false; 21];

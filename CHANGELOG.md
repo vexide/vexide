@@ -19,7 +19,48 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
+
 ## [Unreleased]
+
+### Added
+
+- You can now detect controller release occurrences with `ButtonState::is_now_released`.
+- Added support for 5.5W motors with a new constructor (`Motor::new_exp`) and four new getters (`Motor::max_voltage`, `Motor::motor_type`, `Motor::is_v5`, and `Motor::is_exp`) for `Motor`. (#167)
+
+### Fixed
+
+### Changed
+
+- Controller state is now returned all at once to reduce error checking. (#152) (**Breaking Change**)
+- `Button::was_pressed` has been renamed to `ButtonState::is_now_pressed`.
+- `battery::capacity` now returns from 0.0-1.0 rather than 0-100.
+- `battery::voltage` is now returned in volts rather than millivolts.
+- `battery::current` is now returned in amps rather than milliamps.
+- Changed the incorrect return types of `AdiSolenoid::is_open` and `AdiSolenoid::is_closed` from `LogicLevel` to `bool`. (#164) (**Breaking Change**)
+- Renamed `Motor::MAX_VOLTAGE` to `Motor::V5_MAX_VOLTAGE` and added `Motor::EXP_MAX_VOLTAGE`. (#167) (**Breaking Change**)
+- Moved the ability to convert Smart devices to `SmartPorts` out of the `SmartDevice` trait and into the devices themselves. (#171) (**Breaking Change**)
+
+### Removed
+
+### New Contributors
+
+@zabackary made their first contribution in #164!
+
+## [0.4.1]
+
+### Added
+
+### Fixed
+
+- Updated to vex-sdk 0.21.0, fixing ABI incompatibilities between the VEXos calling convention and the hard-float ABI introduced in vexide 0.4.0. This should fix broken functions that pass floats to the SDK. (#156)
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+## [0.4.0]
 
 ### Added
 
@@ -31,6 +72,7 @@ Before releasing:
 - Fixed an issue where the distance sensor relative_size returned a u32 when it can be negative. (#116)
 - Fixed an issue preventing the `Screen::draw_buffer` function from working properly. (#128)
 - Fixed an issue where panic messages would not be displayed even when the `display_panics` feature was enabled if the screens render mode was set to `DoubleBuffered`. (#134)
+- `GpsImu` should now validate on the correct port. (#141)
 
 ### Changed
 
@@ -41,10 +83,15 @@ Before releasing:
 - Renamed `SmartDevice::port_index` and `SmartPort::index` to `SmartDevice::port_number` and `SmartPort::port_number`. (#121) (**Breaking Change**)
 - Renamed `AdiDevice::port_index` and `AdiPort::index` to `AdiDevice::port_number` and `AdiDevice::port_number`. (#121) (**Breaking Change**)
 - `SmartPort::device_type` now no longer returns a `Result`. (#121) (**Breaking Change**)
+- Updated the names of certain misspelled `enum` variants, constants, and fields. (#132) (**Breaking Change**)
 - Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
 - Controller joystick axis getters now return `f64` instead of `f32`. (#133)
 - Renamed `Screen` and its associated structs to `Display`. (#138) (**Breaking Change**)
 - Changes the banner attribute syntax in the `vexide::main` macro. (#127) (**Breaking Change**)
+- Controller joystick axis getters now return `f64` instead of `f32`. (#133) (**Breaking Change**)
+- Fixed an issue where the async executor would block indefinetly on the first program run after a Brain reboot (#139)
+- Removed the `critical_section` module from `vexide_core`, since vexide doesn't use interrupts and it can potentially break VEXos operations. (#144) (**Breaking Change**)
+- Switched to a hard-float libm build with up to 6 times faster floating point operations. (#145)
 
 ### Removed
 
@@ -124,3 +171,5 @@ Before releasing:
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
+[0.4.0]: https://github.com/vexide/vexide/compare/v0.3.0...v0.4.0
+[0.4.1]: https://github.com/vexide/vexide/compare/v0.4.0...v0.4.1

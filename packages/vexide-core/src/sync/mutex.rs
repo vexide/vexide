@@ -1,36 +1,37 @@
 use core::{
     cell::UnsafeCell,
     fmt::Debug,
-    sync::atomic::{AtomicU8, Ordering},
+    sync::atomic::{AtomicBool, Ordering},
 };
 
 use futures_core::Future;
 use lock_api::RawMutex as _;
 
-struct MutexState(AtomicU8);
+struct MutexState(AtomicBool);
 impl MutexState {
     const fn new() -> Self {
-        Self(AtomicU8::new(0))
+        Self(AtomicBool::new(false))
     }
 
     /// Returns true if the lock was acquired.
     fn try_lock(&self) -> bool {
         self.0
-            .compare_exchange(0, 1, Ordering::Acquire, Ordering::Acquire)
+            .compare_exchange(false, true, Ordering::Acquire, Ordering::Acquire)
             .is_ok()
     }
 
     fn unlock(&self) {
-        self.0.store(0, Ordering::Release);
+        self.0.store(false, Ordering::Release);
     }
 }
 
-/// A raw mutex type built on top of the critical section.
+/// A raw, synchronous, spinning mutex type.
 pub struct RawMutex {
     state: MutexState,
 }
 impl RawMutex {
     /// Creates a new raw mutex.
+    #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
         Self {
             state: MutexState::new(),
@@ -45,21 +46,17 @@ unsafe impl lock_api::RawMutex for RawMutex {
     type GuardMarker = lock_api::GuardSend;
 
     fn lock(&self) {
-        critical_section::with(|_| {
-            while !self.state.try_lock() {
-                core::hint::spin_loop();
-            }
-        })
+        while !self.state.try_lock() {
+            core::hint::spin_loop();
+        }
     }
 
     fn try_lock(&self) -> bool {
-        critical_section::with(|_| self.state.try_lock())
+        self.state.try_lock()
     }
 
     unsafe fn unlock(&self) {
-        critical_section::with(|_| {
-            self.state.unlock();
-        })
+        self.state.unlock();
     }
 }
 
@@ -108,7 +105,7 @@ impl<T> Mutex<T> {
     }
 
     /// Used internally to lock the mutex in a blocking fashion.
-    /// This is neccessary because a mutex may be created internally before the executor is ready to be initialized.
+    /// This is necessary because a mutex may be created internally before the executor is ready to be initialized.
     pub(crate) fn lock_blocking(&self) -> MutexGuard<'_, T> {
         self.raw.lock();
         MutexGuard::new(self)

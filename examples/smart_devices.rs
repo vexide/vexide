@@ -22,7 +22,7 @@ async fn main(peripherals: Peripherals) {
     let mut link = RadioLink::open(
         peripherals.port_15,
         "example",
-        vexide_devices::smart::link::LinkType::Manager,
+        vexide::devices::smart::link::LinkType::Manager,
     )
     .unwrap();
     // Send a message over vexlink.
@@ -34,14 +34,15 @@ async fn main(peripherals: Peripherals) {
     let distance = DistanceSensor::new(peripherals.port_16);
 
     loop {
+        let controller_state = controller.state().unwrap();
         // Simple tank drive
-        let left = controller.left_stick.y().unwrap();
-        let right = controller.right_stick.y().unwrap();
+        let left = controller_state.left_stick.y();
+        let right = controller_state.right_stick.y();
         left_motor.set_voltage(12.0 * left).unwrap();
         right_motor.set_voltage(12.0 * right).unwrap();
 
         println!("IMU Euler angles: {:?}", imu.euler().unwrap());
-        println!("Distance Sensor Object: {:?}", distance.object().unwrap(),);
+        println!("Distance Sensor Object: {:?}", distance.object().unwrap());
 
         // Don't hog the CPU
         sleep(Duration::from_millis(5)).await;

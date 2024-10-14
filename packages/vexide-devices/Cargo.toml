@@ -1,6 +1,6 @@
 [package]
 name = "vexide-devices"
-version = "0.3.0"
+version = "0.4.1"
 edition = "2021"
 license = "MIT"
 description = "High level device bindings for vexide"
@@ -17,12 +17,9 @@ authors = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vexide-core = { version = "0.3.0", path = "../vexide-core" }
-vex-sdk = "0.19.0"
-snafu = { version = "0.8.0", default-features = false, features = [
-    "rust_1_61",
-    "unstable-core-error",
-] }
+vexide-core = { workspace = true }
+vex-sdk = { workspace = true }
+snafu = { workspace = true }
 mint = "0.5.9"
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 bitflags = "2.4.2"
@@ -38,3 +35,6 @@ workspace = true
 dangerous_motor_tuning = []
 smart_leds_trait = ["dep:smart-leds-trait"]
 nalgebra = ["dep:nalgebra"]
+
+[package.metadata.docs.rs]
+targets = ["armv7a-none-eabi"]

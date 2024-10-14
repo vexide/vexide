@@ -1,7 +1,7 @@
 //! ADI Light Sensor
 //!
 //! The Light Sensor is a sensor which uses a photoresistor to measure the intensity of light. It is
-//! one of the 3-Wire series sensors. The sensor has a single mounting holewhich will allow it to be
+//! one of the 3-Wire series sensors. The sensor has a single mounting hole which will allow it to be
 //! attached to the robot's structure.
 
 use vex_sdk::vexDeviceAdiValueGet;

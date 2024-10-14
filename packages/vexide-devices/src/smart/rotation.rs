@@ -119,7 +119,7 @@ impl RotationSensor {
 
     /// Sets the update rate of the sensor.
     ///
-    /// This duration should be above [`Self::MIN_DATA_RATE`] (5 milliseconds).
+    /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -202,5 +202,10 @@ impl SmartDevice for RotationSensor {
 
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::Rotation
+    }
+}
+impl From<RotationSensor> for SmartPort {
+    fn from(device: RotationSensor) -> Self {
+        device.port
     }
 }

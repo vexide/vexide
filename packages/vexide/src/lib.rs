@@ -12,15 +12,14 @@
 //!
 //! ## Project Structure
 //!
-//! The vexide runtime is split into 7 subcrates. The one you're looking at right now re-exports
-//! each of these crates into a single package. You can view the respective docs for each of them below:
+//! The vexide runtime is split into 7 sub-crates. The one you're looking at right now re-exports each of these crates into a single package.
 //!
-//! - [`vexide-core`](https://docs.rs/vexide_core) provides lowlevel core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
+//! - [`vexide-core`](https://docs.rs/vexide_core) provides low-level core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
 //! - [`vexide-devices`](https://docs.rs/vexide_devices) contains all device-related bindings for things like motors and sensors.
 //! - [`vexide-async`](https://docs.rs/vexide_async) implements our cooperative async runtime as well as several important async futures.
 //! - [`vexide-startup`](https://docs.rs/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.
 //! - [`vexide-panic`](https://docs.rs/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
-//! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [Slint] and [`embedded-graphics`].
+//! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [`slint`] and [`embedded-graphics`].
 //! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 //!
 //! # Usage
@@ -28,6 +27,7 @@
 //! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
 //! ```rust
 //! use vexide::prelude::*;
+//!
 //! #[vexide::main]
 //! async fn main() {
 //!     println!("Hello, world!");
@@ -37,21 +37,30 @@
 //! Check out our [docs](https://vexide.dev/docs/) for more in-depth usage guides.
 
 #![no_std]
+#![doc(html_logo_url = "https://vexide.dev/images/logo.svg")]
 
+#[doc(inline)]
 #[cfg(feature = "async")]
 pub use vexide_async as async_runtime;
+#[doc(inline)]
 #[cfg(feature = "core")]
 pub use vexide_core as core;
+#[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
+#[doc(inline)]
 #[cfg(feature = "graphics")]
 pub use vexide_graphics as graphics;
+#[doc(inline)]
 #[cfg(feature = "macro")]
 pub use vexide_macro as r#macro;
+#[doc(inline)]
 #[cfg(feature = "macro")]
 pub use vexide_macro::main;
+#[doc(inline)]
 #[cfg(feature = "panic")]
 pub use vexide_panic as panic;
+#[doc(inline)]
 #[cfg(feature = "startup")]
 pub use vexide_startup as startup;
 

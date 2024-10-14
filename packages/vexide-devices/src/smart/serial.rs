@@ -31,12 +31,12 @@ impl SerialPort {
     /// use by user programs.
     pub const MAX_BAUD_RATE: u32 = 921600;
 
-    /// The maximum length of the serial FIFO inpput and output buffer.
+    /// The maximum length of the serial FIFO input and output buffer.
     pub const INTERNAL_BUFFER_SIZE: usize = 1024;
 
     /// Open and configure a serial port on a [`SmartPort`].
     ///
-    /// This configures a [`SmartPort`] to act as a generic serial controller capable of sending/recieving
+    /// This configures a [`SmartPort`] to act as a generic serial controller capable of sending/receiving
     /// data. Providing a baud rate, or the transmission rate of bits is required. The maximum theoretical
     /// baud rate is 921600.
     ///
@@ -164,7 +164,7 @@ impl SerialPort {
     /// ```
     /// let serial = SerialPort::open(peripherals.port_1, 115200)?;
     ///
-    /// if serial.byets_to_read()? > 0 {
+    /// if serial.bytes_to_read()? > 0 {
     ///     println!("{}", serial.read_byte()?.unwrap());
     /// }
     /// ```
@@ -236,7 +236,7 @@ impl io::Read for SerialPort {
                 io::ErrorKind::Other,
                 "Internal read error occurred.",
             )),
-            recieved => Ok(recieved as usize),
+            received => Ok(received as usize),
         }
     }
 }
@@ -284,6 +284,11 @@ impl SmartDevice for SerialPort {
 
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::GenericSerial
+    }
+}
+impl From<SerialPort> for SmartPort {
+    fn from(device: SerialPort) -> Self {
+        device.port
     }
 }
 

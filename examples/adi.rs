@@ -2,7 +2,6 @@
 #![no_std]
 
 use vexide::prelude::*;
-use vexide_devices::adi::AdiRangeFinder;
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {

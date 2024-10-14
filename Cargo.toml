@@ -1,11 +1,34 @@
+[package]
+name = "examples"
+edition = "2021"
+version = "0.0.1"
+
+[dev-dependencies]
+vexide = { path = "packages/vexide" }
+
 [workspace]
 members = ["packages/*"]
 resolver = "2"
 
 [workspace.lints.rust]
-rust_2018_idioms = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
 missing_docs = "warn"
 unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.dependencies]
+snafu = { version = "0.8.0", default-features = false, features = [
+    "rust_1_61",
+    "unstable-core-error",
+] }
+vexide-async = { version = "0.1.4", path = "packages/vexide-async", default-features = false }
+vexide-core = { version = "0.4.1", path = "packages/vexide-core", default-features = false }
+vexide-devices = { version = "0.4.1", path = "packages/vexide-devices", default-features = false }
+vexide-panic = { version = "0.1.4", path = "packages/vexide-panic", default-features = false }
+vexide-startup = { version = "0.3.1", path = "packages/vexide-startup", default-features = false }
+vexide-graphics = { version = "0.1.4", path = "packages/vexide-graphics", default-features = false }
+vexide-macro = { version = "0.3.0", path = "packages/vexide-macro", default-features = false }
+vex-sdk = "0.22.0"
+no_std_io = { version = "0.6.0", features = ["alloc"] }
 
 [workspace.lints.clippy]
 missing_const_for_fn = "warn"

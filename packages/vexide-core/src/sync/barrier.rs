@@ -12,18 +12,18 @@ pub struct BarrierWaitFuture<'a> {
     leader: bool,
     barrier: &'a Barrier,
 }
-impl<'a> Future for BarrierWaitFuture<'a> {
+impl Future for BarrierWaitFuture<'_> {
     type Output = bool;
     fn poll(
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        if critical_section::with(|_| {
-            self.barrier
-                .current
-                .load(core::sync::atomic::Ordering::Acquire)
-                == self.barrier.count
-        }) {
+        if self
+            .barrier
+            .current
+            .load(core::sync::atomic::Ordering::Acquire)
+            == self.barrier.count
+        {
             core::task::Poll::Ready(self.leader)
         } else {
             cx.waker().wake_by_ref();
@@ -71,11 +71,11 @@ impl Barrier {
     /// A single task will get a [`BarrierWaitFuture`] that resolves to true.
     /// This is the equivalent of the standard library method [`BarrierWaitResult::is_leader`](https://doc.rust-lang.org/std/sync/struct.BarrierWaitResult.html#method.is_leader)
     pub fn wait(&self) -> BarrierWaitFuture<'_> {
-        let leader = critical_section::with(|_| {
+        let leader = {
             let current = self.current.load(core::sync::atomic::Ordering::Acquire) + 1 % self.count;
             self.current.store(current, Ordering::SeqCst);
             current == 1
-        });
+        };
         BarrierWaitFuture {
             leader,
             barrier: self,

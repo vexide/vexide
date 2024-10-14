@@ -54,12 +54,13 @@ impl GpsSensor {
 
         Ok(Self {
             device,
-            port,
             imu: GpsImu {
                 device,
+                port_number: port.number(),
                 rotation_offset: Default::default(),
                 heading_offset: Default::default(),
             },
+            port,
         })
     }
 
@@ -130,10 +131,16 @@ impl SmartDevice for GpsSensor {
         SmartDeviceType::Gps
     }
 }
+impl From<GpsSensor> for SmartPort {
+    fn from(device: GpsSensor) -> Self {
+        device.port
+    }
+}
 
 /// GPS Sensor Internal IMU
 #[derive(Debug, PartialEq)]
 pub struct GpsImu {
+    port_number: u8,
     device: V5_DeviceT,
     rotation_offset: f64,
     heading_offset: f64,
@@ -148,10 +155,7 @@ impl GpsImu {
     pub const MAX_HEADING: f64 = 360.0;
 
     fn validate_port(&self) -> Result<(), PortError> {
-        validate_port(
-            unsafe { (*self.device).zero_indexed_port },
-            SmartDeviceType::Gps,
-        )
+        validate_port(self.port_number, SmartDeviceType::Gps)
     }
 
     /// Returns the IMU's yaw angle bounded by [0, 360) degrees.

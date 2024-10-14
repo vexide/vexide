@@ -62,7 +62,7 @@ impl RwLockState {
 pub struct RwLockReadGuard<'a, T> {
     lock: &'a RwLock<T>,
 }
-impl<'a, T> core::ops::Deref for RwLockReadGuard<'a, T> {
+impl<T> core::ops::Deref for RwLockReadGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { &*self.lock.data.get() }
@@ -86,7 +86,7 @@ impl<'a, T> Future for RwLockReadFuture<'a, T> {
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        if critical_section::with(|_| self.lock.state.try_lock_shared()) {
+        if self.lock.state.try_lock_shared() {
             core::task::Poll::Ready(RwLockReadGuard { lock: self.lock })
         } else {
             cx.waker().wake_by_ref();
@@ -100,13 +100,13 @@ impl<'a, T> Future for RwLockReadFuture<'a, T> {
 pub struct RwLockWriteGuard<'a, T> {
     lock: &'a RwLock<T>,
 }
-impl<'a, T> core::ops::Deref for RwLockWriteGuard<'a, T> {
+impl<T> core::ops::Deref for RwLockWriteGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { &*self.lock.data.get() }
     }
 }
-impl<'a, T> core::ops::DerefMut for RwLockWriteGuard<'a, T> {
+impl<T> core::ops::DerefMut for RwLockWriteGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
         unsafe { &mut *self.lock.data.get() }
     }
@@ -129,7 +129,7 @@ impl<'a, T> Future for RwLockWriteFuture<'a, T> {
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        if critical_section::with(|_| self.lock.state.try_lock_exclusive()) {
+        if self.lock.state.try_lock_exclusive() {
             core::task::Poll::Ready(RwLockWriteGuard { lock: self.lock })
         } else {
             cx.waker().wake_by_ref();
@@ -169,7 +169,7 @@ impl<T> RwLock<T> {
 
     /// Attempt to gain a read lock on the data.
     pub fn try_read(&self) -> Option<RwLockReadGuard<'_, T>> {
-        if critical_section::with(|_| self.state.try_lock_shared()) {
+        if self.state.try_lock_shared() {
             Some(RwLockReadGuard { lock: self })
         } else {
             None
@@ -178,7 +178,7 @@ impl<T> RwLock<T> {
 
     /// Attempt to gain a write lock on the data.
     pub fn try_write(&self) -> Option<RwLockWriteGuard<'_, T>> {
-        if critical_section::with(|_| self.state.try_lock_exclusive()) {
+        if self.state.try_lock_exclusive() {
             Some(RwLockWriteGuard { lock: self })
         } else {
             None
@@ -186,7 +186,7 @@ impl<T> RwLock<T> {
     }
 
     /// Get mutable access to the data stored in the read-write lock.
-    /// This doesn't require a lock to be acquired because the borrow checker guarentees exclusive access because self is a mutable reference.
+    /// This doesn't require a lock to be acquired because the borrow checker guarantees exclusive access because self is a mutable reference.
     pub fn get_mut(&mut self) -> &mut T {
         //SAFETY: This is safe because we have exclusive access to the data thanks to taking a mutable reference to self.
         unsafe { &mut *self.data.get() }

@@ -156,7 +156,7 @@ impl OpticalSensor {
         // Enable gesture detection if not already enabled.
         //
         // For some reason, PROS docs claim that this function makes color reading
-        // unavilable, but from hardware testing this is false.
+        // unavailable, but from hardware testing this is false.
         unsafe { vexDeviceOpticalGestureEnable(self.device) };
 
         let mut gesture = V5_DeviceOpticalGesture::default();
@@ -192,6 +192,11 @@ impl SmartDevice for OpticalSensor {
         SmartDeviceType::Optical
     }
 }
+impl From<OpticalSensor> for SmartPort {
+    fn from(device: OpticalSensor) -> Self {
+        device.port
+    }
+}
 
 /// Represents a gesture and its direction.
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
@@ -219,7 +224,7 @@ impl From<u32> for GestureDirection {
             3 => Self::Left,
             4 => Self::Right,
             // Normally this is just 0, but this is `From` so we have to handle
-            // all values even if they're unreacahable.
+            // all values even if they're unreachable.
             _ => Self::None,
         }
     }
