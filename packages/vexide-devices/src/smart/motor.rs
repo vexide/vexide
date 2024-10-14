@@ -184,7 +184,7 @@ impl Motor {
     /// Creates a new 5.5W (EXP) Smart Motor.
     /// See [`Motor::new`] to create a 11W (V5) Smart Motor.
     pub fn new_exp(port: SmartPort, direction: Direction) -> Self {
-        Self::new_with_type(port, Gearset::Green, direction, MotorType::V5)
+        Self::new_with_type(port, Gearset::Green, direction, MotorType::Exp)
     }
 
     /// Sets the target that the motor should attempt to reach.
