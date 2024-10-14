@@ -138,9 +138,13 @@ impl Motor {
     /// The rate at which data can be written to a [`Motor`].
     pub const DATA_WRITE_INTERVAL: Duration = Duration::from_millis(5);
 
-
     /// Create a new V5 or EXP motor.
-    fn new_with_type(port: SmartPort, gearset: Gearset, direction: Direction, motor_type: MotorType) -> Self {
+    fn new_with_type(
+        port: SmartPort,
+        gearset: Gearset,
+        direction: Direction,
+        motor_type: MotorType,
+    ) -> Self {
         let device = unsafe { port.device_handle() }; // SAFETY: This function is only called once on this port.
 
         // NOTE: SDK properly stores device state when unplugged, meaning that we can safely
@@ -332,7 +336,7 @@ impl Motor {
 
     /// Returns the current position of the motor.
     pub fn position(&self) -> Result<Position, MotorError> {
-        let gearset =  self.gearset()?;
+        let gearset = self.gearset()?;
         Ok(Position::from_ticks(
             unsafe { vexDeviceMotorPositionGet(self.device) } as i64,
             gearset.ticks_per_revolution(),
