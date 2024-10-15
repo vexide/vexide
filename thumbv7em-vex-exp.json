@@ -4,6 +4,7 @@
     "abi": "eabihf",
     "os": "none",
     "vendor": "vex",
+    "env": "exp",
     "panic-strategy": "abort",
     "relocation-model": "static",
     "llvm-target": "thumbv7em-none-eabihf",

@@ -4,6 +4,7 @@
     "abi": "eabihf",
     "os": "none",
     "vendor": "vex",
+    "env": "v5",
     "panic-strategy": "abort",
     "relocation-model": "static",
     "llvm-target": "armv7a-none-eabihf",
