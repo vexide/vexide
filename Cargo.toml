@@ -30,8 +30,8 @@ rust_2018_idioms = { level = "warn", priority = -1 }
 missing_docs = "warn"
 unsafe_op_in_unsafe_fn = "deny"
 unexpected_cfgs = { level = "warn", check-cfg = [
-        'cfg(target_env = "v5")',
-        'cfg(target_env = "exp")',
+        'target_env = "v5"',
+        'target_env = "exp"',
 ] }
 
 [workspace.lints.clippy]
