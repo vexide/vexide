@@ -10,11 +10,6 @@ vexide = { path = "packages/vexide" }
 members = ["packages/*"]
 resolver = "2"
 
-[workspace.lints.rust]
-rust_2018_idioms = { level = "warn", priority = -1 }
-missing_docs = "warn"
-unsafe_op_in_unsafe_fn = "deny"
-
 [workspace.dependencies]
 snafu = { version = "0.8.0", default-features = false, features = [
     "rust_1_61",
@@ -29,6 +24,15 @@ vexide-graphics = { version = "0.1.4", path = "packages/vexide-graphics", defaul
 vexide-macro = { version = "0.3.0", path = "packages/vexide-macro", default-features = false }
 vex-sdk = { git = "https://github.com/vexide/vex-sdk", features = ["exp"] }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
+
+[workspace.lints.rust]
+rust_2018_idioms = { level = "warn", priority = -1 }
+missing_docs = "warn"
+unsafe_op_in_unsafe_fn = "deny"
+unexpected_cfgs = { level = "warn", check-cfg = [
+        'cfg(target_env = "v5")',
+        'cfg(target_env = "exp")',
+] }
 
 [workspace.lints.clippy]
 missing_const_for_fn = "warn"

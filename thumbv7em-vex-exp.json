@@ -1,7 +1,7 @@
 {
     "cpu": "cortex-m7",
     "arch": "arm",
-    "abi": "eabi",
+    "abi": "eabihf",
     "os": "none",
     "vendor": "vex",
     "panic-strategy": "abort",
