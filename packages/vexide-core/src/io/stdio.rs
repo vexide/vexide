@@ -180,7 +180,7 @@ pub use print;
 /// Prints and returns the value of a given expression for quick and dirty debugging.
 macro_rules! dbg {
     () => {
-        $crate::println!("[{}:{}]", $file!(), $line!())
+        $crate::println!("[{}:{}]", file!(), line!())
     };
     ($val:expr $(,)?) => {
         match $val {
