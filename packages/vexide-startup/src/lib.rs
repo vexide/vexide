@@ -71,7 +71,7 @@ impl CodeSignature {
     pub const fn new(program_type: ProgramType, owner: ProgramOwner, flags: ProgramFlags) -> Self {
         Self(
             vex_sdk::vcodesig {
-                magic: vex_sdk::V5_SIG_MAGIC,
+                magic: vex_sdk::EX_SIG_MAGIC,
                 r#type: program_type as _,
                 owner: owner as _,
                 options: flags.bits(),

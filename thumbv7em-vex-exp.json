@@ -1,0 +1,22 @@
+{
+    "cpu": "cortex-m7",
+    "arch": "arm",
+    "abi": "eabi",
+    "os": "none",
+    "vendor": "vex",
+    "panic-strategy": "abort",
+    "relocation-model": "static",
+    "llvm-target": "thumbv7em-none-eabihf",
+    "linker": "rust-lld",
+    "linker-flavor": "ld.lld",
+    "data-layout": "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64",
+    "max-atomic-width": 32,
+    "target-pointer-width": "32",
+    "executables": true,
+    "post-link-args": {
+        "ld.lld": ["-Texp.ld"]
+    },
+    "default-uwtable": true,
+    "disable-redzone": true,
+    "emit-debug-gdb-scripts": false
+}
