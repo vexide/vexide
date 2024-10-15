@@ -29,6 +29,8 @@ Before releasing:
 
 ### Fixed
 
+- The `dbg!();` now works as expected when no arguments are supplied to it. (#175)
+
 ### Changed
 
 - Controller state is now returned all at once to reduce error checking. (#152) (**Breaking Change**)
