@@ -18,6 +18,7 @@
 //! More specific info for each device is availible in their respective modules.
 
 pub mod distance;
+pub mod electromagnet;
 pub mod expander;
 pub mod gps;
 pub mod imu;
@@ -237,7 +238,7 @@ pub enum SmartDeviceType {
     AiVision,
 
     /// Workcell Electromagnet
-    Magnet,
+    Electromagnet,
 
     /// CTE Workcell Light Tower
     LightTower,
@@ -279,7 +280,7 @@ impl From<V5_DeviceType> for SmartDeviceType {
             V5_DeviceType::kDeviceTypeVisionSensor => Self::Vision,
             V5_DeviceType::kDeviceTypeAdiSensor => Self::Adi,
             V5_DeviceType::kDeviceTypeOpticalSensor => Self::Optical,
-            V5_DeviceType::kDeviceTypeMagnetSensor => Self::Magnet,
+            V5_DeviceType::kDeviceTypeMagnetSensor => Self::Electromagnet,
             V5_DeviceType::kDeviceTypeGpsSensor => Self::Gps,
             V5_DeviceType::kDeviceTypeLightTowerSensor => Self::LightTower,
             V5_DeviceType::kDeviceTypeArmDevice => Self::Arm,
@@ -300,7 +301,7 @@ impl From<SmartDeviceType> for V5_DeviceType {
             SmartDeviceType::Distance => V5_DeviceType::kDeviceTypeDistanceSensor,
             SmartDeviceType::Vision => V5_DeviceType::kDeviceTypeVisionSensor,
             SmartDeviceType::AiVision => V5_DeviceType::kDeviceTypeAiVisionSensor,
-            SmartDeviceType::Magnet => V5_DeviceType::kDeviceTypeMagnetSensor,
+            SmartDeviceType::Electromagnet => V5_DeviceType::kDeviceTypeMagnetSensor,
             SmartDeviceType::LightTower => V5_DeviceType::kDeviceTypeLightTowerSensor,
             SmartDeviceType::Arm => V5_DeviceType::kDeviceTypeArmDevice,
             SmartDeviceType::Optical => V5_DeviceType::kDeviceTypeOpticalSensor,
