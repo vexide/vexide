@@ -60,11 +60,11 @@ impl JoystickState {
         self.y_raw as f64 / 127.0
     }
 
-    /// The raw value of the joystick position on its x-axis from [-128, 127].
+    /// The raw value of the joystick position on its x-axis from [-127, 127].
     pub const fn x_raw(&self) -> i8 {
         self.x_raw
     }
-    /// The raw value of the joystick position on its x-axis from [-128, 127].
+    /// The raw value of the joystick position on its x-axis from [-127, 127].
     pub const fn y_raw(&self) -> i8 {
         self.y_raw
     }
