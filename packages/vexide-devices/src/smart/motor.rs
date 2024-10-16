@@ -279,9 +279,8 @@ impl Motor {
     }
 
     /// Get the current [`MotorControl`] value that the motor is attempting to use.
-    pub fn target(&self) -> Result<MotorControl, MotorError> {
-        self.validate_port()?;
-        Ok(self.target)
+    pub const fn target(&self) -> MotorControl {
+        self.target
     }
 
     /// Sets the gearset of the motor.
