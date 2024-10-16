@@ -133,11 +133,9 @@ impl RotationSensor {
         Ok(())
     }
 
-    /// Sets whether or not the rotation sensor should be reversed.
-    pub fn direction(&self) -> Result<Direction, PortError> {
-        self.validate_port()?;
-
-        Ok(self.direction)
+    /// Gets whether or not the rotation sensor should be reversed.
+    pub fn direction(&self) -> Direction {
+        self.direction
     }
 
     /// Get the total number of degrees rotated by the sensor based on direction.
