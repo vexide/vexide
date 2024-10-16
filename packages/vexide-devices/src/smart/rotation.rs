@@ -105,7 +105,7 @@ impl RotationSensor {
         // behavior on our end without ever touching the status code.
         //
         // For more information: <https://www.vexforum.com/t/rotation-sensor-bug-workaround-on-vexos-1-1-0/96577/2>
-        if new_direction != self.direction()? {
+        if new_direction != self.direction() {
             self.direction_offset = self.position()?;
             self.raw_direction_offset = Position::from_ticks(
                 unsafe { vexDeviceAbsEncPositionGet(self.device) } as i64,
@@ -133,11 +133,9 @@ impl RotationSensor {
         Ok(())
     }
 
-    /// Sets whether or not the rotation sensor should be reversed.
-    pub fn direction(&self) -> Result<Direction, PortError> {
-        self.validate_port()?;
-
-        Ok(self.direction)
+    /// Gets whether or not the rotation sensor should be reversed.
+    pub const fn direction(&self) -> Direction {
+        self.direction
     }
 
     /// Get the total number of degrees rotated by the sensor based on direction.

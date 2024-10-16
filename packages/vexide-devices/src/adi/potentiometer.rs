@@ -27,16 +27,13 @@ impl AdiPotentiometer {
     }
 
     /// Get the type of ADI potentiometer device.
-    pub fn potentiometer_type(&self) -> Result<PotentiometerType, PortError> {
-        // Configuration check not necessary since we don't fetch from the SDK.
-        self.port.validate_expander()?;
-
-        Ok(self.potentiometer_type)
+    pub const fn potentiometer_type(&self) -> PotentiometerType {
+        self.potentiometer_type
     }
 
     /// Get the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
-    pub fn max_angle(&self) -> Result<f64, PortError> {
-        Ok(self.potentiometer_type()?.max_angle())
+    pub const fn max_angle(&self) -> f64 {
+        self.potentiometer_type().max_angle()
     }
 
     /// Gets the current potentiometer angle in degrees.
