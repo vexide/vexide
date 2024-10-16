@@ -69,9 +69,9 @@ pub struct CodeSignature(vex_sdk::vcodesig, [u32; 4]);
 impl CodeSignature {
     /// Creates a new signature given a program type, owner, and flags.
     pub const fn new(program_type: ProgramType, owner: ProgramOwner, flags: ProgramFlags) -> Self {
-        #[cfg(target_env = "exp")]
-        const MAGIC: u32 = vex_sdk::V5_SIG_MAGIC;
         #[cfg(not(target_env = "exp"))]
+        const MAGIC: u32 = vex_sdk::V5_SIG_MAGIC;
+        #[cfg(target_env = "exp")]
         const MAGIC: u32 = vex_sdk::EX_SIG_MAGIC;
 
         Self(
