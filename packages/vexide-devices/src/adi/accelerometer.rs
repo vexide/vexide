@@ -28,7 +28,7 @@ impl AdiAccelerometer {
     /// Get the maximum acceleration measurement supported by the current [`Sensitivity`] jumper
     /// configuration.
     pub const fn max_acceleration(&self) -> f64 {
-       self.sensitivity().max_acceleration()
+        self.sensitivity().max_acceleration()
     }
 
     /// Gets the current acceleration measurement for this axis in g (~9.8 m/s/s).
