@@ -43,6 +43,7 @@
     "rust-analyzer.cargo.allTargets": false,
     "rust-analyzer.check.targets": [
         "${workspaceFolder}/armv7a-vex-v5.json",
+        "${workspaceFolder}/thumbv7em-vex-exp.json",
         "wasm32-unknown-unknown"
     ],
     "rust-analyzer.cargo.extraArgs": [
