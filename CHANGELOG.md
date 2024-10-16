@@ -88,6 +88,7 @@ Before releasing:
 - `SmartPort::device_type` now no longer returns a `Result`. (#121) (**Breaking Change**)
 - Updated the names of certain misspelled `enum` variants, constants, and fields. (#132) (**Breaking Change**)
 - Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
+- Renamed `Screen` and its associated structs to `Display`. (#138) (**Breaking Change**)
 - Changes the banner attribute syntax in the `vexide::main` macro. (#127) (**Breaking Change**)
 - Controller joystick axis getters now return `f64` instead of `f32`. (#133) (**Breaking Change**)
 - Fixed an issue where the async executor would block indefinetly on the first program run after a Brain reboot (#139)
