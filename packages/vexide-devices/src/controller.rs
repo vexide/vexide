@@ -62,10 +62,12 @@ impl Button {
     /// function was called.
     pub fn was_pressed(&mut self) -> Result<bool, ControllerError> {
         if self.is_pressed()? {
+            if !self.was_pressed {
+                self.was_pressed = true;
+                return Ok(true);
+            }
+        } else {
             self.was_pressed = false;
-        } else if !self.was_pressed {
-            self.was_pressed = true;
-            return Ok(true);
         }
 
         Ok(false)
