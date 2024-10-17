@@ -26,6 +26,7 @@ Before releasing:
 
 - You can now detect controller release occurrences with `ButtonState::is_now_released`.
 - Added support for 5.5W motors with a new constructor (`Motor::new_exp`) and four new getters (`Motor::max_voltage`, `Motor::motor_type`, `Motor::is_v5`, and `Motor::is_exp`) for `Motor`. (#167)
+- Added support for the V5 Workcell Electromagnet smart device. (#176)
 
 ### Fixed
 
