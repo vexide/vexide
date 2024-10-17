@@ -65,7 +65,7 @@ impl Electromagnet {
     pub fn current(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceMagnetCurrentGet(self.device) }  / 1000.0)
+        Ok(unsafe { vexDeviceMagnetCurrentGet(self.device) } / 1000.0)
     }
 
     /// Returns the internal temperature of the magnet in degrees celsius.
