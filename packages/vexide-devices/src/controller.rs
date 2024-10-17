@@ -261,62 +261,62 @@ impl Controller {
             button_a: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonA,
-                was_pressed: false,
+                was_pressed: true,
             },
             button_b: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonB,
-                was_pressed: false,
+                was_pressed: true,
             },
             button_x: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonX,
-                was_pressed: false,
+                was_pressed: true,
             },
             button_y: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonY,
-                was_pressed: false,
+                was_pressed: true,
             },
             button_up: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonUp,
-                was_pressed: false,
+                was_pressed: true,
             },
             button_down: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonDown,
-                was_pressed: false,
+                was_pressed: true,
             },
             button_left: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonLeft,
-                was_pressed: false,
+                was_pressed: true,
             },
             button_right: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonRight,
-                was_pressed: false,
+                was_pressed: true,
             },
             left_trigger_1: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonL1,
-                was_pressed: false,
+                was_pressed: true,
             },
             left_trigger_2: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonL2,
-                was_pressed: false,
+                was_pressed: true,
             },
             right_trigger_1: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonR1,
-                was_pressed: false,
+                was_pressed: true,
             },
             right_trigger_2: Button {
                 id,
                 channel: V5_ControllerIndex::ButtonR2,
-                was_pressed: false,
+                was_pressed: true,
             },
         }
     }
