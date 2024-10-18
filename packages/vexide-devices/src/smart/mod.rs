@@ -27,6 +27,7 @@ pub mod optical;
 pub mod rotation;
 pub mod serial;
 pub mod vision;
+pub mod ai_vision;
 
 use core::fmt;
 
