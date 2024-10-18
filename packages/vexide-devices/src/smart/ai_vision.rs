@@ -633,12 +633,17 @@ impl AiVisionSensor {
 }
 
 impl SmartDevice for AiVisionSensor {
-    fn port_index(&self) -> u8 {
-        self.port.index()
+    fn port_number(&self) -> u8 {
+        self.port.number()
     }
 
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::AiVision
+    }
+}
+impl From<AiVisionSensor> for SmartPort {
+    fn from(val: AiVisionSensor) -> Self {
+        val.port
     }
 }
 
