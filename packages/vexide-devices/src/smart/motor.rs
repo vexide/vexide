@@ -12,9 +12,9 @@ use vex_sdk::{
     vexDeviceMotorPositionGet, vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset,
     vexDeviceMotorPositionSet, vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet,
     vexDeviceMotorReverseFlagSet, vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet,
-    vexDeviceMotorVelocityGet, vexDeviceMotorVelocitySet, vexDeviceMotorVelocityUpdate,
-    vexDeviceMotorVoltageGet, vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet,
-    vexDeviceMotorVoltageSet, V5MotorBrakeMode, V5MotorGearset, V5_DeviceT,
+    vexDeviceMotorVelocitySet, vexDeviceMotorVelocityUpdate, vexDeviceMotorVoltageGet,
+    vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet,
+    V5MotorBrakeMode, V5MotorGearset, V5_DeviceT,
 };
 #[cfg(feature = "dangerous_motor_tuning")]
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
