@@ -30,6 +30,7 @@ Before releasing:
 ### Fixed
 
 - The `dbg!();` now works as expected when no arguments are supplied to it. (#175)
+- `Motor::velocity` now returns the estimated velocity instead of target velocity. (#184)
 
 ### Changed
 
