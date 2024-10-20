@@ -138,7 +138,7 @@ impl Motor {
     /// The maximum voltage value that can be sent to a V5 [`Motor`].
     pub const V5_MAX_VOLTAGE: f64 = 12.0;
     /// The maximum voltage value that can be sent to a EXP [`Motor`].
-    pub const EXP_MAX_VOLTAGE: f64 = 10.0;
+    pub const EXP_MAX_VOLTAGE: f64 = 8.0;
 
     /// The rate at which data can be read from a [`Motor`].
     pub const DATA_READ_INTERVAL: Duration = Duration::from_millis(10);
