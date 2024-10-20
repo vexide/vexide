@@ -5,13 +5,13 @@ use core::time::Duration;
 use bitflags::bitflags;
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorBrakeModeSet, vexDeviceMotorCurrentGet,
-    vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet, vexDeviceMotorEfficiencyGet,
-    vexDeviceMotorEncoderUnitsSet, vexDeviceMotorFaultsGet, vexDeviceMotorFlagsGet,
-    vexDeviceMotorGearingGet, vexDeviceMotorGearingSet, vexDeviceMotorPositionGet,
-    vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset, vexDeviceMotorPositionSet,
-    vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet, vexDeviceMotorReverseFlagSet,
-    vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet, vexDeviceMotorVelocityGet,
+    vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorActualVelocityGet, vexDeviceMotorBrakeModeSet,
+    vexDeviceMotorCurrentGet, vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet,
+    vexDeviceMotorEfficiencyGet, vexDeviceMotorEncoderUnitsSet, vexDeviceMotorFaultsGet,
+    vexDeviceMotorFlagsGet, vexDeviceMotorGearingGet, vexDeviceMotorGearingSet,
+    vexDeviceMotorPositionGet, vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset,
+    vexDeviceMotorPositionSet, vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet,
+    vexDeviceMotorReverseFlagSet, vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet,
     vexDeviceMotorVelocitySet, vexDeviceMotorVelocityUpdate, vexDeviceMotorVoltageGet,
     vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet,
     V5MotorBrakeMode, V5MotorGearset, V5_DeviceT,
@@ -323,9 +323,13 @@ impl Motor {
     }
 
     /// Gets the estimated angular velocity (RPM) of the motor.
-    pub fn velocity(&self) -> Result<i32, MotorError> {
+    ///
+    /// # Note
+    ///
+    /// To get the current **target** velocity instead of the estimated velocity, use [`Motor::target`].
+    pub fn velocity(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorVelocityGet(self.device) })
+        Ok(unsafe { vexDeviceMotorActualVelocityGet(self.device) })
     }
 
     /// Returns the power drawn by the motor in Watts.
