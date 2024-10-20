@@ -108,14 +108,6 @@ pub trait SmartDevice {
     }
 }
 
-impl<T: SmartDevice> From<T> for SmartPort {
-    fn from(device: T) -> Self {
-        // SAFETY: We can do this, since we ensure that the old smart port was disposed of.
-        // This can effectively be thought as a move out of the device's private `port` field.
-        unsafe { Self::new(device.port_number()) }
-    }
-}
-
 /// Verify that the device type is currently plugged into this port.
 ///
 /// This function provides the internal implementations of [`SmartDevice::validate_port`], [`SmartPort::validate_type`],
@@ -321,9 +313,10 @@ impl From<SmartDeviceType> for V5_DeviceType {
     }
 }
 
-/// Represents a timestamp on a smart device's internal clock. This type offers
-/// no guarantees that the device's clock is in sync with the internal clock of
-/// the brain, and thus cannot be safely compared with [`vexide_core::time::Instant`]s.
+/// Represents a timestamp on a smart device's internal clock.
+///
+/// This type offers no guarantees that the device's clock is in sync with the internal
+/// clock of the brain, and thus cannot be safely compared with [`vexide_core::time::Instant`]s.
 ///
 /// There is additionally no guarantee that this is in sync with other smart devices,
 /// or even the same device if a disconnect occurred causing the clock to reset. As such,

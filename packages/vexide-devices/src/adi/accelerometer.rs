@@ -21,17 +21,14 @@ impl AdiAccelerometer {
     }
 
     /// Get the type of ADI accelerometer device.
-    pub fn sensitivity(&self) -> Result<Sensitivity, PortError> {
-        // Configuration check not required here since we don't access the SDK.
-        self.port.validate_expander()?;
-
-        Ok(self.sensitivity)
+    pub const fn sensitivity(&self) -> Sensitivity {
+        self.sensitivity
     }
 
     /// Get the maximum acceleration measurement supported by the current [`Sensitivity`] jumper
     /// configuration.
-    pub fn max_acceleration(&self) -> Result<f64, PortError> {
-        Ok(self.sensitivity()?.max_acceleration())
+    pub const fn max_acceleration(&self) -> f64 {
+        self.sensitivity().max_acceleration()
     }
 
     /// Gets the current acceleration measurement for this axis in g (~9.8 m/s/s).

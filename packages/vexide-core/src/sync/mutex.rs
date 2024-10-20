@@ -31,6 +31,7 @@ pub struct RawMutex {
 }
 impl RawMutex {
     /// Creates a new raw mutex.
+    #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
         Self {
             state: MutexState::new(),

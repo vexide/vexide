@@ -192,6 +192,11 @@ impl SmartDevice for OpticalSensor {
         SmartDeviceType::Optical
     }
 }
+impl From<OpticalSensor> for SmartPort {
+    fn from(device: OpticalSensor) -> Self {
+        device.port
+    }
+}
 
 /// Represents a gesture and its direction.
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]

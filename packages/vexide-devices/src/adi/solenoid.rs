@@ -48,13 +48,13 @@ impl AdiSolenoid {
     }
 
     /// Returns `true` if the solenoid is open.
-    pub const fn is_open(&self) -> LogicLevel {
-        self.level
+    pub const fn is_open(&self) -> bool {
+        matches!(self.level, LogicLevel::High)
     }
 
     /// Returns `true` if the solenoid is closed.
-    pub const fn is_closed(&self) -> LogicLevel {
-        self.level
+    pub const fn is_closed(&self) -> bool {
+        matches!(self.level, LogicLevel::Low)
     }
 
     /// Open the solenoid, allowing air pressure through the "open" valve.
@@ -65,9 +65,9 @@ impl AdiSolenoid {
     /// Close the solenoid.
     ///
     /// - On single-acting solenoids (e.g. SY113-SMO-PM3-F), this will simply block air pressure
-    /// through the "open" valve.
+    ///   through the "open" valve.
     /// - On double-acting solenoids (e.g. SYJ3120-SMO-M3-F), this will block air pressure through
-    /// the "open" valve and allow air pressure into the "close" valve.
+    ///   the "open" valve and allow air pressure into the "close" valve.
     pub fn close(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::Low)
     }

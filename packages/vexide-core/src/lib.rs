@@ -10,8 +10,7 @@
 //! - Program control: [`program`]
 
 #![no_std]
-#![feature(error_in_core, never_type)]
-#![feature(asm_experimental_arch)]
+#![feature(never_type)]
 
 extern crate alloc;
 

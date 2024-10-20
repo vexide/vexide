@@ -30,3 +30,6 @@ backtraces = ["vexide-core/backtraces"]
 
 [lints]
 workspace = true
+
+[package.metadata.docs.rs]
+targets = ["armv7a-none-eabi"]

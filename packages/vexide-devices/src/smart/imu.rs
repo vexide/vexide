@@ -255,6 +255,11 @@ impl SmartDevice for InertialSensor {
         SmartDeviceType::Imu
     }
 }
+impl From<InertialSensor> for SmartPort {
+    fn from(device: InertialSensor) -> Self {
+        device.port
+    }
+}
 
 /// Represents one of six possible physical IMU orientations relative
 /// to the earth's center of gravity.
