@@ -13,10 +13,7 @@ use vex_sdk::{
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
-/// V5 Electromagnet Device
-///
-/// The V5 electromagnet is a device unique to the V5 workcell kit. It is a simple
-/// device that produces an electric field at a provided power level.
+/// An electromagnet plugged into a smart port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Electromagnet {
     port: SmartPort,
@@ -32,7 +29,8 @@ impl Electromagnet {
     /// Maximum duration that the magnet can be powered for.
     pub const MAX_POWER_DURATION: Duration = Duration::from_secs(2);
 
-    /// Create a new electromagnet from a smart port index.
+    /// Creates a new electromagnet from a [`SmartPort`].
+    #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
@@ -44,6 +42,12 @@ impl Electromagnet {
     ///
     /// Power is expressed as a number from [-1.0, 1.0]. Larger power values will result
     /// in a stronger force of attraction from the magnet.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
+    ///   something else was connected.
     pub fn set_power(&mut self, power: f64, duration: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -55,13 +59,25 @@ impl Electromagnet {
     }
 
     /// Returns the user-sets power level as a number from [-1.0, 1.0].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
+    ///   something else was connected.
     pub fn power(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok((unsafe { vexDeviceMagnetPowerGet(self.device) } as f64) / 100.0)
+        Ok(f64::from(unsafe { vexDeviceMagnetPowerGet(self.device) }) / 100.0)
     }
 
     /// Returns the magnet's electrical current in amps.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
+    ///   something else was connected.
     pub fn current(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -69,6 +85,12 @@ impl Electromagnet {
     }
 
     /// Returns the internal temperature of the magnet in degrees celsius.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
+    ///   something else was connected.
     pub fn temperature(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -76,6 +98,12 @@ impl Electromagnet {
     }
 
     /// Returns the status code of the magnet.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
+    ///   something else was connected.
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 
