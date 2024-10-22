@@ -70,7 +70,7 @@ impl AdiPort {
         }
     }
 
-    /// Get the number of the port.
+    /// Returns the number of the port.
     ///
     /// Ports are numbered starting from 1.
     #[must_use]
@@ -78,7 +78,7 @@ impl AdiPort {
         self.number
     }
 
-    /// Get the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) smart port, or `None` if this port is not
+    /// Returns the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) smart port, or `None` if this port is not
     /// associated with an expander.
     #[must_use]
     pub const fn expander_number(&self) -> Option<u8> {
@@ -113,7 +113,7 @@ impl AdiPort {
         }
     }
 
-    /// Get the type of device this port is currently configured as.
+    /// Returns the type of device this port is currently configured as.
     ///
     /// # Errors
     ///
@@ -172,17 +172,17 @@ pub trait AdiDevice {
     /// occasionally `(u8, u8)` if the device has two ADI wires.
     type PortNumberOutput;
 
-    /// Get the port number of the [`AdiPort`] this device is registered on.
+    /// Returns the port number of the [`AdiPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
     fn port_number(&self) -> Self::PortNumberOutput;
 
-    /// Get the port number of the [`AdiPort`] this device is registered on.
+    /// Returns the port number of the [`AdiPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
     fn expander_port_number(&self) -> Option<u8>;
 
-    /// Get the variant of [`AdiDeviceType`] that this device is associated with.
+    /// Returns the variant of [`AdiDeviceType`] that this device is associated with.
     fn device_type(&self) -> AdiDeviceType;
 }
 

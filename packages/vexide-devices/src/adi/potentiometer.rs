@@ -27,13 +27,13 @@ impl AdiPotentiometer {
         }
     }
 
-    /// Get the type of ADI potentiometer device.
+    /// Returns the type of ADI potentiometer device.
     #[must_use]
     pub const fn potentiometer_type(&self) -> PotentiometerType {
         self.potentiometer_type
     }
 
-    /// Get the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
+    /// Returns the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
     #[must_use]
     pub const fn max_angle(&self) -> f64 {
         self.potentiometer_type().max_angle()
@@ -80,7 +80,7 @@ impl PotentiometerType {
     /// Maximum angle for the V5-era potentiometer V2.
     pub const V2_MAX_ANGLE: f64 = 330.0;
 
-    /// Get the maximum angle measurement (in degrees) for this potentiometer type.
+    /// Returns the maximum angle measurement (in degrees) for this potentiometer type.
     #[must_use]
     pub const fn max_angle(&self) -> f64 {
         match self {

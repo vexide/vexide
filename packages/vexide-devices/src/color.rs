@@ -98,19 +98,19 @@ impl Rgb {
         }
     }
 
-    /// Get the red value of the color.
+    /// Returns the red value of the color.
     #[must_use]
     pub const fn red(&self) -> u8 {
         self.r
     }
 
-    /// Get the green value of the color.
+    /// Returns the green value of the color.
     #[must_use]
     pub const fn green(&self) -> u8 {
         self.g
     }
 
-    /// Get the blue value of the color.
+    /// Returns the blue value of the color.
     #[must_use]
     pub const fn blue(&self) -> u8 {
         self.b

@@ -574,7 +574,7 @@ impl Motor {
         Ok(status)
     }
 
-    /// Get the fault flags of the motor.
+    /// Returns the fault flags of the motor.
     ///
     /// # Errors
     ///

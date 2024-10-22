@@ -42,7 +42,7 @@ impl AdiLineTracker {
         Self { port }
     }
 
-    /// Get the reflectivity factor measured by the sensor. Higher numbers mean
+    /// Returns the reflectivity factor measured by the sensor. Higher numbers mean
     /// a more reflective object.
     ///
     /// This is returned as a value ranging from [0.0, 1.0].
@@ -57,7 +57,7 @@ impl AdiLineTracker {
             / f64::from(analog::ADC_MAX_VALUE))
     }
 
-    /// Get the 12-bit reflectivity reading of the sensor.
+    /// Returns the 12-bit reflectivity reading of the sensor.
     ///
     /// This is a raw 12-bit value from [0, 4095] representing the voltage level from
     /// 0-5V measured by the V5 brain's ADC.

@@ -23,7 +23,7 @@ impl AdiLightSensor {
         Self { port }
     }
 
-    /// Get the brightness factor measured by the sensor. Higher numbers mean
+    /// Returns the brightness factor measured by the sensor. Higher numbers mean
     /// a brighter light source.
     ///
     /// This is returned as a value ranging from [0.0, 1.0].
@@ -38,7 +38,7 @@ impl AdiLightSensor {
             / f64::from(analog::ADC_MAX_VALUE))
     }
 
-    /// Get the 12-bit brightness reading of the sensor.
+    /// Returns the 12-bit brightness reading of the sensor.
     ///
     /// This is a raw 12-bit value from [0, 4095] representing the voltage level from
     /// 0-%V measured by the V5 brain's ADC.

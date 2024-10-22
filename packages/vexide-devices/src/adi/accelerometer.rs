@@ -21,13 +21,13 @@ impl AdiAccelerometer {
         Self { sensitivity, port }
     }
 
-    /// Get the configured sensitivity of the ADI accelerometer device.
+    /// Returns the configured sensitivity of the ADI accelerometer device.
     #[must_use]
     pub const fn sensitivity(&self) -> Sensitivity {
         self.sensitivity
     }
 
-    /// Get the maximum acceleration measurement supported by the current [`Sensitivity`] jumper.
+    /// Returns the maximum acceleration measurement supported by the current [`Sensitivity`] jumper.
     #[must_use]
     pub const fn max_acceleration(&self) -> f64 {
         self.sensitivity().max_acceleration()
@@ -85,7 +85,7 @@ impl Sensitivity {
     /// Maximum acceleration measurement when in high sensitivity mode.
     pub const HIGH_MAX_ACCELERATION: f64 = 6.0;
 
-    /// Get the maximum acceleration measurement (in g) for this sensitivity.
+    /// Returns the maximum acceleration measurement (in g) for this sensitivity.
     #[must_use]
     pub const fn max_acceleration(&self) -> f64 {
         match self {

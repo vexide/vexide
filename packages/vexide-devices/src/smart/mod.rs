@@ -49,7 +49,7 @@ use crate::PortError;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {
-    /// Get the port number of the [`SmartPort`] this device is registered on.
+    /// Returns the port number of the [`SmartPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
     ///
@@ -61,7 +61,7 @@ pub trait SmartDevice {
     /// ```
     fn port_number(&self) -> u8;
 
-    /// Get the variant of [`SmartDeviceType`] that this device is associated with.
+    /// Returns the variant of [`SmartDeviceType`] that this device is associated with.
     ///
     /// # Examples
     ///
@@ -94,7 +94,7 @@ pub trait SmartDevice {
         SmartDeviceType::from(device_types[(self.port_number() - 1) as usize]) == self.device_type()
     }
 
-    /// Get the timestamp recorded by this device's internal clock.
+    /// Returns the timestamp recorded by this device's internal clock.
     ///
     /// # Errors
     ///
@@ -171,7 +171,7 @@ impl SmartPort {
         Self { number }
     }
 
-    /// Get the number of the port.
+    /// Returns the number of the port.
     ///
     /// Ports are numbered starting from 1.
     ///
@@ -191,7 +191,7 @@ impl SmartPort {
         (self.number - 1) as u32
     }
 
-    /// Get the type of device currently connected to this port.
+    /// Returns the type of device currently connected to this port.
     ///
     /// # Examples
     ///
@@ -220,7 +220,7 @@ impl SmartPort {
         validate_port(self.number(), device_type)
     }
 
-    /// Get the raw handle of the underlying smart device connected to this port.
+    /// Returns the raw handle of the underlying smart device connected to this port.
     pub(crate) unsafe fn device_handle(&self) -> V5_DeviceT {
         unsafe { vexDeviceGetByIndex(self.index()) }
     }

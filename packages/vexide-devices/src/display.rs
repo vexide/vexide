@@ -329,7 +329,7 @@ impl Text {
         self.vertical_align = vertical_align;
     }
 
-    /// Get the height of the text widget in pixels
+    /// Returns the height of the text widget in pixels
     #[must_use]
     pub fn height(&self) -> u16 {
         unsafe {
@@ -351,7 +351,7 @@ impl Text {
         }
     }
 
-    /// Get the width of the text widget in pixels
+    /// Returns the width of the text widget in pixels
     #[must_use]
     pub fn width(&self) -> u16 {
         unsafe {
@@ -651,7 +651,7 @@ impl Display {
         Ok(())
     }
 
-    /// Get the current touch status of the screen.
+    /// Returns the current touch status of the screen.
     #[must_use]
     pub fn touch_status(&self) -> TouchEvent {
         // `vexTouchDataGet` (probably) doesn't read from the given status pointer, so this is fine.

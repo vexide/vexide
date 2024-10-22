@@ -165,7 +165,7 @@ impl RotationSensor {
         self.direction
     }
 
-    /// Get the total number of degrees rotated by the sensor based on direction.
+    /// Returns the total number of degrees rotated by the sensor based on direction.
     ///
     /// # Errors
     ///
@@ -185,7 +185,7 @@ impl RotationSensor {
         Ok(self.direction_offset + delta_position)
     }
 
-    /// Get the angle of rotation measured by the sensor.
+    /// Returns the angle of rotation measured by the sensor.
     ///
     /// This value is reported from 0-360 degrees.
     ///
@@ -207,7 +207,7 @@ impl RotationSensor {
         ))
     }
 
-    /// Get the sensor's current velocity in degrees per second
+    /// Returns the sensor's current velocity in degrees per second
     ///
     /// # Errors
     ///

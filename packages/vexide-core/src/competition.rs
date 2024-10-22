@@ -164,7 +164,7 @@ impl Stream for CompetitionUpdates {
 }
 
 impl CompetitionUpdates {
-    /// Get the last status update.
+    /// Returns the last status update.
     ///
     /// This is slightly more efficient than calling [`status`] as it does not require another poll,
     /// however, it can be out of date if the stream has not been polled recently.

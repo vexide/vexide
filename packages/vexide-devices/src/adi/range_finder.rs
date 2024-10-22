@@ -49,7 +49,7 @@ impl AdiRangeFinder {
         })
     }
 
-    /// Get the distance reading of the rangefinder sensor in centimeters.
+    /// Returns the distance reading of the rangefinder sensor in centimeters.
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
     ///

@@ -56,7 +56,7 @@ impl AdiEncoder {
         })
     }
 
-    /// Get the distance reading of the encoder sensor in centimeters.
+    /// Returns the distance reading of the encoder sensor in centimeters.
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
     ///
