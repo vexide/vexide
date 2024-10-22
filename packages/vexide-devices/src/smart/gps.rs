@@ -13,7 +13,7 @@ use vex_sdk::{
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{geometry::Point2, PortError};
 
-/// GPS Sensor Devices
+/// A GPS sensor plugged into a smart port.
 #[derive(Debug, PartialEq)]
 pub struct GpsSensor {
     port: SmartPort,
@@ -29,7 +29,14 @@ unsafe impl Send for GpsSensor {}
 unsafe impl Sync for GpsSensor {}
 
 impl GpsSensor {
-    /// Create a new GPS sensor.
+    /// Creates a new GPS sensor from a [`SmartPort`].
+    ///
+    /// # Configuration
+    ///
+    /// The sensor requires two parameters to be initially configured, passed as arguments ot this function:
+    ///
+    /// - `offset`: The physical offset of the sensor from the robot's center of rotation.
+    /// - `initial_pose`: The inital position and heading of the robot.
     ///
     /// # Errors
     ///
@@ -68,7 +75,7 @@ impl GpsSensor {
         })
     }
 
-    /// Get the physical offset of the sensor from the robot's center of rotation
+    /// Returns the physical offset of the sensor from the robot's center of rotation.
     ///
     /// # Errors
     ///
@@ -82,7 +89,7 @@ impl GpsSensor {
         Ok(data)
     }
 
-    /// Get the currently computed pose (heading and position) from the sensor.
+    /// Returns the currently computed pose (heading and position) from the sensor.
     ///
     /// # Important note about heading!
     ///
@@ -130,7 +137,7 @@ impl GpsSensor {
         Ok(unsafe { vexDeviceGpsErrorGet(self.device) })
     }
 
-    /// Returns the sensor's current status bits.
+    /// Returns the internal status code of the sensor.
     ///
     /// # Errors
     ///

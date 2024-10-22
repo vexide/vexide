@@ -69,7 +69,7 @@ impl VisionSensor {
     /// The update rate of the vision sensor.
     pub const UPDATE_INTERVAL: Duration = Duration::from_millis(50);
 
-    /// Creates a new vision sensor on a smart port.
+    /// Creates a new vision sensor from a smart port.
     ///
     /// # Examples
     ///
@@ -86,8 +86,9 @@ impl VisionSensor {
         }
     }
 
-    /// Adds a detection signature to the sensor's onboard memory. This signature will be used to
-    /// identify objects when using [`VisionSensor::objects`].
+    /// Adds a detection signature to the sensor's onboard memory.
+    ///
+    /// This signature will be used to identify objects when using [`VisionSensor::objects`].
     ///
     /// The sensor can store up to 7 unique signatures, with each signature slot denoted by the
     /// `id` parameter. If a signature with an ID matching an existing signature
@@ -180,7 +181,7 @@ impl VisionSensor {
         Ok(())
     }
 
-    /// Get a signature from the sensor's onboard volatile memory.
+    /// Returns a signature from the sensor's onboard volatile memory.
     ///
     /// # Errors
     ///
@@ -193,7 +194,7 @@ impl VisionSensor {
         Ok(self.raw_signature(id)?.map(Into::into))
     }
 
-    /// Get all signatures currently stored on the sensor's onboard volatile memory.
+    /// Returns all signatures currently stored on the sensor's onboard volatile memory.
     ///
     /// # Errors
     ///
@@ -252,7 +253,7 @@ impl VisionSensor {
         Ok(())
     }
 
-    /// Get the current brightness setting of the vision sensor as a percentage.
+    /// Returns the current brightness setting of the vision sensor as a percentage.
     ///
     /// The returned result should be from `0.0` (0%) to `1.0` (100%).
     ///
@@ -266,7 +267,7 @@ impl VisionSensor {
         Ok(f64::from(unsafe { vexDeviceVisionBrightnessGet(self.device) }) / 100.0)
     }
 
-    /// Get the current white balance of the vision sensor as an RGB color.
+    /// Returns the current white balance of the vision sensor as an RGB color.
     ///
     /// # Errors
     ///
@@ -364,7 +365,7 @@ impl VisionSensor {
         Ok(())
     }
 
-    /// Get the user-set behavior of the LED indicator on the sensor.
+    /// Returns the user-set behavior of the LED indicator on the sensor.
     ///
     /// # Errors
     ///
@@ -479,7 +480,7 @@ impl VisionSensor {
         Ok(())
     }
 
-    /// Gets the current detection mode that the sensor is using.
+    /// Returns the current detection mode that the sensor is using.
     ///
     /// # Errors
     ///

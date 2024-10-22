@@ -28,16 +28,18 @@ impl AdiPotentiometer {
     }
 
     /// Get the type of ADI potentiometer device.
+    #[must_use]
     pub const fn potentiometer_type(&self) -> PotentiometerType {
         self.potentiometer_type
     }
 
     /// Get the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
+    #[must_use]
     pub const fn max_angle(&self) -> f64 {
         self.potentiometer_type().max_angle()
     }
 
-    /// Gets the current potentiometer angle in degrees.
+    /// Returns the current potentiometer angle in degrees.
     ///
     /// The original potentiometer rotates 250 degrees thus returning an angle between 0-250 degrees.
     /// Potentiometer V2 rotates 330 degrees thus returning an angle between 0-330 degrees.

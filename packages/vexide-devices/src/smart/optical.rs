@@ -14,7 +14,7 @@ use vex_sdk::{
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
-/// Represents a smart port configured as a V5 optical sensor
+/// An optical sensor plugged into a smart port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct OpticalSensor {
     port: SmartPort,
@@ -37,7 +37,7 @@ impl OpticalSensor {
     /// Source: <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9>
     pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
-    /// Creates a new optical sensor from a smart port index.
+    /// Creates a new optical sensor from a [`SmartPort`].
     #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
@@ -46,18 +46,20 @@ impl OpticalSensor {
         }
     }
 
-    /// Get the PWM percentage (intensity/brightness) of the sensor's LED indicator.
+    /// Returns the intensity/brightness of the sensor's LED indicator as a number from [0.0-1.0].
     ///
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the smart port.
-    pub fn led_brightness(&self) -> Result<i32, PortError> {
+    pub fn led_brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
-        Ok(unsafe { vexDeviceOpticalLedPwmGet(self.device) })
+        Ok(f64::from(unsafe { vexDeviceOpticalLedPwmGet(self.device) }) / 100.0)
     }
 
-    /// Set the PWM percentage (intensity/brightness) of the sensor's LED indicator.
+    /// Set the intensity of (intensity/brightness) of the sensor's LED indicator.
+    ///
+    /// Intensity is expressed as a number from [0.0, 1.0].
     ///
     /// # Errors
     ///
@@ -70,7 +72,7 @@ impl OpticalSensor {
         Ok(())
     }
 
-    /// Get integration time (update rate) of the optical sensor in milliseconds, with
+    /// Returns integration time of the optical sensor in milliseconds, with
     /// minimum time being 3ms and the maximum time being 712ms.
     ///
     /// # Errors
@@ -84,7 +86,7 @@ impl OpticalSensor {
         ))
     }
 
-    /// Set integration time (update rate) of the optical sensor.
+    /// Set the integration time of the optical sensor.
     ///
     /// Lower integration time results in faster update rates with lower accuracy
     /// due to less available light being read by the sensor.
@@ -112,7 +114,7 @@ impl OpticalSensor {
         Ok(())
     }
 
-    /// Get the detected color hue.
+    /// Returns the detected color's hue.
     ///
     /// Hue has a range of `0` to `359.999`.
     ///
@@ -125,7 +127,7 @@ impl OpticalSensor {
         Ok(unsafe { vexDeviceOpticalHueGet(self.device) })
     }
 
-    /// Gets the detected color saturation.
+    /// Returns the detected color's saturation.
     ///
     /// Saturation has a range `0` to `1.0`.
     ///
@@ -138,7 +140,7 @@ impl OpticalSensor {
         Ok(unsafe { vexDeviceOpticalSatGet(self.device) })
     }
 
-    /// Get the detected color brightness.
+    /// Returns the detected color's brightness.
     ///
     /// Brightness values range from `0` to `1.0`.
     ///
@@ -151,7 +153,7 @@ impl OpticalSensor {
         Ok(unsafe { vexDeviceOpticalBrightnessGet(self.device) })
     }
 
-    /// Get the analog proximity value from `0` to `1.0`.
+    /// Returns an analog proximity value from `0` to `1.0`.
     ///
     /// A reading of 1.0 indicates that the object is close to the sensor, while 0.0
     /// indicates that no object is detected in range of the sensor.
@@ -165,7 +167,7 @@ impl OpticalSensor {
         Ok(f64::from(unsafe { vexDeviceOpticalProximityGet(self.device) }) / 255.0)
     }
 
-    /// Get the processed RGB data from the sensor
+    /// Returns the processed RGB color data from the sensor.
     ///
     /// # Errors
     ///
@@ -179,7 +181,7 @@ impl OpticalSensor {
         Ok(data.into())
     }
 
-    /// Get the raw, unprocessed RGBC data from the sensor
+    /// Returns the raw, unprocessed RGBC color data from the sensor.
     ///
     /// # Errors
     ///
@@ -193,7 +195,9 @@ impl OpticalSensor {
         Ok(data.into())
     }
 
-    /// Get the most recent gesture data from the sensor. Gestures will be cleared after 500mS.
+    /// Returns the most recent gesture data from the sensor.
+    ///
+    /// Gestures will be cleared after 500 milliseconds.
     ///
     /// # Errors
     ///
@@ -223,7 +227,7 @@ impl OpticalSensor {
         })
     }
 
-    /// Gets the status code of the distance sensor
+    /// Returns the internal status code of the optical sensor.
     ///
     /// # Errors
     ///

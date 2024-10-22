@@ -22,7 +22,7 @@ use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_Dev
 use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
 use crate::{position::Position, PortError};
 
-/// The basic motor struct.
+/// A motor plugged into a smart port.
 #[derive(Debug, PartialEq)]
 pub struct Motor {
     port: SmartPort,
@@ -37,7 +37,7 @@ pub struct Motor {
 unsafe impl Send for Motor {}
 unsafe impl Sync for Motor {}
 
-/// Represents a possible target for a [`Motor`].
+/// A possible target action for a [`Motor`].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MotorControl {
     /// The motor brakes using a specified [`BrakeMode`].
@@ -129,7 +129,7 @@ impl MotorType {
         matches!(self, Self::V5)
     }
 
-    /// Gets the maximum voltage for a motor of this type.
+    /// Returns the maximum voltage for a motor of this type.
     #[must_use]
     pub const fn max_voltage(&self) -> f64 {
         match self {
@@ -183,12 +183,14 @@ impl Motor {
     }
 
     /// Creates a new 11W (V5) Smart Motor.
+    ///
     /// See [`Motor::new_exp`] to create a 5.5W (EXP) Smart Motor.
     #[must_use]
     pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
         Self::new_with_type(port, gearset, direction, MotorType::V5)
     }
     /// Creates a new 5.5W (EXP) Smart Motor.
+    ///
     /// See [`Motor::new`] to create a 11W (V5) Smart Motor.
     #[must_use]
     pub fn new_exp(port: SmartPort, direction: Direction) -> Self {
@@ -298,7 +300,7 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the smart port.
-    pub fn update_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
+    pub fn set_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
         self.validate_port()?;
 
         unsafe {
@@ -312,16 +314,18 @@ impl Motor {
         Ok(())
     }
 
-    /// Get the current [`MotorControl`] value that the motor is attempting to use.
+    /// Returns the current [`MotorControl`] target that the motor is attempting to use.
+    #[must_use]
     pub const fn target(&self) -> MotorControl {
         self.target
     }
 
-    /// Sets the gearset of the motor.
+    /// Sets the gearset of an 11W motor.
     ///
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the smart port.
+    /// - A [`MotorError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
         if self.motor_type.is_exp() {
             return Err(MotorError::SetGearsetExp);
@@ -333,7 +337,9 @@ impl Motor {
         Ok(())
     }
 
-    /// Gets the gearset of the motor.
+    /// Returns the gearset of the motor
+    ///
+    /// For 5.5W motors, this will always be returned as [`Gearset::Green`].
     ///
     /// # Errors
     ///
@@ -346,7 +352,7 @@ impl Motor {
         Ok(unsafe { vexDeviceMotorGearingGet(self.device) }.into())
     }
 
-    /// Gets the type of the motor
+    /// Returns the type of the motor,
     #[must_use]
     pub const fn motor_type(&self) -> MotorType {
         self.motor_type
@@ -362,13 +368,13 @@ impl Motor {
         self.motor_type.is_v5()
     }
 
-    /// Gets the maximum voltage for the motor based off of its [motor type](Motor::motor_type).
+    /// Returns the maximum voltage for the motor based off of its [motor type](Motor::motor_type).
     #[must_use]
     pub const fn max_voltage(&self) -> f64 {
         self.motor_type.max_voltage()
     }
 
-    /// Gets the estimated angular velocity (RPM) of the motor.
+    /// Returns the estimated angular velocity (RPM) of the motor.
     ///
     /// # Note
     ///
@@ -451,7 +457,7 @@ impl Motor {
         Ok(f64::from(unsafe { vexDeviceMotorCurrentGet(self.device) }) / 1000.0)
     }
 
-    /// Gets the efficiency of the motor from a range of [0.0, 1.0].
+    /// Returns the efficiency of the motor from a range of [0.0, 1.0].
     ///
     /// An efficiency of 1.0 means that the motor is moving electrically while
     /// drawing no electrical power, and an efficiency of 0.0 means that the motor
@@ -467,6 +473,7 @@ impl Motor {
     }
 
     /// Sets the current encoder position to zero without moving the motor.
+    ///
     /// Analogous to taring or resetting the encoder to the current position.
     ///
     /// # Errors
@@ -479,6 +486,7 @@ impl Motor {
     }
 
     /// Sets the current encoder position to the given position without moving the motor.
+    ///
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
     ///
     /// # Errors
@@ -516,7 +524,7 @@ impl Motor {
         Ok(())
     }
 
-    /// Gets the current limit for the motor in amps.
+    /// Returns the current limit for the motor in amps.
     ///
     /// # Errors
     ///
@@ -526,7 +534,7 @@ impl Motor {
         Ok(f64::from(unsafe { vexDeviceMotorCurrentLimitGet(self.device) }) / 1000.0)
     }
 
-    /// Gets the voltage limit for the motor if one has been explicitly set.
+    /// Returns the voltage limit for the motor if one has been explicitly set.
     ///
     /// # Errors
     ///
@@ -546,7 +554,7 @@ impl Motor {
         Ok(unsafe { vexDeviceMotorTemperatureGet(self.device) })
     }
 
-    /// Get the status flags of a motor.
+    /// Returns the status flags of a motor.
     ///
     /// # Errors
     ///
@@ -579,7 +587,7 @@ impl Motor {
         }))
     }
 
-    /// Check if the motor's over temperature flag is set.
+    /// Returns `true` if the motor's over temperature flag is set.
     ///
     /// # Errors
     ///
@@ -588,7 +596,7 @@ impl Motor {
         Ok(self.faults()?.contains(MotorFaults::OVER_TEMPERATURE))
     }
 
-    /// Check if the motor's over-current flag is set.
+    /// Returns `true` if the motor's over-current flag is set.
     ///
     /// # Errors
     ///
@@ -597,7 +605,7 @@ impl Motor {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
 
-    /// Check if a H-bridge (motor driver) fault has occurred.
+    /// Returns `true` if a H-bridge (motor driver) fault has occurred.
     ///
     /// # Errors
     ///
@@ -606,7 +614,7 @@ impl Motor {
         Ok(self.faults()?.contains(MotorFaults::DRIVER_FAULT))
     }
 
-    /// Check if the motor's H-bridge has an over-current fault.
+    /// Returns `true` if the motor's H-bridge has an over-current fault.
     ///
     /// # Errors
     ///
@@ -615,7 +623,15 @@ impl Motor {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
 
-    /// Set the [`Direction`] of this motor.
+    /// Sets the motor to operate in a given [`Direction`].
+    ///
+    /// This determines which way the motor considers to be “forwards”. You can use the marking on the back of the
+    /// motor as a reference:
+    ///
+    /// - When [`Direction::Forward`] is specified, positive velocity/voltage values will cause the motor to rotate
+    ///   **with the arrow on the back**. Position will increase as the motor rotates **with the arrow**.
+    /// - When [`Direction::Reverse`] is specified, positive velocity/voltage values will cause the motor to rotate
+    ///   **against the arrow on the back**. Position will increase as the motor rotates **against the arrow**.
     ///
     /// # Errors
     ///
@@ -630,7 +646,7 @@ impl Motor {
         Ok(())
     }
 
-    /// Get the [`Direction`] of this motor.
+    /// Returns the [`Direction`] of this motor.
     ///
     /// # Errors
     ///
@@ -716,7 +732,7 @@ impl From<Motor> for SmartPort {
     }
 }
 
-/// Determines how a motor should act when braking.
+/// Determines the behavior a motor should use when braking with [`Motor::brake`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum BrakeMode {
     /// Motor never brakes.
@@ -831,7 +847,7 @@ impl Gearset {
     /// Number of encoder ticks per revolution for the [`Blue`](Gearset::Blue) gearset.
     pub const BLUE_TICKS_PER_REVOLUTION: u32 = 300;
 
-    /// Get the rated maximum speed for this motor gearset.
+    /// Returns the rated maximum speed for this motor gearset.
     #[must_use]
     pub const fn max_rpm(&self) -> f64 {
         match self {
@@ -841,7 +857,7 @@ impl Gearset {
         }
     }
 
-    /// Get the number of encoder ticks per revolution for this motor gearset.
+    /// Returns the number of encoder ticks per revolution for this motor gearset.
     #[must_use]
     pub const fn ticks_per_revolution(&self) -> u32 {
         match self {

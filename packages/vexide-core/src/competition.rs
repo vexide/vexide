@@ -85,7 +85,7 @@ impl CompetitionStatus {
         self.contains(CompetitionStatus::CONNECTED)
     }
 
-    /// Gets the current competition mode, or phase from these status flags.
+    /// Returns the current competition mode, or phase from these status flags.
     #[must_use]
     pub const fn mode(&self) -> CompetitionMode {
         if self.contains(Self::DISABLED) {
@@ -97,7 +97,7 @@ impl CompetitionStatus {
         }
     }
 
-    /// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
+    /// Returns the type of system currently controlling the robot's competition state, or [`None`] if the robot
     /// is not tethered to a competition controller.
     #[must_use]
     pub const fn system(&self) -> Option<CompetitionSystem> {
@@ -113,7 +113,7 @@ impl CompetitionStatus {
     }
 }
 
-/// Gets the current competition status flags.
+/// Returns the current competition status flags.
 #[must_use]
 pub fn status() -> CompetitionStatus {
     CompetitionStatus::from_bits_retain(unsafe { vexCompetitionStatus() })
@@ -125,14 +125,14 @@ pub fn is_connected() -> bool {
     status().is_connected()
 }
 
-/// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
+/// Returns the type of system currently controlling the robot's competition state, or [`None`] if the robot
 /// is not tethered to a competition controller.
 #[must_use]
 pub fn system() -> Option<CompetitionSystem> {
     status().system()
 }
 
-/// Gets the current competition mode, or phase.
+/// Returns the current competition mode, or phase.
 #[must_use]
 pub fn mode() -> CompetitionMode {
     status().mode()

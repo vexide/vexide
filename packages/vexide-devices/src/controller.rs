@@ -55,22 +55,24 @@ pub struct JoystickState {
 }
 
 impl JoystickState {
-    /// Gets the value of the joystick position on its x-axis from [-1, 1].
+    /// Returns the value of the joystick position on its x-axis from [-1, 1].
     #[must_use]
     pub fn x(&self) -> f64 {
         f64::from(self.x_raw) / 127.0
     }
-    /// Gets the value of the joystick position on its y-axis from [-1, 1].
+    /// Returns the value of the joystick position on its y-axis from [-1, 1].
     #[must_use]
     pub fn y(&self) -> f64 {
         f64::from(self.y_raw) / 127.0
     }
 
     /// The raw value of the joystick position on its x-axis from [-127, 127].
+    #[must_use]
     pub const fn x_raw(&self) -> i8 {
         self.x_raw
     }
     /// The raw value of the joystick position on its x-axis from [-127, 127].
+    #[must_use]
     pub const fn y_raw(&self) -> i8 {
         self.y_raw
     }
@@ -213,7 +215,7 @@ impl ControllerScreen {
                 u32::from(id.0),
                 u32::from(line + 1),
                 u32::from(col + 1),
-                text.as_ptr() as *const _,
+                text.as_ptr().cast(),
             );
         }
 
@@ -425,13 +427,13 @@ impl Controller {
         })
     }
 
-    /// Gets the controller's connection type.
+    /// Returns the controller's connection type.
     #[must_use]
     pub fn connection(&self) -> ControllerConnection {
         unsafe { vexControllerConnectionStatusGet(self.id.into()) }.into()
     }
 
-    /// Gets the controller's battery capacity.
+    /// Returns the controller's battery capacity.
     ///
     /// # Errors
     ///
@@ -443,7 +445,7 @@ impl Controller {
         Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryCapacity) })
     }
 
-    /// Gets the controller's battery level.
+    /// Returns the controller's battery level.
     ///
     /// # Errors
     ///
@@ -455,7 +457,7 @@ impl Controller {
         Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryLevel) })
     }
 
-    /// Gets the controller's flags.
+    /// Returns the controller's flags.
     ///
     /// # Errors
     ///

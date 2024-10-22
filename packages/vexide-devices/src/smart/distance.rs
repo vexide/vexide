@@ -9,7 +9,8 @@ use vex_sdk::{
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
-/// A physical distance sensor plugged into a port.
+/// A distance sensor plugged into a smart port.
+///
 /// Distance sensors can only keep track of one object at a time.
 #[derive(Debug, Eq, PartialEq)]
 pub struct DistanceSensor {
@@ -23,7 +24,7 @@ unsafe impl Send for DistanceSensor {}
 unsafe impl Sync for DistanceSensor {}
 
 impl DistanceSensor {
-    /// Create a new distance sensor from a smart port index.
+    /// Creates a new distance sensor from a [`SmartPort`].
     #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
@@ -47,7 +48,7 @@ impl DistanceSensor {
         }
     }
 
-    /// Attempt to detect an object, returning `None` if no object could be found.
+    /// Attempts to detect an object, returning `None` if no object could be found.
     ///
     /// # Errors
     ///
@@ -72,9 +73,7 @@ impl DistanceSensor {
         }
     }
 
-    /// Get the internal status code of the distance sensor.
-    ///
-    /// Vexide uses the status code internally to detect whether the distance sensor is initialized.
+    /// Returns the internal status code of the distance sensor.
     ///
     /// # Errors
     ///

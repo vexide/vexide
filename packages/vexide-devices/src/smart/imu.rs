@@ -23,7 +23,7 @@ use crate::{
     PortError,
 };
 
-/// Represents a smart port configured as a V5 inertial sensor (IMU)
+/// An internal sensor (IMU) plugged into a smart port.
 #[derive(Debug, PartialEq)]
 pub struct InertialSensor {
     port: SmartPort,
@@ -38,19 +38,20 @@ unsafe impl Send for InertialSensor {}
 unsafe impl Sync for InertialSensor {}
 
 impl InertialSensor {
-    /// The time limit used by the PROS kernel for bailing out of calibration. In theory, this
-    /// could be as low as 2s, but is kept at 3s for margin-of-error.
+    /// The time limit used by the PROS kernel for bailing out of calibration.
+    ///
+    /// In theory, this could be as low as 2s, but is kept at 3s for margin-of-error.
     ///
     /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L31>
     pub const CALIBRATION_TIMEOUT: Duration = Duration::from_secs(3);
 
-    /// The minimum data rate that you can set an IMU to.
+    /// The minimum data rate that you can set an IMU perform computations at.
     pub const MIN_DATA_INTERVAL: Duration = Duration::from_millis(5);
 
     /// The maximum value that can be returned by [`Self::heading`].
     pub const MAX_HEADING: f64 = 360.0;
 
-    /// Create a new inertial sensor from a smart port index.
+    /// Create a new inertial sensor from a [`SmartPort`].
     #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
@@ -70,7 +71,7 @@ impl InertialSensor {
         Ok(())
     }
 
-    /// Read the inertial sensor's status code.
+    /// Returns the internal status code of the intertial sensor.
     ///
     /// # Errors
     ///
@@ -88,7 +89,7 @@ impl InertialSensor {
         Ok(InertialStatus::from_bits_retain(bits))
     }
 
-    /// Check if the Inertial Sensor is currently calibrating.
+    /// Returns `true` if the sensor is currently calibrating.
     ///
     /// # Errors
     ///
@@ -98,7 +99,7 @@ impl InertialSensor {
         Ok(self.status()?.contains(InertialStatus::CALIBRATING))
     }
 
-    /// Check if the Inertial Sensor was calibrated using auto-calibration.
+    /// Returns `true` if the sensor was calibrated using auto-calibration.
     ///
     /// # Errors
     ///
@@ -108,7 +109,9 @@ impl InertialSensor {
         Ok(self.status()?.contains(InertialStatus::AUTO_CALIBRATED))
     }
 
-    /// Check the physical orientation of the sensor as it was measured during calibration.
+    /// Returns the physical orientation of the sensor as it was measured during calibration.
+    ///
+    /// This orientation can be one of six possible orientations aligned to two cardinal directions.
     ///
     /// # Errors
     ///
@@ -118,18 +121,20 @@ impl InertialSensor {
         Ok(self.status()?.physical_orientation())
     }
 
-    /// Calibrate IMU asynchronously.
+    /// Calibrate the IMU asynchronously.
     ///
     /// Returns an [`InertialCalibrateFuture`] that resolves once the calibration operation has finished.
     ///
     /// # Errors
     ///
-    /// There is a 3-second timeout that will return [`InertialError::CalibrationTimedOut`] if the timeout is exceeded.
+    /// - An [`InertialError::CalibrationTimedOut`] if a 3-second timeout is exceeded.
+    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
+    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
     pub fn calibrate(&mut self) -> InertialCalibrateFuture {
         InertialCalibrateFuture::Calibrate(self.port.number())
     }
 
-    /// Get the total number of degrees the Inertial Sensor has spun about the z-axis.
+    /// Returns the total number of degrees the Inertial Sensor has spun about the z-axis.
     ///
     /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
     /// while counterclockwise rotations are represented with negative ones.
@@ -144,7 +149,7 @@ impl InertialSensor {
         Ok(unsafe { vexDeviceImuHeadingGet(self.device) } - self.rotation_offset)
     }
 
-    /// Get the Inertial Sensor’s yaw angle bounded by [0, 360) degrees.
+    /// Returns the Inertial Sensor’s yaw angle bounded from [0, 360) degrees.
     ///
     /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
     /// represented with negative ones.
@@ -162,7 +167,7 @@ impl InertialSensor {
         )
     }
 
-    /// Get a quaternion representing the Inertial Sensor’s orientation.
+    /// Returns a quaternion representing the Inertial Sensor’s current orientation.
     ///
     /// # Errors
     ///
@@ -187,7 +192,7 @@ impl InertialSensor {
         })
     }
 
-    /// Get the Euler angles (pitch, yaw, roll) representing the Inertial Sensor’s orientation.
+    /// Returns the Euler angles (pitch, yaw, roll) representing the Inertial Sensor’s orientation.
     ///
     /// # Errors
     ///
@@ -210,7 +215,7 @@ impl InertialSensor {
         })
     }
 
-    /// Get the Inertial Sensor’s raw gyroscope values.
+    /// Returns the Inertial Sensor’s raw gyroscope readings in dps (degrees per second).
     ///
     /// # Errors
     ///
@@ -234,7 +239,7 @@ impl InertialSensor {
         })
     }
 
-    /// Get the Inertial Sensor’s raw accelerometer values.
+    /// Returns the sensor's raw acceleration readings in g (~9.8 m/s/s).
     ///
     /// # Errors
     ///
@@ -258,7 +263,10 @@ impl InertialSensor {
         })
     }
 
-    /// Resets the current reading of the Inertial Sensor’s heading to zero.
+    /// Resets the current reading of the sensor's heading to zero.
+    ///
+    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect [`InertialSensor::rotation`]
+    /// or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
     ///
     /// # Errors
     ///
@@ -269,7 +277,10 @@ impl InertialSensor {
         self.set_heading(Default::default())
     }
 
-    /// Resets the current reading of the Inertial Sensor’s rotation to zero.
+    /// Resets the current reading of the sensor's rotation to zero.
+    ///
+    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect [`InertialSensor::heading`]
+    /// or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
     ///
     /// # Errors
     ///
@@ -280,7 +291,10 @@ impl InertialSensor {
         self.set_rotation(Default::default())
     }
 
-    /// Sets the current reading of the Inertial Sensor’s rotation to target value.
+    /// Sets the current reading of the sensor's rotation to a given value.
+    ///
+    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect [`InertialSensor::heading`]
+    /// or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
     ///
     /// # Errors
     ///
@@ -295,9 +309,10 @@ impl InertialSensor {
         Ok(())
     }
 
-    /// Sets the current reading of the Inertial Sensor’s heading to target value.
+    /// Sets the current reading of the sensor's heading to a given value.
     ///
-    /// Target will default to 360 if above 360 and default to 0 if below 0.
+    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect [`InertialSensor::rotation`]
+    /// or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
     ///
     /// # Errors
     ///
@@ -312,7 +327,10 @@ impl InertialSensor {
         Ok(())
     }
 
-    /// Sets the computation speed of the IMU.
+    /// Sets the internal computation speed of the IMU.
+    ///
+    /// This method does NOT change the communication speed of the IMU with the brain (which will always be 10mS),
+    /// but rather how fast data is sampled and computed onboard the sensor itself.
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     ///
@@ -505,8 +523,8 @@ impl core::future::Future for InertialCalibrateFuture {
     }
 }
 
-#[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an Inertial Sensor.
+#[derive(Debug, Snafu)]
 pub enum InertialError {
     /// The sensor took longer than three seconds to calibrate.
     CalibrationTimedOut,

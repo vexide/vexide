@@ -1,6 +1,9 @@
-//! Generic serial device module.
+//! VEXLink
 //!
-//! Provides support for using [`SmartPort`]s as generic serial communication devices.
+//! This module provides support for VEXLink, a point-to-point wireless communications protocol between
+//! two VEXNet radios.
+//!
+//! For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
 
 use alloc::ffi::CString;
 
@@ -15,7 +18,7 @@ use vex_sdk::{
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
-/// Represents a smart port configured as a VEXLink radio.
+/// VEXLink Wireless Radio Link
 ///
 /// VEXLink is a point-to-point wireless communications protocol between
 /// two VEXNet radios. For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
@@ -35,16 +38,16 @@ impl RadioLink {
     /// opened, other VEXNet functionality such as controller tethering on this
     /// radio will be disabled.
     ///
+    /// # Errors
+    ///
+    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the specified port.
+    /// - A [`LinkError::NonTerminatingNul`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
+    ///
     /// # Examples
     ///
     /// ```
     /// let link = RadioLink::open(port_1, "643A", LinkType::Manager)?;
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the specified port.
-    /// - A [`LinkError::NonTerminatingNul`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
     pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, LinkError> {
         // Ensure that a radio is plugged into the requested port.
         //

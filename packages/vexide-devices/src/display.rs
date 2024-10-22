@@ -541,7 +541,7 @@ impl Display {
         }
     }
 
-    /// Gets the [`RenderMode`] of the screen.
+    /// Returns the [`RenderMode`] of the screen.
     #[must_use]
     pub const fn render_mode(&self) -> RenderMode {
         self.render_mode

@@ -14,7 +14,7 @@ use vex_sdk::{
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
-/// Represents a smart port configured as a generic serial controller.
+/// A smart port configured as a generic RS-485 serial port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct SerialPort {
     port: SmartPort,

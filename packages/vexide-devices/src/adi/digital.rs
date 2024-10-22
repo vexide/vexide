@@ -69,7 +69,7 @@ impl AdiDigitalIn {
         Self { port }
     }
 
-    /// Gets the current logic level of a digital input pin.
+    /// Returns the current logic level of a digital input pin.
     ///
     /// # Errors
     ///
