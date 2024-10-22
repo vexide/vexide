@@ -3,7 +3,7 @@
 
 use core::{convert::Infallible, fmt::Debug, time::Duration};
 
-use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
+use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTaskSleep, vexTasksRun};
 
 use crate::{io, time::Instant};
 
@@ -33,26 +33,28 @@ impl<T: Termination, E: Debug> Termination for Result<T, E> {
 
 /// Exits the program using vexSystemExitRequest.
 /// This function will not instantly exit the program,
-/// but will instead wait 3ms to force the serial buffer to flush.
+/// but will instead wait up to 15mS to force the serial buffer to flush.
 pub fn exit() -> ! {
-    let exit_time = Instant::now();
-    const FLUSH_TIMEOUT: Duration = Duration::from_millis(15);
     unsafe {
+        let exit_time = Instant::now();
+        const FLUSH_TIMEOUT: Duration = Duration::from_millis(15);
+
         // Force the serial buffer to flush
         while exit_time.elapsed() < FLUSH_TIMEOUT {
+            vexTasksRun();
+
             // If the buffer has been fully flushed, exit the loop
             if vexSerialWriteFree(io::STDIO_CHANNEL) == (io::Stdout::INTERNAL_BUFFER_SIZE as i32) {
                 break;
             }
+        }
+
+        // Request program exit.
+        vexSystemExitRequest();
+
+        // Loop while vexos decides what to do with our exit request.
+        loop {
             vexTasksRun();
         }
-        // Exit the program
-        // Everything after this point is unreachable.
-        vexSystemExitRequest();
-    }
-
-    // unreachable.
-    loop {
-        core::hint::spin_loop();
     }
 }
