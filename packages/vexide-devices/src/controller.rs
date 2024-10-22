@@ -21,21 +21,25 @@ pub struct ButtonState {
 
 impl ButtonState {
     /// Returns true if the button state is [`Pressed`](ButtonState::Pressed).
+    #[must_use]
     pub const fn is_pressed(&self) -> bool {
         self.is_pressed
     }
 
     /// Returns true if the button state is [`Released`](ButtonState::Released).
+    #[must_use]
     pub const fn is_released(&self) -> bool {
         !self.is_pressed
     }
 
     /// Returns true if the button state was released in the previous call to [`Controller::state`], but is now pressed.
+    #[must_use]
     pub const fn is_now_pressed(&self) -> bool {
         !self.prev_is_pressed && self.is_pressed
     }
 
     /// Returns true if the button state was pressed in the previous call to [`Controller::state`], but is now released.
+    #[must_use]
     pub const fn is_now_released(&self) -> bool {
         self.prev_is_pressed && !self.is_pressed
     }
@@ -51,20 +55,24 @@ pub struct JoystickState {
 }
 
 impl JoystickState {
-    /// Gets the value of the joystick position on its x-axis from [-1, 1].
+    /// Returns the value of the joystick position on its x-axis from [-1, 1].
+    #[must_use]
     pub fn x(&self) -> f64 {
-        self.x_raw as f64 / 127.0
+        f64::from(self.x_raw) / 127.0
     }
-    /// Gets the value of the joystick position on its y-axis from [-1, 1].
+    /// Returns the value of the joystick position on its y-axis from [-1, 1].
+    #[must_use]
     pub fn y(&self) -> f64 {
-        self.y_raw as f64 / 127.0
+        f64::from(self.y_raw) / 127.0
     }
 
-    /// The raw value of the joystick position on its x-axis from [-128, 127].
+    /// The raw value of the joystick position on its x-axis from [-127, 127].
+    #[must_use]
     pub const fn x_raw(&self) -> i8 {
         self.x_raw
     }
-    /// The raw value of the joystick position on its x-axis from [-128, 127].
+    /// The raw value of the joystick position on its x-axis from [-127, 127].
+    #[must_use]
     pub const fn y_raw(&self) -> i8 {
         self.y_raw
     }
@@ -113,6 +121,10 @@ pub struct ControllerState {
 /// each `ButtonState` needs to know about its previous state from the last `Controller::update`
 /// call in order to allow for `ButtonState::is_now_pressed` and `ButtonState::is_now_released`.
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
+#[allow(
+    clippy::struct_excessive_bools,
+    reason = "not being used as state machine"
+)]
 struct ButtonStates {
     a: bool,
     b: bool,
@@ -152,6 +164,11 @@ impl ControllerScreen {
     pub const MAX_LINES: usize = 2;
 
     /// Clear the contents of a specific text line.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
         //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
         //TODO: We should check the version and change behavior based on it.
@@ -161,6 +178,11 @@ impl ControllerScreen {
     }
 
     /// Clear the whole screen.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn clear_screen(&mut self) -> Result<(), ControllerError> {
         for line in 0..Self::MAX_LINES as u8 {
             self.clear_line(line)?;
@@ -170,6 +192,15 @@ impl ControllerScreen {
     }
 
     /// Set the text contents at a specific row/column offset.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
+    ///   greater than or equal to [`Self::MAX_LINE_LENGTH`].
+    /// - A [`ControllerError::NonTerminatingNul`] error if a NUL (0x00) character was
+    ///   found anywhere in the specified text.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
         if col >= Self::MAX_LINE_LENGTH as u8 {
@@ -181,10 +212,10 @@ impl ControllerScreen {
 
         unsafe {
             vexControllerTextSet(
-                id.0 as _,
-                (line + 1) as _,
-                (col + 1) as _,
-                text.as_ptr() as *const u8,
+                u32::from(id.0),
+                u32::from(line + 1),
+                u32::from(col + 1),
+                text.as_ptr().cast(),
             );
         }
 
@@ -268,6 +299,7 @@ impl Controller {
     /// Creating new `Controller`s is inherently unsafe due to the possibility of constructing
     /// more than one screen at once allowing multiple mutable references to the same
     /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    #[must_use]
     pub const unsafe fn new(id: ControllerId) -> Self {
         Self {
             id,
@@ -294,6 +326,13 @@ impl Controller {
     /// # Note
     ///
     /// If the current competition mode is not driver control, this function will error.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access to
+    ///   the controller data is being restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn state(&self) -> Result<ControllerState, ControllerError> {
         if competition::mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
@@ -388,26 +427,42 @@ impl Controller {
         })
     }
 
-    /// Gets the controller's connection type.
+    /// Returns the controller's connection type.
+    #[must_use]
     pub fn connection(&self) -> ControllerConnection {
         unsafe { vexControllerConnectionStatusGet(self.id.into()) }.into()
     }
 
-    /// Gets the controller's battery capacity.
+    /// Returns the controller's battery capacity.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn battery_capacity(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
         Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryCapacity) })
     }
 
-    /// Gets the controller's battery level.
+    /// Returns the controller's battery level.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn battery_level(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
         Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryLevel) })
     }
 
-    /// Gets the controller's flags.
+    /// Returns the controller's flags.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn flags(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
@@ -419,6 +474,13 @@ impl Controller {
     /// This function takes a string consisting of the characters '.', '-', and ' ', where
     /// dots are short rumbles, dashes are long rumbles, and spaces are pauses. Maximum
     /// supported length is 8 characters.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::NonTerminatingNul`] error if a NUL (0x00) character was
+    ///   found anywhere in the specified text.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
         self.screen.set_text(pattern, 3, 0)
     }
@@ -430,7 +492,7 @@ pub enum ControllerError {
     /// The controller is not connected to the brain.
     Offline,
 
-    /// CString::new encountered NUL (U+0000) byte in non-terminating position.
+    /// A NUL (0x00) character was found in a string that may not contain NUL characters.
     NonTerminatingNul,
 
     /// Access to controller data is restricted by competition control.

@@ -14,41 +14,52 @@ pub struct AdiAccelerometer {
 
 impl AdiAccelerometer {
     /// Create a new accelerometer from an [`AdiPort`].
+    #[must_use]
     pub fn new(port: AdiPort, sensitivity: Sensitivity) -> Self {
         port.configure(AdiDeviceType::Accelerometer);
 
-        Self { port, sensitivity }
+        Self { sensitivity, port }
     }
 
-    /// Get the type of ADI accelerometer device.
-    pub fn sensitivity(&self) -> Result<Sensitivity, PortError> {
-        // Configuration check not required here since we don't access the SDK.
-        self.port.validate_expander()?;
-
-        Ok(self.sensitivity)
+    /// Returns the configured sensitivity of the ADI accelerometer device.
+    #[must_use]
+    pub const fn sensitivity(&self) -> Sensitivity {
+        self.sensitivity
     }
 
-    /// Get the maximum acceleration measurement supported by the current [`Sensitivity`] jumper
-    /// configuration.
-    pub fn max_acceleration(&self) -> Result<f64, PortError> {
-        Ok(self.sensitivity()?.max_acceleration())
+    /// Returns the maximum acceleration measurement supported by the current [`Sensitivity`] jumper.
+    #[must_use]
+    pub const fn max_acceleration(&self) -> f64 {
+        self.sensitivity().max_acceleration()
     }
 
-    /// Gets the current acceleration measurement for this axis in g (~9.8 m/s/s).
+    /// Returns the current acceleration measurement for this axis in g (~9.8 m/s/s).
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn acceleration(&self) -> Result<f64, PortError> {
         Ok(
             // Convert 0-4095 to 0-1, then scale to max accel.
-            self.raw_acceleration()? as f64 / analog::ADC_MAX_VALUE as f64
+            f64::from(self.raw_acceleration()?) / f64::from(analog::ADC_MAX_VALUE)
                 * self.sensitivity.max_acceleration(),
         )
     }
 
-    /// Returns the raw acceleration reading from [0, 4096]. This represents is an ADC-converted
+    /// Returns the raw acceleration reading from [0, 4096]. This represents an ADC-converted
     /// analog input from 0-5V.
     ///
     /// For example, when on high sensitivity a value of `4096` would represent a reading of 6g
     /// ([`Sensitivity::HIGH_MAX_ACCELERATION`]). When on low acceleration, this same value
     /// would instead represent a 2g reading ([`Sensitivity::LOW_MAX_ACCELERATION`]).
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn raw_acceleration(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
@@ -68,13 +79,14 @@ pub enum Sensitivity {
 }
 
 impl Sensitivity {
-    /// Maxmimum acceleration measurement when in low sensitivity mode.
+    /// Maximum acceleration measurement when in low sensitivity mode.
     pub const LOW_MAX_ACCELERATION: f64 = 2.0;
 
-    /// Maxmimum acceleration measurement when in high sensitivity mode.
+    /// Maximum acceleration measurement when in high sensitivity mode.
     pub const HIGH_MAX_ACCELERATION: f64 = 6.0;
 
-    /// Get the maximum acceleration measurement (in G) for this sensitivity.
+    /// Returns the maximum acceleration measurement (in g) for this sensitivity.
+    #[must_use]
     pub const fn max_acceleration(&self) -> f64 {
         match self {
             Self::Low => Self::LOW_MAX_ACCELERATION,

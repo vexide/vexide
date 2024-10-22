@@ -12,6 +12,7 @@ pub struct AdiPwmOut {
 
 impl AdiPwmOut {
     /// Create a pwm output from an [`AdiPort`].
+    #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::PwmOut);
 
@@ -22,12 +23,22 @@ impl AdiPwmOut {
     ///
     /// This value is sent over 16ms periods with pulse widths ranging from roughly
     /// 0.94mS to 2.03mS.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn set_output(&mut self, value: u8) -> Result<(), PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
 
         unsafe {
-            vexDeviceAdiValueSet(self.port.device_handle(), self.port.index(), value as i32);
+            vexDeviceAdiValueSet(
+                self.port.device_handle(),
+                self.port.index(),
+                i32::from(value),
+            );
         }
 
         Ok(())

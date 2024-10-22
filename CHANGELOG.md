@@ -19,7 +19,6 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
-
 ## [Unreleased]
 
 ### Added
@@ -27,8 +26,14 @@ Before releasing:
 - You can now detect controller release occurrences with `ButtonState::is_now_released`.
 - Added support for 5.5W motors with a new constructor (`Motor::new_exp`) and four new getters (`Motor::max_voltage`, `Motor::motor_type`, `Motor::is_v5`, and `Motor::is_exp`) for `Motor`. (#167)
 - Added support for the V5 Workcell Electromagnet smart device. (#176)
+- The conditions upon which functions return errors are now documented. (#155).
+- Implemented the `Copy` trait for `BannerTheme`.
 
 ### Fixed
+
+- `AdiAddrLed::set_pixel` will now correctly return an error if the device's ADI expander is disconnected. (#155)
+- The `dbg!();` now works as expected when no arguments are supplied to it. (#175)
+- `Motor::velocity` now correctly returns the estimated velocity instead of target velocity. (#184) (**Breaking Change**)
 
 ### Changed
 
@@ -41,6 +46,10 @@ Before releasing:
 - Renamed `Motor::MAX_VOLTAGE` to `Motor::V5_MAX_VOLTAGE` and added `Motor::EXP_MAX_VOLTAGE`. (#167) (**Breaking Change**)
 - Moved the ability to convert Smart devices to `SmartPorts` out of the `SmartDevice` trait and into the devices themselves. (#171) (**Breaking Change**)
 - Renamed `SmartDeviceType::Magnet` to `SmartDeviceType::Electromagnet`. (#176) (**Breaking Change**)
+- Getters and constructors will now create warnings when their return values are not used. (#155)
+- Renamed `OpticalSensor::rgb` to `OpticalSensor::color` and `OpticalSensor::raw` to `OpticalSensor::raw_color` (#179) (**Breaking Change**).
+- Made the following functions infallible: `AdiAccelerometer::sensitivity`, `AdiAccelerometer::max_acceleration`, `AdiPotentiometer::potentiometer_type`, `AdiPotentiometer::max_angle`, `Motor::target`, and `RotationSensor::direction`. (#182) (**Breaking Change**)
+- `OpticalSensor::led_brightness` now returns a number from `0.0` - `1.0` rather than a number from `1` - `100`.
 
 ### Removed
 
@@ -87,6 +96,7 @@ Before releasing:
 - `SmartPort::device_type` now no longer returns a `Result`. (#121) (**Breaking Change**)
 - Updated the names of certain misspelled `enum` variants, constants, and fields. (#132) (**Breaking Change**)
 - Marks many futures as `#[must_use]` to warn when futures are created without `await`ing them. (#112)
+- Renamed `Screen` and its associated structs to `Display`. (#138) (**Breaking Change**)
 - Changes the banner attribute syntax in the `vexide::main` macro. (#127) (**Breaking Change**)
 - Controller joystick axis getters now return `f64` instead of `f32`. (#133) (**Breaking Change**)
 - Fixed an issue where the async executor would block indefinetly on the first program run after a Brain reboot (#139)

@@ -12,7 +12,7 @@ use vex_sdk::{
 use super::{motor::Direction, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{position::Position, PortError};
 
-/// A physical rotation sensor plugged into a port.
+/// A rotation sensor plugged into a port.
 #[derive(Debug, PartialEq)]
 pub struct RotationSensor {
     /// Smart Port
@@ -45,6 +45,7 @@ impl RotationSensor {
 
     /// Creates a new rotation sensor on the given port.
     /// Whether or not the sensor should be reversed on creation can be specified.
+    #[must_use]
     pub fn new(port: SmartPort, direction: Direction) -> Self {
         let device = unsafe { port.device_handle() };
 
@@ -57,14 +58,22 @@ impl RotationSensor {
         }
     }
 
-    /// Sets the position to zero.
+    /// Reset's the sensor's position reading to zero.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a rotation sensor is not currently connected to the smart port.
     pub fn reset_position(&mut self) -> Result<(), PortError> {
         // NOTE: We don't use vexDeviceAbsEncReset, since that doesn't actually
         // zero position. It sets position to whatever the angle value is.
         self.set_position(Position::default())
     }
 
-    /// Sets the position.
+    /// Sets the sensor's position reading.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a rotation sensor is not currently connected to the smart port.
     pub fn set_position(&mut self, mut position: Position) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -76,13 +85,25 @@ impl RotationSensor {
             self.direction_offset = Position::default();
             self.raw_direction_offset = Position::default();
 
-            vexDeviceAbsEncPositionSet(self.device, position.as_ticks(36000) as i32)
+            vexDeviceAbsEncPositionSet(self.device, position.as_ticks(36000) as i32);
         }
 
         Ok(())
     }
 
-    /// Sets whether or not the rotation sensor should be reversed.
+    /// Sets the sensor to operate in a given [`Direction`].
+    ///
+    /// This determines which way the sensor considers to be “forwards”. You can use the marking on the top of the
+    /// motor as a reference:
+    ///
+    /// - When [`Direction::Forward`] is specified, positive velocity/voltage values will cause the motor to rotate
+    ///   **with the arrow on the top**. Position will increase as the motor rotates **with the arrow**.
+    /// - When [`Direction::Reverse`] is specified, positive velocity/voltage values will cause the motor to rotate
+    ///   **against the arrow on the top**. Position will increase as the motor rotates **against the arrow**.
+    ///
+    /// # Errors
+    ///
+    /// - An error is returned if an rotation sensor is not currently connected to the smart port.
     pub fn set_direction(&mut self, new_direction: Direction) -> Result<(), PortError> {
         // You're probably wondering why I don't use [`vexDeviceAbsEncReverseFlagSet`] here. So about that...
         //
@@ -105,10 +126,10 @@ impl RotationSensor {
         // behavior on our end without ever touching the status code.
         //
         // For more information: <https://www.vexforum.com/t/rotation-sensor-bug-workaround-on-vexos-1-1-0/96577/2>
-        if new_direction != self.direction()? {
+        if new_direction != self.direction() {
             self.direction_offset = self.position()?;
             self.raw_direction_offset = Position::from_ticks(
-                unsafe { vexDeviceAbsEncPositionGet(self.device) } as i64,
+                i64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
                 Self::TICKS_PER_REVOLUTION,
             );
             self.direction = new_direction;
@@ -120,6 +141,11 @@ impl RotationSensor {
     /// Sets the update rate of the sensor.
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
+    /// The data rate will be transformed to be a multiple of 5 milliseconds.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an rotation sensor is not currently connected to the smart port.
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -133,19 +159,22 @@ impl RotationSensor {
         Ok(())
     }
 
-    /// Sets whether or not the rotation sensor should be reversed.
-    pub fn direction(&self) -> Result<Direction, PortError> {
-        self.validate_port()?;
-
-        Ok(self.direction)
+    /// Returns the [`Direction`] of this sensor.
+    #[must_use]
+    pub const fn direction(&self) -> Direction {
+        self.direction
     }
 
-    /// Get the total number of degrees rotated by the sensor based on direction.
+    /// Returns the total number of degrees rotated by the sensor based on direction.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an rotation sensor is not currently connected to the smart port.
     pub fn position(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
         let mut delta_position = Position::from_ticks(
-            unsafe { vexDeviceAbsEncPositionGet(self.device) } as i64,
+            i64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
             Self::TICKS_PER_REVOLUTION,
         ) - self.raw_direction_offset;
 
@@ -156,9 +185,13 @@ impl RotationSensor {
         Ok(self.direction_offset + delta_position)
     }
 
-    /// Get the angle of rotation measured by the sensor.
+    /// Returns the angle of rotation measured by the sensor.
     ///
     /// This value is reported from 0-360 degrees.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an rotation sensor is not currently connected to the smart port.
     pub fn angle(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
@@ -169,12 +202,16 @@ impl RotationSensor {
         }
 
         Ok(Position::from_ticks(
-            raw_angle as i64,
+            i64::from(raw_angle),
             Self::TICKS_PER_REVOLUTION,
         ))
     }
 
-    /// Get the sensor's current velocity in degrees per second
+    /// Returns the sensor's current velocity in degrees per second
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an rotation sensor is not currently connected to the smart port.
     pub fn velocity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -184,10 +221,14 @@ impl RotationSensor {
             raw_velocity *= -1;
         }
 
-        Ok(raw_velocity as f64 / 100.0)
+        Ok(f64::from(raw_velocity) / 100.0)
     }
 
     /// Returns the sensor's status code.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an rotation sensor is not currently connected to the smart port.
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 

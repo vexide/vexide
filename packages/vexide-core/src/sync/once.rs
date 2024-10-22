@@ -27,6 +27,7 @@ impl Once {
 
     /// Create a new uncompleted [`Once`]
     #[allow(clippy::new_without_default)]
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             state: Mutex::new(false),
@@ -77,6 +78,7 @@ unsafe impl<T: Send> Send for OnceLock<T> {}
 unsafe impl<T: Send + Sync> Sync for OnceLock<T> {}
 impl<T> OnceLock<T> {
     /// Creates a new uninitialized [`OnceLock`].
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             inner: Once::new(),
@@ -103,7 +105,10 @@ impl<T> OnceLock<T> {
     }
 
     /// Attempt to set the data in the [`OnceLock`] if it has not been initialized.
-    /// If already initialized, the data is returned in an [`Err`](Result::Err)` variant.
+    ///
+    /// # Errors
+    ///
+    /// If the data in this [`OnceLock`] is already initialized, the `data` parameter is returned as an error.
     pub fn set(&self, data: T) -> Result<(), T> {
         if self.inner.is_complete() {
             return Err(data);
@@ -137,6 +142,12 @@ impl<T> OnceLock<T> {
 
     /// Attempt to set the data in the [`OnceLock`] if it has not been initialized.
     /// This is similar to [`OnceLock::set`] but always returns the data in the [`OnceLock`].
+    ///
+    /// # Errors
+    ///
+    /// If the data in this [`OnceLock`] is already initialized, the function returns
+    /// a reference to the previously stored data along with the value given as the
+    /// `data` parameter.
     pub fn try_insert(&self, data: T) -> Result<&T, (&T, T)> {
         match self.set(data) {
             Ok(()) => Ok(self.get().unwrap()),
@@ -155,7 +166,14 @@ impl<T> OnceLock<T> {
     }
 
     /// Get or try to initialize the data in the [`OnceLock`].
-    /// If the initialization function is run and returns an error, the error is returned and no value is set.
+    ///
+    /// If the data in the [`OnceLock`] is uninitialized, the `init` function is run and
+    /// a reference to the newly created data is returned.
+    /// Otherwise, a reference to the previously stored data is returned.
+    ///
+    /// # Errors
+    ///
+    /// If `init` is called and returns an error, the error is propagated and no value is set.
     pub async fn get_or_try_init<E: Error>(
         &self,
         init: impl FnOnce() -> Result<T, E>,

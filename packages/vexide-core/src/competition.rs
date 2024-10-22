@@ -80,11 +80,13 @@ pub enum CompetitionSystem {
 
 impl CompetitionStatus {
     /// Checks if the robot is connected to a competition control system.
+    #[must_use]
     pub const fn is_connected(&self) -> bool {
         self.contains(CompetitionStatus::CONNECTED)
     }
 
-    /// Gets the current competition mode, or phase from these status flags.
+    /// Returns the current competition mode, or phase from these status flags.
+    #[must_use]
     pub const fn mode(&self) -> CompetitionMode {
         if self.contains(Self::DISABLED) {
             CompetitionMode::Disabled
@@ -95,8 +97,9 @@ impl CompetitionStatus {
         }
     }
 
-    /// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
+    /// Returns the type of system currently controlling the robot's competition state, or [`None`] if the robot
     /// is not tethered to a competition controller.
+    #[must_use]
     pub const fn system(&self) -> Option<CompetitionSystem> {
         if self.contains(CompetitionStatus::CONNECTED) {
             if self.contains(Self::SYSTEM) {
@@ -110,23 +113,27 @@ impl CompetitionStatus {
     }
 }
 
-/// Gets the current competition status flags.
+/// Returns the current competition status flags.
+#[must_use]
 pub fn status() -> CompetitionStatus {
     CompetitionStatus::from_bits_retain(unsafe { vexCompetitionStatus() })
 }
 
 /// Checks if the robot is connected to a competition control system.
+#[must_use]
 pub fn is_connected() -> bool {
     status().is_connected()
 }
 
-/// Gets the type of system currently controlling the robot's competition state, or [`None`] if the robot
+/// Returns the type of system currently controlling the robot's competition state, or [`None`] if the robot
 /// is not tethered to a competition controller.
+#[must_use]
 pub fn system() -> Option<CompetitionSystem> {
     status().system()
 }
 
-/// Gets the current competition mode, or phase.
+/// Returns the current competition mode, or phase.
+#[must_use]
 pub fn mode() -> CompetitionMode {
     status().mode()
 }
@@ -147,17 +154,17 @@ impl Stream for CompetitionUpdates {
         // TODO: This should probably be done on a timer in the reactor.
         cx.waker().wake_by_ref();
 
-        if self.last_status != Some(current) {
+        if self.last_status == Some(current) {
+            Poll::Pending
+        } else {
             self.get_mut().last_status = Some(current);
             Poll::Ready(Some(current))
-        } else {
-            Poll::Pending
         }
     }
 }
 
 impl CompetitionUpdates {
-    /// Get the last status update.
+    /// Returns the last status update.
     ///
     /// This is slightly more efficient than calling [`status`] as it does not require another poll,
     /// however, it can be out of date if the stream has not been polled recently.
@@ -169,6 +176,7 @@ impl CompetitionUpdates {
 /// Gets a stream of updates to the competition status.
 ///
 /// Yields the current status when first polled, and thereafter whenever the status changes.
+#[must_use]
 pub const fn updates() -> CompetitionUpdates {
     CompetitionUpdates { last_status: None }
 }
@@ -667,7 +675,7 @@ impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
 }
 
 /// A set of tasks to run when the competition is in a particular mode.
-#[allow(async_fn_in_trait)]
+#[allow(async_fn_in_trait, clippy::unused_async)]
 pub trait Compete: Sized {
     /// Runs when the competition system is connected.
     ///
