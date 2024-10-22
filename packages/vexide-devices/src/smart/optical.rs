@@ -170,7 +170,7 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the smart port.
-    pub fn rgb(&self) -> Result<OpticalRgb, PortError> {
+    pub fn color(&self) -> Result<OpticalRgb, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceOpticalRgb::default();
@@ -184,7 +184,7 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the smart port.
-    pub fn raw(&self) -> Result<OpticalRaw, PortError> {
+    pub fn raw_color(&self) -> Result<OpticalRaw, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceOpticalRaw::default();

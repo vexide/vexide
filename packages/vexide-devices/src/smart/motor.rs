@@ -5,13 +5,13 @@ use core::time::Duration;
 use bitflags::bitflags;
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorBrakeModeSet, vexDeviceMotorCurrentGet,
-    vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet, vexDeviceMotorEfficiencyGet,
-    vexDeviceMotorEncoderUnitsSet, vexDeviceMotorFaultsGet, vexDeviceMotorFlagsGet,
-    vexDeviceMotorGearingGet, vexDeviceMotorGearingSet, vexDeviceMotorPositionGet,
-    vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset, vexDeviceMotorPositionSet,
-    vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet, vexDeviceMotorReverseFlagSet,
-    vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet, vexDeviceMotorVelocityGet,
+    vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorActualVelocityGet, vexDeviceMotorBrakeModeSet,
+    vexDeviceMotorCurrentGet, vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet,
+    vexDeviceMotorEfficiencyGet, vexDeviceMotorEncoderUnitsSet, vexDeviceMotorFaultsGet,
+    vexDeviceMotorFlagsGet, vexDeviceMotorGearingGet, vexDeviceMotorGearingSet,
+    vexDeviceMotorPositionGet, vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset,
+    vexDeviceMotorPositionSet, vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet,
+    vexDeviceMotorReverseFlagSet, vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet,
     vexDeviceMotorVelocitySet, vexDeviceMotorVelocityUpdate, vexDeviceMotorVoltageGet,
     vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet,
     V5MotorBrakeMode, V5MotorGearset, V5_DeviceT,
@@ -143,7 +143,7 @@ impl Motor {
     /// The maximum voltage value that can be sent to a V5 [`Motor`].
     pub const V5_MAX_VOLTAGE: f64 = 12.0;
     /// The maximum voltage value that can be sent to a EXP [`Motor`].
-    pub const EXP_MAX_VOLTAGE: f64 = 10.0;
+    pub const EXP_MAX_VOLTAGE: f64 = 8.0;
 
     /// The rate at which data can be read from a [`Motor`].
     pub const DATA_READ_INTERVAL: Duration = Duration::from_millis(10);
@@ -313,13 +313,8 @@ impl Motor {
     }
 
     /// Get the current [`MotorControl`] value that the motor is attempting to use.
-    ///
-    /// # Errors
-    ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the smart port.
-    pub fn target(&self) -> Result<MotorControl, MotorError> {
-        self.validate_port()?;
-        Ok(self.target)
+    pub const fn target(&self) -> MotorControl {
+        self.target
     }
 
     /// Sets the gearset of the motor.
@@ -375,12 +370,16 @@ impl Motor {
 
     /// Gets the estimated angular velocity (RPM) of the motor.
     ///
+    /// # Note
+    ///
+    /// To get the current **target** velocity instead of the estimated velocity, use [`Motor::target`].
+    ///
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the smart port.
-    pub fn velocity(&self) -> Result<i32, MotorError> {
+    pub fn velocity(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceMotorVelocityGet(self.device) })
+        Ok(unsafe { vexDeviceMotorActualVelocityGet(self.device) })
     }
 
     /// Returns the power drawn by the motor in Watts.

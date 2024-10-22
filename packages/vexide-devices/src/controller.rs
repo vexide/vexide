@@ -66,13 +66,11 @@ impl JoystickState {
         f64::from(self.y_raw) / 127.0
     }
 
-    /// The raw value of the joystick position on its x-axis from [-128, 127].
-    #[must_use]
+    /// The raw value of the joystick position on its x-axis from [-127, 127].
     pub const fn x_raw(&self) -> i8 {
         self.x_raw
     }
-    /// The raw value of the joystick position on its x-axis from [-128, 127].
-    #[must_use]
+    /// The raw value of the joystick position on its x-axis from [-127, 127].
     pub const fn y_raw(&self) -> i8 {
         self.y_raw
     }
@@ -208,21 +206,16 @@ impl ControllerScreen {
         }
 
         let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text)
-            .map_err(|_| ControllerError::NonTerminatingNul)?
-            .into_raw();
+        let text = CString::new(text).map_err(|_| ControllerError::NonTerminatingNul)?;
 
         unsafe {
             vexControllerTextSet(
                 u32::from(id.0),
                 u32::from(line + 1),
                 u32::from(col + 1),
-                text as *const _,
+                text.as_ptr() as *const _,
             );
         }
-
-        // stop rust from leaking the CString
-        drop(unsafe { CString::from_raw(text) });
 
         Ok(())
     }

@@ -22,7 +22,7 @@ vexide-panic = { version = "0.1.4", path = "packages/vexide-panic", default-feat
 vexide-startup = { version = "0.3.1", path = "packages/vexide-startup", default-features = false }
 vexide-graphics = { version = "0.1.4", path = "packages/vexide-graphics", default-features = false }
 vexide-macro = { version = "0.3.0", path = "packages/vexide-macro", default-features = false }
-vex-sdk = "0.22.0"
+vex-sdk = "0.23.0"
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 
 [workspace.lints.rust]

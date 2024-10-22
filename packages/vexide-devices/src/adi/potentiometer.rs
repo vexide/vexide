@@ -28,28 +28,13 @@ impl AdiPotentiometer {
     }
 
     /// Get the type of ADI potentiometer device.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
-    pub fn potentiometer_type(&self) -> Result<PotentiometerType, PortError> {
-        // Configuration check not necessary since we don't fetch from the SDK.
-        self.port.validate_expander()?;
-
-        Ok(self.potentiometer_type)
+    pub const fn potentiometer_type(&self) -> PotentiometerType {
+        self.potentiometer_type
     }
 
     /// Get the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
-    pub fn max_angle(&self) -> Result<f64, PortError> {
-        Ok(self.potentiometer_type()?.max_angle())
+    pub const fn max_angle(&self) -> f64 {
+        self.potentiometer_type().max_angle()
     }
 
     /// Gets the current potentiometer angle in degrees.
