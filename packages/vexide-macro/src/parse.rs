@@ -44,10 +44,10 @@ impl From<Attrs> for MacroOpts {
                     for attr in banner.attrs {
                         match attr {
                             BannerAttribute::Enabled(enabled) => {
-                                opts.banner_enabled = enabled.as_bool()
+                                opts.banner_enabled = enabled.as_bool();
                             }
                             BannerAttribute::Theme(theme) => {
-                                opts.banner_theme = Some(theme.into_ident())
+                                opts.banner_theme = Some(theme.into_ident());
                             }
                         }
                     }

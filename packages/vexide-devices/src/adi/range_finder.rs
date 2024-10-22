@@ -17,7 +17,14 @@ pub struct AdiRangeFinder {
 }
 
 impl AdiRangeFinder {
-    /// Create a new rangefinder sensor from a output and input [`AdiPort`].
+    /// Create a new rangefinder sensor from an output and input [`AdiPort`].
+    ///
+    /// # Errors
+    ///
+    /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s,
+    ///   returns [`RangeFinderError::ExpanderPortMismatch`].
+    /// - If the output port is not odd (A, C, E, G), returns [`RangeFinderError::BadInputPort`].
+    /// - If the input port is not the next after the top port, returns [`RangeFinderError::BadOutputPort`].
     pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, RangeFinderError> {
         let output_port = ports.0;
         let input_port = ports.1;
@@ -42,9 +49,14 @@ impl AdiRangeFinder {
         })
     }
 
-    /// Get the distance reading of the rangefinder sensor in centimeters.
+    /// Returns the distance reading of the rangefinder sensor in centimeters.
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
+    ///
+    /// # Errors
+    ///
+    /// - A [`RangeFinderError::NoReading`] error is returned if the rangefinder cannot find a valid reading.
+    /// - A [`RangeFinderError::Port`] error is returned if the ADI device could not be accessed.
     pub fn distance(&self) -> Result<u16, RangeFinderError> {
         self.output_port.validate_expander()?;
         self.output_port.configure(self.device_type());

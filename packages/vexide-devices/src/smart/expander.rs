@@ -1,4 +1,4 @@
-//! ADI expander module support.
+//! ADI Expander Module
 //!
 //! The ADI expander API is similar to that of [`Peripherals`](crate::peripherals::Peripherals).
 //! A main difference between the two is that ADI expanders can be created safely without returning an option.
@@ -7,7 +7,7 @@
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::adi::AdiPort;
 
-/// Represents an ADI expander module plugged into a smart port.
+/// An ADI expander module plugged into a smart port.
 ///
 /// ADI Expanders allow a smart port to be used as an "adapter" for eight additional ADI slots
 /// if all onboard [`AdiPort`]s are used.
@@ -37,7 +37,8 @@ pub struct AdiExpander {
 }
 
 impl AdiExpander {
-    /// Create a new expander from a smart port index.
+    /// Creates a new expander from a [`SmartPort`].
+    #[must_use]
     pub const fn new(port: SmartPort) -> Self {
         unsafe {
             Self {

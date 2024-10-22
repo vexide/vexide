@@ -35,8 +35,8 @@ impl<T: Termination, E: Debug> Termination for Result<T, E> {
 /// This function will not instantly exit the program,
 /// but will instead wait 3ms to force the serial buffer to flush.
 pub fn exit() -> ! {
-    let exit_time = Instant::now();
     const FLUSH_TIMEOUT: Duration = Duration::from_millis(15);
+    let exit_time = Instant::now();
     unsafe {
         // Force the serial buffer to flush
         while exit_time.elapsed() < FLUSH_TIMEOUT {
