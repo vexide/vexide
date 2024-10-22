@@ -485,10 +485,20 @@ impl Screen {
     pub const HEADER_HEIGHT: i16 = 32;
 
     /// The horizontal resolution of the display.
+    #[cfg(not(target_env = "exp"))]
     pub const HORIZONTAL_RESOLUTION: i16 = 480;
 
     /// The vertical resolution of the writable part of the display.
+    #[cfg(not(target_env = "exp"))]
     pub const VERTICAL_RESOLUTION: i16 = 240;
+
+    /// The horizontal resolution of the display.
+    #[cfg(target_env = "exp")]
+    pub const HORIZONTAL_RESOLUTION: i16 = 160;
+
+    /// The vertical resolution of the writable part of the display.
+    #[cfg(target_env = "exp")]
+    pub const VERTICAL_RESOLUTION: i16 = 108;
 
     /// The amount of time it takes for the brain display to fully re-render.
     /// The brain display is 60fps.
