@@ -65,46 +65,46 @@ pub trait Float: Sized {
     /// Returns the largest integer less than or equal to `self`.
     ///
     /// This function always returns the precise result.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn floor(self) -> Self;
 
     /// Returns the smallest integer greater than or equal to `self`.
     ///
     /// This function always returns the precise result.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn ceil(self) -> Self;
 
     /// Returns the nearest integer to `self`. If a value is half-way between two
     /// integers, round away from `0.0`.
     ///
     /// This function always returns the precise result.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn round(self) -> Self;
 
     /// Returns the nearest integer to a number. Rounds half-way cases to the number
     /// with an even least significant digit.
     ///
     /// This function always returns the precise result.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn round_ties_even(self) -> Self;
 
     /// Returns the integer part of `self`.
     /// This means that non-integer numbers are always truncated towards zero.
     ///
     /// This function always returns the precise result.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn trunc(self) -> Self;
 
     /// Returns the fractional part of `self`.
     ///
     /// This function always returns the precise result.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn fract(self) -> Self;
 
     /// Computes the absolute value of `self`.
     ///
     /// This function always returns the precise result.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn abs(self) -> Self;
 
     /// Returns a number that represents the sign of `self`.
@@ -112,7 +112,7 @@ pub trait Float: Sized {
     /// - `1.0` if the number is positive, `+0.0` or `INFINITY`
     /// - `-1.0` if the number is negative, `-0.0` or `NEG_INFINITY`
     /// - NaN if the number is NaN
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn signum(self) -> Self;
 
     /// Returns a number composed of the magnitude of `self` and the sign of
@@ -123,7 +123,7 @@ pub trait Float: Sized {
     /// `sign` is returned. Note, however, that conserving the sign bit on NaN
     /// across arithmetical operations is not generally guaranteed.
     /// See [explanation of NaN as a special value](primitive@f32) for more info.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn copysign(self, sign: Self) -> Self;
 
     /// Fused multiply-add. Computes `(self * a) + b` with only one rounding
@@ -133,7 +133,7 @@ pub trait Float: Sized {
     /// the target architecture has a dedicated `fma` CPU instruction. However,
     /// this is not always true, and will be heavily dependant on designing
     /// algorithms with specific target hardware in mind.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn mul_add(self, a: Self, b: Self) -> Self;
 
     /// Calculates Euclidean division, the matching method for `rem_euclid`.
@@ -142,7 +142,7 @@ pub trait Float: Sized {
     /// `self = n * rhs + self.rem_euclid(rhs)`.
     /// In other words, the result is `self / rhs` rounded to the integer `n`
     /// such that `self >= n * rhs`.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn div_euclid(self, rhs: Self) -> Self;
 
     /// Calculates the least nonnegative remainder of `self (mod rhs)`.
@@ -160,7 +160,7 @@ pub trait Float: Sized {
     ///
     /// The result of this operation is guaranteed to be the rounded
     /// infinite-precision result.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn rem_euclid(self, rhs: Self) -> Self;
 
     /// Raises a number to an integer power.
@@ -172,7 +172,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn powi(self, n: i32) -> Self;
 
     /// Raises a number to a floating point power.
@@ -180,7 +180,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn powf(self, n: Self) -> Self;
 
     /// Returns the square root of a number.
@@ -192,7 +192,7 @@ pub trait Float: Sized {
     /// The result of this operation is guaranteed to be the rounded
     /// infinite-precision result. It is specified by IEEE 754 as `squareRoot`
     /// and guaranteed not to change.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn sqrt(self) -> Self;
 
     /// Returns `e^(self)`, (the exponential function).
@@ -200,7 +200,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn exp(self) -> Self;
 
     /// Returns `2^(self)`.
@@ -208,7 +208,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn exp2(self) -> Self;
 
     /// Returns the natural logarithm of the number.
@@ -216,7 +216,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn ln(self) -> Self;
 
     /// Returns the logarithm of the number with respect to an arbitrary base.
@@ -228,7 +228,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn log(self, base: Self) -> Self;
 
     /// Returns the base 2 logarithm of the number.
@@ -236,7 +236,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn log2(self) -> Self;
 
     /// Returns the base 10 logarithm of the number.
@@ -244,7 +244,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn log10(self) -> Self;
 
     /// The positive difference of two numbers.
@@ -265,7 +265,7 @@ pub trait Float: Sized {
                 difference, consider using that expression or the C function \
                 `fdim`, depending on how you wish to handle NaN."
     )]
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn abs_sub(self, other: Self) -> Self;
 
     /// Returns the cube root of a number.
@@ -273,7 +273,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn cbrt(self) -> Self;
 
     /// Compute the distance between the origin and a point (`x`, `y`) on the
@@ -284,7 +284,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn hypot(self, other: Self) -> Self;
 
     /// Computes the sine of a number (in radians).
@@ -292,7 +292,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn sin(self) -> Self;
 
     /// Computes the cosine of a number (in radians).
@@ -300,7 +300,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn cos(self) -> Self;
 
     /// Computes the tangent of a number (in radians).
@@ -308,7 +308,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn tan(self) -> Self;
 
     /// Computes the arcsine of a number. Return value is in radians in
@@ -318,7 +318,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn asin(self) -> Self;
 
     /// Computes the arccosine of a number. Return value is in radians in
@@ -328,7 +328,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn acos(self) -> Self;
 
     /// Computes the arctangent of a number. Return value is in radians in the
@@ -337,7 +337,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn atan(self) -> Self;
 
     /// Computes the four quadrant arctangent of `self` (`y`) and `other` (`x`) in radians.
@@ -350,7 +350,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn atan2(self, other: Self) -> Self;
 
     /// Simultaneously computes the sine and cosine of the number, `x`. Returns
@@ -359,7 +359,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn sin_cos(self) -> (Self, Self);
 
     /// Returns `e^(self) - 1` in a way that is accurate even if the
@@ -368,7 +368,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn exp_m1(self) -> Self;
 
     /// Returns `ln(1+n)` (natural logarithm) more accurately than if
@@ -377,7 +377,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn ln_1p(self) -> Self;
 
     /// Hyperbolic sine function.
@@ -385,7 +385,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn sinh(self) -> Self;
 
     /// Hyperbolic cosine function.
@@ -393,7 +393,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn cosh(self) -> Self;
 
     /// Hyperbolic tangent function.
@@ -401,7 +401,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn tanh(self) -> Self;
 
     /// Inverse hyperbolic sine function.
@@ -409,7 +409,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn asinh(self) -> Self;
 
     /// Inverse hyperbolic cosine function.
@@ -417,7 +417,7 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn acosh(self) -> Self;
 
     /// Inverse hyperbolic tangent function.
@@ -425,6 +425,6 @@ pub trait Float: Sized {
     /// # Platform-specific precision
     ///
     /// The precision of this function varies by platform and Rust version.
-    #[must_use]
+    #[must_use = "method returns a new number and does not mutate the original value"]
     fn atanh(self) -> Self;
 }
