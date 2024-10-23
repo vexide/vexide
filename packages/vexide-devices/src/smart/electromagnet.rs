@@ -1,7 +1,7 @@
 //! V5 Electromagnet
 //!
 //! The V5 electromagnet is a device unique to the V5 workcell kit. It is a simple
-//! device that produces an electric field at a provided power level.
+//! device that produces a magnetic field at a provided power level.
 
 use core::time::Duration;
 
