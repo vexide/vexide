@@ -1,4 +1,56 @@
-//! Inertial sensor (IMU) device.
+//! Inertial Sensor (IMU)
+//!
+//! This module provides an interface to interact with the V5 Inertial Sensor,
+//! which combines a 3-axis accelerometer and 3-axis gyroscope for precise motion tracking
+//! and navigation capabilities.
+//!
+//! # Hardware Overview
+//!
+//! The IMU's integrated accelerometer measures linear acceleration along three axes:
+//! - X-axis: Forward/backward motion
+//! - Y-axis: Side-to-side motion
+//! - Z-axis: Vertical motion
+//!
+//! These accelerometer readings include the effect of gravity, which can be useful for
+//! determining the sensor's orientation relative to the ground.
+//!
+//! The IMU also has a gyroscope that measures rotational velocity and position on three axes:
+//! - Roll: Rotation around X-axis
+//! - Pitch: Rotation around Y-axis
+//! - Yaw: Rotation around Z-axis
+//!
+//! Like all other smart devices, VEXos will process sensor updates every 10mS.
+//!
+//! # Coordinate System
+//!
+//! The IMU uses a NED (North-East-Down) right-handed coordinate system:
+//! - X-axis: Positive towards the front of the robot (North)
+//! - Y-axis: Positive towards the right of the robot (East)
+//! - Z-axis: Positive downwards (towards the ground)
+//!
+//! This NED convention means that when the robot is on a flat surface:
+//! - The Z acceleration will read approximately +9.81 m/s² (gravity)
+//! - Positive roll represents clockwise rotation around the X-axis (when looking North)
+//! - Positive pitch represents nose-down rotation around the Y-axis
+//! - Positive yaw represents clockwise rotation around the Z-axis (when viewed from above)
+//!
+//! # Calibration
+//!
+//! The IMU requires a calibration period to establish its reference frame in one of six
+//! possible orientations (described by [`InertialOrientation`]). The sensor must be mounted
+//! flat in one of these orientations. Readings will be unpredictable if the IMU is mounted at
+//! an angle or was moving/disturbed during calibration.
+//!
+//! In addition, physical pressure on the sensor's housing or static electricity can cause issues
+//! with the onboard gyroscope, so pressure-mounting the IMU or placing the IMU low to the ground
+//! is undesirable.
+//!
+//! # Disconnect Behavior
+//!
+//! If the IMU loses power due to a disconnect — even momentarily, all calibration data will be lost
+//! and VEXos will re-initiate calibration automatically. The robot cannot be moving when this occurs
+//! due to the aformentioned unpredictable behavior. As such, it is vital that the IMU maintain a stable
+//! connection to the brain and voltage supply during operation.
 
 use core::{
     marker::PhantomData,
@@ -23,7 +75,7 @@ use crate::{
     PortError,
 };
 
-/// An internal sensor (IMU) plugged into a smart port.
+/// An inertial sensor (IMU) plugged into a smart port.
 #[derive(Debug, PartialEq)]
 pub struct InertialSensor {
     port: SmartPort,

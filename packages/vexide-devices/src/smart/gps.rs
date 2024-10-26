@@ -1,4 +1,25 @@
-//! GPS sensor device.
+//! GPS Sensor
+//!
+//! This module provides an interface to interact with the VEX V5 GPS Sensor,
+//! which uses computer vision and an inertial measurement unit (IMU) to provide absolute
+//! position tracking within a VEX Robotics Competition field.
+//!
+//! # Hardware Description
+//!
+//! The GPS sensor combines a monochrome camera and an IMU for robust position tracking
+//! through visual odometry. It works by detecting QR-like patterns on the field perimeter,
+//! using both the pattern sequence's and apparent size for position determination. The
+//! integrated IMU provides motion tracking for position estimation when visual tracking
+//! is unavailable or unreliable.
+//!
+//! The sensor has specific operating ranges: it requires a minimum
+//! distance of 20 inches from the field perimeter for reliable readings, has a deadzone
+//! between 0-13.5 inches, and maintains accuracy up to 12 feet from the perimeter.
+//!
+//! Sensor fusion between the camera and IMU helps maintain position tracking through
+//! dead zones and areas of inconsistent visual detection.
+//!
+//! Further information about the sensor's method of operation can be found in [IFI's patent](https://docs.google.com/viewerng/viewer?url=https://patentimages.storage.googleapis.com/4f/74/30/eccf334da0ae38/WO2020219788A1.pdf).
 
 use core::{marker::PhantomData, time::Duration};
 

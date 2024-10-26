@@ -1,4 +1,4 @@
-//! ADI Expander Module
+//! ADI Expander
 //!
 //! The ADI expander API is similar to that of [`Peripherals`](crate::peripherals::Peripherals).
 //! A main difference between the two is that ADI expanders can be created safely without returning an option.

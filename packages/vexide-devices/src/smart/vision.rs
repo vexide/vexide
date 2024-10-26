@@ -16,8 +16,8 @@
 //!
 //! The Vision Sensor has USB for a direct connection to a computer, where it can be configured
 //! using VEX's proprietary vision utility tool to generate color signatures. The Vision Sensor
-//! also has WiFi Direct and can act as web server, allowing a live video feed of the camera
-//! from any computer equipped with a browser and WiFi.
+//! also has Wi-Fi Direct and can act as web server, allowing a live video feed of the camera
+//! from any computer equipped with a browser and Wi-Fi.
 
 extern crate alloc;
 

@@ -1,4 +1,24 @@
-//! Optical sensor device
+//! Optical Sensor
+//!
+//! This module provides an interface to interact with the V5 Optical Sensor, which combines
+//! ambient light sensing, color detection, proximity measurement, and gesture recognition
+//! capabilities.
+//!
+//! # Hardware Overview
+//!
+//! The optical sensor provides multi-modal optical sensing with an integrated white LED
+//! for low-light operation.
+//!
+//! ## Color Detection
+//!
+//! Color data reported as RGB, HSV, and grayscale data, with optimal performance at
+//! distances under 100mm. The proximity sensing uses reflected light intensity, making
+//! readings dependent on both ambient lighting and target reflectivity.
+//!
+//! ## Gesture Detection
+//!
+//! The optical sensor can detect four distinct motions (up, down, left, right) of objects
+//! passing over the sensor.
 
 use core::time::Duration;
 

@@ -1,6 +1,17 @@
-//! Generic serial device module.
+//! Generic Serial Communication via Smartport
 //!
-//! Provides support for using [`SmartPort`]s as generic serial communication devices.
+//! This module provides an interface for using V5 Smart Ports as serial communication
+//! ports over RS-485. It allows bidirectional communication with any device that speaks
+//! serial over the V5's RS-485 interface.
+//!
+//! # Hardware Description
+//!
+//! V5 smart ports provide half-duplex RS-485 serial communication at up to an allowed
+//! 921600 baud for user programs.
+//!
+//! The ports supply 12.8V VCC nominally (VCC is wired directly to the V5's battery lines,
+//! providing voltage somewhere in the range of 12-14V). Writes to the serialport are buffered,
+//! but are automatically flushed by VEXos as fast as possible (down to ~10µs or so).
 
 use no_std_io::io;
 use snafu::Snafu;
@@ -15,6 +26,9 @@ use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
 /// A smart port configured as a generic RS-485 serial port.
+///
+/// This struct implements the [`Read`] and [`Write`] traits from vexide's `io` module
+/// for reading/writing to the serial port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct SerialPort {
     port: SmartPort,

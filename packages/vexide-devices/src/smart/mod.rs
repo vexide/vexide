@@ -11,11 +11,14 @@
 //!
 //! # Smart Port Devices
 //!
-//! Most devices can be created with a `new` function that generally takes a port number along with other
-//! device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
-//! using the [`peripherals`](crate::peripherals) API.
+//! Most devices can be created with a `new` function that generally takes a [`SmartPort`] instance from [`Peripherals`]
+//! along with other device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
+//! using the [`peripherals`] API.
 //!
 //! More specific info for each device is available in their respective modules.
+//!
+//! [`peripherals`]: crate::peripherals
+//! [`Peripherals`]: crate::peripherals::Peripherals
 
 pub mod distance;
 pub mod expander;
@@ -226,7 +229,7 @@ impl SmartPort {
     }
 }
 
-/// Represents a possible type of device that can be registered on a [`SmartPort`].
+/// A possible type of device that can be plugged into a [`SmartPort`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum SmartDeviceType {
