@@ -1,4 +1,4 @@
-//! V5 Smart Motors
+//! Smart Motors
 
 use core::time::Duration;
 

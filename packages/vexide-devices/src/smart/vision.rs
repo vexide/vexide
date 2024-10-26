@@ -1,4 +1,4 @@
-//! Vision sensor device module.
+//! Vision Sensor
 //!
 //! This module provides an interface for interacting with the VEX Vision Sensor.
 //!

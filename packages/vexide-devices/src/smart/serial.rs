@@ -1,4 +1,4 @@
-//! Generic Serial Communication via Smartport
+//! Generic Serial Communication
 //!
 //! This module provides an interface for using V5 Smart Ports as serial communication
 //! ports over RS-485. It allows bidirectional communication with any device that speaks
