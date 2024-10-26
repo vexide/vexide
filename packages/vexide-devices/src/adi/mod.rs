@@ -78,7 +78,7 @@ impl AdiPort {
         self.number
     }
 
-    /// Returns the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) smart port, or `None` if this port is not
+    /// Returns the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) Smart Port, or `None` if this port is not
     /// associated with an expander.
     #[must_use]
     pub const fn expander_number(&self) -> Option<u8> {
@@ -129,7 +129,7 @@ impl AdiPort {
 
 impl<T: AdiDevice<PortNumberOutput = u8>> From<T> for AdiPort {
     fn from(device: T) -> Self {
-        // SAFETY: We can do this, since we ensure that the old smart port was disposed of.
+        // SAFETY: We can do this, since we ensure that the old Smart Port was disposed of.
         // This can effectively be thought as a move out of the device's private `port` field.
         unsafe { Self::new(device.port_number(), device.expander_port_number()) }
     }

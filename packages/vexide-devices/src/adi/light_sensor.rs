@@ -41,7 +41,7 @@ impl AdiLightSensor {
     /// Returns the 12-bit brightness reading of the sensor.
     ///
     /// This is a raw 12-bit value from [0, 4095] representing the voltage level from
-    /// 0-%V measured by the V5 brain's ADC.
+    /// 0-%V measured by the V5 Brain's ADC.
     ///
     /// A low number (less voltage) represents a **brighter** light source.
     ///

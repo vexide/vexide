@@ -16,7 +16,7 @@ pub enum LogicLevel {
     /// ADI ports operate on 3.3V logic, so this value indicates a voltage of 3.3V or above.
     High,
 
-    /// The low digital signal.
+    /// A low digital signal.
     ///
     /// ADI ports operate on 3.3V logic, so this value indicates a voltage below 3.3V.
     Low,

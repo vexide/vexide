@@ -28,6 +28,8 @@ Before releasing:
 - The conditions upon which functions return errors are now documented. (#155).
 - Implemented the `Copy` trait for `BannerTheme`.
 - Added a getter that retrieves a `Controller`'s identifier. (#189)
+- Added support for controllers in `DynamicPeripherals`. (#196)
+- Added the ability to return Smart Ports, ADI ports, the display, and controllers to `DynamicPeripherals`. (#196)
 
 ### Fixed
 

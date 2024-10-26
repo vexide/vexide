@@ -20,25 +20,25 @@ pub struct ButtonState {
 }
 
 impl ButtonState {
-    /// Returns true if the button state is [`Pressed`](ButtonState::Pressed).
+    /// Returns `true` if this button is currently being pressed.
     #[must_use]
     pub const fn is_pressed(&self) -> bool {
         self.is_pressed
     }
 
-    /// Returns true if the button state is [`Released`](ButtonState::Released).
+    /// Returns `true` if this button is currently released (not being pressed).
     #[must_use]
     pub const fn is_released(&self) -> bool {
         !self.is_pressed
     }
 
-    /// Returns true if the button state was released in the previous call to [`Controller::state`], but is now pressed.
+    /// Returns `true` if the button state was released in the previous call to [`Controller::state`], but is now pressed.
     #[must_use]
     pub const fn is_now_pressed(&self) -> bool {
         !self.prev_is_pressed && self.is_pressed
     }
 
-    /// Returns true if the button state was pressed in the previous call to [`Controller::state`], but is now released.
+    /// Returns `true` if the button state was pressed in the previous call to [`Controller::state`], but is now released.
     #[must_use]
     pub const fn is_now_released(&self) -> bool {
         self.prev_is_pressed && !self.is_pressed
@@ -224,7 +224,7 @@ impl ControllerScreen {
 }
 
 /// Represents an identifier for one of the two possible controllers
-/// connected to the V5 brain.
+/// connected to the V5 Brain.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControllerId {
     /// Primary ("Master") Controller
@@ -249,7 +249,7 @@ pub enum ControllerConnection {
     /// No controller is connected.
     Offline,
 
-    /// Controller is tethered through a wired smart port connection.
+    /// Controller is tethered through a wired Smart Port connection.
     Tethered,
 
     /// Controller is wirelessly connected over a VEXNet radio
@@ -495,7 +495,7 @@ impl Controller {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the controller.
 pub enum ControllerError {
-    /// The controller is not connected to the brain.
+    /// The controller is not connected to the Brain.
     Offline,
 
     /// A NUL (0x00) character was found in a string that may not contain NUL characters.

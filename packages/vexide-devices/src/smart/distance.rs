@@ -1,4 +1,24 @@
-//! Distance sensor device.
+//! Distance Sensor
+//!
+//! This module provides an interface to interact with the VEX V5 Distance Sensor,
+//! which uses a Class 1 laser to measure the distance, object size classification, and
+//! relative velocity of a single object.
+//!
+//! # Hardware Overview
+//!
+//! The sensor uses a narrow-beam Class 1 laser (similar to phone proximity sensors)
+//! for precise detection. It measures distances from 20mm to 2000mm with
+//! varying accuracy (±15mm below 200mm, ±5% above 200mm).
+//!
+//! The sensor can classify detected objects by relative size, helping
+//! distinguish between walls and field elements. It also measures the relative approach
+//! velocity between the sensor and target.
+//!
+//! Due to the use of a laser, measurements are single-point and highly directional,
+//! meaning that objects will only be detected when they are directly in front of the
+//! sensor's field of view.
+//!
+//! Like all other Smart devices, VEXos will process sensor updates every 10mS.
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -9,9 +29,7 @@ use vex_sdk::{
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
-/// A distance sensor plugged into a smart port.
-///
-/// Distance sensors can only keep track of one object at a time.
+/// A distance sensor plugged into a Smart Port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct DistanceSensor {
     port: SmartPort,

@@ -1,4 +1,4 @@
-//! Brain display and touch functions.
+//! Brain Display & Touch Input
 //!
 //! Contains user calls to the V5 Brain display for touching and displaying graphics.
 //! The [`Fill`] trait can be used to draw filled in shapes to the display
@@ -492,8 +492,8 @@ impl Display {
     /// The vertical resolution of the writable part of the display.
     pub const VERTICAL_RESOLUTION: i16 = 240;
 
-    /// The amount of time it takes for the brain display to fully re-render.
-    /// The brain display is 60fps.
+    /// The amount of time it takes for the Brain display to fully re-render.
+    /// The Brain display is 60fps.
     pub const REFRESH_INTERVAL: Duration = Duration::from_micros(16667);
 
     /// Create a new display.

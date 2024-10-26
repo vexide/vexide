@@ -1,21 +1,24 @@
 //! Smart Ports & Devices
 //!
-//! This module provides abstractions over device access connected through VEX V5 Smart Ports. This
+//! This module provides abstractions for devices connected through VEX Smart Ports. This
 //! includes motors, many common sensors, vexlink, and raw serial access.
 //!
 //! # Hardware Overview
 //!
-//! The V5 brain features 21 RJ9 4p4c connector ports (known as "Smart Ports") for communicating with
-//! newer V5 peripherals. Smart port devices have a variable sample rate (unlike ADI, which is limited
+//! The V5 Brain features 21 RJ9 4p4c connector ports (known as "Smart Ports") for communicating with
+//! newer V5 peripherals. Smart Port devices have a variable sample rate (unlike ADI, which is limited
 //! to 10ms), and can support basic data transfer over serial.
 //!
 //! # Smart Port Devices
 //!
-//! Most devices can be created with a `new` function that generally takes a port number along with other
-//! device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
-//! using the [`peripherals`](crate::peripherals) API.
+//! Most devices can be created with a `new` function that generally takes a [`SmartPort`] instance from [`Peripherals`]
+//! along with other device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
+//! using the [`peripherals`] API.
 //!
 //! More specific info for each device is available in their respective modules.
+//!
+//! [`peripherals`]: crate::peripherals
+//! [`Peripherals`]: crate::peripherals::Peripherals
 
 pub mod distance;
 pub mod expander;
@@ -47,7 +50,7 @@ pub use vision::VisionSensor;
 
 use crate::PortError;
 
-/// Defines common functionality shared by all smart port devices.
+/// Defines common functionality shared by all Smart Port devices.
 pub trait SmartDevice {
     /// Returns the port number of the [`SmartPort`] this device is registered on.
     ///
@@ -139,7 +142,7 @@ pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<
     Ok(())
 }
 
-/// Represents a smart port on a V5 Brain
+/// Represents a Smart Port on a V5 Brain
 #[derive(Debug, Eq, PartialEq)]
 pub struct SmartPort {
     /// The number of the port (port number).
@@ -149,7 +152,7 @@ pub struct SmartPort {
 }
 
 impl SmartPort {
-    /// Creates a new smart port on a specified index.
+    /// Creates a new Smart Port on a specified index.
     ///
     /// # Safety
     ///
@@ -161,7 +164,7 @@ impl SmartPort {
     /// # Examples
     ///
     /// ```
-    /// // Create a new smart port at index 1.
+    /// // Create a new Smart Port at index 1.
     /// // This is unsafe! You are responsible for ensuring that only one device registered on a
     /// // single port index.
     /// let my_port = unsafe { SmartPort::new(1) };
@@ -220,13 +223,13 @@ impl SmartPort {
         validate_port(self.number(), device_type)
     }
 
-    /// Returns the raw handle of the underlying smart device connected to this port.
+    /// Returns the raw handle of the underlying Smart device connected to this port.
     pub(crate) unsafe fn device_handle(&self) -> V5_DeviceT {
         unsafe { vexDeviceGetByIndex(self.index()) }
     }
 }
 
-/// Represents a possible type of device that can be registered on a [`SmartPort`].
+/// A possible type of device that can be plugged into a [`SmartPort`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum SmartDeviceType {
@@ -271,7 +274,7 @@ pub enum SmartDeviceType {
 
     /// ADI Expander
     ///
-    /// This variant is also internally to represent the brain's onboard ADI slots.
+    /// This variant is also internally to represent the Brain's onboard ADI slots.
     Adi,
 
     /// Generic Serial Port
@@ -328,12 +331,12 @@ impl From<SmartDeviceType> for V5_DeviceType {
     }
 }
 
-/// Represents a timestamp on a smart device's internal clock.
+/// Represents a timestamp on a Smart device's internal clock.
 ///
 /// This type offers no guarantees that the device's clock is in sync with the internal
-/// clock of the brain, and thus cannot be safely compared with [`vexide_core::time::Instant`]s.
+/// clock of the Brain, and thus cannot be safely compared with [`vexide_core::time::Instant`]s.
 ///
-/// There is additionally no guarantee that this is in sync with other smart devices,
+/// There is additionally no guarantee that this is in sync with other Smart devices,
 /// or even the same device if a disconnect occurred causing the clock to reset. As such,
 /// this is effectively a wrapper of `u32`.
 ///

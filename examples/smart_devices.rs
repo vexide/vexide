@@ -8,17 +8,17 @@ use vexide::prelude::*;
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
     let controller = peripherals.primary_controller;
-    // Create two new motors on smart ports 1 and 10.
+    // Create two new motors on Smart Ports 1 and 10.
     let mut left_motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     let mut right_motor = Motor::new(peripherals.port_10, Gearset::Green, Direction::Forward);
 
-    // Create a new inertial sensor (IMU) on smart port 6.
+    // Create a new inertial sensor (IMU) on Smart Port 6.
     // We don't have to handle a result because this constructor is infallible.
     let mut imu = InertialSensor::new(peripherals.port_6);
     // Calibrate the IMU.
     imu.calibrate().await.unwrap();
 
-    // Create a new radio link on smart port 15 with the id "example".
+    // Create a new radio link on Smart Port 15 with the id "example".
     let mut link = RadioLink::open(
         peripherals.port_15,
         "example",
@@ -29,7 +29,7 @@ async fn main(peripherals: Peripherals) {
     // We dont have to flush because VEXOs does that immediately.
     link.write(b"Hello, world!").unwrap();
 
-    // Create a new distance sensor on smart port 16.
+    // Create a new distance sensor on Smart Port 16.
     // This constructor is infallible.
     let distance = DistanceSensor::new(peripherals.port_16);
 
