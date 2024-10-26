@@ -321,6 +321,12 @@ impl Controller {
         }
     }
 
+    /// Returns the identifier of this controller.
+    #[must_use]
+    pub const fn id(&self) -> ControllerId {
+        self.id
+    }
+
     /// Returns the current state of all buttons and joysticks on the controller.
     ///
     /// # Note
