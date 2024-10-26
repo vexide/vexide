@@ -58,7 +58,7 @@ impl Electromagnet {
         Ok(())
     }
 
-    /// Returns the user-sets power level as a number from [-1.0, 1.0].
+    /// Returns the user-set power level as a number from [-1.0, 1.0].
     ///
     /// # Errors
     ///
