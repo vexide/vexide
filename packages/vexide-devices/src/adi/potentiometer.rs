@@ -14,6 +14,7 @@ pub struct AdiPotentiometer {
 
 impl AdiPotentiometer {
     /// Create a new potentiometer from an [`AdiPort`].
+    #[must_use]
     pub fn new(port: AdiPort, potentiometer_type: PotentiometerType) -> Self {
         port.configure(match potentiometer_type {
             PotentiometerType::Legacy => AdiDeviceType::Potentiometer,
@@ -21,35 +22,42 @@ impl AdiPotentiometer {
         });
 
         Self {
-            port,
             potentiometer_type,
+            port,
         }
     }
 
-    /// Get the type of ADI potentiometer device.
+    /// Returns the type of ADI potentiometer device.
+    #[must_use]
     pub const fn potentiometer_type(&self) -> PotentiometerType {
         self.potentiometer_type
     }
 
-    /// Get the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
+    /// Returns the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
+    #[must_use]
     pub const fn max_angle(&self) -> f64 {
         self.potentiometer_type().max_angle()
     }
 
-    /// Gets the current potentiometer angle in degrees.
+    /// Returns the current potentiometer angle in degrees.
     ///
-    /// The original potentiometer rotates 250 degrees
-    /// thus returning an angle between 0-250 degrees.
-    /// Potentiometer V2 rotates 330 degrees
-    /// thus returning an angle between 0-330 degrees.
+    /// The original potentiometer rotates 250 degrees thus returning an angle between 0-250 degrees.
+    /// Potentiometer V2 rotates 330 degrees thus returning an angle between 0-330 degrees.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     pub fn angle(&self) -> Result<f64, PortError> {
         self.port.validate_expander()?;
         self.port.configure(self.device_type());
 
         Ok(
-            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } as f64
-                * self.potentiometer_type.max_angle()
-                / analog::ADC_MAX_VALUE as f64,
+            f64::from(unsafe {
+                vexDeviceAdiValueGet(self.port.device_handle(), self.port.index())
+            }) * self.potentiometer_type.max_angle()
+                / f64::from(analog::ADC_MAX_VALUE),
         )
     }
 }
@@ -72,7 +80,8 @@ impl PotentiometerType {
     /// Maximum angle for the V5-era potentiometer V2.
     pub const V2_MAX_ANGLE: f64 = 330.0;
 
-    /// Get the maximum angle measurement (in degrees) for this potentiometer type.
+    /// Returns the maximum angle measurement (in degrees) for this potentiometer type.
+    #[must_use]
     pub const fn max_angle(&self) -> f64 {
         match self {
             Self::Legacy => Self::LEGACY_MAX_ANGLE,

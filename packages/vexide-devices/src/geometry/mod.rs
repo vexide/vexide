@@ -38,12 +38,12 @@ impl<T> Point2<T> {
 }
 
 impl<T: Copy> Point2<T> {
-    /// Gets the point's x component.
+    /// Returns the point's x component.
     pub const fn x(&self) -> T {
         self.x
     }
 
-    /// Gets the point's y component.
+    /// Returns the point's y component.
     pub const fn y(&self) -> T {
         self.y
     }

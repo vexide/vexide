@@ -38,10 +38,8 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
     const LINE_HEIGHT: i16 = 20;
     const LINE_MAX_WIDTH: usize = 52;
 
-    display.set_render_mode(vexide_devices::display::RenderMode::Immediate);
-
-    fn draw_text(display: &mut Display, buffer: &str, line: i16) {
-        display.fill(
+    fn draw_text(screen: &mut Display, buffer: &str, line: i16) {
+        screen.fill(
             &Text::new(
                 buffer,
                 TextSize::Small,
@@ -53,6 +51,8 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
             Rgb::WHITE,
         );
     }
+
+    display.set_render_mode(vexide_devices::display::RenderMode::Immediate);
 
     let error_box_rect = Rect::new(
         Point2 {

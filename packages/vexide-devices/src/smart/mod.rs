@@ -15,7 +15,7 @@
 //! device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
 //! using the [`peripherals`](crate::peripherals) API.
 //!
-//! More specific info for each device is availible in their respective modules.
+//! More specific info for each device is available in their respective modules.
 
 pub mod distance;
 pub mod expander;
@@ -49,7 +49,7 @@ use crate::PortError;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {
-    /// Get the port number of the [`SmartPort`] this device is registered on.
+    /// Returns the port number of the [`SmartPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
     ///
@@ -61,7 +61,7 @@ pub trait SmartDevice {
     /// ```
     fn port_number(&self) -> u8;
 
-    /// Get the variant of [`SmartDeviceType`] that this device is associated with.
+    /// Returns the variant of [`SmartDeviceType`] that this device is associated with.
     ///
     /// # Examples
     ///
@@ -94,15 +94,23 @@ pub trait SmartDevice {
         SmartDeviceType::from(device_types[(self.port_number() - 1) as usize]) == self.device_type()
     }
 
-    /// Get the timestamp recorded by this device's internal clock.
+    /// Returns the timestamp recorded by this device's internal clock.
+    ///
+    /// # Errors
+    ///
+    /// Currently, this function never returns an error. This behavior should be considered unstable.
     fn timestamp(&self) -> Result<SmartDeviceTimestamp, PortError> {
         Ok(SmartDeviceTimestamp(unsafe {
-            vexDeviceGetTimestamp(vexDeviceGetByIndex((self.port_number() - 1) as u32))
+            vexDeviceGetTimestamp(vexDeviceGetByIndex(u32::from(self.port_number() - 1)))
         }))
     }
 
     /// Verify that the device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PortError`] if there is not a physical device of type [`SmartDevice::device_type`] in this [`SmartDevice`]'s port.
     fn validate_port(&self) -> Result<(), PortError> {
         validate_port(self.port_number(), self.device_type())
     }
@@ -158,11 +166,12 @@ impl SmartPort {
     /// // single port index.
     /// let my_port = unsafe { SmartPort::new(1) };
     /// ```
+    #[must_use]
     pub const unsafe fn new(number: u8) -> Self {
         Self { number }
     }
 
-    /// Get the number of the port.
+    /// Returns the number of the port.
     ///
     /// Ports are numbered starting from 1.
     ///
@@ -173,6 +182,7 @@ impl SmartPort {
     ///
     /// assert_eq!(my_port.number(), 1);
     /// ```
+    #[must_use]
     pub const fn number(&self) -> u8 {
         self.number
     }
@@ -181,7 +191,7 @@ impl SmartPort {
         (self.number - 1) as u32
     }
 
-    /// Get the type of device currently connected to this port.
+    /// Returns the type of device currently connected to this port.
     ///
     /// # Examples
     ///
@@ -190,6 +200,7 @@ impl SmartPort {
     ///
     /// println!("Type of device connected to port 1: {:?}", my_port.device_type());
     /// ```
+    #[must_use]
     pub fn device_type(&self) -> SmartDeviceType {
         let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
         unsafe {
@@ -201,11 +212,15 @@ impl SmartPort {
 
     /// Verify that a device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PortError`] if there is not a device of the specified type in this port.
     pub fn validate_type(&self, device_type: SmartDeviceType) -> Result<(), PortError> {
         validate_port(self.number(), device_type)
     }
 
-    /// Get the raw handle of the underlying smart device connected to this port.
+    /// Returns the raw handle of the underlying smart device connected to this port.
     pub(crate) unsafe fn device_handle(&self) -> V5_DeviceT {
         unsafe { vexDeviceGetByIndex(self.index()) }
     }
