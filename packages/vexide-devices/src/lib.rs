@@ -31,7 +31,6 @@ pub mod geometry;
 pub mod peripherals;
 pub mod position;
 pub mod smart;
-pub mod usd;
 
 use snafu::Snafu;
 
