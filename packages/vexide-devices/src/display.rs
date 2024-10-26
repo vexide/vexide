@@ -1,4 +1,4 @@
-//! Brain Display & Touchscreen
+//! Brain Display & Touch Input
 //!
 //! Contains user calls to the V5 Brain display for touching and displaying graphics.
 //! The [`Fill`] trait can be used to draw filled in shapes to the display

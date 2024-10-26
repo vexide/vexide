@@ -242,10 +242,10 @@ impl Peripherals {
     /// # Safety
     ///
     /// Creating new [`SmartPort`]s and [`Peripherals`] instances is unsafe due to the possibility of constructing
-    /// more than one device on the same port index, thereby allowing multiple mutable references to the same hardware
-    /// device.
+    /// more than one device on the same port index.
     ///
-    /// The caller must ensure that only one mutable reference to each port is used.
+    /// The caller must ensure that a given peripheral is not mutated concurrently as a result of more than one
+    /// instance existing.
     pub unsafe fn steal() -> Self {
         PERIPHERALS_TAKEN.store(true, core::sync::atomic::Ordering::Release);
         // SAFETY: caller must ensure that this call is safe
