@@ -12,8 +12,8 @@
 //! # Features
 //!
 //! - [`peripherals`]: Singleton-style peripheral access.
-//! - [`smart`]: Smart port communication with V5 devices.
-//! - [`adi`]: Three-wire port support for legacy devices.
+//! - [`smart`]: Smart ports and devices.
+//! - [`adi`]: Three-wire ports and devices.
 //! - [`battery`]: Battery API
 //! - [`display`]: Brain Display API
 //! - [`controller`]: Controller API
