@@ -20,25 +20,25 @@ pub struct ButtonState {
 }
 
 impl ButtonState {
-    /// Returns true if the button state is [`Pressed`](ButtonState::Pressed).
+    /// Returns `true` if this button is currently being pressed.
     #[must_use]
     pub const fn is_pressed(&self) -> bool {
         self.is_pressed
     }
 
-    /// Returns true if the button state is [`Released`](ButtonState::Released).
+    /// Returns `true` if this button is currently released (not being pressed).
     #[must_use]
     pub const fn is_released(&self) -> bool {
         !self.is_pressed
     }
 
-    /// Returns true if the button state was released in the previous call to [`Controller::state`], but is now pressed.
+    /// Returns `true` if the button state was released in the previous call to [`Controller::state`], but is now pressed.
     #[must_use]
     pub const fn is_now_pressed(&self) -> bool {
         !self.prev_is_pressed && self.is_pressed
     }
 
-    /// Returns true if the button state was pressed in the previous call to [`Controller::state`], but is now released.
+    /// Returns `true` if the button state was pressed in the previous call to [`Controller::state`], but is now released.
     #[must_use]
     pub const fn is_now_released(&self) -> bool {
         self.prev_is_pressed && !self.is_pressed

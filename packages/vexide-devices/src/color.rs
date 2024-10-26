@@ -1,5 +1,7 @@
-//! Generic RGB8 color type and conversion trait.
-//! The [`Rgb`] and [`IntoRgb`] types are used in multiple places in the library to represent colors.
+//! RGB Color Type
+//!
+//! The [`Rgb`] struct provides a wrapper for devices dealing with colors in this crate, including the
+//! [Optical Sensor](crate::smart::optical), [Vision Sensor](crate::smart::vision), and [Display](crate::display).
 //!
 //! [`IntoRgb`] is a trait that allows for easy conversion between [`Rgb`] and the VEXos 0rgb format.
 

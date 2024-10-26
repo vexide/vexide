@@ -1,4 +1,4 @@
-//! Brain display and touch functions.
+//! Brain Display & Touchscreen
 //!
 //! Contains user calls to the V5 Brain display for touching and displaying graphics.
 //! The [`Fill`] trait can be used to draw filled in shapes to the display
@@ -610,7 +610,7 @@ impl Display {
     ///
     /// # Errors
     ///
-    /// A [`ScreenError::BufferSize`] error is returned if `buf` does not have the correct number of bytes
+    /// A [`DisplayError::BufferSize`] error is returned if `buf` does not have the correct number of bytes
     /// to fill the specified region.
     pub fn draw_buffer<T, I>(
         &mut self,

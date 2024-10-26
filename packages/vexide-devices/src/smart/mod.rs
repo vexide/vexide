@@ -1,6 +1,6 @@
 //! Smart Ports & Devices
 //!
-//! This module provides abstractions over device access connected through VEX V5 Smart Ports. This
+//! This module provides abstractions for devices connected through VEX smart ports. This
 //! includes motors, many common sensors, vexlink, and raw serial access.
 //!
 //! # Hardware Overview

@@ -1,3 +1,5 @@
+//! Robot Battery
+//!
 //! Utilities for getting information about the robot's battery.
 
 use vex_sdk::{
