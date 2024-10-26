@@ -260,6 +260,11 @@ impl DynamicPeripherals {
         let port_index = port_number as usize - 1;
         self.smart_ports[port_index].take()
     }
+    /// Returns a [`SmartPort`] to the dynamic peripherals.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the provided port is outside the range 1-21.
     pub fn return_smart_port(&mut self, port: SmartPort) {
         let port_index = port.number() as usize - 1;
         self.smart_ports[port_index] = Some(port);
@@ -275,6 +280,11 @@ impl DynamicPeripherals {
         let port_number = port_number as usize - 1;
         self.adi_slots[port_number].take()
     }
+    /// Returns an [`AdiPort`] to the dynamic peripherals.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the provided port is outside the range 1-8.
     pub fn return_adi_port(&mut self, port: AdiPort) {
         let port_number = port.number() as usize - 1;
         self.adi_slots[port_number] = Some(port);
@@ -284,19 +294,25 @@ impl DynamicPeripherals {
     pub fn take_display(&mut self) -> Option<Display> {
         self.display.take()
     }
+    /// Returns a [`Display`] to the dynamic peripherals.
     pub fn return_display(&mut self, display: Display) {
         self.display = Some(display);
     }
 
+    /// Creates a primary controller only if one has not been created before.
     pub fn take_primary_controller(&mut self) -> Option<Controller> {
         self.primary_controller.take()
     }
+    /// Returns a primary controller to the dynamic peripherals.
     pub fn return_primary_controller(&mut self, controller: Controller) {
         self.primary_controller = Some(controller);
     }
+
+    /// Creates a partner controller only if one has not been created before.
     pub fn take_partner_controller(&mut self) -> Option<Controller> {
         self.partner_controller.take()
     }
+    /// Returns a partner controller to the dynamic peripherals.
     pub fn return_partner_controller(&mut self, controller: Controller) {
         self.partner_controller = Some(controller);
     }
