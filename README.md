@@ -16,6 +16,7 @@ If you're just getting started, we recommend going through our [docs](https://ve
 ## Project Structure
 
 The vexide runtime is a fairly standard rust monorepo split into 7 subcrates:
+
 - [`vexide-core`](https://crates.io/crates/vexide_core) provides lowlevel core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
 - [`vexide-devices`](https://crates.io/crates/vexide_devices) contains all device-related bindings for things like motors and sensors.
 - [`vexide-async`](https://crates.io/crates/vexide_async) implements our cooperative async runtime as well as several important async futures.
@@ -64,14 +65,9 @@ cargo v5 build --example basic --release
 ## Testing Your Changes
 
 When making changes to vexide, it's a good idea to test them. The easiest way to do this is by running one of our examples. `cargo-v5` can be used to upload an example by running a command like this:
+
 ```sh
 cargo v5 upload --example basic --release
 ```
+
 Depending on what you have changed, the basic example may not be the best example to test. We have many examples covering different parts of vexide, so choose the one that applies to your changes. If there isn't one, feel free to add it!
-
-## Building for WASM
-
-The vexide runtime is also designed in a way that it can be compiled for the `wasm32-unknown-unknown` target (along with the existing bare metal ARM target). This is done to allow for simulating programs in a [WASM environment](https://github.com/vexide/v5wasm).
-
-To build projects in this repository for WebAssembly, run `cargo v5 build -s`
-This will automatically pass all of the correct arguments to cargo.

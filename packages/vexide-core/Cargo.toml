@@ -30,11 +30,10 @@ pin-project = "1.1.5"
 replace_with = { version = "0.1.7", default-features = false }
 libm = { version = "0.2.8", optional = true }
 
-[target.'cfg(target_arch = "arm")'.dependencies]
+[target.'cfg(target_vendor = "vex")'.dependencies]
 vex-libunwind = { version = "0.1.0", git = "https://github.com/vexide/vex-libunwind.git", optional = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-dlmalloc = { version = "0.2.4", features = ["global"] }
+[target.'cfg(not(target_vendor = "vex"))'.dependencies]
 libm = "0.2.8"
 
 [lints]

@@ -32,6 +32,9 @@ future_incompatible = { level = "warn", priority = -1 }
 let_underscore = { level = "warn", priority = -1 }
 missing_docs = "warn"
 unsafe_op_in_unsafe_fn = "deny"
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(target_vendor, values("vex"))',
+] }
 
 [workspace.lints.clippy]
 missing_const_for_fn = "warn"

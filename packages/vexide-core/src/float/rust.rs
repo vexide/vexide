@@ -2,13 +2,13 @@
 //! libm. <https://github.com/rust-lang/libm/>
 //!
 //! This serves as the only floating-point implementation when compiling for
-//! WASM, and can be forced to be used on ARM using the `force-rust-libm`
+//! non-VEX targets, and can be forced to be used on ARM using the `force-rust-libm`
 //! feature.
 //!
 //! This implementation exists for two reasons:
 //! - You are dead-set on getting a pure-rust program build and don't want to
 //!   be linked to any C libraries whatsoever.
-//! - You are compiling for a WASM target, where an ARM-specific libm won't
+//! - You are compiling for a non-VEX target, where an ARM-specific libm won't
 //!   work.
 //!
 //! At the time of writing this, this rust implementation results in both
