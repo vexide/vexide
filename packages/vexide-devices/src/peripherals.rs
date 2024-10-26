@@ -1,5 +1,20 @@
 //! Peripheral Access
 //!
+//! This module is the gateway to all of your brain’s available I/O — ports, hardware, and devices.
+//! If you want to create a device like a sensor or motor or read from a controller, you are going to
+//! need something off a struct in this module.
+//!
+//! This module provides safe access to underlying hardware by treating physical ports as unique
+//! resources. The [`Peripherals`] struct stores ownership tokens for each hardware interface:
+//!
+//! - 21 smart ports for V5 devices
+//! - 8 ADI ports for legacy devices
+//! - [`Display`] instance.
+//! - Instances for the primary and partner [`Controller`]s.
+//!
+//! These tokens can only be claimed once, preventing multiple parts of code from
+//! accidentally controlling the same hardware.
+//!
 //! # Overview
 //!
 //! The peripherals system uses a singleton pattern to ensure safe hardware access:
