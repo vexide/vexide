@@ -272,9 +272,11 @@ impl Peripherals {
 /// struct at runtime.
 #[derive(Debug)]
 pub struct DynamicPeripherals {
-    display: bool,
-    smart_ports: [bool; 21],
-    adi_slots: [bool; 8],
+    display: Option<Display>,
+    primary_controller: Option<Controller>,
+    partner_controller: Option<Controller>,
+    smart_ports: [Option<SmartPort>; 21],
+    adi_slots: [Option<AdiPort>; 8],
 }
 impl DynamicPeripherals {
     /// Creates a new dynamic peripherals
@@ -285,12 +287,44 @@ impl DynamicPeripherals {
     /// This guarantees safety because [`Peripherals`] cannot be passed by value
     /// after it has been used to create devices.
     #[must_use]
-    #[allow(clippy::needless_pass_by_value)]
-    pub fn new(_peripherals: Peripherals) -> Self {
-        let smart_ports = [false; 21];
-        let adi_slots = [false; 8];
+    pub fn new(peripherals: Peripherals) -> Self {
+        let smart_ports = [
+            peripherals.port_1.into(),
+            peripherals.port_2.into(),
+            peripherals.port_3.into(),
+            peripherals.port_4.into(),
+            peripherals.port_5.into(),
+            peripherals.port_6.into(),
+            peripherals.port_7.into(),
+            peripherals.port_8.into(),
+            peripherals.port_9.into(),
+            peripherals.port_10.into(),
+            peripherals.port_11.into(),
+            peripherals.port_12.into(),
+            peripherals.port_13.into(),
+            peripherals.port_14.into(),
+            peripherals.port_15.into(),
+            peripherals.port_16.into(),
+            peripherals.port_17.into(),
+            peripherals.port_18.into(),
+            peripherals.port_19.into(),
+            peripherals.port_20.into(),
+            peripherals.port_21.into(),
+        ];
+        let adi_slots = [
+            peripherals.adi_a.into(),
+            peripherals.adi_b.into(),
+            peripherals.adi_c.into(),
+            peripherals.adi_d.into(),
+            peripherals.adi_e.into(),
+            peripherals.adi_f.into(),
+            peripherals.adi_g.into(),
+            peripherals.adi_h.into(),
+        ];
         Self {
-            display: false,
+            display: Some(peripherals.display),
+            primary_controller: Some(peripherals.primary_controller),
+            partner_controller: Some(peripherals.partner_controller),
             smart_ports,
             adi_slots,
         }
@@ -304,11 +338,16 @@ impl DynamicPeripherals {
     /// Ports outside of this range are invalid and cannot be created.
     pub fn take_smart_port(&mut self, port_number: u8) -> Option<SmartPort> {
         let port_index = port_number as usize - 1;
-        if self.smart_ports[port_index] {
-            return None;
-        };
-        self.smart_ports[port_index] = true;
-        Some(unsafe { SmartPort::new(port_number) })
+        self.smart_ports[port_index].take()
+    }
+    /// Returns a [`SmartPort`] to the dynamic peripherals.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the provided port is outside the range 1-21.
+    pub fn return_smart_port(&mut self, port: SmartPort) {
+        let port_index = port.number() as usize - 1;
+        self.smart_ports[port_index] = Some(port);
     }
 
     /// Creates an [`AdiPort`] only if one has not been created on the given slot before.
@@ -319,20 +358,43 @@ impl DynamicPeripherals {
     /// Slots outside of this range are invalid and cannot be created.
     pub fn take_adi_port(&mut self, port_number: u8) -> Option<AdiPort> {
         let port_number = port_number as usize - 1;
-        if self.adi_slots[port_number] {
-            return None;
-        }
-        self.smart_ports[port_number] = true;
-        Some(unsafe { AdiPort::new(port_number as u8 + 1, None) })
+        self.adi_slots[port_number].take()
+    }
+    /// Returns an [`AdiPort`] to the dynamic peripherals.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the provided port is outside the range 1-8.
+    pub fn return_adi_port(&mut self, port: AdiPort) {
+        let port_number = port.number() as usize - 1;
+        self.adi_slots[port_number] = Some(port);
     }
 
     /// Creates a [`Display`] only if one has not been created before.
     pub fn take_display(&mut self) -> Option<Display> {
-        if self.display {
-            return None;
-        }
-        self.display = true;
-        Some(unsafe { Display::new() })
+        self.display.take()
+    }
+    /// Returns a [`Display`] to the dynamic peripherals.
+    pub fn return_display(&mut self, display: Display) {
+        self.display = Some(display);
+    }
+
+    /// Creates a primary controller only if one has not been created before.
+    pub fn take_primary_controller(&mut self) -> Option<Controller> {
+        self.primary_controller.take()
+    }
+    /// Returns the primary controller to the dynamic peripherals.
+    pub fn return_primary_controller(&mut self, controller: Controller) {
+        self.primary_controller = Some(controller);
+    }
+
+    /// Creates a partner controller only if one has not been created before.
+    pub fn take_partner_controller(&mut self) -> Option<Controller> {
+        self.partner_controller.take()
+    }
+    /// Returns the partner controller to the dynamic peripherals.
+    pub fn return_partner_controller(&mut self, controller: Controller) {
+        self.partner_controller = Some(controller);
     }
 }
 impl From<Peripherals> for DynamicPeripherals {
