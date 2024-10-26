@@ -303,7 +303,7 @@ impl DynamicPeripherals {
     pub fn take_primary_controller(&mut self) -> Option<Controller> {
         self.primary_controller.take()
     }
-    /// Returns a primary controller to the dynamic peripherals.
+    /// Returns the primary controller to the dynamic peripherals.
     pub fn return_primary_controller(&mut self, controller: Controller) {
         self.primary_controller = Some(controller);
     }
@@ -312,7 +312,7 @@ impl DynamicPeripherals {
     pub fn take_partner_controller(&mut self) -> Option<Controller> {
         self.partner_controller.take()
     }
-    /// Returns a partner controller to the dynamic peripherals.
+    /// Returns the partner controller to the dynamic peripherals.
     pub fn return_partner_controller(&mut self, controller: Controller) {
         self.partner_controller = Some(controller);
     }
