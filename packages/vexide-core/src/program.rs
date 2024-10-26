@@ -3,7 +3,7 @@
 
 use core::{convert::Infallible, fmt::Debug, time::Duration};
 
-use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTaskSleep, vexTasksRun};
+use vex_sdk::{vexSerialWriteFree, vexSystemExitRequest, vexTasksRun};
 
 use crate::{io, time::Instant};
 
