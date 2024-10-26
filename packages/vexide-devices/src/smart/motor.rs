@@ -1,4 +1,34 @@
 //! Smart Motors
+//!
+//! This module provides abstractions for interacting with VEX V5 Smart Motors, supporting both
+//! the 11W and 5.5W variants.
+//!
+//! # Hardware Overview
+//!
+//! The V5 Smart Motors come in two variants: an 11W model with interchangeable gear cartridges
+//! and a 5.5W model with a fixed gearing. The 11W motor supports three cartridge options: a red
+//! cartridge providing 100 RPM, a green cartridge for 200 RPM, and a blue cartridge delivering
+//! 600 RPM. The 5.5W motor comes with a non-interchangeable 200 RPM gear cartridge.
+//!
+//! Motor position and velocity is measured by an integrated encoder.
+//!
+//! Communication between a smart motor and the V5 Brain occur at two different intervals. While
+//! the motor communicates with the brain every 5 milliseconds (and commands can be written to
+//! the motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively
+//! places the date *write* interval at 5mS and the data *read* interval at 10mS.
+//!
+//! # Motor Control
+//!
+//! Each motor contains a sophisticated control system built around a Cortex M0 microcontroller.
+//! The microcontroller continuously monitors position, speed, direction, voltage, current, and
+//! temperature through integrated sensors.
+//!
+//! The onboard motor firmware implements a set of pre-tuned PID (Proportional-Integral-Derivative)
+//! controllers operating on a 10-millisecond cycle for position and velocity control. Motors also
+//! have braking functionality for holding a specific position under load.
+//!
+//! The [`Motor`] API can make use of these builtin control features through the [`MotorControl`] type,
+//! which describes an action that the motor should perform.
 
 use core::time::Duration;
 
