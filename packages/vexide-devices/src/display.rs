@@ -530,7 +530,8 @@ impl Display {
     }
 
     /// Set the render mode for the display.
-    /// For more info on render modes, look at the [`RenderMode`] docs.
+    ///
+    /// For more info on render modes, see [`RenderMode`].
     pub fn set_render_mode(&mut self, mode: RenderMode) {
         self.render_mode = mode;
         unsafe {
@@ -541,7 +542,7 @@ impl Display {
         }
     }
 
-    /// Returns the [`RenderMode`] of the screen.
+    /// Returns the current [`RenderMode`] of the display.
     #[must_use]
     pub const fn render_mode(&self) -> RenderMode {
         self.render_mode
@@ -651,7 +652,7 @@ impl Display {
         Ok(())
     }
 
-    /// Returns the current touch status of the screen.
+    /// Returns the current touch status of the display.
     #[must_use]
     pub fn touch_status(&self) -> TouchEvent {
         // `vexTouchDataGet` (probably) doesn't read from the given status pointer, so this is fine.
