@@ -30,7 +30,7 @@ impl AdiAddrLed {
     ///
     /// If the `length` parameter exceeds [`Self::MAX_LENGTH`], the function returns
     /// [`AddrLedError::BufferTooLarge`].
-    pub fn new<T, I>(port: AdiPort, length: usize) -> Result<Self, AddrLedError> {
+    pub fn new(port: AdiPort, length: usize) -> Result<Self, AddrLedError> {
         if length > Self::MAX_LENGTH {
             return Err(AddrLedError::BufferTooLarge);
         }
