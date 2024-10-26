@@ -6,6 +6,7 @@
 //! For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
 
 use alloc::ffi::CString;
+use core::time::Duration;
 
 use no_std_io::io;
 use snafu::Snafu;
@@ -214,6 +215,8 @@ impl io::Write for RadioLink {
 }
 
 impl SmartDevice for RadioLink {
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(25);
+
     fn port_number(&self) -> u8 {
         self.port.number()
     }

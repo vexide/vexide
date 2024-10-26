@@ -66,9 +66,6 @@ impl VisionSensor {
     /// This value is based on the `VISION_FOV_HEIGHT` macro constant in PROS.
     pub const VERTICAL_RESOLUTION: u16 = 212;
 
-    /// The update rate of the vision sensor.
-    pub const UPDATE_INTERVAL: Duration = Duration::from_millis(50);
-
     /// Creates a new vision sensor from a Smart Port.
     ///
     /// # Examples
@@ -498,6 +495,9 @@ impl VisionSensor {
 }
 
 impl SmartDevice for VisionSensor {
+    /// The interval at which the vision sensor sends updates to the brain.
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(50);
+
     fn port_number(&self) -> u8 {
         self.port.number()
     }

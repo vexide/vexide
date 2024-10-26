@@ -418,7 +418,7 @@ impl GpsImu {
     /// # Errors
     ///
     /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
-    pub fn set_data_rate(&mut self, interval: Duration) -> Result<(), PortError> {
+    pub fn set_computation_interval(&mut self, interval: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe {
