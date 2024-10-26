@@ -3,19 +3,37 @@
 //! This module provides abstractions for interacting with VEX V5 Smart Motors, supporting both
 //! the 11W and 5.5W variants.
 //!
-//! # Hardware Overview
+//! # Overview
 //!
 //! The V5 Smart Motors come in two variants: an 11W model with interchangeable gear cartridges
 //! and a 5.5W model with a fixed gearing. The 11W motor supports three cartridge options: a red
 //! cartridge providing 100 RPM, a green cartridge for 200 RPM, and a blue cartridge delivering
 //! 600 RPM. The 5.5W motor comes with a non-interchangeable 200 RPM gear cartridge.
 //!
-//! Motor position and velocity is measured by an integrated encoder.
+//! Motor position and velocity is measured by an onboard integrated encoder.
 //!
 //! Communication between a smart motor and the V5 Brain occur at two different intervals. While
 //! the motor communicates with the brain every 5 milliseconds (and commands can be written to
 //! the motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively
 //! places the date *write* interval at 5mS and the data *read* interval at 10mS.
+//!
+//! # Current Limitations
+//!
+//! There are some cases where VEXos or the motor itself may decide to limit output current:
+//!
+//! - **Stall Prevention**: The stall current on 11W motors is limited to 2.5A. This
+//!   limitation eliminates the need for automatic resetting fuses (PTC devices) in the motor, which
+//!   can disrupt operation. By restricting the stall current to 2.5A, the motor effectively avoids
+//!   undesirable performance dips and ensures that users do not inadvertently cause stall situations.
+//!
+//! - **Motor Count**: Robots that use 8 or fewer 11W motors will have the aformentioned current limit
+//!   of 2.5A set for each motor. Robots using more than 8 motors, will have a lower default current limit
+//!   per-motor than 2.5A. This limit is determined in VEXos by a calculation accounting for the number of
+//!   motors plugged in, and the user's manually set current limits using [`Motor::set_current_limit`]. For
+//!   more information regarding the current limiting behavior of VEXos, see [this forum post](https://www.vexforum.com/t/how-does-the-decreased-current-affect-the-robot-when-using-more-than-8-motors/72650/4).
+//!
+//! - **Temperature Management**: Motors have an onboard sensor for measuring internal temperature. If
+//!   the motor determines that it is overheating, it will throttle its output current and warn the user.
 //!
 //! # Motor Control
 //!
@@ -404,7 +422,16 @@ impl Motor {
         self.motor_type.max_voltage()
     }
 
-    /// Returns the estimated angular velocity (RPM) of the motor.
+    /// Returns the motor's estimate of its angular velocity in rotations per minute (RPM).
+    ///
+    /// # Accuracy
+    ///
+    /// In some cases, this reported value may be noisy or innaccurate, especially for systems where accurate
+    /// velocity control at high speeds is required (such as flywheels). If the accuracy of this value proves
+    /// inadequate, you may opt to perform your own velocity calculations by differentiating [`Motor::position`]
+    /// over the reported internal timestamp of the motor using [`Motor::timestamp`].
+    ///
+    /// > For more information about smart motor velocity estimation, see [this article](https://sylvie.fyi/sylib/docs/db/d8e/md_module_writeups__velocity__estimation.html).
     ///
     /// # Note
     ///

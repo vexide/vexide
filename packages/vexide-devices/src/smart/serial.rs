@@ -29,6 +29,9 @@ use crate::PortError;
 ///
 /// This struct implements the [`Read`] and [`Write`] traits from vexide's `io` module
 /// for reading/writing to the serial port.
+///
+/// [`Read`]: vexide_core::io::Read
+/// [`Write`]: vexide_core::io::Write
 #[derive(Debug, Eq, PartialEq)]
 pub struct SerialPort {
     port: SmartPort,
