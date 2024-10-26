@@ -321,7 +321,7 @@ impl Controller {
         }
     }
 
-    /// Gets the identifier of this controller.
+    /// Returns the identifier of this controller.
     #[must_use]
     pub const fn id(&self) -> ControllerId {
         self.id
