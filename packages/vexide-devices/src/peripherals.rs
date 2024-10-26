@@ -1,13 +1,13 @@
 //! Peripheral Access
 //!
-//! This module is the gateway to all of your brain’s available I/O — ports, hardware, and devices.
+//! This module is the gateway to all of your Brain’s available I/O — ports, hardware, and devices.
 //! If you want to create a device like a sensor or motor or read from a controller, you are going to
 //! need something off a struct in this module.
 //!
 //! This module provides safe access to underlying hardware by treating physical ports as unique
 //! resources. The [`Peripherals`] struct stores ownership tokens for each hardware interface:
 //!
-//! - 21 smart ports for V5 devices
+//! - 21 Smart Ports for V5 devices
 //! - 8 ADI ports for legacy devices
 //! - [`Display`] instance.
 //! - Instances for the primary and partner [`Controller`]s.
@@ -95,9 +95,9 @@ static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
 /// Singleton Peripheral Access
 ///
-/// Contains an instance of a brain’s available I/O, including ports, hardware, and devices.
+/// Contains an instance of a Brain’s available I/O, including ports, hardware, and devices.
 ///
-/// A brain often has many external devices attached to it. We call these devices *peripherals*, and this
+/// A Brain often has many external devices attached to it. We call these devices *peripherals*, and this
 /// struct is the "gateway" to all of these. [`Peripherals`] is intended to be used as a singleton, and you
 /// will typically only get one of these in your program's execution. This guarantees **at compile time** that
 /// each port is only used once.
@@ -118,64 +118,64 @@ pub struct Peripherals {
     /// Partner Controller
     pub partner_controller: Controller,
 
-    /// Smart port 1 on the brain
+    /// Smart Port 1 on the Brain
     pub port_1: SmartPort,
-    /// Smart port 2 on the brain
+    /// Smart Port 2 on the Brain
     pub port_2: SmartPort,
-    /// Smart port 3 on the brain
+    /// Smart Port 3 on the Brain
     pub port_3: SmartPort,
-    /// Smart port 4 on the brain
+    /// Smart Port 4 on the Brain
     pub port_4: SmartPort,
-    /// Smart port 5 on the brain
+    /// Smart Port 5 on the Brain
     pub port_5: SmartPort,
-    /// Smart port 6 on the brain
+    /// Smart Port 6 on the Brain
     pub port_6: SmartPort,
-    /// Smart port 7 on the brain
+    /// Smart Port 7 on the Brain
     pub port_7: SmartPort,
-    /// Smart port 8 on the brain
+    /// Smart Port 8 on the Brain
     pub port_8: SmartPort,
-    /// Smart port 9 on the brain
+    /// Smart Port 9 on the Brain
     pub port_9: SmartPort,
-    /// Smart port 10 on the brain
+    /// Smart Port 10 on the Brain
     pub port_10: SmartPort,
-    /// Smart port 11 on the brain
+    /// Smart Port 11 on the Brain
     pub port_11: SmartPort,
-    /// Smart port 12 on the brain
+    /// Smart Port 12 on the Brain
     pub port_12: SmartPort,
-    /// Smart port 13 on the brain
+    /// Smart Port 13 on the Brain
     pub port_13: SmartPort,
-    /// Smart port 14 on the brain
+    /// Smart Port 14 on the Brain
     pub port_14: SmartPort,
-    /// Smart port 15 on the brain
+    /// Smart Port 15 on the Brain
     pub port_15: SmartPort,
-    /// Smart port 16 on the brain
+    /// Smart Port 16 on the Brain
     pub port_16: SmartPort,
-    /// Smart port 17 on the brain
+    /// Smart Port 17 on the Brain
     pub port_17: SmartPort,
-    /// Smart port 18 on the brain
+    /// Smart Port 18 on the Brain
     pub port_18: SmartPort,
-    /// Smart port 19 on the brain
+    /// Smart Port 19 on the Brain
     pub port_19: SmartPort,
-    /// Smart port 20 on the brain
+    /// Smart Port 20 on the Brain
     pub port_20: SmartPort,
-    /// Smart port 21 on the brain
+    /// Smart Port 21 on the Brain
     pub port_21: SmartPort,
 
-    /// Adi port A on the brain.
+    /// Adi port A on the Brain.
     pub adi_a: AdiPort,
-    /// Adi port B on the brain.
+    /// Adi port B on the Brain.
     pub adi_b: AdiPort,
-    /// Adi port C on the brain.
+    /// Adi port C on the Brain.
     pub adi_c: AdiPort,
-    /// Adi port D on the brain.
+    /// Adi port D on the Brain.
     pub adi_d: AdiPort,
-    /// Adi port E on the brain.
+    /// Adi port E on the Brain.
     pub adi_e: AdiPort,
-    /// Adi port F on the brain.
+    /// Adi port F on the Brain.
     pub adi_f: AdiPort,
-    /// Adi port G on the brain.
+    /// Adi port G on the Brain.
     pub adi_g: AdiPort,
-    /// Adi port H on the brain.
+    /// Adi port H on the Brain.
     pub adi_h: AdiPort,
 }
 

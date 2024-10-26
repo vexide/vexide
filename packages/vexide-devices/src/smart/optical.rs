@@ -34,7 +34,7 @@ use vex_sdk::{
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
-/// An optical sensor plugged into a smart port.
+/// An optical sensor plugged into a Smart Port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct OpticalSensor {
     port: SmartPort,
@@ -70,7 +70,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn led_brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -83,7 +83,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn set_led_brightness(&mut self, brightness: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -97,7 +97,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn integration_time(&self) -> Result<Duration, PortError> {
         self.validate_port()?;
 
@@ -118,7 +118,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn set_integration_time(&mut self, time: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -140,7 +140,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn hue(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -153,7 +153,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn saturation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -166,7 +166,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -180,7 +180,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn proximity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -191,7 +191,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn color(&self) -> Result<OpticalRgb, PortError> {
         self.validate_port()?;
 
@@ -205,7 +205,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn raw_color(&self) -> Result<OpticalRaw, PortError> {
         self.validate_port()?;
 
@@ -221,7 +221,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn last_gesture(&self) -> Result<Gesture, PortError> {
         self.validate_port()?;
 
@@ -251,7 +251,7 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the smart port.
+    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 

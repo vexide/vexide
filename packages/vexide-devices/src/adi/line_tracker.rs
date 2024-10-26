@@ -60,7 +60,7 @@ impl AdiLineTracker {
     /// Returns the 12-bit reflectivity reading of the sensor.
     ///
     /// This is a raw 12-bit value from [0, 4095] representing the voltage level from
-    /// 0-5V measured by the V5 brain's ADC.
+    /// 0-5V measured by the V5 Brain's ADC.
     ///
     /// A low number (less voltage) represents a **more** reflective object.
     ///

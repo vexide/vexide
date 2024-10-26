@@ -18,7 +18,7 @@
 //! meaning that objects will only be detected when they are directly in front of the
 //! sensor's field of view.
 //!
-//! Like all other smart devices, VEXos will process sensor updates every 10mS.
+//! Like all other Smart devices, VEXos will process sensor updates every 10mS.
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -29,7 +29,7 @@ use vex_sdk::{
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
 
-/// A distance sensor plugged into a smart port.
+/// A distance sensor plugged into a Smart Port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct DistanceSensor {
     port: SmartPort,

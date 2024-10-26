@@ -224,7 +224,7 @@ impl ControllerScreen {
 }
 
 /// Represents an identifier for one of the two possible controllers
-/// connected to the V5 brain.
+/// connected to the V5 Brain.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControllerId {
     /// Primary ("Master") Controller
@@ -249,7 +249,7 @@ pub enum ControllerConnection {
     /// No controller is connected.
     Offline,
 
-    /// Controller is tethered through a wired smart port connection.
+    /// Controller is tethered through a wired Smart Port connection.
     Tethered,
 
     /// Controller is wirelessly connected over a VEXNet radio
@@ -495,7 +495,7 @@ impl Controller {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the controller.
 pub enum ControllerError {
-    /// The controller is not connected to the brain.
+    /// The controller is not connected to the Brain.
     Offline,
 
     /// A NUL (0x00) character was found in a string that may not contain NUL characters.

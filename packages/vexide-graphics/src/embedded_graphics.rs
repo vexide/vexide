@@ -3,7 +3,7 @@
 use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*, primitives::Rectangle};
 use vexide_devices::{color::Rgb, display::Display};
 
-/// An embedded-graphics draw target for the V5 brain display
+/// An embedded-graphics draw target for the V5 Brain display
 /// Currently, this does not support touch detection like the regular [`Display`] API.
 pub struct BrainDisplay {
     display: Display,

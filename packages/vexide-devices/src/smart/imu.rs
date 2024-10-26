@@ -19,7 +19,7 @@
 //! - Pitch: Rotation around Y-axis
 //! - Yaw: Rotation around Z-axis
 //!
-//! Like all other smart devices, VEXos will process sensor updates every 10mS.
+//! Like all other Smart devices, VEXos will process sensor updates every 10mS.
 //!
 //! # Coordinate System
 //!
@@ -50,7 +50,7 @@
 //! If the IMU loses power due to a disconnect — even momentarily, all calibration data will be lost
 //! and VEXos will re-initiate calibration automatically. The robot cannot be moving when this occurs
 //! due to the aformentioned unpredictable behavior. As such, it is vital that the IMU maintain a stable
-//! connection to the brain and voltage supply during operation.
+//! connection to the Brain and voltage supply during operation.
 
 use core::{
     marker::PhantomData,
@@ -75,7 +75,7 @@ use crate::{
     PortError,
 };
 
-/// An inertial sensor (IMU) plugged into a smart port.
+/// An inertial sensor (IMU) plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
 pub struct InertialSensor {
     port: SmartPort,
@@ -381,7 +381,7 @@ impl InertialSensor {
 
     /// Sets the internal computation speed of the IMU.
     ///
-    /// This method does NOT change the communication speed of the IMU with the brain (which will always be 10mS),
+    /// This method does NOT change the communication speed of the IMU with the Brain (which will always be 10mS),
     /// but rather how fast data is sampled and computed onboard the sensor itself.
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).

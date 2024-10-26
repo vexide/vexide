@@ -13,7 +13,7 @@
 //! position count stores the cumulative forward and reverse revolutions relative to program start.
 //! Angular velocity is measured in degrees per second.
 //!
-//! Like all other smart devices, VEXos will process sensor updates every 10mS.
+//! Like all other Smart devices, VEXos will process sensor updates every 10mS.
 
 use core::time::Duration;
 
@@ -25,7 +25,7 @@ use vex_sdk::{
 use super::{motor::Direction, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{position::Position, PortError};
 
-/// A rotation sensor plugged into a smart port.
+/// A rotation sensor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
 pub struct RotationSensor {
     /// Smart Port
@@ -76,7 +76,7 @@ impl RotationSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a rotation sensor is not currently connected to the smart port.
+    /// An error is returned if a rotation sensor is not currently connected to the Smart Port.
     pub fn reset_position(&mut self) -> Result<(), PortError> {
         // NOTE: We don't use vexDeviceAbsEncReset, since that doesn't actually
         // zero position. It sets position to whatever the angle value is.
@@ -87,7 +87,7 @@ impl RotationSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a rotation sensor is not currently connected to the smart port.
+    /// An error is returned if a rotation sensor is not currently connected to the Smart Port.
     pub fn set_position(&mut self, mut position: Position) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -117,7 +117,7 @@ impl RotationSensor {
     ///
     /// # Errors
     ///
-    /// - An error is returned if an rotation sensor is not currently connected to the smart port.
+    /// - An error is returned if an rotation sensor is not currently connected to the Smart Port.
     pub fn set_direction(&mut self, new_direction: Direction) -> Result<(), PortError> {
         // You're probably wondering why I don't use [`vexDeviceAbsEncReverseFlagSet`] here. So about that...
         //
@@ -154,14 +154,14 @@ impl RotationSensor {
 
     /// Sets the internal computation speed of the rotation sensor.
     ///
-    /// This method does NOT change the *communication speed* of the sensor with the brain (which will always be 10mS),
+    /// This method does NOT change the *communication speed* of the sensor with the Brain (which will always be 10mS),
     /// but rather how fast data is sampled and computed onboard the sensor itself.
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     ///
     /// # Errors
     ///
-    /// An error is returned if an rotation sensor is not currently connected to the smart port.
+    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
     pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -185,7 +185,7 @@ impl RotationSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an rotation sensor is not currently connected to the smart port.
+    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
     pub fn position(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
@@ -207,7 +207,7 @@ impl RotationSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an rotation sensor is not currently connected to the smart port.
+    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
     pub fn angle(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
@@ -227,7 +227,7 @@ impl RotationSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an rotation sensor is not currently connected to the smart port.
+    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
     pub fn velocity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -244,7 +244,7 @@ impl RotationSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an rotation sensor is not currently connected to the smart port.
+    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 

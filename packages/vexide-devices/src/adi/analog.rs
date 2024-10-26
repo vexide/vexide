@@ -5,7 +5,7 @@
 //! Unlike digital ADI devices which can only report a "high" or "low" state, analog
 //! ADI devices may report a wide range of values spanning 0-5 volts. These analog
 //! voltages readings are then converted into a digital values using the internal
-//! Analog-to-Digital Converter (ADC) in the V5 brain. The brain measures analog input
+//! Analog-to-Digital Converter (ADC) in the V5 Brain. The Brain measures analog input
 //! using 12-bit values ranging from 0 (0V) to 4095 (5V).
 
 use vex_sdk::vexDeviceAdiValueGet;
@@ -13,7 +13,7 @@ use vex_sdk::vexDeviceAdiValueGet;
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
 
 /// The maximum 12-bit analog value returned by the internal
-/// analog-to-digital converters on the brain.
+/// analog-to-digital converters on the Brain.
 pub const ADC_MAX_VALUE: u16 = 4095;
 
 /// Generic analog input ADI device.

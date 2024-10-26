@@ -34,7 +34,7 @@ unsafe impl Send for RadioLink {}
 unsafe impl Sync for RadioLink {}
 
 impl RadioLink {
-    /// Opens a radio link from a VEXNet radio plugged into a smart port. Once
+    /// Opens a radio link from a VEXNet radio plugged into a Smart Port. Once
     /// opened, other VEXNet functionality such as controller tethering on this
     /// radio will be disabled.
     ///
@@ -81,7 +81,7 @@ impl RadioLink {
     ///
     /// # Errors
     ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the smart port.
+    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
     pub fn unread_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
 
@@ -92,7 +92,7 @@ impl RadioLink {
     ///
     /// # Errors
     ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the smart port.
+    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
     /// - A [`LinkError::ReadFailed`] error is returned if the output buffer could not be accessed.
     pub fn available_write_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
@@ -109,7 +109,7 @@ impl RadioLink {
     ///
     /// # Errors
     ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the smart port.
+    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
     pub fn is_linked(&self) -> Result<bool, LinkError> {
         self.validate_port()?;
 
