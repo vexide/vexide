@@ -17,6 +17,15 @@
 //!
 //! More specific info for each device is available in their respective modules.
 
+use core::fmt;
+
+use vex_sdk::{
+    vexDeviceGetByIndex, vexDeviceGetStatus, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType,
+    V5_MAX_DEVICE_PORTS,
+};
+
+use crate::PortError;
+
 pub mod distance;
 pub mod electromagnet;
 pub mod expander;
@@ -29,9 +38,8 @@ pub mod rotation;
 pub mod serial;
 pub mod vision;
 
-use core::fmt;
-
 pub use distance::DistanceSensor;
+pub use electromagnet::Electromagnet;
 pub use expander::AdiExpander;
 pub use gps::GpsSensor;
 pub use imu::InertialSensor;
@@ -40,13 +48,7 @@ pub use motor::Motor;
 pub use optical::OpticalSensor;
 pub use rotation::RotationSensor;
 pub use serial::SerialPort;
-use vex_sdk::{
-    vexDeviceGetByIndex, vexDeviceGetStatus, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType,
-    V5_MAX_DEVICE_PORTS,
-};
 pub use vision::VisionSensor;
-
-use crate::PortError;
 
 /// Defines common functionality shared by all smart port devices.
 pub trait SmartDevice {
