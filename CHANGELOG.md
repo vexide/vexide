@@ -36,6 +36,7 @@ Before releasing:
 - `AdiAddrLed::set_pixel` will now correctly return an error if the device's ADI expander is disconnected. (#155)
 - The `dbg!();` now works as expected when no arguments are supplied to it. (#175)
 - `Motor::velocity` now correctly returns the estimated velocity instead of target velocity. (#184) (**Breaking Change**)
+- Removed useless generics from `AdiAddrLed::new`. (#197) (**Breaking Change**)
 
 ### Changed
 
