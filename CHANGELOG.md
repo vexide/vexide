@@ -56,6 +56,8 @@ Before releasing:
 
 ### Removed
 
+- Removed the defunct `usd` module from `vexide::devices`. (#198) (**Breaking Change**)
+
 ### New Contributors
 
 @zabackary made their first contribution in #164!
