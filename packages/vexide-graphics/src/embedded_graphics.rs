@@ -1,7 +1,11 @@
 //! Embedded-graphics driver for the V5 Brain display.
 
 use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*, primitives::Rectangle};
-use vexide_devices::{color::Rgb, display::Display};
+use vexide_devices::{display::Display, rgb::Rgb};
+
+fn rgb_into_raw(rgb: Rgb<u8>) -> u32 {
+    (u32::from(rgb.r) << 16) + (u32::from(rgb.g) << 8) + u32::from(rgb.b)
+}
 
 /// An embedded-graphics draw target for the V5 Brain display
 /// Currently, this does not support touch detection like the regular [`Display`] API.
@@ -45,7 +49,7 @@ impl DrawTarget for BrainDisplay {
     {
         pixels
             .into_iter()
-            .map(|p| (p.0, Rgb::new(p.1.r(), p.1.g(), p.1.b()).into()))
+            .map(|p| (p.0, rgb_into_raw(Rgb::new(p.1.r(), p.1.g(), p.1.b()))))
             .for_each(|(pos, col)| {
                 self.triple_buffer
                     [pos.y as usize * Display::HORIZONTAL_RESOLUTION as usize + pos.x as usize] =
