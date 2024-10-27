@@ -17,7 +17,10 @@ use vex_sdk::{
     V5_TouchStatus,
 };
 
-use crate::{rgb::{Rgb, RgbExt}, geometry::Point2};
+use crate::{
+    geometry::Point2,
+    rgb::{Rgb, RgbExt},
+};
 
 /// Represents the physical display on the V5 Brain.
 #[derive(Debug, Eq, PartialEq)]

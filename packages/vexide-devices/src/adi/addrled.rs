@@ -10,7 +10,10 @@ use vex_sdk::vexDeviceAdiAddrLedSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
 #[cfg(feature = "smart_leds_trait")]
-use crate::{rgb::{Rgb, RgbExt}, PortError};
+use crate::{
+    rgb::{Rgb, RgbExt},
+    PortError,
+};
 
 /// WS2812B Addressable LED Strip
 #[derive(Debug, Eq, PartialEq)]
@@ -70,7 +73,11 @@ impl AdiAddrLed {
     /// - Returns [`AddrLedError::OutOfRange`] if the provided index is out of range
     ///   of the current buffer length.
     /// - If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
-    pub fn set_pixel(&mut self, index: usize, color: impl Into<Rgb<u8>>) -> Result<(), AddrLedError> {
+    pub fn set_pixel(
+        &mut self,
+        index: usize,
+        color: impl Into<Rgb<u8>>,
+    ) -> Result<(), AddrLedError> {
         self.port.validate_expander()?;
 
         if let Some(pixel) = self.buf.get_mut(index) {
