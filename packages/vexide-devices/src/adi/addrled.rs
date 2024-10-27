@@ -9,7 +9,6 @@ use snafu::Snafu;
 use vex_sdk::vexDeviceAdiAddrLedSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-#[cfg(feature = "smart_leds_trait")]
 use crate::{
     rgb::{Rgb, RgbExt},
     PortError,
