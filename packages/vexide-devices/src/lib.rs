@@ -24,7 +24,7 @@ extern crate alloc;
 
 pub mod adi;
 pub mod battery;
-pub mod color;
+pub mod rgb;
 pub mod controller;
 pub mod display;
 pub mod geometry;

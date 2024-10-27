@@ -21,6 +21,7 @@ vexide-core = { workspace = true }
 vex-sdk = { workspace = true }
 snafu = { workspace = true }
 mint = "0.5.9"
+rgb = "0.8.50"
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 bitflags = "2.4.2"
 smart-leds-trait = { version = "0.3.0", optional = true }
