@@ -99,7 +99,7 @@ pub mod prelude {
             AdiDevice, AdiPort,
         },
         battery,
-        color::Rgb,
+        rgb::Rgb,
         controller::Controller,
         display::Display,
         peripherals::{DynamicPeripherals, Peripherals},
