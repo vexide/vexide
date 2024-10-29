@@ -53,6 +53,7 @@ Before releasing:
 - Made the following functions infallible: `AdiAccelerometer::sensitivity`, `AdiAccelerometer::max_acceleration`, `AdiPotentiometer::potentiometer_type`, `AdiPotentiometer::max_angle`, `Motor::target`, and `RotationSensor::direction`. (#182) (**Breaking Change**)
 - `OpticalSensor::led_brightness` now returns a number from `0.0` - `1.0` rather than a number from `1` - `100`. (#155) (**Breaking Change**)
 - Renamed `Motor::update_profiled_velocity` to `Motor::set_profiled_velocity`. (#155) (**Breaking Change**)
+- `Mutex` is now `?Sized`, matching the behavior of the standard library. (#202) (**Breaking Change**)
 
 ### Removed
 
