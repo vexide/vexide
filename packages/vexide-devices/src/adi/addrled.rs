@@ -169,9 +169,9 @@ pub enum AddrLedError {
     /// The length of the provided buffer exceeded the maximum strip length that ADI can control (64).
     BufferTooLarge,
 
-    #[snafu(display("{source}"), context(false))]
     /// Generic ADI related error.
-    Adi {
+    #[snafu(display("{source}"), context(false))]
+    Port {
         /// The source of the error
         source: PortError,
     },
