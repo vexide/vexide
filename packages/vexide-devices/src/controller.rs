@@ -105,14 +105,14 @@ pub struct ControllerState {
     /// Button Right
     pub button_right: ButtonState,
 
-    /// Top Left Trigger
-    pub left_trigger_1: ButtonState,
-    /// Bottom Left Trigger
-    pub left_trigger_2: ButtonState,
-    /// Top Right Trigger
-    pub right_trigger_1: ButtonState,
-    /// Bottom Right Trigger
-    pub right_trigger_2: ButtonState,
+    /// Front Left Trigger
+    pub front_left_trigger: ButtonState,
+    /// Back Left Trigger
+    pub back_left_trigger: ButtonState,
+    /// Front Right Trigger
+    pub front_right_trigger: ButtonState,
+    /// Back Right Trigger
+    pub back_right_trigger: ButtonState,
 }
 
 /// This type stores the "pressed" states of every controller button.
@@ -414,19 +414,19 @@ impl Controller {
                 is_pressed: button_states.right,
                 prev_is_pressed: prev_button_states.right,
             },
-            left_trigger_1: ButtonState {
+            back_left_trigger: ButtonState {
                 is_pressed: button_states.left_trigger_1,
                 prev_is_pressed: prev_button_states.left_trigger_1,
             },
-            left_trigger_2: ButtonState {
+            front_left_trigger: ButtonState {
                 is_pressed: button_states.left_trigger_2,
                 prev_is_pressed: prev_button_states.left_trigger_2,
             },
-            right_trigger_1: ButtonState {
+            back_right_trigger: ButtonState {
                 is_pressed: button_states.right_trigger_1,
                 prev_is_pressed: prev_button_states.right_trigger_1,
             },
-            right_trigger_2: ButtonState {
+            front_right_trigger: ButtonState {
                 is_pressed: button_states.right_trigger_2,
                 prev_is_pressed: prev_button_states.right_trigger_2,
             },
