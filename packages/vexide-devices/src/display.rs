@@ -17,7 +17,10 @@ use vex_sdk::{
     V5_TouchStatus,
 };
 
-use crate::{color::IntoRgb, geometry::Point2};
+use crate::{
+    geometry::Point2,
+    rgb::{Rgb, RgbExt},
+};
 
 /// Represents the physical display on the V5 Brain.
 #[derive(Debug, Eq, PartialEq)]
@@ -63,13 +66,13 @@ impl core::fmt::Write for Display {
 /// A type implementing this trait can draw a filled shape to the display.
 pub trait Fill {
     /// Draw a filled shape to the display.
-    fn fill(&self, display: &mut Display, color: impl IntoRgb);
+    fn fill(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
 }
 
 /// A type implementing this trait can draw an outlined shape to the display.
 pub trait Stroke {
     /// Draw an outlined shape to the display.
-    fn stroke(&self, display: &mut Display, color: impl IntoRgb);
+    fn stroke(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
 }
 
 /// A circle that can be drawn on the  display.
@@ -96,9 +99,9 @@ impl Circle {
 }
 
 impl Fill for Circle {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleFill(
                 i32::from(self.center.x),
                 i32::from(self.center.y + Display::HEADER_HEIGHT),
@@ -109,9 +112,9 @@ impl Fill for Circle {
 }
 
 impl Stroke for Circle {
-    fn stroke(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleDraw(
                 i32::from(self.center.x),
                 i32::from(self.center.y + Display::HEADER_HEIGHT),
@@ -143,9 +146,9 @@ impl Line {
 }
 
 impl Fill for Line {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayLineDraw(
                 i32::from(self.start.x),
                 i32::from(self.start.y + Display::HEADER_HEIGHT),
@@ -157,11 +160,11 @@ impl Fill for Line {
 }
 
 impl<T: Into<Point2<i16>> + Copy> Fill for T {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         let point: Point2<i16> = (*self).into();
 
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayPixelSet(point.x as _, (point.y + Display::HEADER_HEIGHT) as _);
         }
     }
@@ -222,9 +225,9 @@ impl Rect {
 }
 
 impl Stroke for Rect {
-    fn stroke(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectDraw(
                 i32::from(self.start.x),
                 i32::from(self.start.y + Display::HEADER_HEIGHT),
@@ -236,9 +239,9 @@ impl Stroke for Rect {
 }
 
 impl Fill for Rect {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectFill(
                 i32::from(self.start.x),
                 i32::from(self.start.y + Display::HEADER_HEIGHT),
@@ -375,7 +378,7 @@ impl Text {
 }
 
 impl Fill for Text {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         // Horizontally align text
         let x = match self.horizontal_align {
             HAlign::Left => self.position.x,
@@ -393,7 +396,7 @@ impl Fill for Text {
         // This implementation is technically broken because it doesn't account errno.
         // This will be fixed once we have switched to vex-sdk.
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
 
             // Use `%s` and varargs to escape the string to stop undefined and unsafe behavior
             match self.size {
@@ -587,19 +590,19 @@ impl Display {
     }
 
     /// Draw a filled object to the display.
-    pub fn fill(&mut self, shape: &impl Fill, color: impl IntoRgb) {
+    pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
         shape.fill(self, color);
     }
 
     /// Draw an outlined object to the display.
-    pub fn stroke(&mut self, shape: &impl Stroke, color: impl IntoRgb) {
+    pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Rgb<u8>>) {
         shape.stroke(self, color);
     }
 
     /// Wipe the entire display buffer, filling it with a specified color.
-    pub fn erase(&mut self, color: impl IntoRgb) {
+    pub fn erase(&mut self, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayBackgroundColor(color.into_rgb().into());
+            vexDisplayBackgroundColor(color.into().into_raw());
             vexDisplayErase();
         };
     }
@@ -621,11 +624,11 @@ impl Display {
     ) -> Result<(), DisplayError>
     where
         T: IntoIterator<Item = I>,
-        I: IntoRgb,
+        I: Into<Rgb<u8>>,
     {
         let mut raw_buf = buf
             .into_iter()
-            .map(|i| i.into_rgb().into())
+            .map(|i| i.into().into_raw())
             .collect::<Vec<_>>();
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.x - region.start.x) as u32

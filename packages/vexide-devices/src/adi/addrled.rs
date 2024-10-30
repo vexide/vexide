@@ -9,9 +9,10 @@ use snafu::Snafu;
 use vex_sdk::vexDeviceAdiAddrLedSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-#[cfg(feature = "smart_leds_trait")]
-use crate::color::Rgb;
-use crate::{color::IntoRgb, PortError};
+use crate::{
+    rgb::{Rgb, RgbExt},
+    PortError,
+};
 
 /// WS2812B Addressable LED Strip
 #[derive(Debug, Eq, PartialEq)]
@@ -59,8 +60,8 @@ impl AdiAddrLed {
     /// # Errors
     ///
     /// If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
-    pub fn set_all(&mut self, color: impl IntoRgb) -> Result<(), AddrLedError> {
-        _ = self.set_buffer(vec![u32::from(color.into_rgb()); self.buf.len()])?;
+    pub fn set_all(&mut self, color: impl Into<Rgb<u8>>) -> Result<(), AddrLedError> {
+        _ = self.set_buffer(vec![color.into(); self.buf.len()])?;
         Ok(())
     }
 
@@ -71,11 +72,15 @@ impl AdiAddrLed {
     /// - Returns [`AddrLedError::OutOfRange`] if the provided index is out of range
     ///   of the current buffer length.
     /// - If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
-    pub fn set_pixel(&mut self, index: usize, color: impl IntoRgb) -> Result<(), AddrLedError> {
+    pub fn set_pixel(
+        &mut self,
+        index: usize,
+        color: impl Into<Rgb<u8>>,
+    ) -> Result<(), AddrLedError> {
         self.port.validate_expander()?;
 
         if let Some(pixel) = self.buf.get_mut(index) {
-            *pixel = color.into_rgb().into();
+            *pixel = color.into().into_raw();
             self.update();
             Ok(())
         } else {
@@ -92,7 +97,7 @@ impl AdiAddrLed {
     pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
     where
         T: IntoIterator<Item = I>,
-        I: IntoRgb,
+        I: Into<Rgb<u8>>,
     {
         self.port.validate_expander()?;
 
@@ -100,7 +105,7 @@ impl AdiAddrLed {
 
         self.buf = iter
             .into_iter()
-            .map(|i| i.into_rgb().into())
+            .map(|i| i.into().into_raw())
             .collect::<Vec<_>>();
 
         self.buf.resize(old_length, 0); // Preserve previous strip length.
@@ -130,7 +135,7 @@ impl AdiDevice for AdiAddrLed {
 #[cfg(feature = "smart_leds_trait")]
 impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
     type Error = AddrLedError;
-    type Color = Rgb;
+    type Color = Rgb<u8>;
 
     fn write<T, I>(&mut self, iterator: T) -> Result<(), Self::Error>
     where
@@ -141,7 +146,7 @@ impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
 
         let buf = iterator
             .into_iter()
-            .map(|i| i.into().into())
+            .map(|i| i.into().into_raw())
             .collect::<Vec<_>>();
 
         if buf.len() > Self::MAX_LENGTH {
