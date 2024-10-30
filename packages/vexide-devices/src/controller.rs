@@ -134,10 +134,10 @@ struct ButtonStates {
     down: bool,
     left: bool,
     right: bool,
-    left_trigger_1: bool,
-    left_trigger_2: bool,
-    right_trigger_1: bool,
-    right_trigger_2: bool,
+    front_left_trigger: bool,
+    back_left_trigger: bool,
+    front_right_trigger: bool,
+    back_right_trigger: bool,
 }
 
 fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
@@ -312,10 +312,10 @@ impl Controller {
                 down: false,
                 left: false,
                 right: false,
-                left_trigger_1: false,
-                left_trigger_2: false,
-                right_trigger_1: false,
-                right_trigger_2: false,
+                front_left_trigger: false,
+                back_left_trigger: false,
+                front_right_trigger: false,
+                back_right_trigger: false,
             }),
             screen: ControllerScreen { id },
         }
@@ -356,16 +356,16 @@ impl Controller {
             left: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonLeft) } != 0,
             right: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonRight) }
                 != 0,
-            left_trigger_1: unsafe {
+            front_left_trigger: unsafe {
                 vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL1)
             } != 0,
-            left_trigger_2: unsafe {
+            back_left_trigger: unsafe {
                 vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL2)
             } != 0,
-            right_trigger_1: unsafe {
+            front_right_trigger: unsafe {
                 vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR1)
             } != 0,
-            right_trigger_2: unsafe {
+            back_right_trigger: unsafe {
                 vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR2)
             } != 0,
         };
@@ -415,20 +415,20 @@ impl Controller {
                 prev_is_pressed: prev_button_states.right,
             },
             back_left_trigger: ButtonState {
-                is_pressed: button_states.left_trigger_1,
-                prev_is_pressed: prev_button_states.left_trigger_1,
+                is_pressed: button_states.front_left_trigger,
+                prev_is_pressed: prev_button_states.front_left_trigger,
             },
             front_left_trigger: ButtonState {
-                is_pressed: button_states.left_trigger_2,
-                prev_is_pressed: prev_button_states.left_trigger_2,
+                is_pressed: button_states.back_left_trigger,
+                prev_is_pressed: prev_button_states.back_left_trigger,
             },
             back_right_trigger: ButtonState {
-                is_pressed: button_states.right_trigger_1,
-                prev_is_pressed: prev_button_states.right_trigger_1,
+                is_pressed: button_states.front_right_trigger,
+                prev_is_pressed: prev_button_states.front_right_trigger,
             },
             front_right_trigger: ButtonState {
-                is_pressed: button_states.right_trigger_2,
-                prev_is_pressed: prev_button_states.right_trigger_2,
+                is_pressed: button_states.back_right_trigger,
+                prev_is_pressed: prev_button_states.back_right_trigger,
             },
         })
     }
