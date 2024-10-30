@@ -23,7 +23,13 @@ jobs:
               uses: actions-rs/cargo@v1
               with:
                   command: check
-                  args: --bins --examples --all-features
+                  args: --bins --all-features -p vexide
+
+            - name: Check Examples
+              uses: actions-rs/cargo@v1
+              with:
+                  command: check
+                  args: --bins --all-features --examples
     lint:
         name: Lint
         runs-on: ubuntu-latest
