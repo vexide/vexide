@@ -414,19 +414,19 @@ impl Controller {
                 is_pressed: button_states.right,
                 prev_is_pressed: prev_button_states.right,
             },
-            back_left_trigger: ButtonState {
+            front_left_trigger: ButtonState {
                 is_pressed: button_states.front_left_trigger,
                 prev_is_pressed: prev_button_states.front_left_trigger,
             },
-            front_left_trigger: ButtonState {
+            back_left_trigger: ButtonState {
                 is_pressed: button_states.back_left_trigger,
                 prev_is_pressed: prev_button_states.back_left_trigger,
             },
-            back_right_trigger: ButtonState {
+            front_right_trigger: ButtonState {
                 is_pressed: button_states.front_right_trigger,
                 prev_is_pressed: prev_button_states.front_right_trigger,
             },
-            front_right_trigger: ButtonState {
+            back_right_trigger: ButtonState {
                 is_pressed: button_states.back_right_trigger,
                 prev_is_pressed: prev_button_states.back_right_trigger,
             },
