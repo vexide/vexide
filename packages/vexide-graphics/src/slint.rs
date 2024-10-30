@@ -12,10 +12,7 @@ use slint::{
     LogicalPosition, PhysicalPosition, PhysicalSize, Rgb8Pixel,
 };
 use vexide_core::time::Instant;
-use vexide_devices::{
-    color::Rgb,
-    display::{Display, Rect},
-};
+use vexide_devices::display::{Display, Rect};
 
 /// A Slint platform implementation for the V5 Brain screen.
 pub struct V5Platform {
@@ -101,7 +98,7 @@ impl Platform for V5Platform {
                             Display::HORIZONTAL_RESOLUTION as _,
                             Display::VERTICAL_RESOLUTION as _,
                         ),
-                        buf.into_iter().map(|p| Rgb::new(p.r, p.g, p.b)),
+                        buf.into_iter(),
                         Display::HORIZONTAL_RESOLUTION as _,
                     )
                     .unwrap();
