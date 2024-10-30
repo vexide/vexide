@@ -19,11 +19,11 @@ jobs:
                   toolchain: nightly-2024-08-20
                   override: true
 
-            - name: Check
+            - name: Check Crates
               uses: actions-rs/cargo@v1
               with:
                   command: check
-                  args: --bins --all-features -p vexide
+                  args: --all-features -p vexide
 
             - name: Check Examples
               uses: actions-rs/cargo@v1
