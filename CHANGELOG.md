@@ -41,7 +41,7 @@ Before releasing:
 ### Changed
 
 - Controller state is now returned all at once to reduce error checking. (#152) (**Breaking Change**)
-- Controller axis `left_trigger_1`, `left_trigger_2`, `right_trigger_1`, and `right_trigger_2` have been renamed to `front_left_trigger`, `back_left_trigger`, `front_right_trigger`, and `back_right_trigger` respectively.
+- Controller bumper naming scheme has been changed from `<left/right>_trigger_<1/2>` to `button_<r/l><1/2>`. (#204) (**Breaking Change**)
 - `Button::was_pressed` has been renamed to `ButtonState::is_now_pressed`.
 - `battery::capacity` now returns from 0.0-1.0 rather than 0-100.
 - `battery::voltage` is now returned in volts rather than millivolts.
