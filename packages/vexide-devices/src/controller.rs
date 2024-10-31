@@ -356,18 +356,10 @@ impl Controller {
             left: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonLeft) } != 0,
             right: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonRight) }
                 != 0,
-            l1: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL1)
-            } != 0,
-            l2: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL2)
-            } != 0,
-            r1: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR1)
-            } != 0,
-            r2: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR2)
-            } != 0,
+            l1: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL1) } != 0,
+            l2: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL2) } != 0,
+            r1: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR1) } != 0,
+            r2: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR2) } != 0,
         };
 
         // Swap the current button states with the previous states, getting the previous states in the process.
