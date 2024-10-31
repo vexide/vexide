@@ -3,17 +3,19 @@
 Each of vexide's examples showcase a different part of the runtime.
 
 Table of contents:
-* [Full Codebases](#full-codebases)
-* [Devices](#devices)
-* [Async](#async)
-* [Macro](#macro)
-* [Misc](#misc)
+
+- [Full Codebases](#full-codebases)
+- [Devices](#devices)
+- [Async](#async)
+- [Macro](#macro)
+- [Misc](#misc)
 
 ## Full Codebases
 
 Fully functional robot programs.
 
-> [!NOTE] These can be used as starting points for your own programs if you don't know where to start.
+> [!NOTE]
+> These can be used as starting points for your own programs if you don't know where to start.
 
 ### [`split_arcade_drive`](./split_arcade_drive.rs)
 
@@ -62,6 +64,7 @@ Demonstrates how the [`Compete`](https://docs.rs/vexide/latest/vexide/core/compe
 ### [`async`](./async.rs)
 
 Explains and showcases several features of vexide's async executor including:
+
 - Tasks
 - Sleep futures
 - Blocking on a future
@@ -82,7 +85,6 @@ The banner at program startup can be fully disabled by passing `banner(enabled =
 
 As well as optionally disabling the banner, you can change its color theme by passing a theme to the `vexide::main` macro: `banner(theme = <THEME_CONST>)`.
 Several default themes can be found in the [`vexide::startup::banner::themes`](https://docs.rs/vexide/latest/vexide/startup/banner/themes/index.html) module.
-
 
 ### [`custom_code_sig`](./custom_code_sig.rs)
 
