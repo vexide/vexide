@@ -74,18 +74,18 @@ impl Compete for ClawBot {
             self.right_motor.set_voltage(right_voltage).ok();
 
             // Arm control using the R1 and R2 buttons on the controller.
-            if c_state.top_left_trigger.is_pressed() {
+            if c_state.button_l1.is_pressed() {
                 self.arm.set_voltage(12.0).ok();
-            } else if c_state.bottom_left_trigger.is_pressed() {
+            } else if c_state.button_l2.is_pressed() {
                 self.arm.set_voltage(-12.0).ok();
             } else {
                 self.arm.brake(BrakeMode::Hold).ok();
             }
 
             // Claw control using the L1 and L2 buttons on the controller.
-            if c_state.top_left_trigger.is_pressed() {
+            if c_state.button_l1.is_pressed() {
                 self.claw.set_voltage(12.0).ok();
-            } else if c_state.bottom_left_trigger.is_pressed() && !limit_switch_pressed {
+            } else if c_state.button_l2.is_pressed() && !limit_switch_pressed {
                 self.claw.set_voltage(-12.0).ok();
             } else {
                 self.claw.brake(BrakeMode::Hold).ok();
