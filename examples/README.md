@@ -68,7 +68,6 @@ Explains and showcases several features of vexide's async executor including:
 
 ### [`sync`](./sync.rs)
 
-<!-- TODO: this example sucks ass -->
 Demonstrates the usage of the asynchronous synchronization primitives included in [`vexide-core`](https://docs.rs/vexide/0.4.2/vexide/core/sync/index.html).
 
 ## Macro
