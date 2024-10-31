@@ -16,7 +16,6 @@ use core::fmt::Write;
 use vexide_core::{backtrace::Backtrace, println};
 #[cfg(feature = "display_panics")]
 use vexide_devices::{
-    color::Rgb,
     display::{Display, Rect, Text, TextSize},
     geometry::Point2,
 };
@@ -48,7 +47,7 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
                     y: ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * LINE_HEIGHT),
                 },
             ),
-            Rgb::WHITE,
+            (255, 255, 255),
         );
     }
 
@@ -65,8 +64,8 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
         },
     );
 
-    display.fill(&error_box_rect, Rgb::RED);
-    display.stroke(&error_box_rect, Rgb::WHITE);
+    display.fill(&error_box_rect, (255, 0, 0));
+    display.stroke(&error_box_rect, (255, 255, 255));
 
     let mut buffer = String::new();
     let mut line: i16 = 0;

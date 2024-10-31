@@ -99,11 +99,11 @@ pub mod prelude {
             AdiDevice, AdiPort,
         },
         battery,
-        color::Rgb,
         controller::Controller,
         display::Display,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
+        rgb::Rgb,
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,
