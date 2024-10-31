@@ -41,6 +41,7 @@ Before releasing:
 ### Changed
 
 - Controller state is now returned all at once to reduce error checking. (#152) (**Breaking Change**)
+- Controller bumper naming scheme has been changed from `<left/right>_trigger_<1/2>` to `button_<r/l><1/2>`. (#204) (**Breaking Change**)
 - `Button::was_pressed` has been renamed to `ButtonState::is_now_pressed`.
 - `battery::capacity` now returns from 0.0-1.0 rather than 0-100.
 - `battery::voltage` is now returned in volts rather than millivolts.
