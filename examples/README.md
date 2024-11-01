@@ -15,7 +15,7 @@ Table of contents:
 Fully functional robot programs.
 
 > [!NOTE]
-> These can be used as starting points for your own programs if you don't know where to start.
+> These can be used as starting points for your own programs if you don't know where to begin.
 
 ### [`split_arcade_drive`](./split_arcade_drive.rs)
 
