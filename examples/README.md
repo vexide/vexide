@@ -92,7 +92,7 @@ Uses the `vexide::main` macro to set a custom code signature for the example. A 
 
 ## Misc
 
-Miscelaneous events.
+Miscelaneous examples.
 
 ### [`basic`](./basic.rs)
 
