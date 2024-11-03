@@ -3,7 +3,7 @@
 //! Line trackers read the difference between a black line and a white surface. They can
 //! be used to follow a marked path on the ground.
 //!
-//! # Hardware Overview
+//! # Overview
 //!
 //! A line tracker consists of an analog infrared light sensor and an infrared LED.
 //! It works by illuminating a surface with infrared light; the sensor then picks up
@@ -13,11 +13,11 @@
 //! allows the sensor to detect a dark line on a white background, or a white line on
 //! a dark background.
 //!
+//! # Hardware
+//!
 //! The Line Tracking Sensor is an analog sensor, and it internally measures values in the
 //! range of 0 to 4095 from 0-5V. Darker objects reflect less light, and are indicated by
 //! higher numbers. Lighter objects reflect more light, and are indicated by lower numbers.
-//!
-//! # Effective Range
 //!
 //! For best results when using the Line Tracking Sensors, it is best to mount the sensors
 //! between 1/8 and 1/4 of an inch away from the surface it is measuring. It is also important

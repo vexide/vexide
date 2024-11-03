@@ -1,4 +1,4 @@
-//! ADI Potentiometer
+//! ADI Potentiometer device.
 
 use vex_sdk::vexDeviceAdiValueGet;
 

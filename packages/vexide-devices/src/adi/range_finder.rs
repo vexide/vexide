@@ -1,4 +1,4 @@
-//! ADI Ultrasonic Range Finder
+//! ADI Ultrasonic Range Finder.
 
 use snafu::Snafu;
 use vex_sdk::vexDeviceAdiValueGet;

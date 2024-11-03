@@ -4,23 +4,16 @@
 //! which measures the absolute position, rotation count, and angular velocity of a
 //! rotating shaft.
 //!
-//! # Hardware Overview
+//! # Hardware Description
 //!
-//! The sensor provides absolute rotational position tracking from 0° to 360° with 0.088° accuracy. The
-//! sensor is compromised of two magnets which utilize the [Hall Effect] to indicate angular position. A
-//! chip inside the rotation sensor (a Cortex M0+) then keeps track of the total rotations of the sensor
-//! to determine total position travelled.
-//!
+//! The sensor provides absolute rotational position tracking from 0° to 360° with 0.088° accuracy.
 //! Position is reported by VEXos in centidegrees before being converted to an instance of [`Position`].
 //!
 //! The absolute angle reading is preserved across power cycles (similar to a potentiometer), while the
-//! position count stores the cumulative forward and reverse revolutions relative to program start, however
-//! the *position* reading will be reset if the sensor loses power. Angular velocity is measured in degrees
-//! per second.
+//! position count stores the cumulative forward and reverse revolutions relative to program start.
+//! Angular velocity is measured in degrees per second.
 //!
 //! Like all other Smart devices, VEXos will process sensor updates every 10mS.
-//!
-//! [Hall Effect]: https://en.wikipedia.org/wiki/Hall_effect_sensor
 
 use core::time::Duration;
 

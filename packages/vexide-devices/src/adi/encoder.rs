@@ -1,43 +1,4 @@
-//! ADI Optical Shaft Encoder
-//!
-//! This module provides an interface to interact with the VEX Optical Shaft Encoder, which is used to
-//! measure both relative position of and rotational distance traveled by a shaft.
-//!
-//! # Hardware Overview
-//!
-//! The Optical Shaft Encoder can be used to track distance traveled, direction of motion, or position of
-//! any rotary component, such as a gripper arm or tracking wheel.
-//!
-//! The encoder works by shining light onto the edge of a disk outfitted with evenly
-//! spaced slits around the circumference. As the disk spins, light passes through the slits and
-//! is blocked by the opaque spaces between the slits. The encoder then detects how many slits have
-//! had light shine through, and in which direction the disk is spinning.
-//!
-//! The encoder can detect up to 1,700 pulses per second, which corresponds to 18.9 revolutions per
-//! second and 1,133 rpm (revolutions per minute). Faster revolutions will therefore not be interpreted
-//! exactly, potentially resulting in erroneous positional data being returned.
-//!
-//! # Comparison to [`RotationSensor`]
-//!
-//! Rotation sensors and Optical Shaft Encoders both measure the same thing (angular position), but
-//! with some important differences. The largest distinction is how position is measured. Rotation
-//! sensors use hall-effect magnets and know their absolute angle at any given time, including after
-//! a power cycle or loss of voltage. In contrast, encoders only track their *change* in position,
-//! meaning that any changes made to the encoder while unplugged will not be detected as a change in
-//! position. Rotation sensors have much higher resolution at 0.088° accuracy and can measure accurately
-//! at higher speeds. Rotation sensors are also capable of slotting VEX's new high-strength shafts, while
-//! these older encoders can only fit low-strength shafts.
-//!
-//! |                     | [`AdiEncoder`]   | [`RotationSensor`]                 |
-//! | ------------------- | ---------------- | ---------------------------------- |
-//! | Port                | Two [`AdiPort`]s | One [`SmartPort`]                  |
-//! | Resolution          | 360 Ticks/Rev    | 4090 Ticks/Rev                     |
-//! | Measurements        | Position         | Position, Absolute Angle, Velocity |
-//! | Update Rate         | 10mS             | 10mS                               |
-//! | Shaft Compatibility | Low Strength     | Low Strength, High Strength        |
-//!
-//! [`RotationSensor`]: crate::smart::rotation::RotationSensor
-//! [`SmartPort`]: crate::smart::SmartPort
+//! ADI encoder sensor.
 
 use snafu::Snafu;
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
@@ -45,7 +6,7 @@ use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 use super::{AdiDevice, AdiDeviceType, AdiPort};
 use crate::{position::Position, PortError};
 
-/// Optical Shaft Encoder
+/// VEX V5 Optical Shaft Encoder
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiEncoder {
     top_port: AdiPort,
