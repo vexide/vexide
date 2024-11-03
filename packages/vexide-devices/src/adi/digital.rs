@@ -95,7 +95,6 @@ impl AdiDigitalIn {
     ///   something else was connected.
     pub fn level(&self) -> Result<LogicLevel, PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         let value =
             unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } != 0;
@@ -174,7 +173,6 @@ impl AdiDigitalOut {
     ///   something else was connected.
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         unsafe {
             vexDeviceAdiValueSet(
@@ -196,7 +194,6 @@ impl AdiDigitalOut {
     ///   something else was connected.
     pub fn level(&self) -> Result<LogicLevel, PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         let value =
             unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } != 0;
