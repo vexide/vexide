@@ -47,7 +47,6 @@ impl AdiMotor {
     ///   something else was connected.
     pub fn set_raw_output(&mut self, pwm: i8) -> Result<(), PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         unsafe {
             vexDeviceAdiValueSet(self.port.device_handle(), self.port.index(), i32::from(pwm));
@@ -77,7 +76,6 @@ impl AdiMotor {
     ///   something else was connected.
     pub fn raw_output(&self) -> Result<i8, PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         Ok(
             // TODO:

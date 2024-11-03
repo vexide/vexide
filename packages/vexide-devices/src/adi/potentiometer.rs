@@ -51,7 +51,6 @@ impl AdiPotentiometer {
     ///   something else was connected.
     pub fn angle(&self) -> Result<f64, PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         Ok(
             f64::from(unsafe {

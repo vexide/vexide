@@ -69,7 +69,6 @@ impl AdiLightSensor {
     ///   something else was connected.
     pub fn raw_brightness(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         Ok(unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } as u16)
     }

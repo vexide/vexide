@@ -34,7 +34,6 @@ impl AdiSolenoid {
     ///   something else was connected.
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         self.level = level;
 

@@ -31,7 +31,6 @@ impl AdiPwmOut {
     ///   something else was connected.
     pub fn set_output(&mut self, value: u8) -> Result<(), PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         unsafe {
             vexDeviceAdiValueSet(
