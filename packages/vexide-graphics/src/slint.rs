@@ -28,6 +28,7 @@ pub struct V5Platform {
 }
 impl V5Platform {
     /// Create a new [`V5Platform`] from a [`Display`].
+    #[must_use]
     pub fn new(display: Display) -> Self {
         let window = MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
         window.set_size(PhysicalSize::new(
@@ -48,7 +49,7 @@ impl V5Platform {
 
     fn get_touch_event(&self) -> WindowEvent {
         let event = self.display.borrow().touch_status();
-        let physical_pos = PhysicalPosition::new(event.x as _, event.y as _);
+        let physical_pos = PhysicalPosition::new(event.x.into(), event.y.into());
         let position = LogicalPosition::from_physical(physical_pos, 1.0);
         match event.state {
             vexide_devices::display::TouchState::Released => {
@@ -98,8 +99,8 @@ impl Platform for V5Platform {
                             Display::HORIZONTAL_RESOLUTION as _,
                             Display::VERTICAL_RESOLUTION as _,
                         ),
-                        buf.into_iter(),
-                        Display::HORIZONTAL_RESOLUTION as _,
+                        buf,
+                        Display::HORIZONTAL_RESOLUTION.into(),
                     )
                     .unwrap();
             });

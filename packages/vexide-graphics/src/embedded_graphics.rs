@@ -18,6 +18,7 @@ impl BrainDisplay {
     /// Create a new [`BrainDisplay`] from a [`Display`].
     /// The display must be moved into this struct,
     /// as it is used to render the display and having multiple mutable references to it is unsafe.
+    #[must_use]
     pub fn new(mut display: Display) -> Self {
         display.set_render_mode(vexide_devices::display::RenderMode::DoubleBuffered);
         Self {
@@ -60,10 +61,10 @@ impl DrawTarget for BrainDisplay {
             vex_sdk::vexDisplayCopyRect(
                 0,
                 0x20,
-                Display::HORIZONTAL_RESOLUTION as _,
-                Display::VERTICAL_RESOLUTION as _,
+                Display::HORIZONTAL_RESOLUTION.into(),
+                Display::VERTICAL_RESOLUTION.into(),
                 self.triple_buffer.as_mut_ptr(),
-                Display::HORIZONTAL_RESOLUTION as _,
+                Display::HORIZONTAL_RESOLUTION.into(),
             );
         };
         self.display.render();

@@ -105,14 +105,14 @@ pub struct ControllerState {
     /// Button Right
     pub button_right: ButtonState,
 
-    /// Top Left Trigger
-    pub left_trigger_1: ButtonState,
-    /// Bottom Left Trigger
-    pub left_trigger_2: ButtonState,
-    /// Top Right Trigger
-    pub right_trigger_1: ButtonState,
-    /// Bottom Right Trigger
-    pub right_trigger_2: ButtonState,
+    /// Top Left Bumpeer
+    pub button_l1: ButtonState,
+    /// Bottom Left Bumper
+    pub button_l2: ButtonState,
+    /// Top Right Bumper
+    pub button_r1: ButtonState,
+    /// Bottom Right Bumper
+    pub button_r2: ButtonState,
 }
 
 /// This type stores the "pressed" states of every controller button.
@@ -134,10 +134,10 @@ struct ButtonStates {
     down: bool,
     left: bool,
     right: bool,
-    left_trigger_1: bool,
-    left_trigger_2: bool,
-    right_trigger_1: bool,
-    right_trigger_2: bool,
+    l1: bool,
+    l2: bool,
+    r1: bool,
+    r2: bool,
 }
 
 fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
@@ -312,10 +312,10 @@ impl Controller {
                 down: false,
                 left: false,
                 right: false,
-                left_trigger_1: false,
-                left_trigger_2: false,
-                right_trigger_1: false,
-                right_trigger_2: false,
+                l1: false,
+                l2: false,
+                r1: false,
+                r2: false,
             }),
             screen: ControllerScreen { id },
         }
@@ -356,18 +356,10 @@ impl Controller {
             left: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonLeft) } != 0,
             right: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonRight) }
                 != 0,
-            left_trigger_1: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL1)
-            } != 0,
-            left_trigger_2: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL2)
-            } != 0,
-            right_trigger_1: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR1)
-            } != 0,
-            right_trigger_2: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR2)
-            } != 0,
+            l1: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL1) } != 0,
+            l2: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL2) } != 0,
+            r1: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR1) } != 0,
+            r2: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR2) } != 0,
         };
 
         // Swap the current button states with the previous states, getting the previous states in the process.
@@ -414,21 +406,21 @@ impl Controller {
                 is_pressed: button_states.right,
                 prev_is_pressed: prev_button_states.right,
             },
-            left_trigger_1: ButtonState {
-                is_pressed: button_states.left_trigger_1,
-                prev_is_pressed: prev_button_states.left_trigger_1,
+            button_l1: ButtonState {
+                is_pressed: button_states.l1,
+                prev_is_pressed: prev_button_states.l1,
             },
-            left_trigger_2: ButtonState {
-                is_pressed: button_states.left_trigger_2,
-                prev_is_pressed: prev_button_states.left_trigger_2,
+            button_l2: ButtonState {
+                is_pressed: button_states.l2,
+                prev_is_pressed: prev_button_states.l2,
             },
-            right_trigger_1: ButtonState {
-                is_pressed: button_states.right_trigger_1,
-                prev_is_pressed: prev_button_states.right_trigger_1,
+            button_r1: ButtonState {
+                is_pressed: button_states.r1,
+                prev_is_pressed: prev_button_states.r1,
             },
-            right_trigger_2: ButtonState {
-                is_pressed: button_states.right_trigger_2,
-                prev_is_pressed: prev_button_states.right_trigger_2,
+            button_r2: ButtonState {
+                is_pressed: button_states.r2,
+                prev_is_pressed: prev_button_states.r2,
             },
         })
     }
