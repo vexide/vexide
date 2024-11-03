@@ -2,11 +2,13 @@
 //!
 //! # Overview
 //!
-//! Unlike digital ADI devices which can only report a "high" or "low" state, analog
+//! Unlike [digital ADI devices] which can only report a "high" or "low" state, analog
 //! ADI devices may report a wide range of values spanning 0-5 volts. These analog
 //! voltages readings are then converted into a digital values using the internal
 //! Analog-to-Digital Converter (ADC) in the V5 Brain. The Brain measures analog input
 //! using 12-bit values ranging from 0 (0V) to 4095 (5V).
+//!
+//! [digital ADI devices]: super::digital
 
 use vex_sdk::vexDeviceAdiValueGet;
 
@@ -16,14 +18,16 @@ use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
 /// analog-to-digital converters on the Brain.
 pub const ADC_MAX_VALUE: u16 = 4095;
 
-/// Generic analog input ADI device.
+/// Analog Input over ADI
+///
+/// Measures the voltage coming into an ADI port via a 12-bit ADC.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiAnalogIn {
     port: AdiPort,
 }
 
 impl AdiAnalogIn {
-    /// Create a analog input from an ADI port.
+    /// Configures an ADI port to measure analog input, returning an [`AdiAnalogIn`].
     #[must_use]
     pub fn new(port: AdiPort) -> Self {
         // NOTE: Don't care about whether or not the expander is available at this point, since
@@ -34,7 +38,7 @@ impl AdiAnalogIn {
         Self { port }
     }
 
-    /// Reads an analog input channel and returns the 12-bit value.
+    /// Reads an analog input channel, returning the 12-bit value (0-4095).
     ///
     /// # Sensor Compatibility
     ///

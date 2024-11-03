@@ -1,4 +1,4 @@
-//! ADI Pulse-width modulation (PWM).
+//! ADI Pulse-width Modulation (PWM)
 
 use vex_sdk::vexDeviceAdiValueSet;
 
