@@ -59,7 +59,6 @@ impl AdiRangeFinder {
     /// - A [`RangeFinderError::Port`] error is returned if the ADI device could not be accessed.
     pub fn distance(&self) -> Result<u16, RangeFinderError> {
         self.output_port.validate_expander()?;
-        self.output_port.configure(self.device_type());
 
         match unsafe {
             vexDeviceAdiValueGet(self.output_port.device_handle(), self.output_port.index())
