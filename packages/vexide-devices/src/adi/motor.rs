@@ -1,12 +1,12 @@
-//! ADI motor device.
+//! ADI Motor Controller
 
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
 use crate::PortError;
 
+/// Cortex-era Motor Controller
 #[derive(Debug, Eq, PartialEq)]
-/// Cortex era motor device.
 pub struct AdiMotor {
     port: AdiPort,
     slew: bool,

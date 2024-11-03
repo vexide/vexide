@@ -1,4 +1,4 @@
-//! ADI (Triport) devices on the Vex V5.
+//! ADI (Triport) Ports & Devices
 
 use core::time::Duration;
 
