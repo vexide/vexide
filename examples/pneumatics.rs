@@ -5,7 +5,7 @@ use vexide::prelude::*;
 
 struct Robot {
     controller: Controller,
-    solenoid: AdiSolenoid,
+    solenoid: AdiDigitalOut,
 }
 
 impl Compete for Robot {
@@ -27,7 +27,7 @@ impl Compete for Robot {
 async fn main(peripherals: Peripherals) {
     Robot {
         controller: peripherals.primary_controller,
-        solenoid: AdiSolenoid::new(peripherals.adi_a),
+        solenoid: AdiDigitalOut::new(peripherals.adi_a),
     }
     .compete()
     .await;

@@ -97,7 +97,6 @@ pub mod prelude {
             potentiometer::{AdiPotentiometer, PotentiometerType},
             pwm::AdiPwmOut,
             range_finder::AdiRangeFinder,
-            solenoid::AdiSolenoid,
             AdiDevice, AdiPort,
         },
         battery,
