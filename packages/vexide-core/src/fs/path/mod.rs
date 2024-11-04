@@ -7,7 +7,10 @@ pub struct Path {
 }
 impl Path {
     pub fn new<'a, P: AsRef<FsStr> + 'a>(path: P) -> &'a Self {
-        unsafe { &*(path.as_ref() as *const FsStr as *const Path) }
+        unsafe { &*(core::ptr::from_ref::<FsStr>(path.as_ref()) as *const Path) }
+    }
+    pub fn as_os_str(&self) -> &FsStr {
+        &self.inner
     }
 }
 impl AsRef<Path> for Path {
