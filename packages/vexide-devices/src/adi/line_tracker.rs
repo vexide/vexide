@@ -27,7 +27,7 @@ use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{analog, AdiDevice, AdiDeviceType, AdiPort, PortError};
 
-/// ADI Line Tracker
+/// Line Tracker
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiLineTracker {
     port: AdiPort,

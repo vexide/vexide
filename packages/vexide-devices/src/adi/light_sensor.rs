@@ -25,7 +25,7 @@ use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{analog, AdiDevice, AdiDeviceType, AdiPort, PortError};
 
-/// ADI Light Sensor
+/// Light Sensor
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiLightSensor {
     port: AdiPort,

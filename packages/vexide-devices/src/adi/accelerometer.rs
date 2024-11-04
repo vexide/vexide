@@ -4,10 +4,9 @@
 //!
 //! # Hardware Overview
 //!
-//! The LIS344ALH capacitive micromachined accelerometer features signal conditioning, a 1-pole
-//! low pass filter, temperature compensation and g Select which allows for the selection among
-//! 2 sensitivities. Zero-g offset full scale span and filter cut-off are factory set and require
-//! no external devices.
+//! The LIS344ALH capacitive accelerometer features signal conditioning, a 1-pole low pass filter,
+//! temperature compensation and a jumper switch which allows for the selection of 2 sensitivities.
+//! Zero-g offset full scale span and filter cut-off are factory set and require no external devices.
 //!
 //! The sensor will measure acceleration in both directions along each of the 3 axis. Acceleration
 //! along the X or Y axis in the direction of the silkscreened arrows will produce a larger reading,
@@ -23,7 +22,7 @@
 //! Z axis will diminish, and the readings on the other axis will change depending on the sensor's
 //! mounting orientation.
 //!
-//! # Connectivity
+//! # Wiring
 //!
 //! Each axis on the accelerometer requires its own ADI port. This means that the accelerometer will take
 //! three ADI ports if you wish to measure acceleration on all axes. You don't have to hook up all the

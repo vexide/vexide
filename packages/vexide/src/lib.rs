@@ -23,6 +23,7 @@
 //! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 //!
 //! [`slint`]: https://slint.rs/
+//! [`embedded-graphics`]: https://crates.io/crates/embedded-graphics
 //!
 //! # Usage
 //!
