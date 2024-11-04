@@ -4,8 +4,6 @@
 //!
 //! # Hardware Overview
 //!
-//! Potentiometers are analog sensors that measure angular position.
-//!
 //! Potentiometers are analog sensors that measure angular position. They function as
 //! variable resistors that change their resistance based on the angular position of
 //! their shaft.
