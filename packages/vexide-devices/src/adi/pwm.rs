@@ -26,7 +26,6 @@
 //! [`LogicLevel::Low`]: super::digital::LogicLevel
 //! [`LogicLevel::High`]: super::digital::LogicLevel
 
-
 use vex_sdk::vexDeviceAdiValueSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
