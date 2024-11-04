@@ -9,7 +9,7 @@ use crate::PortError;
 /// ADI Range Finders.
 ///
 /// Requires two ports - one for pinging, and one for listening for the response.
-/// This output port ("output") must be indexed directly below the input ("input") port.
+/// This output port ("ping") must be indexed directly below the input ("echo") port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiRangeFinder {
     output_port: AdiPort,

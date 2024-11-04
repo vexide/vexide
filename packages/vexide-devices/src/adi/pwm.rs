@@ -1,4 +1,30 @@
 //! ADI Pulse-width Modulation (PWM)
+//!
+//! This module provides an interface for generating 8-bit PWM signals through ADI ports.
+//!
+//! # Hardware Overview
+//!
+//! Pulse-width modulation (PWM) is a digital signaling technique that creates a variable
+//! width pulse over a fixed time period, allowing you to communicate analog data over
+//! digital signals by measuring the length of the pulse.
+//!
+//! PWM signals consist of two components:
+//! - ON time (pulse width): When the signal is high ([`LogicLevel::High`]/3.3V)
+//! - OFF time: When the signal is low ([`LogicLevel::Low`]/0V)
+//!
+//! The ratio between ON time and OFF time (the "duty cycle") is used to encode
+//! information for commands to devices:
+//!
+//! ```text
+//! 3.3V  ┐  ┌────┐     ┌────┐     ┌────┐
+//! 0V    └──┘    └─────┘    └─────┘    └──
+//!          |<-->| pulse width (0.94mS to 2.03mS)
+//!          |<--16ms-->| cycle width (16mS)
+//! ```
+//!
+//! [`LogicLevel::Low`]: super::digital::LogicLevel
+//! [`LogicLevel::High`]: super::digital::LogicLevel
+
 
 use vex_sdk::vexDeviceAdiValueSet;
 
