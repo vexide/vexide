@@ -16,7 +16,7 @@
 //! While this module provides an API similar to that of a [Smart Motor], it is
 //! in reality simply outputting an 8-bit PWM signal, which will be processed by
 //! an intermediate motor controller (such as the MC29) to drive the motor using
-//! an H-bridge circuit, allowing a.
+//! an H-bridge circuit, allowing operation in either direction.
 //!
 //! Because these motors are no longer V5RC legal, they are not affected by
 //! competition control restrictions, nor do they have any software-imposed
