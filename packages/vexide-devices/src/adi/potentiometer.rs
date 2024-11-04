@@ -42,7 +42,7 @@ use vex_sdk::vexDeviceAdiValueGet;
 use super::{analog, AdiDevice, AdiDeviceType, AdiPort};
 use crate::PortError;
 
-/// Analog potentiometer ADI device.
+/// Potentiometer
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiPotentiometer {
     potentiometer_type: PotentiometerType,

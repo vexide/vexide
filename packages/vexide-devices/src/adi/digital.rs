@@ -68,7 +68,7 @@ impl core::ops::Not for LogicLevel {
     }
 }
 
-/// Generic digital input over ADI.
+/// Generic Digital Input over ADI
 ///
 /// Represents an ADI port configured to recieve digital input. The pin can be read to
 /// determine its current [logic level](`LogicLevel`) (above or below 3.3V).
