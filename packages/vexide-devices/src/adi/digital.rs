@@ -147,8 +147,7 @@ impl AdiDevice for AdiDigitalIn {
 /// Generic digital output over ADI.
 ///
 /// Represents an ADI port configured to send digital signals to a device. This can be
-/// used for toggling solenoids (although [`AdiSolenoid`](super::solenoid::AdiSolenoid)
-/// is preferred for this) or other external devices that might need a sigital signal
+/// used for toggling solenoids or other external devices that might need a digital signal
 /// from the brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiDigitalOut {
