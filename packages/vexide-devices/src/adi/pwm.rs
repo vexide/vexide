@@ -5,8 +5,9 @@
 //! # Hardware Overview
 //!
 //! Pulse-width modulation (PWM) is a digital signaling technique that creates a variable
-//! width pulse over a fixed time period, allowing you to communicate analog data over
-//! digital signals by measuring the length of the pulse.
+//! width high pulse over a fixed time period, allowing you to communicate analog data over
+//! digital signals by measuring the length of the pulse (how long it was high compared to
+//! how long it was low).
 //!
 //! PWM signals consist of two components:
 //! - ON time (pulse width): When the signal is high ([`LogicLevel::High`]/3.3V)
