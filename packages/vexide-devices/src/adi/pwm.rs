@@ -16,10 +16,10 @@
 //! information for commands to devices:
 //!
 //! ```text
-//! 3.3V  ┐  ┌────┐     ┌────┐     ┌────┐
-//! 0V    └──┘    └─────┘    └─────┘    └──
-//!          |<-->| pulse width (0.94mS to 2.03mS)
-//!          |<--16ms-->| cycle width (16mS)
+//!             |<-->| pulse width (0.94-2.03mS)
+//! 3.3V  ┐     ┌────┐     ┌──┐       ┌──────┐
+//! 0V    └─────┘    └─────┘  └───────┘      └────
+//!             |<-------->| cycle width (16mS)
 //! ```
 //!
 //! [`LogicLevel::Low`]: super::digital::LogicLevel
