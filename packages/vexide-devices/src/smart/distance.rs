@@ -43,6 +43,15 @@ unsafe impl Sync for DistanceSensor {}
 
 impl DistanceSensor {
     /// Creates a new distance sensor from a [`SmartPort`].
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
@@ -68,6 +77,21 @@ impl DistanceSensor {
 
     /// Attempts to detect an object, returning `None` if no object could be found.
     ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
+    ///
+    ///     if let Some(object) = sensor.object().unwrap_or_default() {
+    ///         println!("Object of size {}mm is moving at {}m/s", object.distance, object.velocity);
+    ///     }
+    /// }
+    /// ```
+    ///
     /// # Errors
     ///
     /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
@@ -92,6 +116,19 @@ impl DistanceSensor {
     }
 
     /// Returns the internal status code of the distance sensor.
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
+    ///
+    ///     if let Ok(status) = sensor.status() {
+    ///         println!("Status: {:b}", status);
+    ///     }
+    /// }
+    /// ```
     ///
     /// # Errors
     ///
