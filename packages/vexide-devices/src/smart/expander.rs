@@ -60,6 +60,21 @@ pub struct AdiExpander {
 
 impl AdiExpander {
     /// Creates a new expander from a [`SmartPort`].
+    ///
+    /// An ADI expander cannot generate errors, only the ADI devices created from it can.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let expander = AdiExpander::new(peripherals.port_1);
+    ///     let analog_in = AdiAnalogIn::new(expander.adi_a);
+    ///     println!("Analog in voltage: {:?}", analog_in.voltage());
+    /// }
+    /// ```
     #[must_use]
     pub const fn new(port: SmartPort) -> Self {
         unsafe {
