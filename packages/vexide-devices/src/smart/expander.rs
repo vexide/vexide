@@ -38,6 +38,20 @@ pub struct AdiExpander {
 
 impl AdiExpander {
     /// Creates a new expander from a [`SmartPort`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let expander = AdiExpander::new(peripherals.port_1);
+    ///
+    ///     // Pull out the expander's Port A. This can then be used to create ADI devices.
+    ///     let port_a = expander.port_a;
+    /// }
+    /// ```
     #[must_use]
     pub const fn new(port: SmartPort) -> Self {
         unsafe {
