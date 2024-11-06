@@ -30,6 +30,7 @@ Before releasing:
 - Added a getter that retrieves a `Controller`'s identifier. (#189)
 - Added support for controllers in `DynamicPeripherals`. (#196)
 - Added the ability to return Smart Ports, ADI ports, the display, and controllers to `DynamicPeripherals`. (#196)
+- Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs.
 
 ### Fixed
 
@@ -37,6 +38,7 @@ Before releasing:
 - The `dbg!();` now works as expected when no arguments are supplied to it. (#175)
 - `Motor::velocity` now correctly returns the estimated velocity instead of target velocity. (#184) (**Breaking Change**)
 - Removed useless generics from `AdiAddrLed::new`. (#197) (**Breaking Change**)
+- Fixed an issue preventing ADI updates in fast loops. (#210)
 
 ### Changed
 
@@ -57,10 +59,12 @@ Before releasing:
 - `Mutex` is now `?Sized`, matching the behavior of the standard library. (#202) (**Breaking Change**)
 - Switched to the [`rgb`](https://crates.io/crates/rgb) for color storage. `vexide::devices::color` is now `vexide::devices::rgb` which re-exports the `Rgb` type. (#201) (**Breaking Change**)
 - Renamed `AddrledError::Adi` to `AddrledError::Port`. (#203) (**Breaking Change**)
+- `AdiDigitalOut::level` now reads the actual reported level value from VEXos, and thus now returns a `Result`. (#210) (**Breaking Change**)
 
 ### Removed
 
 - Removed the defunct `usd` module from `vexide::devices`. (#198) (**Breaking Change**)
+- Removed `AdiSolenoid`. Use `AdiDigitalOut` instead. (#210) (**Breaking Change**)
 
 ### New Contributors
 

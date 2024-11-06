@@ -22,6 +22,9 @@
 //! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [`slint`] and [`embedded-graphics`].
 //! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 //!
+//! [`slint`]: https://slint.rs/
+//! [`embedded-graphics`]: https://crates.io/crates/embedded-graphics
+//!
 //! # Usage
 //!
 //! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
@@ -95,7 +98,6 @@ pub mod prelude {
             potentiometer::{AdiPotentiometer, PotentiometerType},
             pwm::AdiPwmOut,
             range_finder::AdiRangeFinder,
-            solenoid::AdiSolenoid,
             AdiDevice, AdiPort,
         },
         battery,
