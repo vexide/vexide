@@ -1,7 +1,23 @@
-//! VEXLink
+//! VEXlink
 //!
-//! This module provides support for VEXLink, a point-to-point wireless communications protocol between
-//! two VEXNet radios.
+//! This module provides support for VEXlink, a point-to-point wireless communications protocol between
+//! two VEXnet radios.
+//!
+//! # Hardware Overview
+//!
+//! There are two types of radios in a VEXnink connection: "manager" and "worker". A "manager" radio can transmit data at up to 1040 bytes/s
+//! while a "worker" radio can transmit data at up to 520 bytes/s.
+//! A connection should only ever have both types of radios.
+//!
+//! In order to connect to a radio, VEXos hashes a given link name and uses it as an ID to verify the connection.
+//! For this reason, you should try to create a unique name for each radio link
+//! to avoid accidentally interfering, or being interfered with by, an unrelated VEXlink connection.
+//! Ideally, you want a name that will never be used by another team.
+//!
+//! The lights on the radio can be used as a status indicator:
+//! - Blinking red: The radio is waiting for a connection to be established.
+//! - Alternating red and green quickly: The radio is connected to another radio and is the "manager" radio.
+//! - Alternating red and green slowly: The radio is connected to another radio and is the "worker" radio.
 //!
 //! For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
 
@@ -36,7 +52,8 @@ unsafe impl Sync for RadioLink {}
 impl RadioLink {
     /// Opens a radio link from a VEXNet radio plugged into a Smart Port. Once
     /// opened, other VEXNet functionality such as controller tethering on this
-    /// radio will be disabled.
+    /// specific radio will be disabled.
+    /// Other radios connected to the Brain can take over this functionality.
     ///
     /// # Errors
     ///
