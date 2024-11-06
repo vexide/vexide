@@ -64,7 +64,7 @@ Before releasing:
 ### Removed
 
 - Removed the defunct `usd` module from `vexide::devices`. (#198) (**Breaking Change**)
-- Removed `AdiSolenoid`. Use `AdiDigitalOut` instead.
+- Removed `AdiSolenoid`. Use `AdiDigitalOut` instead. (#210) (**Breaking Change**)
 
 ### New Contributors
 

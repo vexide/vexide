@@ -16,7 +16,7 @@
 //!
 //! # Gravity
 //!
-//! Gravity is indistinguishable from upward acceleration, so the sensor will detect a constant 1.0G
+//! Gravity is indistinguishable from upward acceleration, so the sensor will detect a constant 1.0g
 //! on the vertical axis while at rest. For example, if the board is mounted horizontally, gravity will
 //! effect only the Z axis. If the sensor is tilted away from the horizontal, the gravity reading on the
 //! Z axis will diminish, and the readings on the other axis will change depending on the sensor's
