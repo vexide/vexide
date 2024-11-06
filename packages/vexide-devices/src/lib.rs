@@ -24,14 +24,13 @@ extern crate alloc;
 
 pub mod adi;
 pub mod battery;
-pub mod color;
 pub mod controller;
 pub mod display;
 pub mod geometry;
 pub mod peripherals;
 pub mod position;
+pub mod rgb;
 pub mod smart;
-pub mod usd;
 
 use snafu::Snafu;
 

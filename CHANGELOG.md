@@ -31,6 +31,7 @@ Before releasing:
 - Added support for controllers in `DynamicPeripherals`. (#196)
 - Added the ability to return Smart Ports, ADI ports, the display, and controllers to `DynamicPeripherals`. (#196)
 - Added a `SmartDevice::UPDATE_INTERVAL` constant for all devices, representing the amount of time between data updates from a given device. (#199) (**Breaking Change**)
+- Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs.
 
 ### Fixed
 
@@ -38,10 +39,12 @@ Before releasing:
 - The `dbg!();` now works as expected when no arguments are supplied to it. (#175)
 - `Motor::velocity` now correctly returns the estimated velocity instead of target velocity. (#184) (**Breaking Change**)
 - Removed useless generics from `AdiAddrLed::new`. (#197) (**Breaking Change**)
+- Fixed an issue preventing ADI updates in fast loops. (#210)
 
 ### Changed
 
 - Controller state is now returned all at once to reduce error checking. (#152) (**Breaking Change**)
+- Controller bumper naming scheme has been changed from `<left/right>_trigger_<1/2>` to `button_<r/l><1/2>`. (#204) (**Breaking Change**)
 - `Button::was_pressed` has been renamed to `ButtonState::is_now_pressed`.
 - `battery::capacity` now returns from 0.0-1.0 rather than 0-100.
 - `battery::voltage` is now returned in volts rather than millivolts.
@@ -61,6 +64,15 @@ Before releasing:
 ### Removed
 
 - Removed `Motor::DATA_READ_INTERVAL`. Use `Motor::UPDATE_INTERVAL` instead. (#199) (**Breaking Change**)
+- `Mutex` is now `?Sized`, matching the behavior of the standard library. (#202) (**Breaking Change**)
+- Switched to the [`rgb`](https://crates.io/crates/rgb) for color storage. `vexide::devices::color` is now `vexide::devices::rgb` which re-exports the `Rgb` type. (#201) (**Breaking Change**)
+- Renamed `AddrledError::Adi` to `AddrledError::Port`. (#203) (**Breaking Change**)
+- `AdiDigitalOut::level` now reads the actual reported level value from VEXos, and thus now returns a `Result`. (#210) (**Breaking Change**)
+
+### Removed
+
+- Removed the defunct `usd` module from `vexide::devices`. (#198) (**Breaking Change**)
+- Removed `AdiSolenoid`. Use `AdiDigitalOut` instead. (#210) (**Breaking Change**)
 
 ### New Contributors
 

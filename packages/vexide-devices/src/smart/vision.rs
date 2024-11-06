@@ -22,7 +22,6 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-use core::time::Duration;
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -38,7 +37,7 @@ use vex_sdk::{
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::{color::Rgb, geometry::Point2, PortError};
+use crate::{geometry::Point2, rgb::Rgb, PortError};
 
 /// VEX Vision Sensor
 ///
@@ -276,9 +275,15 @@ impl VisionSensor {
             match unsafe { vexDeviceVisionWhiteBalanceModeGet(self.device) } {
                 V5VisionWBMode::kVisionWBNormal => WhiteBalance::Auto,
                 V5VisionWBMode::kVisionWBStart => WhiteBalance::StartupAuto,
-                V5VisionWBMode::kVisionWBManual => WhiteBalance::Manual(
-                    unsafe { vexDeviceVisionWhiteBalanceGet(self.device) }.into(),
-                ),
+                V5VisionWBMode::kVisionWBManual => WhiteBalance::Manual({
+                    let raw = unsafe { vexDeviceVisionWhiteBalanceGet(self.device) };
+
+                    Rgb {
+                        r: raw.red,
+                        g: raw.green,
+                        b: raw.blue,
+                    }
+                }),
                 _ => unreachable!(),
             },
         )
@@ -314,9 +319,9 @@ impl VisionSensor {
                 vexDeviceVisionWhiteBalanceSet(
                     self.device,
                     V5_DeviceVisionRgb {
-                        red: rgb.red(),
-                        green: rgb.green(),
-                        blue: rgb.blue(),
+                        red: rgb.r,
+                        green: rgb.g,
+                        blue: rgb.b,
 
                         // Pretty sure this field does nothing, but PROS sets it to this.
                         //
@@ -350,9 +355,9 @@ impl VisionSensor {
                 vexDeviceVisionLedColorSet(
                     self.device,
                     V5_DeviceVisionRgb {
-                        red: rgb.red(),
-                        green: rgb.green(),
-                        blue: rgb.blue(),
+                        red: rgb.r,
+                        green: rgb.g,
+                        blue: rgb.b,
                         brightness: (brightness * 100.0) as u8,
                     },
                 );
@@ -888,7 +893,7 @@ pub enum WhiteBalance {
     /// Manual Mode
     ///
     /// Allows for manual control over white balance using an RGB color.
-    Manual(Rgb),
+    Manual(Rgb<u8>),
 }
 
 impl From<WhiteBalance> for V5VisionWBMode {
@@ -917,7 +922,7 @@ pub enum LedMode {
     ///
     /// When in manual mode, the integrated LED will display a user-set RGB color code and brightness
     /// percentage from 0.0-1.0.
-    Manual(Rgb, f64),
+    Manual(Rgb<u8>, f64),
 }
 
 impl From<LedMode> for V5VisionLedMode {
@@ -926,12 +931,6 @@ impl From<LedMode> for V5VisionLedMode {
             LedMode::Auto => Self::kVisionLedModeAuto,
             LedMode::Manual(_, _) => Self::kVisionLedModeManual,
         }
-    }
-}
-
-impl From<V5_DeviceVisionRgb> for Rgb {
-    fn from(value: V5_DeviceVisionRgb) -> Self {
-        Self::new(value.red, value.green, value.blue)
     }
 }
 
