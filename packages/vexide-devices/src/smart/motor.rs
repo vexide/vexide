@@ -233,6 +233,18 @@ impl Motor {
     /// Creates a new 11W (V5) Smart Motor.
     ///
     /// See [`Motor::new_exp`] to create a 5.5W (EXP) Smart Motor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Red, Direction::Forward);
+    ///     assert!(motor.is_v5());
+    ///     assert_eq!(motor.max_voltage().unwrap(), Motor::V5_MAX_VOLTAGE);
+    /// }
     #[must_use]
     pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
         Self::new_with_type(port, gearset, direction, MotorType::V5)
@@ -240,6 +252,18 @@ impl Motor {
     /// Creates a new 5.5W (EXP) Smart Motor.
     ///
     /// See [`Motor::new`] to create a 11W (V5) Smart Motor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new_exp(peripherals.port_1, Direction::Forward);
+    ///     assert!(motor.is_exp());
+    ///     assert_eq!(motor.max_voltage().unwrap(), Motor::EXP_MAX_VOLTAGE);
+    /// }
     #[must_use]
     pub fn new_exp(port: SmartPort, direction: Direction) -> Self {
         Self::new_with_type(port, Gearset::Green, direction, MotorType::Exp)
@@ -363,6 +387,20 @@ impl Motor {
     }
 
     /// Returns the current [`MotorControl`] target that the motor is attempting to use.
+    /// This value is set with [`Motor::set_target`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     motor.set_target(MotorControl::Brake(BrakeMode::Hold));
+    ///     let target = motor.target();
+    ///     assert_eq!(target, MotorControl::Brake(BrakeMode::Hold));
+    /// }
     #[must_use]
     pub const fn target(&self) -> MotorControl {
         self.target
@@ -400,23 +438,76 @@ impl Motor {
         Ok(unsafe { vexDeviceMotorGearingGet(self.device) }.into())
     }
 
-    /// Returns the type of the motor,
+    /// Returns the type of the motor.
+    /// This does not check the hardware, it simply returns the type that the motor was created with.
+    ///
+    /// # Examples
+    ///
+    /// Match based on motor type:
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// fn print_motor_type(motor: &Motor) {
+    ///     match motor.motor_type() {
+    ///         MotorType::Exp => println!("Motor is a 5.5W EXP Smart Motor"),
+    ///         MotorType::V5 => println!("Motor is an 11W V5 Smart Motor"),
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub const fn motor_type(&self) -> MotorType {
         self.motor_type
     }
     /// Returns `true` if the motor is a 5.5W (EXP) Smart Motor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new_exp(peripherals.port_1, Direction::Forward);
+    ///     if motor.is_exp() {
+    ///         println!("Motor is a 5.5W EXP Smart Motor");
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub const fn is_exp(&self) -> bool {
         self.motor_type.is_exp()
     }
     /// Returns `true` if the motor is an 11W (V5) Smart Motor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor:: new(peripherals.port_1, Gearset::Red, Direction::Forward);
+    ///     if motor.is_v5() {
+    ///         println!("Motor is an 11W V5 Smart Motor");
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub const fn is_v5(&self) -> bool {
         self.motor_type.is_v5()
     }
 
     /// Returns the maximum voltage for the motor based off of its [motor type](Motor::motor_type).
+    ///
+    /// # Examples
+    ///
+    /// Run a motor at max speed, agnostic of its type:
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// fn run_motor_at_max_speed(motor: &mut Motor) {
+    ///     motor.set_voltage(motor.max_voltage()).unwrap();
+    /// }
     #[must_use]
     pub const fn max_voltage(&self) -> f64 {
         self.motor_type.max_voltage()
@@ -436,6 +527,45 @@ impl Motor {
     /// # Note
     ///
     /// To get the current **target** velocity instead of the estimated velocity, use [`Motor::target`].
+    ///
+    /// # Examples
+    ///
+    /// Get the current velocity of a motor:
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///
+    ///     println!("{:?}", motor.velocity().unwrap());
+    /// }
+    /// ```
+    ///
+    /// Calculate acceleration of a motor:
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///
+    ///     let mut last_velocity = motor.velocity().unwrap();
+    ///     let mut start_time = Instant::now();
+    ///     loop {
+    ///         let velocity = motor.velocity().unwrap();
+    ///         // Make sure we don't divide by zero
+    ///         let elapsed = start_time.elapsed().as_secs_f64() + 0.001;
+    ///
+    ///         // Calculate acceleration
+    ///         let acceleration = (velocity - last_velocity) / elapsed;
+    ///         println!("Velocity: {:.2} RPM, Acceleration: {:.2} RPM/s", velocity, acceleration);
+    ///
+    ///         last_velocity = velocity;
+    ///         start_time = Instant::now();
+    ///    }
+    /// }
+    /// ```
     ///
     /// # Errors
     ///
