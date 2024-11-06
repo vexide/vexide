@@ -68,6 +68,23 @@ impl DistanceSensor {
 
     /// Attempts to detect an object, returning `None` if no object could be found.
     ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let distance_sensor = DistanceSensor::new(peripherals.port_1);
+    ///     loop {
+    ///         let object = distance_sensor.object().unwrap_or_default();
+    ///         println!("distance: {} with confidence: {}", object.distance, object.confidence);
+    ///         sleep(Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
+    ///
     /// # Errors
     ///
     /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
@@ -92,6 +109,31 @@ impl DistanceSensor {
     }
 
     /// Returns the internal status code of the distance sensor.
+    /// The status code of the signature can tell you if the sensor is still initializing or if it is working correctly.
+    /// If the distance sensor is still initializing, the status code will be 0x00.
+    /// If it is done initializing and functioning correctly, the status code will be 0x82 or 0x86.
+    ///
+    /// # Examples
+    ///
+    /// A simple initialization state check:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let distance_sensor = DistanceSensor::new(peripherals.port_1);
+    ///     loop {
+    ///         if let Ok(0) = distance_sensor.status() {
+    ///             println!("Sensor is still initializing");
+    ///         } else {
+    ///             println!("Sensor is ready");
+    ///         }
+    ///         sleep(Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
     ///
     /// # Errors
     ///
