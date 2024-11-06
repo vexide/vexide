@@ -21,8 +21,8 @@
 //!
 //! All ADI devices are updated at a fixed interval of 10ms (100Hz), defined by [`ADI_UPDATE_INTERVAL`].
 //!
-//! [`AdiExpander`](crate::smart::expander::AdiExpander)
-//! [Cortex microcontroller]: https://www.vexrobotics.com/276-2194.html
+//! [`AdiExpander`]: crate::smart::expander::AdiExpander
+//! [Cortex microcontroller]: <https://www.vexrobotics.com/276-2194.html>
 
 use core::time::Duration;
 
