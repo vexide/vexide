@@ -37,6 +37,7 @@ Before releasing:
 - The `dbg!();` now works as expected when no arguments are supplied to it. (#175)
 - `Motor::velocity` now correctly returns the estimated velocity instead of target velocity. (#184) (**Breaking Change**)
 - Removed useless generics from `AdiAddrLed::new`. (#197) (**Breaking Change**)
+- IMU calibration timeouts should no longer appear when the IMU is in working condition. (#212)
 
 ### Changed
 
@@ -57,6 +58,7 @@ Before releasing:
 - `Mutex` is now `?Sized`, matching the behavior of the standard library. (#202) (**Breaking Change**)
 - Switched to the [`rgb`](https://crates.io/crates/rgb) for color storage. `vexide::devices::color` is now `vexide::devices::rgb` which re-exports the `Rgb` type. (#201) (**Breaking Change**)
 - Renamed `AddrledError::Adi` to `AddrledError::Port`. (#203) (**Breaking Change**)
+- Removed `InertialSensor::CALIBRATION_TIMEOUT` and replaced it with the `InertialSensor::CALIBRATION_START_TIMEOUT` and `InertialSensor::CALIBRATION_START_TIMEOUT` constants. (#212) (**Breaking Change**)
 
 ### Removed
 
