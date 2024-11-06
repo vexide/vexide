@@ -51,7 +51,7 @@ unsafe impl Sync for RotationSensor {}
 
 impl RotationSensor {
     /// The minimum data rate that you can set a rotation sensor to.
-    pub const MIN_COMPUTATION_INTERVAL: Duration = Duration::from_millis(5);
+    pub const MIN_DATA_INTERVAL: Duration = Duration::from_millis(5);
 
     /// The amount of unique sensor readings per one revolution of the sensor.
     pub const TICKS_PER_REVOLUTION: u32 = 36000;
@@ -154,8 +154,8 @@ impl RotationSensor {
 
     /// Sets the internal computation speed of the rotation sensor.
     ///
-    /// This method does NOT change the *communication speed* of the sensor with the Brain (which will always be 10mS),
-    /// but rather how fast data is sampled and computed onboard the sensor itself.
+    /// This method does NOT change the rate at which user code can read data off the sensor, as the brain will only talk to
+    /// the device every 10mS regardless of how fast data is being sent or computed. See [`RotationSensor::UPDATE_INTERVAL`].
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     ///
@@ -167,7 +167,7 @@ impl RotationSensor {
 
         let mut time_ms = interval
             .as_millis()
-            .max(Self::MIN_COMPUTATION_INTERVAL.as_millis()) as u32;
+            .max(Self::MIN_DATA_INTERVAL.as_millis()) as u32;
         time_ms -= time_ms % 5; // Rate is in increments of 5ms - not sure if this is necessary, but PROS does it.
 
         unsafe { vexDeviceAbsEncDataRateSet(self.device, time_ms) }
