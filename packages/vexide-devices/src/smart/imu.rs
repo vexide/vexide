@@ -90,12 +90,13 @@ unsafe impl Send for InertialSensor {}
 unsafe impl Sync for InertialSensor {}
 
 impl InertialSensor {
-    /// The time limit used by the PROS kernel for bailing out of calibration.
-    ///
-    /// In theory, this could be as low as 2s, but is kept at 3s for margin-of-error.
-    ///
-    /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L31>
-    pub const CALIBRATION_TIMEOUT: Duration = Duration::from_secs(3);
+    /// The maximum time that the Inertial Sensor should take to *begin* its calibration process following
+    /// a call to [`InertialSensor::calibrate`].
+    pub const CALIBRATION_START_TIMEOUT: Duration = Duration::from_secs(1);
+
+    /// The maximum time that the Inertial Sensor should take to *end* its calibration process after
+    /// calibration has begun.
+    pub const CALIBRATION_END_TIMEOUT: Duration = Duration::from_secs(3);
 
     /// The minimum data rate that you can set an IMU perform computations at.
     pub const MIN_DATA_INTERVAL: Duration = Duration::from_millis(5);
@@ -531,7 +532,12 @@ impl core::future::Future for InertialCalibrateFuture {
                 }
             }
             Self::Waiting(port, timestamp, phase) => {
-                if timestamp.elapsed() > InertialSensor::CALIBRATION_TIMEOUT {
+                if timestamp.elapsed()
+                    > match phase {
+                        CalibrationPhase::Start => InertialSensor::CALIBRATION_START_TIMEOUT,
+                        CalibrationPhase::End => InertialSensor::CALIBRATION_END_TIMEOUT,
+                    }
+                {
                     // Calibration took too long and exceeded timeout.
                     return Poll::Ready(Err(InertialError::CalibrationTimedOut));
                 }
@@ -558,7 +564,7 @@ impl core::future::Future for InertialCalibrateFuture {
                 if status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::Start
                 {
                     // Calibration has started, so we'll change to waiting for it to end.
-                    *self = Self::Waiting(port, timestamp, CalibrationPhase::End);
+                    *self = Self::Waiting(port, Instant::now(), CalibrationPhase::End);
                     cx.waker().wake_by_ref();
                     return Poll::Pending;
                 } else if !status.contains(InertialStatus::CALIBRATING)
