@@ -1,6 +1,6 @@
 //! ADI Addressable LEDs
 //!
-//! This module provides an interface for controlling [WS2812B] (NeoPixel) addressable LED stripsover ADI ports.
+//! This module provides an interface for controlling [WS2812B] addressable LED strips over ADI ports.
 //! These are commonly used for decorative lighting. More can be read about using them in
 //! [this blog post](https://sylvie.fyi/posts/v5-addrled/) and
 //! [this forum post](https://www.vexforum.com/t/v5-addressable-leds/106960).
