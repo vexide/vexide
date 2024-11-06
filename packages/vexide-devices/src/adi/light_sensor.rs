@@ -1,14 +1,31 @@
 //! ADI Light Sensor
 //!
-//! The Light Sensor is a sensor which uses a photoresistor to measure the intensity of light. It is
-//! one of the 3-Wire series sensors. The sensor has a single mounting hole which will allow it to be
-//! attached to the robot's structure.
+//! The Light Sensor measures the intensity of visible light with a photoresistor.
+//!
+//! # Hardware Overview
+//!
+//! Using a Cadmium Sulfoselenide photoconductive photocell (CdS), the light sensor
+//! is able to adjust its resistance based on the amount of visible light shining on it.
+//!
+//! The light sensor only measures light in the visible spectrum. It cannot detect
+//! infrared or ultraviolet sources.
+//!
+//! # Effective Range
+//!
+//! Effective range is dependent on both the intensity of the source and the surrounding
+//! enviornment. Darker ambient surroundings with a brighter source will result in a
+//! greater effective range.
+//!
+//! That being said, the sensor generally has a usable range of up to 6 feet, meaning it
+//! can distinguish a light source from the surrounding ambient light at up to six feet
+//! away. Measurements farther than this might cause the sensor to return inconclusive
+//! results or blend into the ambient light.
 
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{analog, AdiDevice, AdiDeviceType, AdiPort, PortError};
 
-/// ADI Light Sensor
+/// Light Sensor
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiLightSensor {
     port: AdiPort,
@@ -52,7 +69,6 @@ impl AdiLightSensor {
     ///   something else was connected.
     pub fn raw_brightness(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         Ok(unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } as u16)
     }

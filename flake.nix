@@ -12,14 +12,14 @@
           inherit system;
           overlays = [ (import rust-overlay) ];
         };
-        cargo-v5' = cargo-v5.packages.${system}.default;
+        cargo-v5' = cargo-v5.packages.${system}.cargo-v5-full;
       in {
         devShell = pkgs.mkShell {
           buildInputs = [
             cargo-v5'
             pkgs.cargo-binutils
             (pkgs.rust-bin.nightly."2024-08-20".default.override {
-              extensions = [ "rust-analyzer" "rust-src" "clippy" "llvm-tools" ];
+              extensions = [ "rust-analyzer" "rust-src" "clippy" ];
             })
           ];
         };

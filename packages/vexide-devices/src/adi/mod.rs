@@ -1,4 +1,28 @@
-//! ADI (Triport) devices on the Vex V5.
+//! ADI Ports & Devices
+//!
+//! This module provides abstractions for devices connected through VEX's Analog/Digital Interface
+//! (ADI) ports, also known as the "three-wire ports" or "triports".
+//!
+//! # Hardware Overview
+//!
+//! The V5 Brain features 8 three-wire connector ports on its left side that allow connecting
+//! simple analog and digital devices to the brain. These commonly include VEX's legacy sensors
+//! and motors that plugged into the old [Cortex microcontroller].
+//!
+//! ADI ports can also be found on the [`AdiExpander`] device, which grants you eight additional
+//! ports at the cost of a Smart port.
+//!
+//! ADI ports are capable of digital input (3.3V logic), 12-bit analog input, digital output,
+//! and 8-bit PWM output. Each port has a dedicated 12-bit Analog-to-Digital Converter (ADC)
+//! to allow for analog sensors to send a range of values to the port. There is no DAC, making
+//! equivalent analog output impossible. ADI has a max voltage of 5V.
+//!
+//! # Update Times
+//!
+//! All ADI devices are updated at a fixed interval of 10ms (100Hz), defined by [`ADI_UPDATE_INTERVAL`].
+//!
+//! [`AdiExpander`]: crate::smart::expander::AdiExpander
+//! [Cortex microcontroller]: <https://www.vexrobotics.com/276-2194.html>
 
 use core::time::Duration;
 
@@ -15,7 +39,6 @@ pub mod motor;
 pub mod potentiometer;
 pub mod pwm;
 pub mod range_finder;
-pub mod solenoid;
 
 pub use accelerometer::{AdiAccelerometer, Sensitivity};
 pub use analog::AdiAnalogIn;
@@ -27,7 +50,6 @@ pub use motor::AdiMotor;
 pub use potentiometer::{AdiPotentiometer, PotentiometerType};
 pub use pwm::AdiPwmOut;
 pub use range_finder::AdiRangeFinder;
-pub use solenoid::AdiSolenoid;
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
