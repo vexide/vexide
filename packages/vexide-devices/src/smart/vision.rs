@@ -22,6 +22,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
+use core::time::Duration;
 
 use snafu::Snafu;
 use vex_sdk::{
