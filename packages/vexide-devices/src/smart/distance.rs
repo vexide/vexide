@@ -79,6 +79,8 @@ impl DistanceSensor {
     ///
     /// # Examples
     ///
+    /// Measure object distance and velocity:
+    ///
     /// ```
     /// use vexide::prelude::*;
     ///
@@ -89,6 +91,27 @@ impl DistanceSensor {
     ///     if let Some(object) = sensor.object().unwrap_or_default() {
     ///         println!("Object of size {}mm is moving at {}m/s", object.distance, object.velocity);
     ///     }
+    /// }
+    /// ```
+    ///
+    /// Get object distance, but only with high confidence:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
+    ///
+    ///     let distance = sensor.object()
+    ///         .unwrap_or_default()
+    ///         .and_then(|object| {
+    ///             if object.confidence > 0.8 {
+    ///                 Some(object.distance)
+    ///             } else {
+    ///                 None
+    ///             }
+    ///         });
     /// }
     /// ```
     ///
@@ -182,8 +205,8 @@ pub struct DistanceObject {
     pub confidence: f64,
 }
 
-#[derive(Debug, Snafu)]
 /// Errors that can occur when using a distance sensor.
+#[derive(Debug, Snafu)]
 pub enum DistanceError {
     /// The sensor's status code is 0x00
     /// Need to wait for the sensor to finish initializing
