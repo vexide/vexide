@@ -30,6 +30,8 @@ Before releasing:
 - Added a getter that retrieves a `Controller`'s identifier. (#189)
 - Added support for controllers in `DynamicPeripherals`. (#196)
 - Added the ability to return Smart Ports, ADI ports, the display, and controllers to `DynamicPeripherals`. (#196)
+- Added a `SmartDevice::UPDATE_INTERVAL` constant for all devices, representing the amount of time between data updates from a given device. (#199) (**Breaking Change**)
+- Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs.
 
 ### Fixed
 
@@ -37,6 +39,8 @@ Before releasing:
 - The `dbg!();` now works as expected when no arguments are supplied to it. (#175)
 - `Motor::velocity` now correctly returns the estimated velocity instead of target velocity. (#184) (**Breaking Change**)
 - Removed useless generics from `AdiAddrLed::new`. (#197) (**Breaking Change**)
+- IMU calibration timeouts should no longer appear when the IMU is in working condition. (#212)
+- Fixed an issue preventing ADI updates in fast loops. (#210)
 
 ### Changed
 
@@ -57,10 +61,19 @@ Before releasing:
 - `Mutex` is now `?Sized`, matching the behavior of the standard library. (#202) (**Breaking Change**)
 - Switched to the [`rgb`](https://crates.io/crates/rgb) for color storage. `vexide::devices::color` is now `vexide::devices::rgb` which re-exports the `Rgb` type. (#201) (**Breaking Change**)
 - Renamed `AddrledError::Adi` to `AddrledError::Port`. (#203) (**Breaking Change**)
+- Renamed `GpsImu::set_data_rate` to `GpsImu::set_data_interval`. (#199) (**Breaking Change**)
+- Renamed `InertialSensor::set_data_rate` to `InertialSensor::set_data_interval`. (#199) (**Breaking Change**)
+- Renamed `Motor::DATA_WRITE_INTERVAL` to `Motor::WRITE_INTERVAL`. (#199) (**Breaking Change**)
+- Renamed `InertialSensor::accel` to `InertialSensor::acceleration` (#213) (**Breaking Change**)
 
 ### Removed
 
+- Removed `Motor::DATA_READ_INTERVAL`. Use `Motor::UPDATE_INTERVAL` instead. (#199) (**Breaking Change**)
+- Removed `InertialSensor::CALIBRATION_TIMEOUT` and replaced it with the `InertialSensor::CALIBRATION_START_TIMEOUT` and `InertialSensor::CALIBRATION_START_TIMEOUT` constants. (#212) (**Breaking Change**)
+- `AdiDigitalOut::level` now reads the actual reported level value from VEXos, and thus now returns a `Result`. (#210) (**Breaking Change**)
 - Removed the defunct `usd` module from `vexide::devices`. (#198) (**Breaking Change**)
+- Removed `AdiSolenoid`. Use `AdiDigitalOut` instead. (#210) (**Breaking Change**)
+- Removed the deprecated `ZERO_POSITION` and `ZERO_VELOCITY` `Motor` status flags. (#211) (**Breaking Change**)
 
 ### New Contributors
 

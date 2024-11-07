@@ -90,14 +90,15 @@ unsafe impl Send for InertialSensor {}
 unsafe impl Sync for InertialSensor {}
 
 impl InertialSensor {
-    /// The time limit used by the PROS kernel for bailing out of calibration.
-    ///
-    /// In theory, this could be as low as 2s, but is kept at 3s for margin-of-error.
-    ///
-    /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L31>
-    pub const CALIBRATION_TIMEOUT: Duration = Duration::from_secs(3);
+    /// The maximum time that the Inertial Sensor should take to *begin* its calibration process following
+    /// a call to [`InertialSensor::calibrate`].
+    pub const CALIBRATION_START_TIMEOUT: Duration = Duration::from_secs(1);
 
-    /// The minimum data rate that you can set an IMU perform computations at.
+    /// The maximum time that the Inertial Sensor should take to *end* its calibration process after
+    /// calibration has begun.
+    pub const CALIBRATION_END_TIMEOUT: Duration = Duration::from_secs(3);
+
+    /// The minimum data rate that you can set an IMU to run at.
     pub const MIN_DATA_INTERVAL: Duration = Duration::from_millis(5);
 
     /// The maximum value that can be returned by [`Self::heading`].
@@ -571,7 +572,7 @@ impl InertialSensor {
         })
     }
 
-    /// Returns the sensor's raw acceleration readings in g (~9.8 m/s/s).
+    /// Returns the sensor's raw acceleration readings in g (multiples of ~9.8 m/s/s).
     ///
     /// # Errors
     ///
@@ -594,12 +595,12 @@ impl InertialSensor {
     ///
     ///     // Read out accleration values every 10mS
     ///     loop {
-    ///         if let Ok(accel) = sensor.accel() {
+    ///         if let Ok(acceleration) = sensor.acceleration() {
     ///             println!(
     ///                 "x: {}G, y: {}G, z: {}G",
-    ///                 accel.x,
-    ///                 accel.y,
-    ///                 accel.z,
+    ///                 acceleration.x,
+    ///                 acceleration.y,
+    ///                 acceleration.z,
     ///             );
     ///         }
     ///
@@ -607,7 +608,7 @@ impl InertialSensor {
     ///     }
     /// }
     /// ```
-    pub fn accel(&self) -> Result<Vector3<f64>, InertialError> {
+    pub fn acceleration(&self) -> Result<Vector3<f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuRaw::default();
@@ -768,8 +769,8 @@ impl InertialSensor {
 
     /// Sets the internal computation speed of the IMU.
     ///
-    /// This method does NOT change the communication speed of the IMU with the Brain (which will always be 10mS),
-    /// but rather how fast data is sampled and computed onboard the sensor itself.
+    /// This method does NOT change the rate at which user code can read data off the IMU, as the brain will only talk to the
+    /// device every 10mS regardless of how fast data is being sent or computed. See [`InertialSensor::UPDATE_INTERVAL`].
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     ///
@@ -790,13 +791,13 @@ impl InertialSensor {
     ///     let sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Set to minimum interval.
-    ///     sensor.set_data_rate(InertialSensor::MIN_DATA_INTERVAL);
+    ///     sensor.set_data_interval(InertialSensor::MIN_DATA_INTERVAL);
     /// }
     /// ```
-    pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
+    pub fn set_data_interval(&mut self, interval: Duration) -> Result<(), InertialError> {
         self.validate()?;
 
-        let mut time_ms = data_rate
+        let mut time_ms = interval
             .as_millis()
             .max(Self::MIN_DATA_INTERVAL.as_millis()) as u32;
         time_ms -= time_ms % 5; // Rate is in increments of 5ms - not sure if this is necessary, but PROS does it.
@@ -952,7 +953,12 @@ impl core::future::Future for InertialCalibrateFuture {
                 }
             }
             Self::Waiting(port, timestamp, phase) => {
-                if timestamp.elapsed() > InertialSensor::CALIBRATION_TIMEOUT {
+                if timestamp.elapsed()
+                    > match phase {
+                        CalibrationPhase::Start => InertialSensor::CALIBRATION_START_TIMEOUT,
+                        CalibrationPhase::End => InertialSensor::CALIBRATION_END_TIMEOUT,
+                    }
+                {
                     // Calibration took too long and exceeded timeout.
                     return Poll::Ready(Err(InertialError::CalibrationTimedOut));
                 }
@@ -979,7 +985,7 @@ impl core::future::Future for InertialCalibrateFuture {
                 if status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::Start
                 {
                     // Calibration has started, so we'll change to waiting for it to end.
-                    *self = Self::Waiting(port, timestamp, CalibrationPhase::End);
+                    *self = Self::Waiting(port, Instant::now(), CalibrationPhase::End);
                     cx.waker().wake_by_ref();
                     return Poll::Pending;
                 } else if !status.contains(InertialStatus::CALIBRATING)

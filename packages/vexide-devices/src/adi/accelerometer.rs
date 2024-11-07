@@ -1,11 +1,44 @@
-//! ADI Accelerometer device.
+//! ADI Accelerometer
+//!
+//! This module provides an interface for the LIS344ALH-based three-axis analog accelerometer.
+//!
+//! # Hardware Overview
+//!
+//! The LIS344ALH capacitive accelerometer features signal conditioning, a 1-pole low pass filter,
+//! temperature compensation and a jumper switch which allows for the selection of 2 sensitivities.
+//! Zero-g offset full scale span and filter cut-off are factory set and require no external devices.
+//!
+//! The sensor will measure acceleration in both directions along each of the 3 axis. Acceleration
+//! along the X or Y axis in the direction of the silkscreened arrows will produce a larger reading,
+//! while acceleration in the opposite direction will produce a smaller reading. For the Z axis,
+//! upward acceleration (in the direction of the board's face) produces larger values, and downward
+//! acceleration (toward the board's back) produces lower values.
+//!
+//! # Gravity
+//!
+//! Gravity is indistinguishable from upward acceleration, so the sensor will detect a constant 1.0g
+//! on the vertical axis while at rest. For example, if the board is mounted horizontally, gravity will
+//! effect only the Z axis. If the sensor is tilted away from the horizontal, the gravity reading on the
+//! Z axis will diminish, and the readings on the other axis will change depending on the sensor's
+//! mounting orientation.
+//!
+//! # Wiring
+//!
+//! Each axis on the accelerometer requires its own ADI port. This means that the accelerometer will take
+//! three ADI ports if you wish to measure acceleration on all axes. You don't have to hook up all the
+//! channels; you only need to connect the ones required for your application.
+//!
+//! The white (signal) wire of each cable goes near the 'X', 'Y', or 'Z' labels on the board. The black
+//! (ground) wires go at the other end, adjacent to the 'B' label on the board. The center wire is for +5
+//! volts. The sensor's mounting holes are electrically isolated from the circuit, meaning it is safe to
+//! mount the device using screws on a robot.
 
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{analog, AdiDevice, AdiDeviceType, AdiPort};
 use crate::PortError;
 
-/// A single axis connection on the 3-axis analog accelerometer.
+/// A single axis connection to the 3-axis analog accelerometer.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiAccelerometer {
     sensitivity: Sensitivity,
@@ -62,7 +95,6 @@ impl AdiAccelerometer {
     ///   something else was connected.
     pub fn raw_acceleration(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
-        self.port.configure(self.device_type());
 
         Ok(unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } as u16)
     }

@@ -1,7 +1,39 @@
 //! ADI Addressable LEDs
 //!
-//! This module contains abstractions for interacting with WS2812B addressable smart LED
-//! strips over ADI ports.
+//! This module provides an interface for controlling [WS2812B] addressable LED strips over ADI ports.
+//! These are commonly used for decorative lighting. More can be read about using them in
+//! [this blog post](https://sylvie.fyi/posts/v5-addrled/) and
+//! [this forum post](https://www.vexforum.com/t/v5-addressable-leds/106960).
+//!
+//! # Hardware Overview
+//!
+//! ADI ports are capable of controlling a WS2812B LED strip with up to 64 diodes per set of 8 ADI ports. This
+//! limitation is due to the 2A current limit on ADI ports — plugging multiple strips into the same set of ADI ports
+//! may cause your lights to flicker due to this limit being reached. If you require more than 64 continiously
+//! running diodes, then you can run each strip through its own [ADI Expander](crate::smart::expander::AdiExpander).
+//!
+//! The V5's ADI ports can present some technical challenges when interfacing with LEDs. Some commerically
+//! available strips will not work with the V5 out of the box, but mileage may vary. This is mainly caused by two
+//! "quirks" of the V5's ADI ports:
+//!
+//! - ADI ports operate at 3.3V digital logic, but most WS2812B strips expect 5V logic.
+//! - The Brain's ADI ports include built-in short protection via a 1kΩ resistor that may impact signal
+//!   timing on some strips, slowing down the edges of digital logic pulses sent to strip. In rare cases,
+//!   this can cause issues with some strips.
+//!
+//! Using something like a [74HCT125 buffer] inline with the output to convert the 3.3-5V logic addresses both
+//! these problems.
+//!
+//! # `smart_leds_trait` Integration
+//!
+//! When compiled with the `smart_leds_trait` feature, vexide will implement the [`SmartLedsWrite`] trait
+//! from the [`smart-leds-rs`](https://github.com/smart-leds-rs) ecosystem on [`AdiAddrLed`]. This is useful
+//! if you need more advanced features for controlling the strip, such as gradients or gamma correction.
+//!
+//! [WS2812B]: https://cdn-shop.adafruit.com/datasheets/WS2812B.pdf
+//! [74HCT125 buffer]: https://www.diodes.com/assets/Datasheets/74HCT125.pdf
+//! [`smart_leds_trait`]: https://docs.rs/smart-leds-trait/0.3.0/smart_leds_trait/index.html
+//! [`SmartLedsWrite`]: https://docs.rs/smart-leds-trait/0.3.0/smart_leds_trait/trait.SmartLedsWrite.html
 
 use alloc::{vec, vec::Vec};
 
@@ -59,7 +91,7 @@ impl AdiAddrLed {
     ///
     /// # Errors
     ///
-    /// If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
+    /// If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
     pub fn set_all(&mut self, color: impl Into<Rgb<u8>>) -> Result<(), AddrLedError> {
         _ = self.set_buffer(vec![color.into(); self.buf.len()])?;
         Ok(())
@@ -71,7 +103,7 @@ impl AdiAddrLed {
     ///
     /// - Returns [`AddrLedError::OutOfRange`] if the provided index is out of range
     ///   of the current buffer length.
-    /// - If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
+    /// - If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
     pub fn set_pixel(
         &mut self,
         index: usize,
@@ -93,7 +125,7 @@ impl AdiAddrLed {
     ///
     /// # Errors
     ///
-    /// If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
+    /// If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
     pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
     where
         T: IntoIterator<Item = I>,
