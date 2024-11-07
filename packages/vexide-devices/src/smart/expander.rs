@@ -19,10 +19,13 @@
 //! # Examples
 //!
 //! ```
-//! # use vexide_devices::{smart::AdiExpander, adi::AdiAnalogIn, peripherals::Peripherals};
+//! use vexide_devices::{smart::AdiExpander, adi::AdiAnalogIn, peripherals::Peripherals};
+//!
 //! let peripherals = Peripherals::take().unwrap();
+//!
 //! let expander = AdiExpander::new(peripherals.port_1);
 //! let analog_in = AdiAnalogIn::new(expander.adi_a);
+//!
 //! println!("Analog in voltage: {:?}", analog_in.voltage());
 //! ```
 
@@ -75,6 +78,7 @@ impl AdiExpander {
     /// async fn main(peripherals: Peripherals) {
     ///     let expander = AdiExpander::new(peripherals.port_1);
     ///     let analog_in = AdiAnalogIn::new(expander.adi_a);
+    ///
     ///     println!("Analog in voltage: {:?}", analog_in.voltage());
     /// }
     /// ```

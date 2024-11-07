@@ -246,7 +246,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     if sensor.calibrate().await.is_ok() {
     ///         if let Ok(orientation) = sensor.physical_orientation() {
@@ -285,11 +285,11 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     match sensor.calibrate().await {
     ///         Ok(_) => println!("IMU calibrated successfully."),
-    ///         Err(err) => {
+    ///         Err(e mutrr) => {
     ///             println!("IMU failed to calibrate, retrying. Reason: {:?}", err);
     ///
     ///             // Since calibration failed, let's try one more time. If that fails,
@@ -324,7 +324,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let imu = InertialSensor::new(peripherals.port_1);
+    ///     let mut imu = InertialSensor::new(peripherals.port_1);
     ///
     ///     if let Err(err) = imu.calibrate().await {
     ///         // Log out a warning to terminal if calibration failed. You can also retry by
@@ -358,7 +358,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
@@ -395,7 +395,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
@@ -432,7 +432,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
@@ -485,7 +485,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
@@ -535,7 +535,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
@@ -588,7 +588,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
@@ -644,7 +644,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
@@ -682,7 +682,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
@@ -720,7 +720,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Set rotation to 90 degrees clockwise.
     ///     _ = sensor.set_rotation(90.0);
@@ -753,7 +753,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Set heading to 90 degrees clockwise.
     ///     _ = sensor.set_heading(90.0);
@@ -788,7 +788,7 @@ impl InertialSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Set to minimum interval.
     ///     sensor.set_data_interval(InertialSensor::MIN_DATA_INTERVAL);

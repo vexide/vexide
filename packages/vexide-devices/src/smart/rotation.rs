@@ -66,6 +66,17 @@ impl RotationSensor {
     /// Creates a new rotation sensor on the given port.
     ///
     /// Whether or not the sensor should be reversed on creation can be specified.
+    ///
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: SmartPort, direction: Direction) -> Self {
         let device = unsafe { port.device_handle() };
