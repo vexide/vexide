@@ -36,7 +36,7 @@
 //!
 //! For more information on peripheral access, see the [`peripherals`] module.
 //!
-//! [`Peripherals`]: (crate::peripherals::Peripherals)
+//! [`Peripherals`]: crate::peripherals::Peripherals
 
 #![no_std]
 
