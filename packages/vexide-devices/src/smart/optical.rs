@@ -31,7 +31,7 @@ use vex_sdk::{
     V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
 use crate::PortError;
 
 /// An optical sensor plugged into a Smart Port.
@@ -215,14 +215,14 @@ impl OpticalSensor {
         Ok(data.into())
     }
 
-    /// Returns the most recent gesture data from the sensor.
+    /// Returns the most recent gesture data from the sensor, or `None` if no gesture was detected.
     ///
-    /// Gestures will be cleared after 500 milliseconds.
+    /// Gesture data updates every 500 milliseconds.
     ///
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
-    pub fn last_gesture(&self) -> Result<Gesture, PortError> {
+    pub fn last_gesture(&self) -> Result<Option<Gesture>, PortError> {
         self.validate_port()?;
 
         // Enable gesture detection if not already enabled.
@@ -232,10 +232,18 @@ impl OpticalSensor {
         unsafe { vexDeviceOpticalGestureEnable(self.device) };
 
         let mut gesture = V5_DeviceOpticalGesture::default();
-        let direction: GestureDirection =
-            unsafe { vexDeviceOpticalGestureGet(self.device, &mut gesture) }.into();
+        let direction = match unsafe { vexDeviceOpticalGestureGet(self.device, &mut gesture) } {
+            // see: https://github.com/purduesigbots/pros/blob/master/include/pros/optical.h#L37
+            1 => GestureDirection::Up,
+            2 => GestureDirection::Down,
+            3 => GestureDirection::Left,
+            4 => GestureDirection::Right,
 
-        Ok(Gesture {
+            // This is just a zero return usually if no gesture was detected.
+            _ => return Ok(None),
+        };
+
+        Ok(Some(Gesture {
             direction,
             up: gesture.udata,
             down: gesture.ddata,
@@ -243,8 +251,8 @@ impl OpticalSensor {
             right: gesture.rdata,
             gesture_type: gesture.gesture_type,
             count: gesture.count,
-            time: gesture.time,
-        })
+            time: SmartDeviceTimestamp(gesture.time),
+        }))
     }
 
     /// Returns the internal status code of the optical sensor.
@@ -275,11 +283,8 @@ impl From<OpticalSensor> for SmartPort {
 }
 
 /// Represents a gesture and its direction.
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum GestureDirection {
-    /// No gesture detected.
-    #[default]
-    None = 0,
     /// Up gesture.
     Up = 1,
     /// Down gesture.
@@ -290,24 +295,8 @@ pub enum GestureDirection {
     Right = 4,
 }
 
-impl From<u32> for GestureDirection {
-    fn from(code: u32) -> Self {
-        // https://github.com/purduesigbots/pros/blob/master/include/pros/optical.h#L37
-        match code {
-            //
-            1 => Self::Up,
-            2 => Self::Down,
-            3 => Self::Left,
-            4 => Self::Right,
-            // Normally this is just 0, but this is `From` so we have to handle
-            // all values even if they're unreachable.
-            _ => Self::None,
-        }
-    }
-}
-
 /// Gesture data from an [`OpticalSensor`].
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Gesture {
     /// Gesture Direction
     pub direction: GestureDirection,
@@ -324,7 +313,7 @@ pub struct Gesture {
     /// The count of the gesture.
     pub count: u16,
     /// The time of the gesture.
-    pub time: u32,
+    pub time: SmartDeviceTimestamp,
 }
 
 /// RGB data from a [`OpticalSensor`].
