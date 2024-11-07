@@ -299,7 +299,7 @@ impl InertialSensor {
     /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
     /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
     /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
-    pub fn accel(&self) -> Result<Vector3<f64>, InertialError> {
+    pub fn acceleration(&self) -> Result<Vector3<f64>, InertialError> {
         self.validate()?;
 
         let mut data = V5_DeviceImuRaw::default();

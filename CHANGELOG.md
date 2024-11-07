@@ -61,6 +61,7 @@ Before releasing:
 - Renamed `GpsImu::set_data_rate` to `GpsImu::set_data_interval`. (#199) (**Breaking Change**)
 - Renamed `InertialSensor::set_data_rate` to `InertialSensor::set_data_interval`. (#199) (**Breaking Change**)
 - Renamed `Motor::DATA_WRITE_INTERVAL` to `Motor::WRITE_INTERVAL`. (#199) (**Breaking Change**)
+- Renamed `InertialSensor::accel` to `InertialSensor::acceleration` (#213) (**Breaking Change**)
 
 ### Removed
 
@@ -70,9 +71,6 @@ Before releasing:
 - Renamed `AddrledError::Adi` to `AddrledError::Port`. (#203) (**Breaking Change**)
 - Removed `InertialSensor::CALIBRATION_TIMEOUT` and replaced it with the `InertialSensor::CALIBRATION_START_TIMEOUT` and `InertialSensor::CALIBRATION_START_TIMEOUT` constants. (#212) (**Breaking Change**)
 - `AdiDigitalOut::level` now reads the actual reported level value from VEXos, and thus now returns a `Result`. (#210) (**Breaking Change**)
-
-### Removed
-
 - Removed the defunct `usd` module from `vexide::devices`. (#198) (**Breaking Change**)
 - Removed `AdiSolenoid`. Use `AdiDigitalOut` instead. (#210) (**Breaking Change**)
 
