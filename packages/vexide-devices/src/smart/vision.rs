@@ -22,6 +22,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
+use core::time::Duration;
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -500,6 +501,9 @@ impl VisionSensor {
 }
 
 impl SmartDevice for VisionSensor {
+    /// The interval at which the vision sensor sends updates to the brain.
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(50);
+
     fn port_number(&self) -> u8 {
         self.port.number()
     }

@@ -193,11 +193,8 @@ impl Motor {
     /// The maximum voltage value that can be sent to a EXP [`Motor`].
     pub const EXP_MAX_VOLTAGE: f64 = 8.0;
 
-    /// The rate at which data can be read from a [`Motor`].
-    pub const DATA_READ_INTERVAL: Duration = Duration::from_millis(10);
-
-    /// The rate at which data can be written to a [`Motor`].
-    pub const DATA_WRITE_INTERVAL: Duration = Duration::from_millis(5);
+    /// The rate at which the Brain will send new packets to a [`Motor`].
+    pub const WRITE_INTERVAL: Duration = Duration::from_millis(5);
 
     /// Create a new V5 or EXP motor.
     #[must_use]
