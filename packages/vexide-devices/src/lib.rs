@@ -9,7 +9,7 @@
 //! capability for compatibility with legacy Cortex devices. The Brain also has a screen,
 //! battery, and usually a controller for reading user input.
 //!
-//! Hardware access begins at the [`Peripherals`](crate::peripherals::Peripherals) API, where
+//! Hardware access begins at the [`Peripherals`] API, where
 //! singleton access to the brain's I/O and peripherals can be obtained:
 //!
 //! ```
@@ -35,6 +35,8 @@
 //! ```
 //!
 //! For more information on peripheral access, see the [`peripherals`] module.
+//!
+//! [`Peripherals`]: (crate::peripherals::Peripherals)
 
 #![no_std]
 
