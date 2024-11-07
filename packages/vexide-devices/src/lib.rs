@@ -34,7 +34,7 @@
 //! }
 //! ```
 //!
-//! For more information on peripheral access, see the [`peripherals`] module.
+//! For more information on peripheral access, see the [`peripherals`](crate::peripherals) module.
 //!
 //! [`Peripherals`]: crate::peripherals::Peripherals
 
