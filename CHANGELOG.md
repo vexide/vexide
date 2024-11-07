@@ -65,6 +65,9 @@ Before releasing:
 - Renamed `InertialSensor::set_data_rate` to `InertialSensor::set_data_interval`. (#199) (**Breaking Change**)
 - Renamed `Motor::DATA_WRITE_INTERVAL` to `Motor::WRITE_INTERVAL`. (#199) (**Breaking Change**)
 - Renamed `InertialSensor::accel` to `InertialSensor::acceleration` (#213) (**Breaking Change**)
+- `OpticalSensor::last_gesture` now returns an `Option<Gesture>` if no gesture was detected. (#215) (**Breaking Change**)
+- The `time` field on `Gesture` is now returned as an instance of `SmartDeviceTimestamp`. (#215) (**Breaking Change**)
+- `Gesture` and `GestureDirection` no longer implements `Default`. (#215) (**Breaking Change**)
 
 ### Removed
 
@@ -74,6 +77,8 @@ Before releasing:
 - Removed the defunct `usd` module from `vexide::devices`. (#198) (**Breaking Change**)
 - Removed `AdiSolenoid`. Use `AdiDigitalOut` instead. (#210) (**Breaking Change**)
 - Removed the deprecated `ZERO_POSITION` and `ZERO_VELOCITY` `Motor` status flags. (#211) (**Breaking Change**)
+- `GestureDirection::None` has been removed, as `OpticalSensor::next_gesture` now returns an `Option<Gesture>`. (#215) (**Breaking Change**)
+- `GestureDirection` no longer has a `From` conversion for `u32`. (#215) (**Breaking Change**)
 
 ### New Contributors
 
