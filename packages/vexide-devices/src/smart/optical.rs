@@ -57,7 +57,21 @@ impl OpticalSensor {
     /// Source: <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9>
     pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
+    /// The interval that gesture detection through [`OpticalSensor::last_gesture`] provides new data at.
+    pub const GESTURE_UPDATE_INTERVAL: Duration = Duration::from_millis(50);
+
     /// Creates a new optical sensor from a [`SmartPort`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
@@ -71,6 +85,23 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     if let Ok(brightness) = sensor.led_brightness() {
+    ///         println!("LED brightness: {:.1}%", brightness * 100.0);
+    ///     }
+    /// }
+    /// ```
+
     pub fn led_brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -84,6 +115,35 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     // Blink LED 3 times
+    ///     for _ in 0..3 {
+    ///         // Turn LED on
+    ///         if let Err(e) = sensor.set_led_brightness(1.0) {
+    ///             println!("Failed to turn LED on: {:?}", e);
+    ///         }
+    ///
+    ///         sleep(Duration::from_millis(250)).await;
+    ///
+    ///         // Turn LED off
+    ///         if let Err(e) = sensor.set_led_brightness(0.0) {
+    ///             println!("Failed to turn LED off: {:?}", e);
+    ///         }
+    ///
+    ///         sleep(Duration::from_millis(250)).await;
+    ///     }
+    /// }
+    /// ```
     pub fn set_led_brightness(&mut self, brightness: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -95,9 +155,32 @@ impl OpticalSensor {
     /// Returns integration time of the optical sensor in milliseconds, with
     /// minimum time being 3ms and the maximum time being 712ms.
     ///
+    /// The default integration time for the sensor is 103mS, unless otherwise set with
+    /// [`OpticalSensor::set_integration_time`].
+    ///
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     // Set integration time to 50 milliseconds.
+    ///     _ = sensor.set_integration_time(Duration::from_millis(50));
+    ///
+    ///     // Log out the new integration time.
+    ///     if let Ok(time) = sensor.integration_time() {
+    ///         println!("Integration time: {:?}", time);
+    ///     }
+    /// }
+    /// ```
     pub fn integration_time(&self) -> Result<Duration, PortError> {
         self.validate_port()?;
 
@@ -116,9 +199,26 @@ impl OpticalSensor {
     /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for
     /// more information.
     ///
+    /// The default integration time for the sensor is 103mS, unless otherwise set.
+    ///
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     // Set integration time to 50 milliseconds.
+    ///     _ = sensor.set_integration_time(Duration::from_millis(50));
+    /// }
+    /// ```
     pub fn set_integration_time(&mut self, time: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -141,6 +241,34 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     if let Ok(hue) = sensor.hue() {
+    ///         println!("Detected color hue: {:.1}°", hue);
+    ///
+    ///         // Classify the color based on hue angle
+    ///         let color = match hue as u32 {
+    ///             0..=30 => "Red",
+    ///             31..=90 => "Yellow",
+    ///             91..=150 => "Green",
+    ///             151..=210 => "Cyan",
+    ///             211..=270 => "Blue",
+    ///             271..=330 => "Magenta",
+    ///             _ => "Red", // 331-359 wraps back to red
+    ///         };
+    ///
+    ///         println!("Color: {}", color);
+    ///     }
+    /// }
+    /// ```
     pub fn hue(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -154,6 +282,28 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     if let Ok(saturation) = sensor.saturation() {
+    ///         println!("Color saturation: {}%", saturation * 100.0);
+    ///
+    ///         // Check if color is muted or vibrant
+    ///         if saturation < 0.5 {
+    ///             println!("Muted color detected");
+    ///         } else {
+    ///             println!("Vibrant color detected");
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn saturation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -167,6 +317,30 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     if let Ok(brightness) = sensor.brightness() {
+    ///         println!("Color brightness: {}%", brightness * 100.0);
+    ///
+    ///         // Check if color is dark or bright
+    ///         if brightness < 0.3 {
+    ///             println!("Dark color detected");
+    ///         } else if brightness > 0.7 {
+    ///             println!("Bright color detected");
+    ///         } else {
+    ///             println!("Medium brightness color detected");
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -181,6 +355,27 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     // Monitor proximity with thresholds
+    ///     if let Ok(prox) = sensor.proximity() {
+    ///         match prox {
+    ///             x if x > 0.8 => println!("Object very close!"),
+    ///             x if x > 0.5 => println!("Object nearby"),
+    ///             x if x > 0.2 => println!("Object detected"),
+    ///             _ => println!("No object in range"),
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn proximity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -192,6 +387,28 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     // Color detection with RGB values
+    ///     if let Ok(rgb) = sensor.color() {
+    ///         println!("Color reading: R={}, G={}, B={}", rgb.red, rgb.green, rgb.blue);
+    ///
+    ///         // Example: Check if object is primarily red
+    ///         // Note that you should probably use `OpticalSensor::hue` instead for this.
+    ///         if rgb.red > rgb.green && rgb.red > rgb.blue {
+    ///             println!("Object is primarily red!");
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn color(&self) -> Result<OpticalRgb, PortError> {
         self.validate_port()?;
 
@@ -222,6 +439,27 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     // Print the details of the last detected gesture.
+    ///     loop {
+    ///         if let Ok(Some(gesture)) = sensor.last_gesture() {
+    ///             println!("Direction: {:?}", gesture.direction);
+    ///         }
+    ///
+    ///         sleep(Duration::from_millis(25)).await;
+    ///     }
+    /// }
+    /// ```
     pub fn last_gesture(&self) -> Result<Option<Gesture>, PortError> {
         self.validate_port()?;
 
@@ -260,6 +498,21 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     if let Ok(status) = sensor.status() {
+    ///         println!("Status: {:b}", status);
+    ///     }
+    /// }
+    /// ```
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 
