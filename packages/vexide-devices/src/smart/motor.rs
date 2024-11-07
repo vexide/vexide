@@ -12,7 +12,7 @@
 //!
 //! Motor position and velocity is measured by an onboard integrated encoder.
 //!
-//! Communication between a smart motor and the V5 Brain occur at two different intervals. While
+//! Communication between a Smart motor and the V5 Brain occur at two different intervals. While
 //! the motor communicates with the Brain every 5 milliseconds (and commands can be written to
 //! the motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively
 //! places the date *write* interval at 5mS and the data *read* interval at 10mS.
@@ -155,7 +155,7 @@ impl core::ops::Not for Direction {
     }
 }
 
-/// Represents the type of a smart motor.
+/// Represents the type of a Smart motor.
 /// Either a 11W (V5) or 5.5W (EXP) motor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MotorType {
@@ -522,7 +522,7 @@ impl Motor {
     /// inadequate, you may opt to perform your own velocity calculations by differentiating [`Motor::position`]
     /// over the reported internal timestamp of the motor using [`Motor::timestamp`].
     ///
-    /// > For more information about smart motor velocity estimation, see [this article](https://sylvie.fyi/sylib/docs/db/d8e/md_module_writeups__velocity__estimation.html).
+    /// > For more information about Smart motor velocity estimation, see [this article](https://sylvie.fyi/sylib/docs/db/d8e/md_module_writeups__velocity__estimation.html).
     ///
     /// # Note
     ///
@@ -663,6 +663,23 @@ impl Motor {
     ///
     /// Analogous to taring or resetting the encoder to the current position.
     ///
+    /// # Examples
+    ///
+    /// Move the motor in increments of 10 degrees:
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     loop {
+    ///         motor.set_position_target(Position::from_degrees(10.0), 200).unwrap();
+    ///         sleep(Duration::from_secs(1)).await;
+    ///         motor.reset_position().unwrap();
+    ///     }
+    /// }
+    /// ```
+    ///
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
@@ -732,6 +749,27 @@ impl Motor {
     }
 
     /// Returns the internal temperature recorded by the motor in increments of 5 °C.
+    ///
+    /// # Examples
+    ///
+    /// Turn off the motor if it gets too hot:
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.set_voltage(12.0);
+    ///     loop {
+    ///         if motor.temperature().unwrap() > 30.0 {
+    ///             let _ = motor.brake(BrakeMode::Coast);
+    ///         } else {
+    ///             let _ = motor.set_voltage(12.0);
+    ///         }
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     ///
     /// # Errors
     ///
@@ -852,9 +890,9 @@ impl Motor {
     /// # Hardware Safety
     ///
     /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
-    /// to smart motors if done incorrectly. Use these functions entirely at your own risk.
+    /// to Smart motors if done incorrectly. Use these functions entirely at your own risk.
     ///
-    /// VEX has chosen not to disclose the default constants used by smart motors, and currently
+    /// VEX has chosen not to disclose the default constants used by Smart motors, and currently
     /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
     /// well-known or understood, as we have no reference for what these constants should look
     /// like.
@@ -880,9 +918,9 @@ impl Motor {
     /// # Hardware Safety
     ///
     /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
-    /// to smart motors if done incorrectly. Use these functions entirely at your own risk.
+    /// to Smart motors if done incorrectly. Use these functions entirely at your own risk.
     ///
-    /// VEX has chosen not to disclose the default constants used by smart motors, and currently
+    /// VEX has chosen not to disclose the default constants used by Smart motors, and currently
     /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
     /// well-known or understood, as we have no reference for what these constants should look
     /// like.
@@ -977,24 +1015,10 @@ bitflags! {
     pub struct MotorStatus: u32 {
         /// Failed to communicate with the motor
         const BUSY = 0x01;
-
-        /// The motor is currently near zero velocity.
-        #[deprecated(
-            since = "0.9.0",
-            note = "This flag will never be set by the hardware, even though it exists in the SDK. This may change in the future."
-        )]
-        const ZERO_VELOCITY = 0x02;
-
-        /// The motor is at its zero position.
-        #[deprecated(
-            since = "0.9.0",
-            note = "This flag will never be set by the hardware, even though it exists in the SDK. This may change in the future."
-        )]
-        const ZERO_POSITION = 0x04;
     }
 }
 
-/// Internal gearset used by VEX smart motors.
+/// Internal gearset used by VEX Smart motors.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Gearset {
     /// 36:1 gear ratio
@@ -1020,11 +1044,11 @@ impl Gearset {
     /// 600 rpm (alias to `Self::Blue`)
     pub const RPM_600: Gearset = Self::Blue;
 
-    /// Rated max speed for a smart motor with a [`Red`](Gearset::Red) gearset.
+    /// Rated max speed for a Smart motor with a [`Red`](Gearset::Red) gearset.
     pub const MAX_RED_RPM: f64 = 100.0;
-    /// Rated speed for a smart motor with a [`Green`](Gearset::Green) gearset.
+    /// Rated speed for a Smart motor with a [`Green`](Gearset::Green) gearset.
     pub const MAX_GREEN_RPM: f64 = 200.0;
-    /// Rated speed for a smart motor with a [`Blue`](Gearset::Blue) gearset.
+    /// Rated speed for a Smart motor with a [`Blue`](Gearset::Blue) gearset.
     pub const MAX_BLUE_RPM: f64 = 600.0;
 
     /// Number of encoder ticks per revolution for the [`Red`](Gearset::Red) gearset.
@@ -1081,9 +1105,9 @@ impl From<Gearset> for V5MotorGearset {
 /// # Hardware Safety
 ///
 /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
-/// to smart motors if done incorrectly. Use these functions entirely at your own risk.
+/// to Smart motors if done incorrectly. Use these functions entirely at your own risk.
 ///
-/// VEX has chosen not to disclose the default constants used by smart motors, and currently
+/// VEX has chosen not to disclose the default constants used by Smart motors, and currently
 /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
 /// well-known or understood, as we have no reference for what these constants should look
 /// like.

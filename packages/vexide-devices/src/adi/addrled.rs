@@ -59,7 +59,7 @@ impl AdiAddrLed {
     ///
     /// # Errors
     ///
-    /// If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
+    /// If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
     pub fn set_all(&mut self, color: impl Into<Rgb<u8>>) -> Result<(), AddrLedError> {
         _ = self.set_buffer(vec![color.into(); self.buf.len()])?;
         Ok(())
@@ -71,7 +71,7 @@ impl AdiAddrLed {
     ///
     /// - Returns [`AddrLedError::OutOfRange`] if the provided index is out of range
     ///   of the current buffer length.
-    /// - If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
+    /// - If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
     pub fn set_pixel(
         &mut self,
         index: usize,
@@ -93,7 +93,7 @@ impl AdiAddrLed {
     ///
     /// # Errors
     ///
-    /// If the ADI device could not be accessed, [`AddrLedError::Adi`] is returned.
+    /// If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
     pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
     where
         T: IntoIterator<Item = I>,

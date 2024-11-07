@@ -57,6 +57,7 @@ Before releasing:
 - `Mutex` is now `?Sized`, matching the behavior of the standard library. (#202) (**Breaking Change**)
 - Switched to the [`rgb`](https://crates.io/crates/rgb) for color storage. `vexide::devices::color` is now `vexide::devices::rgb` which re-exports the `Rgb` type. (#201) (**Breaking Change**)
 - Renamed `AddrledError::Adi` to `AddrledError::Port`. (#203) (**Breaking Change**)
+- Removed the deprecated `ZERO_POSITION` and `ZERO_VELOCITY` `Motor` status flags. (#211) (**Breaking Change**)
 
 ### Removed
 
