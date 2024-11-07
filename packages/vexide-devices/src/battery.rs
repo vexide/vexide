@@ -52,6 +52,8 @@ pub fn temperature() -> u64 {
 
 /// Returns the electric current of the robot's battery in amps.
 ///
+/// Maximum current draw on the V5 battery is 20 Amps.
+///
 /// # Examples
 ///
 /// ```
@@ -60,7 +62,7 @@ pub fn temperature() -> u64 {
 ///
 /// let current = battery::current();
 ///
-/// println!("Battery drawing {} amps", current);
+/// println!("Drawing {} amps", current);
 /// ```
 #[must_use]
 pub fn current() -> f64 {
@@ -68,6 +70,8 @@ pub fn current() -> f64 {
 }
 
 /// Returns the robot's battery voltage in volts.
+///
+/// Nominal battery voltage on the V5 brain is 12.8V.
 ///
 /// # Examples
 ///
