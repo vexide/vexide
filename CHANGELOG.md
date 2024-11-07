@@ -69,9 +69,6 @@ Before releasing:
 ### Removed
 
 - Removed `Motor::DATA_READ_INTERVAL`. Use `Motor::UPDATE_INTERVAL` instead. (#199) (**Breaking Change**)
-- `Mutex` is now `?Sized`, matching the behavior of the standard library. (#202) (**Breaking Change**)
-- Switched to the [`rgb`](https://crates.io/crates/rgb) for color storage. `vexide::devices::color` is now `vexide::devices::rgb` which re-exports the `Rgb` type. (#201) (**Breaking Change**)
-- Renamed `AddrledError::Adi` to `AddrledError::Port`. (#203) (**Breaking Change**)
 - Removed `InertialSensor::CALIBRATION_TIMEOUT` and replaced it with the `InertialSensor::CALIBRATION_START_TIMEOUT` and `InertialSensor::CALIBRATION_START_TIMEOUT` constants. (#212) (**Breaking Change**)
 - `AdiDigitalOut::level` now reads the actual reported level value from VEXos, and thus now returns a `Result`. (#210) (**Breaking Change**)
 - Removed the defunct `usd` module from `vexide::devices`. (#198) (**Breaking Change**)
