@@ -9,7 +9,7 @@
 //! capability for compatibility with legacy Cortex devices. The Brain also has a screen,
 //! battery, and usually a controller for reading user input.
 //!
-//! Hardware access begins at the [`Peripherals`] API, where
+//! Hardware access begins at the [`Peripherals`](crate::peripherals::Peripherals) API, where
 //! singleton access to the brain's I/O and peripherals can be obtained:
 //!
 //! ```
@@ -20,7 +20,9 @@
 //! let port_1 = peripherals.port_1;
 //! ```
 //!
-//! If you are on vexide, [`Peripherals`] is already given to you through your `main` function:
+//! If you are using vexide's `#[vexide::main]` macro, then
+//! [`Peripherals`](crate::peripherals::Peripherals) is already given to you through an
+//! argument to your `main` function:
 //!
 //! ```
 //! #![no_std]
@@ -34,9 +36,7 @@
 //! }
 //! ```
 //!
-//! For more information on peripheral access, see the [`peripherals`](crate::peripherals) module.
-//!
-//! [`Peripherals`]: crate::peripherals::Peripherals
+//! For more information on peripheral access, see the [`peripherals`] module.
 
 #![no_std]
 
