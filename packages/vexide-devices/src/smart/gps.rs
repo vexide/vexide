@@ -413,12 +413,15 @@ impl GpsImu {
         Ok(())
     }
 
-    /// Sets the computation speed of the IMU.
+    /// Sets the internal computation speed of the IMU.
+    ///
+    /// This method does NOT change the rate at which user code can read data off the IMU, as the brain will only talk to the
+    /// device every 10mS regardless of how fast data is being sent or computed.
     ///
     /// # Errors
     ///
     /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
-    pub fn set_data_rate(&mut self, interval: Duration) -> Result<(), PortError> {
+    pub fn set_data_interval(&mut self, interval: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe {

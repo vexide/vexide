@@ -161,18 +161,18 @@ impl RotationSensor {
 
     /// Sets the internal computation speed of the rotation sensor.
     ///
-    /// This method does NOT change the *communication speed* of the sensor with the Brain (which will always be 10mS),
-    /// but rather how fast data is sampled and computed onboard the sensor itself.
+    /// This method does NOT change the rate at which user code can read data off the sensor, as the brain will only talk to
+    /// the device every 10mS regardless of how fast data is being sent or computed. See [`RotationSensor::UPDATE_INTERVAL`].
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     ///
     /// # Errors
     ///
     /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
-    pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), PortError> {
+    pub fn set_computation_interval(&mut self, interval: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
-        let mut time_ms = data_rate
+        let mut time_ms = interval
             .as_millis()
             .max(Self::MIN_DATA_INTERVAL.as_millis()) as u32;
         time_ms -= time_ms % 5; // Rate is in increments of 5ms - not sure if this is necessary, but PROS does it.

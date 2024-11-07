@@ -97,7 +97,7 @@ impl InertialSensor {
     /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L31>
     pub const CALIBRATION_TIMEOUT: Duration = Duration::from_secs(3);
 
-    /// The minimum data rate that you can set an IMU perform computations at.
+    /// The minimum data rate that you can set an IMU to run at.
     pub const MIN_DATA_INTERVAL: Duration = Duration::from_millis(5);
 
     /// The maximum value that can be returned by [`Self::heading`].
@@ -381,8 +381,8 @@ impl InertialSensor {
 
     /// Sets the internal computation speed of the IMU.
     ///
-    /// This method does NOT change the communication speed of the IMU with the Brain (which will always be 10mS),
-    /// but rather how fast data is sampled and computed onboard the sensor itself.
+    /// This method does NOT change the rate at which user code can read data off the IMU, as the brain will only talk to the
+    /// device every 10mS regardless of how fast data is being sent or computed. See [`InertialSensor::UPDATE_INTERVAL`].
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     ///
@@ -391,10 +391,10 @@ impl InertialSensor {
     /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
     /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
     /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
-    pub fn set_data_rate(&mut self, data_rate: Duration) -> Result<(), InertialError> {
+    pub fn set_data_interval(&mut self, interval: Duration) -> Result<(), InertialError> {
         self.validate()?;
 
-        let mut time_ms = data_rate
+        let mut time_ms = interval
             .as_millis()
             .max(Self::MIN_DATA_INTERVAL.as_millis()) as u32;
         time_ms -= time_ms % 5; // Rate is in increments of 5ms - not sure if this is necessary, but PROS does it.

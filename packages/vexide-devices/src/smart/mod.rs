@@ -31,7 +31,7 @@ pub mod rotation;
 pub mod serial;
 pub mod vision;
 
-use core::fmt;
+use core::{fmt, time::Duration};
 
 pub use distance::DistanceSensor;
 pub use expander::AdiExpander;
@@ -52,6 +52,9 @@ use crate::PortError;
 
 /// Defines common functionality shared by all Smart Port devices.
 pub trait SmartDevice {
+    /// The interval at which the V5 brain reads packets from Smart devices.
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(10);
+
     /// Returns the port number of the [`SmartPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
