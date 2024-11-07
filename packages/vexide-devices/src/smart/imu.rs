@@ -791,7 +791,7 @@ impl InertialSensor {
     ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Set to minimum interval.
-    ///     sensor.set_data_interval(InertialSensor::MIN_DATA_INTERVAL);
+    ///     _ = sensor.set_data_interval(InertialSensor::MIN_DATA_INTERVAL);
     /// }
     /// ```
     pub fn set_data_interval(&mut self, interval: Duration) -> Result<(), InertialError> {

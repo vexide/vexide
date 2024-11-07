@@ -165,6 +165,8 @@ impl DistanceSensor {
     /// }
     /// ```
     ///
+    /// Printing the status code in binary format:
+    ///
     /// ```
     /// use vexide::prelude::*;
     ///
