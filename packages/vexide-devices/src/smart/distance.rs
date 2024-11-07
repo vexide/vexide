@@ -43,6 +43,15 @@ unsafe impl Sync for DistanceSensor {}
 
 impl DistanceSensor {
     /// Creates a new distance sensor from a [`SmartPort`].
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
@@ -70,18 +79,39 @@ impl DistanceSensor {
     ///
     /// # Examples
     ///
+    /// Measure object distance and velocity:
+    ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let distance_sensor = DistanceSensor::new(peripherals.port_1);
-    ///     loop {
-    ///         let object = distance_sensor.object().unwrap_or_default();
-    ///         println!("distance: {} with confidence: {}", object.distance, object.confidence);
-    ///         sleep(Duration::from_millis(10)).await;
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
+    ///
+    ///     if let Some(object) = sensor.object().unwrap_or_default() {
+    ///         println!("Object of size {}mm is moving at {}m/s", object.distance, object.velocity);
     ///     }
+    /// }
+    /// ```
+    ///
+    /// Get object distance, but only with high confidence:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
+    ///
+    ///     let distance = sensor.object()
+    ///         .unwrap_or_default()
+    ///         .and_then(|object| {
+    ///             if object.confidence > 0.8 {
+    ///                 Some(object.distance)
+    ///             } else {
+    ///                 None
+    ///             }
+    ///         });
     /// }
     /// ```
     ///
@@ -131,6 +161,19 @@ impl DistanceSensor {
     ///             println!("Sensor is ready");
     ///         }
     ///         sleep(Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
+    ///
+    ///     if let Ok(status) = sensor.status() {
+    ///         println!("Status: {:b}", status);
     ///     }
     /// }
     /// ```
@@ -187,8 +230,8 @@ pub struct DistanceObject {
     pub confidence: f64,
 }
 
-#[derive(Debug, Snafu)]
 /// Errors that can occur when using a distance sensor.
+#[derive(Debug, Snafu)]
 pub enum DistanceError {
     /// The sensor's status code is 0x00
     /// Need to wait for the sensor to finish initializing

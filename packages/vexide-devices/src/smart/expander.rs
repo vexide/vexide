@@ -61,9 +61,12 @@ pub struct AdiExpander {
 impl AdiExpander {
     /// Creates a new expander from a [`SmartPort`].
     ///
-    /// An ADI expander cannot generate errors, only the ADI devices created from it can.
+    /// An ADI expander does not return port errors itself if it is unplugged. Any disconnect
+    /// handling is done by devices created from the ports on the expander.
     ///
     /// # Examples
+    ///
+    /// Creating an analog input from a port on the expander:
     ///
     /// ```
     /// use vexide::prelude::*;
