@@ -938,6 +938,9 @@ impl core::future::Future for InertialCalibrateFuture {
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match *self {
+            // The "calibrate" phase begins the calibration process.
+            // This only happens for one poll of the future (the first one). All future polls will
+            // either be waiting for calibration to start or for calibration to end.
             Self::Calibrate(port) => {
                 if let Err(err) = validate_port(port, SmartDeviceType::Imu) {
                     // IMU isn't plugged in, no need to go any further.
@@ -952,6 +955,10 @@ impl core::future::Future for InertialCalibrateFuture {
                     Poll::Pending
                 }
             }
+
+            // In this stage, we are either waiting for the calibration status flag to be set (CalibrationPhase::Start),
+            // indicating that calibration has begun, or we are waiting for the calibration status flag to be cleared,
+            // indicating that calibration has finished (CalibrationFlag::End).
             Self::Waiting(port, timestamp, phase) => {
                 if timestamp.elapsed()
                     > match phase {
@@ -959,7 +966,7 @@ impl core::future::Future for InertialCalibrateFuture {
                         CalibrationPhase::End => InertialSensor::CALIBRATION_END_TIMEOUT,
                     }
                 {
-                    // Calibration took too long and exceeded timeout.
+                    // Waiting took too long and exceeded a timeout.
                     return Poll::Ready(Err(InertialError::CalibrationTimedOut));
                 }
 
@@ -984,14 +991,18 @@ impl core::future::Future for InertialCalibrateFuture {
 
                 if status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::Start
                 {
-                    // Calibration has started, so we'll change to waiting for it to end.
+                    // We are in the "start" phase (waiting for the flag to be set) and the flag is now set,
+                    // meaning that calibration has begun.
+                    //
+                    // We now know that the sensor is actually calibrating, so we transition to
+                    // [`CalibrationPhase::End`] and reset the timeout timestamp to wait for calibration to finish.
                     *self = Self::Waiting(port, Instant::now(), CalibrationPhase::End);
                     cx.waker().wake_by_ref();
                     return Poll::Pending;
                 } else if !status.contains(InertialStatus::CALIBRATING)
                     && phase == CalibrationPhase::End
                 {
-                    // Calibration has finished.
+                    // The [`InertialStatus::CALIBRATING`] has been cleared, indicating that calibration is complete.
                     return Poll::Ready(Ok(()));
                 }
 
