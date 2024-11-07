@@ -525,6 +525,10 @@ impl Motor {
     ///
     /// To get the current **target** velocity instead of the estimated velocity, use [`Motor::target`].
     ///
+    /// # Errors
+    ///
+    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
     /// # Examples
     ///
     /// Get the current velocity of a motor:
@@ -563,10 +567,6 @@ impl Motor {
     ///    }
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
     pub fn velocity(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorActualVelocityGet(self.device) })
@@ -660,6 +660,10 @@ impl Motor {
     ///
     /// Analogous to taring or resetting the encoder to the current position.
     ///
+    /// # Errors
+    ///
+    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
     /// # Examples
     ///
     /// Move the motor in increments of 10 degrees:
@@ -676,10 +680,6 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
     pub fn reset_position(&mut self) -> Result<(), MotorError> {
         self.validate_port()?;
         unsafe { vexDeviceMotorPositionReset(self.device) }
@@ -747,9 +747,14 @@ impl Motor {
 
     /// Returns the internal temperature recorded by the motor in increments of 5 °C.
     ///
+    /// # Errors
+    ///
+    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
     /// # Examples
     ///
     /// Turn off the motor if it gets too hot:
+    ///
     /// ```
     /// use vexide::prelude::*;
     ///
@@ -767,10 +772,6 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
     pub fn temperature(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorTemperatureGet(self.device) })

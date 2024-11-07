@@ -114,6 +114,10 @@ impl SerialPort {
     /// Read the next byte available in the serial port's input buffer, or `None` if the input
     /// buffer is empty.
     ///
+    /// # Errors
+    ///
+    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
     /// # Examples
     ///
     /// ```
@@ -126,10 +130,6 @@ impl SerialPort {
     ///     sleep(core::time::Duration::from_millis(10)).await;
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
     pub fn read_byte(&self) -> Result<Option<u8>, SerialError> {
         self.validate_port()?;
 
@@ -144,6 +144,10 @@ impl SerialPort {
     /// Read the next byte available in the port's input buffer without removing it. Returns
     /// `None` if the input buffer is empty.
     ///
+    /// # Errors
+    ///
+    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
     /// # Examples
     ///
     /// ```
@@ -153,10 +157,6 @@ impl SerialPort {
     ///     println!("Next byte: {}", next_byte);
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
     pub fn peek_byte(&self) -> Result<Option<u8>, SerialError> {
         self.validate_port()?;
 
@@ -170,6 +170,11 @@ impl SerialPort {
 
     /// Write a single byte to the port's output buffer.
     ///
+    /// # Errors
+    ///
+    /// - A [`SerialError::WriteFailed`] error is returned if the byte could not be written.
+    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
     /// # Examples
     ///
     /// ```
@@ -178,11 +183,6 @@ impl SerialPort {
     /// // Write 0x80 (128u8) to the output buffer
     /// serial.write_byte(0x80)?;
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`SerialError::WriteFailed`] error is returned if the byte could not be written.
-    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
     pub fn write_byte(&mut self, byte: u8) -> Result<(), SerialError> {
         self.validate_port()?;
 
@@ -194,6 +194,11 @@ impl SerialPort {
 
     /// Returns the number of bytes available to be read in the port's FIFO input buffer.
     ///
+    /// # Errors
+    ///
+    /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be read.
+    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
     /// # Examples
     ///
     /// ```
@@ -203,11 +208,6 @@ impl SerialPort {
     ///     println!("{}", serial.read_byte()?.unwrap());
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be read.
-    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
     pub fn unread_bytes(&self) -> Result<usize, SerialError> {
         self.validate_port()?;
 
@@ -221,6 +221,11 @@ impl SerialPort {
 
     /// Returns the number of bytes free in the port's FIFO output buffer.
     ///
+    /// # Errors
+    ///
+    /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be read.
+    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
     /// # Examples
     ///
     /// ```
@@ -230,11 +235,6 @@ impl SerialPort {
     ///     serial.write_byte(0x80)?;
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be read.
-    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
     pub fn available_write_bytes(&self) -> Result<usize, SerialError> {
         self.validate_port()?;
 
@@ -251,6 +251,12 @@ impl io::Read for SerialPort {
     /// Read some bytes from this serial port into the specified buffer, returning
     /// how many bytes were read.
     ///
+    /// # Errors
+    ///
+    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
+    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned if the serial port is configured as another Smart device.
+    /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be read from the serial device.
+    ///
     /// # Examples
     ///
     /// ```
@@ -263,12 +269,6 @@ impl io::Read for SerialPort {
     ///     sleep(core::time::Duration::from_millis(10)).await;
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
-    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned if the serial port is configured as another Smart device.
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be read from the serial device.
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.validate_port().map_err(|e| match e {
             PortError::Disconnected => {

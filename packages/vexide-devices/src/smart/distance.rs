@@ -77,6 +77,12 @@ impl DistanceSensor {
 
     /// Attempts to detect an object, returning `None` if no object could be found.
     ///
+    /// # Errors
+    ///
+    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
+    /// - A [`DistanceError::StillInitializing`] error is returned if the distance sensor is still initializing.
+    /// - A [`DistanceError::BadStatusCode`] error is returned if the distance sensor has an unknown status code.
+    ///
     /// # Examples
     ///
     /// Measure object distance and velocity:
@@ -114,12 +120,6 @@ impl DistanceSensor {
     ///         });
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
-    /// - A [`DistanceError::StillInitializing`] error is returned if the distance sensor is still initializing.
-    /// - A [`DistanceError::BadStatusCode`] error is returned if the distance sensor has an unknown status code.
     pub fn object(&self) -> Result<Option<DistanceObject>, DistanceError> {
         self.validate()?;
 
@@ -142,6 +142,10 @@ impl DistanceSensor {
     /// The status code of the signature can tell you if the sensor is still initializing or if it is working correctly.
     /// If the distance sensor is still initializing, the status code will be 0x00.
     /// If it is done initializing and functioning correctly, the status code will be 0x82 or 0x86.
+    ///
+    /// # Errors
+    ///
+    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
     ///
     /// # Examples
     ///
@@ -179,10 +183,6 @@ impl DistanceSensor {
     ///     }
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
     pub fn status(&self) -> Result<u32, DistanceError> {
         self.validate_port()?;
 
