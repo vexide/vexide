@@ -31,8 +31,8 @@ Before releasing:
 - Added support for controllers in `DynamicPeripherals`. (#196)
 - Added the ability to return Smart Ports, ADI ports, the display, and controllers to `DynamicPeripherals`. (#196)
 - Added a `SmartDevice::UPDATE_INTERVAL` constant for all devices, representing the amount of time between data updates from a given device. (#199) (**Breaking Change**)
-- Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs.
-- Added the `OpticalSensor::GESTURE_UPDATE_INTERVAL` (50mS) constant.
+- Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs (210).
+- Added the `OpticalSensor::GESTURE_UPDATE_INTERVAL` (50mS) constant (#211).
 
 ### Fixed
 
