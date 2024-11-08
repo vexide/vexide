@@ -67,6 +67,8 @@ Before releasing:
 - `OpticalSensor::last_gesture` now returns an `Option<Gesture>` if no gesture was detected. (#215) (**Breaking Change**)
 - The `time` field on `Gesture` is now returned as an instance of `SmartDeviceTimestamp`. (#215) (**Breaking Change**)
 - `Gesture` and `GestureDirection` no longer implements `Default`. (#215) (**Breaking Change**)
+- Renamed `vexide::devices::geometry` to `vexide::devices::math`.
+- Replaced the custom `Point2` type with `mint`'s `Point2` type for better interop.
 
 ### Removed
 
@@ -80,6 +82,7 @@ Before releasing:
 - Removed `AdiSolenoid`. Use `AdiDigitalOut` instead. (#210) (**Breaking Change**)
 - `GestureDirection::None` has been removed, as `OpticalSensor::next_gesture` now returns an `Option<Gesture>`. (#215) (**Breaking Change**)
 - `GestureDirection` no longer has a `From` conversion for `u32`. (#215) (**Breaking Change**)
+- Removed the `nalgebra` feature. All math types should natively support nalgebra conversions without any additional features.
 
 ### New Contributors
 
