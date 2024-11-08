@@ -78,6 +78,24 @@ impl SerialPort {
         Self { port, device }
     }
 
+    /// Configures the baud rate of the serial port.
+    ///
+    /// Baud rate determines the speed of communication over the data channel. Under normal conditions, user code is limited
+    /// to a maximum baudrate of 921600.
+    ///
+    /// # Errors
+    ///
+    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    pub fn set_baud_rate(&mut self, baud_rate: u32) -> Result<(), SerialError> {
+        self.validate_port()?;
+
+        unsafe {
+            vexDeviceGenericSerialBaudrate(self.device, baud_rate as i32);
+        }
+
+        Ok(())
+    }
+
     /// Clears the internal input and output FIFO buffers.
     ///
     /// This can be useful to reset state and remove old, potentially unneeded data
@@ -130,7 +148,7 @@ impl SerialPort {
     /// # Errors
     ///
     /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
-    pub fn read_byte(&self) -> Result<Option<u8>, SerialError> {
+    pub fn read_byte(&mut self) -> Result<Option<u8>, SerialError> {
         self.validate_port()?;
 
         let byte = unsafe { vexDeviceGenericSerialReadChar(self.device) };
