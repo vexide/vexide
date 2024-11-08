@@ -64,7 +64,12 @@ impl RadioLink {
     /// # Examples
     ///
     /// ```
-    /// let link = RadioLink::open(port_1, "643A", LinkType::Manager)?;
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    /// }
     /// ```
     pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, LinkError> {
         // Ensure that a radio is plugged into the requested port.
@@ -100,6 +105,24 @@ impl RadioLink {
     /// # Errors
     ///
     /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///
+    ///     if link.unread_bytes().is_ok_and(|bytes| bytes > 0) {
+    ///         if let Ok(byte) = link.read_byte() {
+    ///             // Okay to unwrap here, since we've established that there was at least one byte to read.
+    ///             println!("{}", byte.unwrap());
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn unread_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
 
