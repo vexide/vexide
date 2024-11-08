@@ -95,7 +95,7 @@ impl Platform for V5Platform {
                     .borrow_mut()
                     .draw_buffer(
                         Rect::from_dimensions(
-                            (0, 0),
+                            [0, 0],
                             Display::HORIZONTAL_RESOLUTION as _,
                             Display::VERTICAL_RESOLUTION as _,
                         ),

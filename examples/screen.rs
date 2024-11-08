@@ -17,7 +17,7 @@ async fn main(peripherals: Peripherals) {
     write!(display, "Hello, world!").unwrap();
 
     // Create a rectangle to be drawn on the screen.
-    let rect = Rect::new((20, 20), (100, 100));
+    let rect = Rect::new([20, 20], [100, 100]);
 
     // Fill in the entire rectangle with white.
     display.fill(&rect, Rgb::new(255, 255, 255));
@@ -26,7 +26,7 @@ async fn main(peripherals: Peripherals) {
     display.stroke(&rect, Rgb::new(255, 0, 255));
 
     // Create a piece of text to draw on the screen at a specific position.
-    let text = Text::new("Nice to see you!", TextSize::Medium, (80, 80));
+    let text = Text::new("Nice to see you!", TextSize::Medium, [80, 80]);
     // Fill in the text with cyan.
     display.fill(&text, Rgb::new(0, 255, 255));
 

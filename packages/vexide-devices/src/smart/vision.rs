@@ -38,7 +38,7 @@ use vex_sdk::{
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::{geometry::Point2, rgb::Rgb, PortError};
+use crate::{math::Point2, rgb::Rgb, PortError};
 
 /// VEX Vision Sensor
 ///

@@ -32,7 +32,7 @@ use vex_sdk::{
 };
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
-use crate::{geometry::Point2, PortError};
+use crate::{math::Point2, PortError};
 
 /// A GPS sensor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -104,7 +104,7 @@ impl GpsSensor {
     pub fn offset(&self) -> Result<Point2<f64>, PortError> {
         self.validate_port()?;
 
-        let mut data = Point2::<f64>::default();
+        let mut data = Point2 { x: 0.0, y: 0.0 };
         unsafe { vexDeviceGpsOriginGet(self.device, &mut data.x, &mut data.y) }
 
         Ok(data)
@@ -142,7 +142,10 @@ impl GpsSensor {
             % 360.0;
 
         Ok((
-            Point2::<f64>::new(attitude.position_x, attitude.position_y),
+            Point2 {
+                x: attitude.position_x,
+                y: attitude.position_y,
+            },
             heading,
         ))
     }

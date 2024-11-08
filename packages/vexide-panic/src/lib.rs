@@ -17,7 +17,7 @@ use vexide_core::{backtrace::Backtrace, println};
 #[cfg(feature = "display_panics")]
 use vexide_devices::{
     display::{Display, Rect, Text, TextSize},
-    geometry::Point2,
+    math::Point2,
 };
 
 #[cfg(target_arch = "wasm32")]

@@ -71,7 +71,7 @@ use vexide_core::time::Instant;
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
-    geometry::{EulerAngles, Quaternion, Vector3},
+    math::{EulerAngles, Quaternion, Vector3},
     PortError,
 };
 
