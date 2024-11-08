@@ -32,6 +32,7 @@ Before releasing:
 - Added the ability to return Smart Ports, ADI ports, the display, and controllers to `DynamicPeripherals`. (#196)
 - Added a `SmartDevice::UPDATE_INTERVAL` constant for all devices, representing the amount of time between data updates from a given device. (#199) (**Breaking Change**)
 - Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs.
+- Added a `SerialPort::set_baud_rate` method for the adjusting baudrate of a generic serial smartport after initialization. (#217)
 
 ### Fixed
 
@@ -62,6 +63,7 @@ Before releasing:
 - Renamed `InertialSensor::set_data_rate` to `InertialSensor::set_data_interval`. (#199) (**Breaking Change**)
 - Renamed `Motor::DATA_WRITE_INTERVAL` to `Motor::WRITE_INTERVAL`. (#199) (**Breaking Change**)
 - Renamed `InertialSensor::accel` to `InertialSensor::acceleration` (#213) (**Breaking Change**)
+- `SerialPort::read_byte` now takes `&mut self`. (#215) (**Breaking Change**)
 
 ### Removed
 
