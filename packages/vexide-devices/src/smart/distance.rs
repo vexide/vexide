@@ -44,6 +44,8 @@ unsafe impl Sync for DistanceSensor {}
 impl DistanceSensor {
     /// Creates a new distance sensor from a [`SmartPort`].
     ///
+    /// # Examples
+    ///
     /// ```
     /// use vexide::prelude::*;
     ///
