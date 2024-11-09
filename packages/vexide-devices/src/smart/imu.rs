@@ -690,11 +690,11 @@ impl InertialSensor {
     ///     // Sleep for two seconds to allow the robot to be moved.
     ///     sleep(Duration::from_secs(2)).await;
     ///
-    ///     // Store heading before reset.
-    ///     let heading = sensor.heading().unwrap_or_default();
+    ///     // Store rotation before reset.
+    ///     let rotation = sensor.rotation().unwrap_or_default();
     ///
     ///     // Reset heading back to zero.
-    ///     _ = sensor.reset_heading();
+    ///     _ = sensor.reset_rotation();
     /// }
     /// ```
     pub fn reset_rotation(&mut self) -> Result<(), InertialError> {
@@ -716,7 +716,6 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -749,7 +748,6 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -784,7 +782,6 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

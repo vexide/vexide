@@ -66,6 +66,7 @@ Before releasing:
 - Renamed `InertialSensor::set_data_rate` to `InertialSensor::set_data_interval`. (#199) (**Breaking Change**)
 - Renamed `Motor::DATA_WRITE_INTERVAL` to `Motor::WRITE_INTERVAL`. (#199) (**Breaking Change**)
 - Renamed `InertialSensor::accel` to `InertialSensor::acceleration` (#213) (**Breaking Change**)
+- Renamed `GpsImu::accel` to `GpsImu::acceleration` (#211) (**Breaking Change**)
 - `OpticalSensor::last_gesture` now returns an `Option<Gesture>` if no gesture was detected. (#215) (**Breaking Change**)
 - The `time` field on `Gesture` is now returned as an instance of `SmartDeviceTimestamp`. (#215) (**Breaking Change**)
 - `Gesture` and `GestureDirection` no longer implements `Default`. (#215) (**Breaking Change**)
