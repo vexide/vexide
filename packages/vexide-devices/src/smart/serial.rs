@@ -297,7 +297,7 @@ impl io::Read for SerialPort {
     ///
     /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
     /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned if the serial port is configured as another Smart device.
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be read from the serial device.
+    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal read error occurred.
     ///
     /// # Examples
     ///
@@ -347,7 +347,7 @@ impl io::Write for SerialPort {
     ///
     /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
     /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned if the serial port is configured as another Smart device.
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be written to the serial device.
+    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal write error occurred.
     ///
     /// # Examples
     ///

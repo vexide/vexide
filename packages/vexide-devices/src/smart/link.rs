@@ -192,8 +192,16 @@ impl RadioLink {
 }
 
 impl io::Read for RadioLink {
-    /// Read some bytes sent to the radio into the specified buffer, returning
-    /// how many bytes were read.
+    /// Read some bytes sent to the radio into the specified buffer, returning how many bytes were read.
+    ///
+    ///
+    /// # Errors
+    ///
+    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
+    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned a device other than a radio is connected.
+    /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
+    ///   established. Use [`RadioLink::is_linked`] to check this if needed.
+    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal read error occurred.
     ///
     /// # Examples
     ///
@@ -246,8 +254,15 @@ impl io::Read for RadioLink {
 }
 
 impl io::Write for RadioLink {
-    /// Write a buffer into the radio's output buffer, returning how many bytes
-    /// were written.
+    /// Write a buffer into the radio's output buffer, returning how many bytes were written.
+    ///
+    /// # Errors
+    ///
+    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
+    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned a device other than a radio is connected.
+    /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
+    ///   established. Use [`RadioLink::is_linked`] to check this if needed.
+    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal write error occurred.
     ///
     /// # Examples
     ///
@@ -295,6 +310,14 @@ impl io::Write for RadioLink {
     /// This function does nothing.
     ///
     /// VEXLink immediately sends and clears data sent into the write buffer.
+    ///
+    /// # Errors
+    ///
+    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
+    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned a device other than a radio is connected.
+    /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
+    ///   established. Use [`RadioLink::is_linked`] to check this if needed.
+    /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be written to the radio.
     fn flush(&mut self) -> io::Result<()> {
         if !self.is_linked().map_err(|e| match e {
             LinkError::Port { source } => match source {
