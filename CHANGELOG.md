@@ -33,6 +33,8 @@ Before releasing:
 - Added a `SmartDevice::UPDATE_INTERVAL` constant for all devices, representing the amount of time between data updates from a given device. (#199) (**Breaking Change**)
 - Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs (210).
 - Added the `OpticalSensor::GESTURE_UPDATE_INTERVAL` (50mS) constant (#211).
+- Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs.
+- Added a `SerialPort::set_baud_rate` method for the adjusting baudrate of a generic serial smartport after initialization. (#217)
 
 ### Fixed
 
@@ -67,6 +69,7 @@ Before releasing:
 - Renamed `Motor::DATA_WRITE_INTERVAL` to `Motor::WRITE_INTERVAL`. (#199) (**Breaking Change**)
 - Renamed `InertialSensor::accel` to `InertialSensor::acceleration` (#213) (**Breaking Change**)
 - Renamed `GpsImu::accel` to `GpsImu::acceleration` (#211) (**Breaking Change**)
+- `SerialPort::read_byte` now takes `&mut self`. (#215) (**Breaking Change**)
 - `OpticalSensor::last_gesture` now returns an `Option<Gesture>` if no gesture was detected. (#215) (**Breaking Change**)
 - The `time` field on `Gesture` is now returned as an instance of `SmartDeviceTimestamp`. (#215) (**Breaking Change**)
 - `Gesture` and `GestureDirection` no longer implements `Default`. (#215) (**Breaking Change**)
