@@ -563,6 +563,7 @@ impl Controller {
         Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Flags) })
     }
 
+
     /// Send a rumble pattern to the controller's vibration motor.
     ///
     /// This function takes a string consisting of the characters '.', '-', and ' ', where
@@ -586,6 +587,7 @@ impl Controller {
     ///     let mut controller = peripherals.primary_controller;
     ///     let _ = controller.rumble(". -. -.");
     /// }
+    /// ```
     pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
         self.screen.set_text(pattern, 3, 0)
     }
