@@ -228,9 +228,11 @@ impl ControllerScreen {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControllerId {
     /// Primary ("Master") Controller
+    /// This is the controller that is connected to the Brain.
     Primary,
 
     /// Partner Controller
+    /// This is the controller that is connected to the [primary](ControllerId::Primary) controller.
     Partner,
 }
 
@@ -321,7 +323,24 @@ impl Controller {
         }
     }
 
-    /// Returns the identifier of this controller.
+    /// Returns the [identifier](ControllerId) of this controller.
+    ///
+    /// # Examples
+    ///
+    /// Perform a different action based on the controller ID.
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// fn print_a_pressed(controller: &Controller) {
+    ///     let state = controller.state().unwrap_or_default();
+    ///     if state.button_a.is_pressed() {
+    ///         match controller.id() {
+    ///             ControllerId::Primary => println!("Primary Controller A Pressed"),
+    ///             ControllerId::Partner => println!("Partner Controller A Pressed"),
+    ///         }
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub const fn id(&self) -> ControllerId {
         self.id
@@ -339,6 +358,32 @@ impl Controller {
     ///   the controller data is being restricted by competition control.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let controller = peripherals.primary_controller;
+    ///
+    ///     loop {
+    ///         let state = controller.state().unwrap_or_default();
+    ///         println("Left Stick X: {}", state.left_stick.x());
+    ///         if state.button_a.is_now_pressed() {
+    ///             println!("Button A was just pressed!");
+    ///         }
+    ///         if state.button_x.is_pressed() {
+    ///             println!("Button X is pressed!");
+    ///         }
+    ///         if state.button_b.is_released() {
+    ///             println!("Button B is released!");
+    ///         }
+    ///         sleep(Controller::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn state(&self) -> Result<ControllerState, ControllerError> {
         if competition::mode() != CompetitionMode::Driver {
             return Err(ControllerError::CompetitionControl);
@@ -426,6 +471,22 @@ impl Controller {
     }
 
     /// Returns the controller's connection type.
+    ///
+    /// # Examples
+    ///
+    /// Print less information over a slow and unreliable VEXnet connection:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let controller = peripherals.primary_controller;
+    ///     if controller.connection() != ControllerConnection::VexNet {
+    ///         println!("A big info dump");
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub fn connection(&self) -> ControllerConnection {
         unsafe { vexControllerConnectionStatusGet(self.id.into()) }.into()
@@ -437,6 +498,20 @@ impl Controller {
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// Print the controller's battery capacity:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let controller = peripherals.primary_controller;
+    ///     println!("Controller battery capacity: {}", controller.battery_capacity().unwrap_or(0));
+    /// }
+    /// ```
     pub fn battery_capacity(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
@@ -449,6 +524,27 @@ impl Controller {
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// Print a warning if the controller battery is low:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let controller = peripherals.primary_controller;
+    ///     loop {
+    ///         // If the controller isn't connected, it may as well be dead.
+    ///         let battery_level = controller.battery_level().unwrap_or(0);
+    ///         if battery_level < 10 {
+    ///             println!("WARNING: Controller battery is low!");
+    ///         }
+    ///         sleep(Controller::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn battery_level(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
@@ -479,6 +575,17 @@ impl Controller {
     ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.primary_controller;
+    ///     let _ = controller.rumble(". -. -.");
+    /// }
     pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
         self.screen.set_text(pattern, 3, 0)
     }

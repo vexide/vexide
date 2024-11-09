@@ -54,7 +54,6 @@ impl RadioLink {
     /// Opens a radio link from a VEXNet radio plugged into a Smart Port. Once
     /// opened, other VEXNet functionality such as controller tethering on this
     /// specific radio will be disabled.
-    ///
     /// Other radios connected to the Brain can take over this functionality.
     ///
     /// # Errors
