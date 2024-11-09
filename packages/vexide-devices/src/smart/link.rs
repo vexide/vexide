@@ -54,6 +54,7 @@ impl RadioLink {
     /// Opens a radio link from a VEXNet radio plugged into a Smart Port. Once
     /// opened, other VEXNet functionality such as controller tethering on this
     /// specific radio will be disabled.
+    ///
     /// Other radios connected to the Brain can take over this functionality.
     ///
     /// # Errors
@@ -113,13 +114,13 @@ impl RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
     ///
+    ///     let mut buffer = vec![0; 2048];
+    ///
+    ///     // Read into `buffer` if there are unread bytes.
     ///     if link.unread_bytes().is_ok_and(|bytes| bytes > 0) {
-    ///         if let Ok(byte) = link.read_byte() {
-    ///             // Okay to unwrap here, since we've established that there was at least one byte to read.
-    ///             println!("{}", byte.unwrap());
-    ///         }
+    ///         _ = link.read(&mut buffer);
     ///     }
     /// }
     /// ```
@@ -135,6 +136,22 @@ impl RadioLink {
     ///
     /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
     /// - A [`LinkError::ReadFailed`] error is returned if the output buffer could not be accessed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///
+    ///     // Write a byte if there's free space in the buffer.
+    ///     if link.available_write_bytes().is_ok_and(|available| available > 0) {
+    ///         _ = link.write(0x80);
+    ///     }
+    /// }
+    /// ```
     pub fn available_write_bytes(&self) -> Result<usize, LinkError> {
         self.validate_port()?;
 
@@ -151,6 +168,22 @@ impl RadioLink {
     /// # Errors
     ///
     /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///
+    ///     // Write a byte if we are connected to another radio.
+    ///     if link.is_linked() == Ok(true) {
+    ///         _ = link.write(0x80);
+    ///     }
+    /// }
+    /// ```
     pub fn is_linked(&self) -> Result<bool, LinkError> {
         self.validate_port()?;
 
@@ -161,6 +194,24 @@ impl RadioLink {
 impl io::Read for RadioLink {
     /// Read some bytes sent to the radio into the specified buffer, returning
     /// how many bytes were read.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///
+    ///     let mut buffer = vec![0; 2048];
+    ///
+    ///     loop {
+    ///         _ = link.read(&mut buffer);
+    ///         sleep(core::time::Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let is_linked = self.is_linked().map_err(|e| match e {
             LinkError::Port { source } => match source {
@@ -197,6 +248,19 @@ impl io::Read for RadioLink {
 impl io::Write for RadioLink {
     /// Write a buffer into the radio's output buffer, returning how many bytes
     /// were written.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///
+    ///     _ = link.write(b"yo");
+    /// }
+    /// ```
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let is_linked = self.is_linked().map_err(|e| match e {
             LinkError::Port { source } => match source {
