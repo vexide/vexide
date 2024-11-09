@@ -273,6 +273,20 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.set_target(MotorControl::Voltage(5.0));
+    ///     sleep(Duration::from_secs(1)).await;
+    ///     let _ = motor.set_target(MotorControl::Brake(BrakeMode::Hold));
+    /// }
+    /// ```
     pub fn set_target(&mut self, target: MotorControl) -> Result<(), MotorError> {
         let gearset = self.gearset()?;
         self.target = target;
@@ -320,6 +334,18 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.brake(BrakeMode::Hold);
+    /// }
+    /// ```
     pub fn brake(&mut self, mode: BrakeMode) -> Result<(), MotorError> {
         self.set_target(MotorControl::Brake(mode))
     }
@@ -345,6 +371,39 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Give the motor full power:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut v5_motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let mut exp_motor = Motor::new_exp(peripherals.port_2, Direction::Forward);
+    ///     let _ = v5_motor.set_voltage(v5_motor.max_voltage());
+    ///     let _ = exp_motor.set_voltage(exp_motor.max_voltage());
+    /// }
+    /// ```
+    ///
+    /// Drive the motor based on a controller joystick:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let controller = peripherals.primary_controller;
+    ///     loop {
+    ///         let controller_state = controller.state().unwrap_or_default();
+    ///         let voltage = controller_state.left_stick.x() * motor.max_voltage();
+    ///         motor.set_voltage(voltage).unwrap();
+    ///     }
+    /// }
+    /// ```
     pub fn set_voltage(&mut self, volts: f64) -> Result<(), MotorError> {
         self.set_target(MotorControl::Voltage(volts))
     }
@@ -354,6 +413,19 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    ///
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.set_position_target(Position::from_degrees(90.0), 200);
+    /// }
+    /// ```
     pub fn set_position_target(
         &mut self,
         position: Position,
@@ -409,6 +481,21 @@ impl Motor {
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
     /// - A [`MotorError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // This must be a V5 motor
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///
+    ///     // Set the motor to use the red gearset
+    ///     motor.set_gearset(Gearset::Red).unwrap();
+    /// }
+    /// ```
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
         if self.motor_type.is_exp() {
             return Err(MotorError::SetGearsetExp);
@@ -650,6 +737,23 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Print the efficiency of a motor:
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.set_voltage(motor.max_voltage())
+    ///     loop {
+    ///         println!("Efficiency: {:.2}", motor.efficiency().unwrap());
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn efficiency(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
 
