@@ -2,7 +2,7 @@
 //!
 //! This module allows you to read from the buttons and joysticks on the controller and write to the controller's display.
 
-use alloc::ffi::CString;
+use alloc::ffi::{CString, NulError};
 use core::{cell::RefCell, time::Duration};
 
 use snafu::Snafu;
@@ -197,7 +197,7 @@ impl ControllerScreen {
     ///
     /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
     ///   greater than or equal to [`Self::MAX_LINE_LENGTH`].
-    /// - A [`ControllerError::NonTerminatingNul`] error if a NUL (0x00) character was
+    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
     ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
@@ -208,7 +208,7 @@ impl ControllerScreen {
         }
 
         let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text).map_err(|_| ControllerError::NonTerminatingNul)?;
+        let text = CString::new(text)?;
 
         unsafe {
             vexControllerTextSet(
@@ -475,7 +475,7 @@ impl Controller {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::NonTerminatingNul`] error if a NUL (0x00) character was
+    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
     ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
@@ -491,7 +491,11 @@ pub enum ControllerError {
     Offline,
 
     /// A NUL (0x00) character was found in a string that may not contain NUL characters.
-    NonTerminatingNul,
+    #[snafu(transparent)]
+    Nul {
+        /// The source of the error.
+        source: NulError,
+    },
 
     /// Access to controller data is restricted by competition control.
     CompetitionControl,
