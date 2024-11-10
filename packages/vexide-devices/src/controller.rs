@@ -563,7 +563,6 @@ impl Controller {
         Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::Flags) })
     }
 
-
     /// Send a rumble pattern to the controller's vibration motor.
     ///
     /// This function takes a string consisting of the characters '.', '-', and ' ', where
