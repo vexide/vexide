@@ -57,11 +57,13 @@ impl RadioLink {
         // it yet.
         port.validate_type(SmartDeviceType::Radio)?;
 
+        let id = CString::new(id)?;
+
         // That this constructor literally has to be fallible unlike others.
         unsafe {
             vexDeviceGenericRadioConnection(
                 port.device_handle(),
-                CString::new(id)?.as_ptr().cast_mut(),
+                id.as_ptr().cast_mut(),
                 match link_type {
                     LinkType::Worker => 0,
                     LinkType::Manager => 1,
