@@ -699,7 +699,7 @@ pub enum ControllerError {
     /// An invalid line number was given.
     InvalidLine,
 
-    /// An invalid line number was given.
+    /// An invalid column number was given.
     InvalidColumn,
 
     /// Attempted to write a buffer to the controller's screen before the previous buffer was sent.
