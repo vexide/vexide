@@ -158,10 +158,10 @@ pub struct ControllerScreen {
 
 impl ControllerScreen {
     /// Maximum number of characters that can be drawn to a text line.
-    pub const MAX_LINE_LENGTH: usize = 14;
+    pub const MAX_COLUMNS: usize = 19;
 
     /// Number of available text lines on the controller before clearing the screen.
-    pub const MAX_LINES: usize = 2;
+    pub const MAX_LINES: usize = 3;
 
     /// Clear the contents of a specific text line.
     ///
@@ -184,8 +184,12 @@ impl ControllerScreen {
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
     pub fn clear_screen(&mut self) -> Result<(), ControllerError> {
-        for line in 0..Self::MAX_LINES as u8 {
-            self.clear_line(line)?;
+        validate_connection(self.id)?;
+
+        let id: V5_ControllerId = self.id.into();
+
+        unsafe {
+            vexControllerTextSet(u32::from(id.0), 0, 0, c"".as_ptr().cast());
         }
 
         Ok(())
@@ -203,8 +207,13 @@ impl ControllerScreen {
     ///   not connected.
     pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
-        if col >= Self::MAX_LINE_LENGTH as u8 {
+
+        if line > Self::MAX_LINES as u8 {
             return Err(ControllerError::InvalidLine);
+        }
+
+        if col > Self::MAX_COLUMNS as u8 {
+            return Err(ControllerError::InvalidColumn);
         }
 
         let id: V5_ControllerId = self.id.into();
@@ -498,4 +507,7 @@ pub enum ControllerError {
 
     /// An invalid line number was given.
     InvalidLine,
+
+    /// An invalid line number was given.
+    InvalidColumn,
 }
