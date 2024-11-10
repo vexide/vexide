@@ -443,6 +443,20 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     // Set the motor's target to a Position so that changing the velocity isn't a noop.
+    ///     let _ = motor.set_target(MotorControl::Position(Position::from_degrees(90.0), 200));
+    ///     let _ = motor.set_profiled_velocity(100).unwrap();
+    /// }
+    /// ```
     pub fn set_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
         self.validate_port()?;
 
@@ -685,6 +699,22 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Print the power drawn by a motor:
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     loop {
+    ///         println!("Power: {:.2}W", motor.power().unwrap());
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn power(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorPowerGet(self.device) })
@@ -695,6 +725,23 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Print the torque output of a motor:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     loop {
+    ///         println!("Torque: {:.2}Nm", motor.torque().unwrap());
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn torque(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorTorqueGet(self.device) })
@@ -705,6 +752,22 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Print the voltage drawn by a motor:
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     loop {
+    ///         println!("Voltage: {:.2}V", motor.voltage().unwrap());
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn voltage(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
         Ok(f64::from(unsafe { vexDeviceMotorVoltageGet(self.device) }) / 1000.0)
@@ -715,6 +778,23 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Print the current position of a motor:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     loop {
+    ///         println!("Position: {:?}", motor.position().unwrap());
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn position(&self) -> Result<Position, MotorError> {
         let gearset = self.gearset()?;
         Ok(Position::from_ticks(
@@ -730,6 +810,22 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     loop {
+    ///         let (raw_pos, _) = motor.raw_position().unwrap();
+    ///         println!("Raw Position: {}", raw_pos);
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn raw_position(&self) -> Result<(i32, SmartDeviceTimestamp), MotorError> {
         self.validate_port()?;
 
@@ -870,6 +966,20 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Limit the current draw of a motor to 2.5A:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.set_current_limit(2.5);
+    /// }
+    /// ```
     pub fn set_current_limit(&mut self, limit: f64) -> Result<(), MotorError> {
         self.validate_port()?;
         unsafe { vexDeviceMotorCurrentLimitSet(self.device, (limit * 1000.0) as i32) }
@@ -881,6 +991,22 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Limit the voltage of a motor to 4V:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.set_voltage_limit(4.0);
+    ///     // Will appear as if the voltage was set to only 4V
+    ///     let _ = motor.set_voltage(12.0);
+    /// }
+    /// ```
     pub fn set_voltage_limit(&mut self, limit: f64) -> Result<(), MotorError> {
         self.validate_port()?;
 
@@ -896,6 +1022,20 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Print the current limit of a motor:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     println!("Current Limit: {:.2}A", motor.current_limit().unwrap());
+    /// }
+    /// ```
     pub fn current_limit(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
         Ok(f64::from(unsafe { vexDeviceMotorCurrentLimitGet(self.device) }) / 1000.0)
@@ -906,6 +1046,20 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Print the voltage limit of a motor:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     println!("Voltage Limit: {:.2}V", motor.voltage_limit().unwrap());
+    /// }
+    /// ```
     pub fn voltage_limit(&self) -> Result<f64, MotorError> {
         self.validate_port()?;
         Ok(f64::from(unsafe { vexDeviceMotorVoltageLimitGet(self.device) }) / 1000.0)
@@ -948,19 +1102,24 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
-    /// - A [`MotorError::Busy`] error is returned if the motor's status could not be read.
+    ///
+    /// # Examples
+    ///
+    /// Check if a motor is "busy" (busy only occurs if communicating with the motor fails)
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// fn is_motor_busy(motor: &Motor) -> bool {
+    ///     motor.status().unwrap().contains(MotorStatus::BUSY)
+    /// }
+    /// ```
     pub fn status(&self) -> Result<MotorStatus, MotorError> {
         self.validate_port()?;
 
-        let status = MotorStatus::from_bits_retain(unsafe { vexDeviceMotorFlagsGet(self.device) });
-
-        // This is technically just a flag, but it indicates that an error occurred when trying
-        // to get the flags, so we return early here.
-        if status.contains(MotorStatus::BUSY) {
-            return Err(MotorError::Busy);
-        }
-
-        Ok(status)
+        Ok(MotorStatus::from_bits_retain(unsafe {
+            vexDeviceMotorFlagsGet(self.device)
+        }))
     }
 
     /// Returns the fault flags of the motor.
@@ -968,6 +1127,28 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Check if a motor is over temperature:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     loop {
+    ///         let faults = motor.faults().unwrap();
+    ///         println!("Faults: {:?}", faults);
+    ///
+    ///         if faults.contains(MotorFaults::OVER_TEMPERATURE) {
+    ///             println!("Warning: Motor is over temperature");
+    ///         }
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn faults(&self) -> Result<MotorFaults, MotorError> {
         self.validate_port()?;
 
@@ -1011,6 +1192,27 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Print a warning if the motor draws too much current:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.set_voltage(12.0);
+    ///     loop {
+    ///         if let Ok(true) = motor.is_over_current() {
+    ///             println!("Warning: Motor is drawing too much current");
+    ///         }
+    ///         println!("Current: {:.2}A", motor.current().unwrap_or(0.0));
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn is_over_current(&self) -> Result<bool, MotorError> {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
@@ -1020,6 +1222,27 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Print a warning if the motor's H-bridge has a fault:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.set_voltage(12.0);
+    ///     loop {
+    ///         if let Ok(true) = motor.is_driver_fault() {
+    ///             println!("Warning: Motor has a H-bridge fault");
+    ///         }
+    ///         println!("Current: {:.2}A", motor.current().unwrap_or(0.0));
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn is_driver_fault(&self) -> Result<bool, MotorError> {
         Ok(self.faults()?.contains(MotorFaults::DRIVER_FAULT))
     }
@@ -1130,6 +1353,28 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let constants = MotorTuningConstants {
+    ///         kf: 0.0,
+    ///         kp: 0.0,
+    ///         ki: 0.0,
+    ///         kd: 0.0,
+    ///         filter: 0.0,
+    ///         integral_limit: 0.0,
+    ///         tolerance: 0.0,
+    ///         sample_rate: 0.0,
+    ///     };
+    ///     motor.set_velocity_tuning_constants(constants).unwrap();
+    /// }
+    /// ```
     #[cfg(feature = "dangerous_motor_tuning")]
     pub fn set_velocity_tuning_constants(
         &mut self,
@@ -1158,6 +1403,28 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let constants = MotorTuningConstants {
+    ///         kf: 0.0,
+    ///         kp: 0.0,
+    ///         ki: 0.0,
+    ///         kd: 0.0,
+    ///         filter: 0.0,
+    ///         integral_limit: 0.0,
+    ///         tolerance: 0.0,
+    ///         sample_rate: 0.0,
+    ///     };
+    ///     motor.set_position_tuning_constants(constants).unwrap();
+    /// }
+    /// ```
     #[cfg(feature = "dangerous_motor_tuning")]
     pub fn set_position_tuning_constants(
         &mut self,
