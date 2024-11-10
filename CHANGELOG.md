@@ -31,6 +31,8 @@ Before releasing:
 - Added support for controllers in `DynamicPeripherals`. (#196)
 - Added the ability to return Smart Ports, ADI ports, the display, and controllers to `DynamicPeripherals`. (#196)
 - Added a `SmartDevice::UPDATE_INTERVAL` constant for all devices, representing the amount of time between data updates from a given device. (#199) (**Breaking Change**)
+- Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs (210).
+- Added the `OpticalSensor::GESTURE_UPDATE_INTERVAL` (50mS) constant (#211).
 - Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs.
 - Added a `SerialPort::set_baud_rate` method for the adjusting baudrate of a generic serial smartport after initialization. (#217)
 
@@ -42,6 +44,8 @@ Before releasing:
 - Removed useless generics from `AdiAddrLed::new`. (#197) (**Breaking Change**)
 - IMU calibration timeouts should no longer appear when the IMU is in working condition. (#212)
 - Fixed an issue preventing ADI updates in fast loops. (#210)
+- `Motor::status` can now actually return the `MotorStatus::BUSY` flag. (#211)
+- Fixed a memory leak on every `RadioLink` construction. (#220)
 
 ### Changed
 
@@ -59,30 +63,35 @@ Before releasing:
 - Made the following functions infallible: `AdiAccelerometer::sensitivity`, `AdiAccelerometer::max_acceleration`, `AdiPotentiometer::potentiometer_type`, `AdiPotentiometer::max_angle`, `Motor::target`, and `RotationSensor::direction`. (#182) (**Breaking Change**)
 - `OpticalSensor::led_brightness` now returns a number from `0.0` - `1.0` rather than a number from `1` - `100`. (#155) (**Breaking Change**)
 - Renamed `Motor::update_profiled_velocity` to `Motor::set_profiled_velocity`. (#155) (**Breaking Change**)
+- `Mutex` is now `?Sized`, matching the behavior of the standard library. (#202) (**Breaking Change**)
+- Switched to the [`rgb`](https://crates.io/crates/rgb) for color storage. `vexide::devices::color` is now `vexide::devices::rgb` which re-exports the `Rgb` type. (#201) (**Breaking Change**)
+- Renamed `AddrledError::Adi` to `AddrledError::Port`. (#203) (**Breaking Change**)
 - Renamed `GpsImu::set_data_rate` to `GpsImu::set_data_interval`. (#199) (**Breaking Change**)
 - Renamed `InertialSensor::set_data_rate` to `InertialSensor::set_data_interval`. (#199) (**Breaking Change**)
 - Renamed `Motor::DATA_WRITE_INTERVAL` to `Motor::WRITE_INTERVAL`. (#199) (**Breaking Change**)
 - Renamed `InertialSensor::accel` to `InertialSensor::acceleration` (#213) (**Breaking Change**)
+- Renamed `GpsImu::accel` to `GpsImu::acceleration` (#211) (**Breaking Change**)
 - `SerialPort::read_byte` now takes `&mut self`. (#215) (**Breaking Change**)
 - `OpticalSensor::last_gesture` now returns an `Option<Gesture>` if no gesture was detected. (#215) (**Breaking Change**)
 - The `time` field on `Gesture` is now returned as an instance of `SmartDeviceTimestamp`. (#215) (**Breaking Change**)
 - `Gesture` and `GestureDirection` no longer implements `Default`. (#215) (**Breaking Change**)
 - Renamed `vexide::devices::geometry` to `vexide::devices::math`. (#218) (**Breaking Change**)
 - Replaced the custom `Point2` type with `mint`'s `Point2` type for better interop. (#218) (**Breaking Change**)
+- `SmartPort::device_type` now returns an `Option<SmartDeviceType>` which returns `None` if no device is connected or configured to a port. (#219) (**Breaking Change**)
+- Renamed the `LinkError::NonTerminatingNul` and `ControllerError::NonTerminatingNul` variants to simply `Nul` and added a source error. (#220) (**Breaking Change**)
 
 ### Removed
 
 - Removed `Motor::DATA_READ_INTERVAL`. Use `Motor::UPDATE_INTERVAL` instead. (#199) (**Breaking Change**)
-- `Mutex` is now `?Sized`, matching the behavior of the standard library. (#202) (**Breaking Change**)
-- Switched to the [`rgb`](https://crates.io/crates/rgb) for color storage. `vexide::devices::color` is now `vexide::devices::rgb` which re-exports the `Rgb` type. (#201) (**Breaking Change**)
-- Renamed `AddrledError::Adi` to `AddrledError::Port`. (#203) (**Breaking Change**)
 - Removed `InertialSensor::CALIBRATION_TIMEOUT` and replaced it with the `InertialSensor::CALIBRATION_START_TIMEOUT` and `InertialSensor::CALIBRATION_START_TIMEOUT` constants. (#212) (**Breaking Change**)
 - `AdiDigitalOut::level` now reads the actual reported level value from VEXos, and thus now returns a `Result`. (#210) (**Breaking Change**)
 - Removed the defunct `usd` module from `vexide::devices`. (#198) (**Breaking Change**)
 - Removed `AdiSolenoid`. Use `AdiDigitalOut` instead. (#210) (**Breaking Change**)
+- Removed the deprecated `ZERO_POSITION` and `ZERO_VELOCITY` `Motor` status flags. (#211) (**Breaking Change**)
 - `GestureDirection::None` has been removed, as `OpticalSensor::next_gesture` now returns an `Option<Gesture>`. (#215) (**Breaking Change**)
 - `GestureDirection` no longer has a `From` conversion for `u32`. (#215) (**Breaking Change**)
 - Removed the `nalgebra` feature. All math types should natively support nalgebra conversions without any additional features. (#218) (**Breaking Change**)
+- Removed `SmartDeviceType::None`. `SmartPort::device_type` now returns an `Option<SmartDeviceType>` which serves the same purpose. (#219) (**Breaking Change**)
 
 ### New Contributors
 
