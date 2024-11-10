@@ -494,7 +494,6 @@ pub enum ControllerError {
     #[snafu(transparent)]
     Nul {
         /// The source of the error.
-        #[snafu(source)]
         source: NulError,
     },
 
