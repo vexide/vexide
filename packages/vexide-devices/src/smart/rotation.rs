@@ -66,6 +66,17 @@ impl RotationSensor {
     /// Creates a new rotation sensor on the given port.
     ///
     /// Whether or not the sensor should be reversed on creation can be specified.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: SmartPort, direction: Direction) -> Self {
         let device = unsafe { port.device_handle() };
@@ -84,6 +95,23 @@ impl RotationSensor {
     /// # Errors
     ///
     /// An error is returned if a rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     println!("Before reset: {:?}", sensor.position());
+    ///
+    ///     _ = sensor.reset_position();
+    ///
+    ///     println!("After reset: {:?}", sensor.position());
+    /// }
+    /// ```
     pub fn reset_position(&mut self) -> Result<(), PortError> {
         // NOTE: We don't use vexDeviceAbsEncReset, since that doesn't actually
         // zero position. It sets position to whatever the angle value is.
@@ -95,6 +123,20 @@ impl RotationSensor {
     /// # Errors
     ///
     /// An error is returned if a rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     // Set position to 15 degrees.
+    ///     _ = sensor.set_position(Position::from_degrees(15.0));
+    /// }
+    /// ```
     pub fn set_position(&mut self, mut position: Position) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -125,6 +167,36 @@ impl RotationSensor {
     /// # Errors
     ///
     /// - An error is returned if an rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Set the sensor's direction to [`Direction::Reverse`].
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     // Reverse the sensor
+    ///     _ = sensor.set_direction(Direction::Reverse);
+    /// }
+    /// ```
+    ///
+    /// Reverse the sensor's direction (set to opposite of the previous direction):
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     // Reverse the sensor
+    ///     _ = sensor.set_direction(!sensor.direction());
+    /// }
+    /// ```
     pub fn set_direction(&mut self, new_direction: Direction) -> Result<(), PortError> {
         // You're probably wondering why I don't use [`vexDeviceAbsEncReverseFlagSet`] here. So about that...
         //
@@ -169,6 +241,20 @@ impl RotationSensor {
     /// # Errors
     ///
     /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     // Set to minimum interval.
+    ///     _ = sensor.set_data_interval(RotationSensor::MIN_DATA_INTERVAL);
+    /// }
+    /// ```
     pub fn set_computation_interval(&mut self, interval: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -183,6 +269,25 @@ impl RotationSensor {
     }
 
     /// Returns the [`Direction`] of this sensor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     println!(
+    ///         "Sensor's direction is {}",
+    ///         match sensor.direction() {
+    ///             Direction::Forward => "forward",
+    ///             Direction::Reverse => "reverse",
+    ///         }
+    ///     );
+    /// }
+    /// ```
     #[must_use]
     pub const fn direction(&self) -> Direction {
         self.direction
@@ -193,6 +298,24 @@ impl RotationSensor {
     /// # Errors
     ///
     /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     if let Ok(position) = sensor.position() {
+    ///         println!("Position in degrees: {}°", position.as_degrees());
+    ///         println!("Position in radians: {}°", position.as_radians());
+    ///         println!("Position in raw ticks (centidegrees): {}°", position.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
+    ///         println!("Number of revolutions spun: {}°", position.as_revolutions());
+    ///     }
+    /// }
+    /// ```
     pub fn position(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
@@ -215,6 +338,23 @@ impl RotationSensor {
     /// # Errors
     ///
     /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     if let Ok(angle) = sensor.angle() {
+    ///         println!("Angle in degrees: {}°", angle.as_degrees());
+    ///         println!("Angle in radians: {}°", angle.as_radians());
+    ///         println!("Angle in raw ticks (centidegrees): {}°", angle.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
+    ///     }
+    /// }
+    /// ```
     pub fn angle(&self) -> Result<Position, PortError> {
         self.validate_port()?;
 
@@ -235,6 +375,22 @@ impl RotationSensor {
     /// # Errors
     ///
     /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     if let Some(velocity) = sensor.velocity() {
+    ///         println!(
+    ///             "Velocity in RPM {}",
+    ///             velocity / 6.0, // 1rpm = 6dps
+    ///         );
+    ///     }
+    /// }
+    /// ```
     pub fn velocity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -252,6 +408,21 @@ impl RotationSensor {
     /// # Errors
     ///
     /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     if let Ok(status) = sensor.status() {
+    ///         println!("Status: {:b}", status);
+    ///     }
+    /// }
+    /// ```
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 
