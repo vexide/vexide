@@ -163,12 +163,7 @@ impl ControllerScreen {
     /// Number of available text lines on the controller before clearing the screen.
     pub const MAX_LINES: usize = 2;
 
-    /// Clear the contents of a specific text line.
-    ///
-    /// # Errors
-    ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// Clears the contents of a specific text line.
     ///
     /// <section class="warning">
     ///
@@ -176,6 +171,12 @@ impl ControllerScreen {
     /// wired connection or 50ms over VEXnet will not be applied to the controller.
     ///
     /// </section>
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
+    ///
     ///
     /// # Examples
     ///
