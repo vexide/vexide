@@ -11,14 +11,25 @@
 //!
 //! # Smart Port Devices
 //!
-//! Most devices can be created with a `new` function that generally takes a [`SmartPort`] instance from [`Peripherals`]
+//! Most devices can be created with a `new` function that generally takes a [`SmartPort`] instance from [`Peripherals`](crate::peripherals::Peripherals)
 //! along with other device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
-//! using the [`peripherals`] API.
+//! using the [`peripherals`] API. The general device construction pattern looks like this:
+//! ```no_run
+//! use vexide::prelude::*;
+//!
+//! #[vexide::main]
+//! async fn main(peripherals: Peripherals) {
+//!     // Create a new device on port 1.
+//!     let mut device = Device::new(peripherals.port_1, /* other parameters */);
+//!     // Use the device.
+//!     // Device errors are usually only returned by methods, and not the constructor.
+//!     let _ = device.do_something();
+//! }
+//! ```
 //!
 //! More specific info for each device is available in their respective modules.
 //!
 //! [`peripherals`]: crate::peripherals
-//! [`Peripherals`]: crate::peripherals::Peripherals
 
 pub mod distance;
 pub mod expander;

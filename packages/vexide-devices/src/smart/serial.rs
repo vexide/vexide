@@ -60,7 +60,12 @@ impl SerialPort {
     /// # Examples
     ///
     /// ```
-    /// let serial = SerialPort::open(peripherals.port_1, 115200)?;
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let serial = SerialPort::open(peripherals.port_1, 115200);
+    /// }
     /// ```
     #[must_use]
     pub fn open(port: SmartPort, baud_rate: u32) -> Self {
@@ -109,16 +114,23 @@ impl SerialPort {
     /// serial does not use buffered IO (the FIFO buffers are written as soon
     /// as possible).
     ///
-    /// ```
-    /// let mut serial = SerialPort::open(peripherals.port_1, 115200)?;
-    ///
-    /// buffer.write(b"some bytes")?;
-    /// buffer.flush()?;
-    /// ```
-    ///
     /// # Errors
     ///
     /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200);
+    ///
+    ///     _ = serial.clear_buffers();
+    ///     _ = serial.write(b"Buffers are clear!");
+    /// }
+    /// ```
     pub fn clear_buffers(&mut self) -> Result<(), SerialError> {
         self.validate_port()?;
 
@@ -132,16 +144,26 @@ impl SerialPort {
     /// Read the next byte available in the serial port's input buffer, or `None` if the input
     /// buffer is empty.
     ///
+    /// # Errors
+    ///
+    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
     /// # Examples
     ///
     /// ```
-    /// let serial = SerialPort::open(peripherals.port_1, 115200)?;
+    /// use vexide::prelude::*;
     ///
-    /// loop {
-    ///     if let Some(byte) = serial.read_byte()? {
-    ///         println!("Got byte: {}", byte);
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let serial = SerialPort::open(peripherals.port_1, 115200);
+    ///
+    ///     loop {
+    ///         if let Ok(Some(byte)) = serial.read_byte() {
+    ///             println!("Got byte: {}", byte);
+    ///         }
+    ///
+    ///         sleep(core::time::Duration::from_millis(10)).await;
     ///     }
-    ///     sleep(core::time::Duration::from_millis(10)).await;
     /// }
     /// ```
     ///
@@ -162,19 +184,24 @@ impl SerialPort {
     /// Read the next byte available in the port's input buffer without removing it. Returns
     /// `None` if the input buffer is empty.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// let serial = SerialPort::open(peripherals.port_1, 115200)?;
-    ///
-    /// if let Some(next_byte) = serial.peek_byte()? {
-    ///     println!("Next byte: {}", next_byte);
-    /// }
-    /// ```
-    ///
     /// # Errors
     ///
     /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let serial = SerialPort::open(peripherals.port_1, 115200);
+    ///
+    ///     if let Ok(Some(next_byte)) = serial.peek_byte() {
+    ///         println!("Next byte: {}", next_byte);
+    ///     }
+    /// }
+    /// ```
     pub fn peek_byte(&self) -> Result<Option<u8>, SerialError> {
         self.validate_port()?;
 
@@ -188,19 +215,24 @@ impl SerialPort {
 
     /// Write a single byte to the port's output buffer.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// let serial = SerialPort::open(peripherals.port_1, 115200)?;
-    ///
-    /// // Write 0x80 (128u8) to the output buffer
-    /// serial.write_byte(0x80)?;
-    /// ```
-    ///
     /// # Errors
     ///
     /// - A [`SerialError::WriteFailed`] error is returned if the byte could not be written.
     /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200);
+    ///
+    ///     // Attempt to write 0x80 (128u8) to the output buffer
+    ///     _ = serial.write_byte(0x80);
+    /// }
+    /// ```
     pub fn write_byte(&mut self, byte: u8) -> Result<(), SerialError> {
         self.validate_port()?;
 
@@ -212,20 +244,28 @@ impl SerialPort {
 
     /// Returns the number of bytes available to be read in the port's FIFO input buffer.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// let serial = SerialPort::open(peripherals.port_1, 115200)?;
-    ///
-    /// if serial.bytes_to_read()? > 0 {
-    ///     println!("{}", serial.read_byte()?.unwrap());
-    /// }
-    /// ```
-    ///
     /// # Errors
     ///
     /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be read.
     /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200);
+    ///
+    ///     if serial.unread_bytes().is_ok_and(|bytes| bytes > 0) {
+    ///         if let Ok(byte) = serial.read_byte() {
+    ///             // Okay to unwrap here, since we've established that there was at least one byte to read.
+    ///             println!("{}", byte.unwrap());
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn unread_bytes(&self) -> Result<usize, SerialError> {
         self.validate_port()?;
 
@@ -239,20 +279,26 @@ impl SerialPort {
 
     /// Returns the number of bytes free in the port's FIFO output buffer.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// let serial = SerialPort::open(peripherals.port_1, 115200)?;
-    ///
-    /// if serial.available_write_bytes()? > 0 {
-    ///     serial.write_byte(0x80)?;
-    /// }
-    /// ```
-    ///
     /// # Errors
     ///
     /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be read.
     /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let serial = SerialPort::open(peripherals.port_1, 115200);
+    ///
+    ///     // Write a byte if there's free space in the buffer.
+    ///     if serial.available_write_bytes().is_ok_and(|available| available > 0) {
+    ///         _ = serial.write_byte(0x80);
+    ///     }
+    /// }
+    /// ```
     pub fn available_write_bytes(&self) -> Result<usize, SerialError> {
         self.validate_port()?;
 
@@ -269,24 +315,29 @@ impl io::Read for SerialPort {
     /// Read some bytes from this serial port into the specified buffer, returning
     /// how many bytes were read.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// let mut serial = SerialPort::open(peripherals.port_1, 115200)?;
-    ///
-    /// let mut buffer = Vec::new();
-    ///
-    /// loop {
-    ///     serial.read(&mut buffer);
-    ///     sleep(core::time::Duration::from_millis(10)).await;
-    /// }
-    /// ```
-    ///
     /// # Errors
     ///
     /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
     /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned if the serial port is configured as another Smart device.
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be read from the serial device.
+    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal read error occurred.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200);
+    ///
+    ///     let mut buffer = vec![0; 2048];
+    ///
+    ///     loop {
+    ///         _ = serial.read(&mut buffer);
+    ///         sleep(core::time::Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.validate_port()?;
 
@@ -310,7 +361,20 @@ impl io::Write for SerialPort {
     ///
     /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
     /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned if the serial port is configured as another Smart device.
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be written to the serial device.
+    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal write error occurred.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200);
+    ///
+    ///     _ = serial.write(b"yo");
+    /// }
+    /// ```
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.validate_port()?;
 
