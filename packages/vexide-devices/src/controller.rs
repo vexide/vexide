@@ -169,6 +169,32 @@ impl ControllerScreen {
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// <section class="warning">
+    ///
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a
+    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    ///
+    /// </section>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.controller;
+    ///
+    ///     // Write to line 0
+    ///     _ = controller.set_text("Hello, world!", 0, 0);
+    ///
+    ///     sleep(Duration::from_millis(500)).await;
+    ///
+    ///     // Clear line 0
+    ///     _ = controller.clear_line(0);
+    /// }
+    /// ```
     pub fn clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
         //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
         //TODO: We should check the version and change behavior based on it.
@@ -177,12 +203,34 @@ impl ControllerScreen {
         Ok(())
     }
 
-    /// Clear the whole screen.
+    /// Clears the whole screen, including the default widget displayed by the controller if
+    /// it hasn't already been cleared.
+    ///
+    /// <section class="warning">
+    ///
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a
+    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    ///
+    /// </section>
     ///
     /// # Errors
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.controller;
+    ///
+    ///     // Remove the default widget on the controller screen that displays match time.
+    ///     _ = controller.clear_screen();
+    /// }
+    /// ```
     pub fn clear_screen(&mut self) -> Result<(), ControllerError> {
         for line in 0..Self::MAX_LINES as u8 {
             self.clear_line(line)?;
@@ -193,6 +241,13 @@ impl ControllerScreen {
 
     /// Set the text contents at a specific row/column offset.
     ///
+    /// <section class="warning">
+    ///
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a
+    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    ///
+    /// </section>
+    ///
     /// # Errors
     ///
     /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
@@ -201,6 +256,19 @@ impl ControllerScreen {
     ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.controller;
+    ///
+    ///     _ = controller.set_text("Hello, world!", 0, 0);
+    /// }
+    /// ```
     pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
         if col >= Self::MAX_LINE_LENGTH as u8 {
