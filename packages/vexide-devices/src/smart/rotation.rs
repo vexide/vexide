@@ -67,7 +67,6 @@ impl RotationSensor {
     ///
     /// Whether or not the sensor should be reversed on creation can be specified.
     ///
-    ///
     /// # Examples
     ///
     /// ```
