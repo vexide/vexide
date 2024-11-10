@@ -32,14 +32,44 @@ pub mod position;
 pub mod rgb;
 pub mod smart;
 
+use smart::SmartDeviceType;
 use snafu::Snafu;
+use vexide_core::io;
 
 #[derive(Debug, Snafu)]
 /// Generic errors that can take place when using ports on the V5 Brain.
 pub enum PortError {
     /// No device is plugged into the port.
-    Disconnected,
+    #[snafu(display("Expected a device to be connected to port {port}"))]
+    Disconnected {
+        /// The port that was expected to have a device
+        port: u8,
+    },
 
-    /// The incorrect device type is plugged into the port.
-    IncorrectDevice,
+    /// An incorrect type of device is plugged into the port.
+    #[snafu(display(
+        "Expected a {expected:?} device on port {port}, but found a {actual:?} device"
+    ))]
+    IncorrectDevice {
+        /// The device type that was expected
+        expected: SmartDeviceType,
+        /// The device type that was found
+        actual: SmartDeviceType,
+        /// The port that was expected to have a device
+        port: u8,
+    },
+}
+
+impl From<PortError> for io::Error {
+    fn from(value: PortError) -> Self {
+        match value {
+            PortError::Disconnected { .. } => {
+                io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
+            }
+            PortError::IncorrectDevice { .. } => io::Error::new(
+                io::ErrorKind::AddrInUse,
+                "Port is in use as another device.",
+            ),
+        }
+    }
 }

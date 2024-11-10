@@ -118,27 +118,21 @@ impl RadioLink {
     }
 }
 
+const RADIO_NOT_LINKED: &str = "The radio has not established a link with another radio.";
+
 impl io::Read for RadioLink {
     /// Read some bytes sent to the radio into the specified buffer, returning
     /// how many bytes were read.
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let is_linked = self.is_linked().map_err(|e| match e {
-            LinkError::Port { source } => match source {
-                PortError::Disconnected => {
-                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-                }
-                PortError::IncorrectDevice => io::Error::new(
-                    io::ErrorKind::AddrInUse,
-                    "Port is in use as another device.",
-                ),
-            },
+            LinkError::Port { source } => source,
             _ => unreachable!(),
         })?;
 
         if !is_linked {
             return Err(io::Error::new(
                 io::ErrorKind::NotConnected,
-                "Radio is not linked!",
+                RADIO_NOT_LINKED,
             ));
         }
 
@@ -159,22 +153,14 @@ impl io::Write for RadioLink {
     /// were written.
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let is_linked = self.is_linked().map_err(|e| match e {
-            LinkError::Port { source } => match source {
-                PortError::Disconnected => {
-                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-                }
-                PortError::IncorrectDevice => io::Error::new(
-                    io::ErrorKind::AddrInUse,
-                    "Port is in use as another device.",
-                ),
-            },
+            LinkError::Port { source } => source,
             _ => unreachable!(),
         })?;
 
         if !is_linked {
             return Err(io::Error::new(
                 io::ErrorKind::NotConnected,
-                "Radio is not linked!",
+                RADIO_NOT_LINKED,
             ));
         }
 
@@ -193,20 +179,12 @@ impl io::Write for RadioLink {
     /// VEXLink immediately sends and clears data sent into the write buffer.
     fn flush(&mut self) -> io::Result<()> {
         if !self.is_linked().map_err(|e| match e {
-            LinkError::Port { source } => match source {
-                PortError::Disconnected => {
-                    io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-                }
-                PortError::IncorrectDevice => io::Error::new(
-                    io::ErrorKind::AddrInUse,
-                    "Port is in use as another device.",
-                ),
-            },
+            LinkError::Port { source } => source,
             _ => unreachable!(),
         })? {
             return Err(io::Error::new(
                 io::ErrorKind::NotConnected,
-                "Radio is not linked!",
+                RADIO_NOT_LINKED,
             ));
         }
 
@@ -270,7 +248,7 @@ pub enum LinkError {
     },
 
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,

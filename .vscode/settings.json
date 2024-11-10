@@ -13,6 +13,7 @@
         "feedforward",
         "gearset",
         "hotspot",
+        "leds",
         "loopspeed",
         "nalgebra",
         "opcontrol",

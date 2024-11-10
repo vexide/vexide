@@ -5,7 +5,7 @@
 use alloc::ffi::{CString, NulError};
 use core::{cell::RefCell, time::Duration};
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
     V5_ControllerIndex, V5_ControllerStatus,
@@ -105,7 +105,7 @@ pub struct ControllerState {
     /// Button Right
     pub button_right: ButtonState,
 
-    /// Top Left Bumpeer
+    /// Top Left Bumper
     pub button_l1: ButtonState,
     /// Bottom Left Bumper
     pub button_l2: ButtonState,
@@ -144,7 +144,7 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     if unsafe {
         vexControllerConnectionStatusGet(id.into()) == V5_ControllerStatus::kV5ControllerOffline
     } {
-        return Err(ControllerError::Offline);
+        return OfflineSnafu.fail();
     }
 
     Ok(())
@@ -195,7 +195,7 @@ impl ControllerScreen {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
+    /// - A [`ControllerError::InvalidColumn`] error is returned if `col` is
     ///   greater than or equal to [`Self::MAX_LINE_LENGTH`].
     /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
     ///   found anywhere in the specified text.
@@ -203,9 +203,10 @@ impl ControllerScreen {
     ///   not connected.
     pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
-        if col >= Self::MAX_LINE_LENGTH as u8 {
-            return Err(ControllerError::InvalidLine);
-        }
+        ensure!(
+            col < Self::MAX_LINE_LENGTH as u8,
+            InvalidColumnSnafu { col }
+        );
 
         let id: V5_ControllerId = self.id.into();
         let text = CString::new(text)?;
@@ -340,9 +341,10 @@ impl Controller {
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
     pub fn state(&self) -> Result<ControllerState, ControllerError> {
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
+        ensure!(
+            competition::mode() == CompetitionMode::Driver,
+            CompetitionControlSnafu
+        );
         validate_connection(self.id)?;
 
         // Get all current button states
@@ -498,8 +500,14 @@ pub enum ControllerError {
     },
 
     /// Access to controller data is restricted by competition control.
+    ///
+    /// When this error occurs, the requested data is not available outside of
+    /// driver control mode.
     CompetitionControl,
 
-    /// An invalid line number was given.
-    InvalidLine,
+    /// The column number provided is larger than [`ControllerScreen::MAX_LINE_LENGTH`].
+    InvalidColumn {
+        /// The column number that was given.
+        col: u8,
+    },
 }

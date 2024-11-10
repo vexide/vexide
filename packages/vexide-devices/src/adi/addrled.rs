@@ -9,10 +9,10 @@
 //!
 //! ADI ports are capable of controlling a WS2812B LED strip with up to 64 diodes per set of 8 ADI ports. This
 //! limitation is due to the 2A current limit on ADI ports — plugging multiple strips into the same set of ADI ports
-//! may cause your lights to flicker due to this limit being reached. If you require more than 64 continiously
+//! may cause your lights to flicker due to this limit being reached. If you require more than 64 continuously
 //! running diodes, then you can run each strip through its own [ADI Expander](crate::smart::expander::AdiExpander).
 //!
-//! The V5's ADI ports can present some technical challenges when interfacing with LEDs. Some commerically
+//! The V5's ADI ports can present some technical challenges when interfacing with LEDs. Some commercially
 //! available strips will not work with the V5 out of the box, but mileage may vary. This is mainly caused by two
 //! "quirks" of the V5's ADI ports:
 //!
@@ -37,7 +37,7 @@
 
 use alloc::{vec, vec::Vec};
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::vexDeviceAdiAddrLedSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
@@ -64,10 +64,7 @@ impl AdiAddrLed {
     /// If the `length` parameter exceeds [`Self::MAX_LENGTH`], the function returns
     /// [`AddrLedError::BufferTooLarge`].
     pub fn new(port: AdiPort, length: usize) -> Result<Self, AddrLedError> {
-        if length > Self::MAX_LENGTH {
-            return Err(AddrLedError::BufferTooLarge);
-        }
-
+        ensure!(length <= Self::MAX_LENGTH, BufferTooLargeSnafu { length });
         Ok(Self {
             port,
             buf: vec![0; length],
@@ -116,7 +113,11 @@ impl AdiAddrLed {
             self.update();
             Ok(())
         } else {
-            Err(AddrLedError::OutOfRange)
+            OutOfRangeSnafu {
+                index,
+                length: self.buf.len(),
+            }
+            .fail()
         }
     }
 
@@ -181,9 +182,10 @@ impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
             .map(|i| i.into().into_raw())
             .collect::<Vec<_>>();
 
-        if buf.len() > Self::MAX_LENGTH {
-            return Err(AddrLedError::BufferTooLarge);
-        }
+        ensure!(
+            buf.len() <= Self::MAX_LENGTH,
+            BufferTooLargeSnafu { length: buf.len() }
+        );
 
         self.buf = buf;
         self.update();
@@ -196,13 +198,23 @@ impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
 #[derive(Debug, Snafu)]
 pub enum AddrLedError {
     /// The provided index was not in range of the current buffer's length.
-    OutOfRange,
+    #[snafu(display("Index `{index}` is out of range for buffer of length `{length}`"))]
+    OutOfRange {
+        /// The index that was out of range
+        index: usize,
+        /// The length of the buffer
+        length: usize,
+    },
 
-    /// The length of the provided buffer exceeded the maximum strip length that ADI can control (64).
-    BufferTooLarge,
+    /// The length of the provided buffer exceeded the maximum strip length (of 64) that ADI can control.
+    #[snafu(display("Buffer length `{length}` exceeds maximum strip length of `64`"))]
+    BufferTooLarge {
+        /// The length of the buffer that was too large
+        length: usize,
+    },
 
     /// Generic ADI related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error
         source: PortError,

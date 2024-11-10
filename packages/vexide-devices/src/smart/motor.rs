@@ -51,7 +51,7 @@
 use core::time::Duration;
 
 use bitflags::bitflags;
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorActualVelocityGet, vexDeviceMotorBrakeModeSet,
     vexDeviceMotorCurrentGet, vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet,
@@ -372,9 +372,7 @@ impl Motor {
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
     /// - A [`MotorError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
-        if self.motor_type.is_exp() {
-            return Err(MotorError::SetGearsetExp);
-        }
+        ensure!(self.motor_type.is_v5(), SetGearsetExpSnafu);
         self.validate_port()?;
         unsafe {
             vexDeviceMotorGearingSet(self.device, gearset.into());
@@ -621,9 +619,7 @@ impl Motor {
 
         // This is technically just a flag, but it indicates that an error occurred when trying
         // to get the flags, so we return early here.
-        if status.contains(MotorStatus::BUSY) {
-            return Err(MotorError::Busy);
-        }
+        ensure!(!status.contains(MotorStatus::BUSY), BusySnafu);
 
         Ok(status)
     }
@@ -1010,12 +1006,12 @@ pub enum MotorError {
     Busy,
 
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,
     },
 
-    /// Attempted to set a gearset on a EXP motor.
+    /// EXP motors do not have customizable gearsets.
     SetGearsetExp,
 }

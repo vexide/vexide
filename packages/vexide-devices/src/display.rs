@@ -7,7 +7,7 @@
 use alloc::{ffi::CString, string::String, vec::Vec};
 use core::{mem, ptr::addr_of_mut, time::Duration};
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDisplayBackgroundColor, vexDisplayBigStringAt, vexDisplayCircleDraw, vexDisplayCircleFill,
     vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
@@ -633,12 +633,14 @@ impl Display {
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.x - region.start.x) as u32
             * (region.end.y - region.start.y) as u32) as usize;
-        if raw_buf.len() != expected_size {
-            return Err(DisplayError::BufferSize {
+
+        ensure!(
+            raw_buf.len() == expected_size,
+            BufferSizeSnafu {
                 buffer_size: raw_buf.len(),
-                expected_size,
-            });
-        }
+                expected_size
+            }
+        );
 
         // SAFETY: The buffer is guaranteed to be the correct size.
         unsafe {
@@ -679,6 +681,9 @@ impl Display {
 /// Errors that can occur when interacting with the display.
 pub enum DisplayError {
     /// The given buffer of colors was wrong size to fill the specified area.
+    #[snafu(display(
+        "The given buffer of colors was wrong size to fill the specified area: expected {expected_size} bytes, got {buffer_size}."
+    ))]
     BufferSize {
         /// The size of the buffer.
         buffer_size: usize,
