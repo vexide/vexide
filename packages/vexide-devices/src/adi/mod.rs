@@ -125,7 +125,11 @@ impl AdiPort {
     }
 
     pub(crate) fn validate_expander(&self) -> Result<(), PortError> {
-        validate_port(self.expander_index() as u8 + 1, SmartDeviceType::Adi)
+        validate_port(
+            self.expander_number
+                .unwrap_or(Self::INTERNAL_ADI_PORT_NUMBER),
+            SmartDeviceType::Adi,
+        )
     }
 
     /// Configures the ADI port to a specific type if it wasn't already configured.

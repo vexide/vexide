@@ -67,6 +67,7 @@ Before releasing:
 - `OpticalSensor::last_gesture` now returns an `Option<Gesture>` if no gesture was detected. (#215) (**Breaking Change**)
 - The `time` field on `Gesture` is now returned as an instance of `SmartDeviceTimestamp`. (#215) (**Breaking Change**)
 - `Gesture` and `GestureDirection` no longer implements `Default`. (#215) (**Breaking Change**)
+- `SmartPort::device_type` now returns an `Option<SmartDeviceType>` which returns `None` if no device is connected or configured to a port. (#219) (**Breaking Change**)
 
 ### Removed
 
@@ -80,6 +81,7 @@ Before releasing:
 - Removed `AdiSolenoid`. Use `AdiDigitalOut` instead. (#210) (**Breaking Change**)
 - `GestureDirection::None` has been removed, as `OpticalSensor::next_gesture` now returns an `Option<Gesture>`. (#215) (**Breaking Change**)
 - `GestureDirection` no longer has a `From` conversion for `u32`. (#215) (**Breaking Change**)
+- Removed `SmartDeviceType::None`. `SmartPort::device_type` now returns an `Option<SmartDeviceType>` which serves the same purpose. (#219) (**Breaking Change**)
 
 ### New Contributors
 
