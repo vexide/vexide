@@ -132,14 +132,19 @@ pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<
         vexDeviceGetStatus(device_types.as_mut_ptr());
     }
 
-    let connected_type: SmartDeviceType = device_types[(number - 1) as usize].into();
+    let connected_type: Option<SmartDeviceType> = match device_types[(number - 1) as usize] {
+        V5_DeviceType::kDeviceTypeNoSensor => None,
+        raw_type => Some(raw_type.into()),
+    };
 
-    if connected_type == SmartDeviceType::None {
+    if let Some(connected_type) = connected_type {
+        if connected_type != device_type {
+            // The connected device doesn't match the requested type.
+            return Err(PortError::IncorrectDevice);
+        }
+    } else {
         // No device is plugged into the port.
         return Err(PortError::Disconnected);
-    } else if connected_type != device_type {
-        // The connected device doesn't match the requested type.
-        return Err(PortError::IncorrectDevice);
     }
 
     Ok(())
@@ -197,23 +202,29 @@ impl SmartPort {
         (self.number - 1) as u32
     }
 
-    /// Returns the type of device currently connected to this port.
+    /// Returns the type of device currently connected to this port, or `None`
+    /// if no device is connected.
     ///
     /// # Examples
     ///
     /// ```
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
-    /// println!("Type of device connected to port 1: {:?}", my_port.device_type());
+    /// if let Some(device_type) = my_port.device_type() {
+    ///     println!("Type of device connected to port 1: {:?}", device_type);
+    /// }
     /// ```
     #[must_use]
-    pub fn device_type(&self) -> SmartDeviceType {
+    pub fn device_type(&self) -> Option<SmartDeviceType> {
         let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
         unsafe {
             vexDeviceGetStatus(device_types.as_mut_ptr());
         }
 
-        device_types[self.index() as usize].into()
+        match device_types[self.index() as usize] {
+            V5_DeviceType::kDeviceTypeNoSensor => None,
+            raw_type => Some(raw_type.into()),
+        }
     }
 
     /// Verify that a device type is currently plugged into this port, returning an appropriate
@@ -223,7 +234,17 @@ impl SmartPort {
     ///
     /// Returns a [`PortError`] if there is not a device of the specified type in this port.
     pub fn validate_type(&self, device_type: SmartDeviceType) -> Result<(), PortError> {
-        validate_port(self.number(), device_type)
+        if let Some(connected_type) = self.device_type() {
+            if connected_type != device_type {
+                // The connected device doesn't match the requested type.
+                return Err(PortError::IncorrectDevice);
+            }
+        } else {
+            // No device is plugged into the port.
+            return Err(PortError::Disconnected);
+        }
+
+        Ok(())
     }
 
     /// Returns the raw handle of the underlying Smart device connected to this port.
@@ -236,9 +257,6 @@ impl SmartPort {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum SmartDeviceType {
-    /// No device
-    None,
-
     /// Smart Motor
     Motor,
 
@@ -291,7 +309,6 @@ pub enum SmartDeviceType {
 impl From<V5_DeviceType> for SmartDeviceType {
     fn from(value: V5_DeviceType) -> Self {
         match value {
-            V5_DeviceType::kDeviceTypeNoSensor => Self::None,
             V5_DeviceType::kDeviceTypeMotorSensor => Self::Motor,
             V5_DeviceType::kDeviceTypeAbsEncSensor => Self::Rotation,
             V5_DeviceType::kDeviceTypeImuSensor => Self::Imu,
@@ -314,7 +331,6 @@ impl From<V5_DeviceType> for SmartDeviceType {
 impl From<SmartDeviceType> for V5_DeviceType {
     fn from(value: SmartDeviceType) -> Self {
         match value {
-            SmartDeviceType::None => V5_DeviceType::kDeviceTypeNoSensor,
             SmartDeviceType::Motor => V5_DeviceType::kDeviceTypeMotorSensor,
             SmartDeviceType::Rotation => V5_DeviceType::kDeviceTypeAbsEncSensor,
             SmartDeviceType::Imu => V5_DeviceType::kDeviceTypeImuSensor,
