@@ -46,7 +46,7 @@ pub mod adi;
 pub mod battery;
 pub mod controller;
 pub mod display;
-pub mod geometry;
+pub mod math;
 pub mod peripherals;
 pub mod position;
 pub mod rgb;
