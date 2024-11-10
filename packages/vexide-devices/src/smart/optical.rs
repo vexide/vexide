@@ -521,6 +521,8 @@ impl OpticalSensor {
 }
 
 impl SmartDevice for OpticalSensor {
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(20);
+
     fn port_number(&self) -> u8 {
         self.port.number()
     }
