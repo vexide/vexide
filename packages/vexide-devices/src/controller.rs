@@ -158,10 +158,10 @@ pub struct ControllerScreen {
 
 impl ControllerScreen {
     /// Maximum number of characters that can be drawn to a text line.
-    pub const MAX_LINE_LENGTH: usize = 14;
+    pub const MAX_COLUMNS: usize = 19;
 
     /// Number of available text lines on the controller before clearing the screen.
-    pub const MAX_LINES: usize = 2;
+    pub const MAX_LINES: usize = 3;
 
     /// Clears the contents of a specific text line.
     ///
@@ -176,7 +176,8 @@ impl ControllerScreen {
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
-    ///
+    /// - A [`ControllerError::WriteBusy`] error is returned if a screen write
+    ///   occurred too quickly after the previous write attempt.
     ///
     /// # Examples
     ///
@@ -218,6 +219,8 @@ impl ControllerScreen {
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    /// - A [`ControllerError::WriteBusy`] error is returned if a screen write
+    ///   occurred too quickly after the previous write attempt.
     ///
     /// # Examples
     ///
@@ -233,8 +236,12 @@ impl ControllerScreen {
     /// }
     /// ```
     pub fn clear_screen(&mut self) -> Result<(), ControllerError> {
-        for line in 0..Self::MAX_LINES as u8 {
-            self.clear_line(line)?;
+        validate_connection(self.id)?;
+
+        let id: V5_ControllerId = self.id.into();
+
+        if unsafe { vexControllerTextSet(u32::from(id.0), 0, 0, c"".as_ptr().cast()) } != 1 {
+            return Err(ControllerError::WriteBusy);
         }
 
         Ok(())
@@ -252,11 +259,15 @@ impl ControllerScreen {
     /// # Errors
     ///
     /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
-    ///   greater than or equal to [`Self::MAX_LINE_LENGTH`].
+    ///   greater than or equal to [`Self::MAX_LINES`].
+    /// - A [`ControllerError::InvalidColumn`] error is returned if `col` is
+    ///   greater than or equal to [`Self::MAX_COLUMNS`].
     /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
     ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    /// - A [`ControllerError::WriteBusy`] error is returned if a screen write
+    ///   occurred too quickly after the previous write attempt.
     ///
     /// # Examples
     ///
@@ -272,20 +283,28 @@ impl ControllerScreen {
     /// ```
     pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
-        if col >= Self::MAX_LINE_LENGTH as u8 {
+
+        if line > Self::MAX_LINES as u8 {
             return Err(ControllerError::InvalidLine);
+        }
+
+        if col > Self::MAX_COLUMNS as u8 {
+            return Err(ControllerError::InvalidColumn);
         }
 
         let id: V5_ControllerId = self.id.into();
         let text = CString::new(text)?;
 
-        unsafe {
+        if unsafe {
             vexControllerTextSet(
                 u32::from(id.0),
                 u32::from(line + 1),
                 u32::from(col + 1),
                 text.as_ptr().cast(),
-            );
+            )
+        } != 1
+        {
+            return Err(ControllerError::WriteBusy);
         }
 
         Ok(())
@@ -661,8 +680,8 @@ impl Controller {
     }
 }
 
-#[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the controller.
+#[derive(Debug, Snafu)]
 pub enum ControllerError {
     /// The controller is not connected to the Brain.
     Offline,
@@ -679,4 +698,10 @@ pub enum ControllerError {
 
     /// An invalid line number was given.
     InvalidLine,
+
+    /// An invalid line number was given.
+    InvalidColumn,
+
+    /// Attempted to write a buffer to the controller's screen before the previous buffer was sent.
+    WriteBusy,
 }
