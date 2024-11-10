@@ -42,6 +42,7 @@ Before releasing:
 - Removed useless generics from `AdiAddrLed::new`. (#197) (**Breaking Change**)
 - IMU calibration timeouts should no longer appear when the IMU is in working condition. (#212)
 - Fixed an issue preventing ADI updates in fast loops. (#210)
+- Fixed a memory leak on every `RadioLink` construction. (#220)
 
 ### Changed
 

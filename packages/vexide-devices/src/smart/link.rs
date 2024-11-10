@@ -61,7 +61,7 @@ impl RadioLink {
         unsafe {
             vexDeviceGenericRadioConnection(
                 port.device_handle(),
-                CString::new(id)?.into_raw(),
+                CString::new(id)?.as_ptr().cast_mut(),
                 match link_type {
                     LinkType::Worker => 0,
                     LinkType::Manager => 1,
