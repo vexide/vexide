@@ -45,6 +45,7 @@ Before releasing:
 - IMU calibration timeouts should no longer appear when the IMU is in working condition. (#212)
 - Fixed an issue preventing ADI updates in fast loops. (#210)
 - `Motor::status` can now actually return the `MotorStatus::BUSY` flag. (#211)
+- Fixed a memory leak on every `RadioLink` construction. (#220)
 
 ### Changed
 
@@ -75,6 +76,7 @@ Before releasing:
 - The `time` field on `Gesture` is now returned as an instance of `SmartDeviceTimestamp`. (#215) (**Breaking Change**)
 - `Gesture` and `GestureDirection` no longer implements `Default`. (#215) (**Breaking Change**)
 - `SmartPort::device_type` now returns an `Option<SmartDeviceType>` which returns `None` if no device is connected or configured to a port. (#219) (**Breaking Change**)
+- Renamed the `LinkError::NonTerminatingNul` and `ControllerError::NonTerminatingNul` variants to simply `Nul` and added a source error. (#220) (**Breaking Change**)
 
 ### Removed
 
