@@ -18,7 +18,7 @@ use vex_sdk::{
 };
 
 use crate::{
-    geometry::Point2,
+    math::Point2,
     rgb::{Rgb, RgbExt},
 };
 
