@@ -5,7 +5,7 @@
 //!
 //! For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
 
-use alloc::ffi::CString;
+use alloc::ffi::{CString, NulError};
 use core::time::Duration;
 
 use no_std_io::io;
@@ -42,7 +42,7 @@ impl RadioLink {
     /// # Errors
     ///
     /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the specified port.
-    /// - A [`LinkError::NonTerminatingNul`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
+    /// - A [`LinkError::Nul`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
     ///
     /// # Examples
     ///
@@ -62,7 +62,7 @@ impl RadioLink {
             vexDeviceGenericRadioConnection(
                 port.device_handle(),
                 CString::new(id)
-                    .map_err(|_| LinkError::NonTerminatingNul)?
+                    .map_err(|source| LinkError::Nul { source })?
                     .into_raw(),
                 match link_type {
                     LinkType::Worker => 0,
@@ -263,7 +263,12 @@ pub enum LinkError {
     ReadFailed,
 
     /// A NUL (0x00) character was found in a string that may not contain NUL characters.
-    NonTerminatingNul,
+    #[snafu(transparent)]
+    Nul {
+        /// The source of the error.
+        #[snafu(source)]
+        source: NulError,
+    },
 
     /// Generic port related error.
     #[snafu(display("{source}"), context(false))]
