@@ -44,6 +44,7 @@ Before releasing:
 - Removed useless generics from `AdiAddrLed::new`. (#197) (**Breaking Change**)
 - IMU calibration timeouts should no longer appear when the IMU is in working condition. (#212)
 - Fixed an issue preventing ADI updates in fast loops. (#210)
+- `Motor::status` can now actually return the `MotorStatus::BUSY` flag. (#211)
 
 ### Changed
 
