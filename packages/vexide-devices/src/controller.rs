@@ -160,8 +160,10 @@ pub enum ControllerScreenWriteFuture<'a> {
     /// Waiting for the controller to be ready to accept a new write.
     WaitingForIdle {
         /// The line to write to.
+        /// This is indexed like the SDK, with the first onscreen line being 1.
         line: u8,
         /// The column to write to.
+        /// This **NOT** is indexed like the SDK. The first onscreen column is 1.
         col: u8,
         /// The text to write.
         text: String,
@@ -197,12 +199,12 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                     // Do a saturating sub even though it will short circuit just in case
                     if *line == 0 || *line > ControllerScreen::MAX_LINES as u8 {
                         return Poll::Ready(Err(ControllerError::InvalidLine {
-                            line: line.saturating_sub(1),
+                            line: *line,
                         }));
                     }
-                    if *col > ControllerScreen::MAX_COLUMNS as u8 {
-                        return Poll::Ready(Err(ControllerError::InvalidColumn { col: *col }));
-                    }
+                }
+                if *col == 0 || *col > ControllerScreen::MAX_COLUMNS as u8 {
+                    return Poll::Ready(Err(ControllerError::InvalidColumn { col: *col }));
                 }
 
                 let id = controller.id;
@@ -216,7 +218,7 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                         vexControllerTextSet(
                             u32::from(id.0),
                             u32::from(*line),
-                            u32::from(*col),
+                            u32::from(*col - 1),
                             text.as_ptr().cast(),
                         )
                     } == 1
@@ -255,6 +257,7 @@ impl ControllerScreen {
 
     /// Clears the contents of a specific text line, waiting until the controller
     /// successfully clears the line.
+    /// Lines are 1-indexed.
     ///
     /// <section class="warning">
     ///
@@ -289,7 +292,7 @@ impl ControllerScreen {
     #[must_use]
     pub fn clear_line(&mut self, line: u8) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
-            line: line + 1,
+            line,
             col: 1,
             text: String::new(),
             controller: self,
@@ -298,6 +301,7 @@ impl ControllerScreen {
     }
 
     /// Attempts to clear the contents of a specific text line.
+    /// Lines are 1-indexed.
     /// Unlike [`clear_line`](ControllerScreen::clear_line) this function will fail if the controller screen is busy.
     ///
     /// <section class="warning">
@@ -335,7 +339,7 @@ impl ControllerScreen {
     pub fn try_clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
         //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
         //TODO: We should check the version and change behavior based on it.
-        self.try_set_text("", line, 0)?;
+        self.try_set_text("", line, 1)?;
 
         Ok(())
     }
@@ -373,7 +377,7 @@ impl ControllerScreen {
     pub fn clear_screen(&mut self) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
             line: 0,
-            col: 0,
+            col: 1,
             text: String::new(),
             controller: self,
             enforce_visible: false,
@@ -425,6 +429,7 @@ impl ControllerScreen {
 
     /// Set the text contents at a specific row/column offset, waiting until the controller
     /// successfully writes the text.
+    /// Both lines and columns are 1-indexed.
     ///
     /// <section class="warning">
     ///
@@ -464,7 +469,7 @@ impl ControllerScreen {
         col: u8,
     ) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
-            line: line + 1,
+            line,
             col,
             text: text.as_ref().to_string(),
             controller: self,
@@ -473,6 +478,8 @@ impl ControllerScreen {
     }
 
     /// Set the text contents at a specific row/column offset.
+    /// Both lines and columns are 1-indexed.
+    /// Unlike [`set_text`](ControllerScreen::set_text) this function will fail if the controller screen is busy.
     ///
     /// <section class="warning">
     ///
@@ -514,8 +521,8 @@ impl ControllerScreen {
     ) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
 
-        ensure!(col < Self::MAX_COLUMNS as u8, InvalidColumnSnafu { col });
-        ensure!(line < Self::MAX_LINES as u8, InvalidLineSnafu { line });
+        ensure!(col < Self::MAX_COLUMNS as u8 && col != 0, InvalidColumnSnafu { col });
+        ensure!(line < Self::MAX_LINES as u8 && line != 0, InvalidLineSnafu { line });
 
         let id: V5_ControllerId = self.id.into();
         let text = CString::new(text.as_ref())?;
@@ -523,7 +530,7 @@ impl ControllerScreen {
         if unsafe {
             vexControllerTextSet(
                 u32::from(id.0),
-                u32::from(line + 1),
+                u32::from(line),
                 u32::from(col),
                 text.as_ptr().cast(),
             )
@@ -904,7 +911,7 @@ impl Controller {
     pub fn rumble(&mut self, pattern: impl AsRef<str>) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
             line: 4,
-            col: 0,
+            col: 1,
             text: pattern.as_ref().to_string(),
             controller: &mut self.screen,
             enforce_visible: false,
