@@ -196,7 +196,9 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                 if *visible {
                     // Do a saturating sub even though it will short circuit just in case
                     if *line == 0 || line.saturating_sub(1) > ControllerScreen::MAX_LINES as u8 {
-                        return Poll::Ready(Err(ControllerError::InvalidLine { line: line.saturating_sub(1) }));
+                        return Poll::Ready(Err(ControllerError::InvalidLine {
+                            line: line.saturating_sub(1),
+                        }));
                     }
                     if *col > ControllerScreen::MAX_COLUMNS as u8 {
                         return Poll::Ready(Err(ControllerError::InvalidColumn { col: *col }));
