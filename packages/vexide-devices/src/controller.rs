@@ -164,7 +164,7 @@ pub enum ControllerScreenWriteFuture<'a> {
         line: u8,
         /// The column to write to.
         /// This **NOT** is indexed like the SDK. The first onscreen column is 1.
-        col: u8,
+        column: u8,
         /// The text to write.
         text: String,
         /// The controller to write to.
@@ -190,7 +190,7 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
         *this = match this {
             ControllerScreenWriteFuture::WaitingForIdle {
                 line,
-                col,
+                column,
                 text,
                 controller,
                 enforce_visible: visible,
@@ -198,13 +198,11 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                 if *visible {
                     // Do a saturating sub even though it will short circuit just in case
                     if *line == 0 || *line > ControllerScreen::MAX_LINES as u8 {
-                        return Poll::Ready(Err(ControllerError::InvalidLine {
-                            line: *line,
-                        }));
+                        return Poll::Ready(Err(ControllerError::InvalidLine { line: *line }));
                     }
                 }
-                if *col == 0 || *col > ControllerScreen::MAX_COLUMNS as u8 {
-                    return Poll::Ready(Err(ControllerError::InvalidColumn { col: *col }));
+                if *column == 0 || *column > ControllerScreen::MAX_COLUMNS as u8 {
+                    return Poll::Ready(Err(ControllerError::InvalidColumn { column: *column }));
                 }
 
                 let id = controller.id;
@@ -218,7 +216,7 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                         vexControllerTextSet(
                             u32::from(id.0),
                             u32::from(*line),
-                            u32::from(*col - 1),
+                            u32::from(*column - 1),
                             text.as_ptr().cast(),
                         )
                     } == 1
@@ -293,7 +291,7 @@ impl ControllerScreen {
     pub fn clear_line(&mut self, line: u8) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
             line,
-            col: 1,
+            column: 1,
             text: String::new(),
             controller: self,
             enforce_visible: true,
@@ -377,7 +375,7 @@ impl ControllerScreen {
     pub fn clear_screen(&mut self) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
             line: 0,
-            col: 1,
+            column: 1,
             text: String::new(),
             controller: self,
             enforce_visible: false,
@@ -470,7 +468,7 @@ impl ControllerScreen {
     ) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
             line,
-            col,
+            column: col,
             text: text.as_ref().to_string(),
             controller: self,
             enforce_visible: true,
@@ -517,12 +515,18 @@ impl ControllerScreen {
         &mut self,
         text: impl AsRef<str>,
         line: u8,
-        col: u8,
+        column: u8,
     ) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
 
-        ensure!(col < Self::MAX_COLUMNS as u8 && col != 0, InvalidColumnSnafu { col });
-        ensure!(line < Self::MAX_LINES as u8 && line != 0, InvalidLineSnafu { line });
+        ensure!(
+            column < Self::MAX_COLUMNS as u8 && column != 0,
+            InvalidColumnSnafu { column }
+        );
+        ensure!(
+            line < Self::MAX_LINES as u8 && line != 0,
+            InvalidLineSnafu { line }
+        );
 
         let id: V5_ControllerId = self.id.into();
         let text = CString::new(text.as_ref())?;
@@ -531,7 +535,7 @@ impl ControllerScreen {
             vexControllerTextSet(
                 u32::from(id.0),
                 u32::from(line),
-                u32::from(col),
+                u32::from(column),
                 text.as_ptr().cast(),
             )
         } != 1
@@ -911,7 +915,7 @@ impl Controller {
     pub fn rumble(&mut self, pattern: impl AsRef<str>) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
             line: 4,
-            col: 1,
+            column: 1,
             text: pattern.as_ref().to_string(),
             controller: &mut self.screen,
             enforce_visible: false,
@@ -979,12 +983,12 @@ pub enum ControllerError {
 
     /// The column number provided is larger than [`ControllerScreen::MAX_COLUMNS`].
     #[snafu(display(
-        "Invalid column number ({col}) is greater than the maximum number of columns ({})",
+        "Invalid column number ({column}) is greater than the maximum number of columns ({})",
         ControllerScreen::MAX_COLUMNS
     ))]
     InvalidColumn {
         /// The column number that was given.
-        col: u8,
+        column: u8,
     },
 
     /// Attempted to write a buffer to the controller's screen before the previous buffer was sent.
