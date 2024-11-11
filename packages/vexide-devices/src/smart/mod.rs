@@ -52,7 +52,7 @@ pub mod rotation;
 pub mod serial;
 pub mod vision;
 
-use core::{fmt, time::Duration};
+use core::time::Duration;
 
 pub use distance::DistanceSensor;
 pub use electromagnet::Electromagnet;
@@ -64,16 +64,10 @@ pub use motor::Motor;
 pub use optical::OpticalSensor;
 pub use rotation::RotationSensor;
 pub use serial::SerialPort;
-pub use vision::VisionSensor;
-
 use snafu::ensure;
-use vex_sdk::{
-    vexDeviceGetByIndex, vexDeviceGetStatus, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType,
-    V5_MAX_DEVICE_PORTS,
-};
 pub use vision::VisionSensor;
 
-use crate::{DisconnectedSnafu, IncorrectDeviceSnafu, PortError};
+use crate::{DisconnectedSnafu, IncorrectDeviceSnafu};
 
 /// Defines common functionality shared by all Smart Port devices.
 
