@@ -983,7 +983,7 @@ pub enum ControllerError {
 
     /// The column number provided is larger than [`ControllerScreen::MAX_COLUMNS`].
     #[snafu(display(
-        "Invalid column number ({col}) is greater than the maximum number of columns ({})",
+        "Invalid column number ({column}) is greater than the maximum number of columns ({})",
         ControllerScreen::MAX_COLUMNS
     ))]
     InvalidColumn {
