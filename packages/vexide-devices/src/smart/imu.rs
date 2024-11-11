@@ -940,18 +940,18 @@ impl<'a> core::future::Future for InertialCalibrateFuture<'a> {
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
-        let port = this.imu.port_number();
+        let device = unsafe { this.imu.port.device_handle() };
         match this.state {
             // The "calibrate" phase begins the calibration process.
             // This only happens for one poll of the future (the first one). All future polls will
             // either be waiting for calibration to start or for calibration to end.
             InertialCalibrateFutureState::Calibrate => {
-                if let Err(err) = validate_port(port, SmartDeviceType::Imu) {
+                if let Err(err) = this.imu.validate_port() {
                     // IMU isn't plugged in, no need to go any further.
                     Poll::Ready(Err(err.into()))
                 } else {
                     // Request that VEXos calibrate the IMU, and transition to pending state.
-                    unsafe { vexDeviceImuReset(vexDeviceGetByIndex(u32::from(port - 1))) }
+                    unsafe { vexDeviceImuReset(device) }
 
                     // Change to waiting for calibration to start.
                     this.state = InertialCalibrateFutureState::Waiting(
@@ -977,15 +977,13 @@ impl<'a> core::future::Future for InertialCalibrateFuture<'a> {
                     return Poll::Ready(CalibrationTimedOutSnafu.fail());
                 }
 
-                let status = InertialStatus::from_bits_retain(
-                    if let Err(err) = validate_port(port, SmartDeviceType::Imu) {
+                let status =
+                    InertialStatus::from_bits_retain(if let Err(err) = this.imu.validate_port() {
                         // IMU got unplugged, so we'll resolve early.
                         return Poll::Ready(Err(err.into()));
                     } else {
                         // Get status flags from VEXos.
-                        let flags = unsafe {
-                            vexDeviceImuStatusGet(vexDeviceGetByIndex(u32::from(port - 1)))
-                        };
+                        let flags = unsafe { vexDeviceImuStatusGet(device) };
 
                         // 0xFF is returned when the sensor fails to report flags.
                         if flags == InertialStatus::STATUS_ERROR {
@@ -993,8 +991,7 @@ impl<'a> core::future::Future for InertialCalibrateFuture<'a> {
                         }
 
                         flags
-                    },
-                );
+                    });
 
                 if status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::Start
                 {
