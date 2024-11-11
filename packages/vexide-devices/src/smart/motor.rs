@@ -361,6 +361,21 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Spin a motor at 100 RPM:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let _ = motor.set_velocity(100);
+    ///     sleep(Duration::from_secs(1)).await;
+    /// }
+    /// ```
     pub fn set_velocity(&mut self, rpm: i32) -> Result<(), MotorError> {
         self.set_target(MotorControl::Velocity(rpm))
     }
