@@ -248,7 +248,9 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
 
                     cx.waker().wake_by_ref();
                 }
-                Err(err) => *state = ControllerScreenWriteFutureState::Complete { result: Err(err) },
+                Err(err) => {
+                    *state = ControllerScreenWriteFutureState::Complete { result: Err(err) }
+                }
             }
         }
 
