@@ -153,7 +153,7 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     Ok(())
 }
 
-enum ControllerScreenWriteState<'a> {
+enum ControllerScreenWriteFutureState<'a> {
     /// Waiting for the controller to be ready to accept a new write.
     WaitingForIdle {
         /// The line to write to.
@@ -180,7 +180,7 @@ enum ControllerScreenWriteState<'a> {
 /// This future waits until the controller is able to accept a new write
 /// and fails if the controller is disconnected or if the requested write is bad.
 pub struct ControllerScreenWriteFuture<'a> {
-    state: ControllerScreenWriteState<'a>,
+    state: ControllerScreenWriteFutureState<'a>,
 }
 
 impl<'a> ControllerScreenWriteFuture<'a> {
@@ -192,7 +192,7 @@ impl<'a> ControllerScreenWriteFuture<'a> {
         enforce_visible: bool,
     ) -> Self {
         Self {
-            state: ControllerScreenWriteState::WaitingForIdle {
+            state: ControllerScreenWriteFutureState::WaitingForIdle {
                 line,
                 column,
                 text: CString::new(text),
@@ -212,7 +212,7 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
     ) -> core::task::Poll<Self::Output> {
         let state = &mut self.get_mut().state;
 
-        if let ControllerScreenWriteState::WaitingForIdle {
+        if let ControllerScreenWriteFutureState::WaitingForIdle {
             line,
             column,
             text,
@@ -243,16 +243,16 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                     };
 
                     if result != 1 {
-                        *state = ControllerScreenWriteState::Complete { result: Ok(()) }
+                        *state = ControllerScreenWriteFutureState::Complete { result: Ok(()) }
                     }
 
                     cx.waker().wake_by_ref();
                 }
-                Err(err) => *state = ControllerScreenWriteState::Complete { result: Err(err) },
+                Err(err) => *state = ControllerScreenWriteFutureState::Complete { result: Err(err) },
             }
         }
 
-        if let ControllerScreenWriteState::Complete { result } = state {
+        if let ControllerScreenWriteFutureState::Complete { result } = state {
             Poll::Ready(result.clone())
         } else {
             Poll::Pending
