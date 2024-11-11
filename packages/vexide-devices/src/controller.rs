@@ -211,8 +211,8 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                     let result = if unsafe {
                         vexControllerTextSet(
                             u32::from(id.0),
-                            u32::from(*line + 1),
-                            u32::from(*col + 1),
+                            u32::from(*line),
+                            u32::from(*col),
                             text.as_ptr().cast(),
                         )
                     } == 1
@@ -285,8 +285,8 @@ impl ControllerScreen {
     #[must_use]
     pub fn clear_line(&mut self, line: u8) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
-            line,
-            col: 0,
+            line: line + 1,
+            col: 1,
             text: String::new(),
             controller: self,
         }
@@ -458,8 +458,8 @@ impl ControllerScreen {
         col: u8,
     ) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
-            line,
-            col,
+            line: line + 1,
+            col: col + 1,
             text: text.as_ref().to_string(),
             controller: self,
         }
