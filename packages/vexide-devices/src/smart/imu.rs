@@ -62,14 +62,14 @@ use core::{
 use bitflags::bitflags;
 use snafu::{ensure, Snafu};
 use vex_sdk::{
-    vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
+    vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
     vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
     vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode,
     V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw, V5_DeviceT,
 };
 use vexide_core::time::Instant;
 
-use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
     math::{EulerAngles, Quaternion, Vector3},
     PortError,
