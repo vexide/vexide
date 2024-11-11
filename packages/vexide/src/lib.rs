@@ -1,9 +1,9 @@
 //! # vexide
 //!
 //! Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime,
-//! async executor, device API, and more for the VEX V5 brain!
+//! async executor, device API, and more for the VEX V5 Brain!
 //!
-//! vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which are a set of unmaintained API using bindings over [PROS](https://github.com/purduesigbots/pros).
+//! vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which is a set of unmaintained APIs using bindings over [PROS](https://github.com/purduesigbots/pros).
 //!
 //! ## Getting Started
 //!
@@ -21,6 +21,9 @@
 //! - [`vexide-panic`](https://docs.rs/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
 //! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [`slint`] and [`embedded-graphics`].
 //! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
+//!
+//! [`slint`]: https://slint.rs/
+//! [`embedded-graphics`]: https://crates.io/crates/embedded-graphics
 //!
 //! # Usage
 //!
@@ -95,15 +98,14 @@ pub mod prelude {
             potentiometer::{AdiPotentiometer, PotentiometerType},
             pwm::AdiPwmOut,
             range_finder::AdiRangeFinder,
-            solenoid::AdiSolenoid,
             AdiDevice, AdiPort,
         },
         battery,
-        color::Rgb,
         controller::Controller,
         display::Display,
         peripherals::{DynamicPeripherals, Peripherals},
         position::Position,
+        rgb::Rgb,
         smart::{
             distance::DistanceSensor,
             expander::AdiExpander,

@@ -13,8 +13,8 @@
         "feedforward",
         "gearset",
         "hotspot",
+        "leds",
         "loopspeed",
-        "nalgebra",
         "opcontrol",
         "parametricity",
         "photoresistor",
@@ -48,12 +48,10 @@
     "rust-analyzer.cargo.allTargets": false,
     "rust-analyzer.check.targets": [
         "${workspaceFolder}/armv7a-vex-v5.json",
-        "wasm32-unknown-unknown"
     ],
     "rust-analyzer.cargo.extraArgs": [
         "--examples",
         "--lib",
-        "--bins"
     ],
     "rust-analyzer.cargo.features": "all",
     "rust-analyzer.check.command": "clippy",

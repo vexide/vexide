@@ -2,10 +2,10 @@
 //!
 //! This module allows you to read from the buttons and joysticks on the controller and write to the controller's display.
 
-use alloc::ffi::CString;
+use alloc::ffi::{CString, NulError};
 use core::{cell::RefCell, time::Duration};
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
     V5_ControllerIndex, V5_ControllerStatus,
@@ -20,25 +20,25 @@ pub struct ButtonState {
 }
 
 impl ButtonState {
-    /// Returns true if the button state is [`Pressed`](ButtonState::Pressed).
+    /// Returns `true` if this button is currently being pressed.
     #[must_use]
     pub const fn is_pressed(&self) -> bool {
         self.is_pressed
     }
 
-    /// Returns true if the button state is [`Released`](ButtonState::Released).
+    /// Returns `true` if this button is currently released (not being pressed).
     #[must_use]
     pub const fn is_released(&self) -> bool {
         !self.is_pressed
     }
 
-    /// Returns true if the button state was released in the previous call to [`Controller::state`], but is now pressed.
+    /// Returns `true` if the button state was released in the previous call to [`Controller::state`], but is now pressed.
     #[must_use]
     pub const fn is_now_pressed(&self) -> bool {
         !self.prev_is_pressed && self.is_pressed
     }
 
-    /// Returns true if the button state was pressed in the previous call to [`Controller::state`], but is now released.
+    /// Returns `true` if the button state was pressed in the previous call to [`Controller::state`], but is now released.
     #[must_use]
     pub const fn is_now_released(&self) -> bool {
         self.prev_is_pressed && !self.is_pressed
@@ -105,14 +105,14 @@ pub struct ControllerState {
     /// Button Right
     pub button_right: ButtonState,
 
-    /// Top Left Trigger
-    pub left_trigger_1: ButtonState,
-    /// Bottom Left Trigger
-    pub left_trigger_2: ButtonState,
-    /// Top Right Trigger
-    pub right_trigger_1: ButtonState,
-    /// Bottom Right Trigger
-    pub right_trigger_2: ButtonState,
+    /// Top Left Bumper
+    pub button_l1: ButtonState,
+    /// Bottom Left Bumper
+    pub button_l2: ButtonState,
+    /// Top Right Bumper
+    pub button_r1: ButtonState,
+    /// Bottom Right Bumper
+    pub button_r2: ButtonState,
 }
 
 /// This type stores the "pressed" states of every controller button.
@@ -134,17 +134,17 @@ struct ButtonStates {
     down: bool,
     left: bool,
     right: bool,
-    left_trigger_1: bool,
-    left_trigger_2: bool,
-    right_trigger_1: bool,
-    right_trigger_2: bool,
+    l1: bool,
+    l2: bool,
+    r1: bool,
+    r2: bool,
 }
 
 fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     if unsafe {
         vexControllerConnectionStatusGet(id.into()) == V5_ControllerStatus::kV5ControllerOffline
     } {
-        return Err(ControllerError::Offline);
+        return OfflineSnafu.fail();
     }
 
     Ok(())
@@ -163,12 +163,39 @@ impl ControllerScreen {
     /// Number of available text lines on the controller before clearing the screen.
     pub const MAX_LINES: usize = 2;
 
-    /// Clear the contents of a specific text line.
+    /// Clears the contents of a specific text line.
+    ///
+    /// <section class="warning">
+    ///
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a
+    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    ///
+    /// </section>
     ///
     /// # Errors
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.controller;
+    ///
+    ///     // Write to line 0
+    ///     _ = controller.set_text("Hello, world!", 0, 0);
+    ///
+    ///     sleep(Duration::from_millis(500)).await;
+    ///
+    ///     // Clear line 0
+    ///     _ = controller.clear_line(0);
+    /// }
+    /// ```
     pub fn clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
         //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
         //TODO: We should check the version and change behavior based on it.
@@ -177,12 +204,34 @@ impl ControllerScreen {
         Ok(())
     }
 
-    /// Clear the whole screen.
+    /// Clears the whole screen, including the default widget displayed by the controller if
+    /// it hasn't already been cleared.
+    ///
+    /// <section class="warning">
+    ///
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a
+    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    ///
+    /// </section>
     ///
     /// # Errors
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.controller;
+    ///
+    ///     // Remove the default widget on the controller screen that displays match time.
+    ///     _ = controller.clear_screen();
+    /// }
+    /// ```
     pub fn clear_screen(&mut self) -> Result<(), ControllerError> {
         for line in 0..Self::MAX_LINES as u8 {
             self.clear_line(line)?;
@@ -193,22 +242,43 @@ impl ControllerScreen {
 
     /// Set the text contents at a specific row/column offset.
     ///
+    /// <section class="warning">
+    ///
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a
+    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    ///
+    /// </section>
+    ///
     /// # Errors
     ///
-    /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
+    /// - A [`ControllerError::InvalidColumn`] error is returned if `col` is
     ///   greater than or equal to [`Self::MAX_LINE_LENGTH`].
-    /// - A [`ControllerError::NonTerminatingNul`] error if a NUL (0x00) character was
+    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
     ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.controller;
+    ///
+    ///     _ = controller.set_text("Hello, world!", 0, 0);
+    /// }
+    /// ```
     pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
-        if col >= Self::MAX_LINE_LENGTH as u8 {
-            return Err(ControllerError::InvalidLine);
-        }
+        ensure!(
+            col < Self::MAX_LINE_LENGTH as u8,
+            InvalidColumnSnafu { col }
+        );
 
         let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text).map_err(|_| ControllerError::NonTerminatingNul)?;
+        let text = CString::new(text)?;
 
         unsafe {
             vexControllerTextSet(
@@ -224,13 +294,15 @@ impl ControllerScreen {
 }
 
 /// Represents an identifier for one of the two possible controllers
-/// connected to the V5 brain.
+/// connected to the V5 Brain.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControllerId {
     /// Primary ("Master") Controller
+    /// This is the controller that is connected to the Brain.
     Primary,
 
     /// Partner Controller
+    /// This is the controller that is connected to the [primary](ControllerId::Primary) controller.
     Partner,
 }
 
@@ -249,7 +321,7 @@ pub enum ControllerConnection {
     /// No controller is connected.
     Offline,
 
-    /// Controller is tethered through a wired smart port connection.
+    /// Controller is tethered through a wired Smart Port connection.
     Tethered,
 
     /// Controller is wirelessly connected over a VEXNet radio
@@ -312,13 +384,36 @@ impl Controller {
                 down: false,
                 left: false,
                 right: false,
-                left_trigger_1: false,
-                left_trigger_2: false,
-                right_trigger_1: false,
-                right_trigger_2: false,
+                l1: false,
+                l2: false,
+                r1: false,
+                r2: false,
             }),
             screen: ControllerScreen { id },
         }
+    }
+
+    /// Returns the [identifier](ControllerId) of this controller.
+    ///
+    /// # Examples
+    ///
+    /// Perform a different action based on the controller ID.
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// fn print_a_pressed(controller: &Controller) {
+    ///     let state = controller.state().unwrap_or_default();
+    ///     if state.button_a.is_pressed() {
+    ///         match controller.id() {
+    ///             ControllerId::Primary => println!("Primary Controller A Pressed"),
+    ///             ControllerId::Partner => println!("Partner Controller A Pressed"),
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    #[must_use]
+    pub const fn id(&self) -> ControllerId {
+        self.id
     }
 
     /// Returns the current state of all buttons and joysticks on the controller.
@@ -333,10 +428,37 @@ impl Controller {
     ///   the controller data is being restricted by competition control.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let controller = peripherals.primary_controller;
+    ///
+    ///     loop {
+    ///         let state = controller.state().unwrap_or_default();
+    ///         println("Left Stick X: {}", state.left_stick.x());
+    ///         if state.button_a.is_now_pressed() {
+    ///             println!("Button A was just pressed!");
+    ///         }
+    ///         if state.button_x.is_pressed() {
+    ///             println!("Button X is pressed!");
+    ///         }
+    ///         if state.button_b.is_released() {
+    ///             println!("Button B is released!");
+    ///         }
+    ///         sleep(Controller::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn state(&self) -> Result<ControllerState, ControllerError> {
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
+        ensure!(
+            competition::mode() == CompetitionMode::Driver,
+            CompetitionControlSnafu
+        );
         validate_connection(self.id)?;
 
         // Get all current button states
@@ -350,18 +472,10 @@ impl Controller {
             left: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonLeft) } != 0,
             right: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonRight) }
                 != 0,
-            left_trigger_1: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL1)
-            } != 0,
-            left_trigger_2: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL2)
-            } != 0,
-            right_trigger_1: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR1)
-            } != 0,
-            right_trigger_2: unsafe {
-                vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR2)
-            } != 0,
+            l1: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL1) } != 0,
+            l2: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL2) } != 0,
+            r1: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR1) } != 0,
+            r2: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR2) } != 0,
         };
 
         // Swap the current button states with the previous states, getting the previous states in the process.
@@ -408,26 +522,42 @@ impl Controller {
                 is_pressed: button_states.right,
                 prev_is_pressed: prev_button_states.right,
             },
-            left_trigger_1: ButtonState {
-                is_pressed: button_states.left_trigger_1,
-                prev_is_pressed: prev_button_states.left_trigger_1,
+            button_l1: ButtonState {
+                is_pressed: button_states.l1,
+                prev_is_pressed: prev_button_states.l1,
             },
-            left_trigger_2: ButtonState {
-                is_pressed: button_states.left_trigger_2,
-                prev_is_pressed: prev_button_states.left_trigger_2,
+            button_l2: ButtonState {
+                is_pressed: button_states.l2,
+                prev_is_pressed: prev_button_states.l2,
             },
-            right_trigger_1: ButtonState {
-                is_pressed: button_states.right_trigger_1,
-                prev_is_pressed: prev_button_states.right_trigger_1,
+            button_r1: ButtonState {
+                is_pressed: button_states.r1,
+                prev_is_pressed: prev_button_states.r1,
             },
-            right_trigger_2: ButtonState {
-                is_pressed: button_states.right_trigger_2,
-                prev_is_pressed: prev_button_states.right_trigger_2,
+            button_r2: ButtonState {
+                is_pressed: button_states.r2,
+                prev_is_pressed: prev_button_states.r2,
             },
         })
     }
 
     /// Returns the controller's connection type.
+    ///
+    /// # Examples
+    ///
+    /// Print less information over a slow and unreliable VEXnet connection:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let controller = peripherals.primary_controller;
+    ///     if controller.connection() != ControllerConnection::VexNet {
+    ///         println!("A big info dump");
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub fn connection(&self) -> ControllerConnection {
         unsafe { vexControllerConnectionStatusGet(self.id.into()) }.into()
@@ -439,6 +569,20 @@ impl Controller {
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// Print the controller's battery capacity:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let controller = peripherals.primary_controller;
+    ///     println!("Controller battery capacity: {}", controller.battery_capacity().unwrap_or(0));
+    /// }
+    /// ```
     pub fn battery_capacity(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
@@ -451,6 +595,27 @@ impl Controller {
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// Print a warning if the controller battery is low:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let controller = peripherals.primary_controller;
+    ///     loop {
+    ///         // If the controller isn't connected, it may as well be dead.
+    ///         let battery_level = controller.battery_level().unwrap_or(0);
+    ///         if battery_level < 10 {
+    ///             println!("WARNING: Controller battery is low!");
+    ///         }
+    ///         sleep(Controller::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn battery_level(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
@@ -477,10 +642,22 @@ impl Controller {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::NonTerminatingNul`] error if a NUL (0x00) character was
+    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
     ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.primary_controller;
+    ///     let _ = controller.rumble(". -. -.");
+    /// }
+    /// ```
     pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
         self.screen.set_text(pattern, 3, 0)
     }
@@ -489,15 +666,25 @@ impl Controller {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with the controller.
 pub enum ControllerError {
-    /// The controller is not connected to the brain.
+    /// The controller is not connected to the Brain.
     Offline,
 
     /// A NUL (0x00) character was found in a string that may not contain NUL characters.
-    NonTerminatingNul,
+    #[snafu(transparent)]
+    Nul {
+        /// The source of the error.
+        source: NulError,
+    },
 
     /// Access to controller data is restricted by competition control.
+    ///
+    /// When this error occurs, the requested data is not available outside of
+    /// driver control mode.
     CompetitionControl,
 
-    /// An invalid line number was given.
-    InvalidLine,
+    /// The column number provided is larger than [`ControllerScreen::MAX_LINE_LENGTH`].
+    InvalidColumn {
+        /// The column number that was given.
+        col: u8,
+    },
 }

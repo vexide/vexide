@@ -21,12 +21,10 @@ vexide-core = { workspace = true }
 vex-sdk = { workspace = true }
 snafu = { workspace = true }
 mint = "0.5.9"
+rgb = "0.8.50"
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 bitflags = "2.4.2"
 smart-leds-trait = { version = "0.3.0", optional = true }
-nalgebra = { version = "0.32", default-features = false, optional = true, features = [
-    "convert-mint",
-] }
 
 [lints]
 workspace = true
@@ -34,7 +32,6 @@ workspace = true
 [features]
 dangerous_motor_tuning = []
 smart_leds_trait = ["dep:smart-leds-trait"]
-nalgebra = ["dep:nalgebra"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-none-eabi"]

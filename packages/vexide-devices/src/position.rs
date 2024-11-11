@@ -1,3 +1,5 @@
+//! Angular Position Type
+//!
 //! Standard return type for sensors measuring rotational position
 
 use core::{
