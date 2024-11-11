@@ -517,7 +517,7 @@ impl ControllerScreen {
         );
 
         let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text)?;
+        let text = CString::new(text.as_ref())?;
 
         if unsafe {
             vexControllerTextSet(
