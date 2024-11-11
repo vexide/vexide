@@ -10,7 +10,7 @@
 //! however, the electromagnet is intended to be used to pick up V5 Workcell colored disks.
 //! We can assume that the lower bound on the electromagnet's strength is the weight of a V5 Workcell colored disk.
 //! Assuming that the plastic part of the disk is made of ABS plastic and the metal part is solid iron,
-//! the electromagnet can lift at least 0.0148526lb based off of the CAD model files for the V5 Workcell kit provided by VEX.
+//! the electromagnet can lift at least ≈0.24oz based off of the CAD model files for the V5 Workcell kit provided by VEX.
 
 use core::time::Duration;
 
