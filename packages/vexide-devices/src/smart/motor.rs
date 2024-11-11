@@ -53,7 +53,7 @@
 use core::time::Duration;
 
 use bitflags::bitflags;
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorActualVelocityGet, vexDeviceMotorBrakeModeSet,
     vexDeviceMotorCurrentGet, vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet,
@@ -513,9 +513,7 @@ impl Motor {
     /// }
     /// ```
     pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
-        if self.motor_type.is_exp() {
-            return Err(MotorError::SetGearsetExp);
-        }
+        ensure!(self.motor_type.is_v5(), SetGearsetExpSnafu);
         self.validate_port()?;
         unsafe {
             vexDeviceMotorGearingSet(self.device, gearset.into());
@@ -1664,12 +1662,12 @@ pub enum MotorError {
     Busy,
 
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,
     },
 
-    /// Attempted to set a gearset on a EXP motor.
+    /// EXP motors do not have customizable gearsets.
     SetGearsetExp,
 }

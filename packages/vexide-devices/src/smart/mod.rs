@@ -53,13 +53,14 @@ pub use motor::Motor;
 pub use optical::OpticalSensor;
 pub use rotation::RotationSensor;
 pub use serial::SerialPort;
+use snafu::ensure;
 use vex_sdk::{
     vexDeviceGetByIndex, vexDeviceGetStatus, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType,
     V5_MAX_DEVICE_PORTS,
 };
 pub use vision::VisionSensor;
 
-use crate::PortError;
+use crate::{DisconnectedSnafu, IncorrectDeviceSnafu, PortError};
 
 /// Defines common functionality shared by all Smart Port devices.
 pub trait SmartDevice {
@@ -149,13 +150,18 @@ pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<
     };
 
     if let Some(connected_type) = connected_type {
-        if connected_type != device_type {
-            // The connected device doesn't match the requested type.
-            return Err(PortError::IncorrectDevice);
-        }
+        // The connected device must match the requested type.
+        ensure!(
+            connected_type == device_type,
+            IncorrectDeviceSnafu {
+                expected: device_type,
+                actual: connected_type,
+                port: number,
+            }
+        );
     } else {
         // No device is plugged into the port.
-        return Err(PortError::Disconnected);
+        return DisconnectedSnafu { port: number }.fail();
     }
 
     Ok(())
@@ -246,13 +252,18 @@ impl SmartPort {
     /// Returns a [`PortError`] if there is not a device of the specified type in this port.
     pub fn validate_type(&self, device_type: SmartDeviceType) -> Result<(), PortError> {
         if let Some(connected_type) = self.device_type() {
-            if connected_type != device_type {
-                // The connected device doesn't match the requested type.
-                return Err(PortError::IncorrectDevice);
-            }
+            // The connected device must match the requested type.
+            ensure!(
+                connected_type == device_type,
+                IncorrectDeviceSnafu {
+                    expected: device_type,
+                    actual: connected_type,
+                    port: self.number,
+                }
+            );
         } else {
             // No device is plugged into the port.
-            return Err(PortError::Disconnected);
+            return DisconnectedSnafu { port: self.number }.fail();
         }
 
         Ok(())

@@ -35,6 +35,7 @@ Before releasing:
 - Added the `OpticalSensor::GESTURE_UPDATE_INTERVAL` (50mS) constant (#211).
 - Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs.
 - Added a `SerialPort::set_baud_rate` method for the adjusting baudrate of a generic serial smartport after initialization. (#217)
+- Added fields containing relevant failure information to several error types (#221) (**Breaking Change**)
 
 ### Fixed
 

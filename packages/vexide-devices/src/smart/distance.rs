@@ -71,9 +71,9 @@ impl DistanceSensor {
     /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_distance.c#L20>
     fn validate(&self) -> Result<(), DistanceError> {
         match self.status()? {
-            0x00 => Err(DistanceError::StillInitializing),
+            0x00 => StillInitializingSnafu.fail(),
             0x82 | 0x86 => Ok(()),
-            _ => Err(DistanceError::BadStatusCode),
+            code => BadStatusCodeSnafu { code }.fail(),
         }
     }
 
@@ -242,10 +242,14 @@ pub enum DistanceError {
     StillInitializing,
 
     /// The sensor has an unknown status code.
-    BadStatusCode,
+    #[snafu(display("The sensor has an unknown status code (0x{code:x?})."))]
+    BadStatusCode {
+        /// The status code returned by the sensor.
+        code: u32,
+    },
 
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,

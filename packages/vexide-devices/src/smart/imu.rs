@@ -60,7 +60,7 @@ use core::{
 };
 
 use bitflags::bitflags;
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDeviceGetByIndex, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
     vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
@@ -138,9 +138,7 @@ impl InertialSensor {
     /// Validates that the sensor is currently connected to its port, and that it isn't currently
     /// calibrating.
     fn validate(&self) -> Result<(), InertialError> {
-        if self.is_calibrating()? {
-            return Err(InertialError::StillCalibrating);
-        }
+        ensure!(!self.is_calibrating()?, StillCalibratingSnafu);
         Ok(())
     }
 
@@ -170,9 +168,7 @@ impl InertialSensor {
 
         let bits = unsafe { vexDeviceImuStatusGet(self.device) };
 
-        if bits == InertialStatus::STATUS_ERROR {
-            return Err(InertialError::BadStatus);
-        }
+        ensure!(bits != InertialStatus::STATUS_ERROR, BadStatusSnafu);
 
         Ok(InertialStatus::from_bits_retain(bits))
     }
@@ -941,7 +937,7 @@ impl core::future::Future for InertialCalibrateFuture {
             Self::Calibrate(port) => {
                 if let Err(err) = validate_port(port, SmartDeviceType::Imu) {
                     // IMU isn't plugged in, no need to go any further.
-                    Poll::Ready(Err(InertialError::Port { source: err }))
+                    Poll::Ready(Err(err.into()))
                 } else {
                     // Request that VEXos calibrate the IMU, and transition to pending state.
                     unsafe { vexDeviceImuReset(vexDeviceGetByIndex(u32::from(port - 1))) }
@@ -964,13 +960,13 @@ impl core::future::Future for InertialCalibrateFuture {
                     }
                 {
                     // Waiting took too long and exceeded a timeout.
-                    return Poll::Ready(Err(InertialError::CalibrationTimedOut));
+                    return Poll::Ready(CalibrationTimedOutSnafu.fail());
                 }
 
                 let status = InertialStatus::from_bits_retain(
                     if let Err(err) = validate_port(port, SmartDeviceType::Imu) {
                         // IMU got unplugged, so we'll resolve early.
-                        return Poll::Ready(Err(InertialError::Port { source: err }));
+                        return Poll::Ready(Err(err.into()));
                     } else {
                         // Get status flags from VEXos.
                         let flags = unsafe {
@@ -979,7 +975,7 @@ impl core::future::Future for InertialCalibrateFuture {
 
                         // 0xFF is returned when the sensor fails to report flags.
                         if flags == InertialStatus::STATUS_ERROR {
-                            return Poll::Ready(Err(InertialError::BadStatus));
+                            return Poll::Ready(BadStatusSnafu.fail());
                         }
 
                         flags
@@ -1019,7 +1015,7 @@ pub enum InertialError {
     StillCalibrating,
     /// The sensor failed to report its status flags (returned 0xFF).
     BadStatus,
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     /// Generic port related error.
     Port {
         /// The source of the error.
