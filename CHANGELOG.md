@@ -23,6 +23,18 @@ Before releasing:
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+## [0.5.0]
+
+### Added
+
 - You can now detect controller release occurrences with `ButtonState::is_now_released`.
 - Added support for 5.5W motors with a new constructor (`Motor::new_exp`) and four new getters (`Motor::max_voltage`, `Motor::motor_type`, `Motor::is_v5`, and `Motor::is_exp`) for `Motor`. (#167)
 - Added support for the V5 Workcell Electromagnet smart device. (#176)
@@ -223,9 +235,10 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.5.0...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
 [0.4.0]: https://github.com/vexide/vexide/compare/v0.3.0...v0.4.0
 [0.4.1]: https://github.com/vexide/vexide/compare/v0.4.0...v0.4.1
+[0.5.0]: https://github.com/vexide/vexide/compare/v0.4.1...v0.5.0
