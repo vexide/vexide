@@ -91,20 +91,6 @@ impl SerialPort {
     /// # Errors
     ///
     /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200);
-    ///
-    ///     // Change to 9600 baud
-    ///     _ = serial.set_baud_rate(9600);
-    /// }
-    /// ```
     pub fn set_baud_rate(&mut self, baud_rate: u32) -> Result<(), SerialError> {
         self.validate_port()?;
 

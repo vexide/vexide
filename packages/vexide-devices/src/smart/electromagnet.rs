@@ -48,7 +48,7 @@ impl Electromagnet {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
     ///     // Use the electromagnet
     ///     _ = electromagnet.set_power(1.0, Electromagnet::MAX_POWER_DURATION);
     ///     _ = electromagnet.set_power(-0.2, Duration::from_secs(1));
@@ -80,7 +80,7 @@ impl Electromagnet {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
     ///     _ = electromagnet.set_power(1.0, Electromagnet::MAX_POWER_DURATION);
     /// }
     /// ```
@@ -111,12 +111,10 @@ impl Electromagnet {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
     ///     _ = electromagnet.set_power(0.5, Electromagnet::MAX_POWER_DURATION);
-    ///
-    ///     if let Ok(power) = electromagnet.power() {
-    ///         println!("Power: {}%", power * 100.0);
-    ///     }
+    ///     let power = electromagnet.power().unwrap();
+    ///     println!("Power: {}", power);
     /// }
     /// ```
     pub fn power(&self) -> Result<f64, PortError> {
@@ -140,12 +138,10 @@ impl Electromagnet {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
     ///     _ = electromagnet.set_power(1.0, Electromagnet::MAX_POWER_DURATION);
-    ///
-    ///     if let Ok(current) = electromagnet.current() {
-    ///         println!("Current: {}A", current);
-    ///     }
+    ///     let current = electromagnet.current().unwrap();
+    ///     println!("Current: {}", current);
     /// }
     /// ```
     pub fn current(&self) -> Result<f64, PortError> {
@@ -170,10 +166,7 @@ impl Electromagnet {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let electromagnet = Electromagnet::new(peripherals.port_1);
-    ///
-    ///     if let Ok(temperature) = electromagnet.temperature() {
-    ///         println!("Temperature: {}°C", temperature);
-    ///     }
+    ///     println!("Temperature: {}", electromagnet.temperature().unwrap());
     /// }
     /// ```
     pub fn temperature(&self) -> Result<f64, PortError> {
@@ -198,10 +191,7 @@ impl Electromagnet {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let electromagnet = Electromagnet::new(peripherals.port_1);
-    ///
-    ///     if let Ok(status) = electromagnet.status() {
-    ///         println!("Status: {:b}", status);
-    ///     }
+    ///     println!("Status: {:b}", electromagnet.status().unwrap());
     /// }
     /// ```
     pub fn status(&self) -> Result<u32, PortError> {
