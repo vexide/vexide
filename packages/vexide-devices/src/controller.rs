@@ -2,8 +2,11 @@
 //!
 //! This module allows you to read from the buttons and joysticks on the controller and write to the controller's display.
 
-use alloc::ffi::{CString, NulError};
-use core::{cell::RefCell, time::Duration};
+use alloc::{
+    ffi::{CString, NulError},
+    string::{String, ToString},
+};
+use core::{cell::RefCell, future::Future, task::Poll, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -150,6 +153,85 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     Ok(())
 }
 
+/// A future that completes once a write to the controller screen has been performed.
+/// This future waits untill the controller is able to accept a new write
+/// and fails if the controller is disconnected or if the requested write is bad.
+pub enum ControllerScreenWriteFuture<'a> {
+    /// Waiting for the controller to be ready to accept a new write.
+    WaitingForIdle {
+        /// The line to write to.
+        line: u8,
+        /// The column to write to.
+        col: u8,
+        /// The text to write.
+        text: String,
+        /// The controller to write to.
+        controller: &'a mut ControllerScreen,
+    },
+    /// The write has been completed.
+    Complete {
+        /// The result of the write.
+        result: Result<(), ControllerError>,
+    },
+}
+
+impl<'a> Future for ControllerScreenWriteFuture<'a> {
+    type Output = Result<(), ControllerError>;
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        let this = self.get_mut();
+        *this = match this {
+            ControllerScreenWriteFuture::WaitingForIdle {
+                line,
+                col,
+                text,
+                controller,
+            } => {
+                if *line > ControllerScreen::MAX_LINES as u8 {
+                    return Poll::Ready(Err(ControllerError::InvalidLine));
+                }
+                if *col > ControllerScreen::MAX_COLUMNS as u8 {
+                    return Poll::Ready(Err(ControllerError::InvalidColumn));
+                }
+
+                let id = controller.id;
+                if let Err(e) = validate_connection(id) {
+                    ControllerScreenWriteFuture::Complete { result: Err(e) }
+                } else {
+                    let id: V5_ControllerId = (id).into();
+                    let text = CString::new(text.clone())?;
+
+                    let result = if unsafe {
+                        vexControllerTextSet(
+                            u32::from(id.0),
+                            u32::from(*line + 1),
+                            u32::from(*col + 1),
+                            text.as_ptr().cast(),
+                        )
+                    } == 1
+                    {
+                        Ok(())
+                    } else {
+                        cx.waker().wake_by_ref();
+                        return Poll::Pending;
+                    };
+
+                    cx.waker().wake_by_ref();
+                    ControllerScreenWriteFuture::Complete { result }
+                }
+            }
+            ControllerScreenWriteFuture::Complete { ref result } => {
+                return core::task::Poll::Ready(result.clone());
+            }
+        };
+
+        core::task::Poll::Ready(Ok(()))
+    }
+}
+
 /// Controller LCD Console
 #[derive(Debug, Eq, PartialEq)]
 pub struct ControllerScreen {
@@ -164,6 +246,47 @@ impl ControllerScreen {
     pub const MAX_LINES: usize = 3;
 
     /// Clears the contents of a specific text line.
+    ///
+    /// <section class="warning">
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a
+    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    /// </section>
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.primary_controller;
+    ///
+    ///     // Write to line 0
+    ///     _ = controller.screen.set_text("Hello, world!", 0, 0).await;
+    ///
+    ///     sleep(Duration::from_millis(500)).await;
+    ///
+    ///     // Clear line 0
+    ///     _ = controller.screen.clear_line(0).await;
+    /// }
+    /// ```
+    #[must_use]
+    pub fn clear_line(&mut self, line: u8) -> ControllerScreenWriteFuture<'_> {
+        ControllerScreenWriteFuture::WaitingForIdle {
+            line,
+            col: 0,
+            text: String::new(),
+            controller: self,
+        }
+    }
+
+    /// Attempts to clear the contents of a specific text line.
+    /// Unlike [`clear_line`](ControllerScreen::clear_line) this function will fail if the controller screen is busy.
     ///
     /// <section class="warning">
     ///
@@ -186,21 +309,21 @@ impl ControllerScreen {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut controller = peripherals.controller;
+    ///     let mut controller = peripherals.primary_controller;
     ///
     ///     // Write to line 0
-    ///     _ = controller.set_text("Hello, world!", 0, 0);
+    ///     _ = controller.screen.set_text("Hello, world!", 0, 0).await;
     ///
     ///     sleep(Duration::from_millis(500)).await;
     ///
     ///     // Clear line 0
-    ///     _ = controller.clear_line(0);
+    ///     _ = controller.screen.try_clear_line(0);
     /// }
     /// ```
-    pub fn clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
+    pub fn try_clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
         //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
         //TODO: We should check the version and change behavior based on it.
-        self.set_text("", line, 0)?;
+        self.try_set_text("", line, 0)?;
 
         Ok(())
     }
@@ -219,6 +342,45 @@ impl ControllerScreen {
     ///
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.primary_controller;
+    ///
+    ///     // Remove the default widget on the controller screen that displays match time.
+    ///     _ = controller.screen.clear_screen().await;
+    /// }
+    /// ```
+    #[must_use]
+    pub fn clear_screen(&mut self) -> ControllerScreenWriteFuture<'_> {
+        ControllerScreenWriteFuture::WaitingForIdle {
+            line: 0,
+            col: 0,
+            text: String::new(),
+            controller: self,
+        }
+    }
+
+    /// Clears the whole screen, including the default widget displayed by the controller if
+    /// it hasn't already been cleared.
+    /// Unlike [`clear_screen`](ControllerScreen::clear_screen) this function will fail if the controller screen is busy.
+    ///
+    /// <section class="warning">
+    ///
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a
+    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    ///
+    /// </section>
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
     /// - A [`ControllerError::WriteBusy`] error is returned if a screen write
     ///   occurred too quickly after the previous write attempt.
     ///
@@ -229,13 +391,13 @@ impl ControllerScreen {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut controller = peripherals.controller;
+    ///     let mut controller = peripherals.primary_controller;
     ///
     ///     // Remove the default widget on the controller screen that displays match time.
-    ///     _ = controller.clear_screen();
+    ///     _ = controller.screen.try_clear_screen();
     /// }
     /// ```
-    pub fn clear_screen(&mut self) -> Result<(), ControllerError> {
+    pub fn try_clear_screen(&mut self) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
 
         let id: V5_ControllerId = self.id.into();
@@ -245,6 +407,53 @@ impl ControllerScreen {
         }
 
         Ok(())
+    }
+
+    /// Set the text contents at a specific row/column offset.
+    ///
+    /// <section class="warning">
+    ///
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a
+    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    ///
+    /// </section>
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
+    ///   greater than or equal to [`Self::MAX_LINES`].
+    /// - A [`ControllerError::InvalidColumn`] error is returned if `col` is
+    ///   greater than or equal to [`Self::MAX_COLUMNS`].
+    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
+    ///   found anywhere in the specified text.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.primary_controller;
+    ///     _ = controller.screen.set_text("Hello, world!", 0, 0).await;
+    ///     _ = controller.screen.set_text("Hello, world!", 1, 0).await;
+    /// }
+    /// ```
+    #[must_use]
+    pub fn set_text(
+        &mut self,
+        text: impl AsRef<str>,
+        line: u8,
+        col: u8,
+    ) -> ControllerScreenWriteFuture<'_> {
+        ControllerScreenWriteFuture::WaitingForIdle {
+            line,
+            col,
+            text: text.as_ref().to_string(),
+            controller: self,
+        }
     }
 
     /// Set the text contents at a specific row/column offset.
@@ -276,13 +485,19 @@ impl ControllerScreen {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut controller = peripherals.controller;
+    ///     let mut controller = peripherals.primary_controller;
     ///
-    ///     _ = controller.set_text("Hello, world!", 0, 0);
+    ///     _ = controller.try_set_text("Hello, world!", 0, 0);
     /// }
     /// ```
-    pub fn set_text(&mut self, text: &str, line: u8, col: u8) -> Result<(), ControllerError> {
+    pub fn try_set_text(
+        &mut self,
+        text: impl AsRef<str>,
+        line: u8,
+        col: u8,
+    ) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
+        let text = text.as_ref();
 
         if line > Self::MAX_LINES as u8 {
             return Err(ControllerError::InvalidLine);
@@ -672,16 +887,45 @@ impl Controller {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
-    ///     let _ = controller.rumble(". -. -.");
+    ///     let _ = controller.rumble(". -. -.").await;
     /// }
     /// ```
-    pub fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
-        self.screen.set_text(pattern, 3, 0)
+    pub async fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
+        self.screen.set_text(pattern, 3, 0).await
+    }
+
+    /// Send a rumble pattern to the controller's vibration motor.
+    /// Unlike [`rumble`](Controller::rumble) this function will fail if the controller screen is busy.
+    ///
+    /// This function takes a string consisting of the characters '.', '-', and ' ', where
+    /// dots are short rumbles, dashes are long rumbles, and spaces are pauses. Maximum
+    /// supported length is 8 characters.
+    ///
+    /// # Errors
+    ///
+    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
+    ///   found anywhere in the specified text.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is
+    ///   not connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut controller = peripherals.primary_controller;
+    ///     let _ = controller.try_rumble(". -. -.");
+    /// }
+    /// ```
+    pub fn try_rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
+        self.screen.try_set_text(pattern, 3, 0)
     }
 }
 
 /// Errors that can occur when interacting with the controller.
-#[derive(Debug, Snafu)]
+#[derive(Clone, Debug, Snafu)]
 pub enum ControllerError {
     /// The controller is not connected to the Brain.
     Offline,

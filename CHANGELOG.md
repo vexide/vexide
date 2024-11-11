@@ -79,6 +79,7 @@ Before releasing:
 - Replaced the custom `Point2` type with `mint`'s `Point2` type for better interop. (#218) (**Breaking Change**)
 - `SmartPort::device_type` now returns an `Option<SmartDeviceType>` which returns `None` if no device is connected or configured to a port. (#219) (**Breaking Change**)
 - Renamed the `LinkError::NonTerminatingNul` and `ControllerError::NonTerminatingNul` variants to simply `Nul` and added a source error. (#220) (**Breaking Change**)
+- Made `ControllerScreen` methods and `Controller::rumble` asynchronous and added synchronous `try_<action>` variants. (#222) (**Breaking Change**)
 
 ### Removed
 
