@@ -13,7 +13,7 @@ use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
     V5_ControllerIndex, V5_ControllerStatus,
 };
-use vexide_core::{competition, competition::CompetitionMode};
+use vexide_core::competition::{self, CompetitionMode};
 
 /// Represents the state of a button on the controller.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
@@ -167,6 +167,8 @@ pub enum ControllerScreenWriteFuture<'a> {
         text: String,
         /// The controller to write to.
         controller: &'a mut ControllerScreen,
+        /// Whether or not to enforce that this line is on screen.
+        enforce_visible: bool,
     },
     /// The write has been completed.
     Complete {
@@ -189,12 +191,16 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                 col,
                 text,
                 controller,
+                enforce_visible: visible,
             } => {
-                if *line > ControllerScreen::MAX_LINES as u8 {
-                    return Poll::Ready(Err(ControllerError::InvalidLine { line: *line }));
-                }
-                if *col > ControllerScreen::MAX_COLUMNS as u8 {
-                    return Poll::Ready(Err(ControllerError::InvalidColumn { col: *col }));
+                if *visible {
+                    // Do a saturating sub even though it will short circuit just in case
+                    if *line == 0 || line.saturating_sub(1) > ControllerScreen::MAX_LINES as u8 {
+                        return Poll::Ready(Err(ControllerError::InvalidLine { line: line.saturating_sub(1) }));
+                    }
+                    if *col > ControllerScreen::MAX_COLUMNS as u8 {
+                        return Poll::Ready(Err(ControllerError::InvalidColumn { col: *col }));
+                    }
                 }
 
                 let id = controller.id;
@@ -285,6 +291,7 @@ impl ControllerScreen {
             col: 1,
             text: String::new(),
             controller: self,
+            enforce_visible: true,
         }
     }
 
@@ -367,6 +374,7 @@ impl ControllerScreen {
             col: 0,
             text: String::new(),
             controller: self,
+            enforce_visible: false,
         }
     }
 
@@ -455,9 +463,10 @@ impl ControllerScreen {
     ) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::WaitingForIdle {
             line: line + 1,
-            col: col + 1,
+            col,
             text: text.as_ref().to_string(),
             controller: self,
+            enforce_visible: true,
         }
     }
 
@@ -513,7 +522,7 @@ impl ControllerScreen {
             vexControllerTextSet(
                 u32::from(id.0),
                 u32::from(line + 1),
-                u32::from(col + 1),
+                u32::from(col),
                 text.as_ptr().cast(),
             )
         } != 1
@@ -890,8 +899,14 @@ impl Controller {
     ///     let _ = controller.rumble(". -. -.").await;
     /// }
     /// ```
-    pub async fn rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
-        self.screen.set_text(pattern, 3, 0).await
+    pub fn rumble(&mut self, pattern: impl AsRef<str>) -> ControllerScreenWriteFuture<'_> {
+        ControllerScreenWriteFuture::WaitingForIdle {
+            line: 4,
+            col: 0,
+            text: pattern.as_ref().to_string(),
+            controller: &mut self.screen,
+            enforce_visible: false,
+        }
     }
 
     /// Send a rumble pattern to the controller's vibration motor.
@@ -919,7 +934,7 @@ impl Controller {
     ///     let _ = controller.try_rumble(". -. -.");
     /// }
     /// ```
-    pub fn try_rumble(&mut self, pattern: &str) -> Result<(), ControllerError> {
+    pub fn try_rumble(&mut self, pattern: impl AsRef<str>) -> Result<(), ControllerError> {
         self.screen.try_set_text(pattern, 3, 0)
     }
 }
