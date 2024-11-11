@@ -238,7 +238,7 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
             }
         };
 
-        core::task::Poll::Ready(Ok(()))
+        core::task::Poll::Pending
     }
 }
 
