@@ -245,11 +245,14 @@ impl ControllerScreen {
     /// Number of available text lines on the controller before clearing the screen.
     pub const MAX_LINES: usize = 3;
 
-    /// Clears the contents of a specific text line.
+    /// Clears the contents of a specific text line, waiting until the controller
+    /// successfully clears the line.
     ///
     /// <section class="warning">
-    /// Controller text setting is a slow process, so updates faster than 10ms when on a
-    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    ///
+    /// Controller text setting is a slow process, so calls to this function at intervals
+    /// faster than 10ms on wired connection or 50ms over VEXnet will take longer to complete.
+    ///
     /// </section>
     ///
     /// # Errors
@@ -328,13 +331,14 @@ impl ControllerScreen {
         Ok(())
     }
 
-    /// Clears the whole screen, including the default widget displayed by the controller if
-    /// it hasn't already been cleared.
+    /// Clears the whole screen, waiting until the controller successfully clears the screen.
+    ///
+    /// This includes the default widget displayed by the controller if it hasn't already been cleared.
     ///
     /// <section class="warning">
     ///
-    /// Controller text setting is a slow process, so updates faster than 10ms when on a
-    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    /// Controller text setting is a slow process, so calls to this function at intervals
+    /// faster than 10ms on wired connection or 50ms over VEXnet will take longer to complete.
     ///
     /// </section>
     ///
@@ -409,12 +413,13 @@ impl ControllerScreen {
         Ok(())
     }
 
-    /// Set the text contents at a specific row/column offset.
+    /// Set the text contents at a specific row/column offset, waiting until the controller
+    /// successfully writes the text.
     ///
     /// <section class="warning">
     ///
-    /// Controller text setting is a slow process, so updates faster than 10ms when on a
-    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    /// Controller text setting is a slow process, so calls to this function at intervals
+    /// faster than 10ms on wired connection or 50ms over VEXnet will take longer to complete.
     ///
     /// </section>
     ///
