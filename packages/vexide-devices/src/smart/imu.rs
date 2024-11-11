@@ -331,8 +331,11 @@ impl InertialSensor {
     ///     Robot { imu }.compete().await;
     /// }
     /// ```
-    pub fn calibrate(&mut self) -> InertialCalibrateFuture {
-        InertialCalibrateFuture::Calibrate(self.port.number())
+    pub fn calibrate(&mut self) -> InertialCalibrateFuture<'_> {
+        InertialCalibrateFuture {
+            state: InertialCalibrateFutureState::Calibrate,
+            imu: self,
+        }
     }
 
     /// Returns the total number of degrees the Inertial Sensor has spun about the z-axis.
@@ -914,27 +917,35 @@ pub enum CalibrationPhase {
     End,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum InertialCalibrateFutureState {
+    /// Calibrate the IMU
+    Calibrate,
+    /// Wait for the IMU to either begin calibrating or end calibration, depending on the
+    /// designated [`CalibrationPhase`].
+    Waiting(Instant, CalibrationPhase),
+}
+
 /// Future that calibrates an IMU
 /// created with [`InertialSensor::calibrate`].
 #[must_use = "futures do nothing unless you `.await` or poll them"]
-#[derive(Debug, Clone, Copy)]
-pub enum InertialCalibrateFuture {
-    /// Calibrate the IMU
-    Calibrate(u8),
-    /// Wait for the IMU to either begin calibrating or end calibration, depending on the
-    /// designated [`CalibrationPhase`].
-    Waiting(u8, Instant, CalibrationPhase),
+#[derive(Debug)]
+pub struct InertialCalibrateFuture<'a> {
+    state: InertialCalibrateFutureState,
+    imu: &'a mut InertialSensor,
 }
 
-impl core::future::Future for InertialCalibrateFuture {
+impl<'a> core::future::Future for InertialCalibrateFuture<'a> {
     type Output = Result<(), InertialError>;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        match *self {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = self.get_mut();
+        let port = this.imu.port_number();
+        match this.state {
             // The "calibrate" phase begins the calibration process.
             // This only happens for one poll of the future (the first one). All future polls will
             // either be waiting for calibration to start or for calibration to end.
-            Self::Calibrate(port) => {
+            InertialCalibrateFutureState::Calibrate => {
                 if let Err(err) = validate_port(port, SmartDeviceType::Imu) {
                     // IMU isn't plugged in, no need to go any further.
                     Poll::Ready(Err(err.into()))
@@ -943,7 +954,10 @@ impl core::future::Future for InertialCalibrateFuture {
                     unsafe { vexDeviceImuReset(vexDeviceGetByIndex(u32::from(port - 1))) }
 
                     // Change to waiting for calibration to start.
-                    *self = Self::Waiting(port, Instant::now(), CalibrationPhase::Start);
+                    this.state = InertialCalibrateFutureState::Waiting(
+                        Instant::now(),
+                        CalibrationPhase::Start,
+                    );
                     cx.waker().wake_by_ref();
                     Poll::Pending
                 }
@@ -952,7 +966,7 @@ impl core::future::Future for InertialCalibrateFuture {
             // In this stage, we are either waiting for the calibration status flag to be set (CalibrationPhase::Start),
             // indicating that calibration has begun, or we are waiting for the calibration status flag to be cleared,
             // indicating that calibration has finished (CalibrationFlag::End).
-            Self::Waiting(port, timestamp, phase) => {
+            InertialCalibrateFutureState::Waiting(timestamp, phase) => {
                 if timestamp.elapsed()
                     > match phase {
                         CalibrationPhase::Start => InertialSensor::CALIBRATION_START_TIMEOUT,
@@ -989,7 +1003,10 @@ impl core::future::Future for InertialCalibrateFuture {
                     //
                     // We now know that the sensor is actually calibrating, so we transition to
                     // [`CalibrationPhase::End`] and reset the timeout timestamp to wait for calibration to finish.
-                    *self = Self::Waiting(port, Instant::now(), CalibrationPhase::End);
+                    this.state = InertialCalibrateFutureState::Waiting(
+                        Instant::now(),
+                        CalibrationPhase::End,
+                    );
                     cx.waker().wake_by_ref();
                     return Poll::Pending;
                 } else if !status.contains(InertialStatus::CALIBRATING)
