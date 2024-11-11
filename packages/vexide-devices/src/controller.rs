@@ -167,6 +167,8 @@ pub enum ControllerScreenWriteFuture<'a> {
         column: u8,
         /// The text to write.
         text: String,
+        /// The text to write converted to a CString.
+        c_text_cell: Option<CString>,
         /// The controller to write to.
         controller: &'a mut ControllerScreen,
         /// Whether or not to enforce that this line is on screen.
@@ -177,6 +179,24 @@ pub enum ControllerScreenWriteFuture<'a> {
         /// The result of the write.
         result: Result<(), ControllerError>,
     },
+}
+impl<'a> ControllerScreenWriteFuture<'a> {
+    fn new(
+        line: u8,
+        column: u8,
+        text: String,
+        controller: &'a mut ControllerScreen,
+        enforce_visible: bool,
+    ) -> Self {
+        Self::WaitingForIdle {
+            line,
+            column,
+            text,
+            c_text_cell: None,
+            controller,
+            enforce_visible,
+        }
+    }
 }
 
 impl<'a> Future for ControllerScreenWriteFuture<'a> {
@@ -192,6 +212,7 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                 line,
                 column,
                 text,
+                c_text_cell,
                 controller,
                 enforce_visible: visible,
             } => {
@@ -205,12 +226,19 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                     return Poll::Ready(Err(ControllerError::InvalidColumn { column: *column }));
                 }
 
+                let text = if let Some(text) = c_text_cell {
+                    text
+                } else {
+                    let text = CString::new(text.clone())?;
+                    *c_text_cell = Some(text);
+                    c_text_cell.as_ref().unwrap()
+                };
+
                 let id = controller.id;
                 if let Err(e) = validate_connection(id) {
                     ControllerScreenWriteFuture::Complete { result: Err(e) }
                 } else {
                     let id: V5_ControllerId = (id).into();
-                    let text = CString::new(text.clone())?;
 
                     let result = if unsafe {
                         vexControllerTextSet(
@@ -289,13 +317,7 @@ impl ControllerScreen {
     /// ```
     #[must_use]
     pub fn clear_line(&mut self, line: u8) -> ControllerScreenWriteFuture<'_> {
-        ControllerScreenWriteFuture::WaitingForIdle {
-            line,
-            column: 1,
-            text: String::new(),
-            controller: self,
-            enforce_visible: true,
-        }
+        ControllerScreenWriteFuture::new(line, 1, String::new(), self, true)
     }
 
     /// Attempts to clear the contents of a specific text line.
@@ -373,13 +395,7 @@ impl ControllerScreen {
     /// ```
     #[must_use]
     pub fn clear_screen(&mut self) -> ControllerScreenWriteFuture<'_> {
-        ControllerScreenWriteFuture::WaitingForIdle {
-            line: 0,
-            column: 1,
-            text: String::new(),
-            controller: self,
-            enforce_visible: false,
-        }
+        ControllerScreenWriteFuture::new(0, 1, String::new(), self, false)
     }
 
     /// Clears the whole screen, including the default widget displayed by the controller if
@@ -466,13 +482,7 @@ impl ControllerScreen {
         line: u8,
         col: u8,
     ) -> ControllerScreenWriteFuture<'_> {
-        ControllerScreenWriteFuture::WaitingForIdle {
-            line,
-            column: col,
-            text: text.as_ref().to_string(),
-            controller: self,
-            enforce_visible: true,
-        }
+        ControllerScreenWriteFuture::new(line, col, text.as_ref().to_string(), self, true)
     }
 
     /// Set the text contents at a specific row/column offset.
@@ -913,13 +923,13 @@ impl Controller {
     /// }
     /// ```
     pub fn rumble(&mut self, pattern: impl AsRef<str>) -> ControllerScreenWriteFuture<'_> {
-        ControllerScreenWriteFuture::WaitingForIdle {
-            line: 4,
-            column: 1,
-            text: pattern.as_ref().to_string(),
-            controller: &mut self.screen,
-            enforce_visible: false,
-        }
+        ControllerScreenWriteFuture::new(
+            4,
+            1,
+            pattern.as_ref().to_string(),
+            &mut self.screen,
+            false,
+        )
     }
 
     /// Send a rumble pattern to the controller's vibration motor.
