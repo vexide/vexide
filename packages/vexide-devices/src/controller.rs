@@ -191,14 +191,10 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                 controller,
             } => {
                 if *line > ControllerScreen::MAX_LINES as u8 {
-                    return Poll::Ready(Err(ControllerError::InvalidLine {
-                        line: *line,
-                    }));
+                    return Poll::Ready(Err(ControllerError::InvalidLine { line: *line }));
                 }
                 if *col > ControllerScreen::MAX_COLUMNS as u8 {
-                    return Poll::Ready(Err(ControllerError::InvalidColumn {
-                        col: *col,
-                    }));
+                    return Poll::Ready(Err(ControllerError::InvalidColumn { col: *col }));
                 }
 
                 let id = controller.id;
@@ -507,14 +503,8 @@ impl ControllerScreen {
     ) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
 
-        ensure!(
-            col < Self::MAX_COLUMNS as u8,
-            InvalidColumnSnafu { col }
-        );
-        ensure!(
-            line < Self::MAX_LINES as u8,
-            InvalidLineSnafu { line }
-        );
+        ensure!(col < Self::MAX_COLUMNS as u8, InvalidColumnSnafu { col });
+        ensure!(line < Self::MAX_LINES as u8, InvalidLineSnafu { line });
 
         let id: V5_ControllerId = self.id.into();
         let text = CString::new(text.as_ref())?;
