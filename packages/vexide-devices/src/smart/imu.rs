@@ -285,7 +285,7 @@ impl InertialSensor {
     ///
     ///     match sensor.calibrate().await {
     ///         Ok(_) => println!("IMU calibrated successfully."),
-    ///         Err(e mutrr) => {
+    ///         Err(err) => {
     ///             println!("IMU failed to calibrate, retrying. Reason: {:?}", err);
     ///
     ///             // Since calibration failed, let's try one more time. If that fails,
