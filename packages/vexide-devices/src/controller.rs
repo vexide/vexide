@@ -961,14 +961,20 @@ pub enum ControllerError {
     CompetitionControl,
 
     /// The line number provided is larger than [`ControllerScreen::MAX_LINES`].
-    #[snafu(display("Invalid line number ({line}) is greater than the maximum number of lines ({})", ControllerScreen::MAX_LINES))]
+    #[snafu(display(
+        "Invalid line number ({line}) is greater than the maximum number of lines ({})",
+        ControllerScreen::MAX_LINES
+    ))]
     InvalidLine {
         /// The line number that was given.
         line: u8,
     },
 
     /// The column number provided is larger than [`ControllerScreen::MAX_COLUMNS`].
-    #[snafu(display("Invalid column number ({col}) is greater than the maximum number of columns ({})", ControllerScreen::MAX_COLUMNS))]
+    #[snafu(display(
+        "Invalid column number ({col}) is greater than the maximum number of columns ({})",
+        ControllerScreen::MAX_COLUMNS
+    ))]
     InvalidColumn {
         /// The column number that was given.
         col: u8,
