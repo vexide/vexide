@@ -115,6 +115,21 @@ Before releasing:
 
 @zabackary made their first contribution in #164!
 
+
+## [0.4.2]
+
+### Added
+
+### Fixed
+
+- Fixed an issue related to the calling convention of vex-sdk functions causing docs.rs api reference build failures. (#165)
+
+### Changed
+
+### Removed
+
+### New Contributors
+
 ## [0.4.1]
 
 ### Added
@@ -241,4 +256,5 @@ Before releasing:
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
 [0.4.0]: https://github.com/vexide/vexide/compare/v0.3.0...v0.4.0
 [0.4.1]: https://github.com/vexide/vexide/compare/v0.4.0...v0.4.1
-[0.5.0]: https://github.com/vexide/vexide/compare/v0.4.1...v0.5.0
+[0.4.2]: https://github.com/vexide/vexide/compare/v0.4.1...v0.4.2
+[0.5.0]: https://github.com/vexide/vexide/compare/v0.4.2...v0.5.0
