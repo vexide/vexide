@@ -220,7 +220,7 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
             enforce_visible: visible,
         } = state
         {
-            if *visible && !(0..ControllerScreen::MAX_LINES as u8).contains(line) {
+            if *visible && (*line == 0 || *line > ControllerScreen::MAX_LINES as u8) {
                 return Poll::Ready(InvalidLineSnafu { line: *line }.fail());
             }
             if *column == 0 || *column > ControllerScreen::MAX_COLUMNS as u8 {
