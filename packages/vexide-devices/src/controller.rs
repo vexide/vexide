@@ -153,10 +153,7 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     Ok(())
 }
 
-/// A future that completes once a write to the controller screen has been performed.
-/// This future waits untill the controller is able to accept a new write
-/// and fails if the controller is disconnected or if the requested write is bad.
-pub enum ControllerScreenWriteFuture<'a> {
+enum ControllerScreenWriteState<'a> {
     /// Waiting for the controller to be ready to accept a new write.
     WaitingForIdle {
         /// The line to write to.
@@ -166,9 +163,7 @@ pub enum ControllerScreenWriteFuture<'a> {
         /// This **NOT** is indexed like the SDK. The first onscreen column is 1.
         column: u8,
         /// The text to write.
-        text: String,
-        /// The text to write converted to a CString.
-        c_text_cell: Option<CString>,
+        text: Result<CString, NulError>,
         /// The controller to write to.
         controller: &'a mut ControllerScreen,
         /// Whether or not to enforce that this line is on screen.
@@ -180,6 +175,14 @@ pub enum ControllerScreenWriteFuture<'a> {
         result: Result<(), ControllerError>,
     },
 }
+
+/// A future that completes once a write to the controller screen has been performed.
+/// This future waits until the controller is able to accept a new write
+/// and fails if the controller is disconnected or if the requested write is bad.
+pub struct ControllerScreenWriteFuture<'a> {
+    state: ControllerScreenWriteState<'a>,
+}
+
 impl<'a> ControllerScreenWriteFuture<'a> {
     fn new(
         line: u8,
@@ -188,13 +191,14 @@ impl<'a> ControllerScreenWriteFuture<'a> {
         controller: &'a mut ControllerScreen,
         enforce_visible: bool,
     ) -> Self {
-        Self::WaitingForIdle {
-            line,
-            column,
-            text,
-            c_text_cell: None,
-            controller,
-            enforce_visible,
+        Self {
+            state: ControllerScreenWriteState::WaitingForIdle {
+                line,
+                column,
+                text: CString::new(text),
+                controller,
+                enforce_visible,
+            },
         }
     }
 }
@@ -206,65 +210,53 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
         self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Self::Output> {
-        let this = self.get_mut();
-        *this = match this {
-            ControllerScreenWriteFuture::WaitingForIdle {
-                line,
-                column,
-                text,
-                c_text_cell,
-                controller,
-                enforce_visible: visible,
-            } => {
-                if *visible {
-                    // Do a saturating sub even though it will short circuit just in case
-                    if *line == 0 || *line > ControllerScreen::MAX_LINES as u8 {
-                        return Poll::Ready(Err(ControllerError::InvalidLine { line: *line }));
-                    }
-                }
-                if *column == 0 || *column > ControllerScreen::MAX_COLUMNS as u8 {
-                    return Poll::Ready(Err(ControllerError::InvalidColumn { column: *column }));
-                }
+        let state = &mut self.get_mut().state;
 
-                let text = if let Some(text) = c_text_cell {
-                    text
-                } else {
-                    let text = CString::new(text.clone())?;
-                    *c_text_cell = Some(text);
-                    c_text_cell.as_ref().unwrap()
-                };
+        if let ControllerScreenWriteState::WaitingForIdle {
+            line,
+            column,
+            text,
+            controller,
+            enforce_visible: visible,
+        } = state
+        {
+            if *visible && !(0..ControllerScreen::MAX_LINES as u8).contains(line) {
+                return Poll::Ready(InvalidLineSnafu { line: *line }.fail());
+            }
+            if *column == 0 || *column > ControllerScreen::MAX_COLUMNS as u8 {
+                return Poll::Ready(InvalidColumnSnafu { column: *column }.fail());
+            }
 
-                let id = controller.id;
-                if let Err(e) = validate_connection(id) {
-                    ControllerScreenWriteFuture::Complete { result: Err(e) }
-                } else {
-                    let id: V5_ControllerId = (id).into();
+            let text = text.as_deref().map_err(Clone::clone)?;
 
-                    let result = if unsafe {
+            match validate_connection(controller.id) {
+                Ok(()) => {
+                    let id = V5_ControllerId::from(controller.id);
+
+                    let result = unsafe {
                         vexControllerTextSet(
                             u32::from(id.0),
                             u32::from(*line),
                             u32::from(*column - 1),
                             text.as_ptr().cast(),
                         )
-                    } == 1
-                    {
-                        Ok(())
-                    } else {
-                        cx.waker().wake_by_ref();
-                        return Poll::Pending;
                     };
 
-                    cx.waker().wake_by_ref();
-                    ControllerScreenWriteFuture::Complete { result }
-                }
-            }
-            ControllerScreenWriteFuture::Complete { ref result } => {
-                return core::task::Poll::Ready(result.clone());
-            }
-        };
+                    if result != 1 {
+                        *state = ControllerScreenWriteState::Complete { result: Ok(()) }
+                    }
 
-        core::task::Poll::Pending
+                    cx.waker().wake_by_ref();
+                }
+                Err(err) => *state = ControllerScreenWriteState::Complete { result: Err(err) },
+            }
+        }
+
+        if let ControllerScreenWriteState::Complete { result } = state {
+            Poll::Ready(result.clone())
+        } else {
+            Poll::Pending
+        }
     }
 }
 
