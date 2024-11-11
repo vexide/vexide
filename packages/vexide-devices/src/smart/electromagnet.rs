@@ -2,6 +2,15 @@
 //!
 //! The V5 electromagnet is a device unique to the V5 workcell kit. It is a simple
 //! device that produces a magnetic field at a provided power level.
+//! The power level does not have specific units.
+//!
+//! # Hardware Overview
+//!
+//! Not much information can be found on the V5 workcell electromagnet;
+//! however, the electromagnet is intended to be used to pick up V5 Workcell colored disks.
+//! We can assume that the lower bound on the electromagnet's strength is the weight of a V5 Workcell colored disk.
+//! Assuming that the plastic part of the disk is made of ABS plastic and the metal part is solid iron,
+//! the electromagnet can lift at least 0.0148526lb based off of the CAD model files for the V5 Workcell kit provided by VEX.
 
 use core::time::Duration;
 
@@ -30,6 +39,21 @@ impl Electromagnet {
     pub const MAX_POWER_DURATION: Duration = Duration::from_secs(2);
 
     /// Creates a new electromagnet from a [`SmartPort`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     // Use the electromagnet
+    ///     _ = electromagnet.set_power(1.0, Electromagnet::MAX_POWER_DURATION);
+    ///     _ = electromagnet.set_power(-0.2, Duration::from_secs(1));
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
@@ -48,8 +72,22 @@ impl Electromagnet {
     /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     _ = electromagnet.set_power(1.0, Electromagnet::MAX_POWER_DURATION);
+    /// }
+    /// ```
     pub fn set_power(&mut self, power: f64, duration: Duration) -> Result<(), PortError> {
         self.validate_port()?;
+
+        let power = power.clamp(-1.0, 1.0);
 
         unsafe {
             vexDeviceMagnetPowerSet(self.device, (power * 100.0) as _, duration.as_millis() as _);
@@ -65,6 +103,20 @@ impl Electromagnet {
     /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     _ = electromagnet.set_power(0.5, Electromagnet::MAX_POWER_DURATION);
+    ///     let power = electromagnet.power().unwrap();
+    ///     println!("Power: {}", power);
+    /// }
+    /// ```
     pub fn power(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -78,6 +130,20 @@ impl Electromagnet {
     /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     _ = electromagnet.set_power(1.0, Electromagnet::MAX_POWER_DURATION);
+    ///     let current = electromagnet.current().unwrap();
+    ///     println!("Current: {}", current);
+    /// }
+    /// ```
     pub fn current(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -91,6 +157,18 @@ impl Electromagnet {
     /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     println!("Temperature: {}", electromagnet.temperature().unwrap());
+    /// }
+    /// ```
     pub fn temperature(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -104,6 +182,18 @@ impl Electromagnet {
     /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let electromagnet = Electromagnet::new(peripherals.port_1);
+    ///     println!("Status: {:b}", electromagnet.status().unwrap());
+    /// }
+    /// ```
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 
