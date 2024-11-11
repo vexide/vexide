@@ -334,3 +334,20 @@ impl From<AdiDeviceType> for V5_AdiPortConfiguration {
         }
     }
 }
+
+/// Returns the name of the specified ADI port as a character.
+///
+/// This function is intended to help format errors.
+const fn adi_port_name(port: u8) -> char {
+    match port {
+        1 => 'A',
+        2 => 'B',
+        3 => 'C',
+        4 => 'D',
+        5 => 'E',
+        6 => 'F',
+        7 => 'G',
+        8 => 'H',
+        _ => '?',
+    }
+}

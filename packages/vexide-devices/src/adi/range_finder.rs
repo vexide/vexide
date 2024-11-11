@@ -34,11 +34,11 @@
 //! ports. For the sensor to work properly, the “INPUT” wire must be in an odd-numbered slot
 //! (A, C, E, G), and the “OUTPUT” wire must be in the higher slot next to the input wire.
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::PortError;
+use crate::{adi::adi_port_name, PortError};
 
 /// Range Finder
 ///
@@ -63,17 +63,29 @@ impl AdiRangeFinder {
         let output_port = ports.0;
         let input_port = ports.1;
 
-        // Port error handling - two-wire devices are a little weird with this sort of thing.
-        if output_port.expander_index() != input_port.expander_index() {
-            // Output and input must be plugged into the same ADI expander.
-            return Err(RangeFinderError::ExpanderPortMismatch);
-        } else if output_port.index() % 2 == 0 {
-            // Output must be on an odd indexed port (A, C, E, G).
-            return Err(RangeFinderError::BadOutputPort);
-        } else if input_port.index() != (output_port.index() - 1) {
-            // Input must be directly next to output on the higher port index.
-            return Err(RangeFinderError::BadInputPort);
-        }
+        // Input and output must be plugged into the same ADI expander.
+        ensure!(
+            input_port.expander_index() != output_port.expander_index(),
+            ExpanderPortMismatchSnafu {
+                top_port_expander: input_port.expander_number(),
+                bottom_port_expander: output_port.expander_number()
+            }
+        );
+        // Input must be on an odd indexed port (A, C, E, G).
+        ensure!(
+            input_port.index() % 2 != 0,
+            BadInputPortSnafu {
+                port: input_port.number()
+            }
+        );
+        // Output must be directly next to top on the higher port index.
+        ensure!(
+            output_port.index() == (input_port.index() + 1),
+            BadOutputPortSnafu {
+                top_port: input_port.number(),
+                bottom_port: output_port.number()
+            }
+        );
 
         output_port.configure(AdiDeviceType::RangeFinder);
 
@@ -97,7 +109,7 @@ impl AdiRangeFinder {
         match unsafe {
             vexDeviceAdiValueGet(self.output_port.device_handle(), self.output_port.index())
         } {
-            -1 => Err(RangeFinderError::NoReading),
+            -1 => NoReadingSnafu.fail(),
             val => Ok(val as u16),
         }
     }
@@ -125,17 +137,45 @@ pub enum RangeFinderError {
     /// The sensor is unable to return a valid reading.
     NoReading,
 
-    /// The port number of the output wire must be odd (A, C, E, G).
-    BadOutputPort,
+    /// The input wire must be on an odd numbered port (A, C, E, G).
+    #[snafu(display(
+        "The input ADI port provided (`{}`) was not odd numbered (A, C, E, G).",
+        adi_port_name(*port)
+    ))]
+    BadInputPort {
+        /// The port number that caused the error.
+        port: u8,
+    },
 
-    /// The input  wire must be plugged in directly above the output wire.
-    BadInputPort,
+    /// The bottom wire must be plugged in directly above the top wire.
+    #[snafu(display(
+        "The output ADI port provided (`{}`) was not directly above the input port (`{}`). Instead, it should be port `{}`.",
+        adi_port_name(*bottom_port),
+        adi_port_name(*top_port),
+        adi_port_name(*top_port + 1),
+    ))]
+    BadOutputPort {
+        /// The bottom port number that caused the error.
+        bottom_port: u8,
+        /// The top port number that caused the error.
+        top_port: u8,
+    },
 
-    /// The specified output and input ports belong to different ADI expanders.
-    ExpanderPortMismatch,
+    /// The specified top and bottom ports may not belong to different ADI expanders.
+    #[snafu(display(
+        "The specified top and bottom ports may not belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
+        top_port_expander,
+        bottom_port_expander
+    ))]
+    ExpanderPortMismatch {
+        /// The top port's expander number.
+        top_port_expander: Option<u8>,
+        /// The bottom port's expander number.
+        bottom_port_expander: Option<u8>,
+    },
 
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,

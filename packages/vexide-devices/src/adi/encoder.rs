@@ -39,11 +39,11 @@
 //! [`RotationSensor`]: crate::smart::rotation::RotationSensor
 //! [`SmartPort`]: crate::smart::SmartPort
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::{position::Position, PortError};
+use crate::{adi::adi_port_name, position::Position, PortError};
 
 /// Optical Shaft Encoder
 #[derive(Debug, Eq, PartialEq)]
@@ -76,16 +76,30 @@ impl AdiEncoder {
         let bottom_port = ports.1;
 
         // Port error handling - two-wire devices are a little weird with this sort of thing.
-        if top_port.expander_index() != bottom_port.expander_index() {
-            // Top and bottom must be plugged into the same ADI expander.
-            return Err(EncoderError::ExpanderPortMismatch);
-        } else if top_port.index() % 2 == 0 {
-            // Top must be on an odd indexed port (A, C, E, G).
-            return Err(EncoderError::BadTopPort);
-        } else if bottom_port.index() != (top_port.index() + 1) {
-            // Bottom must be directly next to top on the higher port index.
-            return Err(EncoderError::BadBottomPort);
-        }
+
+        // Top and bottom must be plugged into the same ADI expander.
+        ensure!(
+            top_port.expander_index() != bottom_port.expander_index(),
+            ExpanderPortMismatchSnafu {
+                top_port_expander: top_port.expander_number(),
+                bottom_port_expander: bottom_port.expander_number()
+            }
+        );
+        // Top must be on an odd indexed port (A, C, E, G).
+        ensure!(
+            top_port.index() % 2 != 0,
+            BadTopPortSnafu {
+                port: top_port.number()
+            }
+        );
+        // Bottom must be directly next to top on the higher port index.
+        ensure!(
+            bottom_port.index() == (top_port.index() + 1),
+            BadBottomPortSnafu {
+                top_port: top_port.number(),
+                bottom_port: bottom_port.number()
+            }
+        );
 
         top_port.configure(AdiDeviceType::Encoder);
 
@@ -170,17 +184,45 @@ impl AdiDevice for AdiEncoder {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an encoder range finder.
 pub enum EncoderError {
-    /// The number of the top wire must be on an odd numbered port (A, C, E, G).
-    BadTopPort,
+    /// The top wire must be on an odd numbered port (A, C, E, G).
+    #[snafu(display(
+        "The top ADI port provided (`{}`) was not odd numbered (A, C, E, G).",
+        adi_port_name(*port)
+    ))]
+    BadTopPort {
+        /// The port number that caused the error.
+        port: u8,
+    },
 
     /// The bottom wire must be plugged in directly above the top wire.
-    BadBottomPort,
+    #[snafu(display(
+        "The bottom ADI port provided (`{}`) was not directly above the top port (`{}`). Instead, it should be port `{}`.",
+        adi_port_name(*bottom_port),
+        adi_port_name(*top_port),
+        adi_port_name(*top_port + 1),
+    ))]
+    BadBottomPort {
+        /// The bottom port number that caused the error.
+        bottom_port: u8,
+        /// The top port number that caused the error.
+        top_port: u8,
+    },
 
-    /// The specified top and bottom ports belong to different ADI expanders.
-    ExpanderPortMismatch,
+    /// The specified top and bottom ports may not belong to different ADI expanders.
+    #[snafu(display(
+        "The specified top and bottom ports may not belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
+        top_port_expander,
+        bottom_port_expander
+    ))]
+    ExpanderPortMismatch {
+        /// The top port's expander number.
+        top_port_expander: Option<u8>,
+        /// The bottom port's expander number.
+        bottom_port_expander: Option<u8>,
+    },
 
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,

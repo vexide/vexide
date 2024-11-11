@@ -8,7 +8,7 @@ use alloc::{
 };
 use core::{cell::RefCell, future::Future, task::Poll, time::Duration};
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
     V5_ControllerIndex, V5_ControllerStatus,
@@ -108,7 +108,7 @@ pub struct ControllerState {
     /// Button Right
     pub button_right: ButtonState,
 
-    /// Top Left Bumpeer
+    /// Top Left Bumper
     pub button_l1: ButtonState,
     /// Bottom Left Bumper
     pub button_l2: ButtonState,
@@ -147,7 +147,7 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     if unsafe {
         vexControllerConnectionStatusGet(id.into()) == V5_ControllerStatus::kV5ControllerOffline
     } {
-        return Err(ControllerError::Offline);
+        return OfflineSnafu.fail();
     }
 
     Ok(())
@@ -191,10 +191,14 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
                 controller,
             } => {
                 if *line > ControllerScreen::MAX_LINES as u8 {
-                    return Poll::Ready(Err(ControllerError::InvalidLine));
+                    return Poll::Ready(Err(ControllerError::InvalidLine {
+                        line: *line,
+                    }));
                 }
                 if *col > ControllerScreen::MAX_COLUMNS as u8 {
-                    return Poll::Ready(Err(ControllerError::InvalidColumn));
+                    return Poll::Ready(Err(ControllerError::InvalidColumn {
+                        col: *col,
+                    }));
                 }
 
                 let id = controller.id;
@@ -502,15 +506,15 @@ impl ControllerScreen {
         col: u8,
     ) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
-        let text = text.as_ref();
 
-        if line > Self::MAX_LINES as u8 {
-            return Err(ControllerError::InvalidLine);
-        }
-
-        if col > Self::MAX_COLUMNS as u8 {
-            return Err(ControllerError::InvalidColumn);
-        }
+        ensure!(
+            col < Self::MAX_COLUMNS as u8,
+            InvalidColumnSnafu { col }
+        );
+        ensure!(
+            line < Self::MAX_LINES as u8,
+            InvalidLineSnafu { line }
+        );
 
         let id: V5_ControllerId = self.id.into();
         let text = CString::new(text)?;
@@ -693,9 +697,10 @@ impl Controller {
     /// }
     /// ```
     pub fn state(&self) -> Result<ControllerState, ControllerError> {
-        if competition::mode() != CompetitionMode::Driver {
-            return Err(ControllerError::CompetitionControl);
-        }
+        ensure!(
+            competition::mode() == CompetitionMode::Driver,
+            CompetitionControlSnafu
+        );
         validate_connection(self.id)?;
 
         // Get all current button states
@@ -943,13 +948,22 @@ pub enum ControllerError {
     },
 
     /// Access to controller data is restricted by competition control.
+    ///
+    /// When this error occurs, the requested data is not available outside of
+    /// driver control mode.
     CompetitionControl,
 
-    /// An invalid line number was given.
-    InvalidLine,
+    /// The line number provided is larger than [`ControllerScreen::MAX_LINES`].
+    InvalidLine {
+        /// The line number that was given.
+        line: u8,
+    },
 
-    /// An invalid column number was given.
-    InvalidColumn,
+    /// The column number provided is larger than [`ControllerScreen::MAX_COLUMNS`].
+    InvalidColumn {
+        /// The column number that was given.
+        col: u8,
+    },
 
     /// Attempted to write a buffer to the controller's screen before the previous buffer was sent.
     WriteBusy,

@@ -24,7 +24,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 use core::time::Duration;
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDeviceVisionBrightnessGet, vexDeviceVisionBrightnessSet, vexDeviceVisionLedColorGet,
     vexDeviceVisionLedColorSet, vexDeviceVisionLedModeGet, vexDeviceVisionLedModeSet,
@@ -127,10 +127,7 @@ impl VisionSensor {
     /// }
     /// ```
     pub fn set_signature(&mut self, id: u8, signature: VisionSignature) -> Result<(), VisionError> {
-        if !(1..7).contains(&id) {
-            return Err(VisionError::InvalidId);
-        }
-
+        ensure!((1..7).contains(&id), InvalidIdSnafu { provided_id: id });
         self.validate_port()?;
 
         let mut signature = V5_DeviceVisionSignature {
@@ -161,9 +158,7 @@ impl VisionSensor {
     /// Reads a signature off the sensor's onboard memory, returning `Some(sig)` if the slot is filled
     /// or `None` if no signature is stored with the given ID.
     fn read_raw_signature(&self, id: u8) -> Result<Option<V5_DeviceVisionSignature>, VisionError> {
-        if !(1..7).contains(&id) {
-            return Err(VisionError::InvalidId);
-        }
+        ensure!((1..7).contains(&id), InvalidIdSnafu { provided_id: id });
 
         let mut raw_signature = V5_DeviceVisionSignature::default();
         let read_operation =
@@ -179,9 +174,7 @@ impl VisionSensor {
         // TODO: Make sure this is correct and not the PROS docs being wrong here.
         //
         // We also check that the read operation succeeded from the return of `vexDeviceVisionSignatureGet`.
-        if raw_signature.pad[0] == 0 {
-            return Err(VisionError::ReadingFailed);
-        }
+        ensure!(raw_signature.pad[0] != 0, ReadingFailedSnafu);
 
         Ok(Some(raw_signature))
     }
@@ -194,7 +187,7 @@ impl VisionSensor {
             sig.mType = sig_type;
             unsafe { vexDeviceVisionSignatureSet(self.device, &mut sig) }
         } else {
-            return Err(VisionError::ReadingFailed);
+            return ReadingFailedSnafu.fail();
         }
 
         Ok(())
@@ -691,9 +684,7 @@ impl VisionSensor {
     /// }
     /// ```
     pub fn objects(&self) -> Result<Vec<VisionObject>, VisionError> {
-        if self.mode()? == VisionMode::Wifi {
-            return Err(VisionError::WifiMode);
-        }
+        ensure!(self.mode()? != VisionMode::Wifi, WifiModeSnafu);
 
         let object_count = unsafe { vexDeviceVisionObjectCountGet(self.device) } as usize;
         let mut objects = Vec::with_capacity(object_count);
@@ -702,7 +693,7 @@ impl VisionSensor {
             let mut object = V5_DeviceVisionObject::default();
 
             if unsafe { vexDeviceVisionObjectGet(self.device, i as u32, &mut object) } == 0 {
-                return Err(VisionError::ReadingFailed);
+                return ReadingFailedSnafu.fail();
             }
 
             let object: VisionObject = object.into();
@@ -1370,14 +1361,20 @@ pub enum VisionError {
     /// Objects cannot be detected while Wi-Fi mode is enabled.
     WifiMode,
 
-    /// The given signature ID or argument is out of range.
-    InvalidId,
+    /// The given signature ID is not in the expected range `0..7`.
+    #[snafu(display(
+        "The given signature ID `{provided_id}` is not in the expected range `0..7`."
+    ))]
+    InvalidId {
+        /// The given ID which caused the error.
+        provided_id: u8,
+    },
 
     /// The camera could not be read.
     ReadingFailed,
 
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,

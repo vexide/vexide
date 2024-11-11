@@ -10,7 +10,7 @@
 //! 921600 baud for user programs.
 //!
 //! The ports supply 12.8V VCC nominally (VCC is wired directly to the V5's battery lines,
-//! providing voltage somewhere in the range of 12-14V). Writes to the serialport are buffered,
+//! providing voltage somewhere in the range of 12-14V). Writes to the serial port are buffered,
 //! but are automatically flushed by VEXos as fast as possible (down to ~10µs or so).
 
 use no_std_io::io;
@@ -237,7 +237,7 @@ impl SerialPort {
         self.validate_port()?;
 
         match unsafe { vexDeviceGenericSerialWriteChar(self.device, byte) } {
-            -1 => Err(SerialError::WriteFailed),
+            -1 => WriteFailedSnafu.fail(),
             _ => Ok(()),
         }
     }
@@ -272,7 +272,7 @@ impl SerialPort {
         match unsafe { vexDeviceGenericSerialReceiveAvail(self.device) } {
             // TODO: This check may not be necessary, since PROS doesn't do it,
             //		 but we do it just to be safe.
-            -1 => Err(SerialError::ReadFailed),
+            -1 => ReadFailedSnafu.fail(),
             available => Ok(available as usize),
         }
     }
@@ -305,7 +305,7 @@ impl SerialPort {
         match unsafe { vexDeviceGenericSerialWriteFree(self.device) } {
             // TODO: This check may not be necessary, since PROS doesn't do it,
             //		 but we do it just to be safe.
-            -1 => Err(SerialError::ReadFailed),
+            -1 => ReadFailedSnafu.fail(),
             available => Ok(available as usize),
         }
     }
@@ -339,15 +339,7 @@ impl io::Read for SerialPort {
     /// }
     /// ```
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.validate_port().map_err(|e| match e {
-            PortError::Disconnected => {
-                io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-            }
-            PortError::IncorrectDevice => io::Error::new(
-                io::ErrorKind::AddrInUse,
-                "Port is in use as another device.",
-            ),
-        })?;
+        self.validate_port()?;
 
         match unsafe {
             vexDeviceGenericSerialReceive(self.device, buf.as_mut_ptr(), buf.len() as i32)
@@ -384,15 +376,7 @@ impl io::Write for SerialPort {
     /// }
     /// ```
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.validate_port().map_err(|e| match e {
-            PortError::Disconnected => {
-                io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-            }
-            PortError::IncorrectDevice => io::Error::new(
-                io::ErrorKind::AddrInUse,
-                "Port is in use as another device.",
-            ),
-        })?;
+        self.validate_port()?;
 
         match unsafe { vexDeviceGenericSerialTransmit(self.device, buf.as_ptr(), buf.len() as i32) }
         {
@@ -441,7 +425,7 @@ pub enum SerialError {
     ReadFailed,
 
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,
