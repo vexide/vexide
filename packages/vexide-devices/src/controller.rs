@@ -195,7 +195,7 @@ impl<'a> Future for ControllerScreenWriteFuture<'a> {
             } => {
                 if *visible {
                     // Do a saturating sub even though it will short circuit just in case
-                    if *line == 0 || line.saturating_sub(1) > ControllerScreen::MAX_LINES as u8 {
+                    if *line == 0 || *line > ControllerScreen::MAX_LINES as u8 {
                         return Poll::Ready(Err(ControllerError::InvalidLine {
                             line: line.saturating_sub(1),
                         }));
@@ -961,12 +961,14 @@ pub enum ControllerError {
     CompetitionControl,
 
     /// The line number provided is larger than [`ControllerScreen::MAX_LINES`].
+    #[snafu(display("Invalid line number ({line}) is greater than the maximum number of lines ({})", ControllerScreen::MAX_LINES))]
     InvalidLine {
         /// The line number that was given.
         line: u8,
     },
 
     /// The column number provided is larger than [`ControllerScreen::MAX_COLUMNS`].
+    #[snafu(display("Invalid column number ({col}) is greater than the maximum number of columns ({})", ControllerScreen::MAX_COLUMNS))]
     InvalidColumn {
         /// The column number that was given.
         col: u8,
