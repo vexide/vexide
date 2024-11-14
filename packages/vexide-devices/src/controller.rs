@@ -108,6 +108,9 @@ pub struct ControllerState {
     /// Button Right
     pub button_right: ButtonState,
 
+    /// Center Power Button
+    pub button_power: ButtonState,
+
     /// Top Left Bumper
     pub button_l1: ButtonState,
     /// Bottom Left Bumper
@@ -137,6 +140,7 @@ struct ButtonStates {
     down: bool,
     left: bool,
     right: bool,
+    power: bool,
     l1: bool,
     l2: bool,
     r1: bool,
@@ -642,6 +646,7 @@ impl Controller {
                 down: false,
                 left: false,
                 right: false,
+                power: false,
                 l1: false,
                 l2: false,
                 r1: false,
@@ -720,20 +725,21 @@ impl Controller {
         validate_connection(self.id)?;
 
         // Get all current button states
+        let raw_id = self.id.into();
         let button_states = ButtonStates {
-            a: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonA) } != 0,
-            b: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonB) } != 0,
-            x: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonX) } != 0,
-            y: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonY) } != 0,
-            up: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonUp) } != 0,
-            down: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonDown) } != 0,
-            left: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonLeft) } != 0,
-            right: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonRight) }
-                != 0,
-            l1: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL1) } != 0,
-            l2: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonL2) } != 0,
-            r1: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR1) } != 0,
-            r2: unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::ButtonR2) } != 0,
+            a: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonA) } != 0,
+            b: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonB) } != 0,
+            x: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonX) } != 0,
+            y: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonY) } != 0,
+            up: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonUp) } != 0,
+            down: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonDown) } != 0,
+            left: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonLeft) } != 0,
+            power: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonSEL) } != 0,
+            right: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonRight) } != 0,
+            l1: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonL1) } != 0,
+            l2: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonL2) } != 0,
+            r1: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonR1) } != 0,
+            r2: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonR2) } != 0,
         };
 
         // Swap the current button states with the previous states, getting the previous states in the process.
@@ -779,6 +785,10 @@ impl Controller {
             button_right: ButtonState {
                 is_pressed: button_states.right,
                 prev_is_pressed: prev_button_states.right,
+            },
+            button_power: ButtonState {
+                is_pressed: button_states.power,
+                prev_is_pressed: prev_button_states.power,
             },
             button_l1: ButtonState {
                 is_pressed: button_states.l1,
