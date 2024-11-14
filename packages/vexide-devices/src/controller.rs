@@ -108,9 +108,6 @@ pub struct ControllerState {
     /// Button Right
     pub button_right: ButtonState,
 
-    /// Center Power Button
-    pub button_power: ButtonState,
-
     /// Top Left Bumper
     pub button_l1: ButtonState,
     /// Bottom Left Bumper
@@ -119,6 +116,9 @@ pub struct ControllerState {
     pub button_r1: ButtonState,
     /// Bottom Right Bumper
     pub button_r2: ButtonState,
+
+    /// Center Power Button
+    pub button_power: ButtonState,
 }
 
 /// This type stores the "pressed" states of every controller button.
@@ -646,11 +646,11 @@ impl Controller {
                 down: false,
                 left: false,
                 right: false,
-                power: false,
                 l1: false,
                 l2: false,
                 r1: false,
                 r2: false,
+                power: false,
             }),
             screen: ControllerScreen { id },
         }
@@ -734,12 +734,12 @@ impl Controller {
             up: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonUp) } != 0,
             down: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonDown) } != 0,
             left: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonLeft) } != 0,
-            power: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonSEL) } != 0,
             right: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonRight) } != 0,
             l1: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonL1) } != 0,
             l2: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonL2) } != 0,
             r1: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonR1) } != 0,
             r2: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonR2) } != 0,
+            power: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonSEL) } != 0,
         };
 
         // Swap the current button states with the previous states, getting the previous states in the process.
@@ -786,10 +786,6 @@ impl Controller {
                 is_pressed: button_states.right,
                 prev_is_pressed: prev_button_states.right,
             },
-            button_power: ButtonState {
-                is_pressed: button_states.power,
-                prev_is_pressed: prev_button_states.power,
-            },
             button_l1: ButtonState {
                 is_pressed: button_states.l1,
                 prev_is_pressed: prev_button_states.l1,
@@ -805,6 +801,10 @@ impl Controller {
             button_r2: ButtonState {
                 is_pressed: button_states.r2,
                 prev_is_pressed: prev_button_states.r2,
+            },
+            button_power: ButtonState {
+                is_pressed: button_states.power,
+                prev_is_pressed: prev_button_states.power,
             },
         })
     }
