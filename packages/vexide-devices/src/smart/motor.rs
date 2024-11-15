@@ -183,8 +183,8 @@ impl MotorType {
     #[must_use]
     pub const fn max_voltage(&self) -> f64 {
         match self {
-            MotorType::Exp => Motor::V5_MAX_VOLTAGE,
-            MotorType::V5 => Motor::EXP_MAX_VOLTAGE,
+            MotorType::Exp => Motor::EXP_MAX_VOLTAGE,
+            MotorType::V5 => Motor::V5_MAX_VOLTAGE,
         }
     }
 }
