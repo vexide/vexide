@@ -11,7 +11,7 @@ use alloc::{
     boxed::Box,
     string::{String, ToString},
 };
-use core::cell::UnsafeCell;
+use core::{cell::UnsafeCell, default};
 
 use vexide_core::println;
 #[cfg(feature = "display_panics")]
@@ -139,7 +139,7 @@ impl Hook {
     #[inline]
     fn into_box(self) -> Box<dyn Fn(&core::panic::PanicInfo<'_>)> {
         match self {
-            Hook::Default => Box::new(default_hook),
+            Hook::Default => Box::new(default_panic_hook),
             Hook::Custom(hook) => hook,
         }
     }
