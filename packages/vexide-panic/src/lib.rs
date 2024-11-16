@@ -3,7 +3,6 @@
 //! If the `display_panics` feature is enabled, it will also display the panic message on the V5 Brain display.
 
 #![no_std]
-#![feature(fn_traits)]
 
 extern crate alloc;
 
@@ -11,7 +10,7 @@ use alloc::{
     boxed::Box,
     string::{String, ToString},
 };
-use core::{cell::UnsafeCell, default};
+use core::cell::UnsafeCell;
 
 use vexide_core::println;
 #[cfg(feature = "display_panics")]
