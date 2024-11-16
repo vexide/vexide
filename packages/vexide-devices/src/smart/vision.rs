@@ -1,4 +1,4 @@
-//! Vision sensor device module.
+//! Vision Sensor
 //!
 //! This module provides an interface for interacting with the VEX Vision Sensor.
 //!
@@ -10,21 +10,21 @@
 //! to the Pixy2 camera, and performs its own onboard image processing. Manually processing
 //! raw image data from the sensor is not currently possible.
 //!
-//! Every 200 milliseconds, the camera provides a list of the objects found matching up
+//! Every 20 milliseconds, the camera provides a list of the objects found matching up
 //! to seven unique [`VisionSignature`]s. The object’s height, width, and location is provided.
 //! Multi-colored objects may also be programmed through the use of [`VisionCode`]s.
 //!
 //! The Vision Sensor has USB for a direct connection to a computer, where it can be configured
 //! using VEX's proprietary vision utility tool to generate color signatures. The Vision Sensor
-//! also has WiFi Direct and can act as web server, allowing a live video feed of the camera
-//! from any computer equipped with a browser and WiFi.
+//! also has Wi-Fi Direct and can act as web server, allowing a live video feed of the camera
+//! from any computer equipped with a browser and Wi-Fi.
 
 extern crate alloc;
 
 use alloc::vec::Vec;
 use core::time::Duration;
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDeviceVisionBrightnessGet, vexDeviceVisionBrightnessSet, vexDeviceVisionLedColorGet,
     vexDeviceVisionLedColorSet, vexDeviceVisionLedModeGet, vexDeviceVisionLedModeSet,
@@ -38,11 +38,11 @@ use vex_sdk::{
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::{color::Rgb, geometry::Point2, PortError};
+use crate::{math::Point2, rgb::Rgb, PortError};
 
 /// VEX Vision Sensor
 ///
-/// This struct represents a vision sensor plugged into a smart port.
+/// This struct represents a vision sensor plugged into a Smart Port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct VisionSensor {
     port: SmartPort,
@@ -63,20 +63,22 @@ impl VisionSensor {
 
     /// The vertical resolution of the vision sensor.
     ///
-    /// This value is based on the `VISION_FOV_HEIGHT` msacro constant in PROS.
+    /// This value is based on the `VISION_FOV_HEIGHT` macro constant in PROS.
     pub const VERTICAL_RESOLUTION: u16 = 212;
 
-    /// The update rate of the vision sensor.
-    pub const UPDATE_INTERVAL: Duration = Duration::from_millis(50);
-
-    /// Creates a new vision sensor on a smart port.
+    /// Creates a new vision sensor from a Smart Port.
     ///
     /// # Examples
     ///
     /// ```
-    /// // Register a vision sensor on port 1.
-    /// let mut sensor = VisionSensor::new(peripherals.port_1);
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = VisionSensor::new(peripherals.port_1);
+    /// }
     /// ```
+    #[must_use]
     pub fn new(port: SmartPort) -> Self {
         Self {
             device: unsafe { port.device_handle() },
@@ -85,11 +87,12 @@ impl VisionSensor {
         }
     }
 
-    /// Adds a detection signature to the sensor's onboard memory. This signature will be used to
-    /// identify objects when using [`VisionSensor::objects`].
+    /// Adds a detection signature to the sensor's onboard memory.
+    ///
+    /// This signature will be used to identify objects when using [`VisionSensor::objects`].
     ///
     /// The sensor can store up to 7 unique signatures, with each signature slot denoted by the
-    /// id parameter. If a signature with an ID matching an existing signature
+    /// `id` parameter. If a signature with an ID matching an existing signature
     /// on the sensor is added, then the existing signature will be overwritten with the new one.
     ///
     /// # Volatile Memory
@@ -97,11 +100,34 @@ impl VisionSensor {
     /// The memory on the Vision Sensor is *volatile* and will therefore be wiped when the sensor
     /// loses power. As a result, this function should be called every time the sensor is used on
     /// program start.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::InvalidId`] error is returned if the `id` parameter is greater than or equal to 7.
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // These signatures can be generated using VEX's vision utility.
+    ///     let example_signature = VisionSignature::new(
+    ///         (10049, 11513, 10781),
+    ///         (-425, 1, -212),
+    ///         4.1,
+    ///     );
+    ///
+    ///     // Set signature 1 one the sensor.
+    ///     _ = sensor.set_signature(1, example_signature);
+    /// }
+    /// ```
     pub fn set_signature(&mut self, id: u8, signature: VisionSignature) -> Result<(), VisionError> {
-        if !(1..7).contains(&id) {
-            return Err(VisionError::InvalidId);
-        }
-
+        ensure!((1..7).contains(&id), InvalidIdSnafu { provided_id: id });
         self.validate_port()?;
 
         let mut signature = V5_DeviceVisionSignature {
@@ -113,12 +139,14 @@ impl VisionSensor {
             vMean: signature.v_threshold.1,
             vMax: signature.v_threshold.2,
             range: signature.range,
-            mType: if self.codes.iter().any(|code| code.contains_signature(id)) {
-                V5VisionBlockType::kVisionTypeColorCode
-            } else {
-                V5VisionBlockType::kVisionTypeNormal
-            }
-            .0 as _,
+            mType: u32::from(
+                if self.codes.iter().any(|code| code.contains_signature(id)) {
+                    V5VisionBlockType::kVisionTypeColorCode
+                } else {
+                    V5VisionBlockType::kVisionTypeNormal
+                }
+                .0,
+            ),
             ..Default::default()
         };
 
@@ -127,51 +155,118 @@ impl VisionSensor {
         Ok(())
     }
 
-    fn raw_signature(&self, id: u8) -> Result<Option<V5_DeviceVisionSignature>, VisionError> {
-        if !(1..7).contains(&id) {
-            return Err(VisionError::InvalidId);
-        }
+    /// Reads a signature off the sensor's onboard memory, returning `Some(sig)` if the slot is filled
+    /// or `None` if no signature is stored with the given ID.
+    fn read_raw_signature(&self, id: u8) -> Result<Option<V5_DeviceVisionSignature>, VisionError> {
+        ensure!((1..7).contains(&id), InvalidIdSnafu { provided_id: id });
 
         let mut raw_signature = V5_DeviceVisionSignature::default();
         let read_operation =
-            unsafe { vexDeviceVisionSignatureGet(self.device, id as u32, &mut raw_signature) };
+            unsafe { vexDeviceVisionSignatureGet(self.device, u32::from(id), &mut raw_signature) };
 
         if !read_operation {
             return Ok(None);
         }
 
-        // pad[0] is actually an undocumented flags field on V5_DeviceVisionSignature. If the sensor returns
+        // pad[0] is actually an undocumented flags field on `V5_DeviceVisionSignature`. If the sensor returns
         // no flags, then it has failed to send data back.
         //
         // TODO: Make sure this is correct and not the PROS docs being wrong here.
         //
-        // We also check that the read operation succeeded from the return of vexDeviceVisionSignatureGet.
-        if raw_signature.pad[0] == 0 {
-            return Err(VisionError::ReadingFailed);
-        }
+        // We also check that the read operation succeeded from the return of `vexDeviceVisionSignatureGet`.
+        ensure!(raw_signature.pad[0] != 0, ReadingFailedSnafu);
 
         Ok(Some(raw_signature))
     }
 
-    fn set_signature_type(&mut self, id: u8, sig_type: u32) -> Result<(), VisionError> {
-        if let Some(mut sig) = self.raw_signature(id)? {
+    /// Adjusts the type of a signature stored on the sensor.
+    ///
+    /// This is used when assigning certain stored signatures as belonging to color codes.
+    fn write_signature_type(&mut self, id: u8, sig_type: u32) -> Result<(), VisionError> {
+        if let Some(mut sig) = self.read_raw_signature(id)? {
             sig.mType = sig_type;
             unsafe { vexDeviceVisionSignatureSet(self.device, &mut sig) }
         } else {
-            return Err(VisionError::ReadingFailed);
+            return ReadingFailedSnafu.fail();
         }
 
         Ok(())
     }
 
-    /// Get a signature from the sensor's onboard volatile memory.
+    /// Returns a signature from the sensor's onboard volatile memory.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionError::InvalidId`] error is returned if the `id` parameter is greater than or equal to 7.
+    /// - A [`VisionError::ReadingFailed`] error is returned if the read operation failed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set an example signature in the sensor's first slot.
+    ///     _ = sensor.set_signature(1, VisionSignature::new(
+    ///         (10049, 11513, 10781),
+    ///         (-425, 1, -212),
+    ///         4.1,
+    ///     ));
+    ///
+    ///     // Read signature 1 off the sensor.
+    ///     // This should be the same as the one we just set.
+    ///     if let Ok(Some(sig)) = sensor.signature(1) {
+    ///         println!("{:?}", sig);
+    ///     }
+    /// }
+    /// ```
     pub fn signature(&self, id: u8) -> Result<Option<VisionSignature>, VisionError> {
         self.validate_port()?;
 
-        Ok(self.raw_signature(id)?.map(|raw| raw.into()))
+        Ok(self.read_raw_signature(id)?.map(Into::into))
     }
 
-    /// Get all signatures currently stored on the sensor's onboard volatile memory.
+    /// Returns all signatures currently stored on the sensor's onboard volatile memory.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionError::ReadingFailed`] error is returned if the read operation failed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // A bunch of random color signatures.
+    ///     let sig_1 = VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1);
+    ///     let sig_2 = VisionSignature::new((8973, 11143, 10058), (-2119, -1053, -1586), 5.4);
+    ///     let sig_3 = VisionSignature::new((-3665, -2917, -3292), (4135, 10193, 7164), 2.0);
+    ///     let sig_4 = VisionSignature::new((-5845, -4809, -5328), (-5495, -4151, -4822), 3.1);
+    ///
+    ///     // Set signatures 1-4.
+    ///     _ = sensor.set_signature(1, sig_1);
+    ///     _ = sensor.set_signature(2, sig_2);
+    ///     _ = sensor.set_signature(3, sig_3);
+    ///     _ = sensor.set_signature(4, sig_4);
+    ///
+    ///     // Read back the signatures from the sensor's memory.
+    ///     // These should be the signatures that we just set.
+    ///     if let Ok(signatures) = sensor.signatures() {
+    ///         for sig in signatures.into_iter().flatten() {
+    ///             println!("Found sig saved on sensor: {:?}", sig);
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn signatures(&self) -> Result<[Option<VisionSignature>; 7], VisionError> {
         Ok([
             self.signature(1)?,
@@ -195,21 +290,63 @@ impl VisionSensor {
     /// The onboard memory of the Vision Sensor is *volatile* and will therefore be wiped when the
     /// sensor loses its power source. As a result, this function should be called every time the
     /// sensor is used on program start.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionError::InvalidId`] error is returned if one or more of the signature IDs in the
+    ///   [`VisionCode`] were greater than or equal to 7.
+    /// - A [`VisionError::ReadingFailed`] error is returned if a read operation failed or there was
+    ///   no signature previously set in the slot(s) specified in the [`VisionCode`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use vexide::devices::smart::vision::DetectionSource;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Two color signatures.
+    ///     let sig_1 = VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1);
+    ///     let sig_2 = VisionSignature::new((8973, 11143, 10058), (-2119, -1053, -1586), 5.4);
+    ///
+    ///     // Store the signatures on the sensor.
+    ///     _ = sensor.set_signature(1, sig_1);
+    ///     _ = sensor.set_signature(2, sig_2);
+    ///
+    ///     // Create a code assocating signatures 1 and 2 together.
+    ///     let code = VisionCode::from((1, 2));
+    ///
+    ///     // Register our code on the sensor. When we call [`VisionSensor::objects`], the associated
+    ///     // signatures will be returned as a single object if their colors are detected next to each other.
+    ///     _ = sensor.add_code(code);
+    ///
+    ///     // Scan for objects. Filter only objects matching the code we just set.
+    ///     if let Ok(objects) = sensor.objects() {
+    ///         for object in objects.iter().filter(|obj| obj.source == DetectionSource::Code(code)) {
+    ///             println!("{:?}", object);
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn add_code(&mut self, code: impl Into<VisionCode>) -> Result<(), VisionError> {
         self.validate_port()?;
 
         let code = code.into();
 
-        self.set_signature_type(code.0, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
-        self.set_signature_type(code.1, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
+        self.write_signature_type(code.0, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
+        self.write_signature_type(code.1, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
         if let Some(sig_3) = code.2 {
-            self.set_signature_type(sig_3, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
+            self.write_signature_type(sig_3, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
         }
         if let Some(sig_4) = code.3 {
-            self.set_signature_type(sig_4, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
+            self.write_signature_type(sig_4, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
         }
         if let Some(sig_5) = code.4 {
-            self.set_signature_type(sig_5, V5VisionBlockType::kVisionTypeColorCode.0 as _)?;
+            self.write_signature_type(sig_5, u32::from(V5VisionBlockType::kVisionTypeColorCode.0))?;
         }
 
         self.codes.push(code);
@@ -217,17 +354,80 @@ impl VisionSensor {
         Ok(())
     }
 
-    /// Get the current brightness setting of the vision sensor as a percentage.
+    /// Returns the current brightness setting of the vision sensor as a percentage.
     ///
     /// The returned result should be from `0.0` (0%) to `1.0` (100%).
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set brightness to 50%
+    ///     _ = sensor.set_brightness(0.5);
+    ///
+    ///     // Give the sensor time to update.
+    ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
+    ///
+    ///     // Read brightness. Should be 50%, since we just set it.
+    ///     if let Ok(brightness) = sensor.brightness() {
+    ///         assert_eq!(brightness, 0.5);
+    ///     }
+    /// }
+    /// ```
     pub fn brightness(&self) -> Result<f64, VisionError> {
         self.validate_port()?;
 
         // SDK function gives us brightness percentage 0-100.
-        Ok(unsafe { vexDeviceVisionBrightnessGet(self.device) } as f64 / 100.0)
+        Ok(f64::from(unsafe { vexDeviceVisionBrightnessGet(self.device) }) / 100.0)
     }
 
-    /// Get the current white balance of the vision sensor as an RGB color.
+    /// Returns the current white balance of the vision sensor as an RGB color.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set white balance to manual.
+    ///     _ = sensor.set_white_balance(WhiteBalance::Manual(Rgb {
+    ///         r: 255,
+    ///         g: 255,
+    ///         b: 255,
+    ///     }));
+    ///
+    ///     // Give the sensor time to update.
+    ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
+    ///
+    ///     // Read brightness. Should be 50%, since we just set it.
+    ///     if let Ok(white_balance) = sensor.white_balance() {
+    ///         assert_eq!(
+    ///             white_balance,
+    ///             WhiteBalance::Manual(Rgb {
+    ///                 r: 255,
+    ///                 g: 255,
+    ///                 b: 255,
+    ///             })
+    ///         );
+    ///     }
+    /// }
+    /// ```
     pub fn white_balance(&self) -> Result<WhiteBalance, VisionError> {
         self.validate_port()?;
 
@@ -235,15 +435,39 @@ impl VisionSensor {
             match unsafe { vexDeviceVisionWhiteBalanceModeGet(self.device) } {
                 V5VisionWBMode::kVisionWBNormal => WhiteBalance::Auto,
                 V5VisionWBMode::kVisionWBStart => WhiteBalance::StartupAuto,
-                V5VisionWBMode::kVisionWBManual => WhiteBalance::Manual(
-                    unsafe { vexDeviceVisionWhiteBalanceGet(self.device) }.into(),
-                ),
+                V5VisionWBMode::kVisionWBManual => WhiteBalance::Manual({
+                    let raw = unsafe { vexDeviceVisionWhiteBalanceGet(self.device) };
+
+                    Rgb {
+                        r: raw.red,
+                        g: raw.green,
+                        b: raw.blue,
+                    }
+                }),
                 _ => unreachable!(),
             },
         )
     }
 
     /// Sets the brightness percentage of the vision sensor. Should be between 0.0 and 1.0.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set brightness to 50%
+    ///     _ = sensor.set_brightness(0.5);
+    /// }
+    /// ```
     pub fn set_brightness(&mut self, brightness: f64) -> Result<(), VisionError> {
         self.validate_port()?;
 
@@ -255,6 +479,28 @@ impl VisionSensor {
     /// Sets the white balance of the vision sensor.
     ///
     /// White balance can be either automatically set or manually set through an RGB color.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set white balance to manual.
+    ///     _ = sensor.set_white_balance(WhiteBalance::Manual(Rgb {
+    ///         r: 255,
+    ///         g: 255,
+    ///         b: 255,
+    ///     }));
+    /// }
+    /// ```
     pub fn set_white_balance(&mut self, white_balance: WhiteBalance) -> Result<(), VisionError> {
         self.validate_port()?;
 
@@ -265,9 +511,9 @@ impl VisionSensor {
                 vexDeviceVisionWhiteBalanceSet(
                     self.device,
                     V5_DeviceVisionRgb {
-                        red: rgb.red(),
-                        green: rgb.green(),
-                        blue: rgb.blue(),
+                        red: rgb.r,
+                        green: rgb.g,
+                        blue: rgb.b,
 
                         // Pretty sure this field does nothing, but PROS sets it to this.
                         //
@@ -276,7 +522,7 @@ impl VisionSensor {
                         // here for the LED setter, which uses the same type.
                         brightness: 255,
                     },
-                )
+                );
             }
         }
 
@@ -287,6 +533,24 @@ impl VisionSensor {
     ///
     /// The default behavior is represented by [`LedMode::Auto`], which will display the color of the most prominent
     /// detected object's signature color. Alternatively, the LED can be configured to display a single RGB color.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set the LED to red at 100% brightness.
+    ///     _ = sensor.set_led_mode(LedMode::Manual(Rgb { r: 255, g: 0, b: 0 }, 1.0));
+    /// }
+    /// ```
     pub fn set_led_mode(&mut self, mode: LedMode) -> Result<(), VisionError> {
         self.validate_port()?;
 
@@ -297,19 +561,45 @@ impl VisionSensor {
                 vexDeviceVisionLedColorSet(
                     self.device,
                     V5_DeviceVisionRgb {
-                        red: rgb.red(),
-                        green: rgb.green(),
-                        blue: rgb.blue(),
+                        red: rgb.r,
+                        green: rgb.g,
+                        blue: rgb.b,
                         brightness: (brightness * 100.0) as u8,
                     },
-                )
+                );
             }
         }
 
         Ok(())
     }
 
-    /// Get the user-set behavior of the LED indicator on the sensor.
+    /// Returns the user-set behavior of the LED indicator on the sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set the LED to red at 100% brightness.
+    ///     _ = sensor.set_led_mode(LedMode::Manual(Rgb { r: 255, g: 0, b: 0 }, 1.0));
+    ///
+    ///     // Give the sensor time to update.
+    ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
+    ///
+    ///     // Check the sensor's reported LED mode. Should be the same as what we just set
+    ///     if let Ok(led_mode) = sensor.led_mode() {
+    ///         assert_eq!(led_mode, LedMode::Manual(Rgb { r: 255, g: 0, b: 0 }, 1.0));
+    ///     }
+    /// }
+    /// ```
     pub fn led_mode(&self) -> Result<LedMode, VisionError> {
         self.validate_port()?;
 
@@ -320,7 +610,7 @@ impl VisionSensor {
 
                 LedMode::Manual(
                     Rgb::new(led_color.red, led_color.green, led_color.blue),
-                    led_color.brightness as f64 / 100.0,
+                    f64::from(led_color.brightness) / 100.0,
                 )
             }
             _ => unreachable!(),
@@ -328,10 +618,73 @@ impl VisionSensor {
     }
 
     /// Returns a [`Vec`] of objects detected by the sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
+    /// - A [`VisionError::ReadingFailed`] error if the objects could not be read from the sensor.
+    ///
+    /// # Examples
+    ///
+    /// With one signature:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set a color signature on the sensor's first slot.
+    ///     _ = sensor.set_signature(1, VisionSignature::new(
+    ///         (10049, 11513, 10781),
+    ///         (-425, 1, -212),
+    ///         4.1,
+    ///     ));
+    ///
+    ///     // Scan for detected objects.
+    ///     if let Ok(objects) = sensor.objects() {
+    ///         for object in objects {
+    ///             println!("{:?}", object);
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// With multiple signatures:
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use vexide::devices::smart::vision::DetectionSource;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Two color signatures.
+    ///     let sig_1 = VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1);
+    ///     let sig_2 = VisionSignature::new((8973, 11143, 10058), (-2119, -1053, -1586), 5.4);
+    ///
+    ///     // Store the signatures on the sensor.
+    ///     _ = sensor.set_signature(1, sig_1);
+    ///     _ = sensor.set_signature(2, sig_2);
+    ///
+    ///     // Scan for objects.
+    ///     if let Ok(objects) = sensor.objects() {
+    ///         for object in objects {
+    ///             // Identify which signature the detected object matches.
+    ///             match object.source {
+    ///                 DetectionSource::Signature(1) => println!("Detected object matching sig_1: {:?}", object),
+    ///                 DetectionSource::Signature(2) => println!("Detected object matching sig_2: {:?}", object),
+    ///                 _ => {},
+    ///             }
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn objects(&self) -> Result<Vec<VisionObject>, VisionError> {
-        if self.mode()? == VisionMode::Wifi {
-            return Err(VisionError::WifiMode);
-        }
+        ensure!(self.mode()? != VisionMode::Wifi, WifiModeSnafu);
 
         let object_count = unsafe { vexDeviceVisionObjectCountGet(self.device) } as usize;
         let mut objects = Vec::with_capacity(object_count);
@@ -340,7 +693,7 @@ impl VisionSensor {
             let mut object = V5_DeviceVisionObject::default();
 
             if unsafe { vexDeviceVisionObjectGet(self.device, i as u32, &mut object) } == 0 {
-                return Err(VisionError::ReadingFailed);
+                return ReadingFailedSnafu.fail();
             }
 
             let object: VisionObject = object.into();
@@ -361,6 +714,38 @@ impl VisionSensor {
     }
 
     /// Returns the number of objects detected by the sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
+    /// - A [`VisionError::ReadingFailed`] error if the objects could not be read from the sensor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set a color signature on the sensor's first slot.
+    ///     _ = sensor.set_signature(1, VisionSignature::new(
+    ///         (10049, 11513, 10781),
+    ///         (-425, 1, -212),
+    ///         4.1,
+    ///     ));
+    ///
+    ///     loop {
+    ///         if let Ok(n) = sensor.object_count() {
+    ///             println!("Sensor is currently detecting {n} objects.");
+    ///         }
+    ///
+    ///         sleep(VisionSensor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn object_count(&self) -> Result<usize, VisionError> {
         // NOTE: We actually can't rely on [`vexDeviceVisionObjectCountGet`], due to the way that
         // vision codes are registered.
@@ -375,6 +760,25 @@ impl VisionSensor {
 
     /// Sets the vision sensor's detection mode. See [`VisionMode`] for more information on what
     /// each mode does.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Place the sensor into "Wi-Fi mode", allowing you to connect to it via a hotspot
+    ///     // and recieve a video stream of its camera froma nother device.
+    ///     _ = sensor.set_mode(VisionMode::WiFi);
+    /// }
+    /// ```
     pub fn set_mode(&mut self, mode: VisionMode) -> Result<(), VisionError> {
         self.validate_port()?;
 
@@ -393,7 +797,7 @@ impl VisionSensor {
                     VisionMode::ColorDetection => V5VisionMode::kVisionModeNormal,
                     VisionMode::LineDetection => V5VisionMode::kVisionModeLineDetect,
                     VisionMode::MixedDetection => V5VisionMode::kVisionModeMixed,
-                    // If the user requested WiFi mode, then we already set
+                    // If the user requested Wi-Fi mode, then we already set
                     // it around 14 lines ago, so there's nothing to do here.
                     VisionMode::Wifi => return Ok(()),
                     VisionMode::Test => V5VisionMode::kVisionTypeTest,
@@ -404,7 +808,34 @@ impl VisionSensor {
         Ok(())
     }
 
-    /// Gets the current detection mode that the sensor is in.
+    /// Returns the current detection mode that the sensor is using.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Place the sensor into "Wi-Fi mode", allowing you to connect to it via a hotspot
+    ///     // and recieve a video stream of its camera froma nother device.
+    ///     _ = sensor.set_mode(VisionMode::WiFi);
+    ///
+    ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
+    ///
+    ///     // Since we just set the mode, we can get the mode off the sensor to verify that it's
+    ///     // now in Wi-Fi mode.
+    ///     if let Ok(mode) = sensor.mode() {
+    ///         assert_eq!(mode, VisionMode::WiFi);
+    ///     }
+    /// }
+    /// ```
     pub fn mode(&self) -> Result<VisionMode, VisionError> {
         self.validate_port()?;
 
@@ -418,12 +849,20 @@ impl VisionSensor {
 }
 
 impl SmartDevice for VisionSensor {
-    fn port_index(&self) -> u8 {
-        self.port.index()
+    /// The frametime of the Vision Sensor.
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(20);
+
+    fn port_number(&self) -> u8 {
+        self.port.number()
     }
 
     fn device_type(&self) -> SmartDeviceType {
         SmartDeviceType::Vision
+    }
+}
+impl From<VisionSensor> for SmartPort {
+    fn from(device: VisionSensor) -> Self {
+        device.port
     }
 }
 
@@ -453,13 +892,13 @@ pub struct VisionSignature {
     /// The (min, max, mean) values on the "U" axis.
     ///
     /// This defines a threshold of values for the sensor to match against a certain chroma in the
-    /// Y'UV color space - speciailly on the U component.
+    /// Y'UV color space - specifically on the U component.
     pub u_threshold: (i32, i32, i32),
 
     /// The (min, max, mean) values on the V axis.
     ///
     /// This defines a threshold of values for the sensor to match against a certain chroma in the
-    /// Y'UV color space - speciailly on the "V" component.
+    /// Y'UV color space - specifically on the "V" component.
     pub v_threshold: (i32, i32, i32),
 
     /// The signature range scale factor.
@@ -480,6 +919,17 @@ impl VisionSignature {
     /// Create a [`VisionSignature`].
     ///
     /// # Examples
+    ///
+    /// ```
+    /// use vexide::devices::smart::vision::VisionSignature;
+    ///
+    /// let my_signature = VisionSignature::new(
+    ///     (10049, 11513, 10781),
+    ///     (-425, 1, -212),
+    ///     4.1,
+    /// );
+    /// ```
+    #[must_use]
     pub const fn new(
         u_threshold: (i32, i32, i32),
         v_threshold: (i32, i32, i32),
@@ -497,13 +947,16 @@ impl VisionSignature {
     ///
     /// # Examples
     ///
-    /// ````
+    /// ```
+    /// use vexide::devices::smart::vision::VisionSignature;
+    ///
     /// // Register a signature for detecting red objects.
     /// // This numbers in this signature was generated using VEX's vision utility app.
     /// let my_signature =
     ///     VisionSignature::from_utility(1, 10049, 11513, 10781, -425, 1, -212, 4.1, 0);
-    /// ````
+    /// ```
     #[allow(clippy::too_many_arguments)]
+    #[must_use]
     pub const fn from_utility(
         _id: u8, // We don't store IDs in our vision signatures.
         u_min: i32,
@@ -556,6 +1009,16 @@ impl VisionCode {
     ///
     /// Two signatures are required to create a vision code, with an additional three
     /// optional signatures.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::devices::smart::vision::VisionCode;
+    ///
+    /// // Create a vision code associated with signatures 1, 2, and 3.
+    /// let code = VisionCode::new(1, 2, Some(3), None, None);
+    /// ```
+    #[must_use]
     pub const fn new(
         sig_1: u8,
         sig_2: u8,
@@ -567,6 +1030,25 @@ impl VisionCode {
     }
 
     /// Creates a [`VisionCode`] from a bit representation of its signature IDs.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::devices::smart::vision::VisionCode;
+    ///
+    /// let sig_1_id = 1;
+    /// let sig_2_id = 2;
+    ///
+    /// let mut code_id: u16 = 0;
+    ///
+    /// // Store the bits of IDs 1 and 2 in the code ID.
+    /// code_id = (code_id << 3) | u16::from(sig_1_id);
+    /// code_id = (code_id << 3) | u16::from(sig_2_id);
+    ///
+    /// // Create a [`VisionCode`] from signatures 1 and 2.
+    /// let code = VisionCode::from_id(code_id);
+    /// ```
+    #[must_use]
     pub const fn from_id(id: u16) -> Self {
         const MASK: u16 = (1 << 3) - 1;
 
@@ -589,6 +1071,18 @@ impl VisionCode {
     }
 
     /// Returns `true` if a given signature ID is stored in this code.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::devices::smart::vision::VisionCode;
+    ///
+    /// // Create a vision code associated with signatures 1, 2, and 3.
+    /// let code = VisionCode::new(1, 2, Some(3), None, None);
+    ///
+    /// assert!(code.contains_signature(1));
+    /// ```
+    #[must_use]
     pub const fn contains_signature(&self, id: u8) -> bool {
         if self.0 == id || self.1 == id {
             return true;
@@ -615,14 +1109,37 @@ impl VisionCode {
 
     /// Returns the internal ID used by the sensor to determine which signatures
     /// belong to which code.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::devices::smart::vision::VisionCode;
+    ///
+    /// let sig_1_id = 1;
+    /// let sig_2_id = 2;
+    ///
+    /// let mut code_id: u16 = 0;
+    ///
+    /// // Store the bits of IDs 1 and 2 in the code ID.
+    /// code_id = (code_id << 3) | u16::from(sig_1_id);
+    /// code_id = (code_id << 3) | u16::from(sig_2_id);
+    ///
+    /// // Create a [`VisionCode`] from signatures 1 and 2.
+    /// let code = VisionCode::from_id(code_id);
+    ///
+    /// // The ID of the code we just created should be identical to the bit representation
+    /// // containing each signature ID we created it from.
+    /// assert_eq!(code.id(), code_id);
+    /// ```
+    #[must_use]
     pub fn id(&self) -> u16 {
         let mut id: u16 = 0;
 
-        id = (id << 3) | self.0 as u16;
-        id = (id << 3) | self.1 as u16;
-        id = (id << 3) | self.2.unwrap_or_default() as u16;
-        id = (id << 3) | self.3.unwrap_or_default() as u16;
-        id = (id << 3) | self.4.unwrap_or_default() as u16;
+        id = (id << 3) | u16::from(self.0);
+        id = (id << 3) | u16::from(self.1);
+        id = (id << 3) | u16::from(self.2.unwrap_or_default());
+        id = (id << 3) | u16::from(self.3.unwrap_or_default());
+        id = (id << 3) | u16::from(self.4.unwrap_or_default());
 
         id
     }
@@ -681,11 +1198,11 @@ pub enum VisionMode {
     /// Both color signatures and lines will be detected as objects.
     MixedDetection,
 
-    /// Sets the sensor into "wifi mode", which disables all forms of object detection and
-    /// enables the sensor's onboard Wi-Fi hotspot for streaming camera data over a webserver.
+    /// Sets the sensor into "Wi-Fi mode", which disables all forms of object detection and
+    /// enables the sensor's onboard Wi-Fi hotspot for streaming camera data over a web server.
     ///
     /// Once enabled, the sensor will create a wireless network with an SSID
-    /// in the format of of VISION_XXXX. The sensor's camera feed is available
+    /// in the format of VISION_XXXX. The sensor's camera feed is available
     /// at `192.168.1.1`.
     ///
     /// This mode will be automatically disabled when connected to field control.
@@ -797,7 +1314,7 @@ pub enum WhiteBalance {
     /// Manual Mode
     ///
     /// Allows for manual control over white balance using an RGB color.
-    Manual(Rgb),
+    Manual(Rgb<u8>),
 }
 
 impl From<WhiteBalance> for V5VisionWBMode {
@@ -826,7 +1343,7 @@ pub enum LedMode {
     ///
     /// When in manual mode, the integrated LED will display a user-set RGB color code and brightness
     /// percentage from 0.0-1.0.
-    Manual(Rgb, f64),
+    Manual(Rgb<u8>, f64),
 }
 
 impl From<LedMode> for V5VisionLedMode {
@@ -838,26 +1355,26 @@ impl From<LedMode> for V5VisionLedMode {
     }
 }
 
-impl From<V5_DeviceVisionRgb> for Rgb {
-    fn from(value: V5_DeviceVisionRgb) -> Self {
-        Self::new(value.red, value.green, value.blue)
-    }
-}
-
 #[derive(Debug, Snafu)]
 /// Errors that can occur when using a vision sensor.
 pub enum VisionError {
-    /// Objects cannot be detected while wifi mode is enabled.
+    /// Objects cannot be detected while Wi-Fi mode is enabled.
     WifiMode,
 
-    /// The given signature ID or argument is out of range.
-    InvalidId,
+    /// The given signature ID is not in the expected range `0..7`.
+    #[snafu(display(
+        "The given signature ID `{provided_id}` is not in the expected range `0..7`."
+    ))]
+    InvalidId {
+        /// The given ID which caused the error.
+        provided_id: u8,
+    },
 
     /// The camera could not be read.
     ReadingFailed,
 
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,

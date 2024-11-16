@@ -1,25 +1,30 @@
-//! Embedded-graphics driver for the V5 Brain screen.
+//! Embedded-graphics driver for the V5 Brain display.
 
 use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*, primitives::Rectangle};
-use vexide_devices::{color::Rgb, screen::Screen};
+use vexide_devices::{display::Display, rgb::Rgb};
 
-/// An embedded-graphics draw target for the V5 brain screen
-/// Currently, this does not support touch detection like the regular [`Screen`] API.
+fn rgb_into_raw(rgb: Rgb<u8>) -> u32 {
+    (u32::from(rgb.r) << 16) + (u32::from(rgb.g) << 8) + u32::from(rgb.b)
+}
+
+/// An embedded-graphics draw target for the V5 Brain display
+/// Currently, this does not support touch detection like the regular [`Display`] API.
 pub struct BrainDisplay {
-    screen: Screen,
+    display: Display,
     triple_buffer:
-        [u32; Screen::HORIZONTAL_RESOLUTION as usize * Screen::VERTICAL_RESOLUTION as usize],
+        [u32; Display::HORIZONTAL_RESOLUTION as usize * Display::VERTICAL_RESOLUTION as usize],
 }
 impl BrainDisplay {
-    /// Create a new [`BrainDisplay`] from a [`Screen`].
-    /// The screen must be moved into this struct,
+    /// Create a new [`BrainDisplay`] from a [`Display`].
+    /// The display must be moved into this struct,
     /// as it is used to render the display and having multiple mutable references to it is unsafe.
-    pub fn new(mut screen: Screen) -> Self {
-        screen.set_render_mode(vexide_devices::screen::RenderMode::DoubleBuffered);
+    #[must_use]
+    pub fn new(mut display: Display) -> Self {
+        display.set_render_mode(vexide_devices::display::RenderMode::DoubleBuffered);
         Self {
-            screen,
-            triple_buffer: [0; Screen::HORIZONTAL_RESOLUTION as usize
-                * Screen::VERTICAL_RESOLUTION as usize],
+            display,
+            triple_buffer: [0; Display::HORIZONTAL_RESOLUTION as usize
+                * Display::VERTICAL_RESOLUTION as usize],
         }
     }
 }
@@ -28,8 +33,8 @@ impl Dimensions for BrainDisplay {
         Rectangle::new(
             Point::new(0, 0),
             Size::new(
-                Screen::HORIZONTAL_RESOLUTION as _,
-                Screen::VERTICAL_RESOLUTION as _,
+                Display::HORIZONTAL_RESOLUTION as _,
+                Display::VERTICAL_RESOLUTION as _,
             ),
         )
     }
@@ -45,10 +50,10 @@ impl DrawTarget for BrainDisplay {
     {
         pixels
             .into_iter()
-            .map(|p| (p.0, Rgb::new(p.1.r(), p.1.g(), p.1.b()).into()))
+            .map(|p| (p.0, rgb_into_raw(Rgb::new(p.1.r(), p.1.g(), p.1.b()))))
             .for_each(|(pos, col)| {
                 self.triple_buffer
-                    [pos.y as usize * Screen::HORIZONTAL_RESOLUTION as usize + pos.x as usize] =
+                    [pos.y as usize * Display::HORIZONTAL_RESOLUTION as usize + pos.x as usize] =
                     col;
             });
 
@@ -56,13 +61,13 @@ impl DrawTarget for BrainDisplay {
             vex_sdk::vexDisplayCopyRect(
                 0,
                 0x20,
-                Screen::HORIZONTAL_RESOLUTION as _,
-                Screen::VERTICAL_RESOLUTION as _,
+                Display::HORIZONTAL_RESOLUTION.into(),
+                Display::VERTICAL_RESOLUTION.into(),
                 self.triple_buffer.as_mut_ptr(),
-                Screen::HORIZONTAL_RESOLUTION as _,
+                Display::HORIZONTAL_RESOLUTION.into(),
             );
         };
-        self.screen.render();
+        self.display.render();
 
         Ok(())
     }

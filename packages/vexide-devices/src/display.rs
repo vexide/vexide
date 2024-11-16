@@ -1,13 +1,13 @@
-//! Brain screen display and touch functions.
+//! Brain Display & Touch Input
 //!
-//! Contains user calls to the V5 Brain screen for touching and displaying graphics.
-//! The [`Fill`] trait can be used to draw filled in shapes to the screen
+//! Contains user calls to the V5 Brain display for touching and displaying graphics.
+//! The [`Fill`] trait can be used to draw filled in shapes to the display
 //! and the [`Stroke`] trait can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{mem, time::Duration};
+use core::{mem, ptr::addr_of_mut, time::Duration};
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDisplayBackgroundColor, vexDisplayBigStringAt, vexDisplayCircleDraw, vexDisplayCircleFill,
     vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
@@ -17,17 +17,20 @@ use vex_sdk::{
     V5_TouchStatus,
 };
 
-use crate::{color::IntoRgb, geometry::Point2};
+use crate::{
+    math::Point2,
+    rgb::{Rgb, RgbExt},
+};
 
 /// Represents the physical display on the V5 Brain.
 #[derive(Debug, Eq, PartialEq)]
-pub struct Screen {
+pub struct Display {
     writer_buffer: String,
     render_mode: RenderMode,
     current_line: usize,
 }
 
-impl core::fmt::Write for Screen {
+impl core::fmt::Write for Display {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
         for character in text.chars() {
             if character == '\n' {
@@ -44,7 +47,7 @@ impl core::fmt::Write for Screen {
         }
 
         unsafe {
-            vexDisplayForegroundColor(0xffffff);
+            vexDisplayForegroundColor(0xff_ff_ff);
             vexDisplayString(
                 self.current_line as i32,
                 c"%s".as_ptr(),
@@ -63,19 +66,21 @@ impl core::fmt::Write for Screen {
 /// A type implementing this trait can draw a filled shape to the display.
 pub trait Fill {
     /// Draw a filled shape to the display.
-    fn fill(&self, screen: &mut Screen, color: impl IntoRgb);
+    fn fill(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
 }
 
 /// A type implementing this trait can draw an outlined shape to the display.
 pub trait Stroke {
     /// Draw an outlined shape to the display.
-    fn stroke(&self, screen: &mut Screen, color: impl IntoRgb);
+    fn stroke(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
 }
 
-/// A circle that can be drawn on the screen.
+/// A circle that can be drawn on the  display.
+///
+/// Circles are not antialiased.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Circle {
-    /// Center point(coordinates) of the circle
+    /// Center point of the circle
     pub center: Point2<i16>,
 
     /// Radius of the circle
@@ -94,39 +99,39 @@ impl Circle {
 }
 
 impl Fill for Circle {
-    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleFill(
-                self.center.x as _,
-                (self.center.y + Screen::HEADER_HEIGHT) as _,
-                self.radius as i32,
+                i32::from(self.center.x),
+                i32::from(self.center.y + Display::HEADER_HEIGHT),
+                i32::from(self.radius),
             );
         }
     }
 }
 
 impl Stroke for Circle {
-    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) {
+    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleDraw(
-                self.center.x as _,
-                (self.center.y + Screen::HEADER_HEIGHT) as _,
-                self.radius as i32,
+                i32::from(self.center.x),
+                i32::from(self.center.y + Display::HEADER_HEIGHT),
+                i32::from(self.radius),
             );
         }
     }
 }
 
-/// A line that can be drawn on the screen.
+/// A line that can be drawn on the display.
 /// The width is the same as the pen width.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Line {
-    /// Start point(coordinate) of the line
+    /// Start point (coordinate) of the line
     pub start: Point2<i16>,
 
-    /// End point(coordinate) of the line
+    /// End point (coordinate) of the line
     pub end: Point2<i16>,
 }
 
@@ -141,37 +146,41 @@ impl Line {
 }
 
 impl Fill for Line {
-    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayLineDraw(
-                self.start.x as _,
-                (self.start.y + Screen::HEADER_HEIGHT) as _,
-                self.end.x as _,
-                (self.end.y + Screen::HEADER_HEIGHT) as _,
+                i32::from(self.start.x),
+                i32::from(self.start.y + Display::HEADER_HEIGHT),
+                i32::from(self.end.x),
+                i32::from(self.end.y + Display::HEADER_HEIGHT),
             );
         }
     }
 }
 
 impl<T: Into<Point2<i16>> + Copy> Fill for T {
-    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         let point: Point2<i16> = (*self).into();
 
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
-            vexDisplayPixelSet(point.x as _, (point.y + Screen::HEADER_HEIGHT) as _);
+            vexDisplayForegroundColor(color.into().into_raw());
+            vexDisplayPixelSet(point.x as _, (point.y + Display::HEADER_HEIGHT) as _);
         }
     }
 }
 
-/// A rectangular region of the screen.
+/// A rectangular region of the display.
+///
+/// When drawn to the display, both the start and the end points are included inside
+/// the drawn region. Thus, the area of the drawn rectangle is
+/// `(1 + end.x - start.x) * (1 + end.y - start.y)` pixels.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
-    /// First point(coordinate) of the rectangle
+    /// First point (coordinate) of the rectangle
     pub start: Point2<i16>,
 
-    /// Second point(coordinate) of the rectangle
+    /// Second point (coordinate) of the rectangle
     pub end: Point2<i16>,
 }
 
@@ -216,28 +225,28 @@ impl Rect {
 }
 
 impl Stroke for Rect {
-    fn stroke(&self, _screen: &mut Screen, color: impl IntoRgb) {
+    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectDraw(
-                self.start.x as _,
-                (self.start.y + Screen::HEADER_HEIGHT) as _,
-                self.end.x as _,
-                (self.end.y + Screen::HEADER_HEIGHT) as _,
+                i32::from(self.start.x),
+                i32::from(self.start.y + Display::HEADER_HEIGHT),
+                i32::from(self.end.x),
+                i32::from(self.end.y + Display::HEADER_HEIGHT),
             );
         }
     }
 }
 
 impl Fill for Rect {
-    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectFill(
-                self.start.x as _,
-                (self.start.y + Screen::HEADER_HEIGHT) as _,
-                self.end.x as _,
-                (self.end.y + Screen::HEADER_HEIGHT) as _,
+                i32::from(self.start.x),
+                i32::from(self.start.y + Display::HEADER_HEIGHT),
+                i32::from(self.end.x),
+                i32::from(self.end.y + Display::HEADER_HEIGHT),
             );
         }
     }
@@ -254,7 +263,7 @@ pub enum TextSize {
     Large,
 }
 
-/// Horizontal alignment for text on the screen
+/// Horizontal alignment for text on the display
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
 pub enum HAlign {
     /// Input coordinate is at the left of the text box
@@ -266,7 +275,7 @@ pub enum HAlign {
     Right,
 }
 
-/// Vertical alignment for text on the screen
+/// Vertical alignment for text on the display
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
 pub enum VAlign {
     /// Input coordinate is at the top of the text box
@@ -281,25 +290,25 @@ pub enum VAlign {
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text {
-    /// Top left corner coordinates of text on the screen
+    /// Top left corner coordinates of text on the display
     pub position: Point2<i16>,
-    /// C-String of the desired text to be displayed on the screen
+    /// C-String of the desired text to be displayed on the display
     pub text: CString,
-    /// Size of text to be displayed on the screen
+    /// Size of text to be displayed on the display
     pub size: TextSize,
-    /// Horizontal alignment of text displayed on the screen
+    /// Horizontal alignment of text displayed on the display
     pub horizontal_align: HAlign,
-    /// Vertical alignment of text displayed on the screen
+    /// Vertical alignment of text displayed on the display
     pub vertical_align: VAlign,
 }
 
 impl Text {
-    /// Create a new text with a given position(defaults to top left corner alignment) and format
+    /// Create a new text with a given position (defaults to top left corner alignment) and format
     pub fn new(text: &str, size: TextSize, position: impl Into<Point2<i16>>) -> Self {
         Self::new_aligned(text, size, position, HAlign::default(), VAlign::default())
     }
 
-    /// Create a new text with a given position(based on alignment) and format
+    /// Create a new text with a given position (based on alignment) and format
     pub fn new_aligned(
         text: &str,
         size: TextSize,
@@ -323,7 +332,8 @@ impl Text {
         self.vertical_align = vertical_align;
     }
 
-    /// Get the height of the text widget in pixels
+    /// Returns the height of the text widget in pixels
+    #[must_use]
     pub fn height(&self) -> u16 {
         unsafe {
             // Display blank string(no-op function) to set last used text size
@@ -344,7 +354,8 @@ impl Text {
         }
     }
 
-    /// Get the width of the text widget in pixels
+    /// Returns the width of the text widget in pixels
+    #[must_use]
     pub fn width(&self) -> u16 {
         unsafe {
             match self.size {
@@ -367,7 +378,7 @@ impl Text {
 }
 
 impl Fill for Text {
-    fn fill(&self, _screen: &mut Screen, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         // Horizontally align text
         let x = match self.horizontal_align {
             HAlign::Left => self.position.x,
@@ -385,25 +396,25 @@ impl Fill for Text {
         // This implementation is technically broken because it doesn't account errno.
         // This will be fixed once we have switched to vex-sdk.
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
 
-            // Use %s and varargs to escape the string to stop undefined and unsafe behavior
+            // Use `%s` and varargs to escape the string to stop undefined and unsafe behavior
             match self.size {
                 TextSize::Small => vexDisplaySmallStringAt(
-                    x as _,
-                    (y + Screen::HEADER_HEIGHT) as _,
+                    i32::from(x),
+                    i32::from(y + Display::HEADER_HEIGHT),
                     c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
                 TextSize::Medium => vexDisplayStringAt(
-                    x as _,
-                    (y + Screen::HEADER_HEIGHT) as _,
+                    i32::from(x),
+                    i32::from(y + Display::HEADER_HEIGHT),
                     c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
                 TextSize::Large => vexDisplayBigStringAt(
-                    x as _,
-                    (y + Screen::HEADER_HEIGHT) as _,
+                    i32::from(x),
+                    i32::from(y + Display::HEADER_HEIGHT),
                     c"%s".as_ptr(),
                     self.text.as_ptr(),
                 ),
@@ -412,7 +423,7 @@ impl Fill for Text {
     }
 }
 
-/// A touch event on the screen.
+/// A touch event on the display.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct TouchEvent {
     /// Touch state.
@@ -421,9 +432,9 @@ pub struct TouchEvent {
     pub x: i16,
     /// Y coordinate of the touch.
     pub y: i16,
-    /// how many times the screen has been pressed.
+    /// how many times the display has been pressed.
     pub press_count: i32,
-    /// how many times the screen has been released.
+    /// how many times the display has been released.
     pub release_count: i32,
 }
 
@@ -432,9 +443,9 @@ pub struct TouchEvent {
 pub enum TouchState {
     /// The touch has been released.
     Released,
-    /// The screen has been touched.
+    /// The display has been touched.
     Pressed,
-    /// The touch is still being held.
+    /// The display has been touched and is still being held.
     Held,
 }
 
@@ -449,28 +460,30 @@ impl From<V5_TouchEvent> for TouchState {
     }
 }
 
-/// The rendering mode for the screen.
-/// When the screen is on the [`Immediate`](RenderMode::Immediate) mode, all draw calls will immediately show up on the display.
-/// The [`DoubleBuffered`](RenderMode::DoubleBuffered) mode instead pushes all draw calls onto an intermediate buffer
-/// that can be swapped onto the screen by calling [`Screen::render`].
-/// By default the screen uses the [`Immediate`](RenderMode::Immediate) mode.
+/// The rendering mode for the VEX V5's display
+///
+/// When using the display in the [`Immediate`](RenderMode::Immediate) mode, all draw operations will immediately show up on the display.
+/// The [`DoubleBuffered`](RenderMode::DoubleBuffered) mode instead applies draw operations onto an intermediate buffer
+/// that can be swapped onto the display by calling [`Display::render`], thereby preventing screen tearing.
+/// By default, the display uses the [`Immediate`](RenderMode::Immediate) mode.
 /// # Note
-/// [`Screen::render`] **MUST** be called for anything to appear on the screen when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
+/// [`Display::render`] **MUST** be called for anything to appear on the display when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RenderMode {
-    /// Draw calls are immediately pushed to the screen.
-    /// This mode is more convenient because you dont have to call [`Screen::render`] to see anything on the screen.
+    /// Draw operations are immediately applied to the display without the need to call [`Display::render`].
     Immediate,
-    /// Draw calls are pushed to an intermediary buffer which can be pushed to the screen with [`Screen::render`].
-    /// This mode is useful for removing screen flicker when drawing at high speeds.
+    /// Draw calls are affected on an intermediary display buffer, rather than directly drawn to the display.
+    /// The intermediate buffer can later be applied to the display using [`Display::render`]
+    ///
+    /// This mode is necessary for preventing screen tearing when drawing at high speeds.
     DoubleBuffered,
 }
 
-impl Screen {
-    /// The maximum number of lines that can be visible on the screen at once.
+impl Display {
+    /// The maximum number of lines that can be visible on the display at once.
     pub(crate) const MAX_VISIBLE_LINES: usize = 12;
 
-    /// The height of a single line of text on the screen.
+    /// The height of a single line of text on the display.
     pub(crate) const LINE_HEIGHT: i16 = 20;
 
     /// Vertical height taken by the user program header when visible.
@@ -482,17 +495,18 @@ impl Screen {
     /// The vertical resolution of the writable part of the display.
     pub const VERTICAL_RESOLUTION: i16 = 240;
 
-    /// The amount of time it takes for the brain display to fully re-render.
-    /// The brain display is 60fps.
+    /// The amount of time it takes for the Brain display to fully re-render.
+    /// The Brain display is 60fps.
     pub const REFRESH_INTERVAL: Duration = Duration::from_micros(16667);
 
-    /// Create a new screen.
+    /// Create a new display.
     ///
     /// # Safety
     ///
-    /// Creating new `Screen`s is inherently unsafe due to the possibility of constructing
-    /// more than one screen at once allowing multiple mutable references to the same
+    /// Creating new `display`s is inherently unsafe due to the possibility of constructing
+    /// more than one display at once allowing multiple mutable references to the same
     /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    #[must_use]
     pub unsafe fn new() -> Self {
         Self {
             current_line: 0,
@@ -503,7 +517,7 @@ impl Screen {
 
     fn flush_writer(&mut self) {
         unsafe {
-            vexDisplayForegroundColor(0xffffff);
+            vexDisplayForegroundColor(0xff_ff_ff);
             vexDisplayString(
                 self.current_line as i32,
                 c"%s".as_ptr(),
@@ -518,8 +532,9 @@ impl Screen {
         self.writer_buffer.clear();
     }
 
-    /// Set the render mode for the screen.
-    /// For more info on render modes, look at the [`RenderMode`] docs.
+    /// Set the render mode for the display.
+    ///
+    /// For more info on render modes, see [`RenderMode`].
     pub fn set_render_mode(&mut self, mode: RenderMode) {
         self.render_mode = mode;
         unsafe {
@@ -530,97 +545,110 @@ impl Screen {
         }
     }
 
-    /// Gets the [`RenderMode`] of the screen.
+    /// Returns the current [`RenderMode`] of the display.
+    #[must_use]
     pub const fn render_mode(&self) -> RenderMode {
         self.render_mode
     }
 
-    /// Flushes the screens double buffer if it is enabled.
+    /// Flushes the displays double buffer if it is enabled.
     /// This is a no-op with the [`Immediate`](RenderMode::Immediate) rendering mode,
-    /// but is necessary for anything to be displayed on the screen when using the  [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
+    /// but is necessary for anything to be displayed on the displayed when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
     pub fn render(&mut self) {
         if let RenderMode::DoubleBuffered = self.render_mode {
             unsafe {
-                // TODO: create an async function that does the equivalent of bVsyncWait.
-                vex_sdk::vexDisplayRender(false, false)
+                // TODO: create an async function that does the equivalent of `bVsyncWait`.
+                vex_sdk::vexDisplayRender(false, false);
             }
         }
     }
 
-    /// Scroll the entire display buffer.
+    /// Scroll the pixels at or below the specified y-coordinate.
     ///
-    /// This function effectively y-offsets all pixels drawn to the display buffer below a given start point by
-    /// a number (`offset`) of pixels.
+    /// This function y-offsets the pixels in the display buffer which are at or below the given start point (`start`) by
+    /// a number (`offset`) of pixels. Positive values move the pixels upwards, and pixels that are moved out of the scroll
+    /// region are discarded. Empty spaces are then filled with the display's background color.
     pub fn scroll(&mut self, start: i16, offset: i16) {
         unsafe { vexDisplayScroll(start.into(), offset.into()) }
     }
 
-    /// Scroll a region of the screen.
+    /// Scroll a region of the display.
     ///
-    /// This will effectively y-offset the display buffer in this area by
-    /// `offset` pixels.
+    /// This function y-offsets the pixels in the display buffer which are contained in the specified scroll region (`region`) by
+    /// a number (`offset`) of pixels. Positive values move the pixels upwards, and pixels that are moved out of the scroll
+    /// region are discarded. Empty spaces are then filled with the display's background color.
     pub fn scroll_region(&mut self, region: Rect, offset: i16) {
         unsafe {
             vexDisplayScrollRect(
-                region.start.x as _,
-                (region.start.y + Self::HEADER_HEIGHT) as _,
+                i32::from(region.start.x),
+                i32::from(region.start.y + Self::HEADER_HEIGHT),
                 (region.end.x).into(),
-                (region.end.y + Self::HEADER_HEIGHT) as _,
-                offset as _,
-            )
+                i32::from(region.end.y + Self::HEADER_HEIGHT),
+                i32::from(offset),
+            );
         }
     }
 
-    /// Draw a filled object to the screen.
-    pub fn fill(&mut self, shape: &impl Fill, color: impl IntoRgb) {
-        shape.fill(self, color)
+    /// Draw a filled object to the display.
+    pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
+        shape.fill(self, color);
     }
 
-    /// Draw an outlined object to the screen.
-    pub fn stroke(&mut self, shape: &impl Stroke, color: impl IntoRgb) {
-        shape.stroke(self, color)
+    /// Draw an outlined object to the display.
+    pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Rgb<u8>>) {
+        shape.stroke(self, color);
     }
 
     /// Wipe the entire display buffer, filling it with a specified color.
-    pub fn erase(&mut self, color: impl IntoRgb) {
+    pub fn erase(&mut self, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayBackgroundColor(color.into_rgb().into());
+            vexDisplayBackgroundColor(color.into().into_raw());
             vexDisplayErase();
         };
     }
 
-    /// Draw a buffer of pixel colors to a specified region of the screen.
+    /// Draw a buffer of pixels to a specified region of the display.
+    ///
+    /// This function copies the pixels in the specified buffer to the specified region of the display.
+    /// The stride parameter is defined as the number of pixels per row.
+    ///
+    /// # Errors
+    ///
+    /// A [`DisplayError::BufferSize`] error is returned if `buf` does not have the correct number of bytes
+    /// to fill the specified region.
     pub fn draw_buffer<T, I>(
         &mut self,
         region: Rect,
         buf: T,
         src_stride: i32,
-    ) -> Result<(), ScreenError>
+    ) -> Result<(), DisplayError>
     where
         T: IntoIterator<Item = I>,
-        I: IntoRgb,
+        I: Into<Rgb<u8>>,
     {
         let mut raw_buf = buf
             .into_iter()
-            .map(|i| i.into_rgb().into())
+            .map(|i| i.into().into_raw())
             .collect::<Vec<_>>();
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.x - region.start.x) as u32
             * (region.end.y - region.start.y) as u32) as usize;
-        if raw_buf.len() != expected_size {
-            return Err(ScreenError::BufferSize {
+
+        ensure!(
+            raw_buf.len() == expected_size,
+            BufferSizeSnafu {
                 buffer_size: raw_buf.len(),
-                expected_size,
-            });
-        }
+                expected_size
+            }
+        );
 
         // SAFETY: The buffer is guaranteed to be the correct size.
         unsafe {
             vexDisplayCopyRect(
-                region.start.x as _,
-                (region.start.y + Self::HEADER_HEIGHT) as _,
-                region.end.x as _,
-                (region.start.y + Self::HEADER_HEIGHT) as _,
+                i32::from(region.start.x),
+                i32::from(region.start.y + Self::HEADER_HEIGHT),
+                i32::from(region.end.x),
+                i32::from(region.end.y + Self::HEADER_HEIGHT),
                 raw_buf.as_mut_ptr(),
                 src_stride,
             );
@@ -629,13 +657,14 @@ impl Screen {
         Ok(())
     }
 
-    /// Get the current touch status of the screen.
+    /// Returns the current touch status of the display.
+    #[must_use]
     pub fn touch_status(&self) -> TouchEvent {
-        // vexTouchDataGet (probably) doesn't read from the given status pointer so this is fine.
+        // `vexTouchDataGet` (probably) doesn't read from the given status pointer, so this is fine.
         let mut touch_status: V5_TouchStatus = unsafe { mem::zeroed() };
 
         unsafe {
-            vexTouchDataGet(&mut touch_status as *mut _);
+            vexTouchDataGet(addr_of_mut!(touch_status));
         }
 
         TouchEvent {
@@ -649,9 +678,12 @@ impl Screen {
 }
 
 #[derive(Debug, Snafu)]
-/// Errors that can occur when interacting with the screen.
-pub enum ScreenError {
+/// Errors that can occur when interacting with the display.
+pub enum DisplayError {
     /// The given buffer of colors was wrong size to fill the specified area.
+    #[snafu(display(
+        "The given buffer of colors was wrong size to fill the specified area: expected {expected_size} bytes, got {buffer_size}."
+    ))]
     BufferSize {
         /// The size of the buffer.
         buffer_size: usize,

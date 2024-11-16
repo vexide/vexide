@@ -5,7 +5,7 @@ use vexide::prelude::*;
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
-    // Create an ADI expander on smart port 1.
+    // Create an ADI expander on Smart Port 1.
     let expander = AdiExpander::new(peripherals.port_1);
 
     // Create a potentiometer on the expander.

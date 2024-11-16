@@ -31,47 +31,40 @@ impl Executor {
     }
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
-        critical_section::with(|_| {
-            // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
-            //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
-            //   TODO: Make sure that the waker can never be sent off the thread.
-            let (runnable, task) = unsafe {
-                async_task::spawn_unchecked(future, |runnable| {
-                    self.queue.borrow_mut().push_back(runnable)
-                })
-            };
+        // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
+        //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
+        //   TODO: Make sure that the waker can never be sent off the thread.
+        let (runnable, task) = unsafe {
+            async_task::spawn_unchecked(future, |runnable| {
+                self.queue.borrow_mut().push_back(runnable);
+            })
+        };
 
-            runnable.schedule();
+        runnable.schedule();
 
-            task
-        })
+        task
     }
 
     /// Run the provided closure with the reactor.
     /// Used to ensure the thread safety of the executor.
-    /// The closure is run with interrupts disabled.
     pub(crate) fn with_reactor(&self, f: impl FnOnce(&mut Reactor)) {
-        critical_section::with(|_| {
-            f(&mut self.reactor.borrow_mut());
-        });
+        f(&mut self.reactor.borrow_mut());
     }
 
     pub(crate) fn tick(&self) -> bool {
-        critical_section::with(|_| {
-            self.reactor.borrow_mut().tick();
+        self.reactor.borrow_mut().tick();
 
-            let runnable = {
-                let mut queue = self.queue.borrow_mut();
-                queue.pop_front()
-            };
-            match runnable {
-                Some(runnable) => {
-                    runnable.run();
-                    true
-                }
-                None => false,
+        let runnable = {
+            let mut queue = self.queue.borrow_mut();
+            queue.pop_front()
+        };
+        match runnable {
+            Some(runnable) => {
+                runnable.run();
+                true
             }
-        })
+            None => false,
+        }
     }
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
@@ -89,6 +82,11 @@ impl Executor {
                     return output;
                 }
             }
+
+            unsafe {
+                vex_sdk::vexTasksRun();
+            }
+
             self.tick();
         }
     }

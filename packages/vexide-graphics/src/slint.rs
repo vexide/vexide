@@ -12,56 +12,55 @@ use slint::{
     LogicalPosition, PhysicalPosition, PhysicalSize, Rgb8Pixel,
 };
 use vexide_core::time::Instant;
-use vexide_devices::{
-    color::Rgb,
-    screen::{Rect, Screen},
-};
+use vexide_devices::display::{Display, Rect};
 
 /// A Slint platform implementation for the V5 Brain screen.
 pub struct V5Platform {
     start: Instant,
     window: Rc<MinimalSoftwareWindow>,
-    screen: RefCell<Screen>,
-    screen_pressed: RefCell<bool>,
+    display: RefCell<Display>,
+    display_pressed: RefCell<bool>,
 
     buffer: RefCell<
-        [Rgb8Pixel; Screen::HORIZONTAL_RESOLUTION as usize * Screen::VERTICAL_RESOLUTION as usize],
+        [Rgb8Pixel;
+            Display::HORIZONTAL_RESOLUTION as usize * Display::VERTICAL_RESOLUTION as usize],
     >,
 }
 impl V5Platform {
-    /// Create a new [`V5Platform`] from a [`Screen`].
-    pub fn new(screen: Screen) -> Self {
+    /// Create a new [`V5Platform`] from a [`Display`].
+    #[must_use]
+    pub fn new(display: Display) -> Self {
         let window = MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
         window.set_size(PhysicalSize::new(
-            Screen::HORIZONTAL_RESOLUTION as _,
-            Screen::VERTICAL_RESOLUTION as _,
+            Display::HORIZONTAL_RESOLUTION as _,
+            Display::VERTICAL_RESOLUTION as _,
         ));
         Self {
             start: Instant::now(),
             window,
-            screen: RefCell::new(screen),
-            screen_pressed: RefCell::new(false),
+            display: RefCell::new(display),
+            display_pressed: RefCell::new(false),
             buffer: RefCell::new(
                 [Rgb8Pixel::new(0, 0, 0);
-                    Screen::HORIZONTAL_RESOLUTION as usize * Screen::VERTICAL_RESOLUTION as usize],
+                    Display::HORIZONTAL_RESOLUTION as usize * Display::VERTICAL_RESOLUTION as usize],
             ),
         }
     }
 
     fn get_touch_event(&self) -> WindowEvent {
-        let event = self.screen.borrow().touch_status();
-        let physical_pos = PhysicalPosition::new(event.x as _, event.y as _);
+        let event = self.display.borrow().touch_status();
+        let physical_pos = PhysicalPosition::new(event.x.into(), event.y.into());
         let position = LogicalPosition::from_physical(physical_pos, 1.0);
         match event.state {
-            vexide_devices::screen::TouchState::Released => {
-                *self.screen_pressed.borrow_mut() = false;
+            vexide_devices::display::TouchState::Released => {
+                *self.display_pressed.borrow_mut() = false;
                 WindowEvent::PointerReleased {
                     position,
                     button: PointerEventButton::Left,
                 }
             }
-            vexide_devices::screen::TouchState::Pressed => {
-                if self.screen_pressed.replace(true) {
+            vexide_devices::display::TouchState::Pressed => {
+                if self.display_pressed.replace(true) {
                     WindowEvent::PointerMoved { position }
                 } else {
                     WindowEvent::PointerPressed {
@@ -70,7 +69,7 @@ impl V5Platform {
                     }
                 }
             }
-            vexide_devices::screen::TouchState::Held => WindowEvent::PointerMoved { position },
+            vexide_devices::display::TouchState::Held => WindowEvent::PointerMoved { position },
         }
     }
 }
@@ -90,18 +89,18 @@ impl Platform for V5Platform {
 
             self.window.draw_if_needed(|renderer| {
                 let mut buf = *self.buffer.borrow_mut();
-                renderer.render(&mut buf, Screen::HORIZONTAL_RESOLUTION as _);
+                renderer.render(&mut buf, Display::HORIZONTAL_RESOLUTION as _);
                 // Unwrap because the buffer is guaranteed to be the correct size
-                self.screen
+                self.display
                     .borrow_mut()
                     .draw_buffer(
                         Rect::from_dimensions(
-                            (0, 0),
-                            Screen::HORIZONTAL_RESOLUTION as _,
-                            Screen::VERTICAL_RESOLUTION as _,
+                            [0, 0],
+                            Display::HORIZONTAL_RESOLUTION as _,
+                            Display::VERTICAL_RESOLUTION as _,
                         ),
-                        buf.into_iter().map(|p| Rgb::new(p.r, p.g, p.b)),
-                        Screen::HORIZONTAL_RESOLUTION as _,
+                        buf,
+                        Display::HORIZONTAL_RESOLUTION.into(),
                     )
                     .unwrap();
             });
@@ -118,7 +117,7 @@ impl Platform for V5Platform {
 /// Sets the Slint platform to [`V5Platform`].
 /// # Panics
 /// Panics if the Slint platform is already set.
-pub fn initialize_slint_platform(screen: Screen) {
-    slint::platform::set_platform(Box::new(V5Platform::new(screen)))
+pub fn initialize_slint_platform(display: Display) {
+    slint::platform::set_platform(Box::new(V5Platform::new(display)))
         .expect("Slint platform already set!");
 }

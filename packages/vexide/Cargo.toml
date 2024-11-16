@@ -1,6 +1,6 @@
 [package]
 name = "vexide"
-version = "0.3.0"
+version = "0.5.0-rc.2"
 edition = "2021"
 description = "async/await powered Rust library for VEX V5 Brains"
 keywords = ["Robotics", "bindings", "vex", "v5"]
@@ -12,7 +12,7 @@ authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
     "doinkythederp <doinkythederp@icloud.com>",
-    "Tropical"
+    "Tropical",
 ]
 rust-version = "1.75.0"
 
@@ -24,35 +24,47 @@ compress = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vexide-async = { version = "0.1.2", path = "../vexide-async", optional = true }
-vexide-devices = { version = "0.3.0", path = "../vexide-devices", optional = true }
-vexide-panic = { version = "0.1.2", path = "../vexide-panic", optional = true }
-vexide-core = { version = "0.3.0", path = "../vexide-core", optional = true }
-vexide-startup = { version = "0.2.0", path = "../vexide-startup", optional = true }
-vexide-graphics = { version = "0.1.2", path = "../vexide-graphics", optional = true }
-vexide-macro = { version = "0.2.0", path = "../vexide-macro", optional = true }
-vex-sdk = "0.17.0"
+vexide-async = { workspace = true, optional = true }
+vexide-devices = { workspace = true, optional = true }
+vexide-panic = { workspace = true, optional = true }
+vexide-core = { workspace = true, optional = true }
+vexide-startup = { workspace = true, optional = true }
+vexide-graphics = { workspace = true, optional = true }
+vexide-macro = { workspace = true, optional = true }
+vex-sdk = { workspace = true }
 
 [features]
-default = ["async", "devices", "panic", "display_panics", "core", "startup", "macro"]
+default = [
+    "async",
+    "devices",
+    "panic",
+    "display_panics",
+    "core",
+    "startup",
+    "macro",
+    "backtraces",
+]
 
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 
 core = ["dep:vexide-core"]
-force_rust_libm = ["vexide-core/force_rust_libm"]
+backtraces = ["core", "vexide-core/backtraces"]
+force_rust_libm = ["core", "vexide-core/force_rust_libm"]
 
 startup = ["dep:vexide-startup"]
 
 async = ["dep:vexide-async"]
 
 devices = ["dep:vexide-devices"]
+dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]
+smart_leds_trait = ["devices", "vexide-devices/smart_leds_trait"]
 
 graphics = ["dep:vexide-graphics"]
 slint = ["vexide-graphics/slint", "graphics"]
 embedded-graphics = ["vexide-graphics/embedded-graphics", "graphics"]
 
 panic = ["dep:vexide-panic"]
-display_panics = ["vexide-panic/display_panics"]
+display_panics = ["panic", "vexide-panic/display_panics"]
 
-dangerous_motor_tuning = ["vexide-devices/dangerous_motor_tuning"]
-smart_leds_trait = ["vexide-devices/smart_leds_trait"]
+[package.metadata.docs.rs]
+targets = ["armv7a-none-eabi"]

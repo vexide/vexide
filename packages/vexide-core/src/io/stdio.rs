@@ -57,7 +57,8 @@ impl Write for StdoutLock<'_> {
 /// A handle to the serial output stream of this program.
 pub struct Stdout;
 
-/// Contstructs a handle to the serial output stream
+/// Constructs a handle to the serial output stream
+#[must_use]
 pub const fn stdout() -> Stdout {
     Stdout
 }
@@ -146,6 +147,7 @@ impl Stdin {
 }
 
 /// Constructs a handle to the serial input stream.
+#[must_use]
 pub const fn stdin() -> Stdin {
     Stdin
 }
@@ -177,10 +179,14 @@ macro_rules! print {
 pub use print;
 
 #[macro_export]
+#[expect(
+    edition_2024_expr_fragment_specifier,
+    reason = "OK for this macro to accept `const {}` expressions"
+)]
 /// Prints and returns the value of a given expression for quick and dirty debugging.
 macro_rules! dbg {
     () => {
-        $crate::println!("[{}:{}]", $file!(), $line!())
+        $crate::println!("[{}:{}]", file!(), line!())
     };
     ($val:expr $(,)?) => {
         match $val {

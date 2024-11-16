@@ -8,26 +8,29 @@ use alloc::boxed::Box;
 
 use vex_sdk::vexTasksRun;
 use vexide_core::println;
-use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+use vexide_startup::{
+    banner::themes::THEME_DEFAULT, CodeSignature, ProgramFlags, ProgramOwner, ProgramType,
+};
 
-#[no_mangle]
-extern "Rust" fn main() {
+// SAFETY: This symbol is unique and is being used to start the vexide runtime.
+#[unsafe(no_mangle)]
+unsafe extern "C" fn _start() -> ! {
     unsafe {
+        vexide_startup::startup::<true>(THEME_DEFAULT);
+
         // Write something to the screen to test if the program is running
         let test_box = Box::new(100);
         vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
         println!("Hello, world!");
         vexTasksRun(); // Flush serial
     }
+
+    // Exit once we're done.
+    vexide_core::program::exit();
 }
 
-#[no_mangle]
-#[link_section = ".boot"]
-unsafe extern "C" fn _start() {
-    unsafe { vexide_startup::program_entry::<true>() }
-}
-
-#[link_section = ".code_signature"]
+// SAFETY: The code signature needs to be in this section so it may be found by VEXos.
+#[unsafe(link_section = ".code_signature")]
 #[used] // This is needed to prevent the linker from removing this object in release builds
 static CODE_SIG: CodeSignature = CodeSignature::new(
     ProgramType::User,

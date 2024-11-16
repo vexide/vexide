@@ -11,18 +11,19 @@ use replace_with::replace_with;
 use super::{MutexGuard, MutexLockFuture};
 
 /// A future that resolves once a condition variable is notified.
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub enum CondvarWaitFuture<'a, T> {
     /// The future is waiting for a notification.
     WaitingForNotification {
         /// The condition variable to wait on.
         condvar: &'a Condvar,
         /// The mutex guard that was unlocked.
-        gaurd: MutexGuard<'a, T>,
+        guard: MutexGuard<'a, T>,
     },
     /// The future is waiting for a [`Mutex`](super::Mutex) to lock
     WaitingForMutex {
         /// The mutex lock future.
-        gaurd: MutexLockFuture<'a, T>,
+        guard: MutexLockFuture<'a, T>,
     },
 }
 impl<'a, T> Future for CondvarWaitFuture<'a, T> {
@@ -37,14 +38,13 @@ impl<'a, T> Future for CondvarWaitFuture<'a, T> {
             &mut *self,
             || panic!("Failed to replace"),
             |self_| match self_ {
-                Self::WaitingForNotification { condvar, gaurd } => {
-                    let state = condvar.state.load(Ordering::Acquire);
-                    critical_section::with(|_| match state {
+                Self::WaitingForNotification { condvar, guard } => {
+                    match condvar.state.load(Ordering::Acquire) {
                         Condvar::NOTIFIED_ONE => {
                             condvar.state.store(Condvar::WAITING, Ordering::Release);
                             condvar.waiting.fetch_sub(1, Ordering::AcqRel);
                             Self::WaitingForMutex {
-                                gaurd: gaurd.relock(),
+                                guard: guard.relock(),
                             }
                         }
                         Condvar::NOTIFIED_ALL => {
@@ -53,20 +53,20 @@ impl<'a, T> Future for CondvarWaitFuture<'a, T> {
                                 condvar.state.store(Condvar::WAITING, Ordering::Release);
                             }
                             Self::WaitingForMutex {
-                                gaurd: gaurd.relock(),
+                                guard: guard.relock(),
                             }
                         }
-                        Condvar::WAITING => Self::WaitingForNotification { condvar, gaurd },
+                        Condvar::WAITING => Self::WaitingForNotification { condvar, guard },
                         _ => unreachable!("Invalid state in CondVar::state"),
-                    })
+                    }
                 }
-                CondvarWaitFuture::WaitingForMutex { mut gaurd } => {
-                    match core::pin::pin!(&mut gaurd).poll(cx) {
+                CondvarWaitFuture::WaitingForMutex { mut guard } => {
+                    match core::pin::pin!(&mut guard).poll(cx) {
                         Poll::Ready(lock) => {
                             ret = Some(lock);
-                            Self::WaitingForMutex { gaurd }
+                            Self::WaitingForMutex { guard }
                         }
-                        Poll::Pending => Self::WaitingForMutex { gaurd },
+                        Poll::Pending => Self::WaitingForMutex { guard },
                     }
                 }
             },
@@ -112,6 +112,7 @@ impl Condvar {
     const NOTIFIED_ALL: u8 = 2;
 
     /// Creates a new condition variable.
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             state: AtomicU8::new(Self::WAITING),
@@ -120,26 +121,26 @@ impl Condvar {
     }
 
     /// Waits for a notification on the condition variable.
-    pub fn wait<'a, T>(&'a self, gaurd: MutexGuard<'a, T>) -> CondvarWaitFuture<'a, T> {
-        // SAFETY: we can unlock the mutex because we gaurentee that it will not be used again until we safely lock it again.
+    pub fn wait<'a, T>(&'a self, guard: MutexGuard<'a, T>) -> CondvarWaitFuture<'a, T> {
+        // SAFETY: we can unlock the mutex because we guarantee that it will not be used again until we safely lock it again.
         unsafe {
-            gaurd.unlock();
+            guard.unlock();
         }
-        critical_section::with(|_| self.waiting.fetch_add(1, Ordering::AcqRel));
+        self.waiting.fetch_add(1, Ordering::AcqRel);
         CondvarWaitFuture::WaitingForNotification {
             condvar: self,
-            gaurd,
+            guard,
         }
     }
 
     /// Notify one task waiting on the condition variable.
     pub fn notify_one(&self) {
-        critical_section::with(|_| self.state.store(Self::NOTIFIED_ONE, Ordering::Release));
+        self.state.store(Self::NOTIFIED_ONE, Ordering::Release);
     }
 
     /// Notify all tasks waiting on the condition variable.
     pub fn notify_all(&self) {
-        critical_section::with(|_| self.state.store(Self::NOTIFIED_ALL, Ordering::Release));
+        self.state.store(Self::NOTIFIED_ALL, Ordering::Release);
     }
 }
 impl Default for Condvar {

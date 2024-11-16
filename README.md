@@ -1,8 +1,8 @@
 # vexide
 
-Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime, async executor, device API, and more for the VEX V5 brain!
+Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime, async executor, device API, and more for the VEX V5 Brain!
 
-vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which are a set of unmaintained API using bindings over [PROS](https://github.com/purduesigbots/pros).
+vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which is a set of unmaintained APIs using bindings over [PROS](https://github.com/purduesigbots/pros).
 
 > [!WARNING]
 > vexide is still considered experimental, but can be used today. Check out our [docs](https://vexide.dev/docs) on how to get started.
@@ -11,7 +11,7 @@ vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which ar
 
 vexide is published on [crates.io](https://crates.io/crates/vexide) and can be used like a normal embedded Rust crate.
 
-If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment with [vexide-template](https://github.com/vexide/vexide-template).
+If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment with [vexide-template](https://github.com/vexide/vexide-template). You can also use our [examples](./examples/) as a reference for your own projects.
 
 ## Project Structure
 
@@ -26,9 +26,12 @@ The vexide runtime is a fairly standard rust monorepo split into 7 subcrates:
 
 These subcrates are exported from a single [`vexide`](https://github.com/vexide/vexide/blob/main/packages/vexide/src/lib.rs) crate intended to be used as a complete package.
 
+[Slint]: https://slint.dev/
+[`embedded-graphics`]: https://crates.io/crates/embedded-graphics
+
 ## Building
 
-vexide relies on some features that are only availble in Rust’s nightly release channel, so you’ll need to switch to using nightly. We also depend on the `rust-src` component due to our embedded target requiring a build of `core`.
+vexide relies on some features that are only available in Rust’s nightly release channel, so you’ll need to switch to using nightly. We also depend on the `rust-src` component due to our embedded target requiring a build of `core`.
 
 ```sh
 rustup override set nightly
@@ -43,7 +46,7 @@ You can install that tool with the following command:
 cargo install cargo-v5
 ```
 
-From there, the project can be built like any other rust library through `cargo-v5`:
+From there, the project can be built like any other Rust library through `cargo-v5`:
 
 ```sh
 cargo v5 build --release

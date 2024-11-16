@@ -1,36 +1,38 @@
 use core::{
     cell::UnsafeCell,
     fmt::Debug,
-    sync::atomic::{AtomicU8, Ordering},
+    sync::atomic::{AtomicBool, Ordering},
 };
 
 use futures_core::Future;
 use lock_api::RawMutex as _;
 
-struct MutexState(AtomicU8);
+struct MutexState(AtomicBool);
 impl MutexState {
     const fn new() -> Self {
-        Self(AtomicU8::new(0))
+        Self(AtomicBool::new(false))
     }
 
     /// Returns true if the lock was acquired.
     fn try_lock(&self) -> bool {
         self.0
-            .compare_exchange(0, 1, Ordering::Acquire, Ordering::Acquire)
+            .compare_exchange(false, true, Ordering::Acquire, Ordering::Acquire)
             .is_ok()
     }
 
     fn unlock(&self) {
-        self.0.store(0, Ordering::Release);
+        self.0.store(false, Ordering::Release);
     }
 }
 
-/// A raw mutex type built on top of the critical section.
+/// A raw, synchronous, spinning mutex type.
 pub struct RawMutex {
     state: MutexState,
 }
 impl RawMutex {
     /// Creates a new raw mutex.
+    #[must_use]
+    #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
         Self {
             state: MutexState::new(),
@@ -45,26 +47,23 @@ unsafe impl lock_api::RawMutex for RawMutex {
     type GuardMarker = lock_api::GuardSend;
 
     fn lock(&self) {
-        critical_section::with(|_| {
-            while !self.state.try_lock() {
-                core::hint::spin_loop();
-            }
-        })
+        while !self.state.try_lock() {
+            core::hint::spin_loop();
+        }
     }
 
     fn try_lock(&self) -> bool {
-        critical_section::with(|_| self.state.try_lock())
+        self.state.try_lock()
     }
 
     unsafe fn unlock(&self) {
-        critical_section::with(|_| {
-            self.state.unlock();
-        })
+        self.state.unlock();
     }
 }
 
 /// A future that resolves to a mutex guard.
-pub struct MutexLockFuture<'a, T> {
+#[must_use = "futures do nothing unless you `.await` or poll them"]
+pub struct MutexLockFuture<'a, T: ?Sized> {
     mutex: &'a Mutex<T>,
 }
 impl<'a, T> Future for MutexLockFuture<'a, T> {
@@ -84,12 +83,12 @@ impl<'a, T> Future for MutexLockFuture<'a, T> {
 
 /// The basic mutex type.
 /// Mutexes are used to share variables between tasks safely.
-pub struct Mutex<T> {
+pub struct Mutex<T: ?Sized> {
     raw: RawMutex,
     data: UnsafeCell<T>,
 }
-unsafe impl<T: Send> Send for Mutex<T> {}
-unsafe impl<T> Sync for Mutex<T> {}
+unsafe impl<T: ?Sized + Send> Send for Mutex<T> {}
+unsafe impl<T: ?Sized + Send> Sync for Mutex<T> {}
 
 impl<T> Mutex<T> {
     /// Creates a new mutex.
@@ -99,7 +98,9 @@ impl<T> Mutex<T> {
             data: UnsafeCell::new(data),
         }
     }
+}
 
+impl<T: ?Sized> Mutex<T> {
     /// Locks the mutex so that it cannot be locked in another task at the same time.
     /// Blocks the current task until the lock is acquired.
     pub const fn lock(&self) -> MutexLockFuture<'_, T> {
@@ -107,7 +108,7 @@ impl<T> Mutex<T> {
     }
 
     /// Used internally to lock the mutex in a blocking fashion.
-    /// This is neccessary because a mutex may be created internally before the executor is ready to be initialized.
+    /// This is necessary because a mutex may be created internally before the executor is ready to be initialized.
     pub(crate) fn lock_blocking(&self) -> MutexGuard<'_, T> {
         self.raw.lock();
         MutexGuard::new(self)
@@ -123,7 +124,10 @@ impl<T> Mutex<T> {
     }
 
     /// Consumes the mutex and returns the inner data.
-    pub fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T
+    where
+        T: Sized,
+    {
         self.data.into_inner()
     }
 
@@ -135,7 +139,7 @@ impl<T> Mutex<T> {
 
 impl<T> Debug for Mutex<T>
 where
-    T: Debug,
+    T: ?Sized + Debug,
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         struct Placeholder;
@@ -172,15 +176,17 @@ impl<T> From<T> for Mutex<T> {
 /// Allows the user to access the data from a locked mutex.
 /// Dereference to get the inner data.
 #[derive(Debug)]
-pub struct MutexGuard<'a, T> {
+pub struct MutexGuard<'a, T: ?Sized> {
     mutex: &'a Mutex<T>,
 }
 
-impl<'a, T> MutexGuard<'a, T> {
+impl<'a, T: ?Sized> MutexGuard<'a, T> {
     const fn new(mutex: &'a Mutex<T>) -> Self {
         Self { mutex }
     }
+}
 
+impl<'a, T> MutexGuard<'a, T> {
     pub(crate) unsafe fn unlock(&self) {
         // SAFETY: caller must ensure that this is safe
         unsafe {
@@ -195,20 +201,20 @@ impl<'a, T> MutexGuard<'a, T> {
     }
 }
 
-impl<T> core::ops::Deref for MutexGuard<'_, T> {
+impl<T: ?Sized> core::ops::Deref for MutexGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { &*self.mutex.data.get() }
     }
 }
 
-impl<T> core::ops::DerefMut for MutexGuard<'_, T> {
+impl<T: ?Sized> core::ops::DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
         unsafe { &mut *self.mutex.data.get() }
     }
 }
 
-impl<T> Drop for MutexGuard<'_, T> {
+impl<T: ?Sized> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
         unsafe { self.mutex.raw.unlock() };
     }

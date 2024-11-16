@@ -27,13 +27,13 @@ static mut errno: c_int = 0;
 ///
 /// This function returns a raw pointer to a mutable static. It is intended for
 /// interoptability with libm.
-#[no_mangle]
+#[unsafe(no_mangle)] // SAFETY: libm requires this symbol to exist, and this is the only place it is defined
 unsafe extern "C" fn __errno() -> *mut c_int {
-    unsafe { core::ptr::addr_of_mut!(errno) }
+    core::ptr::addr_of_mut!(errno)
 }
 
 #[link(name = "m")]
-extern "C" {
+unsafe extern "C" {
     //
     // f32 bindings
     //

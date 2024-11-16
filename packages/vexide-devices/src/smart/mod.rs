@@ -1,23 +1,47 @@
 //! Smart Ports & Devices
 //!
-//! This module provides abstractions over device access connected through VEX V5 Smart Ports. This
+//! This module provides abstractions for devices connected through VEX Smart Ports. This
 //! includes motors, many common sensors, vexlink, and raw serial access.
 //!
 //! # Hardware Overview
 //!
-//! The V5 brain features 21 RJ9 4p4c connector ports (known as "Smart Ports") for communicating with
-//! newer V5 peripherals. Smart port devices have a variable sample rate (unlike ADI, which is limited
+//! The V5 Brain features 21 RJ9 4p4c connector ports (known as "Smart Ports") for communicating with
+//! newer V5 peripherals. Smart Port devices have a variable sample rate (unlike ADI, which is limited
 //! to 10ms), and can support basic data transfer over serial.
 //!
 //! # Smart Port Devices
 //!
-//! Most devices can be created with a `new` function that generally takes a port number along with other
-//! device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
-//! using the [`peripherals`](crate::peripherals) API.
+//! Most devices can be created with a `new` function that generally takes a [`SmartPort`] instance from [`Peripherals`](crate::peripherals::Peripherals)
+//! along with other device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
+//! using the [`peripherals`] API. The general device construction pattern looks like this:
+//! ```no_run
+//! use vexide::prelude::*;
 //!
-//! More specific info for each device is availible in their respective modules.
+//! #[vexide::main]
+//! async fn main(peripherals: Peripherals) {
+//!     // Create a new device on port 1.
+//!     let mut device = Device::new(peripherals.port_1, /* other parameters */);
+//!     // Use the device.
+//!     // Device errors are usually only returned by methods, and not the constructor.
+//!     let _ = device.do_something();
+//! }
+//! ```
+//!
+//! More specific info for each device is available in their respective modules.
+//!
+//! [`peripherals`]: crate::peripherals
+
+use core::fmt;
+
+use vex_sdk::{
+    vexDeviceGetByIndex, vexDeviceGetStatus, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType,
+    V5_MAX_DEVICE_PORTS,
+};
+
+use crate::PortError;
 
 pub mod distance;
+pub mod electromagnet;
 pub mod expander;
 pub mod gps;
 pub mod imu;
@@ -28,9 +52,10 @@ pub mod rotation;
 pub mod serial;
 pub mod vision;
 
-use core::fmt;
+use core::time::Duration;
 
 pub use distance::DistanceSensor;
+pub use electromagnet::Electromagnet;
 pub use expander::AdiExpander;
 pub use gps::GpsSensor;
 pub use imu::InertialSensor;
@@ -39,26 +64,30 @@ pub use motor::Motor;
 pub use optical::OpticalSensor;
 pub use rotation::RotationSensor;
 pub use serial::SerialPort;
-use vex_sdk::{vexDeviceGetByIndex, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType};
+use snafu::ensure;
 pub use vision::VisionSensor;
 
-use crate::PortError;
+use crate::{DisconnectedSnafu, IncorrectDeviceSnafu};
 
-/// Defines common functionality shared by all smart port devices.
+/// Defines common functionality shared by all Smart Port devices.
+
 pub trait SmartDevice {
-    /// Get the index of the [`SmartPort`] this device is registered on.
+    /// The interval at which the V5 brain reads packets from Smart devices.
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(10);
+
+    /// Returns the port number of the [`SmartPort`] this device is registered on.
     ///
-    /// Ports are indexed starting from 1.
+    /// Ports are numbered starting from 1.
     ///
     /// # Examples
     ///
     /// ```
     /// let sensor = InertialSensor::new(peripherals.port_1)?;
-    /// assert_eq!(sensor.port_index(), 1);
+    /// assert_eq!(sensor.port_number(), 1);
     /// ```
-    fn port_index(&self) -> u8;
+    fn port_number(&self) -> u8;
 
-    /// Get the variant of [`SmartDeviceType`] that this device is associated with.
+    /// Returns the variant of [`SmartDeviceType`] that this device is associated with.
     ///
     /// # Examples
     ///
@@ -83,33 +112,33 @@ pub trait SmartDevice {
     /// }
     /// ```
     fn is_connected(&self) -> bool {
-        let connected_type: SmartDeviceType =
-            unsafe { *vexDeviceGetByIndex((self.port_index() - 1) as u32) }
-                .device_type
-                .into();
+        let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
+        unsafe {
+            vexDeviceGetStatus(device_types.as_mut_ptr());
+        }
 
-        connected_type == self.device_type()
+        SmartDeviceType::from(device_types[(self.port_number() - 1) as usize]) == self.device_type()
     }
 
-    /// Get the timestamp recorded by this device's internal clock.
+    /// Returns the timestamp recorded by this device's internal clock.
+    ///
+    /// # Errors
+    ///
+    /// Currently, this function never returns an error. This behavior should be considered unstable.
     fn timestamp(&self) -> Result<SmartDeviceTimestamp, PortError> {
         Ok(SmartDeviceTimestamp(unsafe {
-            vexDeviceGetTimestamp(vexDeviceGetByIndex((self.port_index() - 1) as u32))
+            vexDeviceGetTimestamp(vexDeviceGetByIndex(u32::from(self.port_number() - 1)))
         }))
     }
 
     /// Verify that the device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PortError`] if there is not a physical device of type [`SmartDevice::device_type`] in this [`SmartDevice`]'s port.
     fn validate_port(&self) -> Result<(), PortError> {
-        validate_port(self.port_index(), self.device_type())
-    }
-}
-
-impl<T: SmartDevice> From<T> for SmartPort {
-    fn from(device: T) -> Self {
-        // SAFETY: We can do this, since we ensure that the old smartport was disposed of.
-        // This can effectively be thought as a move out of the device's private `port` field.
-        unsafe { Self::new(device.port_index()) }
+        validate_port(self.port_number(), self.device_type())
     }
 }
 
@@ -117,32 +146,46 @@ impl<T: SmartDevice> From<T> for SmartPort {
 ///
 /// This function provides the internal implementations of [`SmartDevice::validate_port`], [`SmartPort::validate_type`],
 /// and [`AdiPort::validate_expander`].
-pub(crate) fn validate_port(index: u8, device_type: SmartDeviceType) -> Result<(), PortError> {
-    let device = unsafe { *vexDeviceGetByIndex((index - 1) as u32) };
-    let plugged_type: SmartDeviceType = device.device_type.into();
+pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<(), PortError> {
+    let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
+    unsafe {
+        vexDeviceGetStatus(device_types.as_mut_ptr());
+    }
 
-    if !device.installed {
+    let connected_type: Option<SmartDeviceType> = match device_types[(number - 1) as usize] {
+        V5_DeviceType::kDeviceTypeNoSensor => None,
+        raw_type => Some(raw_type.into()),
+    };
+
+    if let Some(connected_type) = connected_type {
+        // The connected device must match the requested type.
+        ensure!(
+            connected_type == device_type,
+            IncorrectDeviceSnafu {
+                expected: device_type,
+                actual: connected_type,
+                port: number,
+            }
+        );
+    } else {
         // No device is plugged into the port.
-        return Err(PortError::Disconnected);
-    } else if plugged_type != device_type {
-        // The connected device doesn't match the requested type.
-        return Err(PortError::IncorrectDevice);
+        return DisconnectedSnafu { port: number }.fail();
     }
 
     Ok(())
 }
 
-/// Represents a smart port on a V5 Brain
+/// Represents a Smart Port on a V5 Brain
 #[derive(Debug, Eq, PartialEq)]
 pub struct SmartPort {
-    /// The index of the port (port number).
+    /// The number of the port (port number).
     ///
-    /// Ports are indexed starting from 1.
-    index: u8,
+    /// Ports are numbered starting from 1.
+    number: u8,
 }
 
 impl SmartPort {
-    /// Creates a new smart port on a specified index.
+    /// Creates a new Smart Port on a specified index.
     ///
     /// # Safety
     ///
@@ -154,64 +197,96 @@ impl SmartPort {
     /// # Examples
     ///
     /// ```
-    /// // Create a new smart port at index 1.
+    /// // Create a new Smart Port at index 1.
     /// // This is unsafe! You are responsible for ensuring that only one device registered on a
     /// // single port index.
     /// let my_port = unsafe { SmartPort::new(1) };
     /// ```
-    pub const unsafe fn new(index: u8) -> Self {
-        Self { index }
+    #[must_use]
+    pub const unsafe fn new(number: u8) -> Self {
+        Self { number }
     }
 
-    /// Get the index of the port (port number).
+    /// Returns the number of the port.
     ///
-    /// Ports are indexed starting from 1.
+    /// Ports are numbered starting from 1.
     ///
     /// # Examples
     ///
     /// ```
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
-    /// assert_eq!(my_port.index(), 1);
+    /// assert_eq!(my_port.number(), 1);
     /// ```
-    pub const fn index(&self) -> u8 {
-        self.index
+    #[must_use]
+    pub const fn number(&self) -> u8 {
+        self.number
     }
 
-    /// Get the type of device currently connected to this port.
+    pub(crate) const fn index(&self) -> u32 {
+        (self.number - 1) as u32
+    }
+
+    /// Returns the type of device currently connected to this port, or `None`
+    /// if no device is connected.
     ///
     /// # Examples
     ///
     /// ```
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
-    /// println!("Type of device connected to port 1: {:?}", my_port.connected_type()?);
+    /// if let Some(device_type) = my_port.device_type() {
+    ///     println!("Type of device connected to port 1: {:?}", device_type);
+    /// }
     /// ```
-    pub fn device_type(&self) -> Result<SmartDeviceType, PortError> {
-        Ok(unsafe { *vexDeviceGetByIndex((self.index() - 1) as u32) }
-            .device_type
-            .into())
+    #[must_use]
+    pub fn device_type(&self) -> Option<SmartDeviceType> {
+        let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
+        unsafe {
+            vexDeviceGetStatus(device_types.as_mut_ptr());
+        }
+
+        match device_types[self.index() as usize] {
+            V5_DeviceType::kDeviceTypeNoSensor => None,
+            raw_type => Some(raw_type.into()),
+        }
     }
 
     /// Verify that a device type is currently plugged into this port, returning an appropriate
     /// [`PortError`] if not available.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PortError`] if there is not a device of the specified type in this port.
     pub fn validate_type(&self, device_type: SmartDeviceType) -> Result<(), PortError> {
-        validate_port(self.index(), device_type)
+        if let Some(connected_type) = self.device_type() {
+            // The connected device must match the requested type.
+            ensure!(
+                connected_type == device_type,
+                IncorrectDeviceSnafu {
+                    expected: device_type,
+                    actual: connected_type,
+                    port: self.number,
+                }
+            );
+        } else {
+            // No device is plugged into the port.
+            return DisconnectedSnafu { port: self.number }.fail();
+        }
+
+        Ok(())
     }
 
-    /// Get the raw handle of the underlying smart device connected to this port.
+    /// Returns the raw handle of the underlying Smart device connected to this port.
     pub(crate) unsafe fn device_handle(&self) -> V5_DeviceT {
-        unsafe { vexDeviceGetByIndex((self.index() - 1) as u32) }
+        unsafe { vexDeviceGetByIndex(self.index()) }
     }
 }
 
-/// Represents a possible type of device that can be registered on a [`SmartPort`].
+/// A possible type of device that can be plugged into a [`SmartPort`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum SmartDeviceType {
-    /// No device
-    None,
-
     /// Smart Motor
     Motor,
 
@@ -231,7 +306,7 @@ pub enum SmartDeviceType {
     AiVision,
 
     /// Workcell Electromagnet
-    Magnet,
+    Electromagnet,
 
     /// CTE Workcell Light Tower
     LightTower,
@@ -250,7 +325,7 @@ pub enum SmartDeviceType {
 
     /// ADI Expander
     ///
-    /// This variant is also internally to represent the brain's onboard ADI slots.
+    /// This variant is also internally to represent the Brain's onboard ADI slots.
     Adi,
 
     /// Generic Serial Port
@@ -264,7 +339,6 @@ pub enum SmartDeviceType {
 impl From<V5_DeviceType> for SmartDeviceType {
     fn from(value: V5_DeviceType) -> Self {
         match value {
-            V5_DeviceType::kDeviceTypeNoSensor => Self::None,
             V5_DeviceType::kDeviceTypeMotorSensor => Self::Motor,
             V5_DeviceType::kDeviceTypeAbsEncSensor => Self::Rotation,
             V5_DeviceType::kDeviceTypeImuSensor => Self::Imu,
@@ -273,7 +347,7 @@ impl From<V5_DeviceType> for SmartDeviceType {
             V5_DeviceType::kDeviceTypeVisionSensor => Self::Vision,
             V5_DeviceType::kDeviceTypeAdiSensor => Self::Adi,
             V5_DeviceType::kDeviceTypeOpticalSensor => Self::Optical,
-            V5_DeviceType::kDeviceTypeMagnetSensor => Self::Magnet,
+            V5_DeviceType::kDeviceTypeMagnetSensor => Self::Electromagnet,
             V5_DeviceType::kDeviceTypeGpsSensor => Self::Gps,
             V5_DeviceType::kDeviceTypeLightTowerSensor => Self::LightTower,
             V5_DeviceType::kDeviceTypeArmDevice => Self::Arm,
@@ -287,14 +361,13 @@ impl From<V5_DeviceType> for SmartDeviceType {
 impl From<SmartDeviceType> for V5_DeviceType {
     fn from(value: SmartDeviceType) -> Self {
         match value {
-            SmartDeviceType::None => V5_DeviceType::kDeviceTypeNoSensor,
             SmartDeviceType::Motor => V5_DeviceType::kDeviceTypeMotorSensor,
             SmartDeviceType::Rotation => V5_DeviceType::kDeviceTypeAbsEncSensor,
             SmartDeviceType::Imu => V5_DeviceType::kDeviceTypeImuSensor,
             SmartDeviceType::Distance => V5_DeviceType::kDeviceTypeDistanceSensor,
             SmartDeviceType::Vision => V5_DeviceType::kDeviceTypeVisionSensor,
             SmartDeviceType::AiVision => V5_DeviceType::kDeviceTypeAiVisionSensor,
-            SmartDeviceType::Magnet => V5_DeviceType::kDeviceTypeMagnetSensor,
+            SmartDeviceType::Electromagnet => V5_DeviceType::kDeviceTypeMagnetSensor,
             SmartDeviceType::LightTower => V5_DeviceType::kDeviceTypeLightTowerSensor,
             SmartDeviceType::Arm => V5_DeviceType::kDeviceTypeArmDevice,
             SmartDeviceType::Optical => V5_DeviceType::kDeviceTypeOpticalSensor,
@@ -307,13 +380,14 @@ impl From<SmartDeviceType> for V5_DeviceType {
     }
 }
 
-/// Represents a timestamp on a smart device's internal clock. This type offers
-/// no guarantees that the device's clock is in sync with the internal clock of
-/// the brain, and thus cannot be safely compared with [`vexide_core::time::Instant`]s.
+/// Represents a timestamp on a Smart device's internal clock.
 ///
-/// There is additionally no guarantee that this is in sync with other smart devices,
+/// This type offers no guarantees that the device's clock is in sync with the internal
+/// clock of the Brain, and thus cannot be safely compared with [`vexide_core::time::Instant`]s.
+///
+/// There is additionally no guarantee that this is in sync with other Smart devices,
 /// or even the same device if a disconnect occurred causing the clock to reset. As such,
-/// this is effectively a newtype wrapper of `u32`.
+/// this is effectively a wrapper of `u32`.
 ///
 /// # Precision
 ///
