@@ -271,8 +271,7 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
         default_panic_hook(info);
     }
 
-    // unreachable without display_panics
-    #[cfg(feature = "display_panics")]
+    // enter into an endless loop if the panic hook didn't exit the program
     loop {
         unsafe {
             // Flush the serial buffer so that the panic message is printed
