@@ -9,11 +9,14 @@
 extern crate alloc;
 
 #[allow(unused_imports)]
-use alloc::string::{String, ToString};
+use alloc::{
+    boxed::Box,
+    string::{String, ToString},
+};
 #[allow(unused_imports)]
-use core::fmt::Write;
+use core::{cell::UnsafeCell, fmt::Write};
 
-use vexide_core::{backtrace::Backtrace, println};
+use vexide_core::{backtrace::Backtrace, println, sync::Mutex};
 #[cfg(feature = "display_panics")]
 use vexide_devices::{
     display::{Display, Rect, Text, TextSize},
@@ -105,9 +108,35 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
     }
 }
 
-#[panic_handler]
-/// The panic handler for vexide.
-pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
+/// The default panic handler.
+///
+/// This function is called when a panic occurs and no custom panic hook is set,
+/// but you can also use it as a fallback in your custom panic hook to print the
+/// panic message to the screen and stdout.
+///
+/// It will print the panic message to the serial connection, and if the
+/// `display_panics` feature is enabled, it will also display the panic message
+/// on the V5 Brain display.
+///
+/// Note that if `display_panics` is not enabled, this function will not return.
+/// It will immediately exit the program after printing the panic message. If
+/// you do not want this behavior, you should use your own
+///
+/// # Examples
+///
+/// ```
+/// # use vexide_panic::{default_panic_hook, set_hook};
+/// #
+/// set_hook(|info| {
+///     // Do something interesting with the panic info, like printing it to the
+///     // controller screen so the driver knows something has gone wrong.
+///     // ...
+///
+///     // Then, call the default panic hook to show the message on the screen
+///     default_panic_hook(info);
+/// });
+/// ```
+pub fn default_panic_hook(info: &core::panic::PanicInfo<'_>) {
     println!("{info}");
 
     let backtrace = Backtrace::capture();
@@ -130,6 +159,118 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
 
     #[cfg(not(feature = "display_panics"))]
     vexide_core::program::exit();
+}
+
+/// The panic hook type
+///
+/// This mirrors the one available in the standard library.
+enum Hook {
+    Default,
+    Custom(Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send>),
+}
+
+/// A word-for-word copy of the Rust `std` impl
+impl Hook {
+    #[inline]
+    fn into_box(self) -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
+        match self {
+            Hook::Default => Box::new(default_panic_hook),
+            Hook::Custom(hook) => hook,
+        }
+    }
+}
+
+static HOOK: Mutex<Hook> = Mutex::new(Hook::Default);
+
+/// Registers a custom panic hook, replacing the current one if any.
+///
+/// This can be used to, for example, output a different message to the screen
+/// than the default one shown when the `display_panics` feature is enabled, or
+/// to log the panic message to a log file or other output (you will need to use
+/// `unsafe` to get peripheral access).
+///
+/// **Note**: Just like in the standard library, a custom panic hook _does
+/// override_ the default panic hook. In `vexide`'s case, this means that the
+/// error _will not automatically print to the screen or console_ when you set
+/// a custom panic hook. You will need to either do that yourself in the custom
+/// panic hook, or call [`default_panic_hook`] from your hook.
+///
+/// # Examples
+///
+/// ```
+/// use vexide_panic::set_panic_hook;
+///
+/// set_hook(|info| {
+///     // Do something with the panic info
+///     // This is pretty useless since vexide already does this
+///     println!("{:?}", info);
+/// });
+/// ```
+pub fn set_hook<F>(hook: F)
+where
+    F: Fn(&core::panic::PanicInfo<'_>) + Send + 'static,
+{
+    // Try to lock the mutex. This should always succeed since the mutex is only
+    // locked when the program panics and by the set_hook and take_hook
+    // functions, which don't panic while holding a lock.
+    let mut guard = HOOK
+        .try_lock()
+        .expect("failed to set custom panic hook (mutex poisoned or locked)");
+    // If we used a simple assignment, like
+    // *guard = Hook::Custom(Box::new(hook));
+    // the old value will be dropped. Since the old value is `dyn`, it
+    // could have arbitrary side effects in its destructor, *including
+    // panicking*. We need to avoid panicking here, since the panic
+    // handler would not be able to lock the mutex, which is kind of
+    // important.
+    // Don't do anything that could panic until guard is dropped
+    let old_handler = core::mem::replace(&mut *guard, Hook::Custom(Box::new(hook))).into_box();
+    // Drop the guard first to avoid a deadlock
+    core::mem::drop(guard);
+    // Now we can drop the old handler
+    core::mem::drop(old_handler); // This could panic
+}
+
+/// Unregisters the current panic hook, if any, and returns it, replacing it
+/// with the default panic hook.
+///
+/// The default panic hook will remain registered if no custom hook was set.
+pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
+    // Try to lock the mutex. This should always succeed since the mutex is only
+    // locked when the program panics and by the set_hook and take_hook
+    // functions, which don't panic while holding a lock.
+    let mut guard = HOOK
+        .try_lock()
+        .expect("failed to set custom panic hook (mutex poisoned or locked)");
+    // Don't do anything that could panic until guard is dropped
+    let old_hook = core::mem::replace(&mut *guard, Hook::Default).into_box();
+    core::mem::drop(guard);
+    old_hook
+}
+
+#[panic_handler]
+/// The panic handler for vexide.
+pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
+    // Try to lock the HOOK mutex. If we can't, we'll just use the default panic
+    // handler, since it's probably not good to panic in the panic handler and
+    // leave the user clueless about what happened.
+    //
+    // We should be able to lock the mutex, since we know that the mutex is only
+    // otherwise locked in `take_hook` and `set_hook`, which don't panic.
+    if let Some(mut guard) = HOOK.try_lock() {
+        let hook = core::mem::replace(&mut *guard, Hook::Default);
+        // Drop the guard first to avoid preventing set_hook or take_hook from
+        // getting a hook
+        core::mem::drop(guard);
+        (hook.into_box())(info);
+    } else {
+        // Since this is in theory unreachable, if it is reached, let's ask the
+        // user to file a bug report.
+        println!("Panic handler hook mutex is poisoned. Using default `vexide-panic` panic handler. This should never happen.");
+        println!("If you see this, please consider filing a bug: https://github.com/vexide/vexide/issues/new");
+        default_panic_hook(info);
+    }
+
     // unreachable without display_panics
     #[cfg(feature = "display_panics")]
     loop {
