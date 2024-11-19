@@ -96,27 +96,11 @@ impl Sub<Position> for Position {
     }
 }
 
-impl Mul<Position> for Position {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Self(self.0 * rhs.0)
-    }
-}
-
 impl Mul<i64> for Position {
     type Output = Self;
 
     fn mul(self, rhs: i64) -> Self::Output {
         Self(self.0 * rhs)
-    }
-}
-
-impl Div<Position> for Position {
-    type Output = Self;
-
-    fn div(self, rhs: Self) -> Self::Output {
-        Self(self.0 / rhs.0)
     }
 }
 
@@ -140,21 +124,9 @@ impl SubAssign<Position> for Position {
     }
 }
 
-impl MulAssign<Position> for Position {
-    fn mul_assign(&mut self, rhs: Self) {
-        self.0 *= rhs.0;
-    }
-}
-
 impl MulAssign<i64> for Position {
     fn mul_assign(&mut self, rhs: i64) {
         self.0 *= rhs;
-    }
-}
-
-impl DivAssign<Position> for Position {
-    fn div_assign(&mut self, rhs: Self) {
-        self.0 /= rhs.0;
     }
 }
 
