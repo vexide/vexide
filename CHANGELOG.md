@@ -112,6 +112,7 @@ Before releasing:
 - `GestureDirection` no longer has a `From` conversion for `u32`. (#215) (**Breaking Change**)
 - Removed the `nalgebra` feature. All math types should natively support nalgebra conversions without any additional features. (#218) (**Breaking Change**)
 - Removed `SmartDeviceType::None`. `SmartPort::device_type` now returns an `Option<SmartDeviceType>` which serves the same purpose. (#219) (**Breaking Change**)
+- Removed `Position`-to-`Position` `Mul`/`Div` ops, as they were mathematically unsound. Prefer using `Position`-to-scalar operations for this. (#237) (**Breaking Change**)
 
 ### New Contributors
 
