@@ -166,13 +166,13 @@ pub fn default_panic_hook(info: &core::panic::PanicInfo<'_>) {
 /// This mirrors the one available in the standard library.
 enum Hook {
     Default,
-    Custom(Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send>),
+    Custom(Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send + Sync>),
 }
 
 /// A word-for-word copy of the Rust `std` impl
 impl Hook {
     #[inline]
-    fn into_box(self) -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
+    fn into_box(self) -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send + Sync> {
         match self {
             Hook::Default => Box::new(default_panic_hook),
             Hook::Custom(hook) => hook,
@@ -208,7 +208,7 @@ static HOOK: Mutex<Hook> = Mutex::new(Hook::Default);
 /// ```
 pub fn set_hook<F>(hook: F)
 where
-    F: Fn(&core::panic::PanicInfo<'_>) + Send + 'static,
+    F: Fn(&core::panic::PanicInfo<'_>) + Send + Sync + 'static,
 {
     // Try to lock the mutex. This should always succeed since the mutex is only
     // locked when the program panics and by the set_hook and take_hook
@@ -235,7 +235,7 @@ where
 /// with the default panic hook.
 ///
 /// The default panic hook will remain registered if no custom hook was set.
-pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
+pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send + Sync + 'static> {
     // Try to lock the mutex. This should always succeed since the mutex is only
     // locked when the program panics and by the set_hook and take_hook
     // functions, which don't panic while holding a lock.
