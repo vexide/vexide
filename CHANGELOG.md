@@ -64,6 +64,7 @@ Before releasing:
 - Fixed an issue preventing ADI updates in fast loops. (#210)
 - `Motor::status` can now actually return the `MotorStatus::BUSY` flag. (#211)
 - Fixed a memory leak on every `RadioLink` construction. (#220)
+- Fixed a problem where `Sync` was incorrectly implemented for `Mutex` when it shouldn't have been (#238) (**Breaking Change**)
 
 ### Changed
 
