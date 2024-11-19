@@ -49,8 +49,10 @@ Before releasing:
 - Added a `toggle` method to `AdiDigitalOut` to toggle between level outputs.
 - Added a `SerialPort::set_baud_rate` method for the adjusting baudrate of a generic serial smartport after initialization. (#217)
 - Added fields containing relevant failure information to several error types (#221) (**Breaking Change**)
+- Added support for the power button in the `Controller` API. (#231) (**Breaking Change**)
 - Added implementations of `Mul<i64>` and `Div<i64>` for `Position`, allowing
   for opaque scaling (#230)
+- Added panic hook support comparable to the Rust standard library through `vexide::panic::set_hook` and `vexide::panic::take_hook` (#234)
 
 ### Fixed
 
