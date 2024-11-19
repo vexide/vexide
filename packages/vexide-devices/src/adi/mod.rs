@@ -33,6 +33,7 @@ pub mod addrled;
 pub mod analog;
 pub mod digital;
 pub mod encoder;
+pub mod gyroscope;
 pub mod light_sensor;
 pub mod line_tracker;
 pub mod motor;
