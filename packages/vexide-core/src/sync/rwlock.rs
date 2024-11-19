@@ -142,10 +142,13 @@ impl<'a, T> Future for RwLockWriteFuture<'a, T> {
 /// This type allows multiple readers or one writer at a time.
 ///
 /// This is different from a [`Mutex`](super::Mutex) because it allows for multiple readers at the same time.
-pub struct RwLock<T> {
+pub struct RwLock<T: ?Sized> {
     state: RwLockState,
     data: UnsafeCell<T>,
 }
+unsafe impl<T: ?Sized + Send> Send for RwLock<T> {}
+unsafe impl<T: ?Sized + Sync> Sync for RwLock<T> {}
+
 impl<T> RwLock<T> {
     /// Creates a new reader-writer lock.
     pub const fn new(data: T) -> Self {
