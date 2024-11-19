@@ -51,9 +51,9 @@ impl Future for AdiGyroscopeCalibrationFuture<'_> {
             }
             AdiGyroscopeCalibrationFutureState::Waiting { start } => {
                 match this.gyro.is_calibrating() {
-                    Ok(true) => Poll::Ready(Ok(())),
+                    Ok(false) => Poll::Ready(Ok(())),
                     //TODO: Timeouts
-                    Ok(false) => {
+                    Ok(true) => {
                         cx.waker().wake_by_ref();
                         Poll::Pending
                     }
