@@ -64,6 +64,7 @@ Before releasing:
 - Fixed an issue preventing ADI updates in fast loops. (#210)
 - `Motor::status` can now actually return the `MotorStatus::BUSY` flag. (#211)
 - Fixed a memory leak on every `RadioLink` construction. (#220)
+- Added missing `Send` and `Sync` `impl`s for RwLock. (#239)
 
 ### Changed
 
