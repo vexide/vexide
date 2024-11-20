@@ -102,6 +102,8 @@ Before releasing:
 - Made `ControllerScreen` methods and `Controller::rumble` asynchronous and added synchronous `try_<action>` variants. (#222) (**Breaking Change**)
 - Renamed `ControllerScreen::MAX_LINE_LENGTH` to `ControllerScreen::MAX_COLUMNS`. (#222) (**Breaking Change**)
 - Refactored `InertialCalibrateFuture` to an opaque wrapper over the internal state machine. (#225) (**Breaking Change**)
+- `GpsSensor::new` is now infallible and no longer returns a `Result`. (#240) (**Breaking Change**)
+- `RadioLink::new` can now only fail on `NulError` and will not bail if a radio is disconnected. (#240) (**Breaking Change**)
 
 ### Removed
 
@@ -116,6 +118,7 @@ Before releasing:
 - Removed the `nalgebra` feature. All math types should natively support nalgebra conversions without any additional features. (#218) (**Breaking Change**)
 - Removed `SmartDeviceType::None`. `SmartPort::device_type` now returns an `Option<SmartDeviceType>` which serves the same purpose. (#219) (**Breaking Change**)
 - Removed `Position`-to-`Position` `Mul`/`Div` ops, as they were mathematically unsound. Prefer using `Position`-to-scalar operations for this. (#237) (**Breaking Change**)
+- Removed `LinkError::Nul`. (#240) (**Breaking Change**)
 
 ### New Contributors
 

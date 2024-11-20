@@ -58,8 +58,7 @@ impl RadioLink {
     ///
     /// # Errors
     ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the specified port.
-    /// - A [`LinkError::Nul`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
+    /// - A [`NulError`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
     ///
     /// # Examples
     ///
@@ -71,14 +70,7 @@ impl RadioLink {
     ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
     /// }
     /// ```
-    pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, LinkError> {
-        // Ensure that a radio is plugged into the requested port.
-        //
-        // Once we call [`vexDeviceGenericRadioConnection`], this type
-        // will be changed to be generic serial, but we haven't called
-        // it yet.
-        port.validate_type(SmartDeviceType::Radio)?;
-
+    pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, NulError> {
         let id = CString::new(id)?;
 
         // That this constructor literally has to be fallible unlike others.
@@ -365,13 +357,6 @@ pub enum LinkError {
 
     /// Internal read error occurred.
     ReadFailed,
-
-    /// A NUL (0x00) character was found in a string that may not contain NUL characters.
-    #[snafu(transparent)]
-    Nul {
-        /// The source of the error.
-        source: NulError,
-    },
 
     /// Generic port related error.
     #[snafu(transparent)]
