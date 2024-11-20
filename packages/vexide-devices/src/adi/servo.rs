@@ -1,4 +1,29 @@
 //! ADI Servo
+//!
+//! This module provides an interface for controlling the legacy 3-Wire Servo.
+//!
+//! # Hardware Overview
+//!
+//! Servos are similar in both appearance and function to [`AdiMotor`]s, with the
+//! caveat that they are designed to hold a specific *angle* rather than a continious
+//! *speed*. In other words:
+//!
+//! - Motors are designed for continuous rotation, providing variable speed and
+//!   direction of rotation.
+//! - Servos are designed for precise angular positioning, typically rotating to and
+//!   holding a specific angle within a limited range of motion.
+//!
+//! Servos, similar to motors, are PWM controlled. They use a standard
+//! [servo control](https://en.wikipedia.org/wiki/Servo_control) singal. A PWM input of
+//! 1ms - 2ms will give full reverse to full forward, while 1.5ms is neutral.
+//!
+//! # Operating Range
+//!
+//! The VEX legacy servo has an operating range of 100 degrees:
+//! - Minimum: -50 degrees (represented by [`AdiServo::MIN_POSITION`])
+//! - Maximum: 50 degrees (represented by [`AdiServo::MAX_POSITION`])
+//!
+//! Its neutral state is at 0° rotation (the middle of its operating range).
 
 use vex_sdk::vexDeviceAdiValueSet;
 
