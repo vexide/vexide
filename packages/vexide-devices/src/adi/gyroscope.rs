@@ -1,8 +1,21 @@
+//! ADI gyroscope device.
+//!
+//! This module provides an interface for interacting with an ADI gyroscope device.
+//! The gyroscope can be used to measure the yaw rotation of your robot.
+//!
+//! # Hardware overview
+//!
+//! The ADI gyroscope is a (LY3100ALH MEMS motion sensor)[https://content.vexrobotics.com/docs/276-2333-Datasheet-1011.pdf].
+//! This means that it can measure the rate of rotation up to ±1000 degrees per second.
+//! VEXos only provides the calculated yaw rotation of the robot.
+//!
+//! The gyroscope is rated for a noise density of 0.016 dps/√Hz (degrees per second per square root of Hertz).
+//! This means that we cannot determine the exact amount of noise in the sensor's readings because it is unknown how often VEXos polls the gyroscope.
+
 use core::{future::Future, task::Poll, time::Duration};
 
 use snafu::Snafu;
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
-use vexide_core::time::Instant;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
 use crate::{position::Position, PortError};
@@ -11,14 +24,13 @@ use crate::{position::Position, PortError};
 const CALIBRATING_MAGIC: i32 = -32768;
 
 enum AdiGyroscopeCalibrationFutureState {
-    Calibrate,
-    Waiting { start: Instant },
+    Calibrate { calibration_duration: Duration },
+    Waiting,
 }
 
 /// A future that calibrates an [`AdiGyroscope`] for a given duration.
 pub struct AdiGyroscopeCalibrationFuture<'a> {
     gyro: &'a mut AdiGyroscope,
-    calibration_duration: Duration,
     state: AdiGyroscopeCalibrationFutureState,
 }
 impl Future for AdiGyroscopeCalibrationFuture<'_> {
@@ -30,36 +42,31 @@ impl Future for AdiGyroscopeCalibrationFuture<'_> {
     ) -> Poll<Self::Output> {
         let this = self.get_mut();
         match this.state {
-            AdiGyroscopeCalibrationFutureState::Calibrate => {
-                match this.gyro.port.validate_expander() {
-                    Ok(()) => {
-                        unsafe {
-                            vexDeviceAdiValueSet(
-                                this.gyro.port.device_handle(),
-                                this.gyro.port.index(),
-                                this.calibration_duration.as_millis() as _,
-                            );
-                        }
-                        this.state = AdiGyroscopeCalibrationFutureState::Waiting {
-                            start: Instant::now(),
-                        };
-                        cx.waker().wake_by_ref();
-                        Poll::Pending
+            AdiGyroscopeCalibrationFutureState::Calibrate {
+                calibration_duration,
+            } => match this.gyro.port.validate_expander() {
+                Ok(()) => {
+                    unsafe {
+                        vexDeviceAdiValueSet(
+                            this.gyro.port.device_handle(),
+                            this.gyro.port.index(),
+                            calibration_duration.as_millis() as _,
+                        );
                     }
-                    Err(e) => Poll::Ready(Err(AdiGyroscopeError::Port { source: e })),
+                    this.state = AdiGyroscopeCalibrationFutureState::Waiting;
+                    cx.waker().wake_by_ref();
+                    Poll::Pending
                 }
-            }
-            AdiGyroscopeCalibrationFutureState::Waiting { start } => {
-                match this.gyro.is_calibrating() {
-                    Ok(false) => Poll::Ready(Ok(())),
-                    //TODO: Timeouts
-                    Ok(true) => {
-                        cx.waker().wake_by_ref();
-                        Poll::Pending
-                    }
-                    Err(e) => Poll::Ready(Err(e)),
+                Err(e) => Poll::Ready(Err(AdiGyroscopeError::Port { source: e })),
+            },
+            AdiGyroscopeCalibrationFutureState::Waiting => match this.gyro.is_calibrating() {
+                Ok(false) => Poll::Ready(Ok(())),
+                Ok(true) => {
+                    cx.waker().wake_by_ref();
+                    Poll::Pending
                 }
-            }
+                Err(e) => Poll::Ready(Err(e)),
+            },
         }
     }
 }
@@ -139,8 +146,9 @@ impl AdiGyroscope {
     pub fn calibrate(&mut self, duration: Duration) -> AdiGyroscopeCalibrationFuture<'_> {
         AdiGyroscopeCalibrationFuture {
             gyro: self,
-            calibration_duration: duration,
-            state: AdiGyroscopeCalibrationFutureState::Calibrate,
+            state: AdiGyroscopeCalibrationFutureState::Calibrate {
+                calibration_duration: duration,
+            },
         }
     }
 
@@ -200,9 +208,6 @@ pub enum AdiGyroscopeError {
         /// The source of the error.
         source: PortError,
     },
-    //TODO: what timeout
-    /// The sensor took longer than TODO seconds to calibrate.
-    CalibrationTimedOut,
     /// The sensor is still calibrating.
     StillCalibrating,
 }
