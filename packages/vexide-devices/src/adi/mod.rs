@@ -52,7 +52,6 @@ pub use potentiometer::{AdiPotentiometer, PotentiometerType};
 pub use pwm::AdiPwmOut;
 pub use range_finder::AdiRangeFinder;
 pub use servo::AdiServo;
-
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
