@@ -375,7 +375,7 @@ impl InertialSensor {
         Ok(unsafe { vexDeviceImuHeadingGet(self.device) } - self.rotation_offset)
     }
 
-    /// Returns the Inertial Sensor’s yaw angle bounded from [0, 360) degrees.
+    /// Returns the Inertial Sensor’s yaw angle bounded from [0.0, 360.0) degrees.
     ///
     /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
     /// represented with negative ones.
@@ -409,9 +409,11 @@ impl InertialSensor {
     /// ```
     pub fn heading(&self) -> Result<f64, InertialError> {
         self.validate()?;
+        // The result needs to be [0, 360). Adding a significantly negative offset could take us
+        // below 0. Adding a significantly positive offset could take us above 360.
         Ok(
-            (unsafe { vexDeviceImuDegreesGet(self.device) } - self.heading_offset)
-                % Self::MAX_HEADING,
+            (((unsafe { vexDeviceImuDegreesGet(self.device) } + self.heading_offset)
+                % Self::MAX_HEADING) + Self::MAX_HEADING) % Self::MAX_HEADING,
         )
     }
 
