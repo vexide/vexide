@@ -114,7 +114,6 @@ impl RadioLink {
     ///     }
     /// }
     /// ```
-    #[must_use]
     pub fn unread_bytes(&self) -> Result<usize, LinkError> {
         match unsafe { vexDeviceGenericRadioReceiveAvail(self.device) } {
             -1 => Err(LinkError::ReadFailed),
