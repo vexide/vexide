@@ -412,7 +412,8 @@ impl InertialSensor {
         // The result needs to be [0, 360). Adding a significantly negative offset could take us
         // below 0. Adding a significantly positive offset could take us above 360.
         Ok(
-            (unsafe { vexDeviceImuDegreesGet(self.device) } + self.heading_offset).rem_euclid(Self::MAX_HEADING)
+            (unsafe { vexDeviceImuDegreesGet(self.device) } + self.heading_offset)
+                .rem_euclid(Self::MAX_HEADING),
         )
     }
 
