@@ -147,7 +147,7 @@ pub struct RwLock<T: ?Sized> {
     data: UnsafeCell<T>,
 }
 unsafe impl<T: ?Sized + Send> Send for RwLock<T> {}
-unsafe impl<T: ?Sized + Sync> Sync for RwLock<T> {}
+unsafe impl<T: ?Sized + Send + Sync> Sync for RwLock<T> {}
 
 impl<T> RwLock<T> {
     /// Creates a new reader-writer lock.
