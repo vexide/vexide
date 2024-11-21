@@ -228,8 +228,6 @@ impl io::Write for RadioLink {
     ///
     /// # Errors
     ///
-    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
-    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned a device other than a radio is connected.
     /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
     ///   established. Use [`RadioLink::is_linked`] to check this if needed.
     /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal write error occurred.
@@ -270,8 +268,6 @@ impl io::Write for RadioLink {
     ///
     /// # Errors
     ///
-    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
-    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned a device other than a radio is connected.
     /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
     ///   established. Use [`RadioLink::is_linked`] to check this if needed.
     /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be written to the radio.

@@ -3,10 +3,9 @@
 
 extern crate alloc;
 
-use core::str;
-use core::time::Duration;
-
 use alloc::vec;
+use core::str;
+
 use vexide::prelude::*;
 
 #[vexide::main]
@@ -16,7 +15,7 @@ async fn main(peripherals: Peripherals) {
     println!("[MANAGER] Waiting for worker radio...");
 
     while !link.is_linked() {
-        sleep(Duration::from_millis(50)).await;
+        sleep(RadioLink::UPDATE_INTERVAL).await;
     }
 
     println!("[MANAGER] Found worker - link established.");
@@ -29,6 +28,6 @@ async fn main(peripherals: Peripherals) {
             link.read(&mut read).unwrap();
             println!("[WORKER] {}", str::from_utf8(&read).unwrap());
         }
-        sleep(Duration::from_millis(50)).await;
+        sleep(RadioLink::UPDATE_INTERVAL).await;
     }
 }
