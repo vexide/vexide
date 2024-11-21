@@ -349,7 +349,9 @@ impl GpsImu {
             // The result needs to be [0, 360). Adding a significantly negative offset could take us
             // below 0. Adding a significantly positive offset could take us above 360.
             (((unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset)
-                % Self::MAX_HEADING) + Self::MAX_HEADING) % Self::MAX_HEADING,
+                % Self::MAX_HEADING)
+                + Self::MAX_HEADING)
+                % Self::MAX_HEADING,
         )
     }
 
