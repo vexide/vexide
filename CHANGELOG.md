@@ -64,6 +64,7 @@ Before releasing:
 - Fixed an issue preventing ADI updates in fast loops. (#210)
 - `Motor::status` can now actually return the `MotorStatus::BUSY` flag. (#211)
 - Fixed a memory leak on every `RadioLink` construction. (#220)
+- Fixed a bug with IMU reset offsets being applied incorrectly. (#242)
 
 ### Changed
 
