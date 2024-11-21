@@ -95,7 +95,7 @@ impl RadioLink {
     ///
     /// # Errors
     ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
+    /// - A [`LinkError::ReadFailed`] error is returned if the input buffer could not be accessed.
     ///
     /// # Examples
     ///
@@ -125,7 +125,6 @@ impl RadioLink {
     ///
     /// # Errors
     ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
     /// - A [`LinkError::ReadFailed`] error is returned if the output buffer could not be accessed.
     ///
     /// # Examples
@@ -151,10 +150,6 @@ impl RadioLink {
     }
 
     /// Returns `true` if there is a link established with another radio.
-    ///
-    /// # Errors
-    ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
     ///
     /// # Examples
     ///
