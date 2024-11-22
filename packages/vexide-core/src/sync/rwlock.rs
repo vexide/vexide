@@ -59,7 +59,7 @@ impl RwLockState {
 
 /// Allows for gaining immutable access to the data in an [`RwLock`]`.
 /// Multiple readers can access the data at the same time.
-pub struct RwLockReadGuard<'a, T> {
+pub struct RwLockReadGuard<'a, T: ?Sized> {
     lock: &'a RwLock<T>,
 }
 impl<T> core::ops::Deref for RwLockReadGuard<'_, T> {
@@ -68,7 +68,7 @@ impl<T> core::ops::Deref for RwLockReadGuard<'_, T> {
         unsafe { &*self.lock.data.get() }
     }
 }
-impl<T> Drop for RwLockReadGuard<'_, T> {
+impl<T: ?Sized> Drop for RwLockReadGuard<'_, T> {
     fn drop(&mut self) {
         self.lock.state.try_unlock();
     }
@@ -76,7 +76,7 @@ impl<T> Drop for RwLockReadGuard<'_, T> {
 
 /// A future that resolves to a read guard.
 #[must_use = "futures do nothing unless you `.await` or poll them"]
-pub struct RwLockReadFuture<'a, T> {
+pub struct RwLockReadFuture<'a, T: ?Sized> {
     lock: &'a RwLock<T>,
 }
 impl<'a, T> Future for RwLockReadFuture<'a, T> {
@@ -97,7 +97,7 @@ impl<'a, T> Future for RwLockReadFuture<'a, T> {
 
 /// Allows for gaining mutable access to the data in an [`RwLock`]`.
 /// Only one writer can access the data at a time.
-pub struct RwLockWriteGuard<'a, T> {
+pub struct RwLockWriteGuard<'a, T: ?Sized> {
     lock: &'a RwLock<T>,
 }
 impl<T> core::ops::Deref for RwLockWriteGuard<'_, T> {
@@ -111,7 +111,7 @@ impl<T> core::ops::DerefMut for RwLockWriteGuard<'_, T> {
         unsafe { &mut *self.lock.data.get() }
     }
 }
-impl<T> Drop for RwLockWriteGuard<'_, T> {
+impl<T: ?Sized> Drop for RwLockWriteGuard<'_, T> {
     fn drop(&mut self) {
         self.lock.state.try_unlock();
     }
@@ -119,7 +119,7 @@ impl<T> Drop for RwLockWriteGuard<'_, T> {
 
 /// A future that resolves to a write guard.
 #[must_use = "futures do nothing unless you `.await` or poll them"]
-pub struct RwLockWriteFuture<'a, T> {
+pub struct RwLockWriteFuture<'a, T: ?Sized> {
     lock: &'a RwLock<T>,
 }
 impl<'a, T> Future for RwLockWriteFuture<'a, T> {
@@ -157,7 +157,9 @@ impl<T> RwLock<T> {
             data: UnsafeCell::new(data),
         }
     }
+}
 
+impl<T: ?Sized> RwLock<T> {
     /// Obtains a read lock on the data.
     /// Multiple read locks can be held at the same time.
     pub const fn read(&self) -> RwLockReadFuture<'_, T> {
@@ -196,7 +198,10 @@ impl<T> RwLock<T> {
     }
 
     /// Consumes the read-write lock and returns the inner data.
-    pub fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T
+    where
+        T: Sized,
+    {
         self.data.into_inner()
     }
 }
