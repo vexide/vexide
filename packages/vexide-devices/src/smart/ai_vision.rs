@@ -114,6 +114,7 @@ impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
 
 /// The data associated with an AI Vision object.
 /// The data is different depending on the type of object detected.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AiVisionObjectData {
     /// An object detected by color blob detection.
     Color {
@@ -152,7 +153,7 @@ pub enum AiVisionObjectData {
 }
 
 /// Possible april tag families to be detected by the sensor.
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
 pub enum AprilTagFamily {
     /// Circle21h7 family
     #[default]
@@ -169,7 +170,7 @@ pub enum AprilTagFamily {
 
 bitflags! {
     /// Flags relating to the sensor's detection mode.
-    #[derive(Default, Debug, Copy, Clone)]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq)]
     pub struct AiVisionMode: u8 {
         /// Disable model detection
         const DISABLE_MODEL = 1 << 2;
@@ -188,12 +189,19 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+impl Default for AiVisionMode {
+    fn default() -> Self {
+        Self::DISABLE_USB_OVERLAY
+    }
+}
+
+#[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
 /// Represents the state of the AI Vision sensor's USB overlay.
 pub enum AiVisionUsbOverlay {
     /// The USB overlay is enabled.
     Enabled,
     /// The USB overlay is disabled.
+    #[default]
     Disabled,
 }
 
