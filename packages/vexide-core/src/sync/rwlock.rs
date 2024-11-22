@@ -59,6 +59,8 @@ impl RwLockState {
 
 /// Allows for gaining immutable access to the data in an [`RwLock`]`.
 /// Multiple readers can access the data at the same time.
+#[must_use = "if unused the RwLock will immediately unlock"]
+#[clippy::has_significant_drop]
 pub struct RwLockReadGuard<'a, T> {
     lock: &'a RwLock<T>,
 }
@@ -97,6 +99,8 @@ impl<'a, T> Future for RwLockReadFuture<'a, T> {
 
 /// Allows for gaining mutable access to the data in an [`RwLock`]`.
 /// Only one writer can access the data at a time.
+#[must_use = "if unused the RwLock will immediately unlock"]
+#[clippy::has_significant_drop]
 pub struct RwLockWriteGuard<'a, T> {
     lock: &'a RwLock<T>,
 }
