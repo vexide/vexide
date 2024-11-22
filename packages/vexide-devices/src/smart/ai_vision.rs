@@ -4,6 +4,8 @@ use alloc::vec::Vec;
 use core::mem;
 
 use bitflags::bitflags;
+use mint::Point2;
+use rgb::Rgb;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceAiVisionCodeGet, vexDeviceAiVisionCodeSet, vexDeviceAiVisionColorGet,
@@ -60,8 +62,10 @@ impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
                 ObjectType::Color => {
                     let data = object.color;
                     AiVisionObjectData::Color {
-                        x_pos: data.xoffset,
-                        y_pos: data.yoffset,
+                        position: Point2 {
+                            x: data.xoffset,
+                            y: data.yoffset,
+                        },
                         width: data.width,
                         height: data.height,
                         angle: f64::from(data.angle) / 10.0,
@@ -70,8 +74,10 @@ impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
                 ObjectType::Model => {
                     let data = object.model;
                     AiVisionObjectData::Model {
-                        x_pos: data.xoffset,
-                        y_pos: data.yoffset,
+                        position: Point2 {
+                            x: data.xoffset,
+                            y: data.yoffset,
+                        },
                         width: data.width,
                         height: data.height,
                         confidence: data.score,
@@ -80,19 +86,19 @@ impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
                 ObjectType::AprilTag => {
                     let data = object.tag;
                     AiVisionObjectData::AprilTag {
-                        point1: mint::Point2 {
+                        corner_1: mint::Point2 {
                             x: data.x0,
                             y: data.y0,
                         },
-                        point2: mint::Point2 {
+                        corner_2: mint::Point2 {
                             x: data.x1,
                             y: data.y1,
                         },
-                        point3: mint::Point2 {
+                        corner_3: mint::Point2 {
                             x: data.x2,
                             y: data.y2,
                         },
-                        point4: mint::Point2 {
+                        corner_4: mint::Point2 {
                             x: data.x3,
                             y: data.y3,
                         },
@@ -111,11 +117,8 @@ impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
 pub enum AiVisionObjectData {
     /// An object detected by color blob detection.
     Color {
-        /// The x position of the object.
-        x_pos: u16,
-        /// The y position of the object.
-        y_pos: u16,
-
+        /// The position of the object.
+        position: Point2<u16>,
         /// The width of the object.
         width: u16,
         /// The height of the object.
@@ -126,17 +129,14 @@ pub enum AiVisionObjectData {
     /// An object detected by apriltag detection.
     AprilTag {
         //TODO: figure out what corners these points represent
-        point1: mint::Point2<i16>,
-        point2: mint::Point2<i16>,
-        point3: mint::Point2<i16>,
-        point4: mint::Point2<i16>,
+        corner_1: mint::Point2<i16>,
+        corner_2: mint::Point2<i16>,
+        corner_3: mint::Point2<i16>,
+        corner_4: mint::Point2<i16>,
     },
     /// An object detected by an onboard model.
     Model {
-        /// The x position of the object.
-        x_pos: u16,
-        /// The y position of the object.
-        y_pos: u16,
+        position: Point2<u16>,
         /// The width of the object.
         width: u16,
         /// The height of the object.
@@ -188,12 +188,8 @@ pub enum AiVisionUsbOverlay {
 #[derive(Debug, Copy, Clone)]
 /// A color signature used by an AI Vision Sensor to detect color blobs.
 pub struct AiVisionColor {
-    /// The red value of the color.
-    pub red: u8,
-    /// The green value of the color.
-    pub green: u8,
-    /// The blue value of the color.
-    pub blue: u8,
+    /// The RGB color value.
+    pub rgb: Rgb<u8>,
     /// The accepted hue range of the color. VEXcode limits this value to [0, 20]
     pub hue: f32,
     /// The accepted saturation range of the color.
@@ -496,9 +492,9 @@ impl AiVisionSensor {
 
         let mut color = V5_DeviceAiVisionColor {
             id,
-            red: color.red,
-            grn: color.green,
-            blu: color.blue,
+            red: color.rgb.r,
+            grn: color.rgb.g,
+            blu: color.rgb.b,
             hangle: color.hue,
             hdsat: color.saturation,
             reserved: 0,
@@ -526,9 +522,7 @@ impl AiVisionSensor {
         }
 
         Ok(Some(AiVisionColor {
-            red: color.red,
-            green: color.grn,
-            blue: color.blu,
+            rgb: Rgb::new(color.red, color.grn, color.blu),
             hue: color.hangle,
             saturation: color.hdsat,
         }))
@@ -588,7 +582,7 @@ impl AiVisionSensor {
 
     /// Returns all objects detected by the AI Vision sensor.
     pub fn objects(&self) -> Result<Vec<AiVisionObject>> {
-        let num_objects = self.num_objects()?;
+        let num_objects = self.object_count()?;
 
         let mut objects = Vec::new();
         for i in 0..num_objects {
@@ -604,7 +598,7 @@ impl AiVisionSensor {
     }
 
     /// Returns the number of objects currently detected by the AI Vision sensor.
-    pub fn num_objects(&self) -> Result<u32> {
+    pub fn object_count(&self) -> Result<u32> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionObjectCountGet(self.device) as _ })
     }
