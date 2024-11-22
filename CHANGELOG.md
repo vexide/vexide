@@ -64,6 +64,7 @@ Before releasing:
 - Fixed an issue preventing ADI updates in fast loops. (#210)
 - `Motor::status` can now actually return the `MotorStatus::BUSY` flag. (#211)
 - Fixed a memory leak on every `RadioLink` construction. (#220)
+- Fixed a panic in `RadioLink::open` that would occur if a program using a VEXlink radio was ran twice. (#243)
 - Fixed a bug with IMU reset offsets being applied incorrectly. (#242)
 
 ### Changed
@@ -104,6 +105,8 @@ Before releasing:
 - Refactored `InertialCalibrateFuture` to an opaque wrapper over the internal state machine. (#225) (**Breaking Change**)
 - `GpsSensor::new` is now infallible and no longer returns a `Result`. (#240) (**Breaking Change**)
 - `RadioLink::new` can now only fail on `NulError` and will not bail if a radio is disconnected. (#240) (**Breaking Change**)
+- `RadioLink::unread_bytes` can now return a `LinkError::ReadError`. (#243)
+- `RadioLink::is_linked` is now infallible. (#243) (**Breaking Change**)
 
 ### Removed
 
@@ -119,6 +122,7 @@ Before releasing:
 - Removed `SmartDeviceType::None`. `SmartPort::device_type` now returns an `Option<SmartDeviceType>` which serves the same purpose. (#219) (**Breaking Change**)
 - Removed `Position`-to-`Position` `Mul`/`Div` ops, as they were mathematically unsound. Prefer using `Position`-to-scalar operations for this. (#237) (**Breaking Change**)
 - Removed `LinkError::Nul`. (#240) (**Breaking Change**)
+- Removed `LinkError::Port`, because it was broken. VEXlink will no longer perform port validation. (#243) (**Breaking Change**)
 
 ### New Contributors
 
