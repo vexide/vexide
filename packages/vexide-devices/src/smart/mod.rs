@@ -40,6 +40,7 @@ use vex_sdk::{
 
 use crate::PortError;
 
+pub mod ai_vision;
 pub mod distance;
 pub mod electromagnet;
 pub mod expander;
@@ -51,7 +52,6 @@ pub mod optical;
 pub mod rotation;
 pub mod serial;
 pub mod vision;
-pub mod ai_vision;
 
 use core::time::Duration;
 
