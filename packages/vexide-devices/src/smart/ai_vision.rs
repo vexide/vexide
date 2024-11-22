@@ -151,8 +151,8 @@ pub enum AiVisionObjectData {
     },
 }
 
-#[derive(Debug, Copy, Clone)]
 /// Possible april tag families to be detected by the sensor.
+#[derive(Debug, Copy, Clone)]
 pub enum AprilTagFamily {
     /// Circle21h7 family
     Circle21h7,
@@ -167,6 +167,7 @@ pub enum AprilTagFamily {
 }
 
 bitflags! {
+    /// Flags relating to the sensor's detection mode.
     #[derive(Debug, Copy, Clone)]
     pub struct AiVisionMode: u8 {
         /// Disable model detection
@@ -183,21 +184,6 @@ bitflags! {
 
         /// Disable USB overlay
         const DISABLE_USB_OVERLAY = 1 << 7;
-    }
-}
-
-bitflags! {
-    #[derive(Debug, Copy, Clone)]
-    pub struct AiVisionStatus: u8 {
-        /// Indicates that some value in bits 8-23 have changed.
-        const UPDATE = 1 << 1;
-
-        /// When set, bits 16-23 will no longer be interpreted as apriltag data,
-        /// but rather as an input to some kind of testing interface.
-        const TEST_MODE = 1 << 2;
-
-        /// Actual use unknown. Default value when everything is reset.
-        const RESET = 1 << 6;
     }
 }
 
@@ -558,8 +544,6 @@ impl AiVisionSensor {
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
     pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
-        let x: u32 = 3;
-        let y = x.to_le_bytes();
         if !(1..=7).contains(&id) {
             return InvalidIdSnafu { id, range: 1..=7 }.fail();
         }
