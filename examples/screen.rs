@@ -26,9 +26,19 @@ async fn main(peripherals: Peripherals) {
     display.stroke(&rect, Rgb::new(255, 0, 255));
 
     // Create a piece of text to draw on the screen at a specific position.
-    let text = Text::new("Nice to see you!", TextSize::Medium, [80, 80]);
+    // It will have the default background color of black.
+    let text = Text::new("Nice to see you!", TextSize::Medium, [80, 50]);
     // Fill in the text with cyan.
     display.fill(&text, Rgb::new(0, 255, 255));
+
+    // Draw some text with a background color
+    let text = Text::new("Welcome back.", TextSize::Medium, [80, 80]);
+    // Fill in the text with red and a yellow background.
+    text.write(
+        &mut display,
+        Rgb::new(255, 0, 0),
+        Some(Rgb::new(255, 255, 0)),
+    );
 
     loop {
         sleep(Duration::from_secs(1)).await;
