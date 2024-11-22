@@ -1,7 +1,7 @@
 //! AI Vision sensor device.
 
 use alloc::vec::Vec;
-use core::{mem, u8};
+use core::mem;
 
 use bitflags::bitflags;
 use mint::Point2;
