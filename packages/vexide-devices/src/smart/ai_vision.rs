@@ -1,7 +1,7 @@
 //! AI Vision sensor device.
 
 use alloc::vec::Vec;
-use core::mem;
+use core::{mem, u8};
 
 use bitflags::bitflags;
 use mint::Point2;
@@ -636,7 +636,7 @@ impl AiVisionSensor {
 
         let new_mode = current_mode | mode.bits();
 
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | Self::MODE_MAGIC_BIT) }
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode << 8 | Self::MODE_MAGIC_BIT) }
 
         Ok(())
     }
@@ -695,11 +695,14 @@ impl AiVisionSensor {
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn set_usb_overlay(&mut self, state: AiVisionUsbOverlay) -> Result<()> {
         let status = self.status()?;
+
         let new_mode = match state {
             AiVisionUsbOverlay::Enabled => status & 0b0111_1111,
-            AiVisionUsbOverlay::Disabled => status & u32::from(u8::MAX) | 0b1000_0000,
+            AiVisionUsbOverlay::Disabled => status & 0b1111_1111 | 0b1000_0000,
         };
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | Self::MODE_MAGIC_BIT) }
+
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode << 8 | Self::MODE_MAGIC_BIT) }
+
         Ok(())
     }
 
