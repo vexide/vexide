@@ -53,6 +53,10 @@ Showcases writing text to the display through `write!`, drawing a shape, both fi
 
 Creates and communicates with several smart devices.
 
+### [`vexlink_manager`](./vexlink_manager.rs) & [`vexlink_worker`](./vexlink_worker.rs)
+
+Demonstrates basic usage of the VEXlink protocol for wireless message passing between two radios. These examples will need to be uploaded to two different robots (one "manager robot" and one "worker robot") each with their own radios in port 21.
+
 ## Async
 
 Examples showcasing vexide's async capabilities

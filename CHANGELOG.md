@@ -64,7 +64,7 @@ Before releasing:
 - Fixed an issue preventing ADI updates in fast loops. (#210)
 - `Motor::status` can now actually return the `MotorStatus::BUSY` flag. (#211)
 - Fixed a memory leak on every `RadioLink` construction. (#220)
-- Fixed a panic in `RadioLink::new` that would occur if a program using a VEXlink radio was ran twice. (#243)
+- Fixed a panic in `RadioLink::open` that would occur if a program using a VEXlink radio was ran twice. (#243)
 
 ### Changed
 
