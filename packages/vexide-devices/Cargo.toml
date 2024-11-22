@@ -34,4 +34,4 @@ dangerous_motor_tuning = []
 smart_leds_trait = ["dep:smart-leds-trait"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-none-eabi"]
+targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.

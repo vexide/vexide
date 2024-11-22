@@ -33,7 +33,6 @@ use vex_sdk::{
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::PortError;
 
 /// VEXLink Wireless Radio Link
 ///
@@ -58,8 +57,7 @@ impl RadioLink {
     ///
     /// # Errors
     ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the specified port.
-    /// - A [`LinkError::Nul`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
+    /// - A [`NulError`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
     ///
     /// # Examples
     ///
@@ -71,14 +69,7 @@ impl RadioLink {
     ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
     /// }
     /// ```
-    pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, LinkError> {
-        // Ensure that a radio is plugged into the requested port.
-        //
-        // Once we call [`vexDeviceGenericRadioConnection`], this type
-        // will be changed to be generic serial, but we haven't called
-        // it yet.
-        port.validate_type(SmartDeviceType::Radio)?;
-
+    pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, NulError> {
         let id = CString::new(id)?;
 
         // That this constructor literally has to be fallible unlike others.
@@ -104,7 +95,7 @@ impl RadioLink {
     ///
     /// # Errors
     ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
+    /// - A [`LinkError::ReadFailed`] error is returned if the input buffer could not be accessed.
     ///
     /// # Examples
     ///
@@ -124,16 +115,16 @@ impl RadioLink {
     /// }
     /// ```
     pub fn unread_bytes(&self) -> Result<usize, LinkError> {
-        self.validate_port()?;
-
-        Ok(unsafe { vexDeviceGenericRadioReceiveAvail(self.device) } as usize)
+        match unsafe { vexDeviceGenericRadioReceiveAvail(self.device) } {
+            -1 => Err(LinkError::ReadFailed),
+            unread => Ok(unread as usize),
+        }
     }
 
     /// Returns the number of bytes free in the radio's output buffer.
     ///
     /// # Errors
     ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
     /// - A [`LinkError::ReadFailed`] error is returned if the output buffer could not be accessed.
     ///
     /// # Examples
@@ -152,21 +143,13 @@ impl RadioLink {
     /// }
     /// ```
     pub fn available_write_bytes(&self) -> Result<usize, LinkError> {
-        self.validate_port()?;
-
         match unsafe { vexDeviceGenericRadioWriteFree(self.device) } {
-            // TODO: This check may not be necessary, since PROS doesn't do it,
-            //		 but we do it just to be safe.
             -1 => Err(LinkError::ReadFailed),
             available => Ok(available as usize),
         }
     }
 
     /// Returns `true` if there is a link established with another radio.
-    ///
-    /// # Errors
-    ///
-    /// - A [`LinkError::Port`] error is returned if a radio device is not currently connected to the Smart Port.
     ///
     /// # Examples
     ///
@@ -183,10 +166,9 @@ impl RadioLink {
     ///     }
     /// }
     /// ```
-    pub fn is_linked(&self) -> Result<bool, LinkError> {
-        self.validate_port()?;
-
-        Ok(unsafe { vexDeviceGenericRadioLinkStatus(self.device) })
+    #[must_use]
+    pub fn is_linked(&self) -> bool {
+        unsafe { vexDeviceGenericRadioLinkStatus(self.device) }
     }
 }
 
@@ -222,12 +204,7 @@ impl io::Read for RadioLink {
     /// }
     /// ```
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let is_linked = self.is_linked().map_err(|e| match e {
-            LinkError::Port { source } => source,
-            _ => unreachable!(),
-        })?;
-
-        if !is_linked {
+        if !self.is_linked() {
             return Err(io::Error::new(
                 io::ErrorKind::NotConnected,
                 RADIO_NOT_LINKED,
@@ -251,8 +228,6 @@ impl io::Write for RadioLink {
     ///
     /// # Errors
     ///
-    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
-    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned a device other than a radio is connected.
     /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
     ///   established. Use [`RadioLink::is_linked`] to check this if needed.
     /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal write error occurred.
@@ -270,12 +245,7 @@ impl io::Write for RadioLink {
     /// }
     /// ```
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let is_linked = self.is_linked().map_err(|e| match e {
-            LinkError::Port { source } => source,
-            _ => unreachable!(),
-        })?;
-
-        if !is_linked {
+        if !self.is_linked() {
             return Err(io::Error::new(
                 io::ErrorKind::NotConnected,
                 RADIO_NOT_LINKED,
@@ -298,16 +268,11 @@ impl io::Write for RadioLink {
     ///
     /// # Errors
     ///
-    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
-    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned a device other than a radio is connected.
     /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
     ///   established. Use [`RadioLink::is_linked`] to check this if needed.
     /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be written to the radio.
     fn flush(&mut self) -> io::Result<()> {
-        if !self.is_linked().map_err(|e| match e {
-            LinkError::Port { source } => source,
-            _ => unreachable!(),
-        })? {
+        if !self.is_linked() {
             return Err(io::Error::new(
                 io::ErrorKind::NotConnected,
                 RADIO_NOT_LINKED,
@@ -365,18 +330,4 @@ pub enum LinkError {
 
     /// Internal read error occurred.
     ReadFailed,
-
-    /// A NUL (0x00) character was found in a string that may not contain NUL characters.
-    #[snafu(transparent)]
-    Nul {
-        /// The source of the error.
-        source: NulError,
-    },
-
-    /// Generic port related error.
-    #[snafu(transparent)]
-    Port {
-        /// The source of the error.
-        source: PortError,
-    },
 }
