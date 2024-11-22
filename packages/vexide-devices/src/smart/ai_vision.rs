@@ -152,9 +152,10 @@ pub enum AiVisionObjectData {
 }
 
 /// Possible april tag families to be detected by the sensor.
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub enum AprilTagFamily {
     /// Circle21h7 family
+    #[default]
     Circle21h7,
     /// 16h5 family
     Tag16h5,
@@ -177,7 +178,7 @@ bitflags! {
         const DISABLE_COLOR = 1 << 1;
 
         /// Disable apriltag detection
-        const DISABLE_APRIL_TAG = 1 << 0;
+        const DISABLE_APRILTAG = 1 << 0;
 
         /// Merge color blobs?
         const COLOR_MERGE = 1 << 4;
@@ -353,8 +354,8 @@ impl AiVisionSensor {
     pub const DIAGONAL_FOV: f32 = 87.0;
 
     const RESET_FLAG: u32 = (1 << 30);
-    const UPDATE_FLAG: u32 = (1 << 26);
-    const TEST_MODE_FLAG: u32 = (1 << 25);
+    const UPDATE_FLAG: u32 = (1 << 25);
+    const TEST_MODE_FLAG: u32 = (1 << 26);
 
     /// Create a new AI Vision sensor from a smart port.
     #[must_use]
@@ -648,7 +649,7 @@ impl AiVisionSensor {
         let mut new_mode = self.status()? << 8;
 
         new_mode &= !(0xff << 8); // Clear the mode bits.
-        new_mode |= (u32::from(mode.bits()) << 8) & Self::UPDATE_FLAG; // Set the mode bits and set the UPDATE flag in StateFlags.
+        new_mode |= (u32::from(mode.bits()) << 8) | Self::UPDATE_FLAG; // Set the mode bits and set the UPDATE flag in StateFlags.
 
         // Update mode
         unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
@@ -697,7 +698,7 @@ impl AiVisionSensor {
     pub fn apriltag_family(&mut self) -> Result<AprilTagFamily> {
         let status = self.status()?;
         let is_test_mode = ((status << 8) & Self::TEST_MODE_FLAG) == Self::TEST_MODE_FLAG;
-        let family_byte = (status & (0xff << 8)) as u8;
+        let family_byte = (status >> 8 & 0xff) as u8;
 
         Ok(if is_test_mode {
             AprilTagFamily::TestMode(family_byte)
