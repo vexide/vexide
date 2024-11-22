@@ -352,7 +352,8 @@ impl AiVisionSensor {
     /// The diagonal FOV of the vision sensor in degrees.
     pub const DIAGONAL_FOV: f32 = 87.0;
 
-    const UPDATE_FLAG: u32 = (1 << 25);
+    const RESET_FLAG: u32 = (1 << 30);
+    const UPDATE_FLAG: u32 = (1 << 26);
     const TEST_MODE_FLAG: u32 = (1 << 25);
 
     /// Create a new AI Vision sensor from a smart port.
@@ -368,6 +369,9 @@ impl AiVisionSensor {
             brightness,
             contrast,
         };
+        unsafe {
+            vexDeviceAiVisionModeSet(device, Self::RESET_FLAG);
+        }
         let _ = this.set_mode(AiVisionMode::DISABLE_USB_OVERLAY);
         this
     }
