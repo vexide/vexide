@@ -1,4 +1,27 @@
 //! AI Vision sensor device.
+//!
+//! This module provides an API for interacting with the AI Vision sensor.
+//! The AI Vision sensor is meant to be a direct upgrade from the [Vision Sensor](super::vision)
+//! with a wider camera range and AI model capabilities.
+//!
+//! # Hardware overview
+//!
+//! The AI Vision sensor has three detection modes that can all be enabled at the same time:
+//!     - [Color detection](AiVisionMode::DISABLE_COLOR)
+//!     - [Custom model detection](AiVisionMode::DISABLE_MODEL)
+//!     - [AprilTag detection](AiVisionMode::COLOR_MERGE) (requires color detection to be enabled)
+//!     - [Color code detection](AiVisionMode::MERGE)
+//! Currently there is no known way to upload custom models to the sensor and fields do not have AprilTags.
+//! However, there are built-in models that can be used for detection.
+//! See [VEX's documentation](https://kb.vex.com/hc/en-us/articles/30326315023892-Using-AI-Classifications-with-the-AI-Vision-Sensor) for more information.
+//!
+//! The resolution of the AI Vision sensor is 320x240 pixels.
+//! It has a horizontal FOV of 74 degrees and a vertical FOV of 63 degrees.
+//! Both of these values are a slight upgrade from the Vision Sensor.
+//!
+//! Unlike the Vision Sensor, the AI Vision sensor uses more readable color signatures
+//! that may be created without the AI Vision utility.
+//! It still has a USB port that can be used to create these signatures with VEX's utility.
 
 use alloc::vec::Vec;
 use core::mem;
