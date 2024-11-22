@@ -1,8 +1,6 @@
 #![no_main]
 #![no_std]
 
-use core::time::Duration;
-
 use vexide::{
     devices::smart::ai_vision::{AiVisionColor, AiVisionSensor},
     prelude::*,
@@ -22,8 +20,8 @@ async fn main(peripherals: Peripherals) {
         )
         .unwrap();
     loop {
-        println!("Vision Sensor: {:?}", ai_vision.num_objects().unwrap());
+        println!("Vision Sensor: {:?}", ai_vision.object_count().unwrap());
 
-        sleep(Duration::from_millis(10)).await;
+        sleep(AiVisionSensor::UPDATE_INTERVAL).await;
     }
 }
