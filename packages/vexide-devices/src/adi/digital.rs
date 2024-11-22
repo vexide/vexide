@@ -163,6 +163,32 @@ impl AdiDigitalOut {
         Self { port }
     }
 
+    /// Create a digital output from an [`AdiPort`] with an initial logic level.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let digital_out = AdiDigitalOut::with_initial_level(peripherals.adi_a, LogicLevel::High).expect("failed to initialize digital output");
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
+    pub fn with_initial_level(port: AdiPort, initial_level: LogicLevel) -> Result<Self, PortError> {
+        port.configure(AdiDeviceType::DigitalOut);
+
+        let mut adi_digital_out = Self { port };
+        adi_digital_out.set_level(initial_level)?;
+        Ok(adi_digital_out)
+    }
+
     /// Sets the digital logic level (high or low) of a pin.
     ///
     /// # Errors
