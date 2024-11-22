@@ -31,6 +31,7 @@ enum ObjectType {
 }
 impl From<u8> for ObjectType {
     fn from(value: u8) -> Self {
+        #[allow(clippy::match_same_arms)]
         match value {
             0 => ObjectType::Unknown,
             1 => ObjectType::Color,
@@ -136,6 +137,7 @@ pub enum AiVisionObjectData {
     },
     /// An object detected by an onboard model.
     Model {
+        /// The position of the object.
         position: Point2<u16>,
         /// The width of the object.
         width: u16,
@@ -202,11 +204,13 @@ pub struct AiVisionColor {
 pub struct AiVisionColorCode([Option<u8>; 7]);
 impl AiVisionColorCode {
     /// Creates a new color code with the given color signature ids.
+    #[must_use]
     pub const fn new<const N: usize>(code: [Option<u8>; 7]) -> Self {
         Self(code)
     }
 
     /// Returns the color signature ids in the color code.
+    #[must_use]
     pub fn colors(&self) -> Vec<u8> {
         self.0.iter().flatten().copied().collect()
     }
@@ -342,14 +346,15 @@ impl AiVisionSensor {
     const MODE_MAGIC_BIT: u32 = 0x2000_0000;
 
     /// Create a new AI Vision sensor from a smart port.
+    #[must_use]
     pub fn new(port: SmartPort, brightness: f64, contrast: f64) -> Self {
         let device = unsafe { port.device_handle() };
         // Configure the AI Vision sensor with the given brightness and contrast.
         // SAFETY: The device handle is valid because it was created from a valid port.
         unsafe { vexDeviceAiVisionSensorSet(device, brightness, contrast) }
         let mut this = Self {
-            device,
             port,
+            device,
             brightness,
             contrast,
         };
@@ -358,6 +363,10 @@ impl AiVisionSensor {
     }
 
     /// Returns the current temperature of the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn temperature(&self) -> Result<f64> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionTemperatureGet(self.device) })
@@ -367,10 +376,15 @@ impl AiVisionSensor {
     /// # Note
     /// This method does not query the device for the current contrast.
     /// If the sensor is not connected, this function will not error.
+    #[must_use]
     pub const fn contrast(&self) -> f64 {
         self.contrast
     }
     /// Sets the contrast of the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn set_contrast(&mut self, contrast: f64) -> Result<()> {
         self.validate_port()?;
         self.contrast = contrast;
@@ -379,13 +393,20 @@ impl AiVisionSensor {
     }
 
     /// Returns the brightness of the AI Vision sensor.
+    ///
     /// # Note
+    ///
     /// This method does not query the device for the current brightness.
     /// If the sensor is not connected, this function will not error.
+    #[must_use]
     pub const fn brightness(&self) -> f64 {
         self.brightness
     }
     /// Sets the brightness of the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn set_brightness(&mut self, brightness: f64) -> Result<()> {
         self.validate_port()?;
         self.brightness = brightness;
@@ -394,9 +415,17 @@ impl AiVisionSensor {
     }
 
     /// Sets a color code used to detect groups of colors.
+    ///
     /// # Note
+    ///
     /// This function will return an error if the given ID is not in the range [1, 8].
-    pub fn set_color_code(&mut self, id: u8, code: AiVisionColorCode) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 8].
+    /// - A [`AiVisionError::InvalidIdInCode`] is returned if the given color code contains an ID that is not in the range [1, 7].
+    pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<()> {
         if !(1..=8).contains(&id) {
             return Err(AiVisionError::InvalidId);
         }
@@ -424,22 +453,27 @@ impl AiVisionSensor {
         let mut code = V5_DeviceAiVisionCode {
             id,
             len,
-            c1: ids[0] as i16,
-            c2: ids[1] as i16,
-            c3: ids[2] as i16,
-            c4: ids[3] as i16,
-            c5: ids[4] as i16,
-            c6: ids[5] as i16,
-            c7: ids[6] as i16,
+            c1: i16::from(ids[0]),
+            c2: i16::from(ids[1]),
+            c3: i16::from(ids[2]),
+            c4: i16::from(ids[3]),
+            c5: i16::from(ids[4]),
+            c6: i16::from(ids[5]),
+            c7: i16::from(ids[6]),
         };
         unsafe {
-            vexDeviceAiVisionCodeSet(self.device, &mut code as *mut _);
+            vexDeviceAiVisionCodeSet(self.device, core::ptr::from_mut(&mut code));
         }
 
         Ok(())
     }
 
     /// Returns the color code set on the AI Vision sensor with the given ID if it exists.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 8].
     pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>> {
         if !(1..=8).contains(&id) {
             return Err(AiVisionError::InvalidId);
@@ -448,7 +482,9 @@ impl AiVisionSensor {
 
         // Get the color code from the sensor
         let mut code: V5_DeviceAiVisionCode = unsafe { mem::zeroed() };
-        let read = unsafe { vexDeviceAiVisionCodeGet(self.device, id as _, &mut code as *mut _) };
+        let read = unsafe {
+            vexDeviceAiVisionCodeGet(self.device, id.into(), core::ptr::from_mut(&mut code))
+        };
         if !read {
             return Ok(None);
         }
@@ -468,6 +504,10 @@ impl AiVisionSensor {
     }
 
     /// Returns all color codes set on the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn color_codes(&self) -> Result<[Option<AiVisionColorCode>; 8]> {
         Ok([
             self.color_code(1)?,
@@ -482,8 +522,15 @@ impl AiVisionSensor {
     }
 
     /// Sets a color signature for the AI Vision sensor.
+    ///
     /// # Note
+    ///
     /// This function will return an error if the given ID is not in the range [1, 7].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
     pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
         if !(1..=7).contains(&id) {
             return Err(AiVisionError::InvalidId);
@@ -501,12 +548,17 @@ impl AiVisionSensor {
         };
 
         //TODO: Make sure that the color is not modified by this function
-        unsafe { vexDeviceAiVisionColorSet(self.device, &mut color as *mut _) }
+        unsafe { vexDeviceAiVisionColorSet(self.device, core::ptr::from_mut(&mut color)) }
 
         Ok(())
     }
 
     /// Returns the color signature set on the AI Vision sensor with the given ID if it exists.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
     pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>> {
         if !(1..=7).contains(&id) {
             return Err(AiVisionError::InvalidId);
@@ -516,7 +568,7 @@ impl AiVisionSensor {
         let mut color: V5_DeviceAiVisionColor = unsafe { mem::zeroed() };
 
         let read =
-            unsafe { vexDeviceAiVisionColorGet(self.device, id as u32, &mut color as *mut _) };
+            unsafe { vexDeviceAiVisionColorGet(self.device, u32::from(id), core::ptr::from_mut(&mut color)) };
         if !read {
             return Ok(None);
         }
@@ -529,6 +581,10 @@ impl AiVisionSensor {
     }
 
     /// Returns all color signatures set on the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn colors(&self) -> Result<[Option<AiVisionColor>; 7]> {
         Ok([
             self.color(1)?,
@@ -548,14 +604,24 @@ impl AiVisionSensor {
     }
 
     /// Returns the current detection mode of the AI Vision sensor.
+    ///
     /// # Note
+    ///
     /// This function currently cannot detect if the sensor is in color code detection mode.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn detection_mode(&self) -> Result<AiVisionDetectionMode> {
         let status = self.status()?;
         let mode = status & 0b111;
         Ok(AiVisionDetectionMode::from_bits_truncate(mode))
     }
     /// Set the type of objects that will be detected
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
         // Mask out the current detection mode
         let mode_mask = 0b1111_1000;
@@ -569,6 +635,10 @@ impl AiVisionSensor {
     }
 
     /// Sets the family of apriltag that will be detected
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn set_apriltag_family(&mut self, family: AiVisionAprilTagFamily) -> Result<()> {
         self.validate_port()?;
 
@@ -581,6 +651,10 @@ impl AiVisionSensor {
     }
 
     /// Returns all objects detected by the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn objects(&self) -> Result<Vec<AiVisionObject>> {
         let num_objects = self.object_count()?;
 
@@ -588,7 +662,7 @@ impl AiVisionSensor {
         for i in 0..num_objects {
             unsafe {
                 let mut object: V5_DeviceAiVisionObject = mem::zeroed();
-                vexDeviceAiVisionObjectGet(self.device, i, &mut object as *mut _);
+                vexDeviceAiVisionObjectGet(self.device, i, core::ptr::from_mut(&mut object));
                 let object = object.try_into()?;
                 objects.push(object);
             }
@@ -598,23 +672,35 @@ impl AiVisionSensor {
     }
 
     /// Returns the number of objects currently detected by the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn object_count(&self) -> Result<u32> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionObjectCountGet(self.device) as _ })
     }
 
     /// Sets state of the AI Vision sensor's USB overlay.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn set_usb_overlay(&mut self, state: AiVisionUsbOverlay) -> Result<()> {
         let status = self.status()?;
         let new_mode = match state {
             AiVisionUsbOverlay::Enabled => status & 0b0111_1111,
-            AiVisionUsbOverlay::Disabled => status & u8::MAX as u32 | 0b1000_0000,
+            AiVisionUsbOverlay::Disabled => status & u32::from(u8::MAX) | 0b1000_0000,
         };
         unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | Self::MODE_MAGIC_BIT) }
         Ok(())
     }
 
     /// Returns the state of the AI Vision sensor's USB overlay.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn usb_overlay(&self) -> Result<AiVisionUsbOverlay> {
         let status = self.status()?;
         let state = status & 0b1000_0000;
