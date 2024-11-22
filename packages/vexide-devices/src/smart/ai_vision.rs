@@ -1,4 +1,27 @@
 //! AI Vision sensor device.
+//!
+//! This module provides an API for interacting with the AI Vision sensor.
+//! The AI Vision sensor is meant to be a direct upgrade from the [Vision Sensor](super::vision)
+//! with a wider camera range and AI model capabilities.
+//!
+//! # Hardware overview
+//!
+//! The AI Vision sensor has three detection modes that can all be enabled at the same time:
+//!     - [Color detection](AiVisionMode::DISABLE_COLOR)
+//!     - [Custom model detection](AiVisionMode::DISABLE_MODEL)
+//!     - [AprilTag detection](AiVisionMode::COLOR_MERGE) (requires color detection to be enabled)
+//!     - [Color code detection](AiVisionMode::MERGE)
+//! Currently there is no known way to upload custom models to the sensor and fields do not have AprilTags.
+//! However, there are built-in models that can be used for detection.
+//! See [VEX's documentation](https://kb.vex.com/hc/en-us/articles/30326315023892-Using-AI-Classifications-with-the-AI-Vision-Sensor) for more information.
+//!
+//! The resolution of the AI Vision sensor is 320x240 pixels.
+//! It has a horizontal FOV of 74 degrees and a vertical FOV of 63 degrees.
+//! Both of these values are a slight upgrade from the Vision Sensor.
+//!
+//! Unlike the Vision Sensor, the AI Vision sensor uses more readable color signatures
+//! that may be created without the AI Vision utility.
+//! It still has a USB port that can be used to create these signatures with VEX's utility.
 
 use alloc::{
     string::{FromUtf8Error, String},
@@ -170,7 +193,7 @@ pub enum AiVisionUsbOverlay {
     Disabled,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 /// A color signature used by an AI Vision Sensor to detect color blobs.
 pub struct AiVisionColor {
     /// The RGB color value.
@@ -335,7 +358,19 @@ impl AiVisionSensor {
     const AWB_FLAG_1: u32 = (1 << 27);
     const AWB_START_VALUE: u32 = 4;
 
-    /// Create a new AI Vision sensor from a smart port.
+    /// Create a new AI Vision sensor from a smart port with the given brightness and contrast.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     // Do something with the AI Vision sensor
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: SmartPort, brightness: f64, contrast: f64) -> Self {
         let device = unsafe { port.device_handle() };
@@ -359,6 +394,21 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     loop {
+    ///         println!("{:?}", ai_vision.temperature());
+    ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn temperature(&self) -> Result<f64> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionTemperatureGet(self.device) })
@@ -370,6 +420,17 @@ impl AiVisionSensor {
     ///
     /// This method does not query the device for the current contrast.
     /// If the sensor is not connected, this function will not error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     assert_eq!(ai_vision.contrast(), 1.0);
+    /// }
     #[must_use]
     pub const fn contrast(&self) -> f64 {
         self.contrast
@@ -379,6 +440,20 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Contrast is 0.0
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 0.0, 0.0);
+    ///     // Contrast is now 1.0
+    ///     ai_vision.set_contrast(1.0).unwrap();
+    /// }
+    /// ```
     pub fn set_contrast(&mut self, contrast: f64) -> Result<()> {
         self.validate_port()?;
         self.contrast = contrast;
@@ -392,6 +467,18 @@ impl AiVisionSensor {
     ///
     /// This method does not query the device for the current brightness.
     /// If the sensor is not connected, this function will not error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     assert_eq!(ai_vision.brightness(), 1.0);
+    /// }
+    /// ```
     #[must_use]
     pub const fn brightness(&self) -> f64 {
         self.brightness
@@ -401,6 +488,20 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Brightness is 1.0
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     // Brightness is now 0.5
+    ///     ai_vision.set_brightness(0.5).unwrap();
+    /// }
+    /// ```
     pub fn set_brightness(&mut self, brightness: f64) -> Result<()> {
         self.validate_port()?;
         self.brightness = brightness;
@@ -419,6 +520,25 @@ impl AiVisionSensor {
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 8].
     /// - A [`AiVisionError::InvalidIdInCode`] is returned if the given color code contains an ID that is not in the range [1, 7].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let color = AiVisionColor {
+    ///         rgb: Rgb::new(255, 0, 0),
+    ///         hue: 10.0,
+    ///         saturation: 1.0,
+    ///     };
+    ///     _ = ai_vision.set_color(1, color);
+    ///     let code = AiVisionColorCode::from([1]);
+    ///     _ = ai_vision.set_color_code(1, &code);
+    /// }
+    /// ```
     pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<()> {
         if !(1..=8).contains(&id) {
             return InvalidIdSnafu { id, range: 1..=8 }.fail();
@@ -468,6 +588,24 @@ impl AiVisionSensor {
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 8].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let code = AiVisionColorCode::from([1]);
+    ///     _ = ai_vision.set_color_code(1, &code);
+    ///     if let Ok(Some(code)) = ai_vision.color_code(1) {
+    ///          println!("{:?}", code);
+    ///     } else {
+    ///         println!("Something went wrong!");
+    ///     }
+    /// }
+    /// ```
     pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>> {
         if !(1..=8).contains(&id) {
             return InvalidIdSnafu { id, range: 1..=8 }.fail();
@@ -502,6 +640,20 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     _ = ai_vision.set_color_code(1, &AiVisionColorCode::from([1]));
+    ///     _ = ai_vision.set_color_code(2, &AiVisionColorCode::from([1, 2]));
+    ///     println!("{:?}", ai_vision.color_codes());
+    /// }
+    /// ```
     pub fn color_codes(&self) -> Result<[Option<AiVisionColorCode>; 8]> {
         Ok([
             self.color_code(1)?,
@@ -525,6 +677,24 @@ impl AiVisionSensor {
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let color = AiVisionColor {
+    ///         rgb: Rgb::new(255, 0, 0),
+    ///         hue: 10.0,
+    ///         saturation: 1.0,
+    ///     };
+    ///     _ = ai_vision.set_color(1, color);
+    ///     _ = ai_vision.set_color(2, color);
+    /// }
+    /// ```
     pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
         if !(1..=7).contains(&id) {
             return InvalidIdSnafu { id, range: 1..=7 }.fail();
@@ -553,6 +723,28 @@ impl AiVisionSensor {
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let color = AiVisionColor {
+    ///         rgb: Rgb::new(255, 0, 0),
+    ///         hue: 10.0,
+    ///         saturation: 1.0,
+    ///     };
+    ///     _ = ai_vision.set_color(1, color);
+    ///     if let Ok(Some(color)) = ai_vision.color(1) {
+    ///         println!("{:?}", color);
+    ///     } else {
+    ///         println!("Something went wrong!");
+    ///     }
+    /// }
+    /// ```
     pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>> {
         if !(1..=7).contains(&id) {
             return InvalidIdSnafu { id, range: 1..=7 }.fail();
@@ -580,6 +772,25 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let color = AiVisionColor {
+    ///         rgb: Rgb::new(255, 0, 0),
+    ///         hue: 10.0,
+    ///         saturation: 1.0,
+    ///     };
+    ///     _ = ai_vision.set_color(1, color);
+    ///     let colors = ai_vision.colors().unwrap();
+    ///     println!("{:?}", colors);
+    /// }
+    /// ```
     pub fn colors(&self) -> Result<[Option<AiVisionColor>; 7]> {
         Ok([
             self.color(1)?,
@@ -607,6 +818,18 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     println!("{:?}", ai_vision.mode());
+    /// }
+    /// ```
     pub fn mode(&self) -> Result<AiVisionMode> {
         // Only care about the first byte of status.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
@@ -620,6 +843,20 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     // Enable all detection modes except for custom model and disable USB overlay
+    ///     let mode = AiVisionMode::DISABLE_USB_OVERLAY | AiVisionMode::DISABLE_MODEL;
+    ///     _ = ai_vision.set_mode(mode);
+    /// }
+    /// ```
     pub fn set_mode(&mut self, mode: AiVisionMode) -> Result<()> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
@@ -639,6 +876,18 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     _ = ai_vision.set_apriltag_family(AprilTagFamily::Tag16h5);
+    /// }
+    /// ```
     pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<()> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
@@ -672,6 +921,19 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     _ = ai_vision.set_apriltag_family(AprilTagFamily::Tag16h5);
+    ///     assert_eq!(ai_vision.apriltag_family().unwrap(), AprilTagFamily::Tag16h5);
+    /// }
+    /// ```
     pub fn apriltag_family(&mut self) -> Result<AprilTagFamily> {
         let status = self.status()?;
         let is_test_mode = ((status << 8) & Self::TEST_MODE_FLAG) == Self::TEST_MODE_FLAG;
@@ -696,6 +958,27 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// Loop through all objects of a specific type
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     loop {
+    ///         let objects = ai_vision.objects().unwrap();
+    ///         for object in objects {
+    ///             if let AiVisionObjectData::Color { position, .. } = object.data {
+    ///                 println!("{:?}", position);
+    ///             }
+    ///         }
+    ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn objects(&self) -> Result<Vec<AiVisionObject>> {
         let num_objects = self.object_count()?;
 
@@ -782,6 +1065,21 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected toMODE_MAGIC_BIT the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     loop {
+    ///         println!("AI Vision sensor currently detects {:?} objects", ai_vision.object_count());
+    ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn object_count(&self) -> Result<u32> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionObjectCountGet(self.device) as _ })
