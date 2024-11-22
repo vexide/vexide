@@ -53,6 +53,7 @@ Before releasing:
 - Added implementations of `Mul<i64>` and `Div<i64>` for `Position`, allowing
   for opaque scaling (#230)
 - Added panic hook support comparable to the Rust standard library through `vexide::panic::set_hook` and `vexide::panic::take_hook` (#234)
+- Added `Text::write` to write text to `Display` with a background color. (#247)
 
 ### Fixed
 
@@ -101,6 +102,7 @@ Before releasing:
 - Made `ControllerScreen` methods and `Controller::rumble` asynchronous and added synchronous `try_<action>` variants. (#222) (**Breaking Change**)
 - Renamed `ControllerScreen::MAX_LINE_LENGTH` to `ControllerScreen::MAX_COLUMNS`. (#222) (**Breaking Change**)
 - Refactored `InertialCalibrateFuture` to an opaque wrapper over the internal state machine. (#225) (**Breaking Change**)
+- `<Text as Fill>::fill` now defaults to a transparent background color instead of the last used one. (#247) (**Breaking Change**)
 
 ### Removed
 
