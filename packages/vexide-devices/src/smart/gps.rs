@@ -30,6 +30,7 @@ use vex_sdk::{
     vexDeviceGpsRawGyroGet, vexDeviceGpsRotationGet, vexDeviceGpsStatusGet, V5_DeviceGpsAttitude,
     V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
 };
+use vexide_core::float::Float;
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{math::Point2, PortError};
@@ -59,10 +60,6 @@ impl GpsSensor {
     /// - `offset`: The physical offset of the sensor from the robot's center of rotation.
     /// - `initial_pose`: The inital position and heading of the robot.
     ///
-    /// # Errors
-    ///
-    /// An error is returned if a GPS sensor is not currently connected to the specified port.
-    ///
     /// # Examples
     ///
     /// ```
@@ -76,16 +73,14 @@ impl GpsSensor {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     /// }
     /// ```
     pub fn new(
         port: SmartPort,
         offset: impl Into<Point2<f64>>,
         initial_pose: (impl Into<Point2<f64>>, f64),
-    ) -> Result<Self, PortError> {
-        port.validate_type(SmartDeviceType::Gps)?;
-
+    ) -> Self {
         let device = unsafe { port.device_handle() };
 
         let initial_position = initial_pose.0.into();
@@ -101,7 +96,7 @@ impl GpsSensor {
             );
         }
 
-        Ok(Self {
+        Self {
             device,
             imu: GpsImu {
                 device,
@@ -110,7 +105,7 @@ impl GpsSensor {
                 heading_offset: Default::default(),
             },
             port,
-        })
+        }
     }
 
     /// Returns the physical offset of the sensor from the robot's center of rotation.
@@ -130,7 +125,7 @@ impl GpsSensor {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///
     ///     // Get the configured offset of the sensor
     ///     if let Ok(offset) = gps.offset() {
@@ -176,7 +171,7 @@ impl GpsSensor {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///
     ///     // Get current position and heading
     ///     if let Ok((position, heading)) = gps.pose() {
@@ -229,7 +224,7 @@ impl GpsSensor {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///
     ///     // Check position accuracy
     ///     if gps.error().is_ok_and(|err| err > 0.3) {
@@ -260,7 +255,7 @@ impl GpsSensor {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///
     ///     if let Ok(status) = gps.status() {
     ///         println!("Status: {:b}", status);
@@ -310,7 +305,7 @@ impl GpsImu {
         validate_port(self.port_number, SmartDeviceType::Gps)
     }
 
-    /// Returns the IMU's yaw angle bounded by [0, 360) degrees.
+    /// Returns the IMU's yaw angle bounded by [0.0, 360.0) degrees.
     ///
     /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
     /// represented with negative ones.
@@ -338,7 +333,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
@@ -352,8 +347,10 @@ impl GpsImu {
     pub fn heading(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(
-            (unsafe { vexDeviceGpsDegreesGet(self.device) } - self.heading_offset)
-                % Self::MAX_HEADING,
+            // The result needs to be [0, 360). Adding a significantly negative offset could take us
+            // below 0. Adding a significantly positive offset could take us above 360.
+            (unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset)
+                .rem_euclid(Self::MAX_HEADING),
         )
     }
 
@@ -385,7 +382,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
@@ -398,7 +395,7 @@ impl GpsImu {
     /// ```
     pub fn rotation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } - self.rotation_offset)
+        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } + self.rotation_offset)
     }
 
     /// Returns the Euler angles (pitch, yaw, roll) representing the IMU's orientation.
@@ -426,7 +423,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
@@ -483,7 +480,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
@@ -536,7 +533,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Read out accleration values every 10mS
@@ -587,7 +584,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Read out angular velocity values every 10mS
@@ -643,7 +640,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
@@ -683,7 +680,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
@@ -722,7 +719,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Set rotation to 90 degrees clockwise.
@@ -761,7 +758,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Set heading to 90 degrees clockwise.
@@ -797,7 +794,7 @@ impl GpsImu {
     ///         peripherals.port_1,
     ///         [2.0, 1.0],
     ///         ([0.0, 0.0], 90.0)
-    ///     ).unwrap();
+    ///     );
     ///     let imu = gps.imu;
     ///
     ///     // Set to minimum interval.
