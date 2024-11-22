@@ -35,12 +35,3 @@ smart_leds_trait = ["dep:smart-leds-trait"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
-# Trick docs.rs to use our actual target instead.
-cargo-args = [
-    "--target",
-    "./armv7a-vex-v5.json",
-    "-Z",
-    "build-std=core,alloc,compiler_builtins",
-    "-Z",
-    "build-std-features=compiler-builtins-mem",
-]
