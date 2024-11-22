@@ -433,16 +433,16 @@ impl AiVisionSensor {
         let mut code = V5_DeviceAiVisionCode {
             id,
             len,
-            c1: ids[0] as i16,
-            c2: ids[1] as i16,
-            c3: ids[2] as i16,
-            c4: ids[3] as i16,
-            c5: ids[4] as i16,
-            c6: ids[5] as i16,
-            c7: ids[6] as i16,
+            c1: i16::from(ids[0]),
+            c2: i16::from(ids[1]),
+            c3: i16::from(ids[2]),
+            c4: i16::from(ids[3]),
+            c5: i16::from(ids[4]),
+            c6: i16::from(ids[5]),
+            c7: i16::from(ids[6]),
         };
         unsafe {
-            vexDeviceAiVisionCodeSet(self.device, &mut code as *mut _);
+            vexDeviceAiVisionCodeSet(self.device, core::ptr::from_mut(&mut code));
         }
 
         Ok(())
@@ -457,7 +457,9 @@ impl AiVisionSensor {
 
         // Get the color code from the sensor
         let mut code: V5_DeviceAiVisionCode = unsafe { mem::zeroed() };
-        let read = unsafe { vexDeviceAiVisionCodeGet(self.device, id as _, &mut code as *mut _) };
+        let read = unsafe {
+            vexDeviceAiVisionCodeGet(self.device, u32::from(id), core::ptr::from_mut(&mut code))
+        };
         if !read {
             return Ok(None);
         }
@@ -510,7 +512,7 @@ impl AiVisionSensor {
         };
 
         //TODO: Make sure that the color is not modified by this function
-        unsafe { vexDeviceAiVisionColorSet(self.device, &mut color as *mut _) }
+        unsafe { vexDeviceAiVisionColorSet(self.device, core::ptr::from_mut(&mut color)) }
 
         Ok(())
     }
@@ -618,7 +620,7 @@ impl AiVisionSensor {
         let status = self.status()?;
         let new_mode = match state {
             AiVisionUsbOverlay::Enabled => status & 0b0111_1111,
-            AiVisionUsbOverlay::Disabled => status & u8::MAX as u32 | 0b1000_0000,
+            AiVisionUsbOverlay::Disabled => status & u32::from(u8::MAX) | 0b1000_0000,
         };
         unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | Self::MODE_MAGIC_BIT) }
         Ok(())
