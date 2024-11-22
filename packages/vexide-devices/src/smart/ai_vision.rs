@@ -701,6 +701,30 @@ impl AiVisionSensor {
         Ok(())
     }
 
+    /// Returns the family of apriltag that will be detected
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    pub fn apriltag_family(&mut self) -> Result<AprilTagFamily> {
+        let status = self.status()?;
+        let is_test_mode = ((status << 8) & Self::TEST_MODE_FLAG) == Self::TEST_MODE_FLAG;
+        let family_byte = (status & (0xff << 8)) as u8;
+
+        Ok(if is_test_mode {
+            AprilTagFamily::TestMode(family_byte)
+        } else {
+            match family_byte {
+                0 => AprilTagFamily::Circle21h7,
+                1 => AprilTagFamily::Tag16h5,
+                2 => AprilTagFamily::Tag25h9,
+                3 => AprilTagFamily::Tag36h11,
+                // Probably unreachable
+                other => AprilTagFamily::TestMode(other),
+            }
+        })
+    }
+
     /// Returns all objects detected by the AI Vision sensor.
     ///
     /// # Errors
