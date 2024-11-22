@@ -151,33 +151,53 @@ pub enum AiVisionObjectData {
     },
 }
 
-#[repr(u8)]
 #[derive(Debug, Copy, Clone)]
 /// Possible april tag families to be detected by the sensor.
 pub enum AprilTagFamily {
     /// Circle21h7 family
-    Circle21h7 = 0,
+    Circle21h7,
     /// 16h5 family
-    Tag16h5 = 1,
+    Tag16h5,
     /// 25h9 family
-    Tag25h9 = 2,
+    Tag25h9,
     /// 36h11 family
-    Tag36h11 = 3,
+    Tag36h11,
+    /// Sensor is in test mode
+    TestMode(u8),
 }
 
 bitflags! {
-    /// The mode of the AI Vision sensor.
     #[derive(Debug, Copy, Clone)]
-    pub struct AiVisionDetectionMode: u32 {
-        /// Objects will be detected by an onboard model
-        const MODEL = 0b1;
-        /// Color blobs will be detected
-        const COLOR = 0b10;
-        /// Color codes will be detected
-        /// This only functions while color detection is enabled.
-        const COLOR_CODE = 0b10000;
-        /// April tags will be detected
-        const APRIL_TAG = 0b100;
+    pub struct AiVisionMode: u8 {
+        /// Disable model detection
+        const DISABLE_MODEL = 1 << 2;
+
+        /// Disable color detection
+        const DISABLE_COLOR = 1 << 1;
+
+        /// Disable apriltag detection
+        const DISABLE_APRIL_TAG = 1 << 0;
+
+        /// Merge color blobs?
+        const COLOR_MERGE = 1 << 4;
+
+        /// Disable USB overlay
+        const DISABLE_USB_OVERLAY = 1 << 7;
+    }
+}
+
+bitflags! {
+    #[derive(Debug, Copy, Clone)]
+    pub struct AiVisionStatus: u8 {
+        /// Indicates that some value in bits 8-23 have changed.
+        const UPDATE = 1 << 1;
+
+        /// When set, bits 16-23 will no longer be interpreted as apriltag data,
+        /// but rather as an input to some kind of testing interface.
+        const TEST_MODE = 1 << 2;
+
+        /// Actual use unknown. Default value when everything is reset.
+        const RESET = 1 << 6;
     }
 }
 
@@ -346,7 +366,8 @@ impl AiVisionSensor {
     /// The diagonal FOV of the vision sensor in degrees.
     pub const DIAGONAL_FOV: f32 = 87.0;
 
-    const MODE_MAGIC_BIT: u32 = 0x2000_0000;
+    const UPDATE_FLAG: u32 = (1 << 25);
+    const TEST_MODE_FLAG: u32 = (1 << 25);
 
     /// Create a new AI Vision sensor from a smart port.
     #[must_use]
@@ -361,7 +382,7 @@ impl AiVisionSensor {
             brightness,
             contrast,
         };
-        let _ = this.set_usb_overlay(AiVisionUsbOverlay::Disabled);
+        let _ = this.set_mode(AiVisionMode::DISABLE_USB_OVERLAY);
         this
     }
 
@@ -537,6 +558,8 @@ impl AiVisionSensor {
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
     pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
+        let x: u32 = 3;
+        let y = x.to_le_bytes();
         if !(1..=7).contains(&id) {
             return InvalidIdSnafu { id, range: 1..=7 }.fail();
         }
@@ -618,24 +641,29 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    pub fn detection_mode(&self) -> Result<AiVisionDetectionMode> {
-        let status = self.status()?;
-        let mode = status & 0b111;
-        Ok(AiVisionDetectionMode::from_bits_truncate(mode))
+    pub fn mode(&self) -> Result<AiVisionMode> {
+        // Only care about the first byte of status.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        Ok(AiVisionMode::from_bits_retain(
+            (self.status()? & 0xff) as u8,
+        ))
     }
+
     /// Set the type of objects that will be detected
     ///
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
-        // Mask out the current detection mode
-        let mode_mask = 0b1111_1000;
-        let current_mode = self.status()? & mode_mask as u32;
+    pub fn set_mode(&mut self, mode: AiVisionMode) -> Result<()> {
+        // Status is shifted to the right from mode. Least-significant byte is missing.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        let mut new_mode = self.status()? << 8;
 
-        let new_mode = current_mode | mode.bits();
+        new_mode &= !(0xff << 8); // Clear the mode bits.
+        new_mode |= (u32::from(mode.bits()) << 8) & Self::UPDATE_FLAG; // Set the mode bits and set the UPDATE flag in StateFlags.
 
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode << 8 | Self::MODE_MAGIC_BIT) }
+        // Update mode
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
 
         Ok(())
     }
@@ -646,13 +674,30 @@ impl AiVisionSensor {
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
     pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<()> {
-        self.validate_port()?;
+        // Status is shifted to the right from mode. Least-significant byte is missing.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        let mut new_mode = self.status()? << 8;
 
-        let new_mode = (family as u32) << 16;
+        new_mode &= !(0xff << 16); // Clear the existing apriltag family bits.
+        new_mode |= u32::from(match family {
+            AprilTagFamily::Circle21h7 => 0,
+            AprilTagFamily::Tag16h5 => 1,
+            AprilTagFamily::Tag25h9 => 2,
+            AprilTagFamily::Tag36h11 => 3,
+            AprilTagFamily::TestMode(value) => value,
+        }) << 16; // Set family bits
 
-        //TODO: This should overwrite all of the other settings?
-        //TODO: Testing required. This is what vexcode does...
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | Self::MODE_MAGIC_BIT) }
+        new_mode |= if matches!(family, AprilTagFamily::TestMode(_)) {
+            // Set TEST_MODE flag
+            Self::TEST_MODE_FLAG
+        } else {
+            // Set UPDATE flag
+            Self::UPDATE_FLAG
+        };
+
+        // Update mode
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
+
         Ok(())
     }
 
@@ -681,43 +726,10 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError`] is returned if an AI Vision is not connected toMODE_MAGIC_BIT the Smart Port.
     pub fn object_count(&self) -> Result<u32> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionObjectCountGet(self.device) as _ })
-    }
-
-    /// Sets state of the AI Vision sensor's USB overlay.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    pub fn set_usb_overlay(&mut self, state: AiVisionUsbOverlay) -> Result<()> {
-        let status = self.status()?;
-
-        let new_mode = match state {
-            AiVisionUsbOverlay::Enabled => status & 0b0111_1111,
-            AiVisionUsbOverlay::Disabled => status & 0b1111_1111 | 0b1000_0000,
-        };
-
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode << 8 | Self::MODE_MAGIC_BIT) }
-
-        Ok(())
-    }
-
-    /// Returns the state of the AI Vision sensor's USB overlay.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    pub fn usb_overlay(&self) -> Result<AiVisionUsbOverlay> {
-        let status = self.status()?;
-        let state = status & 0b1000_0000;
-        match state {
-            1 => Ok(AiVisionUsbOverlay::Disabled),
-            0 => Ok(AiVisionUsbOverlay::Enabled),
-            _ => unreachable!(),
-        }
     }
 }
 
