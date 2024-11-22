@@ -377,8 +377,20 @@ impl Text {
     }
 }
 
-impl Fill for Text {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+impl Text {
+    /// Write the text to the display.
+    ///
+    /// # Arguments
+    ///
+    /// - `display` - The display to write the text to.
+    /// - `color` - The color of the text.
+    /// - `bg_color` - The background color of the text. If `None`, the background will be transparent.
+    pub fn write(
+        &self,
+        _display: &mut Display,
+        color: impl Into<Rgb<u8>>,
+        bg_color: Option<impl Into<Rgb<u8>>>,
+    ) {
         // Horizontally align text
         let x = match self.horizontal_align {
             HAlign::Left => self.position.x,
@@ -397,6 +409,13 @@ impl Fill for Text {
         // This will be fixed once we have switched to vex-sdk.
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
+            vexDisplayBackgroundColor(if let Some(color) = bg_color {
+                color.into().into_raw()
+            } else {
+                // If the byte before the color is not 0, VEXos will use a
+                // transparent background.
+                0b1 << 24
+            });
 
             // Use `%s` and varargs to escape the string to stop undefined and unsafe behavior
             match self.size {
@@ -420,6 +439,12 @@ impl Fill for Text {
                 ),
             }
         }
+    }
+}
+
+impl Fill for Text {
+    fn fill(&self, display: &mut Display, color: impl Into<Rgb<u8>>) {
+        self.write(display, color, Option::<Rgb<u8>>::None);
     }
 }
 
@@ -590,6 +615,9 @@ impl Display {
     }
 
     /// Draw a filled object to the display.
+    ///
+    /// For `Text` widgets, the background color is transparent by default. Use
+    /// `Text::write` to specify a background color.
     pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
         shape.fill(self, color);
     }
