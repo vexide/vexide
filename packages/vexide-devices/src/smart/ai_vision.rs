@@ -129,7 +129,6 @@ pub enum AiVisionObjectData {
     /// An object detected by apriltag detection.
     AprilTag {
         //TODO: figure out what corners these points represent
-
         /// Tag Corner 1
         corner_1: mint::Point2<i16>,
         /// Tag Corner 2
