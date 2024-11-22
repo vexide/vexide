@@ -1,6 +1,9 @@
 use core::ptr;
 
+use alloc::{borrow::ToOwned, boxed::Box};
+
 #[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FsStr {
     inner: [i8],
 }

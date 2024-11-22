@@ -1,10 +1,9 @@
 //! File system API for the Brain SD card.
 
 use alloc::ffi::CString;
-use vex_sdk::{vexFileOpen, vexFileOpenCreate, vexFileOpenWrite, vexFileRead, vexFileWrite};
 
 use self::path::Path;
-use crate::{io, println};
+use crate::io;
 
 pub mod path;
 
@@ -19,7 +18,7 @@ pub struct OpenOptions {
 
 impl OpenOptions {
     #[must_use]
-    pub fn new() -> OpenOptions {
+    pub const fn new() -> OpenOptions {
         OpenOptions { read: false, write: false, append: false, truncate: false, create_new: false }
     }
 
@@ -48,6 +47,9 @@ impl OpenOptions {
         self
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the SD card failed to mount or if there are filesystem errors.
     pub fn open<P: AsRef<Path>>(&self, path: P) -> io::Result<File> {
         // Mount sdcard volume as FAT filesystem
         map_fresult(unsafe { vex_sdk::vexFileMountSD() })?;
@@ -101,7 +103,7 @@ impl OpenOptions {
         if file.is_null() {
             Err(io::Error::new(io::ErrorKind::NotFound, "Could not open file"))
         } else {
-            Ok(File { fd: file })
+            Ok(File { fd: file, write: self.write })
         }
     }
 }
@@ -174,6 +176,7 @@ impl Metadata {
 /// Represents a file in the file system.
 pub struct File {
     fd: *mut vex_sdk::FIL,
+    write: bool,
 }
 impl File {
     fn flush(&self) {
@@ -182,13 +185,18 @@ impl File {
         }
     }
 
+    /// Opens a file in read-only mode.
     pub fn open<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         OpenOptions::new().read(true).open(path.as_ref())
     }
 
+    /// Opens or creates a file in write-only mode.
+    /// Files cannot be read from in this mode.
     pub fn create<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         OpenOptions::new().write(true).create(true).truncate(true).open(path.as_ref())
     }
+    /// Creates a file in write-only mode, erroring if the file already exists.
+    /// Files cannot be read from in this mode.
     pub fn create_new<P: AsRef<Path>>(path: P) -> io::Result<File> {
         OpenOptions::new().read(true).write(true).create_new(true).open(path.as_ref())
     }
@@ -231,6 +239,9 @@ impl io::Write for File {
 }
 impl io::Read for File {
     fn read(&mut self, buf: &mut [u8]) -> no_std_io::io::Result<usize> {
+        if self.write {
+            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "Files opened in write mode cannot be read from"));
+        }
         let len = buf.len() as _;
         let buf_ptr = buf.as_mut_ptr();
         let read = unsafe { vex_sdk::vexFileRead(buf_ptr.cast(), 1, len, self.fd) };

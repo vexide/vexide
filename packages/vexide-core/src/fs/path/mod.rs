@@ -1,4 +1,5 @@
 mod fs_str;
+use alloc::borrow::Cow;
 use fs_str::FsStr;
 
 #[repr(transparent)]
@@ -16,5 +17,10 @@ impl Path {
 impl AsRef<Path> for Path {
     fn as_ref(&self) -> &Path {
         self
+    }
+}
+impl AsRef<Path> for &str {
+    fn as_ref(&self) -> &Path {
+        Path::new(self)
     }
 }

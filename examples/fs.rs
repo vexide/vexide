@@ -1,16 +1,18 @@
 #![no_main]
 #![no_std]
 
+use alloc::string::String;
 use vexide::prelude::*;
-use vexide::core::fs::path::Path;
+extern crate alloc;
 
 #[vexide::main]
 async fn main(_peripherals: Peripherals) {
-    let path = Path::new("file.txt");
-    let mut file = vexide::core::fs::File::create(path).unwrap();
-    file.write_all(b"Hello, world!").unwrap();
+    let mut file = vexide::core::fs::File::create("foo").unwrap();
+    file.write_all(b"bar").unwrap();
     file.flush().unwrap();
-    let mut buf = [0; 13];
+    let mut file = vexide::core::fs::File::open("foo").unwrap();
+    let mut buf = [0; 3];
     file.read(&mut buf).unwrap();
-    println!("{buf:?}");
+    let buf = String::from_utf8(buf.to_vec()).unwrap();
+    println!("{buf}");
 }
