@@ -64,7 +64,7 @@ impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
                         y_pos: data.yoffset,
                         width: data.width,
                         height: data.height,
-                        angle: data.angle as f64 / 10.0,
+                        angle: f64::from(data.angle) / 10.0,
                     }
                 }
                 ObjectType::Model => {
@@ -184,8 +184,6 @@ pub enum AiVisionUsbOverlay {
     /// The USB overlay is disabled.
     Disabled,
 }
-
-const MODE_MAGIC_BIT: u32 = 0x20000000;
 
 #[derive(Debug, Copy, Clone)]
 /// A color signature used by an AI Vision Sensor to detect color blobs.
@@ -344,6 +342,8 @@ impl AiVisionSensor {
 
     /// The diagonal FOV of the vision sensor in degrees.
     pub const DIAGONAL_FOV: f32 = 87.0;
+
+    const MODE_MAGIC_BIT: u32 = 0x2000_0000;
 
     /// Create a new AI Vision sensor from a smart port.
     pub fn new(port: SmartPort, brightness: f64, contrast: f64) -> Self {
@@ -564,12 +564,12 @@ impl AiVisionSensor {
     /// Set the type of objects that will be detected
     pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
         // Mask out the current detection mode
-        let mode_mask = 0b11111000;
+        let mode_mask = 0b1111_1000;
         let current_mode = self.status()? & mode_mask as u32;
 
         let new_mode = current_mode | mode.bits();
 
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | MODE_MAGIC_BIT) }
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | Self::MODE_MAGIC_BIT) }
 
         Ok(())
     }
@@ -582,7 +582,7 @@ impl AiVisionSensor {
 
         //TODO: This should overwrite all of the other settings?
         //TODO: Testing required. This is what vexcode does...
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | MODE_MAGIC_BIT) }
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | Self::MODE_MAGIC_BIT) }
         Ok(())
     }
 
@@ -613,17 +613,17 @@ impl AiVisionSensor {
     pub fn set_usb_overlay(&mut self, state: AiVisionUsbOverlay) -> Result<()> {
         let status = self.status()?;
         let new_mode = match state {
-            AiVisionUsbOverlay::Enabled => status & 0b01111111,
-            AiVisionUsbOverlay::Disabled => status & u8::MAX as u32 | 0b10000000,
+            AiVisionUsbOverlay::Enabled => status & 0b0111_1111,
+            AiVisionUsbOverlay::Disabled => status & u8::MAX as u32 | 0b1000_0000,
         };
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | MODE_MAGIC_BIT) }
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode | Self::MODE_MAGIC_BIT) }
         Ok(())
     }
 
     /// Returns the state of the AI Vision sensor's USB overlay.
     pub fn usb_overlay(&self) -> Result<AiVisionUsbOverlay> {
         let status = self.status()?;
-        let state = status & 0b10000000;
+        let state = status & 0b1000_0000;
         match state {
             1 => Ok(AiVisionUsbOverlay::Disabled),
             0 => Ok(AiVisionUsbOverlay::Enabled),
