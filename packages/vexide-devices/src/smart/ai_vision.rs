@@ -169,7 +169,7 @@ pub enum AprilTagFamily {
 
 bitflags! {
     /// Flags relating to the sensor's detection mode.
-    #[derive(Debug, Copy, Clone)]
+    #[derive(Default, Debug, Copy, Clone)]
     pub struct AiVisionMode: u8 {
         /// Disable model detection
         const DISABLE_MODEL = 1 << 2;
