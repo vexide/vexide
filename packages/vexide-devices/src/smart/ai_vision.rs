@@ -1,6 +1,9 @@
 //! AI Vision sensor device.
 
-use alloc::vec::Vec;
+use alloc::{
+    string::{FromUtf8Error, String},
+    vec::Vec,
+};
 use core::mem;
 
 use bitflags::bitflags;
@@ -8,11 +11,11 @@ use mint::Point2;
 use rgb::Rgb;
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceAiVisionCodeGet, vexDeviceAiVisionCodeSet, vexDeviceAiVisionColorGet,
-    vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet, vexDeviceAiVisionObjectCountGet,
-    vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet, vexDeviceAiVisionStatusGet,
-    vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionCode, V5_DeviceAiVisionColor,
-    V5_DeviceAiVisionObject, V5_DeviceT,
+    vexDeviceAiVisionClassNameGet, vexDeviceAiVisionCodeGet, vexDeviceAiVisionCodeSet,
+    vexDeviceAiVisionColorGet, vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet,
+    vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet,
+    vexDeviceAiVisionStatusGet, vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionCode,
+    V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT,
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -43,93 +46,54 @@ impl From<u8> for ObjectType {
     }
 }
 
-/// An object detected by the AI Vision sensor.
-pub struct AiVisionObject {
-    /// The ID of the object.
+/// Classification of a model detection.
+///
+/// Describes what model was used to detect an [`AiVisionObject`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModelClassification {
+    /// ID of the model used.
     pub id: u8,
-    /// The data associated with the object.
-    pub data: AiVisionObjectData,
-}
 
-impl TryFrom<V5_DeviceAiVisionObject> for AiVisionObject {
-    type Error = AiVisionError;
-
-    fn try_from(value: V5_DeviceAiVisionObject) -> Result<Self, Self::Error> {
-        let object = value.object;
-        let id = value.id;
-        let data = unsafe {
-            match id.into() {
-                ObjectType::Color => {
-                    let data = object.color;
-                    AiVisionObjectData::Color {
-                        position: Point2 {
-                            x: data.xoffset,
-                            y: data.yoffset,
-                        },
-                        width: data.width,
-                        height: data.height,
-                        angle: f64::from(data.angle) / 10.0,
-                    }
-                }
-                ObjectType::Model => {
-                    let data = object.model;
-                    AiVisionObjectData::Model {
-                        position: Point2 {
-                            x: data.xoffset,
-                            y: data.yoffset,
-                        },
-                        width: data.width,
-                        height: data.height,
-                        confidence: data.score,
-                    }
-                }
-                ObjectType::AprilTag => {
-                    let data = object.tag;
-                    AiVisionObjectData::AprilTag {
-                        corner_1: mint::Point2 {
-                            x: data.x0,
-                            y: data.y0,
-                        },
-                        corner_2: mint::Point2 {
-                            x: data.x1,
-                            y: data.y1,
-                        },
-                        corner_3: mint::Point2 {
-                            x: data.x2,
-                            y: data.y2,
-                        },
-                        corner_4: mint::Point2 {
-                            x: data.x3,
-                            y: data.y3,
-                        },
-                    }
-                }
-                _ => return Err(AiVisionError::InvalidObject),
-            }
-        };
-
-        Ok(Self { id, data })
-    }
+    /// Name of the model used.
+    pub class_name: String,
 }
 
 /// The data associated with an AI Vision object.
 /// The data is different depending on the type of object detected.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum AiVisionObjectData {
+#[derive(Debug, Clone, PartialEq)]
+pub enum AiVisionObject {
     /// An object detected by color blob detection.
     Color {
+        /// ID of the signature used to detect this object.
+        id: u8,
+        /// The top-left corner of the object.
+        position: Point2<u16>,
+        /// The width of the object.
+        width: u16,
+        /// The height of the object.
+        height: u16,
+    },
+
+    /// An object detected by color code detection.
+    Code {
+        /// ID of the code used to detect this object.
+        id: u8,
         /// The position of the object.
         position: Point2<u16>,
         /// The width of the object.
         width: u16,
         /// The height of the object.
         height: u16,
-        /// The angle of the object.
+        /// The angle of the object's associated colors. Not always reliably available.
         angle: f64,
     },
+
     /// An object detected by apriltag detection.
     AprilTag {
-        //TODO: figure out what corners these points represent
+        /// The detected AprilTag(s) ID number
+        index: u8,
+        //TODO: Figure out what corners these points represent. Here's
+        //      some impressively unhelpful comments for the time being:
         /// Tag Corner 1
         corner_1: mint::Point2<i16>,
         /// Tag Corner 2
@@ -139,8 +103,11 @@ pub enum AiVisionObjectData {
         /// Tag Corner 4
         corner_4: mint::Point2<i16>,
     },
+
     /// An object detected by an onboard model.
     Model {
+        /// Represents the specific type of AI Classification detected.
+        classification: ModelClassification,
         /// The position of the object.
         position: Point2<u16>,
         /// The width of the object.
@@ -172,18 +139,16 @@ bitflags! {
     /// Flags relating to the sensor's detection mode.
     #[derive(Debug, Copy, Clone, Eq, PartialEq)]
     pub struct AiVisionMode: u8 {
-        /// Disable model detection
-        const DISABLE_MODEL = 1 << 2;
-
-        /// Disable color detection
-        const DISABLE_COLOR = 1 << 1;
-
         /// Disable apriltag detection
         const DISABLE_APRILTAG = 1 << 0;
-
+        /// Disable color detection
+        const DISABLE_COLOR = 1 << 1;
+        /// Disable model detection
+        const DISABLE_MODEL = 1 << 2;
         /// Merge color blobs?
         const COLOR_MERGE = 1 << 4;
-
+        /// Disable status overlay
+        const DISABLE_STATUS_OVERLAY = 1 << 5;
         /// Disable USB overlay
         const DISABLE_USB_OVERLAY = 1 << 7;
     }
@@ -199,9 +164,9 @@ impl Default for AiVisionMode {
 /// Represents the state of the AI Vision sensor's USB overlay.
 pub enum AiVisionUsbOverlay {
     /// The USB overlay is enabled.
+    #[default]
     Enabled,
     /// The USB overlay is disabled.
-    #[default]
     Disabled,
 }
 
@@ -211,9 +176,9 @@ pub struct AiVisionColor {
     /// The RGB color value.
     pub rgb: Rgb<u8>,
     /// The accepted hue range of the color. VEXcode limits this value to [0, 20]
-    pub hue: f32,
+    pub hue_range: f32,
     /// The accepted saturation range of the color.
-    pub saturation: f32,
+    pub saturation_range: f32,
 }
 
 /// A color code used by an AI Vision Sensor to detect groups of color blobs.
@@ -346,6 +311,9 @@ unsafe impl Send for AiVisionSensor {}
 unsafe impl Sync for AiVisionSensor {}
 
 impl AiVisionSensor {
+    /// Maximum number of objects that can be detected at once.
+    pub const MAX_OBJECTS: usize = 24;
+
     /// The horizontal resolution of the AI Vision sensor.
     pub const HORIZONTAL_RESOLUTION: u16 = 320;
 
@@ -364,6 +332,8 @@ impl AiVisionSensor {
     const RESET_FLAG: u32 = (1 << 30);
     const UPDATE_FLAG: u32 = (1 << 25);
     const TEST_MODE_FLAG: u32 = (1 << 26);
+    const AWB_FLAG_1: u32 = (1 << 27);
+    const AWB_START_VALUE: u32 = 4;
 
     /// Create a new AI Vision sensor from a smart port.
     #[must_use]
@@ -372,17 +342,16 @@ impl AiVisionSensor {
         // Configure the AI Vision sensor with the given brightness and contrast.
         // SAFETY: The device handle is valid because it was created from a valid port.
         unsafe { vexDeviceAiVisionSensorSet(device, brightness, contrast) }
-        let mut this = Self {
+        unsafe {
+            vexDeviceAiVisionModeSet(device, Self::RESET_FLAG);
+        }
+
+        Self {
             port,
             device,
             brightness,
             contrast,
-        };
-        unsafe {
-            vexDeviceAiVisionModeSet(device, Self::RESET_FLAG);
         }
-        let _ = this.set_mode(AiVisionMode::DISABLE_USB_OVERLAY);
-        this
     }
 
     /// Returns the current temperature of the AI Vision sensor.
@@ -567,8 +536,8 @@ impl AiVisionSensor {
             red: color.rgb.r,
             grn: color.rgb.g,
             blu: color.rgb.b,
-            hangle: color.hue,
-            hdsat: color.saturation,
+            hangle: color.hue_range,
+            hdsat: color.saturation_range,
             reserved: 0,
         };
 
@@ -601,8 +570,8 @@ impl AiVisionSensor {
 
         Ok(Some(AiVisionColor {
             rgb: Rgb::new(color.red, color.grn, color.blu),
-            hue: color.hangle,
-            saturation: color.hdsat,
+            hue_range: color.hangle,
+            saturation_range: color.hdsat,
         }))
     }
 
@@ -733,9 +702,74 @@ impl AiVisionSensor {
         let mut objects = Vec::new();
         for i in 0..num_objects {
             unsafe {
-                let mut object: V5_DeviceAiVisionObject = mem::zeroed();
-                vexDeviceAiVisionObjectGet(self.device, i, core::ptr::from_mut(&mut object));
-                let object = object.try_into()?;
+                let mut raw: V5_DeviceAiVisionObject = mem::zeroed();
+                vexDeviceAiVisionObjectGet(self.device, i, core::ptr::from_mut(&mut raw));
+
+                let object = match raw.r#type.into() {
+                    ObjectType::Color => AiVisionObject::Color {
+                        id: raw.id,
+                        position: Point2 {
+                            x: raw.object.color.xoffset,
+                            y: raw.object.color.yoffset,
+                        },
+                        width: raw.object.color.width,
+                        height: raw.object.color.height,
+                    },
+                    ObjectType::Code => AiVisionObject::Code {
+                        id: raw.id,
+                        position: Point2 {
+                            x: raw.object.color.xoffset,
+                            y: raw.object.color.yoffset,
+                        },
+                        width: raw.object.color.width,
+                        height: raw.object.color.height,
+                        angle: f64::from(raw.object.color.angle) / 10.0,
+                    },
+                    ObjectType::Model => AiVisionObject::Model {
+                        classification: ModelClassification {
+                            id: raw.id,
+                            class_name: {
+                                let mut class_name = [0; 20]; // AIVISION_MAX_CLASS_NAME
+
+                                vexDeviceAiVisionClassNameGet(
+                                    self.device,
+                                    i32::from(raw.id),
+                                    class_name.as_mut_ptr(),
+                                );
+
+                                String::from_utf8(class_name.to_vec())?
+                            },
+                        },
+                        position: Point2 {
+                            x: raw.object.model.xoffset,
+                            y: raw.object.model.yoffset,
+                        },
+                        width: raw.object.model.width,
+                        height: raw.object.model.height,
+                        confidence: raw.object.model.score,
+                    },
+                    ObjectType::AprilTag => AiVisionObject::AprilTag {
+                        index: raw.id,
+                        corner_1: mint::Point2 {
+                            x: raw.object.tag.x0,
+                            y: raw.object.tag.y0,
+                        },
+                        corner_2: mint::Point2 {
+                            x: raw.object.tag.x1,
+                            y: raw.object.tag.y1,
+                        },
+                        corner_3: mint::Point2 {
+                            x: raw.object.tag.x2,
+                            y: raw.object.tag.y2,
+                        },
+                        corner_4: mint::Point2 {
+                            x: raw.object.tag.x3,
+                            y: raw.object.tag.y3,
+                        },
+                    },
+                    _ => return Err(AiVisionError::InvalidObject),
+                };
+
                 objects.push(object);
             }
         }
@@ -787,6 +821,11 @@ pub enum AiVisionError {
     InvalidIdInCode {
         /// The ID that was out of range.
         id: u8,
+    },
+    #[snafu(transparent)]
+    InvalidClassName {
+        /// The source of the error.
+        source: FromUtf8Error,
     },
     /// Generic port related error.
     #[snafu(transparent)]
