@@ -32,7 +32,6 @@ enum ObjectType {
 impl From<u8> for ObjectType {
     fn from(value: u8) -> Self {
         match value {
-            0 => ObjectType::Unknown,
             1 => ObjectType::Color,
             2 => ObjectType::Code,
             4 => ObjectType::Model,
@@ -136,6 +135,7 @@ pub enum AiVisionObjectData {
     },
     /// An object detected by an onboard model.
     Model {
+        /// The position of the object.
         position: Point2<u16>,
         /// The width of the object.
         width: u16,
@@ -149,7 +149,7 @@ pub enum AiVisionObjectData {
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
 /// Possible april tag families to be detected by the sensor.
-pub enum AiVisionAprilTagFamily {
+pub enum AprilTagFamily {
     /// Circle21h7 family
     Circle21h7 = 0,
     /// 16h5 family
@@ -202,11 +202,13 @@ pub struct AiVisionColor {
 pub struct AiVisionColorCode([Option<u8>; 7]);
 impl AiVisionColorCode {
     /// Creates a new color code with the given color signature ids.
+    #[must_use]
     pub const fn new<const N: usize>(code: [Option<u8>; 7]) -> Self {
         Self(code)
     }
 
     /// Returns the color signature ids in the color code.
+    #[must_use]
     pub fn colors(&self) -> Vec<u8> {
         self.0.iter().flatten().copied().collect()
     }
@@ -342,14 +344,15 @@ impl AiVisionSensor {
     const MODE_MAGIC_BIT: u32 = 0x2000_0000;
 
     /// Create a new AI Vision sensor from a smart port.
+    #[must_use]
     pub fn new(port: SmartPort, brightness: f64, contrast: f64) -> Self {
         let device = unsafe { port.device_handle() };
         // Configure the AI Vision sensor with the given brightness and contrast.
         // SAFETY: The device handle is valid because it was created from a valid port.
         unsafe { vexDeviceAiVisionSensorSet(device, brightness, contrast) }
         let mut this = Self {
-            device,
             port,
+            device,
             brightness,
             contrast,
         };
@@ -364,9 +367,12 @@ impl AiVisionSensor {
     }
 
     /// Returns the contrast of the AI Vision sensor.
+    ///
     /// # Note
+    ///
     /// This method does not query the device for the current contrast.
     /// If the sensor is not connected, this function will not error.
+    #[must_use]
     pub const fn contrast(&self) -> f64 {
         self.contrast
     }
@@ -379,9 +385,12 @@ impl AiVisionSensor {
     }
 
     /// Returns the brightness of the AI Vision sensor.
+    ///
     /// # Note
+    ///
     /// This method does not query the device for the current brightness.
     /// If the sensor is not connected, this function will not error.
+    #[must_use]
     pub const fn brightness(&self) -> f64 {
         self.brightness
     }
@@ -515,8 +524,9 @@ impl AiVisionSensor {
 
         let mut color: V5_DeviceAiVisionColor = unsafe { mem::zeroed() };
 
-        let read =
-            unsafe { vexDeviceAiVisionColorGet(self.device, id as u32, &mut color as *mut _) };
+        let read = unsafe {
+            vexDeviceAiVisionColorGet(self.device, u32::from(id), core::ptr::from_mut(&mut color))
+        };
         if !read {
             return Ok(None);
         }
@@ -569,7 +579,7 @@ impl AiVisionSensor {
     }
 
     /// Sets the family of apriltag that will be detected
-    pub fn set_apriltag_family(&mut self, family: AiVisionAprilTagFamily) -> Result<()> {
+    pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<()> {
         self.validate_port()?;
 
         let new_mode = (family as u32) << 16;
@@ -588,7 +598,7 @@ impl AiVisionSensor {
         for i in 0..num_objects {
             unsafe {
                 let mut object: V5_DeviceAiVisionObject = mem::zeroed();
-                vexDeviceAiVisionObjectGet(self.device, i, &mut object as *mut _);
+                vexDeviceAiVisionObjectGet(self.device, i, core::ptr::from_mut(&mut object));
                 let object = object.try_into()?;
                 objects.push(object);
             }

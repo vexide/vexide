@@ -21,8 +21,9 @@ async fn main(peripherals: Peripherals) {
             },
         )
         .unwrap();
+
     loop {
-        println!("Vision Sensor: {:?}", ai_vision.num_objects().unwrap());
+        println!("Vision Sensor: {:?}", ai_vision.object_count().unwrap());
 
         sleep(Duration::from_millis(10)).await;
     }
