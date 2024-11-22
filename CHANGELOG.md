@@ -65,6 +65,7 @@ Before releasing:
 - `Motor::status` can now actually return the `MotorStatus::BUSY` flag. (#211)
 - Fixed a memory leak on every `RadioLink` construction. (#220)
 - Fixed a panic in `RadioLink::open` that would occur if a program using a VEXlink radio was ran twice. (#243)
+- Fixed a bug with IMU reset offsets being applied incorrectly. (#242)
 
 ### Changed
 
