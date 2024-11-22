@@ -427,7 +427,7 @@ impl AiVisionSensor {
     /// - A [`AiVisionError::InvalidIdInCode`] is returned if the given color code contains an ID that is not in the range [1, 7].
     pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<()> {
         if !(1..=8).contains(&id) {
-            return Err(AiVisionError::InvalidId);
+            return InvalidIdSnafu { id, range: 1..=8 }.fail();
         }
         self.validate_port()?;
 
@@ -435,7 +435,7 @@ impl AiVisionSensor {
         let mut ids = [0u8; 7];
         for (i, id) in code.0.iter().flatten().enumerate() {
             if !(1..=7).contains(id) {
-                return Err(AiVisionError::InvalidIdInCode);
+                return InvalidIdInCodeSnafu { id: *id }.fail();
             }
             ids[i] = *id;
         }
@@ -476,7 +476,7 @@ impl AiVisionSensor {
     /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 8].
     pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>> {
         if !(1..=8).contains(&id) {
-            return Err(AiVisionError::InvalidId);
+            return InvalidIdSnafu { id, range: 1..=8 }.fail();
         }
         self.validate_port()?;
 
@@ -533,7 +533,7 @@ impl AiVisionSensor {
     /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
     pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
         if !(1..=7).contains(&id) {
-            return Err(AiVisionError::InvalidId);
+            return InvalidIdSnafu { id, range: 1..=7 }.fail();
         }
         self.validate_port()?;
 
@@ -561,14 +561,15 @@ impl AiVisionSensor {
     /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
     pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>> {
         if !(1..=7).contains(&id) {
-            return Err(AiVisionError::InvalidId);
+            return InvalidIdSnafu { id, range: 1..=7 }.fail();
         }
         self.validate_port()?;
 
         let mut color: V5_DeviceAiVisionColor = unsafe { mem::zeroed() };
 
-        let read =
-            unsafe { vexDeviceAiVisionColorGet(self.device, u32::from(id), core::ptr::from_mut(&mut color)) };
+        let read = unsafe {
+            vexDeviceAiVisionColorGet(self.device, u32::from(id), core::ptr::from_mut(&mut color))
+        };
         if !read {
             return Ok(None);
         }
@@ -733,11 +734,21 @@ pub enum AiVisionError {
     /// An object created by VEXos failed to be converted.
     InvalidObject,
     /// The given signature ID or argument is out of range.
-    InvalidId,
+    #[snafu(display("The given ID ({id}) is out of the range {range:?}."))]
+    InvalidId {
+        /// The ID that was out of range.
+        id: u8,
+        /// The range of possible values for the ID.
+        range: core::ops::RangeInclusive<u8>,
+    },
     /// A color signature ID in a given color code is out of range.
-    InvalidIdInCode,
+    #[snafu(display("The given color code contains an ID ({id}) that is out of range."))]
+    InvalidIdInCode {
+        /// The ID that was out of range.
+        id: u8,
+    },
     /// Generic port related error.
-    #[snafu(display("{source}"), context(false))]
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,
