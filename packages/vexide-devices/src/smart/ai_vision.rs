@@ -114,7 +114,7 @@ pub enum AiVisionObject {
     /// An object detected by apriltag detection.
     AprilTag {
         /// The detected AprilTag(s) ID number
-        index: u8,
+        id: u8,
         //TODO: Figure out what corners these points represent. Here's
         //      some impressively unhelpful comments for the time being:
         /// Tag Corner 1
@@ -1021,7 +1021,7 @@ impl AiVisionSensor {
                         confidence: raw.object.model.score,
                     },
                     ObjectType::AprilTag => AiVisionObject::AprilTag {
-                        index: raw.id,
+                        id: raw.id,
                         corner_1: mint::Point2 {
                             x: raw.object.tag.x0,
                             y: raw.object.tag.y0,
