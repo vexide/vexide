@@ -14,8 +14,8 @@ async fn main(peripherals: Peripherals) {
             1,
             AiVisionColor {
                 rgb: Rgb::new(55, 125, 70),
-                hue: 10.0,
-                saturation: 0.2,
+                hue_range: 10.0,
+                saturation_range: 0.2,
             },
         )
         .unwrap();

@@ -129,7 +129,7 @@ pub enum AiVisionObject {
 
     /// An object detected by an onboard model.
     Model {
-        /// Represents the specific type of AI Classification detected.
+        /// Represents the specific type of AI classification detected by the sensor
         classification: ModelClassification,
         /// The position of the object.
         position: Point2<u16>,
@@ -144,18 +144,17 @@ pub enum AiVisionObject {
 
 /// Possible april tag families to be detected by the sensor.
 #[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u8)]
 pub enum AprilTagFamily {
     /// Circle21h7 family
     #[default]
-    Circle21h7,
+    Circle21h7 = 0,
     /// 16h5 family
-    Tag16h5,
+    Tag16h5 = 1,
     /// 25h9 family
-    Tag25h9,
+    Tag25h9 = 2,
     /// 36h11 family
-    Tag36h11,
-    /// Sensor is in test mode
-    TestMode(u8),
+    Tag36h11 = 3,
 }
 
 bitflags! {
@@ -353,10 +352,12 @@ impl AiVisionSensor {
     pub const DIAGONAL_FOV: f32 = 87.0;
 
     const RESET_FLAG: u32 = (1 << 30);
-    const UPDATE_FLAG: u32 = (1 << 25);
+    const TAG_SET_FLAG: u32 = (1 << 29);
+    const MODE_SET_FLAG: u32 = (1 << 25);
     const TEST_MODE_FLAG: u32 = (1 << 26);
-    const AWB_FLAG_1: u32 = (1 << 27);
-    const AWB_START_VALUE: u32 = 4;
+    const AWB_START_FLAG: u32 = (1 << 27);
+
+    // const AWB_START_VALUE: u32 = 4;
 
     /// Create a new AI Vision sensor from a smart port with the given brightness and contrast.
     ///
@@ -863,7 +864,46 @@ impl AiVisionSensor {
         let mut new_mode = self.status()? << 8;
 
         new_mode &= !(0xff << 8); // Clear the mode bits.
-        new_mode |= (u32::from(mode.bits()) << 8) | Self::UPDATE_FLAG; // Set the mode bits and set the UPDATE flag in StateFlags.
+        // Set the mode bits and set the update flag in byte 4.
+        new_mode |= (u32::from(mode.bits()) << 8) | Self::MODE_SET_FLAG;
+
+        // Update mode
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
+
+        Ok(())
+    }
+
+    /// Enables and begins the automatic white balance process.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    pub fn enable_awb(&mut self) -> Result<()> {
+        // Status is shifted to the right from mode. Least-significant byte is missing.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        let mut new_mode = self.status()? << 8;
+
+        new_mode &= !(0xff << 16); // Clear byte 3
+        new_mode |= (1 << 18) | Self::AWB_START_FLAG;
+
+        // Update mode
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
+
+        Ok(())
+    }
+
+    /// Enables and begins the automatic white balance process.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    pub fn enable_test(&mut self, test: u8) -> Result<()> {
+        // Status is shifted to the right from mode. Least-significant byte is missing.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        let mut new_mode = self.status()? << 8;
+
+        new_mode &= !(0xff << 16); // Clear byte 3
+        new_mode |= (u32::from(test) << 16) | Self::TEST_MODE_FLAG;
 
         // Update mode
         unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
@@ -894,63 +934,12 @@ impl AiVisionSensor {
         let mut new_mode = self.status()? << 8;
 
         new_mode &= !(0xff << 16); // Clear the existing apriltag family bits.
-        new_mode |= u32::from(match family {
-            AprilTagFamily::Circle21h7 => 0,
-            AprilTagFamily::Tag16h5 => 1,
-            AprilTagFamily::Tag25h9 => 2,
-            AprilTagFamily::Tag36h11 => 3,
-            AprilTagFamily::TestMode(value) => value,
-        }) << 16; // Set family bits
-
-        new_mode |= if matches!(family, AprilTagFamily::TestMode(_)) {
-            // Set TEST_MODE flag
-            Self::TEST_MODE_FLAG
-        } else {
-            // Set UPDATE flag
-            Self::UPDATE_FLAG
-        };
+        new_mode |= u32::from(family as u8) << 16 | Self::TAG_SET_FLAG; // Set family bits
 
         // Update mode
         unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
 
         Ok(())
-    }
-
-    /// Returns the family of apriltag that will be detected
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
-    ///     _ = ai_vision.set_apriltag_family(AprilTagFamily::Tag16h5);
-    ///     assert_eq!(ai_vision.apriltag_family().unwrap(), AprilTagFamily::Tag16h5);
-    /// }
-    /// ```
-    pub fn apriltag_family(&mut self) -> Result<AprilTagFamily> {
-        let status = self.status()?;
-        let is_test_mode = ((status << 8) & Self::TEST_MODE_FLAG) == Self::TEST_MODE_FLAG;
-        let family_byte = (status >> 8 & 0xff) as u8;
-
-        Ok(if is_test_mode {
-            AprilTagFamily::TestMode(family_byte)
-        } else {
-            match family_byte {
-                0 => AprilTagFamily::Circle21h7,
-                1 => AprilTagFamily::Tag16h5,
-                2 => AprilTagFamily::Tag25h9,
-                3 => AprilTagFamily::Tag36h11,
-                // Probably unreachable
-                other => AprilTagFamily::TestMode(other),
-            }
-        })
     }
 
     /// Returns all objects detected by the AI Vision sensor.
@@ -1120,6 +1109,8 @@ pub enum AiVisionError {
         /// The ID that was out of range.
         id: u8,
     },
+    /// Failed to fetch the class name of a model-detected object due it having a invalid
+    /// string representation.
     #[snafu(transparent)]
     InvalidClassName {
         /// The source of the error.
