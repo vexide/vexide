@@ -385,7 +385,7 @@ impl Text {
     /// - `display` - The display to write the text to.
     /// - `color` - The color of the text.
     /// - `bg_color` - The background color of the text. If `None`, the background will be transparent.
-    pub fn write(
+    pub fn draw(
         &self,
         _display: &mut Display,
         color: impl Into<Rgb<u8>>,
@@ -412,8 +412,10 @@ impl Text {
             vexDisplayBackgroundColor(if let Some(color) = bg_color {
                 color.into().into_raw()
             } else {
-                // If the byte before the color is not 0, VEXos will use a
-                // transparent background.
+                // If the byte before the red component is not 0, VEXos will use
+                // a transparent background.
+                // Not sure this is documented anywhere, but it works and is a
+                // relatively safe assumption that is unlikely to change.
                 0b1 << 24
             });
 
@@ -439,12 +441,6 @@ impl Text {
                 ),
             }
         }
-    }
-}
-
-impl Fill for Text {
-    fn fill(&self, display: &mut Display, color: impl Into<Rgb<u8>>) {
-        self.write(display, color, Option::<Rgb<u8>>::None);
     }
 }
 
@@ -617,9 +613,31 @@ impl Display {
     /// Draw a filled object to the display.
     ///
     /// For `Text` widgets, the background color is transparent by default. Use
-    /// `Text::write` to specify a background color.
+    /// `Display::fill_text` to specify a background color.
     pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
         shape.fill(self, color);
+    }
+
+    /// Fill text with a specified color and background color to the display.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// let mut display = Display::new();
+    /// // Create a new text widget.
+    /// let text = Text::new("Hello, World!", TextSize::Medium, Point2::new(10, 10));
+    /// // Write red text with a blue background to the display.
+    /// display.fill_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
+    /// ```
+    pub fn draw_text(
+        &mut self,
+        text: &Text,
+        color: impl Into<Rgb<u8>>,
+        bg_color: Option<impl Into<Rgb<u8>>>,
+    ) {
+        text.draw(self, color, bg_color);
     }
 
     /// Draw an outlined object to the display.
