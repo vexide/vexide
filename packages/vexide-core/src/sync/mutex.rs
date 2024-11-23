@@ -176,6 +176,8 @@ impl<T> From<T> for Mutex<T> {
 /// Allows the user to access the data from a locked mutex.
 /// Dereference to get the inner data.
 #[derive(Debug)]
+#[must_use = "if unused the Mutex will immediately unlock"]
+#[clippy::has_significant_drop]
 pub struct MutexGuard<'a, T: ?Sized> {
     mutex: &'a Mutex<T>,
 }
