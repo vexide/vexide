@@ -30,7 +30,7 @@ async fn main(peripherals: Peripherals) {
     // `None`.
     let text = Text::new("Nice to see you!", TextSize::Large, [80, 50]);
     // Fill in the text with cyan.
-    display.draw_text(&text, Rgb::new(255, 0, 0), Option::<(u8, u8, u8)>::None);
+    display.draw_text(&text, Rgb::new(255, 0, 0), None);
 
     // Draw some text with a background color
     let text = Text::new("Welcome back.", TextSize::Medium, [80, 80]);

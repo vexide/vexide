@@ -389,7 +389,7 @@ impl Text {
         &self,
         _display: &mut Display,
         color: impl Into<Rgb<u8>>,
-        bg_color: Option<impl Into<Rgb<u8>>>,
+        bg_color: Option<Rgb<u8>>,
     ) {
         // Horizontally align text
         let x = match self.horizontal_align {
@@ -410,7 +410,7 @@ impl Text {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayBackgroundColor(if let Some(color) = bg_color {
-                color.into().into_raw()
+                color.into_raw()
             } else {
                 // If the byte before the red component is not 0, VEXos will use
                 // a transparent background.
@@ -631,12 +631,7 @@ impl Display {
     /// // Write red text with a blue background to the display.
     /// display.fill_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
     /// ```
-    pub fn draw_text(
-        &mut self,
-        text: &Text,
-        color: impl Into<Rgb<u8>>,
-        bg_color: Option<impl Into<Rgb<u8>>>,
-    ) {
+    pub fn draw_text(&mut self, text: &Text, color: impl Into<Rgb<u8>>, bg_color: Option<Rgb<u8>>) {
         text.draw(self, color, bg_color);
     }
 

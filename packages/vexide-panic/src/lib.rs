@@ -51,7 +51,7 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
                 },
             ),
             (255, 255, 255),
-            Option::<(u8, u8, u8)>::None,
+            None,
         );
     }
 
