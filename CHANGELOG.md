@@ -53,7 +53,7 @@ Before releasing:
 - Added implementations of `Mul<i64>` and `Div<i64>` for `Position`, allowing
   for opaque scaling (#230)
 - Added panic hook support comparable to the Rust standard library through `vexide::panic::set_hook` and `vexide::panic::take_hook` (#234)
-- Added `Text::write` to write text to `Display` with a background color. (#247)
+- Added `Display::draw_text` to write `Text` to a `Display`. (#247)
 
 ### Fixed
 
@@ -108,7 +108,6 @@ Before releasing:
 - `RadioLink::new` can now only fail on `NulError` and will not bail if a radio is disconnected. (#240) (**Breaking Change**)
 - `RadioLink::unread_bytes` can now return a `LinkError::ReadError`. (#243)
 - `RadioLink::is_linked` is now infallible. (#243) (**Breaking Change**)
-- `<Text as Fill>::fill` now defaults to a transparent background color instead of the last used one. (#247) (**Breaking Change**)
 
 ### Removed
 
@@ -125,6 +124,7 @@ Before releasing:
 - Removed `Position`-to-`Position` `Mul`/`Div` ops, as they were mathematically unsound. Prefer using `Position`-to-scalar operations for this. (#237) (**Breaking Change**)
 - Removed `LinkError::Nul`. (#240) (**Breaking Change**)
 - Removed `LinkError::Port`, because it was broken. VEXlink will no longer perform port validation. (#243) (**Breaking Change**)
+- Added `Fill` implementation for `Text`, since it's a bit of a special case. (#247)
 
 ### New Contributors
 
