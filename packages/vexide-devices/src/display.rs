@@ -15,6 +15,7 @@ use vex_sdk::{
     vexDisplayScrollRect, vexDisplayString, vexDisplayStringHeightGet, vexDisplayStringWidthGet,
     vexDisplayTextSize, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
+use vexide_core::float::Float;
 
 use crate::{
     math::Point2,
@@ -285,33 +286,110 @@ pub struct FontSize {
     pub denominator: u32,
 }
 
+/// Calculate the greatest common divisor using the euclidian algorithm.
+const fn gcd(mut a: i32, mut b: i32) -> i32 {
+    while a != b {
+        if a > b {
+            a -= b;
+        } else {
+            b -= a;
+        }
+    }
+    a
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
+    // Seperate the integral and fractional parts of the input.
+    let integral_part = input.floor();
+    let fractional_part = input.fract();
+
+    // If the fractional part is 0, return the integral part.
+    if fractional_part == 0.0 {
+        return (integral_part as i32, 1);
+    }
+
+    let precision = precision as f32;
+
+    let gcd = gcd((fractional_part * precision).round() as _, precision as _);
+
+    let denominator = precision as i32 / gcd;
+    let numerator = (fractional_part * precision).round() as i32 / gcd;
+
+    (
+        // Add back the integral part to the numerator.
+        numerator + integral_part as i32 * denominator,
+        denominator,
+    )
+}
+
 impl FontSize {
     /// Create a custom fractional font size.
     #[must_use]
-    pub const fn new(numerator: u32, denominator: u32) -> Self {
+    pub const fn from_fraction(numerator: u32, denominator: u32) -> Self {
         Self {
             numerator,
             denominator,
         }
     }
 
+    /// Create a fractional font size from a floating-point size.
+    ///
+    /// # Note
+    ///
+    /// This function is lossy, but negligibly so.
+    /// The highest the denominator can be is 10000.
+    ///
+    /// # Errors
+    ///
+    /// - [`NegativeFontSizeError`] if the given size is negative.
+    pub fn from_float(size: f32) -> Result<Self, NegativeFontSizeError> {
+        if size.is_sign_negative() {
+            return Err(NegativeFontSizeError { value: size });
+        }
+        let (numerator, denominator) = approximate_fraction(size, 10_000);
+        // Unwraps are safe because we gaurentee a positive fraction earlier.
+        let (numerator, denominator) = (
+            numerator.try_into().unwrap(),
+            denominator.try_into().unwrap(),
+        );
+        Ok(Self {
+            numerator,
+            denominator,
+        })
+    }
+
     /// An extra-small font size with a value of one-fifth.
-    pub const EXTRA_SMALL: Self = Self::new(1, 5);
+    pub const EXTRA_SMALL: Self = Self::from_fraction(1, 5);
     /// A small font size with a value of one-fourth.
-    pub const SMALL: Self = Self::new(1, 4);
+    pub const SMALL: Self = Self::from_fraction(1, 4);
     /// A medium font size with a value of one-third.
-    pub const MEDIUM: Self = Self::new(1, 3);
+    pub const MEDIUM: Self = Self::from_fraction(1, 3);
     /// A medium font size with a value of one-half.
-    pub const LARGE: Self = Self::new(1, 2);
+    pub const LARGE: Self = Self::from_fraction(1, 2);
     /// An extra-large font size with a value of two-thirds.
-    pub const EXTRA_LARGE: Self = Self::new(2, 3);
+    pub const EXTRA_LARGE: Self = Self::from_fraction(2, 3);
     /// The full size of the font.
-    pub const FULL: Self = Self::new(1, 1);
+    pub const FULL: Self = Self::from_fraction(1, 1);
 }
 
 impl Default for FontSize {
     fn default() -> Self {
         Self::MEDIUM
+    }
+}
+impl TryFrom<f32> for FontSize {
+    type Error = NegativeFontSizeError;
+
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        Self::from_float(value)
+    }
+}
+impl TryFrom<f64> for FontSize {
+    type Error = NegativeFontSizeError;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        Self::from_float(value as f32)
     }
 }
 
@@ -724,4 +802,11 @@ pub enum DisplayError {
         /// The expected size of the buffer.
         expected_size: usize,
     },
+}
+
+/// An error that occurs when a negative font size is attempted to be created.
+#[derive(Debug, Clone, Copy, Snafu)]
+#[snafu(display("Attempted to create a font size with a negative value ({value})."))]
+pub struct NegativeFontSizeError {
+    value: f32,
 }

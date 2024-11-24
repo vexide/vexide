@@ -30,13 +30,18 @@ async fn main(peripherals: Peripherals) {
     display.fill(&text, Rgb::new(0, 255, 255));
 
     // You can use varying text sizes and fonts.
-
     let text = Text::new(
         "This is vexide.",
-        Font::new(FontSize::new(1, 1), FontFamily::Proportional),
-        [21, 21],
+        Font::new(FontSize::from_fraction(2, 3), FontFamily::Proportional),
+        [21, 84],
     );
     display.fill(&text, Rgb::new(255, 255, 255));
+
+    // Font sizes can be created with a fraction or a float
+    let size = FontSize::from_float(0.333).unwrap();
+    println!("Font Size: {:?}", size);
+    let size = FontSize::try_from(1.4).unwrap();
+    println!("Font Size: {:?}", size);
 
     loop {
         sleep(Duration::from_secs(1)).await;
