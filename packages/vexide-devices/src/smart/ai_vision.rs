@@ -69,18 +69,6 @@ impl From<u8> for ObjectType {
     }
 }
 
-/// Classification of a model detection.
-///
-/// Describes what model was used to detect an [`AiVisionObject`].
-#[derive(Debug, Clone, PartialEq)]
-pub struct ModelClassification {
-    /// ID of the model used.
-    pub id: u8,
-
-    /// Name of the model used.
-    pub class_name: String,
-}
-
 /// The data associated with an AI Vision object.
 /// The data is different depending on the type of object detected.
 #[derive(Debug, Clone, PartialEq)]
@@ -129,8 +117,10 @@ pub enum AiVisionObject {
 
     /// An object detected by an onboard model.
     Model {
-        /// Represents the specific type of AI classification detected by the sensor
-        classification: ModelClassification,
+        /// ID of the detected object.
+        id: u8,
+        /// A string describing the specific onboard model used to detect this object.
+        classification: String,
         /// The position of the object.
         position: Point2<u16>,
         /// The width of the object.
@@ -1043,19 +1033,17 @@ impl AiVisionSensor {
                         angle: f64::from(raw.object.color.angle) / 10.0,
                     },
                     ObjectType::Model => AiVisionObject::Model {
-                        classification: ModelClassification {
-                            id: raw.id,
-                            class_name: {
-                                let mut class_name = [0; 20]; // AIVISION_MAX_CLASS_NAME
+                        id: raw.id,
+                        classification: {
+                            let mut class_name = [0; 20]; // AIVISION_MAX_CLASS_NAME
 
-                                vexDeviceAiVisionClassNameGet(
-                                    self.device,
-                                    i32::from(raw.id),
-                                    class_name.as_mut_ptr(),
-                                );
+                            vexDeviceAiVisionClassNameGet(
+                                self.device,
+                                i32::from(raw.id),
+                                class_name.as_mut_ptr(),
+                            );
 
-                                String::from_utf8(class_name.to_vec())?
-                            },
+                            String::from_utf8(class_name.to_vec())?
                         },
                         position: Point2 {
                             x: raw.object.model.xoffset,
