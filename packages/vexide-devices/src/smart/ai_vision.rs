@@ -158,7 +158,7 @@ pub enum AprilTagFamily {
 }
 
 bitflags! {
-    /// Flags relating to the sensor's detection mode.
+    /// Represents the mode of the AI Vision sensor.
     #[derive(Debug, Copy, Clone, Eq, PartialEq)]
     pub struct AiVisionMode: u8 {
         /// Disable apriltag detection
@@ -174,11 +174,36 @@ bitflags! {
         /// Disable USB overlay
         const DISABLE_USB_OVERLAY = 1 << 7;
     }
+
+    /// Flags relating to the sensor's detection mode.
+    #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+    pub struct AiVisionDetectionMode: u8 {
+        /// Enable apriltag detection
+        const APRILTAG = 1 << 0;
+        /// Enable color detection
+        const COLOR = 1 << 1;
+        /// Enable model detection
+        const MODEL = 1 << 2;
+        /// Merge color blobs?
+        const COLOR_MERGE = 1 << 4;
+    }
 }
 
 impl Default for AiVisionMode {
     fn default() -> Self {
         Self::DISABLE_USB_OVERLAY
+    }
+}
+impl TryFrom<AiVisionMode> for AiVisionDetectionMode {
+    type Error = ();
+    fn try_from(value: AiVisionMode) -> Result<AiVisionDetectionMode, ()> {
+        AiVisionDetectionMode::from_bits(value.bits()).ok_or(())
+    }
+}
+impl From<AiVisionDetectionMode> for AiVisionMode {
+    fn from(value: AiVisionDetectionMode) -> Self {
+        let status = !(value.bits() & !(1 << 4)) | value.bits() & (1 << 4);
+        Self::from_bits(status).unwrap_or_default()
     }
 }
 
@@ -804,17 +829,37 @@ impl AiVisionSensor {
         ])
     }
 
-    fn status(&self) -> Result<u32> {
+    /// Sets the detection mode of the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     _ = ai_vision.set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
+    /// }
+    /// ```
+    pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
+        let mode = (self.mode()?
+            & (AiVisionMode::DISABLE_USB_OVERLAY | AiVisionMode::DISABLE_STATUS_OVERLAY))
+            | AiVisionMode::from(mode);
+        self.set_mode(mode)
+    }
+
+    fn raw_status(&self) -> Result<u32> {
         self.validate_port()?;
         let status = unsafe { vexDeviceAiVisionStatusGet(self.device) };
         Ok(status)
     }
 
-    /// Returns the current detection mode of the AI Vision sensor.
-    ///
-    /// # Note
-    ///
-    /// This function currently cannot detect if the sensor is in color code detection mode.
+    /// Returns the current status of the AI Vision sensor including the detection mode.
     ///
     /// # Errors
     ///
@@ -835,11 +880,11 @@ impl AiVisionSensor {
         // Only care about the first byte of status.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         Ok(AiVisionMode::from_bits_retain(
-            (self.status()? & 0xff) as u8,
+            (self.raw_status()? & 0xff) as u8,
         ))
     }
 
-    /// Set the type of objects that will be detected
+    /// Set the full mode of the AI Vision sensor, including the detection mode.
     ///
     /// # Errors
     ///
@@ -861,10 +906,10 @@ impl AiVisionSensor {
     pub fn set_mode(&mut self, mode: AiVisionMode) -> Result<()> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        let mut new_mode = self.status()? << 8;
+        let mut new_mode = self.raw_status()? << 8;
 
         new_mode &= !(0xff << 8); // Clear the mode bits.
-        // Set the mode bits and set the update flag in byte 4.
+                                  // Set the mode bits and set the update flag in byte 4.
         new_mode |= (u32::from(mode.bits()) << 8) | Self::MODE_SET_FLAG;
 
         // Update mode
@@ -881,7 +926,7 @@ impl AiVisionSensor {
     pub fn enable_awb(&mut self) -> Result<()> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        let mut new_mode = self.status()? << 8;
+        let mut new_mode = self.raw_status()? << 8;
 
         new_mode &= !(0xff << 16); // Clear byte 3
         new_mode |= (1 << 18) | Self::AWB_START_FLAG;
@@ -900,7 +945,7 @@ impl AiVisionSensor {
     pub fn enable_test(&mut self, test: u8) -> Result<()> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        let mut new_mode = self.status()? << 8;
+        let mut new_mode = self.raw_status()? << 8;
 
         new_mode &= !(0xff << 16); // Clear byte 3
         new_mode |= (u32::from(test) << 16) | Self::TEST_MODE_FLAG;
@@ -931,7 +976,7 @@ impl AiVisionSensor {
     pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<()> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        let mut new_mode = self.status()? << 8;
+        let mut new_mode = self.raw_status()? << 8;
 
         new_mode &= !(0xff << 16); // Clear the existing apriltag family bits.
         new_mode |= u32::from(family as u8) << 16 | Self::TAG_SET_FLAG; // Set family bits
