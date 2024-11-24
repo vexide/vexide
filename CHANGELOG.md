@@ -53,6 +53,7 @@ Before releasing:
 - Added implementations of `Mul<i64>` and `Div<i64>` for `Position`, allowing
   for opaque scaling (#230)
 - Added panic hook support comparable to the Rust standard library through `vexide::panic::set_hook` and `vexide::panic::take_hook` (#234)
+- Added missing `Send` and `Sync` `impl`s for RwLock. (#239)
 
 ### Fixed
 
