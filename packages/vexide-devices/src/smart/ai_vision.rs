@@ -891,7 +891,7 @@ impl AiVisionSensor {
     ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
     ///     // Enable all detection modes except for custom model and disable USB overlay
     ///     let flags = AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_MODEL;
-    ///     _ = ai_vision.set_mode(flags);
+    ///     _ = ai_vision.set_flags(flags);
     /// }
     /// ```
     pub fn set_flags(&mut self, mode: AiVisionFlags) -> Result<()> {
