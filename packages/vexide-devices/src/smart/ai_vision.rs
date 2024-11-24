@@ -150,7 +150,7 @@ pub enum AprilTagFamily {
 bitflags! {
     /// Represents the mode of the AI Vision sensor.
     #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-    pub struct AiVisionMode: u8 {
+    pub struct AiVisionFlags: u8 {
         /// Disable apriltag detection
         const DISABLE_APRILTAG = 1 << 0;
         /// Disable color detection
@@ -179,18 +179,18 @@ bitflags! {
     }
 }
 
-impl Default for AiVisionMode {
+impl Default for AiVisionFlags {
     fn default() -> Self {
         Self::DISABLE_USB_OVERLAY
     }
 }
-impl TryFrom<AiVisionMode> for AiVisionDetectionMode {
+impl TryFrom<AiVisionFlags> for AiVisionDetectionMode {
     type Error = ();
-    fn try_from(value: AiVisionMode) -> Result<AiVisionDetectionMode, ()> {
+    fn try_from(value: AiVisionFlags) -> Result<AiVisionDetectionMode, ()> {
         AiVisionDetectionMode::from_bits(value.bits()).ok_or(())
     }
 }
-impl From<AiVisionDetectionMode> for AiVisionMode {
+impl From<AiVisionDetectionMode> for AiVisionFlags {
     fn from(value: AiVisionDetectionMode) -> Self {
         let status = !(value.bits() & !(1 << 4)) | value.bits() & (1 << 4);
         Self::from_bits(status).unwrap_or_default()
@@ -838,8 +838,8 @@ impl AiVisionSensor {
     /// ```
     pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
         let mode = (self.mode()?
-            & (AiVisionMode::DISABLE_USB_OVERLAY | AiVisionMode::DISABLE_STATUS_OVERLAY))
-            | AiVisionMode::from(mode);
+            & (AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_STATUS_OVERLAY))
+            | AiVisionFlags::from(mode);
         self.set_mode(mode)
     }
 
@@ -866,10 +866,10 @@ impl AiVisionSensor {
     ///     println!("{:?}", ai_vision.mode());
     /// }
     /// ```
-    pub fn mode(&self) -> Result<AiVisionMode> {
+    pub fn mode(&self) -> Result<AiVisionFlags> {
         // Only care about the first byte of status.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        Ok(AiVisionMode::from_bits_retain(
+        Ok(AiVisionFlags::from_bits_retain(
             (self.raw_status()? & 0xff) as u8,
         ))
     }
@@ -893,7 +893,7 @@ impl AiVisionSensor {
     ///     _ = ai_vision.set_mode(mode);
     /// }
     /// ```
-    pub fn set_mode(&mut self, mode: AiVisionMode) -> Result<()> {
+    pub fn set_mode(&mut self, mode: AiVisionFlags) -> Result<()> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
