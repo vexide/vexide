@@ -319,11 +319,13 @@ impl Default for FontSize {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
 pub enum FontFamily {
     /// A monospaced font which has a fixed width for each character.
+    ///
+    /// This font at full size is 49pt Noto Mono.
     #[default]
     Monospace,
-    /// A proportional font  which has a varying width for each character.
+    /// A proportional font which has a varying width for each character.
     ///
-    /// The proportional font is Noto Sans at 49pt.
+    /// This font at full size is 49pt Noto Sans.
     Proportional,
 }
 
