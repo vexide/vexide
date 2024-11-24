@@ -172,21 +172,22 @@ impl AdiDigitalOut {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::with_initial_level(peripherals.adi_a, LogicLevel::High).expect("failed to initialize digital output");
+    ///     let digital_out = AdiDigitalOut::with_initial_level(peripherals.adi_a, LogicLevel::High);
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
-    pub fn with_initial_level(port: AdiPort, initial_level: LogicLevel) -> Result<Self, PortError> {
+    #[must_use]
+    pub fn with_initial_level(port: AdiPort, initial_level: LogicLevel) -> Self {
         port.configure(AdiDeviceType::DigitalOut);
 
-        let mut adi_digital_out = Self { port };
-        adi_digital_out.set_level(initial_level)?;
-        Ok(adi_digital_out)
+        unsafe {
+            vexDeviceAdiValueSet(
+                port.device_handle(),
+                port.index(),
+                i32::from(initial_level.is_high()),
+            );
+        }
+
+        Self { port }
     }
 
     /// Sets the digital logic level (high or low) of a pin.
