@@ -71,14 +71,30 @@ impl AdiServo {
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
     pub fn set_target(&mut self, position: Position) -> Result<(), PortError> {
+        self.set_raw_target((position.as_degrees() / Self::MAX_POSITION.as_degrees().clamp(-1.0, 1.0) * 127.0) as i8)
+    }
+
+    /// Sets the servo's raw position using a raw 8-bit PWM input from [-127, 127]. This is functionally equivalent
+    /// to [`Self::set_target`] with the exception that it accepts an unscaled integer rather than a [`Position`].
+    ///
+    /// # Range
+    ///
+    /// VEX servos have an operating range of 100° spanning from [`AdiServo::MIN_POSITION`] (-127) to
+    /// [`AdiServo::MAX_POSITION`] (127).
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
+    pub fn set_raw_target(&mut self, pwm: i8) -> Result<(), PortError> {
         self.port.validate_expander()?;
 
-        let degrees = position.as_degrees();
         unsafe {
             vexDeviceAdiValueSet(
                 self.port.device_handle(),
                 self.port.index(),
-                ((degrees / Self::MAX_POSITION.as_degrees()).clamp(-1.0, 1.0) * 127.0) as i32,
+                i32::from(pwm),
             );
         }
 
