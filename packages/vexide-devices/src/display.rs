@@ -286,7 +286,7 @@ pub struct FontSize {
     pub denominator: u32,
 }
 
-/// Calculate the greatest common divisor using the euclidian algorithm.
+/// Calculates the greatest common divisor of two values using the euclidian algorithm.
 const fn gcd(mut a: i32, mut b: i32) -> i32 {
     while a != b {
         if a > b {
@@ -808,5 +808,6 @@ pub enum DisplayError {
 #[derive(Debug, Clone, Copy, Snafu)]
 #[snafu(display("Attempted to create a font size with a negative value ({value})."))]
 pub struct NegativeFontSizeError {
-    value: f32,
+    /// The negative value that was attempted to be used as a font size.
+    pub value: f32,
 }
