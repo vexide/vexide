@@ -71,7 +71,10 @@ impl AdiServo {
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
     pub fn set_target(&mut self, position: Position) -> Result<(), PortError> {
-        self.set_raw_target((position.as_degrees() / Self::MAX_POSITION.as_degrees().clamp(-1.0, 1.0) * 127.0) as i8)
+        self.set_raw_target(
+            (position.as_degrees() / Self::MAX_POSITION.as_degrees().clamp(-1.0, 1.0) * 127.0)
+                as i8,
+        )
     }
 
     /// Sets the servo's raw position using a raw 8-bit PWM input from [-127, 127]. This is functionally equivalent
@@ -91,11 +94,7 @@ impl AdiServo {
         self.port.validate_expander()?;
 
         unsafe {
-            vexDeviceAdiValueSet(
-                self.port.device_handle(),
-                self.port.index(),
-                i32::from(pwm),
-            );
+            vexDeviceAdiValueSet(self.port.device_handle(), self.port.index(), i32::from(pwm));
         }
 
         Ok(())
