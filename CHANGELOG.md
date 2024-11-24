@@ -54,6 +54,7 @@ Before releasing:
   for opaque scaling (#230)
 - Added panic hook support comparable to the Rust standard library through `vexide::panic::set_hook` and `vexide::panic::take_hook` (#234)
 - Added missing `Send` and `Sync` `impl`s for RwLock. (#239)
+- Added `AdiDigitalOut::with_initial_state` to set the initial state of a digital output while creating it (#246)
 
 ### Fixed
 
