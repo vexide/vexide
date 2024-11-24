@@ -837,10 +837,10 @@ impl AiVisionSensor {
     /// }
     /// ```
     pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
-        let mode = (self.mode()?
+        let mode = (self.flags()?
             & (AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_STATUS_OVERLAY))
             | AiVisionFlags::from(mode);
-        self.set_mode(mode)
+        self.set_flags(mode)
     }
 
     fn raw_status(&self) -> Result<u32> {
@@ -849,7 +849,8 @@ impl AiVisionSensor {
         Ok(status)
     }
 
-    /// Returns the current status of the AI Vision sensor including the detection mode.
+    /// Returns the current flags of the AI Vision sensor including the detection mode
+    /// flags set by [`Self::set_detection`].
     ///
     /// # Errors
     ///
@@ -863,10 +864,10 @@ impl AiVisionSensor {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
-    ///     println!("{:?}", ai_vision.mode());
+    ///     println!("{:?}", ai_vision.flags());
     /// }
     /// ```
-    pub fn mode(&self) -> Result<AiVisionFlags> {
+    pub fn flags(&self) -> Result<AiVisionFlags> {
         // Only care about the first byte of status.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         Ok(AiVisionFlags::from_bits_retain(
@@ -874,7 +875,7 @@ impl AiVisionSensor {
         ))
     }
 
-    /// Set the full mode of the AI Vision sensor, including the detection mode.
+    /// Set the full flags of the AI Vision sensor, including the detection mode.
     ///
     /// # Errors
     ///
@@ -889,11 +890,11 @@ impl AiVisionSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
     ///     // Enable all detection modes except for custom model and disable USB overlay
-    ///     let mode = AiVisionMode::DISABLE_USB_OVERLAY | AiVisionMode::DISABLE_MODEL;
-    ///     _ = ai_vision.set_mode(mode);
+    ///     let flags = AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_MODEL;
+    ///     _ = ai_vision.set_mode(flags);
     /// }
     /// ```
-    pub fn set_mode(&mut self, mode: AiVisionFlags) -> Result<()> {
+    pub fn set_flags(&mut self, mode: AiVisionFlags) -> Result<()> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
