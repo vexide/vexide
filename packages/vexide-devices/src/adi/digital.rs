@@ -163,6 +163,33 @@ impl AdiDigitalOut {
         Self { port }
     }
 
+    /// Create a digital output from an [`AdiPort`] with an initial logic level.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let digital_out = AdiDigitalOut::with_initial_level(peripherals.adi_a, LogicLevel::High);
+    /// }
+    /// ```
+    #[must_use]
+    pub fn with_initial_level(port: AdiPort, initial_level: LogicLevel) -> Self {
+        port.configure(AdiDeviceType::DigitalOut);
+
+        unsafe {
+            vexDeviceAdiValueSet(
+                port.device_handle(),
+                port.index(),
+                i32::from(initial_level.is_high()),
+            );
+        }
+
+        Self { port }
+    }
+
     /// Sets the digital logic level (high or low) of a pin.
     ///
     /// # Errors

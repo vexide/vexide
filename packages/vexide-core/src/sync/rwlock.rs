@@ -61,7 +61,7 @@ impl RwLockState {
 /// Multiple readers can access the data at the same time.
 #[must_use = "if unused the RwLock will immediately unlock"]
 #[clippy::has_significant_drop]
-pub struct RwLockReadGuard<'a, T> {
+pub struct RwLockReadGuard<'a, T: ?Sized> {
     lock: &'a RwLock<T>,
 }
 impl<T> core::ops::Deref for RwLockReadGuard<'_, T> {
@@ -70,7 +70,7 @@ impl<T> core::ops::Deref for RwLockReadGuard<'_, T> {
         unsafe { &*self.lock.data.get() }
     }
 }
-impl<T> Drop for RwLockReadGuard<'_, T> {
+impl<T: ?Sized> Drop for RwLockReadGuard<'_, T> {
     fn drop(&mut self) {
         self.lock.state.try_unlock();
     }
@@ -78,7 +78,7 @@ impl<T> Drop for RwLockReadGuard<'_, T> {
 
 /// A future that resolves to a read guard.
 #[must_use = "futures do nothing unless you `.await` or poll them"]
-pub struct RwLockReadFuture<'a, T> {
+pub struct RwLockReadFuture<'a, T: ?Sized> {
     lock: &'a RwLock<T>,
 }
 impl<'a, T> Future for RwLockReadFuture<'a, T> {
@@ -101,7 +101,7 @@ impl<'a, T> Future for RwLockReadFuture<'a, T> {
 /// Only one writer can access the data at a time.
 #[must_use = "if unused the RwLock will immediately unlock"]
 #[clippy::has_significant_drop]
-pub struct RwLockWriteGuard<'a, T> {
+pub struct RwLockWriteGuard<'a, T: ?Sized> {
     lock: &'a RwLock<T>,
 }
 impl<T> core::ops::Deref for RwLockWriteGuard<'_, T> {
@@ -115,7 +115,7 @@ impl<T> core::ops::DerefMut for RwLockWriteGuard<'_, T> {
         unsafe { &mut *self.lock.data.get() }
     }
 }
-impl<T> Drop for RwLockWriteGuard<'_, T> {
+impl<T: ?Sized> Drop for RwLockWriteGuard<'_, T> {
     fn drop(&mut self) {
         self.lock.state.try_unlock();
     }
@@ -123,7 +123,7 @@ impl<T> Drop for RwLockWriteGuard<'_, T> {
 
 /// A future that resolves to a write guard.
 #[must_use = "futures do nothing unless you `.await` or poll them"]
-pub struct RwLockWriteFuture<'a, T> {
+pub struct RwLockWriteFuture<'a, T: ?Sized> {
     lock: &'a RwLock<T>,
 }
 impl<'a, T> Future for RwLockWriteFuture<'a, T> {
@@ -146,10 +146,13 @@ impl<'a, T> Future for RwLockWriteFuture<'a, T> {
 /// This type allows multiple readers or one writer at a time.
 ///
 /// This is different from a [`Mutex`](super::Mutex) because it allows for multiple readers at the same time.
-pub struct RwLock<T> {
+pub struct RwLock<T: ?Sized> {
     state: RwLockState,
     data: UnsafeCell<T>,
 }
+unsafe impl<T: ?Sized + Send> Send for RwLock<T> {}
+unsafe impl<T: ?Sized + Send + Sync> Sync for RwLock<T> {}
+
 impl<T> RwLock<T> {
     /// Creates a new reader-writer lock.
     pub const fn new(data: T) -> Self {
@@ -158,7 +161,9 @@ impl<T> RwLock<T> {
             data: UnsafeCell::new(data),
         }
     }
+}
 
+impl<T: ?Sized> RwLock<T> {
     /// Obtains a read lock on the data.
     /// Multiple read locks can be held at the same time.
     pub const fn read(&self) -> RwLockReadFuture<'_, T> {
@@ -197,7 +202,10 @@ impl<T> RwLock<T> {
     }
 
     /// Consumes the read-write lock and returns the inner data.
-    pub fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T
+    where
+        T: Sized,
+    {
         self.data.into_inner()
     }
 }
