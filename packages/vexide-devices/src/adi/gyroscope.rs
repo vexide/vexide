@@ -24,8 +24,12 @@ use crate::{position::Position, PortError};
 const CALIBRATING_MAGIC: i32 = -32768;
 
 enum AdiGyroscopeCalibrationFutureState {
+    /// Tell VEXos to start calibration for the given duration.
     Calibrate { calibration_duration: Duration },
-    Waiting,
+    /// Waiting for the calibration to start.
+    WaitingStart,
+    /// Waiting for the calibration to end.
+    WaitingEnd,
 }
 
 /// A future that calibrates an [`AdiGyroscope`] for a given duration.
@@ -53,20 +57,36 @@ impl Future for AdiGyroscopeCalibrationFuture<'_> {
                             calibration_duration.as_millis() as _,
                         );
                     }
-                    this.state = AdiGyroscopeCalibrationFutureState::Waiting;
+                    this.state = AdiGyroscopeCalibrationFutureState::WaitingStart;
                     cx.waker().wake_by_ref();
                     Poll::Pending
                 }
                 Err(e) => Poll::Ready(Err(AdiGyroscopeError::Port { source: e })),
             },
-            AdiGyroscopeCalibrationFutureState::Waiting => match this.gyro.is_calibrating() {
-                Ok(false) => Poll::Ready(Ok(())),
-                Ok(true) => {
-                    cx.waker().wake_by_ref();
-                    Poll::Pending
+            AdiGyroscopeCalibrationFutureState::WaitingStart => {
+                match this.gyro.is_calibrating() {
+                    Ok(false) => {
+                        cx.waker().wake_by_ref();
+                        Poll::Pending
+                    }
+                    Ok(true) => {
+                        this.state = AdiGyroscopeCalibrationFutureState::WaitingEnd;
+                        cx.waker().wake_by_ref();
+                        Poll::Pending
+                    }
+                    Err(e) => Poll::Ready(Err(e)),
                 }
-                Err(e) => Poll::Ready(Err(e)),
-            },
+            }
+            AdiGyroscopeCalibrationFutureState::WaitingEnd => {
+                match this.gyro.is_calibrating() {
+                    Ok(false) => Poll::Ready(Ok(())),
+                    Ok(true) => {
+                        cx.waker().wake_by_ref();
+                        Poll::Pending
+                    }
+                    Err(e) => Poll::Ready(Err(e)),
+                }
+            }
         }
     }
 }
