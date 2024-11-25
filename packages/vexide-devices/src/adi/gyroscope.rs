@@ -63,30 +63,26 @@ impl Future for AdiGyroscopeCalibrationFuture<'_> {
                 }
                 Err(e) => Poll::Ready(Err(AdiGyroscopeError::Port { source: e })),
             },
-            AdiGyroscopeCalibrationFutureState::WaitingStart => {
-                match this.gyro.is_calibrating() {
-                    Ok(false) => {
-                        cx.waker().wake_by_ref();
-                        Poll::Pending
-                    }
-                    Ok(true) => {
-                        this.state = AdiGyroscopeCalibrationFutureState::WaitingEnd;
-                        cx.waker().wake_by_ref();
-                        Poll::Pending
-                    }
-                    Err(e) => Poll::Ready(Err(e)),
+            AdiGyroscopeCalibrationFutureState::WaitingStart => match this.gyro.is_calibrating() {
+                Ok(false) => {
+                    cx.waker().wake_by_ref();
+                    Poll::Pending
                 }
-            }
-            AdiGyroscopeCalibrationFutureState::WaitingEnd => {
-                match this.gyro.is_calibrating() {
-                    Ok(false) => Poll::Ready(Ok(())),
-                    Ok(true) => {
-                        cx.waker().wake_by_ref();
-                        Poll::Pending
-                    }
-                    Err(e) => Poll::Ready(Err(e)),
+                Ok(true) => {
+                    this.state = AdiGyroscopeCalibrationFutureState::WaitingEnd;
+                    cx.waker().wake_by_ref();
+                    Poll::Pending
                 }
-            }
+                Err(e) => Poll::Ready(Err(e)),
+            },
+            AdiGyroscopeCalibrationFutureState::WaitingEnd => match this.gyro.is_calibrating() {
+                Ok(false) => Poll::Ready(Ok(())),
+                Ok(true) => {
+                    cx.waker().wake_by_ref();
+                    Poll::Pending
+                }
+                Err(e) => Poll::Ready(Err(e)),
+            },
         }
     }
 }
