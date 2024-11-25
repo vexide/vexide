@@ -286,7 +286,7 @@ pub struct FontSize {
     pub denominator: u32,
 }
 
-/// Calculates the greatest common divisor of two values using the euclidian algorithm.
+/// Calculates the greatest common divisor of two values using the Euclidean algorithm.
 const fn gcd(mut a: i32, mut b: i32) -> i32 {
     while a != b {
         if a > b {
@@ -300,7 +300,7 @@ const fn gcd(mut a: i32, mut b: i32) -> i32 {
 
 #[allow(clippy::cast_precision_loss)]
 fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
-    // Seperate the integral and fractional parts of the input.
+    // Separate the integral and fractional parts of the input.
     let integral_part = input.floor();
     let fractional_part = input.fract();
 
@@ -344,12 +344,13 @@ impl FontSize {
     /// # Errors
     ///
     /// - [`NegativeFontSizeError`] if the given size is negative.
-    pub fn from_float(size: f32) -> Result<Self, NegativeFontSizeError> {
-        if size.is_sign_negative() {
-            return Err(NegativeFontSizeError { value: size });
-        }
+    pub fn from_float(size: f32) -> Result<Self, InvalidFontSizeError> {
+        ensure!(
+            size.is_finite() && !size.is_sign_negative(),
+            InvalidFontSizeSnafu { value: size }
+        );
         let (numerator, denominator) = approximate_fraction(size, 10_000);
-        // Unwraps are safe because we gaurentee a positive fraction earlier.
+        // Unwraps are safe because we guarantee a positive fraction earlier.
         let (numerator, denominator) = (
             numerator.try_into().unwrap(),
             denominator.try_into().unwrap(),
@@ -366,7 +367,7 @@ impl FontSize {
     pub const SMALL: Self = Self::new(1, 4);
     /// A medium font size with a value of one-third.
     pub const MEDIUM: Self = Self::new(1, 3);
-    /// A medium font size with a value of one-half.
+    /// A large font size with a value of one-half.
     pub const LARGE: Self = Self::new(1, 2);
     /// An extra-large font size with a value of two-thirds.
     pub const EXTRA_LARGE: Self = Self::new(2, 3);
@@ -379,18 +380,26 @@ impl Default for FontSize {
         Self::MEDIUM
     }
 }
+
 impl TryFrom<f32> for FontSize {
-    type Error = NegativeFontSizeError;
+    type Error = InvalidFontSizeError;
 
     fn try_from(value: f32) -> Result<Self, Self::Error> {
         Self::from_float(value)
     }
 }
+
 impl TryFrom<f64> for FontSize {
-    type Error = NegativeFontSizeError;
+    type Error = InvalidFontSizeError;
 
     fn try_from(value: f64) -> Result<Self, Self::Error> {
         Self::from_float(value as f32)
+    }
+}
+
+impl From<u32> for FontSize {
+    fn from(value: u32) -> Self {
+        Self::new(value, 1)
     }
 }
 
@@ -805,10 +814,10 @@ pub enum DisplayError {
     },
 }
 
-/// An error that occurs when a negative font size is attempted to be created.
+/// An error that occurs when a negative or non-finite font size is attempted to be created.
 #[derive(Debug, Clone, Copy, Snafu)]
-#[snafu(display("Attempted to create a font size with a negative value ({value})."))]
-pub struct NegativeFontSizeError {
+#[snafu(display("Attempted to create a font size with a negative/non-finite value ({value})."))]
+pub struct InvalidFontSizeError {
     /// The negative value that was attempted to be used as a font size.
     pub value: f32,
 }
