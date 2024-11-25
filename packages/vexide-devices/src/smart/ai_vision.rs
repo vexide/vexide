@@ -7,10 +7,9 @@
 //! # Hardware overview
 //!
 //! The AI Vision sensor has three detection modes that can all be enabled at the same time:
-//!     - [Color detection](AiVisionMode::DISABLE_COLOR)
-//!     - [Custom model detection](AiVisionMode::DISABLE_MODEL)
-//!     - [AprilTag detection](AiVisionMode::COLOR_MERGE) (requires color detection to be enabled)
-//!     - [Color code detection](AiVisionMode::MERGE)
+//!     - [Color detection](AiVisionDetectionMode::COLOR)
+//!     - [Custom model detection](AiVisionDetectionMode::MODEL)
+//!     - [AprilTag detection](AiVisionDetectionMode::APRILTAG) (requires color detection to be enabled)
 //! Currently there is no known way to upload custom models to the sensor and fields do not have AprilTags.
 //! However, there are built-in models that can be used for detection.
 //! See [VEX's documentation](https://kb.vex.com/hc/en-us/articles/30326315023892-Using-AI-Classifications-with-the-AI-Vision-Sensor) for more information.
@@ -850,7 +849,7 @@ impl AiVisionSensor {
     }
 
     /// Returns the current flags of the AI Vision sensor including the detection mode
-    /// flags set by [`Self::set_detection`].
+    /// flags set by [`Self::set_detection_mode`].
     ///
     /// # Errors
     ///
