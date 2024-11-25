@@ -32,7 +32,7 @@ async fn main(peripherals: Peripherals) {
     // You can use varying text sizes and fonts.
     let text = Text::new(
         "This is vexide.",
-        Font::new(FontSize::from_fraction(2, 3), FontFamily::Proportional),
+        Font::new(FontSize::new(2, 3), FontFamily::Proportional),
         [21, 84],
     );
     display.fill(&text, Rgb::new(255, 255, 255));
