@@ -45,7 +45,7 @@ Showcases creating and reading from several ADI devices on the Brain's built in 
 
 Controls pneumatics through an ADI solenoid device.
 
-### [`screen`](./screen.rs)
+### [`display`](./display.rs)
 
 Showcases writing text to the display through `write!`, drawing a shape, both filled and outlined, and filling the display with a solid color.
 
