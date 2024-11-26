@@ -188,12 +188,11 @@ impl AdiGyroscope {
     /// }
     /// ```
     pub fn yaw(&self) -> Result<Position, AdiGyroscopeError> {
-        self.port.validate_expander()?;
         if self.is_calibrating()? {
             return Err(AdiGyroscopeError::StillCalibrating);
         }
         let value = unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) };
-        let value = f64::from(value) / 100.0;
+        let value = f64::from(value) / 10.0;
 
         Ok(Position::from_degrees(value))
     }
