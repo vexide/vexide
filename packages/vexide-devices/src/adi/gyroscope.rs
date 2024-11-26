@@ -21,7 +21,7 @@ use super::{AdiDevice, AdiDeviceType, AdiPort};
 use crate::{position::Position, PortError};
 
 /// The magic number returned by the ADI device when the gyroscope is still calibrating.
-const CALIBRATING_MAGIC: i32 = -32768;
+const CALIBRATING_MAGIC: i32 = -0x8000;
 
 enum AdiGyroscopeCalibrationFutureState {
     /// Tell VEXos to start calibration for the given duration.
