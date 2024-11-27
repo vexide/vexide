@@ -611,9 +611,6 @@ impl Display {
     }
 
     /// Draw a filled object to the display.
-    ///
-    /// For `Text` widgets, the background color is transparent by default. Use
-    /// `Display::fill_text` to specify a background color.
     pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
         shape.fill(self, color);
     }

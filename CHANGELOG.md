@@ -124,7 +124,6 @@ Before releasing:
 - Removed `Position`-to-`Position` `Mul`/`Div` ops, as they were mathematically unsound. Prefer using `Position`-to-scalar operations for this. (#237) (**Breaking Change**)
 - Removed `LinkError::Nul`. (#240) (**Breaking Change**)
 - Removed `LinkError::Port`, because it was broken. VEXlink will no longer perform port validation. (#243) (**Breaking Change**)
-- Added `Fill` implementation for `Text`, since it's a bit of a special case. (#247)
 
 ### New Contributors
 
