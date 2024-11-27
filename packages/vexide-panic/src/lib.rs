@@ -19,7 +19,7 @@ use core::{cell::UnsafeCell, fmt::Write};
 use vexide_core::{backtrace::Backtrace, println, sync::Mutex};
 #[cfg(feature = "display_panics")]
 use vexide_devices::{
-    display::{Display, Rect, Text, TextSize},
+    display::{Display, Font, FontFamily, FontSize, Rect, Text},
     math::Point2,
 };
 
@@ -44,7 +44,7 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
         screen.draw_text(
             &Text::new(
                 buffer,
-                TextSize::Small,
+                Font::new(FontSize::SMALL, FontFamily::Monospace),
                 Point2 {
                     x: ERROR_BOX_MARGIN + ERROR_BOX_PADDING,
                     y: ERROR_BOX_MARGIN + ERROR_BOX_PADDING + (line * LINE_HEIGHT),
