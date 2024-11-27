@@ -908,12 +908,12 @@ impl AiVisionSensor {
         Ok(())
     }
 
-    /// Enables and begins the automatic white balance process.
+    /// Restarts the automatic white balance process.
     ///
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    pub fn enable_awb(&mut self) -> Result<()> {
+    pub fn start_awb(&mut self) -> Result<()> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
