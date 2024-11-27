@@ -545,20 +545,14 @@ impl Text {
 
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
-            vexDisplayBackgroundColor(if let Some(color) = bg_color {
-                color.into_raw()
-            } else {
-                // If the byte before the red component is not 0, VEXos will use
-                // a transparent background.
-                // Not sure this is documented anywhere, but it works and is a
-                // relatively safe assumption that is unlikely to change.
-                0b1 << 24
-            });
+            if let Some(bg_color) = bg_color {
+                vexDisplayBackgroundColor(bg_color.into_raw());
+            }
             self.font.apply();
             vexDisplayPrintf(
                 i32::from(x),
                 i32::from(y + Display::HEADER_HEIGHT),
-                1,
+                i32::from(bg_color.is_some()),
                 c"%s".as_ptr(),
                 self.text.as_ptr(),
             );
