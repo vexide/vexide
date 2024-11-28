@@ -30,6 +30,7 @@ use vex_sdk::{
     vexDeviceGpsRawGyroGet, vexDeviceGpsRotationGet, vexDeviceGpsStatusGet, V5_DeviceGpsAttitude,
     V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
 };
+use vexide_core::float::Float;
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{math::Point2, PortError};
@@ -304,7 +305,7 @@ impl GpsImu {
         validate_port(self.port_number, SmartDeviceType::Gps)
     }
 
-    /// Returns the IMU's yaw angle bounded by [0, 360) degrees.
+    /// Returns the IMU's yaw angle bounded by [0.0, 360.0) degrees.
     ///
     /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
     /// represented with negative ones.
@@ -346,8 +347,10 @@ impl GpsImu {
     pub fn heading(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(
-            (unsafe { vexDeviceGpsDegreesGet(self.device) } - self.heading_offset)
-                % Self::MAX_HEADING,
+            // The result needs to be [0, 360). Adding a significantly negative offset could take us
+            // below 0. Adding a significantly positive offset could take us above 360.
+            (unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset)
+                .rem_euclid(Self::MAX_HEADING),
         )
     }
 
@@ -392,7 +395,7 @@ impl GpsImu {
     /// ```
     pub fn rotation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } - self.rotation_offset)
+        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } + self.rotation_offset)
     }
 
     /// Returns the Euler angles (pitch, yaw, roll) representing the IMU's orientation.

@@ -45,13 +45,17 @@ Showcases creating and reading from several ADI devices on the Brain's built in 
 
 Controls pneumatics through an ADI solenoid device.
 
-### [`screen`](./screen.rs)
+### [`display`](./display.rs)
 
 Showcases writing text to the display through `write!`, drawing a shape, both filled and outlined, and filling the display with a solid color.
 
 ### [`smart_devices`](./smart_devices.rs)
 
 Creates and communicates with several smart devices.
+
+### [`vexlink_manager`](./vexlink_manager.rs) & [`vexlink_worker`](./vexlink_worker.rs)
+
+Demonstrates basic usage of the VEXlink protocol for wireless message passing between two radios. These examples will need to be uploaded to two different robots (one "manager robot" and one "worker robot") each with their own radios in port 21.
 
 ## Async
 
