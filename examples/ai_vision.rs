@@ -8,7 +8,7 @@ use vexide::{
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
-    let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ai_vision
         .set_color(
             1,
