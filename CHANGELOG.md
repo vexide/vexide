@@ -54,6 +54,7 @@ Before releasing:
   for opaque scaling (#230)
 - Added panic hook support comparable to the Rust standard library through `vexide::panic::set_hook` and `vexide::panic::take_hook` (#234)
 - Added missing `Send` and `Sync` `impl`s for RwLock. (#239)
+- Added the `Proportional` font family and support for fractional font scaling. (#248) (**Breaking Change**)
 - Added `AdiDigitalOut::with_initial_state` to set the initial state of a digital output while creating it (#246)
 
 ### Fixed
@@ -125,11 +126,11 @@ Before releasing:
 - Removed `Position`-to-`Position` `Mul`/`Div` ops, as they were mathematically unsound. Prefer using `Position`-to-scalar operations for this. (#237) (**Breaking Change**)
 - Removed `LinkError::Nul`. (#240) (**Breaking Change**)
 - Removed `LinkError::Port`, because it was broken. VEXlink will no longer perform port validation. (#243) (**Breaking Change**)
+- Removed the `TextSize` enum. Use the associated constants on the new `FontSize` struct instead. (#248) (**Breaking Change**)
 
 ### New Contributors
 
 @zabackary made their first contribution in #164!
-
 
 ## [0.4.2]
 
