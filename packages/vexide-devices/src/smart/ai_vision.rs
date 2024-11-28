@@ -35,9 +35,9 @@ use snafu::Snafu;
 use vex_sdk::{
     vexDeviceAiVisionClassNameGet, vexDeviceAiVisionCodeGet, vexDeviceAiVisionCodeSet,
     vexDeviceAiVisionColorGet, vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet,
-    vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionSensorSet,
-    vexDeviceAiVisionStatusGet, vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionCode,
-    V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT,
+    vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionStatusGet,
+    vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionCode, V5_DeviceAiVisionColor,
+    V5_DeviceAiVisionObject, V5_DeviceT,
 };
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -102,16 +102,14 @@ pub enum AiVisionObject {
     AprilTag {
         /// The detected AprilTag(s) ID number
         id: u8,
-        //TODO: Figure out what corners these points represent. Here's
-        //      some impressively unhelpful comments for the time being:
-        /// Tag Corner 1
-        corner_1: mint::Point2<i16>,
-        /// Tag Corner 2
-        corner_2: mint::Point2<i16>,
-        /// Tag Corner 3
-        corner_3: mint::Point2<i16>,
-        /// Tag Corner 4
-        corner_4: mint::Point2<i16>,
+        /// Position of the top-left corner of the tag
+        top_left: mint::Point2<i16>,
+        /// Position of the top-right corner of the tag
+        top_right: mint::Point2<i16>,
+        /// Position of the top-right corner of the tag
+        bottom_right: mint::Point2<i16>,
+        /// Position of the bottom-left corner of the tag
+        bottom_left: mint::Point2<i16>,
     },
 
     /// An object detected by an onboard model.
@@ -183,27 +181,12 @@ impl Default for AiVisionFlags {
         Self::DISABLE_USB_OVERLAY
     }
 }
-impl TryFrom<AiVisionFlags> for AiVisionDetectionMode {
-    type Error = ();
-    fn try_from(value: AiVisionFlags) -> Result<AiVisionDetectionMode, ()> {
-        AiVisionDetectionMode::from_bits(value.bits()).ok_or(())
-    }
-}
+
 impl From<AiVisionDetectionMode> for AiVisionFlags {
     fn from(value: AiVisionDetectionMode) -> Self {
-        let status = !(value.bits() & !(1 << 4)) | value.bits() & (1 << 4);
-        Self::from_bits(status).unwrap_or_default()
+        !Self::from_bits((value ^ AiVisionDetectionMode::COLOR_MERGE).bits()).unwrap_or_default()
+            & !(Self::DISABLE_STATUS_OVERLAY | Self::DISABLE_USB_OVERLAY)
     }
-}
-
-#[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
-/// Represents the state of the AI Vision sensor's USB overlay.
-pub enum AiVisionUsbOverlay {
-    /// The USB overlay is enabled.
-    #[default]
-    Enabled,
-    /// The USB overlay is disabled.
-    Disabled,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -337,8 +320,6 @@ impl_code_from_array!(1, 2, 3, 4, 5, 6, 7);
 pub struct AiVisionSensor {
     port: SmartPort,
     device: V5_DeviceT,
-    brightness: f64,
-    contrast: f64,
 }
 
 // SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
@@ -387,21 +368,14 @@ impl AiVisionSensor {
     /// }
     /// ```
     #[must_use]
-    pub fn new(port: SmartPort, brightness: f64, contrast: f64) -> Self {
+    pub fn new(port: SmartPort) -> Self {
         let device = unsafe { port.device_handle() };
-        // Configure the AI Vision sensor with the given brightness and contrast.
-        // SAFETY: The device handle is valid because it was created from a valid port.
-        unsafe { vexDeviceAiVisionSensorSet(device, brightness, contrast) }
+
         unsafe {
             vexDeviceAiVisionModeSet(device, Self::RESET_FLAG);
         }
 
-        Self {
-            port,
-            device,
-            brightness,
-            contrast,
-        }
+        Self { port, device }
     }
 
     /// Returns the current temperature of the AI Vision sensor.
@@ -427,101 +401,6 @@ impl AiVisionSensor {
     pub fn temperature(&self) -> Result<f64> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionTemperatureGet(self.device) })
-    }
-
-    /// Returns the contrast of the AI Vision sensor.
-    ///
-    /// # Note
-    ///
-    /// This method does not query the device for the current contrast.
-    /// If the sensor is not connected, this function will not error.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
-    ///     assert_eq!(ai_vision.contrast(), 1.0);
-    /// }
-    #[must_use]
-    pub const fn contrast(&self) -> f64 {
-        self.contrast
-    }
-    /// Sets the contrast of the AI Vision sensor.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     // Contrast is 0.0
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 0.0, 0.0);
-    ///     // Contrast is now 1.0
-    ///     ai_vision.set_contrast(1.0).unwrap();
-    /// }
-    /// ```
-    pub fn set_contrast(&mut self, contrast: f64) -> Result<()> {
-        self.validate_port()?;
-        self.contrast = contrast;
-        unsafe { vexDeviceAiVisionSensorSet(self.device, self.brightness, contrast) }
-        Ok(())
-    }
-
-    /// Returns the brightness of the AI Vision sensor.
-    ///
-    /// # Note
-    ///
-    /// This method does not query the device for the current brightness.
-    /// If the sensor is not connected, this function will not error.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
-    ///     assert_eq!(ai_vision.brightness(), 1.0);
-    /// }
-    /// ```
-    #[must_use]
-    pub const fn brightness(&self) -> f64 {
-        self.brightness
-    }
-    /// Sets the brightness of the AI Vision sensor.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     // Brightness is 1.0
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
-    ///     // Brightness is now 0.5
-    ///     ai_vision.set_brightness(0.5).unwrap();
-    /// }
-    /// ```
-    pub fn set_brightness(&mut self, brightness: f64) -> Result<()> {
-        self.validate_port()?;
-        self.brightness = brightness;
-        unsafe { vexDeviceAiVisionSensorSet(self.device, brightness, self.contrast) }
-        Ok(())
     }
 
     /// Sets a color code used to detect groups of colors.
@@ -836,10 +715,10 @@ impl AiVisionSensor {
     /// }
     /// ```
     pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
-        let mode = (self.flags()?
+        let flags = (self.flags()?
             & (AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_STATUS_OVERLAY))
             | AiVisionFlags::from(mode);
-        self.set_flags(mode)
+        self.set_flags(flags)
     }
 
     fn raw_status(&self) -> Result<u32> {
@@ -1055,19 +934,19 @@ impl AiVisionSensor {
                     },
                     ObjectType::AprilTag => AiVisionObject::AprilTag {
                         id: raw.id,
-                        corner_1: mint::Point2 {
+                        top_left: mint::Point2 {
                             x: raw.object.tag.x0,
                             y: raw.object.tag.y0,
                         },
-                        corner_2: mint::Point2 {
+                        top_right: mint::Point2 {
                             x: raw.object.tag.x1,
                             y: raw.object.tag.y1,
                         },
-                        corner_3: mint::Point2 {
+                        bottom_right: mint::Point2 {
                             x: raw.object.tag.x2,
                             y: raw.object.tag.y2,
                         },
-                        corner_4: mint::Point2 {
+                        bottom_left: mint::Point2 {
                             x: raw.object.tag.x3,
                             y: raw.object.tag.y3,
                         },
