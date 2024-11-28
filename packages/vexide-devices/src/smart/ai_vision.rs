@@ -645,7 +645,7 @@ impl AiVisionSensor {
         }
         self.validate_port()?;
 
-        let mut color: V5_DeviceAiVisionColor = unsafe { mem::zeroed() };
+        let mut color: V5_DeviceAiVisionColor = unsafe { core::mem::zeroed() };
 
         let read = unsafe {
             vexDeviceAiVisionColorGet(self.device, u32::from(id), core::ptr::from_mut(&mut color))
@@ -888,7 +888,7 @@ impl AiVisionSensor {
         let mut objects = Vec::new();
         for i in 0..num_objects {
             unsafe {
-                let mut raw: V5_DeviceAiVisionObject = mem::zeroed();
+                let mut raw: V5_DeviceAiVisionObject = core::mem::zeroed();
                 vexDeviceAiVisionObjectGet(self.device, i, core::ptr::from_mut(&mut raw));
 
                 let object = match raw.r#type.into() {
