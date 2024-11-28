@@ -916,7 +916,11 @@ impl AiVisionSensor {
                         classification: {
                             let ptr = CString::default().into_raw();
 
-                            vexDeviceAiVisionClassNameGet(self.device, i32::from(raw.id), ptr.cast());
+                            vexDeviceAiVisionClassNameGet(
+                                self.device,
+                                i32::from(raw.id),
+                                ptr.cast(),
+                            );
 
                             CString::from_raw(ptr).into_string()?
                         },

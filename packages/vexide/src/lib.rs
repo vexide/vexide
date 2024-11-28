@@ -107,6 +107,7 @@ pub mod prelude {
         position::Position,
         rgb::Rgb,
         smart::{
+            ai_vision::{AiVisionColor, AiVisionColorCode, AiVisionObject, AiVisionSensor},
             distance::DistanceSensor,
             expander::AdiExpander,
             imu::InertialSensor,
