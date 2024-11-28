@@ -189,8 +189,8 @@ impl From<AiVisionDetectionMode> for AiVisionFlags {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
 /// A color signature used by an AI Vision Sensor to detect color blobs.
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct AiVisionColor {
     /// The RGB color value.
     pub rgb: Rgb<u8>,
@@ -363,7 +363,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     // Do something with the AI Vision sensor
     /// }
     /// ```
@@ -391,7 +391,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
     ///         println!("{:?}", ai_vision.temperature());
     ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
@@ -422,7 +422,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
@@ -490,7 +490,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     let code = AiVisionColorCode::from([1]);
     ///     _ = ai_vision.set_color_code(1, &code);
     ///     if let Ok(Some(code)) = ai_vision.color_code(1) {
@@ -542,7 +542,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     _ = ai_vision.set_color_code(1, &AiVisionColorCode::from([1]));
     ///     _ = ai_vision.set_color_code(2, &AiVisionColorCode::from([1, 2]));
     ///     println!("{:?}", ai_vision.color_codes());
@@ -579,7 +579,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
@@ -625,7 +625,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
@@ -674,7 +674,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
@@ -710,7 +710,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     _ = ai_vision.set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
     /// }
     /// ```
@@ -741,7 +741,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     println!("{:?}", ai_vision.flags());
     /// }
     /// ```
@@ -766,7 +766,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     // Enable all detection modes except for custom model and disable USB overlay
     ///     let flags = AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_MODEL;
     ///     _ = ai_vision.set_flags(flags);
@@ -838,7 +838,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     _ = ai_vision.set_apriltag_family(AprilTagFamily::Tag16h5);
     /// }
     /// ```
@@ -870,7 +870,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
     ///         let objects = ai_vision.objects().unwrap();
     ///         for object in objects {
@@ -970,7 +970,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1, 1.0, 1.0);
+    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
     ///         println!("AI Vision sensor currently detects {:?} objects", ai_vision.object_count());
     ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
