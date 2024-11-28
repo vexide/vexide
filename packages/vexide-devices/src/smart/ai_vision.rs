@@ -23,7 +23,9 @@
 //! It still has a USB port that can be used to create these signatures with VEX's utility.
 
 use alloc::{
-    ffi::{CString, IntoStringError}, string::String, vec::Vec
+    ffi::{CString, IntoStringError},
+    string::String,
+    vec::Vec,
 };
 
 use bitflags::bitflags;
@@ -914,11 +916,7 @@ impl AiVisionSensor {
                         classification: {
                             let ptr = CString::default().into_raw();
 
-                            vexDeviceAiVisionClassNameGet(
-                                self.device,
-                                i32::from(raw.id),
-                                ptr as _,
-                            );
+                            vexDeviceAiVisionClassNameGet(self.device, i32::from(raw.id), ptr as _);
 
                             CString::from_raw(ptr).into_string()?
                         },
