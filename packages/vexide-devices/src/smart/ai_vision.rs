@@ -23,10 +23,8 @@
 //! It still has a USB port that can be used to create these signatures with VEX's utility.
 
 use alloc::{
-    string::{FromUtf8Error, String},
-    vec::Vec,
+    ffi::{CString, IntoStringError}, string::String, vec::Vec
 };
-use core::mem;
 
 use bitflags::bitflags;
 use mint::Point2;
@@ -507,7 +505,7 @@ impl AiVisionSensor {
         self.validate_port()?;
 
         // Get the color code from the sensor
-        let mut code: V5_DeviceAiVisionCode = unsafe { mem::zeroed() };
+        let mut code: V5_DeviceAiVisionCode = unsafe { core::mem::zeroed() };
         let read = unsafe {
             vexDeviceAiVisionCodeGet(self.device, id.into(), core::ptr::from_mut(&mut code))
         };
@@ -914,15 +912,15 @@ impl AiVisionSensor {
                     ObjectType::Model => AiVisionObject::Model {
                         id: raw.id,
                         classification: {
-                            let mut class_name = [0; 20]; // AIVISION_MAX_CLASS_NAME
+                            let ptr = CString::default().into_raw();
 
                             vexDeviceAiVisionClassNameGet(
                                 self.device,
                                 i32::from(raw.id),
-                                class_name.as_mut_ptr(),
+                                ptr as _,
                             );
 
-                            String::from_utf8(class_name.to_vec())?
+                            CString::from_raw(ptr).into_string()?
                         },
                         position: Point2 {
                             x: raw.object.model.xoffset,
@@ -1026,7 +1024,7 @@ pub enum AiVisionError {
     #[snafu(transparent)]
     InvalidClassName {
         /// The source of the error.
-        source: FromUtf8Error,
+        source: IntoStringError,
     },
     /// Generic port related error.
     #[snafu(transparent)]
