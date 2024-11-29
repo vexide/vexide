@@ -176,7 +176,7 @@ impl OpenOptions {
     /// # Examples
     ///
     /// ```no_run
-    /// use std::fs::OpenOptions;
+    /// use vexide::core::fs::OpenOptions;
     ///
     /// let file = OpenOptions::new().append(true).open("foo.txt");
     /// ```
@@ -469,7 +469,7 @@ impl Metadata {
     ///
     /// ```no_run
     /// fn main() -> std::io::Result<()> {
-    ///     use std::fs;
+    ///     use vexide::core::fs;
     ///
     ///     let metadata = fs::metadata("foo.txt")?;
     ///
