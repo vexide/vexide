@@ -65,7 +65,7 @@ pub use fs_str::FsStr;
 ///             .open("foo.txt");
 /// ```
 #[allow(clippy::struct_excessive_bools)]
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct OpenOptions {
     read: bool,
     write: bool,
@@ -350,12 +350,69 @@ impl OpenOptions {
     }
 }
 
+/// A structure representing a type of file with accessors for each file type.
+/// It is returned by [`Metadata::file_type`] method.
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub struct FileType {
     is_dir: bool,
 }
 
+impl FileType {
+    /// Tests whether this file type represents a directory. The
+    /// result is mutually exclusive to the results of [`is_file`];
+    /// only one of these tests may pass.
+    ///
+    /// [`is_file`]: FileType::is_file
+    /// [`is_symlink`]: FileType::is_symlink
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs;
+    ///
+    /// let metadata = fs::metadata("foo.txt")?;
+    /// let file_type = metadata.file_type();
+    ///
+    /// assert_eq!(file_type.is_dir(), false);
+    /// ```
+    #[must_use]
+    pub const fn is_dir(&self) -> bool {
+        self.is_dir
+    }
+
+    /// Tests whether this file type represents a regular file. The
+    /// result is mutually exclusive to the results of [`is_dir`];
+    /// only one of these tests may pass.
+    ///
+    /// When the goal is simply to read from (or write to) the source, the most
+    /// reliable way to test the source can be read (or written to) is to open
+    /// it. See [`File::open`] or [`OpenOptions::open`] for more information.
+    ///
+    /// [`is_dir`]: FileType::is_dir
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs;
+    ///
+    /// let metadata = fs::metadata("foo.txt")?;
+    /// let file_type = metadata.file_type();
+    ///
+    /// assert_eq!(file_type.is_file(), true);
+    /// ```
+    #[must_use]
+    pub const fn is_file(&self) -> bool {
+        !self.is_dir
+    }
+}
+
+/// Metadata information about a file.
+///
+/// This structure is returned from the [`metadata`] function or method
+/// and represents known metadata about a file such as its size and type.
+#[derive(Clone)]
 pub struct Metadata {
-    is_dir: bool,
+    file_type: FileType,
     size: u64,
 }
 
@@ -366,7 +423,9 @@ impl Metadata {
         if size >= 0 {
             Ok(Self {
                 size: size as u64,
-                is_dir: false,
+                file_type: FileType {
+                    is_dir: false,
+                },
             })
         } else {
             Err(io::Error::new(
@@ -388,7 +447,9 @@ impl Metadata {
         if is_dir {
             Ok(Self {
                 size: 0,
-                is_dir: true,
+                file_type: FileType {
+                    is_dir: true,
+                },
             })
         } else {
             let mut opts = OpenOptions::new();
@@ -400,17 +461,85 @@ impl Metadata {
         }
     }
 
-    pub fn is_dir(&self) -> bool {
-        self.is_dir
+    /// Returns the file type for this metadata.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// fn main() -> std::io::Result<()> {
+    ///     use std::fs;
+    ///
+    ///     let metadata = fs::metadata("foo.txt")?;
+    ///
+    ///     println!("{:?}", metadata.file_type());
+    ///     Ok(())
+    /// }
+    /// ```
+    #[must_use]
+    pub const fn file_type(&self) -> FileType {
+        self.file_type
     }
-    pub fn is_file(&self) -> bool {
-        !self.is_dir
+
+    /// Tests whether this file type represents a directory. The
+    /// result is mutually exclusive to the results of [`is_file`];
+    /// only one of these tests may pass.
+    ///
+    /// [`is_file`]: FileType::is_file
+    /// [`is_symlink`]: FileType::is_symlink
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs;
+    ///
+    /// let metadata = fs::metadata("foo.txt")?;
+    ///
+    /// assert!(!metadata.is_dir());
+    /// ```
+    #[must_use]
+    pub const fn is_dir(&self) -> bool {
+        self.file_type.is_dir
     }
-    pub fn is_symlink(&self) -> bool {
-        false
+
+    /// Tests whether this file type represents a regular file. The
+    /// result is mutually exclusive to the results of [`is_dir`];
+    /// only one of these tests may pass.
+    ///
+    /// When the goal is simply to read from (or write to) the source, the most
+    /// reliable way to test the source can be read (or written to) is to open
+    /// it. See [`File::open`] or [`OpenOptions::open`] for more information.
+    ///
+    /// [`is_dir`]: FileType::is_dir
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs;
+    ///
+    /// let metadata = fs::metadata("foo.txt")?;
+    ///
+    /// assert!(metadata.is_file());
+    /// ```
+    #[must_use]
+    pub const fn is_file(&self) -> bool {
+        !self.file_type.is_dir
     }
+
+    /// Returns the size of the file, in bytes, this metadata is for.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs;
+    ///
+    /// let metadata = fs::metadata("foo.txt")?;
+    ///
+    /// assert_eq!(0, metadata.len());
+    /// ```
+    #[allow(clippy::len_without_is_empty)]
+    #[must_use]
     pub fn len(&self) -> Option<u64> {
-        self.is_dir.then(|| self.size)
+        self.file_type.is_dir.then_some(self.size)
     }
 }
 
