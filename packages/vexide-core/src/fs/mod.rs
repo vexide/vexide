@@ -16,7 +16,7 @@
 
 use alloc::{ffi::CString, string::String, vec::Vec};
 
-use no_std_io::io::{Read, Write};
+use no_std_io::io::{Read, Seek, Write};
 
 use crate::{io, path::Path};
 
@@ -555,6 +555,16 @@ impl File {
         }
     }
 
+    fn tell(&self) -> io::Result<u64> {
+        let position = unsafe { vex_sdk::vexFileTell(self.fd) };
+        position.try_into().map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Failed to get current location in file",
+            )
+        })
+    }
+
     /// Opens a file in read-only mode.
     pub fn open<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         OpenOptions::new().read(true).open(path.as_ref())
@@ -645,6 +655,84 @@ impl io::Read for File {
         } else {
             Ok(read as usize)
         }
+    }
+}
+
+impl Seek for File {
+    fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
+        const SEEK_SET: i32 = 0;
+        const SEEK_CUR: i32 = 1;
+        const SEEK_END: i32 = 2;
+
+        fn try_convert_offset<T: TryInto<u32>>(offset: T) -> io::Result<u32> {
+            offset.try_into().map_err(|_| {
+                io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Cannot seek to an offset too large to fit in a 32 bit integer",
+                )
+            })
+        }
+
+        match pos {
+            io::SeekFrom::Start(offset) => unsafe {
+                map_fresult(vex_sdk::vexFileSeek(
+                    self.fd,
+                    try_convert_offset(offset)?,
+                    SEEK_SET,
+                ))?;
+            },
+
+            // VEXos does not allow seeking with negative offsets.
+            // That means we need to calculate the offset from the start for both of these.
+            io::SeekFrom::End(offset) => unsafe {
+                // If our offset is positive, everything is easy
+                if offset >= 0 {
+                    map_fresult(vex_sdk::vexFileSeek(
+                        self.fd,
+                        try_convert_offset(offset)?,
+                        SEEK_END,
+                    ))?;
+                } else {
+                    // Get the position of the end of the file...
+                    map_fresult(vex_sdk::vexFileSeek(
+                        self.fd,
+                        try_convert_offset(offset)?,
+                        SEEK_END,
+                    ))?;
+                    // The number returned by the VEX SDK tell is stored as a 32 bit interger,
+                    // and therefore this conversion cannot fail.
+                    let position = self.tell()? as i64;
+
+                    // Offset from that position
+                    let new_position = position + offset;
+                    map_fresult(vex_sdk::vexFileSeek(
+                        self.fd,
+                        try_convert_offset(new_position)?,
+                        SEEK_SET,
+                    ))?;
+                }
+            },
+            io::SeekFrom::Current(offset) => unsafe {
+                if offset >= 0 {
+                    map_fresult(vex_sdk::vexFileSeek(
+                        self.fd,
+                        try_convert_offset(offset)?,
+                        SEEK_CUR,
+                    ))?;
+                } else {
+                    let position = self.tell()? as i64;
+
+                    let new_position = position + offset;
+                    map_fresult(vex_sdk::vexFileSeek(
+                        self.fd,
+                        try_convert_offset(new_position)?,
+                        SEEK_SET,
+                    ))?;
+                }
+            },
+        }
+
+        self.tell()
     }
 }
 
