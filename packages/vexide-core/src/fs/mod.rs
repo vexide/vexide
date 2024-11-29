@@ -565,13 +565,37 @@ impl File {
         })
     }
 
-    /// Opens a file in read-only mode.
+    /// Attempts to open a file in read-only mode.
+    ///
+    /// See the [`OpenOptions::open`] method for more details.
+    ///
+    /// If you only need to read the entire file contents, consider
+    /// [`fs::read()`][self::read] or [`fs::read_to_string()`][self::read_to_string]
+    /// instead.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if `path` does not already exist.
+    /// Other errors may also be returned according to [`OpenOptions::open`].
     pub fn open<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         OpenOptions::new().read(true).open(path.as_ref())
     }
 
-    /// Opens or creates a file in write-only mode.
-    /// Files cannot be read from in this mode.
+    /// Opens a file in write-only mode.
+    ///
+    /// This function will create a file if it does not exist,
+    /// and will truncate it if it does.
+    ///
+    /// Depending on the platform, this function may fail if the
+    /// full directory path does not exist.
+    /// See the [`OpenOptions::open`] function for more details.
+    ///
+    /// See also [`fs::write()`][self::write] for a simple function to
+    /// create a file with some given data.
+    ///
+    /// # Errors
+    ///
+    /// See [`OpenOptions::open`].
     pub fn create<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         OpenOptions::new()
             .write(true)
@@ -579,8 +603,27 @@ impl File {
             .truncate(true)
             .open(path.as_ref())
     }
-    /// Creates a file in write-only mode, erroring if the file already exists.
-    /// Files cannot be read from in this mode.
+
+    /// Creates a new file in read-write mode; error if the file exists.
+    ///
+    /// This function will create a file if it does not exist, or return an error if it does. This
+    /// way, if the call succeeds, the file returned is guaranteed to be new.
+    /// If a file exists at the target location, creating a new file will fail with [`AlreadyExists`]
+    /// or another error based on the situation. See [`OpenOptions::open`] for a
+    /// non-exhaustive list of likely errors.
+    ///
+    /// This option is useful because it is atomic. Otherwise between checking whether a file
+    /// exists and creating a new one, the file may have been created by another process (a TOCTOU
+    /// race condition / attack).
+    ///
+    /// This can also be written using
+    /// `File::options().read(true).write(true).create_new(true).open(...)`.
+    ///
+    /// [`AlreadyExists`]: crate::io::ErrorKind::AlreadyExists
+    ///
+    /// # Errors
+    ///
+    /// See [`OpenOptions::open`].
     pub fn create_new<P: AsRef<Path>>(path: P) -> io::Result<File> {
         OpenOptions::new()
             .read(true)
@@ -589,19 +632,71 @@ impl File {
             .open(path.as_ref())
     }
 
+    /// Returns a new OpenOptions object.
+    ///
+    /// This function returns a new OpenOptions object that you can use to
+    /// open or create a file with specific options if `open()` or `create()`
+    /// are not appropriate.
+    ///
+    /// It is equivalent to `OpenOptions::new()`, but allows you to write more
+    /// readable code. Instead of
+    /// `OpenOptions::new().append(true).open("example.log")`,
+    /// you can write `File::options().append(true).open("example.log")`. This
+    /// also avoids the need to import `OpenOptions`.
+    ///
+    /// See the [`OpenOptions::new`] function for more details.
     #[must_use]
-    pub fn options() -> OpenOptions {
+    pub const fn options() -> OpenOptions {
         OpenOptions::new()
     }
 
+    /// Queries metadata about the underlying file.
+    ///
+    /// # Errors
+    ///
+    /// * [`InvalidData`]: Internal filesystem error occurred.
     pub fn metadata(&self) -> io::Result<Metadata> {
         Metadata::from_fd(self.fd)
     }
 
+    /// Attempts to sync all OS-internal file content and metadata to disk.
+    ///
+    /// This function will attempt to ensure that all in-memory data reaches the
+    /// filesystem before returning.
+    ///
+    /// This can be used to handle errors that would otherwise only be caught
+    /// when the `File` is closed, as dropping a `File` will ignore all errors.
+    /// Note, however, that `sync_all` is generally more expensive than closing
+    /// a file by dropping it, because the latter is not required to block until
+    /// the data has been written to the filesystem.
+    ///
+    /// If synchronizing the metadata is not required, use [`sync_data`] instead.
+    ///
+    /// [`sync_data`]: File::sync_data
+    ///
+    /// # Errors
+    ///
+    /// This function is infallible.
     pub fn sync_all(&self) -> io::Result<()> {
         self.flush();
         Ok(())
     }
+
+    /// This function is similar to [`sync_all`], except that it might not
+    /// synchronize file metadata to the filesystem.
+    ///
+    /// This is intended for use cases that must synchronize content, but don't
+    /// need the metadata on disk. The goal of this method is to reduce disk
+    /// operations.
+    ///
+    /// Note that some platforms may simply implement this in terms of
+    /// [`sync_all`].
+    ///
+    /// [`sync_all`]: File::sync_all
+    ///
+    /// # Errors
+    ///
+    /// This function is infallible.
     pub fn sync_data(&self) -> io::Result<()> {
         self.flush();
         Ok(())
