@@ -72,7 +72,7 @@ impl AdiServo {
     ///   something else was connected.
     pub fn set_target(&mut self, position: Position) -> Result<(), PortError> {
         self.set_raw_target(
-            (position.as_degrees() / Self::MAX_POSITION.as_degrees().clamp(-1.0, 1.0) * 127.0)
+            ((position.as_degrees() / Self::MAX_POSITION.as_degrees()).clamp(-1.0, 1.0) * 127.0)
                 as i8,
         )
     }
