@@ -409,7 +409,7 @@ pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<u64> {
 }
 
 pub fn exists<P: AsRef<Path>>(path: P) -> bool {
-    let file_exists = unsafe { vex_sdk::vexFileStatus(path.as_ref().as_os_str().as_ptr()) };
+    let file_exists = unsafe { vex_sdk::vexFileStatus(path.as_ref().as_fs_str().as_ptr()) };
     // Woop woop we've got a nullptr!
     file_exists != 0
 }
