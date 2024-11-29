@@ -122,7 +122,7 @@ _boot:
 /// - `sbss` and `ebss` must be `T` aligned.
 #[inline]
 #[allow(clippy::similar_names)]
-#[cfg(target_arch = "arm")]
+#[cfg(target_vendor = "vex")]
 unsafe fn zero_bss<T>(mut sbss: *mut T, ebss: *mut T)
 where
     T: Copy,
@@ -147,7 +147,7 @@ where
 /// Must be called once at the start of program execution after the stack has been setup.
 #[inline]
 pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
-    #[cfg(target_arch = "arm")]
+    #[cfg(target_vendor = "vex")]
     unsafe {
         // Fill the `.bss` section of our program's memory with zeroes to ensure that uninitialized data is allocated properly.
         zero_bss(
@@ -156,8 +156,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         );
 
         // Initialize the heap allocator
-        // This cfg is mostly just to make the language server happy. All of this code is near impossible to run in the WASM sim.
-        vexide_core::allocator::vexos::init_heap();
+        vexide_core::allocator::init_heap();
     }
 
     // Print the banner

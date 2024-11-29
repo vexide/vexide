@@ -14,6 +14,7 @@
 
 extern crate alloc;
 
+#[cfg(target_vendor = "vex")]
 pub mod allocator;
 pub mod backtrace;
 pub mod competition;

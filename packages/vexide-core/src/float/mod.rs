@@ -3,14 +3,10 @@
 //! This module provides implementations of math functions of floating point
 //! primitive types (`f32`, `f64`).
 
-#[cfg(all(
-    target_arch = "arm",
-    target_os = "none",
-    not(feature = "force_rust_libm")
-))]
+#[cfg(all(target_vendor = "vex", not(feature = "force_rust_libm")))]
 mod newlib;
 
-#[cfg(any(target_arch = "wasm32", feature = "force_rust_libm"))]
+#[cfg(any(not(target_vendor = "vex"), feature = "force_rust_libm"))]
 mod rust;
 
 /// Used to make [`powi_impl`] generic across f32 and f64.
