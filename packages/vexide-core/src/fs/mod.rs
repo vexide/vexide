@@ -24,6 +24,47 @@ mod fs_str;
 
 pub use fs_str::FsStr;
 
+/// Options and flags which can be used to configure how a file is opened.
+///
+/// This builder exposes the ability to configure how a [`File`] is opened and
+/// what operations are permitted on the open file. The [`File::open`] and
+/// [`File::create`] methods are aliases for commonly used options using this
+/// builder.
+///
+/// Generally speaking, when using `OpenOptions`, you'll first call
+/// [`OpenOptions::new`], then chain calls to methods to set each option, then
+/// call [`OpenOptions::open`], passing the path of the file you're trying to
+/// open. This will give you a [`io::Result`] with a [`File`] inside that you
+/// can further operate on.
+///
+/// # Limitations
+///
+/// - Files MUST be opened in either `read` XOR `write` mode.
+/// - VEXos does not allow you to open a file configured as `read` and `write`
+///   at the same time. Doing so will return an error with `File::open`. This is
+///   a fundamental limtiation of the OS.
+///
+/// # Examples
+///
+/// Opening a file to read:
+///
+/// ```no_run
+/// use vexide::core::fs::OpenOptions;
+///
+/// let file = OpenOptions::new().read(true).open("foo.txt");
+/// ```
+///
+/// Opening a file for writing, as well as creating it if it doesn't exist:
+///
+/// ```no_run
+/// use vexide::core::fs::OpenOptions;
+///
+/// let file = OpenOptions::new()
+///             .write(true)
+///             .create(true)
+///             .open("foo.txt");
+/// ```
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Default)]
 pub struct OpenOptions {
     read: bool,
@@ -34,6 +75,18 @@ pub struct OpenOptions {
 }
 
 impl OpenOptions {
+    /// Creates a blank new set of options ready for configuration.
+    ///
+    /// All options are initially set to `false`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs::OpenOptions;
+    ///
+    /// let mut options = OpenOptions::new();
+    /// let file = options.read(true).open("foo.txt");
+    /// ```
     #[must_use]
     pub const fn new() -> OpenOptions {
         OpenOptions {
@@ -45,34 +98,191 @@ impl OpenOptions {
         }
     }
 
+    /// Sets the option for read access.
+    ///
+    /// This option, when true, will indicate that the file should be
+    /// `read`-able if opened.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs::OpenOptions;
+    ///
+    /// let file = OpenOptions::new().read(true).open("foo.txt");
+    /// ```
     pub fn read(&mut self, read: bool) -> &mut Self {
         self.read = read;
         self
     }
+
+    /// Sets the option for write access.
+    ///
+    /// This option, when true, will indicate that the file should be
+    /// `write`-able if opened.
+    ///
+    /// If the file already exists, any write calls on it will overwrite its
+    /// contents, without truncating it.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs::OpenOptions;
+    ///
+    /// let file = OpenOptions::new().write(true).open("foo.txt");
+    /// ```
     pub fn write(&mut self, write: bool) -> &mut Self {
         self.write = write;
         self
     }
+
+    /// Sets the option for the append mode.
+    ///
+    /// This option, when true, means that writes will append to a file instead
+    /// of overwriting previous contents.
+    /// Note that setting `.write(true).append(true)` has the same effect as
+    /// setting only `.append(true)`.
+    ///
+    /// Append mode guarantees that writes will be positioned at the current end of file,
+    /// even when there are other processes or threads appending to the same file. This is
+    /// unlike <code>[seek]\([SeekFrom]::[End]\(0))</code> followed by `write()`, which
+    /// has a race between seeking and writing during which another writer can write, with
+    /// our `write()` overwriting their data.
+    ///
+    /// Keep in mind that this does not necessarily guarantee that data appended by
+    /// different processes or threads does not interleave. The amount of data accepted a
+    /// single `write()` call depends on the operating system and file system. A
+    /// successful `write()` is allowed to write only part of the given data, so even if
+    /// you're careful to provide the whole message in a single call to `write()`, there
+    /// is no guarantee that it will be written out in full. If you rely on the filesystem
+    /// accepting the message in a single write, make sure that all data that belongs
+    /// together is written in one operation. This can be done by concatenating strings
+    /// before passing them to [`write()`].
+    ///
+    /// ## Note
+    ///
+    /// This function doesn't create the file if it doesn't exist. Use the
+    /// [`OpenOptions::create`] method to do so.
+    ///
+    /// [`write()`]: Write::write "io::Write::write"
+    /// [`flush()`]: Write::flush "io::Write::flush"
+    /// [stream_position]: Seek::stream_position "io::Seek::stream_position"
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::fs::OpenOptions;
+    ///
+    /// let file = OpenOptions::new().append(true).open("foo.txt");
+    /// ```
     pub fn append(&mut self, append: bool) -> &mut Self {
         self.append = append;
         self
     }
+
+    /// Sets the option for truncating a previous file.
+    ///
+    /// If a file is successfully opened with this option set it will truncate
+    /// the file to 0 length if it already exists.
+    ///
+    /// The file must be opened with write access for truncate to work.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs::OpenOptions;
+    ///
+    /// let file = OpenOptions::new().write(true).truncate(true).open("foo.txt");
+    /// ```
     pub fn truncate(&mut self, truncate: bool) -> &mut Self {
         self.truncate = truncate;
         self
     }
+
+    /// Sets the option to create a new file, or open it if it already exists.
+    ///
+    /// In order for the file to be created, [`OpenOptions::write`] or
+    /// [`OpenOptions::append`] access must be used.
+    ///
+    /// See also [`write()`][self::write] for a simple function to create a file
+    /// with some given data.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs::OpenOptions;
+    ///
+    /// let file = OpenOptions::new().write(true).create(true).open("foo.txt");
+    /// ```
     pub fn create(&mut self, create: bool) -> &mut Self {
         self.write = create;
         self
     }
+
+    /// Sets the option to create a new file, failing if it already exists.
+    ///
+    /// No file is allowed to exist at the target location. In this way, if the call succeeds,
+    /// the file returned is guaranteed to be new. If a file exists at the target location,
+    /// creating a new file will fail with [`AlreadyExists`] or another error based on the
+    /// situation. See [`OpenOptions::open`] for a non-exhaustive list of likely errors.
+    ///
+    /// If `.create_new(true)` is set, [`.create()`] and [`.truncate()`] are
+    /// ignored.
+    ///
+    /// The file must be opened with write or append access in order to create
+    /// a new file.
+    ///
+    /// [`.create()`]: OpenOptions::create
+    /// [`.truncate()`]: OpenOptions::truncate
+    /// [`AlreadyExists`]: io::ErrorKind::AlreadyExists
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs::OpenOptions;
+    ///
+    /// let file = OpenOptions::new().write(true)
+    ///                              .create_new(true)
+    ///                              .open("foo.txt");
+    /// ```
     pub fn create_new(&mut self, create_new: bool) -> &mut Self {
         self.create_new = create_new;
         self
     }
 
+    /// Opens a file at `path` with the options specified by `self`.
+    ///
     /// # Errors
     ///
-    /// Returns an error if the SD card failed to mount or if there are filesystem errors.
+    /// This function will return an error under a number of different
+    /// circumstances. Some of these error conditions are listed here, together
+    /// with their [`io::ErrorKind`]. The mapping to [`io::ErrorKind`]s is not
+    /// part of the compatibility contract of the function.
+    ///
+    /// * [`NotFound`]: The specified file does not exist and neither `create`
+    ///   or `create_new` is set.
+    /// * [`AlreadyExists`]: `create_new` was specified and the file already
+    ///   exists.
+    /// * [`InvalidInput`]: Invalid combinations of open options (read/write
+    ///   access both specified, truncate without write access, no access mode
+    ///   set, etc.).
+    ///
+    /// The following errors don't match any existing [`io::ErrorKind`] at the moment:
+    /// * Filesystem-level errors: full disk, write permission
+    ///   requested on a read-only file system, exceeded disk quota, too many
+    ///   open files, too long filename.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::core::fs::OpenOptions;
+    ///
+    /// let file = OpenOptions::new().read(true).open("foo.txt");
+    /// ```
+    ///
+    /// [`AlreadyExists`]: io::ErrorKind::AlreadyExists
+    /// [`InvalidInput`]: io::ErrorKind::InvalidInput
+    /// [`NotFound`]: io::ErrorKind::NotFound
+    /// [`PermissionDenied`]: io::ErrorKind::PermissionDenied
     pub fn open<P: AsRef<Path>>(&self, path: P) -> io::Result<File> {
         // Mount sdcard volume as FAT filesystem
         map_fresult(unsafe { vex_sdk::vexFileMountSD() })?;
