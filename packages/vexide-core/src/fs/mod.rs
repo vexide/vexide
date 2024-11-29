@@ -16,10 +16,11 @@
 
 use alloc::ffi::CString;
 
-use self::path::Path;
-use crate::io;
+use crate::{io, path::Path};
 
-pub mod path;
+mod fs_str;
+
+pub use fs_str::FsStr;
 
 #[derive(Clone, Debug, Default)]
 pub struct OpenOptions {
@@ -76,7 +77,7 @@ impl OpenOptions {
 
         let path = path.as_ref();
 
-        let path = CString::new(path.as_os_str().as_encoded_bytes()).map_err(|_| {
+        let path = CString::new(path.as_fs_str().as_encoded_bytes()).map_err(|_| {
             io::Error::new(io::ErrorKind::InvalidData, "Path contained a null byte")
         })?;
 
@@ -171,7 +172,7 @@ impl Metadata {
     }
 
     fn from_path(path: &Path) -> io::Result<Self> {
-        let c_path = CString::new(path.as_os_str().as_encoded_bytes()).map_err(|_| {
+        let c_path = CString::new(path.as_fs_str().as_encoded_bytes()).map_err(|_| {
             io::Error::new(io::ErrorKind::InvalidData, "Path contained a null byte")
         })?;
 
