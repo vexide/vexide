@@ -92,6 +92,7 @@ pub mod prelude {
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},
             encoder::AdiEncoder,
+            gyroscope::AdiGyroscope,
             light_sensor::AdiLightSensor,
             line_tracker::AdiLineTracker,
             motor::AdiMotor,
@@ -107,6 +108,7 @@ pub mod prelude {
         position::Position,
         rgb::Rgb,
         smart::{
+            ai_vision::{AiVisionColor, AiVisionColorCode, AiVisionObject, AiVisionSensor},
             distance::DistanceSensor,
             expander::AdiExpander,
             imu::InertialSensor,
