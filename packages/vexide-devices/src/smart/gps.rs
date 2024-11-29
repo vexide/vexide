@@ -1,4 +1,25 @@
-//! GPS sensor device.
+//! GPS Sensor
+//!
+//! This module provides an interface to interact with the VEX V5 GPS Sensor,
+//! which uses computer vision and an inertial measurement unit (IMU) to provide absolute
+//! position tracking within a VEX Robotics Competition field.
+//!
+//! # Hardware Description
+//!
+//! The GPS sensor combines a monochrome camera and an IMU for robust position tracking
+//! through visual odometry. It works by detecting QR-like patterns on the field perimeter,
+//! using both the pattern sequence's and apparent size for position determination. The
+//! integrated IMU provides motion tracking for position estimation when visual tracking
+//! is unavailable or unreliable.
+//!
+//! The sensor has specific operating ranges: it requires a minimum
+//! distance of 20 inches from the field perimeter for reliable readings, has a deadzone
+//! between 0-13.5 inches, and maintains accuracy up to 12 feet from the perimeter.
+//!
+//! Sensor fusion between the camera and IMU helps maintain position tracking through
+//! dead zones and areas of inconsistent visual detection.
+//!
+//! Further information about the sensor's method of operation can be found in [IFI's patent](https://docs.google.com/viewerng/viewer?url=https://patentimages.storage.googleapis.com/4f/74/30/eccf334da0ae38/WO2020219788A1.pdf).
 
 use core::{marker::PhantomData, time::Duration};
 
@@ -9,11 +30,12 @@ use vex_sdk::{
     vexDeviceGpsRawGyroGet, vexDeviceGpsRotationGet, vexDeviceGpsStatusGet, V5_DeviceGpsAttitude,
     V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
 };
+use vexide_core::float::Float;
 
 use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
-use crate::{geometry::Point2, PortError};
+use crate::{math::Point2, PortError};
 
-/// A GPS sensor plugged into a smart port.
+/// A GPS sensor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
 pub struct GpsSensor {
     port: SmartPort,
@@ -38,16 +60,27 @@ impl GpsSensor {
     /// - `offset`: The physical offset of the sensor from the robot's center of rotation.
     /// - `initial_pose`: The inital position and heading of the robot.
     ///
-    /// # Errors
+    /// # Examples
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the specified port.
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a GPS sensor mounted 2 inches forward and 1 inch right of center
+    ///     // Starting at position (0, 0) with 90 degree heading
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    /// }
+    /// ```
     pub fn new(
         port: SmartPort,
         offset: impl Into<Point2<f64>>,
         initial_pose: (impl Into<Point2<f64>>, f64),
-    ) -> Result<Self, PortError> {
-        port.validate_type(SmartDeviceType::Gps)?;
-
+    ) -> Self {
         let device = unsafe { port.device_handle() };
 
         let initial_position = initial_pose.0.into();
@@ -63,7 +96,7 @@ impl GpsSensor {
             );
         }
 
-        Ok(Self {
+        Self {
             device,
             imu: GpsImu {
                 device,
@@ -72,18 +105,38 @@ impl GpsSensor {
                 heading_offset: Default::default(),
             },
             port,
-        })
+        }
     }
 
     /// Returns the physical offset of the sensor from the robot's center of rotation.
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///
+    ///     // Get the configured offset of the sensor
+    ///     if let Ok(offset) = gps.offset() {
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y);
+    ///     }
+    /// }
+    /// ```
     pub fn offset(&self) -> Result<Point2<f64>, PortError> {
         self.validate_port()?;
 
-        let mut data = Point2::<f64>::default();
+        let mut data = Point2 { x: 0.0, y: 0.0 };
         unsafe { vexDeviceGpsOriginGet(self.device, &mut data.x, &mut data.y) }
 
         Ok(data)
@@ -105,7 +158,32 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///
+    ///     // Get current position and heading
+    ///     if let Ok((position, heading)) = gps.pose() {
+    ///         println!(
+    ///             "Robot is at x={}, y={} with heading {}°",
+    ///             position.x,
+    ///             position.y,
+    ///             heading
+    ///         );
+    ///     }
+    /// }
+    /// ```
     pub fn pose(&self) -> Result<(Point2<f64>, f64), PortError> {
         self.validate_port()?;
 
@@ -121,7 +199,10 @@ impl GpsSensor {
             % 360.0;
 
         Ok((
-            Point2::<f64>::new(attitude.position_x, attitude.position_y),
+            Point2 {
+                x: attitude.position_x,
+                y: attitude.position_y,
+            },
             heading,
         ))
     }
@@ -130,7 +211,27 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///
+    ///     // Check position accuracy
+    ///     if gps.error().is_ok_and(|err| err > 0.3) {
+    ///         println!("Warning: GPS position accuracy is low ({}m error)", error);
+    ///     }
+    /// }
+    /// ```
     pub fn error(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
@@ -141,7 +242,26 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///
+    ///     if let Ok(status) = gps.status() {
+    ///         println!("Status: {:b}", status);
+    ///     }
+    /// }
+    /// ```
     pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 
@@ -185,7 +305,7 @@ impl GpsImu {
         validate_port(self.port_number, SmartDeviceType::Gps)
     }
 
-    /// Returns the IMU's yaw angle bounded by [0, 360) degrees.
+    /// Returns the IMU's yaw angle bounded by [0.0, 360.0) degrees.
     ///
     /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
     /// represented with negative ones.
@@ -199,12 +319,38 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     if let Ok(heading) = imu.heading() {
+    ///         println!("Heading is {} degrees.", rotation);
+    ///     }
+    /// }
+    /// ```
     pub fn heading(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(
-            (unsafe { vexDeviceGpsDegreesGet(self.device) } - self.heading_offset)
-                % Self::MAX_HEADING,
+            // The result needs to be [0, 360). Adding a significantly negative offset could take us
+            // below 0. Adding a significantly positive offset could take us above 360.
+            (unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset)
+                .rem_euclid(Self::MAX_HEADING),
         )
     }
 
@@ -222,10 +368,34 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     if let Ok(rotation) = imu.rotation() {
+    ///         println!("Robot has rotated {} degrees since calibration.", rotation);
+    ///     }
+    /// }
+    /// ```
     pub fn rotation(&self) -> Result<f64, PortError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } - self.rotation_offset)
+        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } + self.rotation_offset)
     }
 
     /// Returns the Euler angles (pitch, yaw, roll) representing the IMU's orientation.
@@ -239,7 +409,36 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     if let Ok(angles) = imu.euler() {
+    ///         println!(
+    ///             "yaw: {}°, pitch: {}°, roll: {}°",
+    ///             angles.a.to_degrees(),
+    ///             angles.b.to_degrees(),
+    ///             angles.c.to_degrees(),
+    ///         );
+    ///     }
+    /// }
+    /// ```
     pub fn euler(&self) -> Result<mint::EulerAngles<f64, f64>, PortError> {
         self.validate_port()?;
 
@@ -267,7 +466,37 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     if let Ok(quaternion) = imu.quaternion() {
+    ///         println!(
+    ///             "x: {}, y: {}, z: {}, scalar: {}",
+    ///             quaternion.v.x,
+    ///             quaternion.v.y,
+    ///             quaternion.v.z,
+    ///             quaternion.s,
+    ///         );
+    ///     }
+    /// }
+    /// ```
     pub fn quaternion(&self) -> Result<mint::Quaternion<f64>, PortError> {
         self.validate_port()?;
 
@@ -290,8 +519,39 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
-    pub fn accel(&self) -> Result<mint::Vector3<f64>, PortError> {
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Read out accleration values every 10mS
+    ///     loop {
+    ///         if let Ok(acceleration) = imu.acceleration() {
+    ///             println!(
+    ///                 "x: {}G, y: {}G, z: {}G",
+    ///                 acceleration.x,
+    ///                 acceleration.y,
+    ///                 acceleration.z,
+    ///             );
+    ///         }
+    ///
+    ///         sleep(Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
+    pub fn acceleration(&self) -> Result<mint::Vector3<f64>, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceGpsRaw::default();
@@ -310,7 +570,38 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Read out angular velocity values every 10mS
+    ///     loop {
+    ///         if let Ok(rates) = imu.gyro_rate() {
+    ///             println!(
+    ///                 "x: {}°/s, y: {}°/s, z: {}°/s",
+    ///                 rates.x,
+    ///                 rates.y,
+    ///                 rates.z,
+    ///             );
+    ///         }
+    ///
+    ///         sleep(Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
     pub fn gyro_rate(&self) -> Result<mint::Vector3<f64>, PortError> {
         self.validate_port()?;
 
@@ -335,7 +626,33 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     // Store heading before reset.
+    ///     let heading = imu.heading().unwrap_or_default();
+    ///
+    ///     // Reset heading back to zero.
+    ///     _ = imu.reset_heading();
+    /// }
+    /// ```
     pub fn reset_heading(&mut self) -> Result<(), PortError> {
         self.set_heading(Default::default())
     }
@@ -349,7 +666,33 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     // Store rotation before reset.
+    ///     let rotation = imu.rotation().unwrap_or_default();
+    ///
+    ///     // Reset rotation back to zero.
+    ///     _ = imu.reset_rotation();
+    /// }
+    /// ```
     pub fn reset_rotation(&mut self) -> Result<(), PortError> {
         self.set_rotation(Default::default())
     }
@@ -363,7 +706,26 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Set rotation to 90 degrees clockwise.
+    ///     _ = imu.set_rotation(90.0);
+    /// }
+    /// ```
     pub fn set_rotation(&mut self, rotation: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -383,7 +745,26 @@ impl GpsImu {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Set heading to 90 degrees clockwise.
+    ///     _ = imu.set_heading(90.0);
+    /// }
+    /// ```
     pub fn set_heading(&mut self, heading: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
@@ -392,12 +773,35 @@ impl GpsImu {
         Ok(())
     }
 
-    /// Sets the computation speed of the IMU.
+    /// Sets the internal computation speed of the IMU.
+    ///
+    /// This method does NOT change the rate at which user code can read data off the IMU, as the brain will only talk to the
+    /// device every 10mS regardless of how fast data is being sent or computed.
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the smart port.
-    pub fn set_data_rate(&mut self, interval: Duration) -> Result<(), PortError> {
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         [2.0, 1.0],
+    ///         ([0.0, 0.0], 90.0)
+    ///     );
+    ///     let imu = gps.imu;
+    ///
+    ///     // Set to minimum interval.
+    ///     _ = imu.set_data_interval(Duration::from_millis(5));
+    /// }
+    /// ```
+    pub fn set_data_interval(&mut self, interval: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe {

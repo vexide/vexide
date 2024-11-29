@@ -1,6 +1,6 @@
 [package]
 name = "vexide-core"
-version = "0.4.1"
+version = "0.5.0-rc.2"
 edition = "2021"
 license = "MIT"
 description = "Core functionality for vexide"
@@ -45,4 +45,4 @@ force_rust_libm = ["dep:libm"]
 backtraces = ["dep:vex-libunwind"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-none-eabi"]
+targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.

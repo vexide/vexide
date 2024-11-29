@@ -1,6 +1,6 @@
 [package]
 name = "vexide-startup"
-version = "0.3.1"
+version = "0.3.3-rc.1"
 edition = "2021"
 license = "MIT"
 description = "Support code for V5 Brain user program booting"
@@ -27,4 +27,4 @@ workspace = true
 default = []
 
 [package.metadata.docs.rs]
-targets = ["armv7a-none-eabi"]
+targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.

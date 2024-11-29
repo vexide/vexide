@@ -1,6 +1,6 @@
 [package]
 name = "vexide"
-version = "0.4.1"
+version = "0.5.0-rc.2"
 edition = "2021"
 description = "async/await powered Rust library for VEX V5 Brains"
 keywords = ["Robotics", "bindings", "vex", "v5"]
@@ -67,4 +67,4 @@ panic = ["dep:vexide-panic"]
 display_panics = ["panic", "vexide-panic/display_panics"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-none-eabi"]
+targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.

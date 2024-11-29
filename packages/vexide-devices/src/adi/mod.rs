@@ -1,4 +1,28 @@
-//! ADI (Triport) devices on the Vex V5.
+//! ADI Ports & Devices
+//!
+//! This module provides abstractions for devices connected through VEX's Analog/Digital Interface
+//! (ADI) ports, also known as the "three-wire ports" or "triports".
+//!
+//! # Hardware Overview
+//!
+//! The V5 Brain features 8 three-wire connector ports on its left side that allow connecting
+//! simple analog and digital devices to the brain. These commonly include VEX's legacy sensors
+//! and motors that plugged into the old [Cortex microcontroller].
+//!
+//! ADI ports can also be found on the [`AdiExpander`] device, which grants you eight additional
+//! ports at the cost of a Smart port.
+//!
+//! ADI ports are capable of digital input (3.3V logic), 12-bit analog input, digital output,
+//! and 8-bit PWM output. Each port has a dedicated 12-bit Analog-to-Digital Converter (ADC)
+//! to allow for analog sensors to send a range of values to the port. There is no DAC, making
+//! equivalent analog output impossible. ADI has a max voltage of 5V.
+//!
+//! # Update Times
+//!
+//! All ADI devices are updated at a fixed interval of 10ms (100Hz), defined by [`ADI_UPDATE_INTERVAL`].
+//!
+//! [`AdiExpander`]: crate::smart::expander::AdiExpander
+//! [Cortex microcontroller]: <https://www.vexrobotics.com/276-2194.html>
 
 use core::time::Duration;
 
@@ -9,25 +33,27 @@ pub mod addrled;
 pub mod analog;
 pub mod digital;
 pub mod encoder;
+pub mod gyroscope;
 pub mod light_sensor;
 pub mod line_tracker;
 pub mod motor;
 pub mod potentiometer;
 pub mod pwm;
 pub mod range_finder;
-pub mod solenoid;
+pub mod servo;
 
 pub use accelerometer::{AdiAccelerometer, Sensitivity};
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
 pub use encoder::AdiEncoder;
+pub use gyroscope::AdiGyroscope;
 pub use light_sensor::AdiLightSensor;
 pub use line_tracker::AdiLineTracker;
 pub use motor::AdiMotor;
 pub use potentiometer::{AdiPotentiometer, PotentiometerType};
 pub use pwm::AdiPwmOut;
 pub use range_finder::AdiRangeFinder;
-pub use solenoid::AdiSolenoid;
+pub use servo::AdiServo;
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
@@ -78,7 +104,7 @@ impl AdiPort {
         self.number
     }
 
-    /// Returns the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) smart port, or `None` if this port is not
+    /// Returns the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) Smart Port, or `None` if this port is not
     /// associated with an expander.
     #[must_use]
     pub const fn expander_number(&self) -> Option<u8> {
@@ -103,7 +129,11 @@ impl AdiPort {
     }
 
     pub(crate) fn validate_expander(&self) -> Result<(), PortError> {
-        validate_port(self.expander_index() as u8 + 1, SmartDeviceType::Adi)
+        validate_port(
+            self.expander_number
+                .unwrap_or(Self::INTERNAL_ADI_PORT_NUMBER),
+            SmartDeviceType::Adi,
+        )
     }
 
     /// Configures the ADI port to a specific type if it wasn't already configured.
@@ -129,7 +159,7 @@ impl AdiPort {
 
 impl<T: AdiDevice<PortNumberOutput = u8>> From<T> for AdiPort {
     fn from(device: T) -> Self {
-        // SAFETY: We can do this, since we ensure that the old smart port was disposed of.
+        // SAFETY: We can do this, since we ensure that the old Smart Port was disposed of.
         // This can effectively be thought as a move out of the device's private `port` field.
         unsafe { Self::new(device.port_number(), device.expander_port_number()) }
     }
@@ -306,5 +336,22 @@ impl From<AdiDeviceType> for V5_AdiPortConfiguration {
             AdiDeviceType::MotorSlew => Self::kAdiPortTypeLegacyPwmSlew,
             AdiDeviceType::Unknown(raw) => raw,
         }
+    }
+}
+
+/// Returns the name of the specified ADI port as a character.
+///
+/// This function is intended to help format errors.
+const fn adi_port_name(port: u8) -> char {
+    match port {
+        1 => 'A',
+        2 => 'B',
+        3 => 'C',
+        4 => 'D',
+        5 => 'E',
+        6 => 'F',
+        7 => 'G',
+        8 => 'H',
+        _ => '?',
     }
 }

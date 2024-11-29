@@ -1,6 +1,6 @@
 [package]
 name = "vexide-panic"
-version = "0.1.4"
+version = "0.1.6-rc.1"
 edition = "2021"
 license = "MIT"
 description = "Panic handler for vexide"
@@ -32,4 +32,4 @@ backtraces = ["vexide-core/backtraces"]
 workspace = true
 
 [package.metadata.docs.rs]
-targets = ["armv7a-none-eabi"]
+targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.

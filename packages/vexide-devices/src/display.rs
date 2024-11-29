@@ -1,23 +1,26 @@
-//! Brain display and touch functions.
+//! Brain Display & Touch Input
 //!
 //! Contains user calls to the V5 Brain display for touching and displaying graphics.
 //! The [`Fill`] trait can be used to draw filled in shapes to the display
 //! and the [`Stroke`] trait can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{mem, ptr::addr_of_mut, time::Duration};
+use core::{ffi::CStr, mem, ptr::addr_of_mut, time::Duration};
 
-use snafu::Snafu;
+use snafu::{ensure, Snafu};
 use vex_sdk::{
-    vexDisplayBackgroundColor, vexDisplayBigStringAt, vexDisplayCircleDraw, vexDisplayCircleFill,
-    vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
-    vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
-    vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
-    vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexTouchDataGet, V5_TouchEvent,
-    V5_TouchStatus,
+    vexDisplayBackgroundColor, vexDisplayCircleDraw, vexDisplayCircleFill, vexDisplayCopyRect,
+    vexDisplayErase, vexDisplayFontNamedSet, vexDisplayForegroundColor, vexDisplayLineDraw,
+    vexDisplayPixelSet, vexDisplayPrintf, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
+    vexDisplayScrollRect, vexDisplayString, vexDisplayStringHeightGet, vexDisplayStringWidthGet,
+    vexDisplayTextSize, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
+use vexide_core::float::Float;
 
-use crate::{color::IntoRgb, geometry::Point2};
+use crate::{
+    math::Point2,
+    rgb::{Rgb, RgbExt},
+};
 
 /// Represents the physical display on the V5 Brain.
 #[derive(Debug, Eq, PartialEq)]
@@ -63,13 +66,13 @@ impl core::fmt::Write for Display {
 /// A type implementing this trait can draw a filled shape to the display.
 pub trait Fill {
     /// Draw a filled shape to the display.
-    fn fill(&self, display: &mut Display, color: impl IntoRgb);
+    fn fill(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
 }
 
 /// A type implementing this trait can draw an outlined shape to the display.
 pub trait Stroke {
     /// Draw an outlined shape to the display.
-    fn stroke(&self, display: &mut Display, color: impl IntoRgb);
+    fn stroke(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
 }
 
 /// A circle that can be drawn on the  display.
@@ -96,9 +99,9 @@ impl Circle {
 }
 
 impl Fill for Circle {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleFill(
                 i32::from(self.center.x),
                 i32::from(self.center.y + Display::HEADER_HEIGHT),
@@ -109,9 +112,9 @@ impl Fill for Circle {
 }
 
 impl Stroke for Circle {
-    fn stroke(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleDraw(
                 i32::from(self.center.x),
                 i32::from(self.center.y + Display::HEADER_HEIGHT),
@@ -143,9 +146,9 @@ impl Line {
 }
 
 impl Fill for Line {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayLineDraw(
                 i32::from(self.start.x),
                 i32::from(self.start.y + Display::HEADER_HEIGHT),
@@ -157,11 +160,11 @@ impl Fill for Line {
 }
 
 impl<T: Into<Point2<i16>> + Copy> Fill for T {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         let point: Point2<i16> = (*self).into();
 
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayPixelSet(point.x as _, (point.y + Display::HEADER_HEIGHT) as _);
         }
     }
@@ -222,9 +225,9 @@ impl Rect {
 }
 
 impl Stroke for Rect {
-    fn stroke(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectDraw(
                 i32::from(self.start.x),
                 i32::from(self.start.y + Display::HEADER_HEIGHT),
@@ -236,9 +239,9 @@ impl Stroke for Rect {
 }
 
 impl Fill for Rect {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
+            vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectFill(
                 i32::from(self.start.x),
                 i32::from(self.start.y + Display::HEADER_HEIGHT),
@@ -250,14 +253,178 @@ impl Fill for Rect {
 }
 
 /// Options for how a text object should be formatted.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
+pub struct Font {
+    /// The size of the font.
+    pub size: FontSize,
+    /// The font family of the font.
+    pub family: FontFamily,
+}
+
+impl Font {
+    /// Create a new font with a given size and family.
+    #[must_use]
+    pub const fn new(size: FontSize, family: FontFamily) -> Self {
+        Self { size, family }
+    }
+
+    /// Set the display's font to this font.
+    fn apply(self) {
+        unsafe {
+            vexDisplayFontNamedSet(self.family.raw().as_ptr());
+            vexDisplayTextSize(self.size.numerator, self.size.denominator);
+        }
+    }
+}
+
+/// A fractional font scaling factor.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum TextSize {
-    /// Small text.
-    Small,
-    /// Medium text.
-    Medium,
-    /// Large text.
-    Large,
+pub struct FontSize {
+    /// The numerator of the fractional font scale.
+    pub numerator: u32,
+    /// The denominator of the fractional font scale.
+    pub denominator: u32,
+}
+
+/// Calculates the greatest common divisor of two values using the Euclidean algorithm.
+const fn gcd(mut a: i32, mut b: i32) -> i32 {
+    while a != b {
+        if a > b {
+            a -= b;
+        } else {
+            b -= a;
+        }
+    }
+    a
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
+    // Separate the integral and fractional parts of the input.
+    let integral_part = input.floor();
+    let fractional_part = input.fract();
+
+    // If the fractional part is 0, return the integral part.
+    if fractional_part == 0.0 {
+        return (integral_part as i32, 1);
+    }
+
+    let precision = precision as f32;
+
+    let gcd = gcd((fractional_part * precision).round() as _, precision as _);
+
+    let denominator = precision as i32 / gcd;
+    let numerator = (fractional_part * precision).round() as i32 / gcd;
+
+    (
+        // Add back the integral part to the numerator.
+        numerator + integral_part as i32 * denominator,
+        denominator,
+    )
+}
+
+impl FontSize {
+    /// Create a custom fractional font size.
+    /// If you want to create a font size from a floating-point size, use [`FontSize::from_float`] instead.
+    #[must_use]
+    pub const fn new(numerator: u32, denominator: u32) -> Self {
+        Self {
+            numerator,
+            denominator,
+        }
+    }
+
+    /// Create a fractional font size from a floating-point size.
+    ///
+    /// # Note
+    ///
+    /// This function is lossy, but negligibly so.
+    /// The highest the denominator can be is 10000.
+    ///
+    /// # Errors
+    ///
+    /// - [`NegativeFontSizeError`] if the given size is negative.
+    pub fn from_float(size: f32) -> Result<Self, InvalidFontSizeError> {
+        ensure!(
+            size.is_finite() && !size.is_sign_negative(),
+            InvalidFontSizeSnafu { value: size }
+        );
+        let (numerator, denominator) = approximate_fraction(size, 10_000);
+        // Unwraps are safe because we guarantee a positive fraction earlier.
+        let (numerator, denominator) = (
+            numerator.try_into().unwrap(),
+            denominator.try_into().unwrap(),
+        );
+        Ok(Self {
+            numerator,
+            denominator,
+        })
+    }
+
+    /// An extra-small font size with a value of one-fifth.
+    pub const EXTRA_SMALL: Self = Self::new(1, 5);
+    /// A small font size with a value of one-fourth.
+    pub const SMALL: Self = Self::new(1, 4);
+    /// A medium font size with a value of one-third.
+    pub const MEDIUM: Self = Self::new(1, 3);
+    /// A large font size with a value of one-half.
+    pub const LARGE: Self = Self::new(1, 2);
+    /// An extra-large font size with a value of two-thirds.
+    pub const EXTRA_LARGE: Self = Self::new(2, 3);
+    /// The full size of the font.
+    pub const FULL: Self = Self::new(1, 1);
+}
+
+impl Default for FontSize {
+    fn default() -> Self {
+        Self::MEDIUM
+    }
+}
+
+impl TryFrom<f32> for FontSize {
+    type Error = InvalidFontSizeError;
+
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        Self::from_float(value)
+    }
+}
+
+impl TryFrom<f64> for FontSize {
+    type Error = InvalidFontSizeError;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        Self::from_float(value as f32)
+    }
+}
+
+impl From<u32> for FontSize {
+    fn from(value: u32) -> Self {
+        Self::new(value, 1)
+    }
+}
+
+/// The font family of a text object.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
+pub enum FontFamily {
+    /// A monospaced font which has a fixed width for each character.
+    ///
+    /// This font at full size is 49pt Noto Mono.
+    #[default]
+    Monospace,
+    /// A proportional font which has a varying width for each character.
+    ///
+    /// This font at full size is 49pt Noto Sans.
+    Proportional,
+}
+
+impl FontFamily {
+    #[must_use]
+    const fn raw(self) -> &'static CStr {
+        match self {
+            FontFamily::Monospace => c"monospace",
+            FontFamily::Proportional => c"proportional",
+        }
+    }
 }
 
 /// Horizontal alignment for text on the display
@@ -291,8 +458,8 @@ pub struct Text {
     pub position: Point2<i16>,
     /// C-String of the desired text to be displayed on the display
     pub text: CString,
-    /// Size of text to be displayed on the display
-    pub size: TextSize,
+    /// The font that will be used when this text is displayed
+    pub font: Font,
     /// Horizontal alignment of text displayed on the display
     pub horizontal_align: HAlign,
     /// Vertical alignment of text displayed on the display
@@ -300,15 +467,15 @@ pub struct Text {
 }
 
 impl Text {
-    /// Create a new text with a given position (defaults to top left corner alignment) and format
-    pub fn new(text: &str, size: TextSize, position: impl Into<Point2<i16>>) -> Self {
-        Self::new_aligned(text, size, position, HAlign::default(), VAlign::default())
+    /// Create a new text with a given position (defaults to top left corner alignment) and font
+    pub fn new(text: &str, font: Font, position: impl Into<Point2<i16>>) -> Self {
+        Self::new_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
 
-    /// Create a new text with a given position (based on alignment) and format
+    /// Create a new text with a given position (based on alignment) and font
     pub fn new_aligned(
         text: &str,
-        size: TextSize,
+        font: Font,
         position: impl Into<Point2<i16>>,
         horizontal_align: HAlign,
         vertical_align: VAlign,
@@ -317,7 +484,7 @@ impl Text {
             text: CString::new(text)
                 .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
             position: position.into(),
-            size,
+            font,
             horizontal_align,
             vertical_align,
         }
@@ -333,20 +500,7 @@ impl Text {
     #[must_use]
     pub fn height(&self) -> u16 {
         unsafe {
-            // Display blank string(no-op function) to set last used text size
-            // vexDisplayString(Height/Width)Get uses the last text size to determine text size
-            match self.size {
-                TextSize::Small => {
-                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
-                }
-                TextSize::Medium => {
-                    vexDisplayStringAt(0, 0, c"".as_ptr());
-                }
-                TextSize::Large => {
-                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
-                }
-            }
-
+            self.font.apply();
             vexDisplayStringHeightGet(self.text.as_ptr()) as _
         }
     }
@@ -355,27 +509,14 @@ impl Text {
     #[must_use]
     pub fn width(&self) -> u16 {
         unsafe {
-            match self.size {
-                // Display blank string(no-op function) to set last used text size
-                // vexDisplayString(Height/Width)Get uses the last text size to determine text size
-                TextSize::Small => {
-                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
-                }
-                TextSize::Medium => {
-                    vexDisplayStringAt(0, 0, c"".as_ptr());
-                }
-                TextSize::Large => {
-                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
-                }
-            }
-
+            self.font.apply();
             vexDisplayStringWidthGet(self.text.as_ptr()) as _
         }
     }
 }
 
 impl Fill for Text {
-    fn fill(&self, _display: &mut Display, color: impl IntoRgb) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
         // Horizontally align text
         let x = match self.horizontal_align {
             HAlign::Left => self.position.x,
@@ -390,32 +531,16 @@ impl Fill for Text {
             VAlign::Bottom => self.position.y - self.height() as i16,
         };
 
-        // This implementation is technically broken because it doesn't account errno.
-        // This will be fixed once we have switched to vex-sdk.
         unsafe {
-            vexDisplayForegroundColor(color.into_rgb().into());
-
-            // Use `%s` and varargs to escape the string to stop undefined and unsafe behavior
-            match self.size {
-                TextSize::Small => vexDisplaySmallStringAt(
-                    i32::from(x),
-                    i32::from(y + Display::HEADER_HEIGHT),
-                    c"%s".as_ptr(),
-                    self.text.as_ptr(),
-                ),
-                TextSize::Medium => vexDisplayStringAt(
-                    i32::from(x),
-                    i32::from(y + Display::HEADER_HEIGHT),
-                    c"%s".as_ptr(),
-                    self.text.as_ptr(),
-                ),
-                TextSize::Large => vexDisplayBigStringAt(
-                    i32::from(x),
-                    i32::from(y + Display::HEADER_HEIGHT),
-                    c"%s".as_ptr(),
-                    self.text.as_ptr(),
-                ),
-            }
+            vexDisplayForegroundColor(color.into().into_raw());
+            self.font.apply();
+            vexDisplayPrintf(
+                i32::from(x),
+                i32::from(y + Display::HEADER_HEIGHT),
+                1,
+                c"%s".as_ptr(),
+                self.text.as_ptr(),
+            );
         }
     }
 }
@@ -492,8 +617,8 @@ impl Display {
     /// The vertical resolution of the writable part of the display.
     pub const VERTICAL_RESOLUTION: i16 = 240;
 
-    /// The amount of time it takes for the brain display to fully re-render.
-    /// The brain display is 60fps.
+    /// The amount of time it takes for the Brain display to fully re-render.
+    /// The Brain display is 60fps.
     pub const REFRESH_INTERVAL: Duration = Duration::from_micros(16667);
 
     /// Create a new display.
@@ -587,19 +712,19 @@ impl Display {
     }
 
     /// Draw a filled object to the display.
-    pub fn fill(&mut self, shape: &impl Fill, color: impl IntoRgb) {
+    pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
         shape.fill(self, color);
     }
 
     /// Draw an outlined object to the display.
-    pub fn stroke(&mut self, shape: &impl Stroke, color: impl IntoRgb) {
+    pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Rgb<u8>>) {
         shape.stroke(self, color);
     }
 
     /// Wipe the entire display buffer, filling it with a specified color.
-    pub fn erase(&mut self, color: impl IntoRgb) {
+    pub fn erase(&mut self, color: impl Into<Rgb<u8>>) {
         unsafe {
-            vexDisplayBackgroundColor(color.into_rgb().into());
+            vexDisplayBackgroundColor(color.into().into_raw());
             vexDisplayErase();
         };
     }
@@ -621,21 +746,23 @@ impl Display {
     ) -> Result<(), DisplayError>
     where
         T: IntoIterator<Item = I>,
-        I: IntoRgb,
+        I: Into<Rgb<u8>>,
     {
         let mut raw_buf = buf
             .into_iter()
-            .map(|i| i.into_rgb().into())
+            .map(|i| i.into().into_raw())
             .collect::<Vec<_>>();
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.x - region.start.x) as u32
             * (region.end.y - region.start.y) as u32) as usize;
-        if raw_buf.len() != expected_size {
-            return Err(DisplayError::BufferSize {
+
+        ensure!(
+            raw_buf.len() == expected_size,
+            BufferSizeSnafu {
                 buffer_size: raw_buf.len(),
-                expected_size,
-            });
-        }
+                expected_size
+            }
+        );
 
         // SAFETY: The buffer is guaranteed to be the correct size.
         unsafe {
@@ -676,10 +803,21 @@ impl Display {
 /// Errors that can occur when interacting with the display.
 pub enum DisplayError {
     /// The given buffer of colors was wrong size to fill the specified area.
+    #[snafu(display(
+        "The given buffer of colors was wrong size to fill the specified area: expected {expected_size} bytes, got {buffer_size}."
+    ))]
     BufferSize {
         /// The size of the buffer.
         buffer_size: usize,
         /// The expected size of the buffer.
         expected_size: usize,
     },
+}
+
+/// An error that occurs when a negative or non-finite font size is attempted to be created.
+#[derive(Debug, Clone, Copy, Snafu)]
+#[snafu(display("Attempted to create a font size with a negative/non-finite value ({value})."))]
+pub struct InvalidFontSizeError {
+    /// The negative value that was attempted to be used as a font size.
+    pub value: f32,
 }

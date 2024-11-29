@@ -1,6 +1,6 @@
 # vexide-startup
 
-Startup primitives for the [vexide runtime](https://vexide.dev/). This project provides a bare-metal entrypoint that freestanding Rust binaries can leverage to run on the VEX V5 brain.
+Startup primitives for the [vexide runtime](https://vexide.dev/). This project provides a bare-metal entrypoint that freestanding Rust binaries can leverage to run on the VEX V5 Brain.
 
 This includes:
 - Stack setup

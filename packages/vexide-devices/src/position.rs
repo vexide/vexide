@@ -1,3 +1,5 @@
+//! Angular Position Type
+//!
 //! Standard return type for sensors measuring rotational position
 
 use core::{
@@ -14,7 +16,7 @@ impl Position {
     ///
     /// At this time, this represents the least common multiple between the rotation sensor's TPR and
     /// an ungeared motor encoder's TPR.
-    const INTERNAL_TPR: u32 = 4_608_000; // LCM of 36000 and 4096
+    pub(crate) const INTERNAL_TPR: u32 = 4_608_000; // LCM of 36000 and 4096
 
     /// Creates a position from a custom tick reading with a given ticks-per-revolution value.
     ///
@@ -94,19 +96,19 @@ impl Sub<Position> for Position {
     }
 }
 
-impl Mul<Position> for Position {
+impl Mul<i64> for Position {
     type Output = Self;
 
-    fn mul(self, rhs: Self) -> Self::Output {
-        Self(self.0 * rhs.0)
+    fn mul(self, rhs: i64) -> Self::Output {
+        Self(self.0 * rhs)
     }
 }
 
-impl Div<Position> for Position {
+impl Div<i64> for Position {
     type Output = Self;
 
-    fn div(self, rhs: Self) -> Self::Output {
-        Self(self.0 / rhs.0)
+    fn div(self, rhs: i64) -> Self::Output {
+        Self(self.0 / rhs)
     }
 }
 
@@ -122,15 +124,15 @@ impl SubAssign<Position> for Position {
     }
 }
 
-impl MulAssign<Position> for Position {
-    fn mul_assign(&mut self, rhs: Self) {
-        self.0 *= rhs.0;
+impl MulAssign<i64> for Position {
+    fn mul_assign(&mut self, rhs: i64) {
+        self.0 *= rhs;
     }
 }
 
-impl DivAssign<Position> for Position {
-    fn div_assign(&mut self, rhs: Self) {
-        self.0 /= rhs.0;
+impl DivAssign<i64> for Position {
+    fn div_assign(&mut self, rhs: i64) {
+        self.0 /= rhs;
     }
 }
 

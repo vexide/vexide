@@ -63,7 +63,7 @@ unsafe impl lock_api::RawMutex for RawMutex {
 
 /// A future that resolves to a mutex guard.
 #[must_use = "futures do nothing unless you `.await` or poll them"]
-pub struct MutexLockFuture<'a, T> {
+pub struct MutexLockFuture<'a, T: ?Sized> {
     mutex: &'a Mutex<T>,
 }
 impl<'a, T> Future for MutexLockFuture<'a, T> {
@@ -83,12 +83,12 @@ impl<'a, T> Future for MutexLockFuture<'a, T> {
 
 /// The basic mutex type.
 /// Mutexes are used to share variables between tasks safely.
-pub struct Mutex<T> {
+pub struct Mutex<T: ?Sized> {
     raw: RawMutex,
     data: UnsafeCell<T>,
 }
-unsafe impl<T: Send> Send for Mutex<T> {}
-unsafe impl<T> Sync for Mutex<T> {}
+unsafe impl<T: ?Sized + Send> Send for Mutex<T> {}
+unsafe impl<T: ?Sized + Send> Sync for Mutex<T> {}
 
 impl<T> Mutex<T> {
     /// Creates a new mutex.
@@ -98,7 +98,9 @@ impl<T> Mutex<T> {
             data: UnsafeCell::new(data),
         }
     }
+}
 
+impl<T: ?Sized> Mutex<T> {
     /// Locks the mutex so that it cannot be locked in another task at the same time.
     /// Blocks the current task until the lock is acquired.
     pub const fn lock(&self) -> MutexLockFuture<'_, T> {
@@ -122,7 +124,10 @@ impl<T> Mutex<T> {
     }
 
     /// Consumes the mutex and returns the inner data.
-    pub fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T
+    where
+        T: Sized,
+    {
         self.data.into_inner()
     }
 
@@ -134,7 +139,7 @@ impl<T> Mutex<T> {
 
 impl<T> Debug for Mutex<T>
 where
-    T: Debug,
+    T: ?Sized + Debug,
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         struct Placeholder;
@@ -171,15 +176,19 @@ impl<T> From<T> for Mutex<T> {
 /// Allows the user to access the data from a locked mutex.
 /// Dereference to get the inner data.
 #[derive(Debug)]
-pub struct MutexGuard<'a, T> {
+#[must_use = "if unused the Mutex will immediately unlock"]
+#[clippy::has_significant_drop]
+pub struct MutexGuard<'a, T: ?Sized> {
     mutex: &'a Mutex<T>,
 }
 
-impl<'a, T> MutexGuard<'a, T> {
+impl<'a, T: ?Sized> MutexGuard<'a, T> {
     const fn new(mutex: &'a Mutex<T>) -> Self {
         Self { mutex }
     }
+}
 
+impl<'a, T> MutexGuard<'a, T> {
     pub(crate) unsafe fn unlock(&self) {
         // SAFETY: caller must ensure that this is safe
         unsafe {
@@ -194,20 +203,20 @@ impl<'a, T> MutexGuard<'a, T> {
     }
 }
 
-impl<T> core::ops::Deref for MutexGuard<'_, T> {
+impl<T: ?Sized> core::ops::Deref for MutexGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { &*self.mutex.data.get() }
     }
 }
 
-impl<T> core::ops::DerefMut for MutexGuard<'_, T> {
+impl<T: ?Sized> core::ops::DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
         unsafe { &mut *self.mutex.data.get() }
     }
 }
 
-impl<T> Drop for MutexGuard<'_, T> {
+impl<T: ?Sized> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
         unsafe { self.mutex.raw.unlock() };
     }
