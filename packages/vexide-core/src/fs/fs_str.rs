@@ -58,8 +58,6 @@ impl FsStr {
 
 impl AsRef<FsStr> for str {
     fn as_ref(&self) -> &FsStr {
-        unsafe {
-            FsStr::from_encoded_bytes_unchecked(self.as_bytes())
-        }
+        unsafe { FsStr::from_encoded_bytes_unchecked(self.as_bytes()) }
     }
 }

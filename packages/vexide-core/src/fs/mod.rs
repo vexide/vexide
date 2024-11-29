@@ -424,9 +424,7 @@ impl Metadata {
         if size >= 0 {
             Ok(Self {
                 size: size as u64,
-                file_type: FileType {
-                    is_dir: false,
-                },
+                file_type: FileType { is_dir: false },
             })
         } else {
             Err(io::Error::new(
@@ -448,9 +446,7 @@ impl Metadata {
         if is_dir {
             Ok(Self {
                 size: 0,
-                file_type: FileType {
-                    is_dir: true,
-                },
+                file_type: FileType { is_dir: true },
             })
         } else {
             let mut opts = OpenOptions::new();
