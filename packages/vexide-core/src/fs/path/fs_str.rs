@@ -1,6 +1,5 @@
-use core::ptr;
-
 use alloc::{borrow::ToOwned, boxed::Box};
+use core::ptr;
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

@@ -19,7 +19,13 @@ pub struct OpenOptions {
 impl OpenOptions {
     #[must_use]
     pub const fn new() -> OpenOptions {
-        OpenOptions { read: false, write: false, append: false, truncate: false, create_new: false }
+        OpenOptions {
+            read: false,
+            write: false,
+            append: false,
+            truncate: false,
+            create_new: false,
+        }
     }
 
     pub fn read(&mut self, read: bool) -> &mut Self {
@@ -69,7 +75,10 @@ impl OpenOptions {
         if self.create_new {
             let file_exists = unsafe { vex_sdk::vexFileStatus(path.as_ptr()) };
             if file_exists != 0 {
-                return Err(io::Error::new(io::ErrorKind::AlreadyExists, "File already exists"));
+                return Err(io::Error::new(
+                    io::ErrorKind::AlreadyExists,
+                    "File already exists",
+                ));
             }
         }
 
@@ -101,9 +110,15 @@ impl OpenOptions {
         };
 
         if file.is_null() {
-            Err(io::Error::new(io::ErrorKind::NotFound, "Could not open file"))
+            Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Could not open file",
+            ))
         } else {
-            Ok(File { fd: file, write: self.write })
+            Ok(File {
+                fd: file,
+                write: self.write,
+            })
         }
     }
 }
@@ -129,9 +144,15 @@ impl Metadata {
         let size = unsafe { vex_sdk::vexFileSize(fd) };
 
         if size >= 0 {
-            Ok(Self { size: size as u64, is_dir: false })
+            Ok(Self {
+                size: size as u64,
+                is_dir: false,
+            })
         } else {
-            Err(io::Error::new(io::ErrorKind::InvalidData, "Failed to get file size"))
+            Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Failed to get file size",
+            ))
         }
     }
 
@@ -145,7 +166,10 @@ impl Metadata {
 
         // We can't get the size if its a directory because we cant open it as a file
         if is_dir {
-            Ok(Self { size: 0, is_dir: true })
+            Ok(Self {
+                size: 0,
+                is_dir: true,
+            })
         } else {
             let mut opts = OpenOptions::new();
             opts.read(true);
@@ -193,12 +217,20 @@ impl File {
     /// Opens or creates a file in write-only mode.
     /// Files cannot be read from in this mode.
     pub fn create<P: AsRef<Path>>(path: P) -> io::Result<Self> {
-        OpenOptions::new().write(true).create(true).truncate(true).open(path.as_ref())
+        OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(path.as_ref())
     }
     /// Creates a file in write-only mode, erroring if the file already exists.
     /// Files cannot be read from in this mode.
     pub fn create_new<P: AsRef<Path>>(path: P) -> io::Result<File> {
-        OpenOptions::new().read(true).write(true).create_new(true).open(path.as_ref())
+        OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create_new(true)
+            .open(path.as_ref())
     }
 
     #[must_use]
@@ -226,7 +258,10 @@ impl io::Write for File {
         let written =
             unsafe { vex_sdk::vexFileWrite(buf_ptr.cast_mut().cast(), 1, len as _, self.fd) };
         if written < 0 {
-            Err(io::Error::new(io::ErrorKind::Other, "Could not write to file"))
+            Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Could not write to file",
+            ))
         } else {
             Ok(written as usize)
         }
@@ -240,13 +275,19 @@ impl io::Write for File {
 impl io::Read for File {
     fn read(&mut self, buf: &mut [u8]) -> no_std_io::io::Result<usize> {
         if self.write {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "Files opened in write mode cannot be read from"));
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "Files opened in write mode cannot be read from",
+            ));
         }
         let len = buf.len() as _;
         let buf_ptr = buf.as_mut_ptr();
         let read = unsafe { vex_sdk::vexFileRead(buf_ptr.cast(), 1, len, self.fd) };
         if read < 0 {
-            Err(io::Error::new(io::ErrorKind::Other, "Could not read from file"))
+            Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Could not read from file",
+            ))
         } else {
             Ok(read as usize)
         }
@@ -273,9 +314,10 @@ fn map_fresult(fresult: vex_sdk::FRESULT) -> io::Result<()> {
             io::ErrorKind::Uncategorized,
             "the storage device could not be prepared to work",
         )),
-        vex_sdk::FRESULT::FR_NO_FILE => {
-            Err(io::Error::new(io::ErrorKind::NotFound, "could not find the file in the directory"))
-        }
+        vex_sdk::FRESULT::FR_NO_FILE => Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            "could not find the file in the directory",
+        )),
         vex_sdk::FRESULT::FR_NO_PATH => Err(io::Error::new(
             io::ErrorKind::NotFound,
             "a directory in the path name could not be found",
@@ -312,9 +354,10 @@ fn map_fresult(fresult: vex_sdk::FRESULT) -> io::Result<()> {
             io::ErrorKind::Uncategorized,
             "valid FAT volume could not be found on the drive",
         )),
-        vex_sdk::FRESULT::FR_MKFS_ABORTED => {
-            Err(io::Error::new(io::ErrorKind::Uncategorized, "failed to create filesystem volume"))
-        }
+        vex_sdk::FRESULT::FR_MKFS_ABORTED => Err(io::Error::new(
+            io::ErrorKind::Uncategorized,
+            "failed to create filesystem volume",
+        )),
         vex_sdk::FRESULT::FR_TIMEOUT => Err(io::Error::new(
             io::ErrorKind::TimedOut,
             "the function was canceled due to a timeout of thread-safe control",
@@ -323,16 +366,18 @@ fn map_fresult(fresult: vex_sdk::FRESULT) -> io::Result<()> {
             io::ErrorKind::Uncategorized,
             "the operation to the object was rejected by file sharing control",
         )),
-        vex_sdk::FRESULT::FR_NOT_ENOUGH_CORE => {
-            Err(io::Error::new(io::ErrorKind::Uncategorized, "not enough memory for the operation"))
-        }
+        vex_sdk::FRESULT::FR_NOT_ENOUGH_CORE => Err(io::Error::new(
+            io::ErrorKind::Uncategorized,
+            "not enough memory for the operation",
+        )),
         vex_sdk::FRESULT::FR_TOO_MANY_OPEN_FILES => Err(io::Error::new(
             io::ErrorKind::Uncategorized,
             "maximum number of open files has been reached",
         )),
-        vex_sdk::FRESULT::FR_INVALID_PARAMETER => {
-            Err(io::Error::new(io::ErrorKind::InvalidInput, "a given parameter was invalid"))
-        }
+        vex_sdk::FRESULT::FR_INVALID_PARAMETER => Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "a given parameter was invalid",
+        )),
         _ => unreachable!(), // C-style enum
     }
 }

@@ -2,6 +2,7 @@
 #![no_std]
 
 use alloc::string::String;
+
 use vexide::prelude::*;
 extern crate alloc;
 
