@@ -5,17 +5,17 @@
 //! and the [`Stroke`] trait can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{mem, ptr::addr_of_mut, time::Duration};
+use core::{ffi::CStr, mem, ptr::addr_of_mut, time::Duration};
 
 use snafu::{ensure, Snafu};
 use vex_sdk::{
-    vexDisplayBackgroundColor, vexDisplayBigStringAt, vexDisplayCircleDraw, vexDisplayCircleFill,
-    vexDisplayCopyRect, vexDisplayErase, vexDisplayForegroundColor, vexDisplayLineDraw,
-    vexDisplayPixelSet, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
-    vexDisplayScrollRect, vexDisplaySmallStringAt, vexDisplayString, vexDisplayStringAt,
-    vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexTouchDataGet, V5_TouchEvent,
-    V5_TouchStatus,
+    vexDisplayBackgroundColor, vexDisplayCircleDraw, vexDisplayCircleFill, vexDisplayCopyRect,
+    vexDisplayErase, vexDisplayFontNamedSet, vexDisplayForegroundColor, vexDisplayLineDraw,
+    vexDisplayPixelSet, vexDisplayPrintf, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
+    vexDisplayScrollRect, vexDisplayString, vexDisplayStringHeightGet, vexDisplayStringWidthGet,
+    vexDisplayTextSize, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
+use vexide_core::float::Float;
 
 use crate::{
     math::Point2,
@@ -253,14 +253,178 @@ impl Fill for Rect {
 }
 
 /// Options for how a text object should be formatted.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
+pub struct Font {
+    /// The size of the font.
+    pub size: FontSize,
+    /// The font family of the font.
+    pub family: FontFamily,
+}
+
+impl Font {
+    /// Create a new font with a given size and family.
+    #[must_use]
+    pub const fn new(size: FontSize, family: FontFamily) -> Self {
+        Self { size, family }
+    }
+
+    /// Set the display's font to this font.
+    fn apply(self) {
+        unsafe {
+            vexDisplayFontNamedSet(self.family.raw().as_ptr());
+            vexDisplayTextSize(self.size.numerator, self.size.denominator);
+        }
+    }
+}
+
+/// A fractional font scaling factor.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum TextSize {
-    /// Small text.
-    Small,
-    /// Medium text.
-    Medium,
-    /// Large text.
-    Large,
+pub struct FontSize {
+    /// The numerator of the fractional font scale.
+    pub numerator: u32,
+    /// The denominator of the fractional font scale.
+    pub denominator: u32,
+}
+
+/// Calculates the greatest common divisor of two values using the Euclidean algorithm.
+const fn gcd(mut a: i32, mut b: i32) -> i32 {
+    while a != b {
+        if a > b {
+            a -= b;
+        } else {
+            b -= a;
+        }
+    }
+    a
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
+    // Separate the integral and fractional parts of the input.
+    let integral_part = input.floor();
+    let fractional_part = input.fract();
+
+    // If the fractional part is 0, return the integral part.
+    if fractional_part == 0.0 {
+        return (integral_part as i32, 1);
+    }
+
+    let precision = precision as f32;
+
+    let gcd = gcd((fractional_part * precision).round() as _, precision as _);
+
+    let denominator = precision as i32 / gcd;
+    let numerator = (fractional_part * precision).round() as i32 / gcd;
+
+    (
+        // Add back the integral part to the numerator.
+        numerator + integral_part as i32 * denominator,
+        denominator,
+    )
+}
+
+impl FontSize {
+    /// Create a custom fractional font size.
+    /// If you want to create a font size from a floating-point size, use [`FontSize::from_float`] instead.
+    #[must_use]
+    pub const fn new(numerator: u32, denominator: u32) -> Self {
+        Self {
+            numerator,
+            denominator,
+        }
+    }
+
+    /// Create a fractional font size from a floating-point size.
+    ///
+    /// # Note
+    ///
+    /// This function is lossy, but negligibly so.
+    /// The highest the denominator can be is 10000.
+    ///
+    /// # Errors
+    ///
+    /// - [`NegativeFontSizeError`] if the given size is negative.
+    pub fn from_float(size: f32) -> Result<Self, InvalidFontSizeError> {
+        ensure!(
+            size.is_finite() && !size.is_sign_negative(),
+            InvalidFontSizeSnafu { value: size }
+        );
+        let (numerator, denominator) = approximate_fraction(size, 10_000);
+        // Unwraps are safe because we guarantee a positive fraction earlier.
+        let (numerator, denominator) = (
+            numerator.try_into().unwrap(),
+            denominator.try_into().unwrap(),
+        );
+        Ok(Self {
+            numerator,
+            denominator,
+        })
+    }
+
+    /// An extra-small font size with a value of one-fifth.
+    pub const EXTRA_SMALL: Self = Self::new(1, 5);
+    /// A small font size with a value of one-fourth.
+    pub const SMALL: Self = Self::new(1, 4);
+    /// A medium font size with a value of one-third.
+    pub const MEDIUM: Self = Self::new(1, 3);
+    /// A large font size with a value of one-half.
+    pub const LARGE: Self = Self::new(1, 2);
+    /// An extra-large font size with a value of two-thirds.
+    pub const EXTRA_LARGE: Self = Self::new(2, 3);
+    /// The full size of the font.
+    pub const FULL: Self = Self::new(1, 1);
+}
+
+impl Default for FontSize {
+    fn default() -> Self {
+        Self::MEDIUM
+    }
+}
+
+impl TryFrom<f32> for FontSize {
+    type Error = InvalidFontSizeError;
+
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        Self::from_float(value)
+    }
+}
+
+impl TryFrom<f64> for FontSize {
+    type Error = InvalidFontSizeError;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        Self::from_float(value as f32)
+    }
+}
+
+impl From<u32> for FontSize {
+    fn from(value: u32) -> Self {
+        Self::new(value, 1)
+    }
+}
+
+/// The font family of a text object.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
+pub enum FontFamily {
+    /// A monospaced font which has a fixed width for each character.
+    ///
+    /// This font at full size is 49pt Noto Mono.
+    #[default]
+    Monospace,
+    /// A proportional font which has a varying width for each character.
+    ///
+    /// This font at full size is 49pt Noto Sans.
+    Proportional,
+}
+
+impl FontFamily {
+    #[must_use]
+    const fn raw(self) -> &'static CStr {
+        match self {
+            FontFamily::Monospace => c"monospace",
+            FontFamily::Proportional => c"proportional",
+        }
+    }
 }
 
 /// Horizontal alignment for text on the display
@@ -294,8 +458,8 @@ pub struct Text {
     pub position: Point2<i16>,
     /// C-String of the desired text to be displayed on the display
     pub text: CString,
-    /// Size of text to be displayed on the display
-    pub size: TextSize,
+    /// The font that will be used when this text is displayed
+    pub font: Font,
     /// Horizontal alignment of text displayed on the display
     pub horizontal_align: HAlign,
     /// Vertical alignment of text displayed on the display
@@ -303,15 +467,15 @@ pub struct Text {
 }
 
 impl Text {
-    /// Create a new text with a given position (defaults to top left corner alignment) and format
-    pub fn new(text: &str, size: TextSize, position: impl Into<Point2<i16>>) -> Self {
-        Self::new_aligned(text, size, position, HAlign::default(), VAlign::default())
+    /// Create a new text with a given position (defaults to top left corner alignment) and font
+    pub fn new(text: &str, font: Font, position: impl Into<Point2<i16>>) -> Self {
+        Self::new_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
 
-    /// Create a new text with a given position (based on alignment) and format
+    /// Create a new text with a given position (based on alignment) and font
     pub fn new_aligned(
         text: &str,
-        size: TextSize,
+        font: Font,
         position: impl Into<Point2<i16>>,
         horizontal_align: HAlign,
         vertical_align: VAlign,
@@ -320,7 +484,7 @@ impl Text {
             text: CString::new(text)
                 .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
             position: position.into(),
-            size,
+            font,
             horizontal_align,
             vertical_align,
         }
@@ -336,20 +500,7 @@ impl Text {
     #[must_use]
     pub fn height(&self) -> u16 {
         unsafe {
-            // Display blank string(no-op function) to set last used text size
-            // vexDisplayString(Height/Width)Get uses the last text size to determine text size
-            match self.size {
-                TextSize::Small => {
-                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
-                }
-                TextSize::Medium => {
-                    vexDisplayStringAt(0, 0, c"".as_ptr());
-                }
-                TextSize::Large => {
-                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
-                }
-            }
-
+            self.font.apply();
             vexDisplayStringHeightGet(self.text.as_ptr()) as _
         }
     }
@@ -358,20 +509,7 @@ impl Text {
     #[must_use]
     pub fn width(&self) -> u16 {
         unsafe {
-            match self.size {
-                // Display blank string(no-op function) to set last used text size
-                // vexDisplayString(Height/Width)Get uses the last text size to determine text size
-                TextSize::Small => {
-                    vexDisplaySmallStringAt(0, 0, c"".as_ptr());
-                }
-                TextSize::Medium => {
-                    vexDisplayStringAt(0, 0, c"".as_ptr());
-                }
-                TextSize::Large => {
-                    vexDisplayBigStringAt(0, 0, c"".as_ptr());
-                }
-            }
-
+            self.font.apply();
             vexDisplayStringWidthGet(self.text.as_ptr()) as _
         }
     }
@@ -393,32 +531,16 @@ impl Fill for Text {
             VAlign::Bottom => self.position.y - self.height() as i16,
         };
 
-        // This implementation is technically broken because it doesn't account errno.
-        // This will be fixed once we have switched to vex-sdk.
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
-
-            // Use `%s` and varargs to escape the string to stop undefined and unsafe behavior
-            match self.size {
-                TextSize::Small => vexDisplaySmallStringAt(
-                    i32::from(x),
-                    i32::from(y + Display::HEADER_HEIGHT),
-                    c"%s".as_ptr(),
-                    self.text.as_ptr(),
-                ),
-                TextSize::Medium => vexDisplayStringAt(
-                    i32::from(x),
-                    i32::from(y + Display::HEADER_HEIGHT),
-                    c"%s".as_ptr(),
-                    self.text.as_ptr(),
-                ),
-                TextSize::Large => vexDisplayBigStringAt(
-                    i32::from(x),
-                    i32::from(y + Display::HEADER_HEIGHT),
-                    c"%s".as_ptr(),
-                    self.text.as_ptr(),
-                ),
-            }
+            self.font.apply();
+            vexDisplayPrintf(
+                i32::from(x),
+                i32::from(y + Display::HEADER_HEIGHT),
+                1,
+                c"%s".as_ptr(),
+                self.text.as_ptr(),
+            );
         }
     }
 }
@@ -690,4 +812,12 @@ pub enum DisplayError {
         /// The expected size of the buffer.
         expected_size: usize,
     },
+}
+
+/// An error that occurs when a negative or non-finite font size is attempted to be created.
+#[derive(Debug, Clone, Copy, Snafu)]
+#[snafu(display("Attempted to create a font size with a negative/non-finite value ({value})."))]
+pub struct InvalidFontSizeError {
+    /// The negative value that was attempted to be used as a font size.
+    pub value: f32,
 }

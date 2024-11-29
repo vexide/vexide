@@ -16,7 +16,7 @@ impl Position {
     ///
     /// At this time, this represents the least common multiple between the rotation sensor's TPR and
     /// an ungeared motor encoder's TPR.
-    const INTERNAL_TPR: u32 = 4_608_000; // LCM of 36000 and 4096
+    pub(crate) const INTERNAL_TPR: u32 = 4_608_000; // LCM of 36000 and 4096
 
     /// Creates a position from a custom tick reading with a given ticks-per-revolution value.
     ///
