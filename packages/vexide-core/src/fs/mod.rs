@@ -10,7 +10,9 @@
 //! limitations in the VEXos filesystem. This module only provides a small subset of
 //! what would normally be expected in a typical Rust enviornment. Notably:
 //!
-//! - Files cannot be opened as read and write at the same time (only one). To read a file that you’ve written to, you’ll need to drop your written file descriptor and reopen it as readonly.
+//! - Files cannot be opened as read and write at the same time (only one). To read a
+//!   file that you’ve written to, you’ll need to drop your written file descriptor and
+//!   reopen it as readonly.
 //! - Files can be created, but not deleted or renamed.
 //! - Directories cannot be created or enumerated from the Brain, only top-level files.
 
