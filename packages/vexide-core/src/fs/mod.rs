@@ -1,4 +1,18 @@
-//! File system API for the Brain SD card.
+//! Filesystem manipulation operations.
+//!
+//! This module contains basic methods to manipulate the contents of the brain's
+//! micro SDCard card. All methods in this module represent VEXos filesystem
+//! operations.
+//!
+//! # VEXos Limitations
+//!
+//! While this module largely mimicks Rust's `std::fs` API, there are several major
+//! limitations in the VEXos filesystem. This module only provides a small subset of
+//! what would normally be expected in a typical Rust enviornment. Notably:
+//!
+//! - Files cannot be opened as read and write at the same time (only one). To read a file that you’ve written to, you’ll need to drop your written file descriptor and reopen it as readonly.
+//! - Files can be created, but not deleted or renamed.
+//! - Directories cannot be created or enumerated from the Brain, only top-level files.
 
 use alloc::ffi::CString;
 
