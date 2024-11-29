@@ -607,6 +607,15 @@ fn map_fresult(fresult: vex_sdk::FRESULT) -> io::Result<()> {
     }
 }
 
+/// Copies the contents of one file to another.
+///
+/// If the destination file does not exist, it will be created.
+/// If it does exist, it will be overwritten.
+///
+/// # Errors
+///
+/// This function will error if the source file does not exist
+/// or any other error according to [`OpenOptions::open`].
 pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<u64> {
     let from = read(from)?;
     let mut to = File::create(to)?;
@@ -618,16 +627,41 @@ pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<u64> {
     Ok(len)
 }
 
+/// Returns true if the path points to a file that exists on the filesystem.
+///
+/// Unlike in the standard library, this function cannot fail because there are not permissions.
+///
+/// # Examples
+///
+/// ```
+/// use vexide::core::fs::*;
+///
+/// assert!(exists("existent.txt"));
+/// assert!(!exists("nonexistent.txt"));
+/// ```
 pub fn exists<P: AsRef<Path>>(path: P) -> bool {
     let file_exists = unsafe { vex_sdk::vexFileStatus(path.as_ref().as_fs_str().as_ptr()) };
     // Woop woop we've got a nullptr!
     file_exists != 0
 }
 
+/// Gets the metadata for a file or path.
+///
+/// # Errors
+///
+/// This function will error if the path doesn't exist.
 pub fn metadata<P: AsRef<Path>>(path: P) -> io::Result<Metadata> {
     Metadata::from_path(path.as_ref())
 }
 
+/// Reads the entire contents of a file into a vector.
+///
+/// This is a convenience function for using [`File::open`] and [`Read::read_to_end`].
+///
+/// # Errors
+///
+/// This function will error if the path doesn't exist
+/// or any other error according to [`OpenOptions::open`].
 pub fn read<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     let mut file = File::open(path)?;
     let mut buf = Vec::new();
@@ -635,6 +669,14 @@ pub fn read<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     Ok(buf)
 }
 
+/// Reads the entire contents of a file into a string.
+///
+/// This is a convenience function for using [`File::open`], [`Read::read_to_end`], and [`String::from_utf8`] (no_std_io does not support read_to_string).
+///
+/// # Errors
+///
+/// This function will error if the path doesn't exist, if the file is not valid UTF-8,
+/// or any other error according to [`OpenOptions::open`].
 pub fn read_to_string<P: AsRef<Path>>(path: P) -> io::Result<String> {
     let mut file = File::open(path)?;
     let mut buf = Vec::new();
@@ -644,6 +686,15 @@ pub fn read_to_string<P: AsRef<Path>>(path: P) -> io::Result<String> {
     Ok(string)
 }
 
+/// Writes an entire buffer to a file, replacing its contents.
+///
+/// This function will create a new file if it does not exist.
+///
+/// This is a convenience function for using [`File::create`] and [`Write::write_all`].
+///
+/// # Errors
+///
+/// This function will error if the path is invalid or for any other error according to [`OpenOptions::open`].
 pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) -> io::Result<()> {
     let mut file = File::create(path)?;
     file.write_all(contents.as_ref())
