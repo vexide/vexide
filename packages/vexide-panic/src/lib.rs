@@ -23,12 +23,6 @@ use vexide_devices::{
     math::Point2,
 };
 
-#[cfg(target_arch = "wasm32")]
-extern "C" {
-    /// Prints a backtrace to the debug console
-    fn sim_log_backtrace();
-}
-
 /// Draw an error box to the display.
 ///
 /// This function is internally used by the vexide panic handler for displaying
@@ -149,11 +143,6 @@ pub fn default_panic_hook(info: &core::panic::PanicInfo<'_>) {
         &backtrace,
     );
 
-    #[cfg(target_arch = "wasm32")]
-    unsafe {
-        sim_log_backtrace();
-    }
-    #[cfg(not(target_arch = "wasm32"))]
     if !backtrace.frames.is_empty() {
         println!("{backtrace}");
     }

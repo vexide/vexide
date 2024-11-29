@@ -40,6 +40,7 @@ use vex_sdk::{
 
 use crate::PortError;
 
+pub mod ai_vision;
 pub mod distance;
 pub mod electromagnet;
 pub mod expander;
