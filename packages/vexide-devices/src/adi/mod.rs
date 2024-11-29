@@ -40,17 +40,20 @@ pub mod motor;
 pub mod potentiometer;
 pub mod pwm;
 pub mod range_finder;
+pub mod servo;
 
 pub use accelerometer::{AdiAccelerometer, Sensitivity};
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
 pub use encoder::AdiEncoder;
+pub use gyroscope::AdiGyroscope;
 pub use light_sensor::AdiLightSensor;
 pub use line_tracker::AdiLineTracker;
 pub use motor::AdiMotor;
 pub use potentiometer::{AdiPotentiometer, PotentiometerType};
 pub use pwm::AdiPwmOut;
 pub use range_finder::AdiRangeFinder;
+pub use servo::AdiServo;
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
