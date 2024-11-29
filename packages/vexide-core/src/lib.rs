@@ -20,7 +20,7 @@ pub mod competition;
 pub mod float;
 pub mod fs;
 pub mod io;
+pub mod path;
 pub mod program;
 pub mod sync;
 pub mod time;
-pub mod path;
