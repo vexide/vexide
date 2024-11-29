@@ -18,16 +18,16 @@ async fn main(peripherals: Peripherals) {
 
     let rect = Rect::new([20, 20], [120, 120]);
 
-    // Fill in the entire rectangle with white.
-    display.fill(&rect, Rgb::new(255, 255, 255));
+    // Fill in the entire rectangle with some gray.
+    display.fill(&rect, Rgb::new(128, 128, 128));
     // Draw a thin magenta border of the same dimensions.
-    // This will appear on top of the white fill because it is called later.
+    // This will appear on top of the gray fill because it is called later.
     display.stroke(&rect, Rgb::new(255, 0, 255));
 
     let text = Text::new("Nice to see you!", Font::default(), [80, 40]);
 
-    // Draw the text on the display in cyan.
-    display.fill(&text, Rgb::new(0, 255, 255));
+    // Draw the text on the display in cyan with a yellow background color.
+    display.draw_text(&text, Rgb::new(0, 255, 255), Some(Rgb::new(255, 255, 0)));
 
     // You can use varying text sizes and fonts.
     let text = Text::new(
@@ -35,7 +35,8 @@ async fn main(peripherals: Peripherals) {
         Font::new(FontSize::new(2, 3), FontFamily::Proportional),
         [21, 84],
     );
-    display.fill(&text, Rgb::new(255, 255, 255));
+    // Draw the text white, with a transparent background.
+    display.draw_text(&text, Rgb::new(255, 255, 255), None);
 
     // Font sizes can be created with a fraction or a float
     let size = FontSize::from_float(0.333).unwrap();

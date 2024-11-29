@@ -35,7 +35,7 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
     const LINE_MAX_WIDTH: usize = 52;
 
     fn draw_text(screen: &mut Display, buffer: &str, line: i16) {
-        screen.fill(
+        screen.draw_text(
             &Text::new(
                 buffer,
                 Font::new(FontSize::SMALL, FontFamily::Monospace),
@@ -45,6 +45,7 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
                 },
             ),
             (255, 255, 255),
+            None,
         );
     }
 

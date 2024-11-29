@@ -515,8 +515,20 @@ impl Text {
     }
 }
 
-impl Fill for Text {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+impl Text {
+    /// Write the text to the display.
+    ///
+    /// # Arguments
+    ///
+    /// - `display` - The display to write the text to.
+    /// - `color` - The color of the text.
+    /// - `bg_color` - The background color of the text. If `None`, the background will be transparent.
+    pub fn draw(
+        &self,
+        _display: &mut Display,
+        color: impl Into<Rgb<u8>>,
+        bg_color: Option<Rgb<u8>>,
+    ) {
         // Horizontally align text
         let x = match self.horizontal_align {
             HAlign::Left => self.position.x,
@@ -533,11 +545,14 @@ impl Fill for Text {
 
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
+            if let Some(bg_color) = bg_color {
+                vexDisplayBackgroundColor(bg_color.into_raw());
+            }
             self.font.apply();
             vexDisplayPrintf(
                 i32::from(x),
                 i32::from(y + Display::HEADER_HEIGHT),
-                1,
+                i32::from(bg_color.is_some()),
                 c"%s".as_ptr(),
                 self.text.as_ptr(),
             );
@@ -714,6 +729,23 @@ impl Display {
     /// Draw a filled object to the display.
     pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
         shape.fill(self, color);
+    }
+
+    /// Fill text with a specified color and background color to the display.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// let mut display = Display::new();
+    /// // Create a new text widget.
+    /// let text = Text::new("Hello, World!", TextSize::Medium, Point2::new(10, 10));
+    /// // Write red text with a blue background to the display.
+    /// display.fill_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
+    /// ```
+    pub fn draw_text(&mut self, text: &Text, color: impl Into<Rgb<u8>>, bg_color: Option<Rgb<u8>>) {
+        text.draw(self, color, bg_color);
     }
 
     /// Draw an outlined object to the display.
