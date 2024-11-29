@@ -29,10 +29,10 @@ impl FsStr {
     /// # Safety
     ///
     /// As the encoding is unspecified, callers must pass in bytes that originated as a mixture of
-    /// validated UTF-8 and bytes from [`OsStr::as_encoded_bytes`] from within the same Rust version
+    /// validated UTF-8 and bytes from [`FsStr::as_encoded_bytes`] from within the same Rust version
     /// built for the same target platform.
     ///
-    /// Due to the encoding being self-synchronizing, the bytes from [`OsStr::as_encoded_bytes`] can be
+    /// Due to the encoding being self-synchronizing, the bytes from [`FsStr::as_encoded_bytes`] can be
     /// split either immediately before or immediately after any valid non-empty UTF-8 substring.
     #[must_use]
     pub const unsafe fn from_encoded_bytes_unchecked(bytes: &[u8]) -> &Self {
@@ -44,7 +44,7 @@ impl FsStr {
     }
 
     /// Converts an FS string slice to a byte slice. To convert the byte slice back into an FS
-    /// string slice, use the [`OsStr::from_encoded_bytes_unchecked`] function.
+    /// string slice, use the [`FsStr::from_encoded_bytes_unchecked`] function.
     ///
     /// Note: As the encoding is unspecified, any sub-slice of bytes that is not valid UTF-8 should
     /// be treated as opaque and only comparable within the same Rust version built for the same

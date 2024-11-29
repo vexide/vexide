@@ -159,6 +159,11 @@ impl OpenOptions {
     /// together is written in one operation. This can be done by concatenating strings
     /// before passing them to [`write()`].
     ///
+    /// [SeekFrom]: io::SeekFrom
+    /// [Start]: io::SeekFrom::End
+    /// [End]: io::SeekFrom::End
+    /// [Seek]: io::Seek::seek
+    ///
     /// ## Note
     ///
     /// This function doesn't create the file if it doesn't exist. Use the
