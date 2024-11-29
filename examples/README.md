@@ -41,6 +41,10 @@ Showcases creating a ADI device on an ADI expander.
 
 Showcases creating and reading from several ADI devices on the Brain's built in ADI ports.
 
+### [`ai_vision`](./ai_vision.rs)
+
+Prints the number of objects detected by an AI Vision device in color detection mode in a loop.
+
 ### [`pneumatics`](./pneumatics.rs)
 
 Controls pneumatics through an ADI solenoid device.
