@@ -14,7 +14,9 @@
 //! - Files can be created, but not deleted or renamed.
 //! - Directories cannot be created or enumerated from the Brain, only top-level files.
 
-use alloc::ffi::CString;
+use alloc::{ffi::CString, string::String, vec::Vec};
+
+use no_std_io::io::{Read, Write};
 
 use crate::{io, path::Path};
 
@@ -147,13 +149,6 @@ pub struct Metadata {
     size: u64,
 }
 
-pub struct Permissions;
-impl Permissions {
-    pub fn readonly(&self) -> bool {
-        false
-    }
-}
-
 impl Metadata {
     fn from_fd(fd: *mut vex_sdk::FIL) -> io::Result<Self> {
         let size = unsafe { vex_sdk::vexFileSize(fd) };
@@ -204,11 +199,8 @@ impl Metadata {
     pub fn is_symlink(&self) -> bool {
         false
     }
-    pub fn len(&self) -> u64 {
-        self.size
-    }
-    pub fn permissions(&self) -> Permissions {
-        Permissions
+    pub fn len(&self) -> Option<u64> {
+        self.is_dir.then(|| self.size)
     }
 }
 
@@ -268,6 +260,13 @@ impl File {
 }
 impl io::Write for File {
     fn write(&mut self, buf: &[u8]) -> no_std_io::io::Result<usize> {
+        if !self.write {
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "Files opened in read mode cannot be written to.",
+            ));
+        }
+
         let len = buf.len();
         let buf_ptr = buf.as_ptr();
         let written =
@@ -292,9 +291,10 @@ impl io::Read for File {
         if self.write {
             return Err(io::Error::new(
                 io::ErrorKind::PermissionDenied,
-                "Files opened in write mode cannot be read from",
+                "Files opened in write mode cannot be read from.",
             ));
         }
+
         let len = buf.len() as _;
         let buf_ptr = buf.as_mut_ptr();
         let read = unsafe { vex_sdk::vexFileRead(buf_ptr.cast(), 1, len, self.fd) };
@@ -395,4 +395,46 @@ fn map_fresult(fresult: vex_sdk::FRESULT) -> io::Result<()> {
         )),
         _ => unreachable!(), // C-style enum
     }
+}
+
+pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<u64> {
+    let from = read(from)?;
+    let mut to = File::create(to)?;
+    // Not completely accurate to std, but this is the best we've got
+    let len = from.len() as u64;
+
+    to.write_all(&from)?;
+
+    Ok(len)
+}
+
+pub fn exists<P: AsRef<Path>>(path: P) -> bool {
+    let file_exists = unsafe { vex_sdk::vexFileStatus(path.as_ref().as_os_str().as_ptr()) };
+    // Woop woop we've got a nullptr!
+    file_exists != 0
+}
+
+pub fn metadata<P: AsRef<Path>>(path: P) -> io::Result<Metadata> {
+    Metadata::from_path(path.as_ref())
+}
+
+pub fn read<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
+    let mut file = File::open(path)?;
+    let mut buf = Vec::new();
+    file.read_to_end(&mut buf)?;
+    Ok(buf)
+}
+
+pub fn read_to_string<P: AsRef<Path>>(path: P) -> io::Result<String> {
+    let mut file = File::open(path)?;
+    let mut buf = Vec::new();
+    file.read_to_end(&mut buf)?;
+    let string = String::from_utf8(buf)
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "File was not valid UTF-8"))?;
+    Ok(string)
+}
+
+pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) -> io::Result<()> {
+    let mut file = File::create(path)?;
+    file.write_all(contents.as_ref())
 }
