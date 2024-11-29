@@ -267,6 +267,13 @@ impl File {
 }
 impl io::Write for File {
     fn write(&mut self, buf: &[u8]) -> no_std_io::io::Result<usize> {
+        if !self.write {
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "Files opened in read mode cannot be written to.",
+            ));
+        }
+
         let len = buf.len();
         let buf_ptr = buf.as_ptr();
         let written =
@@ -291,9 +298,10 @@ impl io::Read for File {
         if self.write {
             return Err(io::Error::new(
                 io::ErrorKind::PermissionDenied,
-                "Files opened in write mode cannot be read from",
+                "Files opened in write mode cannot be read from.",
             ));
         }
+
         let len = buf.len() as _;
         let buf_ptr = buf.as_mut_ptr();
         let read = unsafe { vex_sdk::vexFileRead(buf_ptr.cast(), 1, len, self.fd) };
