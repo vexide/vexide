@@ -60,6 +60,7 @@ Before releasing:
 - Added the `Proportional` font family and support for fractional font scaling. (#248) (**Breaking Change**)
 - Added `AdiDigitalOut::with_initial_state` to set the initial state of a digital output while creating it (#246)
 - Added support for the legacy Yaw Rate Gyroscope through the `AdiGyroscope` struct. (#236)
+- Added support for reading/writing to the Brain's SDCard slot using the `vexide::core::fs` module. (#22)
 
 ### Fixed
 

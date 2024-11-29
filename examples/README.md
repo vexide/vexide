@@ -105,3 +105,8 @@ Miscelaneous examples.
 ### [`basic`](./basic.rs)
 
 A simple hello world example program. This is commonly used by vexide contributors to test changes to the runtime.
+
+### [`fs`](./fs.rs)
+
+A program using the filesystem API.
+The filesystem is often used to store log files.
