@@ -66,6 +66,18 @@ impl VisionSensor {
     /// This value is based on the `VISION_FOV_HEIGHT` macro constant in PROS.
     pub const VERTICAL_RESOLUTION: u16 = 212;
 
+    /// The horizontal FOV of the vision sensor in degrees.
+    pub const HORIZONTAL_FOV: f32 = 64.6;
+
+    /// The vertical FOV of the vision sensor in degrees.
+    pub const VERTICAL_FOV: f32 = 46.0;
+
+    /// The diagonal FOV of the vision sensor in degrees.
+    pub const DIAGONAL_FOV: f32 = 78.0;
+
+    /// The update rate of the vision sensor.
+    pub const UPDATE_INTERVAL: Duration = Duration::from_millis(50);
+
     /// Creates a new vision sensor from a Smart Port.
     ///
     /// # Examples
