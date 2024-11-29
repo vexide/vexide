@@ -87,6 +87,7 @@ impl OpenOptions {
     /// let mut options = OpenOptions::new();
     /// let file = options.read(true).open("foo.txt");
     /// ```
+    #[allow(clippy::new_without_default)]
     #[must_use]
     pub const fn new() -> OpenOptions {
         OpenOptions {
@@ -655,6 +656,8 @@ impl File {
     /// # Errors
     ///
     /// * [`InvalidData`]: Internal filesystem error occurred.
+    ///
+    /// [`InvalidData`]: io::ErrorKind::InvalidData
     pub fn metadata(&self) -> io::Result<Metadata> {
         Metadata::from_fd(self.fd)
     }
