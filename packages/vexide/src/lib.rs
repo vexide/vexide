@@ -87,6 +87,7 @@ pub mod prelude {
     #[cfg(feature = "devices")]
     pub use vexide_devices::{
         adi::{
+            servo::AdiServo,
             accelerometer::{AdiAccelerometer, Sensitivity},
             addrled::AdiAddrLed,
             analog::AdiAnalogIn,

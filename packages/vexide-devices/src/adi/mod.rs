@@ -52,6 +52,7 @@ pub use motor::AdiMotor;
 pub use potentiometer::{AdiPotentiometer, PotentiometerType};
 pub use pwm::AdiPwmOut;
 pub use range_finder::AdiRangeFinder;
+pub use gyroscope::AdiGyroscope;
 pub use servo::AdiServo;
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
