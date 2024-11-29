@@ -1,6 +1,6 @@
 [package]
 name = "vexide-panic"
-version = "0.1.6-rc.1"
+version = "0.1.6"
 edition = "2021"
 license = "MIT"
 description = "Panic handler for vexide"
