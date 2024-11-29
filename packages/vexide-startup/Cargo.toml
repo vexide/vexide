@@ -1,6 +1,6 @@
 [package]
 name = "vexide-startup"
-version = "0.3.3"
+version = "0.3.4-test.1"
 edition = "2021"
 license = "MIT"
 description = "Support code for V5 Brain user program booting"
