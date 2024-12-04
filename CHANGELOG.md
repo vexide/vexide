@@ -19,7 +19,7 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
-## [0.4.1]
+## [0.5.1]
 
 ### Added
 
