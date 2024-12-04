@@ -19,6 +19,20 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
+## [0.5.1]
+
+### Added
+
+### Fixed
+
+- Fixed docs.rs build by updating to `vex-sdk` 0.26.0. No functional changes from 0.5.0.
+
+### Changed
+
+### Removed
+
+### New Contributors
+
 ## [Unreleased]
 
 ### Added
@@ -272,7 +286,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.5.1...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
@@ -280,3 +294,4 @@ Before releasing:
 [0.4.1]: https://github.com/vexide/vexide/compare/v0.4.0...v0.4.1
 [0.4.2]: https://github.com/vexide/vexide/compare/v0.4.1...v0.4.2
 [0.5.0]: https://github.com/vexide/vexide/compare/v0.4.2...v0.5.0
+[0.5.1]: https://github.com/vexide/vexide/compare/v0.5.0...v0.5.1
