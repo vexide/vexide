@@ -36,4 +36,5 @@ embedded-graphics = ["dep:embedded-graphics-core"]
 slint = ["dep:slint"]
 
 [package.metadata.docs.rs]
+all-features = true # Otherwise the crate is completely empty.
 targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
