@@ -34,4 +34,5 @@ dangerous_motor_tuning = []
 smart_leds_trait = ["dep:smart-leds-trait"]
 
 [package.metadata.docs.rs]
+all-features = true # Show optional APIs
 targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
