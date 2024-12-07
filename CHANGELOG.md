@@ -27,7 +27,7 @@ Before releasing:
 
 ### Changed
 
-- All `Position` methods are now usable in `const` context.
+- All `Position` methods are now usable in `const` context. (#254)
 
 ### Removed
 
