@@ -207,7 +207,7 @@ impl<'a> ControllerScreenWriteFuture<'a> {
     }
 }
 
-impl<'a> Future for ControllerScreenWriteFuture<'a> {
+impl Future for ControllerScreenWriteFuture<'_> {
     type Output = Result<(), ControllerError>;
 
     fn poll(

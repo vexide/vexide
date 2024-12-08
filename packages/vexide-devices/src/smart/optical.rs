@@ -101,7 +101,6 @@ impl OpticalSensor {
     ///     }
     /// }
     /// ```
-
     pub fn led_brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
