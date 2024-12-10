@@ -35,7 +35,7 @@ impl Once {
     }
 
     /// Returns true if call_once has been run.
-    pub fn is_complete(&self) -> bool {
+    pub fn is_completed(&self) -> bool {
         if let Some(state) = self.state.try_lock() {
             *state == Self::ONCE_COMPLETE
         } else {
@@ -88,7 +88,7 @@ impl<T> OnceLock<T> {
 
     /// Get a reference to the data in the [`OnceLock`] if it has been initialized.
     pub fn get(&self) -> Option<&T> {
-        if self.inner.is_complete() {
+        if self.inner.is_completed() {
             Some(unsafe { &*(*self.data.get()).as_ptr() })
         } else {
             None
@@ -97,7 +97,7 @@ impl<T> OnceLock<T> {
 
     /// Get a mutable reference to the data in the [`OnceLock`] if it has been initialized.
     pub fn get_mut(&mut self) -> Option<&mut T> {
-        if self.inner.is_complete() {
+        if self.inner.is_completed() {
             Some(unsafe { &mut *(*self.data.get()).as_mut_ptr() })
         } else {
             None
@@ -110,7 +110,7 @@ impl<T> OnceLock<T> {
     ///
     /// If the data in this [`OnceLock`] is already initialized, the `data` parameter is returned as an error.
     pub fn set(&self, data: T) -> Result<(), T> {
-        if self.inner.is_complete() {
+        if self.inner.is_completed() {
             return Err(data);
         }
 
@@ -119,7 +119,7 @@ impl<T> OnceLock<T> {
 
     /// Consumes the [`OnceLock`] and returns the inner data if it has been initialized.
     pub fn into_inner(self) -> Option<T> {
-        if self.inner.is_complete() {
+        if self.inner.is_completed() {
             Some(unsafe { (*self.data.get()).as_ptr().read() })
         } else {
             None
@@ -129,14 +129,14 @@ impl<T> OnceLock<T> {
     /// Move the data out of the [`OnceLock`] if it has been initialized.
     /// This will leave the [`OnceLock`] in an uninitialized state.
     pub fn take(&mut self) -> Option<T> {
-        let data = if self.inner.is_complete() {
+        let data = if self.inner.is_completed() {
             Some(unsafe { (*self.data.get()).as_ptr().read() })
         } else {
             None
         };
         self.inner = Once::new();
         *self.data.get_mut() = MaybeUninit::uninit();
-        debug_assert!(!self.inner.is_complete());
+        debug_assert!(!self.inner.is_completed());
         data
     }
 
@@ -182,7 +182,7 @@ impl<T> OnceLock<T> {
             return Ok(data);
         }
         self.try_init(init).await?;
-        debug_assert!(self.inner.is_complete());
+        debug_assert!(self.inner.is_completed());
         Ok(unsafe { &*(*self.data.get()).as_ptr() })
     }
 
@@ -192,7 +192,7 @@ impl<T> OnceLock<T> {
                 (*self.data.get()).write(init());
             })
             .await;
-        debug_assert!(self.inner.is_complete());
+        debug_assert!(self.inner.is_completed());
     }
 
     async fn try_init<E: Error>(&self, init: impl FnOnce() -> Result<T, E>) -> Result<(), E> {
@@ -232,7 +232,7 @@ impl<T> Default for OnceLock<T> {
 }
 impl<T> Drop for OnceLock<T> {
     fn drop(&mut self) {
-        if self.inner.is_complete() {
+        if self.inner.is_completed() {
             unsafe { (*self.data.get()).assume_init_drop() }
         }
     }
