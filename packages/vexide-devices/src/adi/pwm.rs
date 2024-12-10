@@ -37,7 +37,19 @@ pub struct AdiPwmOut {
 }
 
 impl AdiPwmOut {
-    /// Create a pwm output from an [`AdiPort`].
+    /// Create a PWM output from an [`AdiPort`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut pwm = AdiPwmOut::new(peripherals.adi_a);
+    ///     pwm.set_output(128).unwrap(); // Set PWM to 50% duty cycle
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::PwmOut);
@@ -55,6 +67,18 @@ impl AdiPwmOut {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut pwm = AdiPwmOut::new(peripherals.adi_a);
+    ///     pwm.set_output(128).unwrap(); // Set PWM to 50% duty cycle
+    /// }
+    /// ```
     pub fn set_output(&mut self, value: u8) -> Result<(), PortError> {
         self.port.validate_expander()?;
 
