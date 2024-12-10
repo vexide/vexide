@@ -19,6 +19,20 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
+## [Unreleased]
+
+### Added
+
+### Fixed
+
+### Changed
+
+- All `Position` methods are now usable in `const` context. (#254)
+
+### Removed
+
+### New Contributors
+
 ## [0.5.1]
 
 ### Added
@@ -26,18 +40,6 @@ Before releasing:
 ### Fixed
 
 - Fixed docs.rs build by updating to `vex-sdk` 0.26.0. No functional changes from 0.5.0.
-
-### Changed
-
-### Removed
-
-### New Contributors
-
-## [Unreleased]
-
-### Added
-
-### Fixed
 
 ### Changed
 

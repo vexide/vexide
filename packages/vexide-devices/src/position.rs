@@ -28,20 +28,20 @@ impl Position {
 
     /// Creates a position from a specified number of degrees.
     #[must_use]
-    pub fn from_degrees(degrees: f64) -> Self {
-        Self(((degrees / 360.0) * f64::from(Self::INTERNAL_TPR)) as i64)
+    pub const fn from_degrees(degrees: f64) -> Self {
+        Self(((degrees / 360.0) * (Self::INTERNAL_TPR as f64)) as i64)
     }
 
     /// Creates a position from a specified number of radians.
     #[must_use]
-    pub fn from_radians(radians: f64) -> Self {
-        Self(((radians / TAU) * f64::from(Self::INTERNAL_TPR)) as i64)
+    pub const fn from_radians(radians: f64) -> Self {
+        Self(((radians / TAU) * (Self::INTERNAL_TPR as f64)) as i64)
     }
 
     /// Creates a position from a specified number of revolutions.
     #[must_use]
-    pub fn from_revolutions(revolutions: f64) -> Self {
-        Self((revolutions * f64::from(Self::INTERNAL_TPR)) as i64)
+    pub const fn from_revolutions(revolutions: f64) -> Self {
+        Self((revolutions * (Self::INTERNAL_TPR as f64)) as i64)
     }
 
     /// Returns the number of degrees rotated in this position.
@@ -49,8 +49,8 @@ impl Position {
     /// This function's conversion from an internal representation may cause a loss of precision.
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
-    pub fn as_degrees(&self) -> f64 {
-        (self.0 * 360) as f64 / f64::from(Self::INTERNAL_TPR)
+    pub const fn as_degrees(&self) -> f64 {
+        (self.0 * 360) as f64 / (Self::INTERNAL_TPR as f64)
     }
 
     /// Returns the number of radians rotated in this position.
@@ -58,8 +58,8 @@ impl Position {
     /// This function's conversion from an internal representation may cause a loss of precision.
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
-    pub fn as_radians(&self) -> f64 {
-        self.0 as f64 / f64::from(Self::INTERNAL_TPR) * TAU
+    pub const fn as_radians(&self) -> f64 {
+        self.0 as f64 / (Self::INTERNAL_TPR as f64) * TAU
     }
 
     /// Returns the number of revolutions rotated in this position.
@@ -67,8 +67,8 @@ impl Position {
     /// This function's conversion from an internal representation may cause a loss of precision.
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
-    pub fn as_revolutions(&self) -> f64 {
-        self.0 as f64 / f64::from(Self::INTERNAL_TPR)
+    pub const fn as_revolutions(&self) -> f64 {
+        self.0 as f64 / (Self::INTERNAL_TPR as f64)
     }
 
     /// Returns this position's value scaled to another tick value with a different TPR.

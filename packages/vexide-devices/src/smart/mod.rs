@@ -71,7 +71,6 @@ pub use vision::VisionSensor;
 use crate::{DisconnectedSnafu, IncorrectDeviceSnafu};
 
 /// Defines common functionality shared by all Smart Port devices.
-
 pub trait SmartDevice {
     /// The interval at which the V5 brain reads packets from Smart devices.
     const UPDATE_INTERVAL: Duration = Duration::from_millis(10);

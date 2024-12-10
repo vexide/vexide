@@ -705,6 +705,7 @@ pub trait Compete: Sized {
 
 /// Extension methods for [`Compete`].
 /// Automatically implemented for any type implementing [`Compete`].
+#[allow(clippy::type_complexity)]
 pub trait CompeteExt: Compete {
     /// Build a competition runtime that competes with this robot.
     fn compete(
