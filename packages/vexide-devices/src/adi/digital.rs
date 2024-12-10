@@ -41,19 +41,13 @@ impl LogicLevel {
     /// Returns `true` if the level is [`High`](LogicLevel::High).
     #[must_use]
     pub const fn is_high(&self) -> bool {
-        match self {
-            Self::High => true,
-            Self::Low => false,
-        }
+        matches!(self, Self::High)
     }
 
     /// Returns `true` if the level is [`Low`](LogicLevel::Low).
     #[must_use]
     pub const fn is_low(&self) -> bool {
-        match self {
-            Self::High => false,
-            Self::Low => true,
-        }
+        matches!(self, Self::Low)
     }
 }
 
@@ -70,7 +64,7 @@ impl core::ops::Not for LogicLevel {
 
 /// Generic Digital Input over ADI
 ///
-/// Represents an ADI port configured to recieve digital input. The pin can be read to
+/// Represents an ADI port configured to receive digital input. The pin can be read to
 /// determine its current [logic level](`LogicLevel`) (above or below 3.3V).
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiDigitalIn {
