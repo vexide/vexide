@@ -3,6 +3,9 @@
 //! Line trackers read the difference between a black line and a white surface. They can
 //! be used to follow a marked path on the ground.
 //!
+//! In the V5 ecosystem, line trackers can be used to determine whether a robot is on a
+//! white tape line placed on the field. This can be used to determine where a robot is.
+//!
 //! # Hardware Overview
 //!
 //! A line tracker consists of an analog infrared light sensor and an infrared LED.
@@ -34,7 +37,22 @@ pub struct AdiLineTracker {
 }
 
 impl AdiLineTracker {
-    /// Create a line tracker from an ADI port.
+    /// Create a line tracker on the given [`AdiPort`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let line_tracker = AdiLineTracker::new(peripherals.adi_b);
+    ///     loop {
+    ///         println!("Reflectivity: {}%", line_tracker.reflectivity().unwrap() * 100.0);
+    ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::LineTracker);
@@ -52,6 +70,21 @@ impl AdiLineTracker {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let line_tracker = AdiLineTracker::new(peripherals.adi_b);
+    ///     loop {
+    ///         println!("Reflectivity: {}%", line_tracker.reflectivity().unwrap() * 100.0);
+    ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn reflectivity(&self) -> Result<f64, PortError> {
         Ok(f64::from(analog::ADC_MAX_VALUE - self.raw_reflectivity()?)
             / f64::from(analog::ADC_MAX_VALUE))
@@ -69,6 +102,21 @@ impl AdiLineTracker {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let line_tracker = AdiLineTracker::new(peripherals.adi_b);
+    ///     loop {
+    ///         println!("Raw 12-bit reflectivity: {}%", line_tracker.reflectivity().unwrap());
+    ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn raw_reflectivity(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
 
