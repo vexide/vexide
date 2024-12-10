@@ -50,6 +50,18 @@ impl AdiServo {
     );
 
     /// Create a servo from an [`AdiPort`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut servo = AdiServo::new(peripherals.adi_a);
+    ///     servo.set_target(Position::from_degrees(25.0)).expect("Failed to set servo target");
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::Servo);
@@ -70,6 +82,18 @@ impl AdiServo {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut servo = AdiServo::new(peripherals.adi_a);
+    ///     servo.set_target(Position::from_degrees(25.0)).expect("Failed to set servo target");
+    /// }
+    /// ```
     pub fn set_target(&mut self, position: Position) -> Result<(), PortError> {
         self.set_raw_target(
             ((position.as_degrees() / Self::MAX_POSITION.as_degrees()).clamp(-1.0, 1.0) * 127.0)
@@ -90,6 +114,19 @@ impl AdiServo {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut servo = AdiServo::new(peripherals.adi_a);
+    ///     // Set the servo to the center position
+    ///     servo.set_raw_target(0).expect("Failed to set servo target");
+    /// }
+    /// ```
     pub fn set_raw_target(&mut self, pwm: i8) -> Result<(), PortError> {
         self.port.validate_expander()?;
 
