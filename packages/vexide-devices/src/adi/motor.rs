@@ -43,6 +43,28 @@ impl AdiMotor {
     ///
     /// Motors can be optionally configured to use slew rate control to prevent the internal
     /// PTC from tripping on older cortex-era 393 motors.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new ADI motor on ADI port A with slew rate control enabled.
+    ///     let mut motor = AdiMotor::new(peripherals.adi_a, true);
+    ///
+    ///     // Set the motor output to 50% power.
+    ///     motor.set_output(0.5).unwrap();
+    ///
+    ///     // Get the current motor output.
+    ///     let output = motor.output().unwrap();
+    ///     println!("Current motor output: {}", output);
+    ///
+    ///     // Stop the motor.
+    ///     motor.stop().unwrap();
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: AdiPort, slew: bool) -> Self {
         port.configure(match slew {
@@ -60,6 +82,21 @@ impl AdiMotor {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new ADI motor on ADI port A with slew rate control enabled.
+    ///     let mut motor = AdiMotor::new(peripherals.adi_a, true);
+    ///
+    ///     // Set the motor output to 50% power.
+    ///     motor.set_output(0.5).unwrap();
+    /// }
+    /// ```
     pub fn set_output(&mut self, value: f64) -> Result<(), PortError> {
         self.set_raw_output((value * 127.0) as i8)
     }
@@ -71,6 +108,21 @@ impl AdiMotor {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new ADI motor on ADI port A with slew rate control enabled.
+    ///     let mut motor = AdiMotor::new(peripherals.adi_a, true);
+    ///
+    ///     // Set the motor output to 100 out of 127.
+    ///     motor.set_raw_output(100).unwrap();
+    /// }
+    /// ```
     pub fn set_raw_output(&mut self, pwm: i8) -> Result<(), PortError> {
         self.port.validate_expander()?;
 
@@ -89,6 +141,22 @@ impl AdiMotor {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new ADI motor on ADI port A with slew rate control enabled.
+    ///     let mut motor = AdiMotor::new(peripherals.adi_a, true);
+    ///
+    ///     // Get the current motor output.
+    ///     let output = motor.output().unwrap();
+    ///     println!("Current motor output: {}", output);
+    /// }
+    /// ```
     pub fn output(&self) -> Result<f64, PortError> {
         Ok(f64::from(self.raw_output()?) / f64::from(i8::MAX))
     }
@@ -100,6 +168,22 @@ impl AdiMotor {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new ADI motor on ADI port A with slew rate control enabled.
+    ///     let mut motor = AdiMotor::new(peripherals.adi_a, true);
+    ///
+    ///     // Get the current motor output.
+    ///     let output = motor.raw_output().unwrap();
+    ///     println!("Current motor output out of 127: {}", output);
+    /// }
+    /// ```
     pub fn raw_output(&self) -> Result<i8, PortError> {
         self.port.validate_expander()?;
 
@@ -123,6 +207,21 @@ impl AdiMotor {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new ADI motor on ADI port A with slew rate control enabled.
+    ///     let mut motor = AdiMotor::new(peripherals.adi_a, true);
+    ///
+    ///     // Stop the motor.
+    ///     let output = motor.stop().unwrap();
+    /// }
+    /// ```
     pub fn stop(&mut self) -> Result<(), PortError> {
         self.set_raw_output(0)
     }
