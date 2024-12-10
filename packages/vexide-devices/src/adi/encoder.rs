@@ -17,6 +17,13 @@
 //! second and 1,133 rpm (revolutions per minute). Faster revolutions will therefore not be interpreted
 //! exactly, potentially resulting in erroneous positional data being returned.
 //!
+//! ## Connecting to the V5 Brain
+//!
+//! The Optical Shaft Encoder is a two-wire device that must be connected to two adjacent ports on
+//! the same brain/ADI expander. The top wire must be plugged into an odd-numbered port (A, C, E, G),
+//! while the bottom wire must be plugged into the port directly above the top wire (that is, B, D, F, or
+//! H, respectively).
+//!
 //! # Comparison to [`RotationSensor`]
 //!
 //! Rotation sensors and Optical Shaft Encoders both measure the same thing (angular position), but
@@ -71,11 +78,33 @@ impl AdiEncoder {
     ///   returns [`EncoderError::ExpanderPortMismatch`].
     /// - If the top port is not odd (A, C, E, G), returns [`EncoderError::BadTopPort`].
     /// - If the bottom port is not the next after the top port, returns [`EncoderError::BadBottomPort`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::{
+    ///     prelude::*,
+    ///     devices::adi::AdiDevice,
+    /// };
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b)).expect("could not create encoder");
+    ///
+    ///     loop {
+    ///         println!("encoder position: {:?}", encoder.position());
+    ///         sleep(AdiDevice::ADI_UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, EncoderError> {
         let top_port = ports.0;
         let bottom_port = ports.1;
 
         // Port error handling - two-wire devices are a little weird with this sort of thing.
+        // TODO: This could be refactored to share logic with the range finder.
+        // Might be fixed through #120
 
         // Top and bottom must be plugged into the same ADI expander.
         ensure!(
@@ -116,6 +145,26 @@ impl AdiEncoder {
     /// # Errors
     ///
     /// If the ADI device could not be accessed, returns [`EncoderError::Port`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::{
+    ///     prelude::*,
+    ///     devices::adi::AdiDevice,
+    /// };
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b)).expect("could not create encoder");
+    ///
+    ///     loop {
+    ///         println!("encoder position: {:?}", encoder.position());
+    ///         sleep(AdiDevice::ADI_UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn position(&self) -> Result<Position, EncoderError> {
         self.top_port.validate_expander()?;
         self.top_port.configure(self.device_type());
@@ -131,13 +180,32 @@ impl AdiEncoder {
         ))
     }
 
-    /// Sets the current encoder position to the given position without moving the motor.
+    /// Sets the current encoder position to the given position without any actual movement.
     ///
     /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
+    /// This can be useful if you want to reset the encoder position to a known value at a certain point.
     ///
     /// # Errors
     ///
     /// If the ADI device could not be accessed, returns [`EncoderError::Port`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::{
+    ///     prelude::*,
+    ///     devices::adi::AdiDevice,
+    /// };
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b)).expect("could not create encoder");
+    ///
+    ///     // Treat the encoder as if it were at 180 degrees.
+    ///     encoder.set_position(Position::from_degrees(180)).expect("could not set position");
+    /// }
+    /// ```
     pub fn set_position(&self, position: Position) -> Result<(), EncoderError> {
         self.top_port.validate_expander()?;
 
@@ -160,6 +228,25 @@ impl AdiEncoder {
     /// # Errors
     ///
     /// If the ADI device could not be accessed, returns [`EncoderError::Port`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::{
+    ///     prelude::*,
+    ///     devices::adi::AdiDevice,
+    /// };
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b)).expect("could not create encoder");
+    ///
+    ///     // Reset the encoder position to zero.
+    ///     // This doesn't really do anything in this case, but it's a good example.
+    ///     encoder.reset_position().expect("could not set position");
+    /// }
+    /// ```
     pub fn reset_position(&mut self) -> Result<(), EncoderError> {
         self.set_position(Position::default())
     }
