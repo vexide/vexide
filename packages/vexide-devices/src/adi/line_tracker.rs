@@ -48,7 +48,7 @@ impl AdiLineTracker {
     /// async fn main(peripherals: Peripherals) {
     ///     let line_tracker = AdiLineTracker::new(peripherals.adi_b);
     ///     loop {
-    ///         println!("Reflectivity: {}%", line_tracker.reflectivity().unwrap() * 100.0);
+    ///         println!("Reflectivity: {}%", line_tracker.reflectivity().expect("couldn't get reflectivity") * 100.0);
     ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -80,7 +80,7 @@ impl AdiLineTracker {
     /// async fn main(peripherals: Peripherals) {
     ///     let line_tracker = AdiLineTracker::new(peripherals.adi_b);
     ///     loop {
-    ///         println!("Reflectivity: {}%", line_tracker.reflectivity().unwrap() * 100.0);
+    ///         println!("Reflectivity: {}%", line_tracker.reflectivity().expect("couldn't get reflectivity") * 100.0);
     ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -112,7 +112,7 @@ impl AdiLineTracker {
     /// async fn main(peripherals: Peripherals) {
     ///     let line_tracker = AdiLineTracker::new(peripherals.adi_b);
     ///     loop {
-    ///         println!("Raw 12-bit reflectivity: {}%", line_tracker.reflectivity().unwrap());
+    ///         println!("Raw 12-bit reflectivity: {}%", line_tracker.raw_reflectivity().expect("couldn't get reflectivity"));
     ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }

@@ -47,7 +47,7 @@ impl AdiPwmOut {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut pwm = AdiPwmOut::new(peripherals.adi_a);
-    ///     pwm.set_output(128).unwrap(); // Set PWM to 50% duty cycle
+    ///     _ = pwm.set_output(128); // Set PWM to 50% duty cycle
     /// }
     /// ```
     #[must_use]
@@ -76,7 +76,7 @@ impl AdiPwmOut {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut pwm = AdiPwmOut::new(peripherals.adi_a);
-    ///     pwm.set_output(128).unwrap(); // Set PWM to 50% duty cycle
+    ///     _ = pwm.set_output(128); // Set PWM to 50% duty cycle
     /// }
     /// ```
     pub fn set_output(&mut self, value: u8) -> Result<(), PortError> {

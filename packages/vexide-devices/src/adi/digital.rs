@@ -163,7 +163,7 @@ impl AdiDigitalOut {
     ///
     ///     // Toggle the digital output every second
     ///     loop {
-    ///         digital_out.toggle().expect("could not toggle digital output");
+    ///         _ = digital_out.toggle();
     ///         sleep(Duration::from_millis(1000)).await;
     ///     }
     /// }
@@ -223,7 +223,7 @@ impl AdiDigitalOut {
     ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Set the digital output to high
-    ///     digital_out.set_level(LogicLevel::High).expect("could not set level");
+    ///     _ = digital_out.set_level(LogicLevel::High);
     ///
     ///     // Let's check if the universe isn't broken
     ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
@@ -316,7 +316,7 @@ impl AdiDigitalOut {
     ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Set the digital output to high
-    ///     digital_out.set_high().expect("could not set level");
+    ///     _ = digital_out.set_high();
     ///
     ///     // Let's check if the universe isn't broken
     ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
@@ -345,7 +345,7 @@ impl AdiDigitalOut {
     ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Set the digital output to low
-    ///     digital_out.set_low().expect("could not set level");
+    ///     _ = digital_out.set_low();
     ///
     ///     // Let's check if the universe isn't broken
     ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
@@ -378,7 +378,7 @@ impl AdiDigitalOut {
     ///
     ///     // Toggle the digital output every second
     ///     loop {
-    ///         digital_out.toggle().expect("could not toggle digital output");
+    ///         _ = digital_out.toggle();
     ///         sleep(Duration::from_millis(1000)).await;
     ///     }
     /// }
