@@ -203,7 +203,7 @@ impl AdiEncoder {
     ///     let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b)).expect("could not create encoder");
     ///
     ///     // Treat the encoder as if it were at 180 degrees.
-    ///     encoder.set_position(Position::from_degrees(180)).expect("could not set position");
+    ///     _ = encoder.set_position(Position::from_degrees(180));
     /// }
     /// ```
     pub fn set_position(&self, position: Position) -> Result<(), EncoderError> {
@@ -244,7 +244,7 @@ impl AdiEncoder {
     ///
     ///     // Reset the encoder position to zero.
     ///     // This doesn't really do anything in this case, but it's a good example.
-    ///     encoder.reset_position().expect("could not set position");
+    ///     _ = encoder.reset_position();
     /// }
     /// ```
     pub fn reset_position(&mut self) -> Result<(), EncoderError> {

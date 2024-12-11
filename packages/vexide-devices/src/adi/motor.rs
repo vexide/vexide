@@ -55,14 +55,14 @@ impl AdiMotor {
     ///     let mut motor = AdiMotor::new(peripherals.adi_a, true);
     ///
     ///     // Set the motor output to 50% power.
-    ///     motor.set_output(0.5).unwrap();
+    ///     _ = motor.set_output(0.5);
     ///
     ///     // Get the current motor output.
     ///     let output = motor.output().unwrap();
     ///     println!("Current motor output: {}", output);
     ///
     ///     // Stop the motor.
-    ///     motor.stop().unwrap();
+    ///     _ = motor.stop();
     /// }
     /// ```
     #[must_use]
@@ -94,7 +94,7 @@ impl AdiMotor {
     ///     let mut motor = AdiMotor::new(peripherals.adi_a, true);
     ///
     ///     // Set the motor output to 50% power.
-    ///     motor.set_output(0.5).unwrap();
+    ///     _ = motor.set_output(0.5);
     /// }
     /// ```
     pub fn set_output(&mut self, value: f64) -> Result<(), PortError> {
@@ -219,7 +219,7 @@ impl AdiMotor {
     ///     let mut motor = AdiMotor::new(peripherals.adi_a, true);
     ///
     ///     // Stop the motor.
-    ///     let output = motor.stop().unwrap();
+    ///     _ = motor.stop();
     /// }
     /// ```
     pub fn stop(&mut self) -> Result<(), PortError> {

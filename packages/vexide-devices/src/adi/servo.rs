@@ -59,7 +59,7 @@ impl AdiServo {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut servo = AdiServo::new(peripherals.adi_a);
-    ///     servo.set_target(Position::from_degrees(25.0)).expect("Failed to set servo target");
+    ///     _ = servo.set_target(Position::from_degrees(25.0));
     /// }
     /// ```
     #[must_use]
@@ -91,7 +91,7 @@ impl AdiServo {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut servo = AdiServo::new(peripherals.adi_a);
-    ///     servo.set_target(Position::from_degrees(25.0)).expect("Failed to set servo target");
+    ///     _ = servo.set_target(Position::from_degrees(25.0));
     /// }
     /// ```
     pub fn set_target(&mut self, position: Position) -> Result<(), PortError> {
@@ -124,7 +124,7 @@ impl AdiServo {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut servo = AdiServo::new(peripherals.adi_a);
     ///     // Set the servo to the center position
-    ///     servo.set_raw_target(0).expect("Failed to set servo target");
+    ///     _ = servo.set_raw_target(0);
     /// }
     /// ```
     pub fn set_raw_target(&mut self, pwm: i8) -> Result<(), PortError> {
