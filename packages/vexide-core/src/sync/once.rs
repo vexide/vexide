@@ -36,10 +36,9 @@ impl Once {
 
     /// Returns true if call_once has been run.
     pub fn is_completed(&self) -> bool {
-        if let Some(state) = self.state.try_lock() {
-            *state == Self::ONCE_COMPLETE
-        } else {
-            false
+        match self.state.try_lock() {
+            Some(state) => *state == Self::ONCE_COMPLETE,
+            None => false,
         }
     }
 

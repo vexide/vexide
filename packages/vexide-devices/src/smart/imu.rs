@@ -937,7 +937,7 @@ pub struct InertialCalibrateFuture<'a> {
     imu: &'a mut InertialSensor,
 }
 
-impl<'a> core::future::Future for InertialCalibrateFuture<'a> {
+impl core::future::Future for InertialCalibrateFuture<'_> {
     type Output = Result<(), InertialError>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
