@@ -27,6 +27,7 @@ Before releasing:
 
 ### Changed
 
+- Renamed `Once::is_complete` to `Once::is_completed` for consistency with the standard library. (#257) (**Breaking Change**)
 - All `Position` methods are now usable in `const` context. (#254)
 
 ### Removed
