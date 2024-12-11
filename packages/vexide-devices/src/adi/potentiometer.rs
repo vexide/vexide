@@ -51,6 +51,22 @@ pub struct AdiPotentiometer {
 
 impl AdiPotentiometer {
     /// Create a new potentiometer from an [`AdiPort`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let potentiometer = AdiPotentiometer::new(peripherals.adi_a, PotentiometerType::V2);
+    ///     loop {
+    ///         let angle = potentiometer.angle().expect("Failed to read potentiometer angle");
+    ///         println!("Potentiometer Angle: {}", angle);
+    ///         sleep(Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: AdiPort, potentiometer_type: PotentiometerType) -> Self {
         port.configure(match potentiometer_type {
@@ -65,6 +81,8 @@ impl AdiPotentiometer {
     }
 
     /// Returns the type of ADI potentiometer device.
+    ///
+    /// This is either the legacy EDR potentiometer or the V5-era potentiometer V2.
     #[must_use]
     pub const fn potentiometer_type(&self) -> PotentiometerType {
         self.potentiometer_type
@@ -86,6 +104,22 @@ impl AdiPotentiometer {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let potentiometer = AdiPotentiometer::new(peripherals.adi_a, PotentiometerType::V2);
+    ///     loop {
+    ///         let angle = potentiometer.angle().expect("Failed to read potentiometer angle");
+    ///         println!("Potentiometer Angle: {}", angle);
+    ///         sleep(Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
     pub fn angle(&self) -> Result<f64, PortError> {
         self.port.validate_expander()?;
 
@@ -110,7 +144,7 @@ pub enum PotentiometerType {
 }
 
 impl PotentiometerType {
-    /// Maxmimum angle for the older cortex-era EDR potentiometer.
+    /// Maximum angle for the older cortex-era EDR potentiometer.
     pub const LEGACY_MAX_ANGLE: f64 = 250.0;
 
     /// Maximum angle for the V5-era potentiometer V2.
