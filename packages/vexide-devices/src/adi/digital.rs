@@ -41,19 +41,13 @@ impl LogicLevel {
     /// Returns `true` if the level is [`High`](LogicLevel::High).
     #[must_use]
     pub const fn is_high(&self) -> bool {
-        match self {
-            Self::High => true,
-            Self::Low => false,
-        }
+        matches!(self, Self::High)
     }
 
     /// Returns `true` if the level is [`Low`](LogicLevel::Low).
     #[must_use]
     pub const fn is_low(&self) -> bool {
-        match self {
-            Self::High => false,
-            Self::Low => true,
-        }
+        matches!(self, Self::Low)
     }
 }
 
@@ -70,7 +64,7 @@ impl core::ops::Not for LogicLevel {
 
 /// Generic Digital Input over ADI
 ///
-/// Represents an ADI port configured to recieve digital input. The pin can be read to
+/// Represents an ADI port configured to receive digital input. The pin can be read to
 /// determine its current [logic level](`LogicLevel`) (above or below 3.3V).
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiDigitalIn {
@@ -156,6 +150,24 @@ pub struct AdiDigitalOut {
 
 impl AdiDigitalOut {
     /// Create a digital output from an [`AdiPort`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///
+    ///     // Toggle the digital output every second
+    ///     loop {
+    ///         _ = digital_out.toggle();
+    ///         sleep(Duration::from_millis(1000)).await;
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: AdiPort) -> Self {
         port.configure(AdiDeviceType::DigitalOut);
@@ -165,7 +177,7 @@ impl AdiDigitalOut {
 
     /// Create a digital output from an [`AdiPort`] with an initial logic level.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// use vexide::prelude::*;
@@ -173,6 +185,9 @@ impl AdiDigitalOut {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let digital_out = AdiDigitalOut::with_initial_level(peripherals.adi_a, LogicLevel::High);
+    ///
+    ///     // The digital output is now set to high
+    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
     /// }
     /// ```
     #[must_use]
@@ -197,6 +212,23 @@ impl AdiDigitalOut {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///
+    ///     // Set the digital output to high
+    ///     _ = digital_out.set_level(LogicLevel::High);
+    ///
+    ///     // Let's check if the universe isn't broken
+    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    /// }
+    /// ```
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), PortError> {
         self.port.validate_expander()?;
 
@@ -218,6 +250,19 @@ impl AdiDigitalOut {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///
+    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::Low);
+    /// }
+    /// ```
     pub fn level(&self) -> Result<LogicLevel, PortError> {
         self.port.validate_expander()?;
 
@@ -260,6 +305,23 @@ impl AdiDigitalOut {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///
+    ///     // Set the digital output to high
+    ///     _ = digital_out.set_high();
+    ///
+    ///     // Let's check if the universe isn't broken
+    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    /// }
+    /// ```
     pub fn set_high(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::High)
     }
@@ -272,6 +334,23 @@ impl AdiDigitalOut {
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///
+    ///     // Set the digital output to low
+    ///     _ = digital_out.set_low();
+    ///
+    ///     // Let's check if the universe isn't broken
+    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    /// }
+    /// ```
     pub fn set_low(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::Low)
     }
@@ -281,13 +360,29 @@ impl AdiDigitalOut {
     /// - If the port was previously set to [`LogicLevel::Low`], then the level will be set to [`LogicLevel::High`].
     /// - If the port was previously set to [`LogicLevel::High`], then the level will be set to [`LogicLevel::Low`].
     ///
-    /// This is analagous to `self.set_level(!self.level()?)?` and is useful for toggling devices like solenoids.
+    /// This is analogous to `self.set_level(!self.level()?)?` and is useful for toggling devices like solenoids.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    /// use core::time::Duration;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///
+    ///     // Toggle the digital output every second
+    ///     loop {
+    ///         _ = digital_out.toggle();
+    ///         sleep(Duration::from_millis(1000)).await;
+    ///     }
+    /// }
+    /// ```
     pub fn toggle(&mut self) -> Result<(), PortError> {
         self.set_level(!self.level()?)
     }

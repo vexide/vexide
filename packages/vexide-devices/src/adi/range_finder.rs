@@ -1,7 +1,9 @@
 //! ADI Ultrasonic Range Finder
 //!
-//! The Ultrasonic Range Finder is a rangfinding device which uses ultrasonic sound to measure the
+//! The Ultrasonic Range Finder is a rangefinding device which uses ultrasonic sound to measure the
 //! distance between the sensor and the object the sound is being reflected back from.
+//!
+//! The Ultrasonic Range Finder is also known as a sonar sensor in VEXCode terminology.
 //!
 //! # Hardware Overview
 //!
@@ -59,6 +61,22 @@ impl AdiRangeFinder {
     ///   returns [`RangeFinderError::ExpanderPortMismatch`].
     /// - If the output port is not odd (A, C, E, G), returns [`RangeFinderError::BadInputPort`].
     /// - If the input port is not the next after the top port, returns [`RangeFinderError::BadOutputPort`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let range_finder = AdiRangeFinder::new((peripherals.adi_a, peripherals.adi_b)).expect("Failed to create range finder");
+    ///     loop {
+    ///         let distance = range_finder.distance().expect("Failed to get distance");
+    ///         println!("Distance: {} cm", distance);
+    ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, RangeFinderError> {
         let output_port = ports.0;
         let input_port = ports.1;
@@ -103,6 +121,22 @@ impl AdiRangeFinder {
     ///
     /// - A [`RangeFinderError::NoReading`] error is returned if the rangefinder cannot find a valid reading.
     /// - A [`RangeFinderError::Port`] error is returned if the ADI device could not be accessed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let range_finder = AdiRangeFinder::new((peripherals.adi_a, peripherals.adi_b)).expect("Failed to create range finder");
+    ///     loop {
+    ///         let distance = range_finder.distance().expect("Failed to get distance");
+    ///         println!("Distance: {} cm", distance);
+    ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
     pub fn distance(&self) -> Result<u16, RangeFinderError> {
         self.output_port.validate_expander()?;
 
@@ -161,9 +195,9 @@ pub enum RangeFinderError {
         top_port: u8,
     },
 
-    /// The specified top and bottom ports may not belong to different ADI expanders.
+    /// The specified top and bottom ports may belong to different ADI expanders.
     #[snafu(display(
-        "The specified top and bottom ports may not belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
+        "The specified top and bottom ports may belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
         top_port_expander,
         bottom_port_expander
     ))]
