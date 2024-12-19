@@ -25,6 +25,8 @@ Before releasing:
 
 ### Fixed
 
+- Fixed an internal issue regarding units with `Motor::set_position`.
+
 ### Changed
 
 - Renamed `Once::is_complete` to `Once::is_completed` for consistency with the standard library. (#257) (**Breaking Change**)
