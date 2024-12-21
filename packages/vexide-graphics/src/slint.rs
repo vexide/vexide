@@ -40,6 +40,7 @@ impl V5Platform {
             window,
             display: RefCell::new(display),
             display_pressed: RefCell::new(false),
+            #[allow(clippy::large_stack_arrays)] // we got plenty
             buffer: RefCell::new(
                 [Rgb8Pixel::new(0, 0, 0);
                     Display::HORIZONTAL_RESOLUTION as usize * Display::VERTICAL_RESOLUTION as usize],
