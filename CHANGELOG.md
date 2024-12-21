@@ -25,6 +25,8 @@ Before releasing:
 
 ### Fixed
 
+- Fixed error handling for encoder port numbers. (#264)
+
 ### Changed
 
 - Renamed `Once::is_complete` to `Once::is_completed` for consistency with the standard library. (#257) (**Breaking Change**)
