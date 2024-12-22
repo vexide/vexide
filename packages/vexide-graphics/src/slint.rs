@@ -101,8 +101,7 @@ impl Platform for V5Platform {
                         ),
                         buf,
                         Display::HORIZONTAL_RESOLUTION.into(),
-                    )
-                    .unwrap();
+                    );
             });
 
             self.window.dispatch_event(self.get_touch_event());

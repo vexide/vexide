@@ -113,9 +113,12 @@ impl VisionSensor {
     /// loses power. As a result, this function should be called every time the sensor is used on
     /// program start.
     ///
+    /// # Panics
+    ///
+    /// - Panics if the given signature ID is not in the interval [0, 7).
+    ///
     /// # Errors
     ///
-    /// - A [`VisionError::InvalidId`] error is returned if the `id` parameter is greater than or equal to 7.
     /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
     ///
     /// # Examples
@@ -139,7 +142,10 @@ impl VisionSensor {
     /// }
     /// ```
     pub fn set_signature(&mut self, id: u8, signature: VisionSignature) -> Result<(), VisionError> {
-        ensure!((1..7).contains(&id), InvalidIdSnafu { provided_id: id });
+        assert!(
+            (1..7).contains(&id),
+            "The given signature ID `{id}` is not in the expected interval [0, 7)."
+        );
         self.validate_port()?;
 
         let mut signature = V5_DeviceVisionSignature {
@@ -170,7 +176,10 @@ impl VisionSensor {
     /// Reads a signature off the sensor's onboard memory, returning `Some(sig)` if the slot is filled
     /// or `None` if no signature is stored with the given ID.
     fn read_raw_signature(&self, id: u8) -> Result<Option<V5_DeviceVisionSignature>, VisionError> {
-        ensure!((1..7).contains(&id), InvalidIdSnafu { provided_id: id });
+        assert!(
+            (1..7).contains(&id),
+            "The given signature ID `{id}` is not in the expected interval [0, 7)."
+        );
 
         let mut raw_signature = V5_DeviceVisionSignature::default();
         let read_operation =
@@ -207,10 +216,13 @@ impl VisionSensor {
 
     /// Returns a signature from the sensor's onboard volatile memory.
     ///
+    /// # Panics
+    ///
+    /// - Panics if the given signature ID is not in the interval [0, 7).
+    ///
     /// # Errors
     ///
     /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionError::InvalidId`] error is returned if the `id` parameter is greater than or equal to 7.
     /// - A [`VisionError::ReadingFailed`] error is returned if the read operation failed.
     ///
     /// # Examples
@@ -303,11 +315,13 @@ impl VisionSensor {
     /// sensor loses its power source. As a result, this function should be called every time the
     /// sensor is used on program start.
     ///
+    /// # Panics
+    ///
+    /// - Panics if one or more of the given signature IDs are not in the interval [0, 7).
+    ///
     /// # Errors
     ///
     /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionError::InvalidId`] error is returned if one or more of the signature IDs in the
-    ///   [`VisionCode`] were greater than or equal to 7.
     /// - A [`VisionError::ReadingFailed`] error is returned if a read operation failed or there was
     ///   no signature previously set in the slot(s) specified in the [`VisionCode`].
     ///
@@ -1372,15 +1386,6 @@ impl From<LedMode> for V5VisionLedMode {
 pub enum VisionError {
     /// Objects cannot be detected while Wi-Fi mode is enabled.
     WifiMode,
-
-    /// The given signature ID is not in the expected range `0..7`.
-    #[snafu(display(
-        "The given signature ID `{provided_id}` is not in the expected range `0..7`."
-    ))]
-    InvalidId {
-        /// The given ID which caused the error.
-        provided_id: u8,
-    },
 
     /// The camera could not be read.
     ReadingFailed,
