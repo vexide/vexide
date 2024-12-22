@@ -52,14 +52,6 @@ impl Once {
             *state = true;
         }
     }
-
-    pub(crate) fn call_once_blocking<F: FnOnce()>(&self, fun: F) {
-        let mut state = self.state.lock_blocking();
-        if *state == Self::ONCE_INCOMPLETE {
-            fun();
-            *state = true;
-        }
-    }
 }
 impl Debug for Once {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {

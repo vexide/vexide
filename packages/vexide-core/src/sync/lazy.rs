@@ -55,11 +55,6 @@ impl<T, I: FnOnce() -> T> LazyLock<T, I> {
         self.once.call_once(|| unsafe { self.lazy_init() }).await;
         unsafe { &(*self.data.get()).data }
     }
-
-    fn force(&self) -> &T {
-        self.once.call_once_blocking(|| unsafe { self.lazy_init() });
-        unsafe { &(*self.data.get()).data }
-    }
 }
 impl<T: Default> Default for LazyLock<T> {
     fn default() -> Self {
@@ -69,13 +64,6 @@ impl<T: Default> Default for LazyLock<T> {
             }),
             once: Once::new(),
         }
-    }
-}
-impl<T, I: FnOnce() -> T> Deref for LazyLock<T, I> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        self.force()
     }
 }
 impl<T: Debug, I> Debug for LazyLock<T, I> {
