@@ -247,6 +247,13 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     //
     // We should be able to lock the mutex, since we know that the mutex is only
     // otherwise locked in `take_hook` and `set_hook`, which don't panic.
+
+    // Allow if_let_rescope lint since we actually prefer the Rust 2024 rescope
+    // in this case.
+    // Formerly, in the `else` branch, the lock would be held to the end of the
+    // block, but it doesn't in the 2024 edition of Rust. That behavior is
+    // actually preferable here.
+    #[allow(if_let_rescope)]
     if let Some(mut guard) = HOOK.try_lock() {
         let hook = core::mem::replace(&mut *guard, Hook::Default);
         // Drop the guard first to avoid preventing set_hook or take_hook from
