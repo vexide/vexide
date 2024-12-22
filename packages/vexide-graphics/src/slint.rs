@@ -91,17 +91,15 @@ impl Platform for V5Platform {
                 let mut buf = *self.buffer.borrow_mut();
                 renderer.render(&mut buf, Display::HORIZONTAL_RESOLUTION as _);
                 // Unwrap because the buffer is guaranteed to be the correct size
-                self.display
-                    .borrow_mut()
-                    .draw_buffer(
-                        Rect::from_dimensions(
-                            [0, 0],
-                            Display::HORIZONTAL_RESOLUTION as _,
-                            Display::VERTICAL_RESOLUTION as _,
-                        ),
-                        buf,
-                        Display::HORIZONTAL_RESOLUTION.into(),
-                    );
+                self.display.borrow_mut().draw_buffer(
+                    Rect::from_dimensions(
+                        [0, 0],
+                        Display::HORIZONTAL_RESOLUTION as _,
+                        Display::VERTICAL_RESOLUTION as _,
+                    ),
+                    buf,
+                    Display::HORIZONTAL_RESOLUTION.into(),
+                );
             });
 
             self.window.dispatch_event(self.get_touch_event());

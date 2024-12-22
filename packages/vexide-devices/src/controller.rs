@@ -235,7 +235,10 @@ impl Future for ControllerScreenWriteFuture<'_> {
                 ControllerScreen::MAX_COLUMNS
             );
 
-            let text = text.as_deref().map_err(Clone::clone).expect("A NUL (0x00) character was found in the text input string.");
+            let text = text
+                .as_deref()
+                .map_err(Clone::clone)
+                .expect("A NUL (0x00) character was found in the text input string.");
 
             match validate_connection(controller.id) {
                 Ok(()) => {
@@ -543,7 +546,8 @@ impl ControllerScreen {
         );
 
         let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text.as_ref()).expect("A NUL (0x00) character was found in the text input string.");
+        let text = CString::new(text.as_ref())
+            .expect("A NUL (0x00) character was found in the text input string.");
 
         if unsafe {
             vexControllerTextSet(
