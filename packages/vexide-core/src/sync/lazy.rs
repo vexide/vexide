@@ -1,4 +1,4 @@
-use core::{cell::UnsafeCell, fmt::Debug, mem::ManuallyDrop, ops::Deref};
+use core::{cell::UnsafeCell, fmt::Debug, mem::ManuallyDrop};
 
 use super::Once;
 

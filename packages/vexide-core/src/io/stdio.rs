@@ -63,26 +63,24 @@ pub const fn stdout() -> Stdout {
     Stdout
 }
 
-impl Write for Stdout {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.lock().write(buf)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        self.lock().flush()
-    }
-}
-
 impl Stdout {
     /// The size of the internal VEXOs FIFO serial out buffer.
     pub const INTERNAL_BUFFER_SIZE: usize = 2048;
 
     /// Locks the stdout for writing.
-    /// This function is blocking and will wait until the lock is acquired.
-    pub fn lock(&self) -> StdoutLock<'static> {
+    /// This function is will wait until the lock is acquired.
+    pub async fn lock(&self) -> StdoutLock<'static> {
         StdoutLock {
-            inner: STDOUT.lock_blocking(),
+            inner: STDOUT.lock().await,
         }
+    }
+    /// Attempts to lock the stdout for writing.
+    ///
+    /// This function will return `None` if the lock could not be acquired.
+    pub fn try_lock(&self) -> Option<StdoutLock<'static>> {
+        Some(StdoutLock {
+            inner: STDOUT.try_lock()?,
+        })
     }
 }
 
@@ -127,22 +125,24 @@ impl io::Read for StdinLock<'_> {
 /// A handle to the serial input stream of this program.
 pub struct Stdin;
 
-impl io::Read for Stdin {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.lock().read(buf)
-    }
-}
-
 impl Stdin {
     /// The size of the internal VEXOs serial in buffer.
     pub const STDIN_BUFFER_SIZE: usize = 4096;
 
     /// Locks the stdin for reading.
     /// This function is blocking and will wait until the lock is acquired.
-    pub fn lock(&self) -> StdinLock<'static> {
+    pub async fn lock(&self) -> StdinLock<'static> {
         StdinLock {
-            inner: STDIN.lock_blocking(),
+            inner: STDIN.lock().await,
         }
+    }
+    /// Attempts to lock the stdin for writing.
+    ///
+    /// This function will return `None` if the lock could not be acquired.
+    pub fn try_lock(&self) -> Option<StdinLock<'static>> {
+        Some(StdinLock {
+            inner: STDIN.try_lock()?,
+        })
     }
 }
 
@@ -170,9 +170,15 @@ macro_rules! print {
     ($($arg:tt)*) => {{
 		{
 			use $crate::io::Write;
-			if let Err(e) = $crate::io::stdout().write_fmt(format_args!($($arg)*)) {
-				panic!("failed printing to stdout: {e}");
-			}
+            // Silently ignore the print if stdout is not available.
+            // While this is less than ideal,
+            // the alternative is either a complete deadlock or writing unsafely without locking.
+            let mut stdout =  $crate::io::stdout().try_lock();
+            if let Some(lock) = stdout.as_mut() {
+                if let Err(e) = lock.write_fmt(format_args!($($arg)*)) {
+                    panic!("failed printing to stdout: {e}");
+                }
+            }
 		}
     }};
 }
