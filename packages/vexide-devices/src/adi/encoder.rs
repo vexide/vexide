@@ -20,9 +20,11 @@
 //! ## Connecting to the V5 Brain
 //!
 //! The Optical Shaft Encoder is a two-wire device that must be connected to two adjacent ports on
-//! the same brain/ADI expander. The top wire must be plugged into an odd-numbered port (A, C, E, G),
-//! while the bottom wire must be plugged into the port directly above the top wire (that is, B, D, F, or
-//! H, respectively).
+//! the same brain/ADI expander. One of the wires must be plugged into an odd-numbered port (A, C, E, G),
+//! while the other wire must be plugged into the port directly above that wire (that is, B, D, F, or
+//! H, respectively). If the top wire is plugged into the lower odd-numbered port (A, C, E, G), then
+//! *clockwise* rotation will represent a positive change in position. If the bottom wire is plugged into
+//! the lower port, then *counterclockwise* rotation will be positive instead.
 //!
 //! # Comparison to [`RotationSensor`]
 //!
@@ -76,8 +78,8 @@ impl AdiEncoder {
     ///
     /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s,
     ///   returns [`EncoderError::ExpanderPortMismatch`].
-    /// - If the top port is not odd (A, C, E, G), returns [`EncoderError::BadTopPort`].
-    /// - If the bottom port is not the next after the top port, returns [`EncoderError::BadBottomPort`].
+    /// - If the ports are not directly next to each other or in an invalid position (one port is not in A, C, E, G and
+    ///   the other is not in in B, D, F), returns [`EncoderError::BadPortPlacement`].
     ///
     /// # Examples
     ///
@@ -98,9 +100,9 @@ impl AdiEncoder {
     ///     }
     /// }
     /// ```
-    pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, EncoderError> {
-        let top_port = ports.0;
-        let bottom_port = ports.1;
+    pub fn new((top_port, bottom_port): (AdiPort, AdiPort)) -> Result<Self, EncoderError> {
+        let top_number = top_port.number();
+        let bottom_number = bottom_port.number();
 
         // Port error handling - two-wire devices are a little weird with this sort of thing.
         // TODO: This could be refactored to share logic with the range finder.
@@ -114,16 +116,15 @@ impl AdiEncoder {
                 bottom_port_expander: bottom_port.expander_number()
             }
         );
-        // Top must be on an odd indexed port (A, C, E, G).
+
+        // Top and bottom must be some combination of (AB, CD, EF, GH) or (BA, CD, FE, HG)
+        let top_is_even = top_number % 2 == 0;
         ensure!(
-            top_port.index() % 2 != 0,
-            BadTopPortSnafu {
-                port: top_port.number()
-            }
-        );
-        // Bottom must be directly next to top on the higher port index.
-        ensure!(
-            bottom_port.index() == (top_port.index() + 1),
+            if top_is_even {
+                bottom_number == top_number - 1
+            } else {
+                bottom_number == top_number + 1
+            },
             BadBottomPortSnafu {
                 top_port: top_port.number(),
                 bottom_port: bottom_port.number()
@@ -281,12 +282,12 @@ pub enum EncoderError {
         port: u8,
     },
 
-    /// The bottom wire must be plugged in directly above the top wire.
+    /// Ports must be placed directly next to each other, with the ports being some combination of (AB, CD, EF, GH) or (BA, CD, EF, HG).
+    // TODO: Change this to be named `BadPortPlacement` in the next major release.
     #[snafu(display(
-        "The bottom ADI port provided (`{}`) was not directly above the top port (`{}`). Instead, it should be port `{}`.",
-        adi_port_name(*bottom_port),
+        "Encoder ports must be placed directly next to each other and in some combination of AB, CD, EF, GH, or BA, CD, EF, HG. (Got `{}{}`)",
         adi_port_name(*top_port),
-        adi_port_name(*top_port + 1),
+        adi_port_name(*bottom_port),
     ))]
     BadBottomPort {
         /// The bottom port number that caused the error.

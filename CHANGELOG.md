@@ -25,6 +25,7 @@ Before releasing:
 
 ### Fixed
 
+- Fixed error handling for encoder port numbers. (#264)
 - Fixed an internal issue regarding units with `Motor::set_position`.
 
 ### Changed
