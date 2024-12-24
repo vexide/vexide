@@ -90,7 +90,7 @@ impl Platform for V5Platform {
             self.window.draw_if_needed(|renderer| {
                 let mut buf = *self.buffer.borrow_mut();
                 renderer.render(&mut buf, Display::HORIZONTAL_RESOLUTION as _);
-                // Unwrap because the buffer is guaranteed to be the correct size
+
                 self.display.borrow_mut().draw_buffer(
                     Rect::from_dimensions(
                         [0, 0],
