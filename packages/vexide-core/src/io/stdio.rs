@@ -68,7 +68,7 @@ impl Stdout {
     pub const INTERNAL_BUFFER_SIZE: usize = 2048;
 
     /// Locks the stdout for writing.
-    /// This function is will wait until the lock is acquired.
+    /// This function will wait until the lock is acquired.
     pub async fn lock(&self) -> StdoutLock<'static> {
         StdoutLock {
             inner: STDOUT.lock().await,
