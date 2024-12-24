@@ -170,14 +170,12 @@ macro_rules! print {
     ($($arg:tt)*) => {{
 		{
 			use $crate::io::Write;
-            // Silently ignore the print if stdout is not available.
+            // Panic on print if stdout is not available.
             // While this is less than ideal,
-            // the alternative is either a complete deadlock or writing unsafely without locking.
-            let mut stdout =  $crate::io::stdout().try_lock();
-            if let Some(lock) = stdout.as_mut() {
-                if let Err(e) = lock.write_fmt(format_args!($($arg)*)) {
-                    panic!("failed printing to stdout: {e}");
-                }
+            // the alternative is either ingoring the print, a complete deadlock, or writing unsafely without locking.
+            let mut stdout =  $crate::io::stdout().try_lock().expect("Attempted to print while stdout was already locked.");
+            if let Err(e) = stdout.write_fmt(format_args!($($arg)*)) {
+                panic!("failed printing to stdout: {e}");
             }
 		}
     }};
