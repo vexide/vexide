@@ -26,6 +26,7 @@ Before releasing:
 ### Fixed
 
 - Fixed an internal issue regarding units with `Motor::set_position`.
+- Fixed `File::seek` seeking to the wrong position when using `SeekFrom::End` with a negative offset. (#267)
 
 ### Changed
 
