@@ -19,22 +19,22 @@
 //!
 //! # Effective Range
 //!
-//! The usable range of the Range Finder is between 1.5” (3.0cm) and 115” (300cm). When the sensor
-//! attempts to measure an object at less than 1.5”, the sound echos back too quickly for the
-//! sensor to detect and much beyond 115” the intensity of the sound is too weak to detect.
+//! The usable range of the Range Finder is between 1.5" (3.0cm) and 115" (300cm). When the sensor
+//! attempts to measure an object at less than 1.5", the sound echos back too quickly for the
+//! sensor to detect and much beyond 115" the intensity of the sound is too weak to detect.
 //!
 //! Since the Ultrasonic Rangefinder relies on sound waves, surfaces that absorb or deflect sound
 //! (such as cushioned surfaces or sharp angles) will limit the operating range of the sensor.
 //!
 //! # Wiring
 //!
-//! The sensor has two 3-Wire Cables. There is a black, red, and orange “Output” cable which
-//! pulses power to a 40KHz speaker; and a black, red, and yellow “Input” cable which sends a
+//! The sensor has two 3-Wire Cables. There is a black, red, and orange "Output" cable which
+//! pulses power to a 40KHz speaker; and a black, red, and yellow "Input" cable which sends a
 //! signal back from its high frequency microphone receiver.
 //!
 //! When wiring the Ultrasonic Rangefinder to the, both wires must be plugged into adjacent ADI
-//! ports. For the sensor to work properly, the “INPUT” wire must be in an odd-numbered slot
-//! (A, C, E, G), and the “OUTPUT” wire must be in the higher slot next to the input wire.
+//! ports. For the sensor to work properly, the "OUTPUT" wire must be in an odd-numbered slot
+//! (A, C, E, G), and the "INPUT" wire must be in the higher slot next to the input wire.
 
 use snafu::{ensure, Snafu};
 use vex_sdk::vexDeviceAdiValueGet;
@@ -44,7 +44,7 @@ use crate::{adi::adi_port_name, PortError};
 
 /// Range Finder
 ///
-/// Requires two ports - one for pinging, and one for listening for the response.
+/// Requires two ports - one for pinging (output), and one for listening for the response (input).
 /// This output port ("ping") must be indexed directly below the input ("echo") port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiRangeFinder {
@@ -60,7 +60,7 @@ impl AdiRangeFinder {
     /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s,
     ///   returns [`RangeFinderError::ExpanderPortMismatch`].
     /// - If the output port is not odd (A, C, E, G), returns [`RangeFinderError::BadInputPort`].
-    /// - If the input port is not the next after the top port, returns [`RangeFinderError::BadOutputPort`].
+    /// - If the input port is not the next after the output port, returns [`RangeFinderError::BadOutputPort`].
     ///
     /// # Examples
     ///
@@ -77,9 +77,9 @@ impl AdiRangeFinder {
     ///     }
     /// }
     /// ```
-    pub fn new(ports: (AdiPort, AdiPort)) -> Result<Self, RangeFinderError> {
-        let output_port = ports.0;
-        let input_port = ports.1;
+    pub fn new((output_port, input_port): (AdiPort, AdiPort)) -> Result<Self, RangeFinderError> {
+        let output_number = output_port.number();
+        let input_number = input_port.number();
 
         // Input and output must be plugged into the same ADI expander.
         ensure!(
@@ -89,19 +89,20 @@ impl AdiRangeFinder {
                 bottom_port_expander: output_port.expander_number()
             }
         );
-        // Input must be on an odd indexed port (A, C, E, G).
+
+        // Output must be on an odd indexed port (A, C, E, G).
         ensure!(
-            input_port.index() % 2 != 0,
+            output_number % 2 != 0,
             BadInputPortSnafu {
-                port: input_port.number()
+                port: output_number
             }
         );
-        // Output must be directly next to top on the higher port index.
+        // Input must be directly next to top on the higher port index.
         ensure!(
-            output_port.index() == (input_port.index() + 1),
+            input_number == output_number + 1,
             BadOutputPortSnafu {
-                top_port: input_port.number(),
-                bottom_port: output_port.number()
+                input_port: input_number,
+                output_port: output_number,
             }
         );
 
@@ -171,9 +172,10 @@ pub enum RangeFinderError {
     /// The sensor is unable to return a valid reading.
     NoReading,
 
-    /// The input wire must be on an odd numbered port (A, C, E, G).
+    /// The output wire must be on an odd numbered port (A, C, E, G).
+    // TODO: Change this to be `BadOutputPort`.
     #[snafu(display(
-        "The input ADI port provided (`{}`) was not odd numbered (A, C, E, G).",
+        "The output ADI port provided (`{}`) was not odd numbered (A, C, E, G).",
         adi_port_name(*port)
     ))]
     BadInputPort {
@@ -181,18 +183,18 @@ pub enum RangeFinderError {
         port: u8,
     },
 
-    /// The bottom wire must be plugged in directly above the top wire.
+    /// The input wire must be plugged in directly above the output wire.
     #[snafu(display(
-        "The output ADI port provided (`{}`) was not directly above the input port (`{}`). Instead, it should be port `{}`.",
-        adi_port_name(*bottom_port),
-        adi_port_name(*top_port),
-        adi_port_name(*top_port + 1),
+        "The input ADI port provided (`{}`) was not directly above the output port (`{}`). Instead, it should be port `{}`.",
+        adi_port_name(*input_port),
+        adi_port_name(*output_port),
+        adi_port_name(*output_port + 1),
     ))]
     BadOutputPort {
         /// The bottom port number that caused the error.
-        bottom_port: u8,
+        input_port: u8,
         /// The top port number that caused the error.
-        top_port: u8,
+        output_port: u8,
     },
 
     /// The specified top and bottom ports may belong to different ADI expanders.
