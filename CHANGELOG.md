@@ -19,7 +19,7 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
-## [Unreleased]
+## [0.4.1]
 
 ### Added
 
@@ -31,7 +31,6 @@ Before releasing:
 
 ### Changed
 
-- Renamed `Once::is_complete` to `Once::is_completed` for consistency with the standard library. (#257) (**Breaking Change**)
 - All `Position` methods are now usable in `const` context. (#254)
 
 ### Removed

@@ -31,7 +31,7 @@ impl<T, I: FnOnce() -> T> LazyLock<T, I> {
     /// containing the initializer function.
     pub fn into_inner(self) -> Result<T, I> {
         let mut data = unsafe { core::ptr::read(&self.data).into_inner() };
-        match self.once.is_completed() {
+        match self.once.is_complete() {
             true => Ok(unsafe { ManuallyDrop::take(&mut data.data) }),
             false => Err(unsafe { ManuallyDrop::take(&mut data.init) }),
         }
@@ -81,7 +81,7 @@ impl<T, I: FnOnce() -> T> Deref for LazyLock<T, I> {
 impl<T: Debug, I> Debug for LazyLock<T, I> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut struct_ = f.debug_struct("LazyLock");
-        if self.once.is_completed() {
+        if self.once.is_complete() {
             struct_.field("data", unsafe { &(*self.data.get()).data });
         } else {
             struct_.field("data", &"Uninitialized");
@@ -91,7 +91,7 @@ impl<T: Debug, I> Debug for LazyLock<T, I> {
 }
 impl<T, I> Drop for LazyLock<T, I> {
     fn drop(&mut self) {
-        match self.once.is_completed() {
+        match self.once.is_complete() {
             true => unsafe {
                 ManuallyDrop::drop(&mut (*self.data.get()).data);
             },
