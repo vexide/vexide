@@ -24,7 +24,7 @@ pub fn print(theme: BannerTheme) {
     const DISABLED: u32 = 1 << 0;
     const AUTONOMOUS: u32 = 1 << 1;
 
-    const VEXIDE_VERSION: &str = "0.5.1";
+    const VEXIDE_VERSION: &str = "0.5.2";
 
     let system_version = unsafe { vexSystemVersion() }.to_be_bytes();
     let competition_status = unsafe { vexCompetitionStatus() };
