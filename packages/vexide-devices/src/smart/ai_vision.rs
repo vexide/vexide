@@ -201,6 +201,7 @@ pub struct AiVisionColor {
 }
 
 /// A color code used by an AI Vision Sensor to detect groups of color blobs.
+///
 /// The color code can have up to 7 color signatures.
 /// When the colors in a color code are detected next to eachother, the sensor will detect the color code.
 pub struct AiVisionColorCode([Option<u8>; 7]);

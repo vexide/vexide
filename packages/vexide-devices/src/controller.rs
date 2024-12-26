@@ -181,6 +181,7 @@ enum ControllerScreenWriteFutureState<'a> {
 }
 
 /// A future that completes once a write to the controller screen has been performed.
+///
 /// This future waits until the controller is able to accept a new write
 /// and fails if the controller is disconnected or if the requested write is bad.
 pub struct ControllerScreenWriteFuture<'a> {
