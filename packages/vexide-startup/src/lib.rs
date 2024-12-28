@@ -123,17 +123,17 @@ unsafe fn overwrite_with_new(new: &[u8]) -> ! {
         core::ptr::copy_nonoverlapping(new.as_ptr(), 0x0380_0000 as _, new.len());
 
         // invalidate caches
-        // see <https://developer.arm.com/documentation/den0042/a/Caches/Invalidating-and-cleaning-cache-memory>
+        // see <https://developer.arm.com/documentation/den0013/d/Caches/Invalidating-and-cleaning-cache-memory>
         core::arch::asm!(
             "
             mrc p15, 0, r1, c1, c0, 0           @ Read System Control Register (SCTLR)
-            bic r1, r1, #1                      @ mpu off
+            bic r1, r1, #1                      @ mmu off
             bic r1, r1, #(1 << 12)              @ i-cache off
             bic r1, r1, #(1 << 2)               @ d-cache & L2-$ off
             mcr p15, 0, r1, c1, c0, 0           @ Write System Control Register (SCTLR)
 
             mrc p15, 0, r1, c1, c0, 0           @ Read System Control Register (SCTLR)
-            bic r1, r1, #1                      @ mpu off
+            bic r1, r1, #1                      @ mmu off
             bic r1, r1, #(1 << 12)              @ i-cache off
             bic r1, r1, #(1 << 2)               @ d-cache & L2-$ off
             mcr p15, 0, r1, c1, c0, 0           @ Write System Control Register (SCTLR)
@@ -141,12 +141,13 @@ unsafe fn overwrite_with_new(new: &[u8]) -> ! {
             mov     r0, #0
             mcr     p15, 0, r0, c7, c5, 0       @ Invalidate Instruction Cache
             mcr     p15, 0, r0, c7, c5, 6       @ Invalidate branch prediction array
-            isb                                 @ Instruction Synchronization Barrier
+            mcr     p15, 0, r0, c8, c7, 0       @ Invalidate entire Unified Main TLB
+            isb                                 @ instr sync barrier
 
-            mrc     p15, 0, r0, c1, c0, 0       @ System control register
-            orr     r0, r0, #1 << 12            @ Instruction cache enable
-            orr     r0, r0, #1 << 11            @ Program flow prediction
-            mcr     p15, 0, r0, c1, c0, 0       @ System control register
+            MRC     p15, 0, r0, c1, c0, 0           @ System control register
+            ORR     r0, r0, #1 << 12                @ Instruction cache enable
+            ORR     r0, r0, #1 << 11                @ Program flow prediction
+            MCR     p15, 0, r0, c1, c0, 0           @ System control register
 
             b _boot
         ", options(noreturn)
