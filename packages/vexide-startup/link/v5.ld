@@ -3,7 +3,7 @@ OUTPUT_FORMAT("elf32-littlearm")
 ENTRY(_boot)
 
 __user_ram_start = 0x03800000;
-__user_ram_length = 0x04800000;
+__user_ram_length = 0x04000000; /* This is actually 0x04800000, but we don't want the stack colliding with the linked patch. */
 __user_ram_end = __user_ram_start + __user_ram_length;
 
 __code_signature_length = 0x20;
@@ -32,6 +32,7 @@ SECTIONS {
 
     .text : {
         *(.boot)
+        *(.overwriter)
         *(.text .text.*)
     } > USER_RAM
 
