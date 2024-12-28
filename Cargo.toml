@@ -5,6 +5,7 @@ version = "0.0.1"
 
 [dev-dependencies]
 vexide = { path = "packages/vexide" }
+vex-sdk = "0.26.0"
 
 [workspace]
 members = ["packages/*"]
