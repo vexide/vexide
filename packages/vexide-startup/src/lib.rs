@@ -18,6 +18,7 @@ extern crate alloc;
 use banner::themes::BannerTheme;
 use bitflags::bitflags;
 use varint_slop::VarIntReader;
+use vex_sdk::vexDisplayString;
 use vexide_core::io::{Cursor, Read, Seek, SeekFrom};
 
 pub mod banner;
@@ -120,7 +121,36 @@ _boot:
 unsafe fn overwrite_with_new(new: &[u8]) -> ! {
     unsafe {
         core::ptr::copy_nonoverlapping(new.as_ptr(), 0x0380_0000 as _, new.len());
-        core::arch::asm!("b _boot", options(noreturn));
+
+        // invalidate caches
+        // see <https://developer.arm.com/documentation/den0042/a/Caches/Invalidating-and-cleaning-cache-memory>
+        core::arch::asm!(
+            "
+            mrc p15, 0, r1, c1, c0, 0           @ Read System Control Register (SCTLR)
+            bic r1, r1, #1                      @ mpu off
+            bic r1, r1, #(1 << 12)              @ i-cache off
+            bic r1, r1, #(1 << 2)               @ d-cache & L2-$ off
+            mcr p15, 0, r1, c1, c0, 0           @ Write System Control Register (SCTLR)
+
+            mrc p15, 0, r1, c1, c0, 0           @ Read System Control Register (SCTLR)
+            bic r1, r1, #1                      @ mpu off
+            bic r1, r1, #(1 << 12)              @ i-cache off
+            bic r1, r1, #(1 << 2)               @ d-cache & L2-$ off
+            mcr p15, 0, r1, c1, c0, 0           @ Write System Control Register (SCTLR)
+
+            mov     r0, #0
+            mcr     p15, 0, r0, c7, c5, 0       @ Invalidate Instruction Cache
+            mcr     p15, 0, r0, c7, c5, 6       @ Invalidate branch prediction array
+            isb                                 @ Instruction Synchronization Barrier
+
+            mrc     p15, 0, r0, c1, c0, 0       @ System control register
+            orr     r0, r0, #1 << 12            @ Instruction cache enable
+            orr     r0, r0, #1 << 11            @ Program flow prediction
+            mcr     p15, 0, r0, c1, c0, 0       @ System control register
+
+            b _boot
+        ", options(noreturn)
+        );
     }
 }
 
@@ -172,6 +202,7 @@ enum PatcherState {
 ///
 /// Must be called once at the start of program execution after the stack has been setup.
 #[inline]
+#[allow(clippy::too_many_lines)]
 pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     #[cfg(target_vendor = "vex")]
     unsafe {
@@ -215,7 +246,8 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
 
                 // We have to ensure that the heap does not overlap the memory space from the new binary.
                 vexide_core::allocator::claim(
-                    (USER_MEMORY_START + new_binary_len) as *mut u8,
+                    (USER_MEMORY_START + new_binary_len).max(&raw const __heap_start as u32)
+                        as *mut u8,
                     &raw mut __heap_end,
                 );
 
@@ -225,13 +257,13 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
                     patch_len as usize - (size_of::<u32>() * 5),
                 );
 
-                // Slice of the executable portion of the currently running program (this one!)
+                // Slice of the executable portion of the currently running program (this one currently running this code).
                 let mut old = Cursor::new(core::slice::from_raw_parts_mut(
                     USER_MEMORY_START as *mut u8,
                     old_binary_len as usize,
                 ));
 
-                // `bidiff` does not patch in-place, meaning we need a copy of our currently running binary on the heap
+                // `bidiff` does not patch in-place, meaning we need a copy of our currently running binary onto the heap
                 // that we will apply our patch to using our actively running binary as a reference point for the "old" bits.
                 // After that, `apply_patch` will handle safely overwriting user code with our "new" version on the heap.
                 let mut new_vec = alloc::vec![0; new_binary_len as usize];
@@ -241,7 +273,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
                 //
                 // This is basically a port of <https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs>
 
-                let mut buf = alloc::vec![0u8; 4096];
+                let mut buf = [0u8; 4096];
 
                 let mut state = PatcherState::Initial;
 
@@ -305,7 +337,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
     }
 
-    // Print the bannerx
+    // Print the banner
     if BANNER {
         banner::print(theme);
     }
