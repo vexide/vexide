@@ -19,7 +19,7 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
-## [Unrealised]
+## [Unreleased]
 
 ### Added
 
@@ -31,7 +31,7 @@ Before releasing:
 
 ### New Contributors
 
-## [0.5.1]
+## [0.5.2]
 
 ### Added
 
@@ -314,3 +314,4 @@ Before releasing:
 [0.4.2]: https://github.com/vexide/vexide/compare/v0.4.1...v0.4.2
 [0.5.0]: https://github.com/vexide/vexide/compare/v0.4.2...v0.5.0
 [0.5.1]: https://github.com/vexide/vexide/compare/v0.5.0...v0.5.1
+[0.5.2]: https://github.com/vexide/vexide/compare/v0.5.1...v0.5.2
