@@ -59,8 +59,8 @@ impl AdiRangeFinder {
     ///
     /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s,
     ///   returns [`RangeFinderError::ExpanderPortMismatch`].
-    /// - If the output port is not odd (A, C, E, G), returns [`RangeFinderError::BadInputPort`].
-    /// - If the input port is not the next after the output port, returns [`RangeFinderError::BadOutputPort`].
+    /// - If the output port is not odd (A, C, E, G), returns [`RangeFinderError::BadOutputPort`].
+    /// - If the input port is not the next after the output port, returns [`RangeFinderError::BadInputPort`].
     ///
     /// # Examples
     ///
@@ -69,7 +69,7 @@ impl AdiRangeFinder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let range_finder = AdiRangeFinder::new((peripherals.adi_a, peripherals.adi_b)).expect("Failed to create range finder");
+    ///     let range_finder = AdiRangeFinder::new(peripherals.adi_a, peripherals.adi_b).expect("Failed to create range finder");
     ///     loop {
     ///         let distance = range_finder.distance().expect("Failed to get distance");
     ///         println!("Distance: {} cm", distance);
@@ -77,7 +77,7 @@ impl AdiRangeFinder {
     ///     }
     /// }
     /// ```
-    pub fn new((output_port, input_port): (AdiPort, AdiPort)) -> Result<Self, RangeFinderError> {
+    pub fn new(output_port: AdiPort, input_port: AdiPort) -> Result<Self, RangeFinderError> {
         let output_number = output_port.number();
         let input_number = input_port.number();
 
@@ -93,14 +93,14 @@ impl AdiRangeFinder {
         // Output must be on an odd indexed port (A, C, E, G).
         ensure!(
             output_number % 2 != 0,
-            BadInputPortSnafu {
+            BadOutputPortSnafu {
                 port: output_number
             }
         );
         // Input must be directly next to top on the higher port index.
         ensure!(
             input_number == output_number + 1,
-            BadOutputPortSnafu {
+            BadInputPortSnafu {
                 input_port: input_number,
                 output_port: output_number,
             }
@@ -130,7 +130,7 @@ impl AdiRangeFinder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let range_finder = AdiRangeFinder::new((peripherals.adi_a, peripherals.adi_b)).expect("Failed to create range finder");
+    ///     let range_finder = AdiRangeFinder::new(peripherals.adi_a, peripherals.adi_b).expect("Failed to create range finder");
     ///     loop {
     ///         let distance = range_finder.distance().expect("Failed to get distance");
     ///         println!("Distance: {} cm", distance);
@@ -173,12 +173,11 @@ pub enum RangeFinderError {
     NoReading,
 
     /// The output wire must be on an odd numbered port (A, C, E, G).
-    // TODO: Change this to be `BadOutputPort`.
     #[snafu(display(
         "The output ADI port provided (`{}`) was not odd numbered (A, C, E, G).",
         adi_port_name(*port)
     ))]
-    BadInputPort {
+    BadOutputPort {
         /// The port number that caused the error.
         port: u8,
     },
@@ -190,7 +189,7 @@ pub enum RangeFinderError {
         adi_port_name(*output_port),
         adi_port_name(*output_port + 1),
     ))]
-    BadOutputPort {
+    BadInputPort {
         /// The bottom port number that caused the error.
         input_port: u8,
         /// The top port number that caused the error.
