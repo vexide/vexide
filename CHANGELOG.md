@@ -34,13 +34,13 @@ Before releasing:
 
 - Renamed `Once::is_complete` to `Once::is_completed` for consistency with the standard library. (#257) (**Breaking Change**)
 - All `Position` methods are now usable in `const` context. (#254)
-- Two-wire ADI devices (`AdiEncoder` and `AdiRangeFinder`) now take their ports as separate arguments instead of a tuple. (#) (**Breaking Change**)
-- Renamed `EncoderError::BadBottomPort` to `EncoderError::BadPortPlacement`.  (#) (**Breaking Change**)
-- Swapped the naming of `RangeFinderError::BadInputPort` and `RangeFinderError::BadOutputPort`.  (#) (**Breaking Change**)
+- Two-wire ADI devices (`AdiEncoder` and `AdiRangeFinder`) now take their ports as separate arguments instead of a tuple. (#271) (**Breaking Change**)
+- Renamed `EncoderError::BadBottomPort` to `EncoderError::BadPortPlacement`. (#271) (**Breaking Change**)
+- Swapped the naming of `RangeFinderError::BadInputPort` and `RangeFinderError::BadOutputPort`. (#271) (**Breaking Change**)
 
 ### Removed
 
-- Renmoved `EncoderError::BadTopPort`. (#) (**Breaking Change**)
+- Renmoved `EncoderError::BadTopPort`. (#271) (**Breaking Change**)
 
 ### New Contributors
 
