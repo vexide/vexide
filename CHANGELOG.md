@@ -40,7 +40,7 @@ Before releasing:
 
 ### Removed
 
-- Renmoved `EncoderError::BadTopPort`. (#271) (**Breaking Change**)
+- Removed `EncoderError::BadTopPort`. (#271) (**Breaking Change**)
 
 ### New Contributors
 
