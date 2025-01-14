@@ -7,7 +7,7 @@ use vexide::prelude::*;
 
 #[vexide::main]
 async fn main(_peripherals: Peripherals) {
-    println!("Henlooooo");
+    println!("helo :33");
 
     loop {
         sleep(Duration::from_millis(500)).await;
