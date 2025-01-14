@@ -113,43 +113,14 @@ _boot:
 "#
 );
 
-// TODO: rewrite in assembly to prevent this function from possibly patching itself due to
-// differences between debug/release codegen and rustc updates.
-#[unsafe(link_section = ".overwriter")]
-#[inline(never)]
-unsafe fn overwrite_with_new(new: &[u8]) -> ! {
-    unsafe {
-        core::ptr::copy_nonoverlapping(new.as_ptr(), 0x0380_0000 as _, new.len());
-
-        // invalidate caches
-        // see <https://developer.arm.com/documentation/den0013/d/Caches/Invalidating-and-cleaning-cache-memory>
-        core::arch::asm!(
-            "
-            @ 1. Disable all the things while we do maintenance.
-            mrc p15, 0, r1, c1, c0, 0           @ SCTLR -> r1
-            mov r0, r1                          @ Save initial SCTLR into r0
-            bic r1, r1, #1                      @ Disable MMU
-            bic r1, r1, #(1 << 12)              @ Disable icache
-            bic r1, r1, #(1 << 2)               @ Disable dcache and L2C
-            mcr p15, 0, r1, c1, c0, 0           @ r1 -> SCTLR
-
-            @ 2. Cache maintenance
-            mov     r1, #0
-            mcr     p15, 0, r1, c7, c5, 0       @ Invalidate icache
-            mcr     p15, 0, r1, c7, c5, 6       @ Invalidate branch predictor
-            mcr     p15, 0, r1, c8, c7, 0       @ Invalidate main TLB
-            isb
-
-            @ 3. Restore initial SCTLR from r0.
-            mcr     p15, 0, r0, c1, c0, 0       @ r0 -> SCTLR
-
-            @ 4. Branch to _boot again with our now-patched program.
-            b _boot
-        ",
-            options(noreturn)
-        );
-    }
-}
+// Assembly implementation of the patch overwriter (`__patcher_overwrite`).
+//
+// The overwriter is responsible for self-modifying the currently running code
+// in memory with the new version on the heap built by the first patcher stage.
+//
+// In other words, this code is responsible for actually "applying" the patch.
+core::arch::global_asm!(include_str!("./overwriter_aeabi_memcpy.S"));
+core::arch::global_asm!(include_str!("./overwriter.S"));
 
 /// Zeroes the `.bss` section
 ///
@@ -210,7 +181,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         );
     }
 
-    'patch: {
+    'patcher: {
         const PATCH_MAGIC: u32 = 0xB1DF;
         const PATCH_VERSION: u32 = 0x1000;
         const USER_MEMORY_START: u32 = 0x0380_0000;
@@ -224,34 +195,37 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
             let patch_ptr = PATCH_MEMORY_START as *mut u32;
 
             unsafe {
-                // We first need to validate that the linked file is indeed a patch. The first 32 bits
-                // (starting at link_addr+0) should always be 0xB1DF, and the 32 bits after should contain
-                // a version constant that matches ours. If either of these checks fail, then we boot normally.
-                if patch_ptr.read() != PATCH_MAGIC || patch_ptr.offset(1).read() != PATCH_VERSION {
-                    // TODO: reclaim as heap space.
-                    break 'patch;
+                // First few bytes contain some important metadata we'll need to setup the patch.
+                let patch_magic = patch_ptr.read(); // Should be 0xB1DF if the patch needs to be applied.
+                let patch_version = patch_ptr.offset(1).read(); // Shoud be 0x1000
+                let patch_len = patch_ptr.offset(2).read(); // length of the patch buffer
+                let old_binary_len = patch_ptr.offset(3).read(); // length of the currently running binary
+                let new_binary_len = patch_ptr.offset(4).read(); // length of the new binary after the patch
+                let new_heap_start = patch_ptr.offset(5).read(); // address of the __heap_start address in the new binary
+
+                // Do not proceed with the patch if:
+                // - We have an unexpected PATCH_MAGIC (this is edited after the fact to 0xB2Df intentionally break out of here).
+                // - Our patch format version does not match the version in the patch.
+                // - There isn't anything to patch.
+                if patch_magic != PATCH_MAGIC || patch_version != PATCH_VERSION || patch_len == 0 {
+                    // TODO(tropix126): We could reclaim the patch as heap space maybe? Not a high priority.
+                    break 'patcher;
                 }
 
                 // Overwrite patch magic so we don't re-apply the patch next time.
                 patch_ptr.write(0xB2DF);
 
-                // Next few bytes contain metadata about how large our current binary is, as well as the length of
-                // the patch itself. We need this for the next step.
-                let patch_len = patch_ptr.offset(2).read();
-                let old_binary_len = patch_ptr.offset(3).read();
-                let new_binary_len = patch_ptr.offset(4).read();
-
-                // We have to ensure that the heap does not overlap the memory space from the new binary.
+                // Create a temporary heap at a location that will not overlap the binary after being patched.
                 vexide_core::allocator::claim(
-                    (USER_MEMORY_START + new_binary_len).max(&raw const __heap_start as u32)
-                        as *mut u8,
+                    // .max(__heap_start) handles the case where the new binary is smaller than the old.
+                    (new_heap_start).max(&raw const __heap_start as u32) as *mut u8,
                     &raw mut __heap_end,
                 );
 
                 // Slice representing our patch contents.
                 let mut patch = core::slice::from_raw_parts(
-                    patch_ptr.offset(5).cast(),
-                    patch_len as usize - (size_of::<u32>() * 5),
+                    patch_ptr.offset(6).cast(),
+                    patch_len as usize - (size_of::<u32>() * 6),
                 );
 
                 // Slice of the executable portion of the currently running program (this one currently running this code).
@@ -324,7 +298,14 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
                     new = &mut new[processed..];
                 }
 
-                overwrite_with_new(&new_vec);
+                // Jump to the overwriter to handle the rest.
+                core::arch::asm!(
+                    "mov r0, #0x03800000",
+                    "b __patcher_overwrite",
+                    in("r1") new_vec.as_ptr(),
+                    in("r2") new_vec.len(),
+                    options(noreturn)
+                );
             }
         }
     }
