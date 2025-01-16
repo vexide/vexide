@@ -14,14 +14,39 @@ __code_signature_length = 0x20;
 
 __stack_length = 0x400000;
 __heap_end = __program_ram_end - __stack_length;
+__program_length = __heap_start - __program_ram_start;
 
 /* see https://github.com/llvm/llvm-project/blob/main/libunwind/src/AddressSpace.hpp#L78 */
 __eh_frame_hdr_start = SIZEOF(.eh_frame_hdr) > 0 ? ADDR(.eh_frame_hdr) : 0;
 __eh_frame_hdr_end = SIZEOF(.eh_frame_hdr) > 0 ? . : 0;
 
 MEMORY {
-    PROGRAM_RAM : ORIGIN = __program_ram_start, LENGTH = __program_ram_length
-    PATCHER_RAM : ORIGIN = __patcher_ram_start, LENGTH = __patcher_ram_length
+    /*
+     * Memory available for (initial) use by the user program.
+     *
+     * This is technically all the way from 0x03800000-0x8000000, but we reserve
+     * the last 6mb for the patcher, which is later reclaimed as heap space.
+     */
+    PROGRAM_RAM (RWX) : ORIGIN = __program_ram_start, LENGTH = __program_ram_length
+
+    /*
+     * Memory reserved for the patcher.
+     *
+     * We reserve last 6mb of the CPU1 RWX region for storing data relating to patch
+     * uploading. This region is further split into three 2mb "subsections":
+     *
+     * - The first 2mb are where the actual patch itself is loaded to.
+     * - The next 2mb is a buffer where the running user program is copied to, which
+     *   will serve as a reference for building the patched binary. We can't use active
+     *   memory to do this, since statics and unwind tables will be written to at runtime,
+     *   messing with the patch.
+     * - The final 2mb is where the new patched binary will be constructed and eventually
+     *   memcpy'd back to __program_ram_start.
+     *
+     * Following the patch process (or if we don't need to patch), this entire region is
+     * claimed as heap space.
+     */
+    PATCHER_RAM (RWX) : ORIGIN = __patcher_ram_start, LENGTH = __patcher_ram_length
 }
 
 SECTIONS {
@@ -81,6 +106,8 @@ SECTIONS {
         *(.ARM.extab*)
         __extab_end = .;
     } > PROGRAM_RAM
+
+    /* -- End of loadable sections - anything beyond this point shouldnt go in the BIN. -- */
 
     /* Active memory regions for the stack/heap. */
     .heap (NOLOAD) : ALIGN(4) {
