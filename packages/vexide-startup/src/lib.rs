@@ -244,10 +244,8 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
                 // `bidiff` does not patch in-place, meaning we need a copy of our currently running binary onto the heap
                 // that we will apply our patch to using our actively running binary as a reference point for the "old" bits.
                 // After that, `apply_patch` will handle safely overwriting user code with our "new" version on the heap.
-                let mut new: &mut [u8] = core::slice::from_raw_parts_mut(
-                    NEW_START as *mut u8,
-                    new_binary_len as usize,
-                );
+                let mut new: &mut [u8] =
+                    core::slice::from_raw_parts_mut(NEW_START as *mut u8, new_binary_len as usize);
 
                 // Apply the patch onto `new`, using `old` as a reference.
                 //
