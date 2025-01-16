@@ -1,5 +1,9 @@
 OUTPUT_FORMAT("elf32-littlearm")
 
+/*
+ * _boot is an assembly routine defined in src/lib.rs that sets
+ * up the stack pointer before jumping to _start (Rust entrypoint).
+ */
 ENTRY(_boot)
 
 __program_ram_start = 0x03800000;
@@ -7,8 +11,8 @@ __program_ram_length = 0x04200000; /* This is actually 0x04800000, but we don't 
 __program_ram_end = __program_ram_start + __program_ram_length;
 
 __patcher_ram_start = 0x07A00000;
-__patcher_ram_length = 0x600000; /* 6mb, 2mb for each segment */
-__patcher_ram_end = __patcher_ram_start + __patcher_ram_length; /* End of CPU1 RWX memory block */
+__patcher_ram_length = 0x600000; /* 6mb total, 2mb for each subsection. */
+__patcher_ram_end = __patcher_ram_start + __patcher_ram_length; /* End of CPU1 RWX memory block. */
 
 __code_signature_length = 0x20;
 
@@ -60,13 +64,21 @@ SECTIONS {
         . = __program_ram_start + __code_signature_length;
     } > PROGRAM_RAM
 
+    /*
+     * Executable program instructions.
+     */
     .text : {
+        /* _boot routine (always runs first, must be at 0x03800020) */
         *(.boot)
+        /* Stage 2 patcher. */
         *(.overwriter)
+        /* Rest of the program. */
         *(.text .text.*)
     } > PROGRAM_RAM
 
-    /* Global/uninitialized/static/constant data sections. */
+    /*
+     * Global/uninitialized/static/constant data sections.
+     */
     .rodata : {
         *(.rodata .rodata.*)
     } > PROGRAM_RAM
@@ -82,6 +94,8 @@ SECTIONS {
     } > PROGRAM_RAM
 
     /*
+     * ARM Stack Unwinding Sections
+     *
      * These sections are added by the compiler in some cases to facilitate stack unwinding.
      * __eh_frame_start and similar symbols are used by libunwind.
      */
@@ -109,7 +123,11 @@ SECTIONS {
 
     /* -- End of loadable sections - anything beyond this point shouldnt go in the BIN. -- */
 
-    /* Active memory regions for the stack/heap. */
+    /*
+     * Active memory sections for the stack/heap.
+     *
+     * Because these are (NOLOAD), they will not influence the final size of the binary.
+     */
     .heap (NOLOAD) : ALIGN(4) {
         __heap_start = .;
         . = __heap_end;
