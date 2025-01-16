@@ -13,8 +13,6 @@
 #![no_std]
 #![allow(clippy::needless_doctest_main)]
 
-extern crate alloc;
-
 use banner::themes::BannerTheme;
 use bitflags::bitflags;
 use varint_slop::VarIntReader;
@@ -108,8 +106,22 @@ core::arch::global_asm!(
 .global _boot
 
 _boot:
-    ldr sp, =__stack_top @ Load the user stack.
-    b _start             @ Jump to the Rust entrypoint.
+    ldr sp, =__stack_top                 @ Load the user stack.
+
+    mov r0, #0x07A00000                  @ Check for patch magic.
+    ldr r0, [r0]
+    ldr r1, =0xB1DF
+    cmp r0, r1
+
+    mov r0, #0x07C00000                  @ Prepare to memcpy binary to 0x07C00000
+    mov r1, #0x03800000
+
+    ldr r2, =__heap_start
+    sub r2, #0x03800000
+
+    bleq __overwriter_aeabi_memcpy       @ Do the memcpy if patch magic is present
+
+    b _start                             @ Jump to the Rust entrypoint.
 "#
 );
 
@@ -185,14 +197,16 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         const PATCH_MAGIC: u32 = 0xB1DF;
         const PATCH_VERSION: u32 = 0x1000;
         const USER_MEMORY_START: u32 = 0x0380_0000;
-        const PATCH_MEMORY_START: u32 = 0x0780_0000;
+        const PATCHER_MEMORY_START: u32 = 0x07A0_0000;
+        const OLD_COPY_START: u32 = 0x07C0_0000;
+        const NEW_START: u32 = 0x07E0_0000;
 
         let link_addr = unsafe { vex_sdk::vexSystemLinkAddrGet() };
 
         // This means we might potentially have a patch that needs to be applied.
         if link_addr == USER_MEMORY_START {
             // Pointer to the linked file in memory.
-            let patch_ptr = PATCH_MEMORY_START as *mut u32;
+            let patch_ptr = PATCHER_MEMORY_START as *mut u32;
 
             unsafe {
                 // First few bytes contain some important metadata we'll need to setup the patch.
@@ -201,7 +215,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
                 let patch_len = patch_ptr.offset(2).read(); // length of the patch buffer
                 let old_binary_len = patch_ptr.offset(3).read(); // length of the currently running binary
                 let new_binary_len = patch_ptr.offset(4).read(); // length of the new binary after the patch
-                let new_heap_start = patch_ptr.offset(5).read(); // address of the __heap_start address in the new binary
+                let _new_heap_start = patch_ptr.offset(5).read(); // address of the __heap_start address in the new binary
 
                 // Do not proceed with the patch if:
                 // - We have an unexpected PATCH_MAGIC (this is edited after the fact to 0xB2Df intentionally break out of here).
@@ -215,13 +229,6 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
                 // Overwrite patch magic so we don't re-apply the patch next time.
                 patch_ptr.write(0xB2DF);
 
-                // Create a temporary heap at a location that will not overlap the binary after being patched.
-                vexide_core::allocator::claim(
-                    // .max(__heap_start) handles the case where the new binary is smaller than the old.
-                    (new_heap_start).max(&raw const __heap_start as u32) as *mut u8,
-                    &raw mut __heap_end,
-                );
-
                 // Slice representing our patch contents.
                 let mut patch = core::slice::from_raw_parts(
                     patch_ptr.offset(6).cast(),
@@ -230,15 +237,17 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
 
                 // Slice of the executable portion of the currently running program (this one currently running this code).
                 let mut old = Cursor::new(core::slice::from_raw_parts_mut(
-                    USER_MEMORY_START as *mut u8,
+                    OLD_COPY_START as *mut u8,
                     old_binary_len as usize,
                 ));
 
                 // `bidiff` does not patch in-place, meaning we need a copy of our currently running binary onto the heap
                 // that we will apply our patch to using our actively running binary as a reference point for the "old" bits.
                 // After that, `apply_patch` will handle safely overwriting user code with our "new" version on the heap.
-                let mut new_vec = alloc::vec![0; new_binary_len as usize];
-                let mut new: &mut [u8] = new_vec.as_mut_slice();
+                let mut new: &mut [u8] = core::slice::from_raw_parts_mut(
+                    NEW_START as *mut u8,
+                    new_binary_len as usize,
+                );
 
                 // Apply the patch onto `new`, using `old` as a reference.
                 //
@@ -301,9 +310,9 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
                 // Jump to the overwriter to handle the rest.
                 core::arch::asm!(
                     "mov r0, #0x03800000",
+                    "mov r1, #0x07E00000",
                     "b __patcher_overwrite",
-                    in("r1") new_vec.as_ptr(),
-                    in("r2") new_vec.len(),
+                    in("r2") new_binary_len,
                     options(noreturn)
                 );
             }
