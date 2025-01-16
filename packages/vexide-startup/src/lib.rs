@@ -15,11 +15,11 @@
 
 use banner::themes::BannerTheme;
 use bitflags::bitflags;
-use varint_slop::VarIntReader;
+use varint_encoding::VarIntReader;
 use vexide_core::io::{Cursor, Read, Seek, SeekFrom};
 
 pub mod banner;
-pub(crate) mod varint_slop;
+pub(crate) mod varint_encoding;
 
 /// Identifies the type of binary to VEXos.
 #[repr(u32)]
