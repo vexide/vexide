@@ -215,7 +215,6 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
                 let patch_len = patch_ptr.offset(2).read(); // length of the patch buffer
                 let old_binary_len = patch_ptr.offset(3).read(); // length of the currently running binary
                 let new_binary_len = patch_ptr.offset(4).read(); // length of the new binary after the patch
-                let _new_heap_start = patch_ptr.offset(5).read(); // address of the __heap_start address in the new binary
 
                 // Do not proceed with the patch if:
                 // - We have an unexpected PATCH_MAGIC (this is edited after the fact to 0xB2Df intentionally break out of here).
@@ -231,8 +230,8 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
 
                 // Slice representing our patch contents.
                 let mut patch = core::slice::from_raw_parts(
-                    patch_ptr.offset(6).cast(),
-                    patch_len as usize - (size_of::<u32>() * 6),
+                    patch_ptr.offset(5).cast(),
+                    patch_len as usize - (size_of::<u32>() * 5),
                 );
 
                 // Slice of the executable portion of the currently running program (this one currently running this code).
