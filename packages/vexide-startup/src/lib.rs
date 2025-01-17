@@ -115,9 +115,8 @@ _boot:
 
     mov r0, #0x07C00000                  @ Prepare to memcpy binary to 0x07C00000
     mov r1, #0x03800000
-
-    ldr r2, =__heap_start
-    sub r2, #0x03800000
+    ldr r2, =0x07A0000C
+    ldr r2, [r2]
 
     bleq __overwriter_aeabi_memcpy       @ Do the memcpy if patch magic is present
 
