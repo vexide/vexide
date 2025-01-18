@@ -47,12 +47,12 @@ enum PatcherState {
 /// "base binary" that it's patching over. The program running on the brain before the patch is applied
 /// is always the original binary, so in the `_boot` routine (vexide's assembly entrypoint) we preemptively
 /// make a copy of the currently running binary before any Rust code gets the chance to modify a writable
-/// section of the binary like `.data` or `.bss` (which would corrupt the patch).This unmodified copy of
+/// section of the binary like `.data` or `.bss` (which would corrupt the patch). This unmodified copy of
 /// the old binary is copied to address `0x07C00000` (2mb after where our patch is loaded).
 ///
 /// Finally, using the copy of the old binary and the patch, we are able to apply bidiff's [`bipatch`
 /// algorithm](https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs) to build the new
-/// binary file that we will run. This new binary is build at address `0x07E00000` (4mb after where our
+/// binary file that we will run. This new binary is built at address `0x07E00000` (4mb after where our
 /// patch is loaded).
 ///
 /// ## Stage 2 - Overwriting the old binary with the new one
@@ -90,7 +90,7 @@ enum PatcherState {
 ///
 /// The caller must ensure that the patch loaded at 0x07A00000 has been built using the currently running
 /// binary as the basis for the patch.
-pub(crate) unsafe fn patch(patch_ptr: *mut u32) {
+pub(crate) unsafe fn patch() {
     // First four byets of the patch file MUST be 0xB1DF for the patch to be applied.
     const PATCH_MAGIC: u32 = 0xB1DF;
 
@@ -102,18 +102,20 @@ pub(crate) unsafe fn patch(patch_ptr: *mut u32) {
     //
     // This is copied to this address by vexide's `_boot` routine that can be found in `lib.rs`.
     const BASE_START: u32 = 0x07C0_0000;
-
     // Address of where we will builder our patched binary at and store it before we overwrite the current
     // binary with it in stage 2.
     const NEW_START: u32 = 0x07E0_0000;
 
+    /// Load address of patch files.
+    const PATCH_MEMORY: *mut u32 = 0x07A0_0000 as _;
+
     unsafe {
         // First few bytes contain some important metadata we'll need to setup the patch.
-        let patch_magic = patch_ptr.read(); // Should be 0xB1DF if the patch needs to be applied.
-        let patch_version = patch_ptr.offset(1).read(); // Shoud be 0x1000
-        let patch_len = patch_ptr.offset(2).read(); // length of the patch buffer
-        let original_binary_len = patch_ptr.offset(3).read(); // length of the currently running binary
-        let new_binary_len = patch_ptr.offset(4).read(); // length of the new binary after the patch
+        let patch_magic = PATCH_MEMORY.read(); // Should be 0xB1DF if the patch needs to be applied.
+        let patch_version = PATCH_MEMORY.offset(1).read(); // Shoud be 0x1000
+        let patch_len = PATCH_MEMORY.offset(2).read(); // length of the patch buffer
+        let original_binary_len = PATCH_MEMORY.offset(3).read(); // length of the currently running binary
+        let new_binary_len = PATCH_MEMORY.offset(4).read(); // length of the new binary after the patch
 
         // Do not proceed with the patch if:
         // - We have an unexpected PATCH_MAGIC (this is edited after the fact to 0xB2Df intentionally break out of here).
@@ -125,11 +127,11 @@ pub(crate) unsafe fn patch(patch_ptr: *mut u32) {
         }
 
         // Overwrite patch magic so we don't re-apply the patch next time.
-        patch_ptr.write(0xB2DF);
+        PATCH_MEMORY.write(0xB2DF);
 
         // Slice representing our patch contents.
         let mut patch = core::slice::from_raw_parts(
-            patch_ptr.offset(5).cast(),
+            PATCH_MEMORY.offset(5).cast(),
             patch_len as usize - (size_of::<u32>() * 5),
         );
 

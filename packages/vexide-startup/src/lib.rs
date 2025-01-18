@@ -21,8 +21,6 @@ mod patcher;
 
 /// Load address of user programs.
 const USER_MEMORY_START: u32 = 0x0380_0000;
-/// Load address of patch files.
-const PATCH_MEMORY_START: u32 = 0x07A0_0000;
 
 /// Identifies the type of binary to VEXos.
 #[repr(u32)]
@@ -197,7 +195,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     // differential uploads by cargo-v5 and may have a patch to apply.
     if unsafe { vex_sdk::vexSystemLinkAddrGet() } == USER_MEMORY_START {
         unsafe {
-            patcher::patch(PATCH_MEMORY_START as *mut u32);
+            patcher::patch();
         }
     }
 
