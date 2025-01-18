@@ -194,7 +194,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     }
 
     // If this link address is 0x03800000, this implies we were uploaded using
-    // `upload-strategy = "patch"` by cargo by cargo-v5 and may have a patch to apply.
+    // differential uploads by cargo-v5 and may have a patch to apply.
     if unsafe { vex_sdk::vexSystemLinkAddrGet() } == USER_MEMORY_START {
         unsafe {
             patcher::patch(PATCH_MEMORY_START as *mut u32);

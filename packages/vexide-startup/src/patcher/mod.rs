@@ -20,7 +20,7 @@ enum PatcherState {
     Copy(usize),
 }
 
-/// Patch Uploading Routine
+/// Differential Upload Patcher
 ///
 /// This function builds a modified version of the user program in memory with a binary patch (generated
 /// by `bidiff` in cargo-v5) applied to it, then overwrites (self-modifies) the current program with the
@@ -29,7 +29,7 @@ enum PatcherState {
 ///
 /// # Overview
 ///
-/// Patching is performed in two steps. The first step is done by this function, and it involves
+/// Patching is performed in two steps. The first step is performed by this function, and involves
 /// building the "newer" binary using the uploaded patch file and the current program as a reference.
 /// The second step of patching is performed by the `__patcher_overwrite` assembly routine, which
 /// is responsible for actually self-modifying the current program's active memory and preparing CPU1
@@ -38,28 +38,30 @@ enum PatcherState {
 /// ## Stage 1 - Building the new binary
 ///
 /// The first stage of patching involves building the new (patched) binary. When `cargo-v5` uploads a
-/// new patch file to the brain, we tell it to load the file into memory at address 0x07A00000. We
-/// reserve a 6mb region of memory spanning 0x07A00000..0x80000000 specifically for the patcher to use.
+/// new patch file to the brain, we tell it to load the file into memory at address `0x07A00000` — 6mb
+/// from the end of the RWX memory block allocated to user code. This 6mb region of memory spanning
+/// `0x07A00000`..`0x80000000` is reserved specifically for the patcher to use and is split into three
+/// 2mb subregions (which will be discussed later).
 ///
 /// In order to actually use the patch file to build a new binary, we need a reference to the original
-/// "base binary" that it's patching over. The original binary is actually the run currently running on
-/// the brain before the patch is applied, so in the `_boot` routine (vexide's assembly entrypoint) we
-/// preemptively make a copy of the currently running binary before any Rust code gets the chance to
-/// modify a writable section of the binary like `.data` or `.bss` (which would corrupt the patch).This
-/// unmodified copy of the old binary is copied to address 0x07C00000 (2mb after where our patch is loaded).
+/// "base binary" that it's patching over. The program running on the brain before the patch is applied
+/// is always the original binary, so in the `_boot` routine (vexide's assembly entrypoint) we preemptively
+/// make a copy of the currently running binary before any Rust code gets the chance to modify a writable
+/// section of the binary like `.data` or `.bss` (which would corrupt the patch).This unmodified copy of
+/// the old binary is copied to address `0x07C00000` (2mb after where our patch is loaded).
 ///
 /// Finally, using the copy of the old binary and the patch, we are able to apply bidiff's [`bipatch`
 /// algorithm](https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs) to build the new
-/// binary file that we will run. This new binary is build at address 0x07E00000 (4mb after where our
+/// binary file that we will run. This new binary is build at address `0x07E00000` (4mb after where our
 /// patch is loaded).
 ///
 /// ## Stage 2 - Overwriting the old binary with the new one
 ///
 /// The second stage of the patch process is handled by the `__patcher_overwrite` assembly routine. This
 /// routine is responsible for overwriting our currently running code with that new version we just built.
-/// This involves memcpy-ing our new binary at 0x07E00000 to the start of user memory (0x03800000). Doing
-/// this is far easier said than done though, and requires some important considerations as to not shoot
-/// ourselves in the foot:
+/// This involves memcpy-ing our new binary at `0x07E00000` to the start of user memory (`0x03800000`).
+/// Doing this is far easier said than done though, and requires some important considerations as to not
+/// shoot ourselves in the foot:
 ///
 /// - When overwriting, it is *absolutely imperative* that the overwriter not depend on memory that is
 ///   in the process of being overwritten. This means that the overwriting routine must be done entirely
@@ -75,13 +77,14 @@ enum PatcherState {
 ///
 /// - Finally, there is the problem of cache coherency. ARMv7-A, like most modern architectures, caches
 ///   instructions fetched from memory into an on-chip L1 cache called the icache. There is also a similar
-///   L1 cache called the dcache for memory/data accesses. ARM's memory model does not guarantee L1 cache
-///   will always be synchronized ("coherent") with what's actually in physical memory when working with
+///   L1 cache called the dcache for memory/data accesses. ARM's cache model does not guarantee L1 cache will
+///   always be synchronized (coherent) with what's actually present in physical memory when working with
 ///   self-modifying code, so we need to explicitly "clean" the instruction cache to bring it back to a
-///   point-of-unification (PoU) with physical memory, ensuring that when we jump back to the start of our
-///   program, we are actually executing from the newly overwritten memory rather than stale icache
-///   instructions. This process of invalidating and cleaning instruction caches is described to further
-///   detail [in ARM's documentation](https://developer.arm.com/documentation/den0013/latest/Caches/Invalidating-and-cleaning-cache-memory).
+///   [point-of-unification (PoU)](https://developer.arm.com/documentation/den0013/d/Caches/Point-of-coherency-and-unification)
+///   with physical memory, ensuring that when we jump back to the start of our program, we are actually
+///   executing from the newly overwritten memory rather than stale instructions from icache. This process
+///   of invalidating and cleaning instruction caches is described to further detail in
+///   [ARM's documentation](https://developer.arm.com/documentation/den0013/latest/Caches/Invalidating-and-cleaning-cache-memory).
 ///
 /// # Safety
 ///
@@ -109,7 +112,7 @@ pub(crate) unsafe fn patch(patch_ptr: *mut u32) {
         let patch_magic = patch_ptr.read(); // Should be 0xB1DF if the patch needs to be applied.
         let patch_version = patch_ptr.offset(1).read(); // Shoud be 0x1000
         let patch_len = patch_ptr.offset(2).read(); // length of the patch buffer
-        let old_binary_len = patch_ptr.offset(3).read(); // length of the currently running binary
+        let original_binary_len = patch_ptr.offset(3).read(); // length of the currently running binary
         let new_binary_len = patch_ptr.offset(4).read(); // length of the new binary after the patch
 
         // Do not proceed with the patch if:
@@ -131,9 +134,9 @@ pub(crate) unsafe fn patch(patch_ptr: *mut u32) {
         );
 
         // Slice of the executable portion of the currently running program (this one currently running this code).
-        let mut old = Cursor::new(core::slice::from_raw_parts_mut(
+        let mut original = Cursor::new(core::slice::from_raw_parts_mut(
             BASE_START as *mut u8,
-            old_binary_len as usize,
+            original_binary_len as usize,
         ));
 
         // `bidiff` does not patch in-place, meaning we need a copy of our currently running binary onto the heap
@@ -160,7 +163,7 @@ pub(crate) unsafe fn patch(patch_ptr: *mut u32) {
                     let n = add_len.min(new.len()).min(buf.len());
 
                     let out = &mut new[..n];
-                    old.read_exact(out).unwrap();
+                    original.read_exact(out).unwrap();
 
                     let dif = &mut buf[..n];
                     patch.read_exact(dif).unwrap();
@@ -186,7 +189,7 @@ pub(crate) unsafe fn patch(patch_ptr: *mut u32) {
 
                     state = if copy_len == n {
                         let seek: i64 = patch.read_varint().unwrap();
-                        old.seek(SeekFrom::Current(seek)).unwrap();
+                        original.seek(SeekFrom::Current(seek)).unwrap();
 
                         PatcherState::Initial
                     } else {
