@@ -15,11 +15,14 @@
 
 use banner::themes::BannerTheme;
 use bitflags::bitflags;
-use varint_encoding::VarIntReader;
-use vexide_core::io::{Cursor, Read, Seek, SeekFrom};
 
 pub mod banner;
-pub(crate) mod varint_encoding;
+mod patcher;
+
+/// Load address of user programs.
+const USER_MEMORY_START: u32 = 0x0380_0000;
+/// Load address of patch files.
+const PATCH_MEMORY_START: u32 = 0x07A0_0000;
 
 /// Identifies the type of binary to VEXos.
 #[repr(u32)]
@@ -106,32 +109,36 @@ core::arch::global_asm!(
 .global _boot
 
 _boot:
-    ldr sp, =__stack_top                 @ Load the user stack.
+    @ Load the user program stack.
+    @
+    @ This technically isn't required, as VEXos already sets up a stack for CPU1,
+    @ but that stack is relatively small and we have more than enough memory
+    @ available to us for this.
+    ldr sp, =__stack_top
 
-    mov r0, #0x07A00000                  @ Check for patch magic.
+    @ Before any Rust code runs, we need to memcpy the currently running binary to
+    @ 0x07C00000 if a patch file is loaded into memory. See the documentation in
+    @ `patcher/mod.rs` for why we want to do this.
+
+    @ Check for patch magic at 0x07A00000.
+    mov r0, #0x07A00000
     ldr r0, [r0]
     ldr r1, =0xB1DF
     cmp r0, r1
 
-    mov r0, #0x07C00000                  @ Prepare to memcpy binary to 0x07C00000
-    mov r1, #0x03800000
-    ldr r2, =0x07A0000C
+    @ Prepare to memcpy binary to 0x07C00000
+    mov r0, #0x07C00000 @ memcpy dest -> r0
+    mov r1, #0x03800000 @ memcpy src -> r1
+    ldr r2, =0x07A0000C @ memcpy size -> r2
     ldr r2, [r2]
 
-    bleq __overwriter_aeabi_memcpy       @ Do the memcpy if patch magic is present
+    @ Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
+    bleq __overwriter_aeabi_memcpy
 
-    b _start                             @ Jump to the Rust entrypoint.
+    @ Jump to the Rust entrypoint.
+    b _start
 "#
 );
-
-// Assembly implementation of the patch overwriter (`__patcher_overwrite`).
-//
-// The overwriter is responsible for self-modifying the currently running code
-// in memory with the new version on the heap built by the first patcher stage.
-//
-// In other words, this code is responsible for actually "applying" the patch.
-core::arch::global_asm!(include_str!("./overwriter_aeabi_memcpy.S"));
-core::arch::global_asm!(include_str!("./overwriter.S"));
 
 /// Zeroes the `.bss` section
 ///
@@ -164,13 +171,6 @@ where
     }
 }
 
-#[derive(Debug)]
-enum PatcherState {
-    Initial,
-    Add(usize),
-    Copy(usize),
-}
-
 /// Startup Routine
 ///
 /// - Sets up the heap allocator if necessary.
@@ -185,133 +185,19 @@ enum PatcherState {
 pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     #[cfg(target_vendor = "vex")]
     unsafe {
-        // Fill the `.bss` section of our program's memory with zeroes to ensure that uninitialized data is allocated properly.
+        // Fill the `.bss` section of our program's memory with zeroes to ensure that
+        // uninitialized data is allocated properly.
         zero_bss(
             core::ptr::addr_of_mut!(__bss_start),
             core::ptr::addr_of_mut!(__bss_end),
         );
     }
 
-    'patcher: {
-        const PATCH_MAGIC: u32 = 0xB1DF;
-        const PATCH_VERSION: u32 = 0x1000;
-        const USER_MEMORY_START: u32 = 0x0380_0000;
-        const PATCHER_MEMORY_START: u32 = 0x07A0_0000;
-        const OLD_COPY_START: u32 = 0x07C0_0000;
-        const NEW_START: u32 = 0x07E0_0000;
-
-        let link_addr = unsafe { vex_sdk::vexSystemLinkAddrGet() };
-
-        // This means we might potentially have a patch that needs to be applied.
-        if link_addr == USER_MEMORY_START {
-            // Pointer to the linked file in memory.
-            let patch_ptr = PATCHER_MEMORY_START as *mut u32;
-
-            unsafe {
-                // First few bytes contain some important metadata we'll need to setup the patch.
-                let patch_magic = patch_ptr.read(); // Should be 0xB1DF if the patch needs to be applied.
-                let patch_version = patch_ptr.offset(1).read(); // Shoud be 0x1000
-                let patch_len = patch_ptr.offset(2).read(); // length of the patch buffer
-                let old_binary_len = patch_ptr.offset(3).read(); // length of the currently running binary
-                let new_binary_len = patch_ptr.offset(4).read(); // length of the new binary after the patch
-
-                // Do not proceed with the patch if:
-                // - We have an unexpected PATCH_MAGIC (this is edited after the fact to 0xB2Df intentionally break out of here).
-                // - Our patch format version does not match the version in the patch.
-                // - There isn't anything to patch.
-                if patch_magic != PATCH_MAGIC || patch_version != PATCH_VERSION || patch_len == 0 {
-                    // TODO(tropix126): We could reclaim the patch as heap space maybe? Not a high priority.
-                    break 'patcher;
-                }
-
-                // Overwrite patch magic so we don't re-apply the patch next time.
-                patch_ptr.write(0xB2DF);
-
-                // Slice representing our patch contents.
-                let mut patch = core::slice::from_raw_parts(
-                    patch_ptr.offset(5).cast(),
-                    patch_len as usize - (size_of::<u32>() * 5),
-                );
-
-                // Slice of the executable portion of the currently running program (this one currently running this code).
-                let mut old = Cursor::new(core::slice::from_raw_parts_mut(
-                    OLD_COPY_START as *mut u8,
-                    old_binary_len as usize,
-                ));
-
-                // `bidiff` does not patch in-place, meaning we need a copy of our currently running binary onto the heap
-                // that we will apply our patch to using our actively running binary as a reference point for the "old" bits.
-                // After that, `apply_patch` will handle safely overwriting user code with our "new" version on the heap.
-                let mut new: &mut [u8] =
-                    core::slice::from_raw_parts_mut(NEW_START as *mut u8, new_binary_len as usize);
-
-                // Apply the patch onto `new`, using `old` as a reference.
-                //
-                // This is basically a port of <https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs>
-
-                let mut buf = [0u8; 4096];
-
-                let mut state = PatcherState::Initial;
-
-                while !new.is_empty() {
-                    let processed = match state {
-                        PatcherState::Initial => {
-                            state = PatcherState::Add(patch.read_varint().unwrap());
-                            0
-                        }
-                        PatcherState::Add(add_len) => {
-                            let n = add_len.min(new.len()).min(buf.len());
-
-                            let out = &mut new[..n];
-                            old.read_exact(out).unwrap();
-
-                            let dif = &mut buf[..n];
-                            patch.read_exact(dif).unwrap();
-
-                            for i in 0..n {
-                                out[i] = out[i].wrapping_add(dif[i]);
-                            }
-
-                            state = if add_len == n {
-                                let copy_len: usize = patch.read_varint().unwrap();
-                                PatcherState::Copy(copy_len)
-                            } else {
-                                PatcherState::Add(add_len - n)
-                            };
-
-                            n
-                        }
-                        PatcherState::Copy(copy_len) => {
-                            let n = copy_len.min(new.len());
-
-                            let out = &mut new[..n];
-                            patch.read_exact(out).unwrap();
-
-                            state = if copy_len == n {
-                                let seek: i64 = patch.read_varint().unwrap();
-                                old.seek(SeekFrom::Current(seek)).unwrap();
-
-                                PatcherState::Initial
-                            } else {
-                                PatcherState::Copy(copy_len - n)
-                            };
-
-                            n
-                        }
-                    };
-
-                    new = &mut new[processed..];
-                }
-
-                // Jump to the overwriter to handle the rest.
-                core::arch::asm!(
-                    "mov r0, #0x03800000",
-                    "mov r1, #0x07E00000",
-                    "b __patcher_overwrite",
-                    in("r2") new_binary_len,
-                    options(noreturn)
-                );
-            }
+    // If this link address is 0x03800000, this implies we were uploaded using
+    // `upload-strategy = "patch"` by cargo by cargo-v5 and may have a patch to apply.
+    if unsafe { vex_sdk::vexSystemLinkAddrGet() } == USER_MEMORY_START {
+        unsafe {
+            patcher::patch(PATCH_MEMORY_START as *mut u32);
         }
     }
 
