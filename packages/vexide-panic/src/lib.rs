@@ -234,7 +234,7 @@ pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
     // functions, which don't panic while holding a lock.
     let mut guard = HOOK
         .try_lock()
-        .expect("failed to set custom panic hook (mutex poisoned or locked)");
+        .expect("failed to set custom panic hook (mutex locked)");
     // Don't do anything that could panic until guard is dropped
     let old_hook = core::mem::replace(&mut *guard, Hook::Default).into_box();
     core::mem::drop(guard);
@@ -274,7 +274,7 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     } else {
         // Since this is in theory unreachable, if it is reached, let's ask the
         // user to file a bug report.
-        println!("Panic handler hook mutex is poisoned. Using default `vexide-panic` panic handler. This should never happen.");
+        println!("Panic handler hook mutex was locked while using the default panic hook. This should never happen.");
         println!("If you see this, please consider filing a bug: https://github.com/vexide/vexide/issues/new");
         default_panic_hook(info);
     }
