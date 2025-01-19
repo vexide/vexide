@@ -191,17 +191,17 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         );
     }
 
+    // Initialize the heap allocator using normal bounds
+    unsafe {
+        vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
+    }
+
     // If this link address is 0x03800000, this implies we were uploaded using
     // differential uploads by cargo-v5 and may have a patch to apply.
     if unsafe { vex_sdk::vexSystemLinkAddrGet() } == USER_MEMORY_START {
         unsafe {
             patcher::patch();
         }
-    }
-
-    // Initialize the heap allocator using normal bounds
-    unsafe {
-        vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
     }
 
     // Print the banner
