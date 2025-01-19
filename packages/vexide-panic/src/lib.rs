@@ -274,7 +274,8 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     } else {
         // Since this is in theory unreachable, if it is reached, let's ask the
         // user to file a bug report.
-        println!("Panic handler hook mutex was locked while using the default panic hook. This should never happen.");
+        // FIXME: use eprintln once armv7a-vex-v5 support in Rust is merged
+        println!("Panic handler hook mutex was locked, so the default panic hook will be used. This should never happen.");
         println!("If you see this, please consider filing a bug: https://github.com/vexide/vexide/issues/new");
         default_panic_hook(info);
     }
