@@ -13,6 +13,7 @@ use alloc::{
     boxed::Box,
     string::{String, ToString},
 };
+use core::sync::atomic::{AtomicBool, Ordering};
 #[allow(unused_imports)]
 use core::{cell::UnsafeCell, fmt::Write};
 
@@ -22,6 +23,8 @@ use vexide_devices::{
     display::{Display, Font, FontFamily, FontSize, Rect, Text},
     math::Point2,
 };
+
+static FIRST_PANIC: AtomicBool = AtomicBool::new(true);
 
 /// Draw an error box to the display.
 ///
@@ -241,6 +244,14 @@ pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
 #[panic_handler]
 /// The panic handler for vexide.
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
+    // This can only occur if the panic handler itself has panicked (which can
+    // happen in hooks or if println!() fails), resulting in a potential stack
+    // overflow. In this instance, something is likely very wrong, so it's better
+    // to just abort rather than recursively panicking.
+    if !FIRST_PANIC.swap(false, Ordering::Relaxed) {
+        vexide_core::program::exit();
+    }
+
     // Try to lock the HOOK mutex. If we can't, we'll just use the default panic
     // handler, since it's probably not good to panic in the panic handler and
     // leave the user clueless about what happened.
