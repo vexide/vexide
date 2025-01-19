@@ -29,6 +29,7 @@ Before releasing:
 - Fixed error handling for rangefinder port numbers. (#268)
 - Fixed an internal issue regarding units with `Motor::set_position`.
 - Fixed `File::seek` seeking to the wrong position when using `SeekFrom::End` with a negative offset. (#267)
+- Recursive panics (panics that occur *within* `vexide_panic`'s handler) will now immediately abort rather than potentially causing a stack overflow. (#275)
 
 ### Changed
 
