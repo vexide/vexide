@@ -8,7 +8,9 @@ __patcher_overwrite:
     @ Execute memcpy to copy our patched program from the heap to active memory.
     mov r0, #0x03800000                 @ memcpy dest -> r0
     mov r1, #0x07E00000                 @ memcpy src -> r1
-                                        @ r2 is loaded from Rust
+    ldr r2, =0x07A00010                 @ memcpy size -> r2
+    ldr r2, [r2]
+
     bl __overwriter_aeabi_memcpy
 
     @ Disable all the things while we do cache maintenance.

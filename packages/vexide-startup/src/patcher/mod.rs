@@ -206,16 +206,6 @@ pub(crate) unsafe fn patch() {
         }
 
         // Jump to the stage 2 overwriter routine to handle the rest.
-        core::arch::asm!(
-            // First argument to memcpy - `dist` (the start of user memory).
-            "mov r0, #0x03800000",
-            // Second argument to memcpy - `src` (the patched binary).
-            "mov r1, #0x07E00000",
-            // Jump to `__patcher_overwrite`.
-            "b __patcher_overwrite",
-            // Third argument to memcpy, containing the number of bytes we want to copy from `src`.
-            in("r2") new_binary_len,
-            options(noreturn)
-        );
+        core::arch::asm!("b __patcher_overwrite", options(noreturn));
     }
 }
