@@ -114,7 +114,7 @@ pub(crate) unsafe fn patch() {
         let patch_magic = PATCH_MEMORY.read(); // Should be 0xB1DF if the patch needs to be applied.
         let patch_version = PATCH_MEMORY.offset(1).read(); // Shoud be 0x1000
         let patch_len = PATCH_MEMORY.offset(2).read(); // length of the patch buffer
-        let original_binary_len = PATCH_MEMORY.offset(3).read(); // length of the currently running binary
+        let base_binary_len = PATCH_MEMORY.offset(3).read(); // length of the currently running binary
         let new_binary_len = PATCH_MEMORY.offset(4).read(); // length of the new binary after the patch
 
         // Do not proceed with the patch if:
@@ -136,9 +136,9 @@ pub(crate) unsafe fn patch() {
         );
 
         // Slice of the executable portion of the currently running program (this one currently running this code).
-        let mut original = Cursor::new(core::slice::from_raw_parts_mut(
-            BASE_START as *mut u8,
-            original_binary_len as usize,
+        let mut base = Cursor::new(core::slice::from_raw_parts(
+            BASE_START as *const u8,
+            base_binary_len as usize,
         ));
 
         // `bidiff` does not patch in-place, meaning we need a copy of our currently running binary onto the heap
@@ -165,7 +165,7 @@ pub(crate) unsafe fn patch() {
                     let n = add_len.min(new.len()).min(buf.len());
 
                     let out = &mut new[..n];
-                    original.read_exact(out).unwrap();
+                    base.read_exact(out).unwrap();
 
                     let dif = &mut buf[..n];
                     patch.read_exact(dif).unwrap();
@@ -191,7 +191,7 @@ pub(crate) unsafe fn patch() {
 
                     state = if copy_len == n {
                         let seek: i64 = patch.read_varint().unwrap();
-                        original.seek(SeekFrom::Current(seek)).unwrap();
+                        base.seek(SeekFrom::Current(seek)).unwrap();
 
                         PatcherState::Initial
                     } else {
