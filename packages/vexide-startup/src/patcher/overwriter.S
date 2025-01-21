@@ -3,7 +3,7 @@
 .global __patcher_overwrite
 
 __patcher_overwrite:
-    @ Execute memcpy to copy our patched program from the heap to active memory.
+    @ Execute memcpy to copy our patched program at 0x07E00000 onto active memory.
     mov r0, #0x03800000                 @ memcpy dest -> r0
     mov r1, #0x07E00000                 @ memcpy src -> r1
     ldr r2, =0x07A00010                 @ memcpy size -> r2

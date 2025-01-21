@@ -6,7 +6,7 @@ mod varint_encoding;
 // Assembly implementation of the patch overwriter (`__patcher_overwrite`).
 //
 // The overwriter is responsible for self-modifying the currently running code
-// in memory with the new version on the heap built by the first patcher stage.
+// in memory with the new version built at 0x07E00000 by the first patcher stage.
 //
 // In other words, this code is responsible for actually "applying" the patch.
 core::arch::global_asm!(include_str!("./overwriter_aeabi_memcpy.S"));
@@ -141,15 +141,13 @@ pub(crate) unsafe fn patch() {
             base_binary_len as usize,
         ));
 
-        // `bidiff` does not patch in-place, meaning we need a copy of our currently running binary onto the heap
-        // that we will apply our patch to using our actively running binary as a reference point for the "old" bits.
-        // After that, `apply_patch` will handle safely overwriting user code with our "new" version on the heap.
+        // We'll build our new binary using our patch and base at address 0x07E00000 (NEW_START).
         let mut new: &mut [u8] =
             core::slice::from_raw_parts_mut(NEW_START as *mut u8, new_binary_len as usize);
 
-        // Apply the patch onto `new`, using `old` as a reference.
+        // Build the new binary, using `base` and `patch` as a reference.
         //
-        // This is basically a port of <https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs>
+        // This is essentially a port of <https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs>
 
         let mut buf = [0u8; 4096];
 
