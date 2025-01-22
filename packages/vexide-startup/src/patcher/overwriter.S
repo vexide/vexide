@@ -3,25 +3,31 @@
 .global __patcher_overwrite
 
 __patcher_overwrite:
-    cpsid i                             @ Interrupts OFF
+    cpsid i                    @ Mask interrupts
 
     @ Execute memcpy to copy our patched program at 0x07E00000 onto active memory.
-    mov r0, #0x03800000                 @ memcpy dest -> r0
-    mov r1, #0x07E00000                 @ memcpy src -> r1
-    ldr r2, =0x07A00010                 @ memcpy size -> r2
-    ldr r2, [r2]
+    mov r0, #0x03800000        @ memcpy dest
+    mov r1, #0x07E00000        @ memcpy src
+    ldr r2, =0x07A00010        @ Address containing size of new binary
+    ldr r2, [r2]               @ Load actual size value
 
     bl __overwriter_aeabi_memcpy
 
-    @ Ensure coherency between L1 cache and main memory
-    dsb
+    @ Clean L1 data cache in the range of new user memory
+    add r1, r0, r2             @ End address
+dcache_clean_range:
+    mcr p15, 0, r0, c7, c11, 1 @ Clean and invalidate D-cache line by MVA (DCCMVAU)
+    add r0, #32                @ Move to the next cache line
+    cmp r0, r1                 @ Check if we've reached the end
+    blo dcache_clean_range     @ If not, continue cleaning
+    dsb                        @ Ensure all cache operations complete
+
+    @ Invalidate entire L1 instruction cache
     mov r0, #0
-    mcr p15, 0, r0, c7, c5, 0           @ Invalidate instruction cache (ICIALLU)
-    mcr p15, 0, r0, c7, c5, 6           @ Invalidate branch predictor array (BPIALL)
+    mcr p15, 0, r0, c7, c1, 0  @ ICIALLUIS
     dsb
-    isb
 
-    cpsie i                             @ Interrupts ON
+    cpsie i                    @ Unmask interrupts
 
-    @ Branch to _boot again with our now-patched program.
+    @ Jump to modified code
     b _boot
