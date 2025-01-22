@@ -14,18 +14,19 @@ __patcher_overwrite:
     bl __overwriter_aeabi_memcpy
 
     @ Clean L1 data cache in the range of new user memory
+    @ NOTE: 0x03800000 is already aligned to cache line size (32), so no work there.
     mov r1, 0x08000000         @ End address
 dcache_clean_range:
     mcr p15, 0, r0, c7, c11, 1 @ Clean and invalidate D-cache line by MVA (DCCMVAU)
     add r0, #32                @ Move to the next cache line
     cmp r0, r1                 @ Check if we've reached the end
     blo dcache_clean_range     @ If not, continue cleaning
-    dsb                        @ Ensure all cache operations complete
+    dsb                        @ Wait until all cache operations complete
 
     @ Invalidate entire L1 instruction cache
     mov r0, #0
     mcr p15, 0, r0, c7, c1, 0  @ ICIALLUIS
-    dsb                        @ Ensure all cache operations complete
+    dsb                        @ Wait until all cache operations complete
 
     cpsie i                    @ Unmask interrupts
 
