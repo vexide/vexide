@@ -128,7 +128,7 @@ _boot:
     mov r0, #0x07C00000 @ memcpy dest -> r0
     mov r1, #0x03800000 @ memcpy src -> r1
     ldr r2, =0x07A0000C @ the length of the binary is stored at 0x07A0000C
-    ldr r2, [r2]
+    ldr r2, [r2] @ memcpy size -> r2
 
     @ Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
     bleq __overwriter_aeabi_memcpy
