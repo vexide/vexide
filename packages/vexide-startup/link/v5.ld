@@ -121,7 +121,7 @@ SECTIONS {
         __extab_end = .;
     } > PROGRAM_RAM
 
-    /* -- End of loadable sections - anything beyond this point shouldnt go in the BIN. -- */
+    /* -- End of loadable sections - anything beyond this point shouldn't go in the BIN. -- */
 
     /*
      * Active memory sections for the stack/heap.
