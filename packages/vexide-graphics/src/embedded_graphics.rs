@@ -23,6 +23,7 @@ impl BrainDisplay {
         display.set_render_mode(vexide_devices::display::RenderMode::DoubleBuffered);
         Self {
             display,
+            #[allow(clippy::large_stack_arrays)] // we got plenty
             triple_buffer: [0; Display::HORIZONTAL_RESOLUTION as usize
                 * Display::VERTICAL_RESOLUTION as usize],
         }

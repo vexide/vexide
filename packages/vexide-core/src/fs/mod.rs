@@ -782,11 +782,7 @@ impl Seek for File {
                     SEEK_SET,
                 ))?;
             },
-
-            // VEXos does not allow seeking with negative offsets.
-            // That means we need to calculate the offset from the start for both of these.
             io::SeekFrom::End(offset) => unsafe {
-                // If our offset is positive, everything is easy
                 if offset >= 0 {
                     map_fresult(vex_sdk::vexFileSeek(
                         self.fd,
@@ -794,21 +790,11 @@ impl Seek for File {
                         SEEK_END,
                     ))?;
                 } else {
-                    // Get the position of the end of the file...
+                    // `vexFileSeek` does not support seeking with negative offset, meaning
+                    // we have to calculate the offset from the end of the file ourselves.
                     map_fresult(vex_sdk::vexFileSeek(
                         self.fd,
-                        try_convert_offset(offset)?,
-                        SEEK_END,
-                    ))?;
-                    // The number returned by the VEX SDK tell is stored as a 32 bit interger,
-                    // and therefore this conversion cannot fail.
-                    let position = self.tell()? as i64;
-
-                    // Offset from that position
-                    let new_position = position + offset;
-                    map_fresult(vex_sdk::vexFileSeek(
-                        self.fd,
-                        try_convert_offset(new_position)?,
+                        try_convert_offset((self.metadata()?.size as i64) + offset)?,
                         SEEK_SET,
                     ))?;
                 }
@@ -821,12 +807,11 @@ impl Seek for File {
                         SEEK_CUR,
                     ))?;
                 } else {
-                    let position = self.tell()? as i64;
-
-                    let new_position = position + offset;
+                    // `vexFileSeek` does not support seeking with negative offset, meaning
+                    // we have to calculate the offset from the stream position ourselves.
                     map_fresult(vex_sdk::vexFileSeek(
                         self.fd,
-                        try_convert_offset(new_position)?,
+                        try_convert_offset((self.tell()? as i64) + offset)?,
                         SEEK_SET,
                     ))?;
                 }
@@ -958,7 +943,7 @@ pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<u64> {
 /// assert!(!exists("nonexistent.txt"));
 /// ```
 pub fn exists<P: AsRef<Path>>(path: P) -> bool {
-    let file_exists = unsafe { vex_sdk::vexFileStatus(path.as_ref().as_fs_str().as_ptr()) };
+    let file_exists = unsafe { vex_sdk::vexFileStatus(path.as_ref().as_fs_str().as_ptr().cast()) };
     // Woop woop we've got a nullptr!
     file_exists != 0
 }

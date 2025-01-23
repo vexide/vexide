@@ -968,9 +968,18 @@ impl Motor {
     ///     motor.set_position(Position::from_degrees(0.0)).unwrap();
     /// }
     /// ```
+    #[allow(clippy::cast_precision_loss)]
     pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
-        self.validate_port()?;
-        unsafe { vexDeviceMotorPositionSet(self.device, position.as_degrees()) }
+        let gearset = self.gearset()?;
+
+        unsafe {
+            vexDeviceMotorPositionSet(
+                self.device,
+                // NOTE: No precision loss since ticks are not fractional.
+                position.as_ticks(gearset.ticks_per_revolution()) as f64,
+            );
+        }
+
         Ok(())
     }
 
