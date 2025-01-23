@@ -67,13 +67,6 @@ impl AdiEncoder {
 
     /// Create a new encoder sensor from a top and bottom [`AdiPort`].
     ///
-    /// ```no_run
-    /// # fn make_encoder(peripherals: Peripherals) -> Result<(), EncoderError> {
-    /// let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b))?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    ///
     /// # Errors
     ///
     /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s,
@@ -92,7 +85,7 @@ impl AdiEncoder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b)).expect("could not create encoder");
+    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b).expect("could not create encoder");
     ///
     ///     loop {
     ///         println!("encoder position: {:?}", encoder.position());
@@ -100,7 +93,7 @@ impl AdiEncoder {
     ///     }
     /// }
     /// ```
-    pub fn new((top_port, bottom_port): (AdiPort, AdiPort)) -> Result<Self, EncoderError> {
+    pub fn new(top_port: AdiPort, bottom_port: AdiPort) -> Result<Self, EncoderError> {
         let top_number = top_port.number();
         let bottom_number = bottom_port.number();
 
@@ -125,7 +118,7 @@ impl AdiEncoder {
             } else {
                 bottom_number == top_number + 1
             },
-            BadBottomPortSnafu {
+            BadPortPlacementSnafu {
                 top_port: top_port.number(),
                 bottom_port: bottom_port.number()
             }
@@ -158,7 +151,7 @@ impl AdiEncoder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b)).expect("could not create encoder");
+    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b).expect("could not create encoder");
     ///
     ///     loop {
     ///         println!("encoder position: {:?}", encoder.position());
@@ -201,7 +194,7 @@ impl AdiEncoder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b)).expect("could not create encoder");
+    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b).expect("could not create encoder");
     ///
     ///     // Treat the encoder as if it were at 180 degrees.
     ///     _ = encoder.set_position(Position::from_degrees(180));
@@ -241,7 +234,7 @@ impl AdiEncoder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new((peripherals.adi_a, peripherals.adi_b)).expect("could not create encoder");
+    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b).expect("could not create encoder");
     ///
     ///     // Reset the encoder position to zero.
     ///     // This doesn't really do anything in this case, but it's a good example.
@@ -272,33 +265,22 @@ impl AdiDevice for AdiEncoder {
 #[derive(Debug, Snafu)]
 /// Errors that can occur when interacting with an encoder range finder.
 pub enum EncoderError {
-    /// The top wire must be on an odd numbered port (A, C, E, G).
-    #[snafu(display(
-        "The top ADI port provided (`{}`) was not odd numbered (A, C, E, G).",
-        adi_port_name(*port)
-    ))]
-    BadTopPort {
-        /// The port number that caused the error.
-        port: u8,
-    },
-
     /// Ports must be placed directly next to each other, with the ports being some combination of (AB, CD, EF, GH) or (BA, CD, EF, HG).
-    // TODO: Change this to be named `BadPortPlacement` in the next major release.
     #[snafu(display(
         "Encoder ports must be placed directly next to each other and in some combination of AB, CD, EF, GH, or BA, CD, EF, HG. (Got `{}{}`)",
         adi_port_name(*top_port),
         adi_port_name(*bottom_port),
     ))]
-    BadBottomPort {
+    BadPortPlacement {
         /// The bottom port number that caused the error.
         bottom_port: u8,
         /// The top port number that caused the error.
         top_port: u8,
     },
 
-    /// The specified top and bottom ports may not belong to different ADI expanders.
+    /// The specified top and bottom ports belong to different ADI expanders.
     #[snafu(display(
-        "The specified top and bottom ports may not belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
+        "The specified top and bottom ports belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
         top_port_expander,
         bottom_port_expander
     ))]

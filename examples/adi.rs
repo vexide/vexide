@@ -13,7 +13,7 @@ async fn main(peripherals: Peripherals) {
     let line_tracker = AdiLineTracker::new(peripherals.adi_b);
 
     // Create an ultrasonic range finder on triport C.
-    let range_finder = AdiRangeFinder::new((peripherals.adi_c, peripherals.adi_d)).unwrap();
+    let range_finder = AdiRangeFinder::new(peripherals.adi_c, peripherals.adi_d).unwrap();
 
     loop {
         // Print out the sensor values to stdout every 10ms (the update rate of ADI devices).
