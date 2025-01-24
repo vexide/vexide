@@ -8,7 +8,7 @@
 
 use themes::BannerTheme;
 use vex_sdk::vexBatteryCapacityGet;
-use vexide_core::{competition, os, println};
+use vexide_core::{competition, os, println, time};
 
 pub mod themes;
 
@@ -41,10 +41,10 @@ pub fn print(theme: BannerTheme) {
         mk = theme.metadata_key,
         emoji = theme.emoji,
         vexide_version = VEXIDE_VERSION,
-        vexos_version = os::get_version(),
+        vexos_version = os::system_version(),
         battery = unsafe { vexBatteryCapacityGet() } as u8,
         rust_version = compile_time::rustc_version_str!(),
         competition_mode = competition::mode(),
-        uptime = os::get_uptime(),
+        uptime = time::uptime(),
     );
 }

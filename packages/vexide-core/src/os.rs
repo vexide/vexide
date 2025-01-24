@@ -2,9 +2,9 @@
 //!
 //! Module for retreiving information about vexOS
 
-use core::{fmt, time::Duration};
+use core::fmt;
 
-use vex_sdk::{vexSystemPowerupTimeGet, vexSystemUsbStatus, vexSystemVersion};
+use vex_sdk::{vexSystemUsbStatus, vexSystemVersion};
 
 /// A VexOS version
 #[derive(Clone, Copy, Debug)]
@@ -31,7 +31,7 @@ impl fmt::Display for Version {
 
 /// Returns the current VexOS version.
 #[must_use]
-pub fn get_version() -> Version {
+pub fn system_version() -> Version {
     let version_bytes = unsafe { vexSystemVersion() }.to_be_bytes();
     Version {
         major: version_bytes[0],
@@ -39,12 +39,6 @@ pub fn get_version() -> Version {
         build: version_bytes[2],
         patch: version_bytes[3],
     }
-}
-
-/// Returns the duration that the brain has been turned on.
-#[must_use]
-pub fn get_uptime() -> Duration {
-    Duration::from_micros(unsafe { vexSystemPowerupTimeGet() })
 }
 
 /// Whether or not the brain has a USB cable plugged in.
