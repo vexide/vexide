@@ -4,7 +4,7 @@
 
 use core::fmt;
 
-use vex_sdk::{vexSystemUsbStatus, vexSystemVersion};
+use vex_sdk::vexSystemVersion;
 
 /// A VexOS version
 #[derive(Clone, Copy, Debug)]
@@ -39,10 +39,4 @@ pub fn system_version() -> Version {
         build: version_bytes[2],
         patch: version_bytes[3],
     }
-}
-
-/// Whether or not the brain has a USB cable plugged in.
-#[must_use]
-pub fn has_usb() -> bool {
-    (unsafe { vexSystemUsbStatus() } == 1)
 }
