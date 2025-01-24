@@ -770,12 +770,7 @@ impl Display {
     ///
     /// A [`DisplayError::BufferSize`] error is returned if `buf` does not have the correct number of bytes
     /// to fill the specified region.
-    pub fn draw_buffer<T, I>(
-        &mut self,
-        region: Rect,
-        buf: T,
-        src_stride: i32,
-    ) -> Result<(), DisplayError>
+    pub fn draw_buffer<T, I>(&mut self, region: Rect, buf: T, src_stride: i32)
     where
         T: IntoIterator<Item = I>,
         I: Into<Rgb<u8>>,
@@ -788,12 +783,10 @@ impl Display {
         let expected_size = ((region.end.x - region.start.x) as u32
             * (region.end.y - region.start.y) as u32) as usize;
 
-        ensure!(
-            raw_buf.len() == expected_size,
-            BufferSizeSnafu {
-                buffer_size: raw_buf.len(),
-                expected_size
-            }
+        let buffer_size = raw_buf.len();
+        assert_eq!(
+            buffer_size, expected_size,
+            "The given buffer of colors was wrong size to fill the specified area: expected {expected_size} bytes, got {buffer_size}."
         );
 
         // SAFETY: The buffer is guaranteed to be the correct size.
@@ -807,8 +800,6 @@ impl Display {
                 src_stride,
             );
         }
-
-        Ok(())
     }
 
     /// Returns the current touch status of the display.
@@ -829,21 +820,6 @@ impl Display {
             release_count: touch_status.releaseCount,
         }
     }
-}
-
-#[derive(Debug, Snafu)]
-/// Errors that can occur when interacting with the display.
-pub enum DisplayError {
-    /// The given buffer of colors was wrong size to fill the specified area.
-    #[snafu(display(
-        "The given buffer of colors was wrong size to fill the specified area: expected {expected_size} bytes, got {buffer_size}."
-    ))]
-    BufferSize {
-        /// The size of the buffer.
-        buffer_size: usize,
-        /// The expected size of the buffer.
-        expected_size: usize,
-    },
 }
 
 /// An error that occurs when a negative or non-finite font size is attempted to be created.
