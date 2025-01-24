@@ -406,15 +406,14 @@ impl AiVisionSensor {
 
     /// Sets a color code used to detect groups of colors.
     ///
-    /// # Note
+    /// # Panics
     ///
-    /// This function will return an error if the given ID is not in the range [1, 8].
+    /// - Panics if the given color code contains an ID that is not in the interval [1, 7].
+    /// - Panics if the given ID is not in the interval [1, 8].
     ///
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 8].
-    /// - A [`AiVisionError::InvalidIdInCode`] is returned if the given color code contains an ID that is not in the range [1, 7].
     ///
     /// # Examples
     ///
@@ -435,17 +434,19 @@ impl AiVisionSensor {
     /// }
     /// ```
     pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<()> {
-        if !(1..=8).contains(&id) {
-            return InvalidIdSnafu { id, range: 1..=8 }.fail();
-        }
+        assert!(
+            !(1..=8).contains(&id),
+            "The given ID ({id}) is out of the interval [1, 8]."
+        );
         self.validate_port()?;
 
         // Copy the color code into the V5_DeviceAiVisionCode struct
         let mut ids = [0u8; 7];
         for (i, id) in code.0.iter().flatten().enumerate() {
-            if !(1..=7).contains(id) {
-                return InvalidIdInCodeSnafu { id: *id }.fail();
-            }
+            assert!(
+                !(1..=7).contains(id),
+                "The given color code contains an ID ({id}) that is out of the interval [1, 7]."
+            );
             ids[i] = *id;
         }
 
@@ -479,10 +480,13 @@ impl AiVisionSensor {
 
     /// Returns the color code set on the AI Vision sensor with the given ID if it exists.
     ///
+    /// # Panics
+    ///
+    /// - Panics if the given ID is not in the interval [1, 8].
+    ///
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 8].
     ///
     /// # Examples
     ///
@@ -502,9 +506,10 @@ impl AiVisionSensor {
     /// }
     /// ```
     pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>> {
-        if !(1..=8).contains(&id) {
-            return InvalidIdSnafu { id, range: 1..=8 }.fail();
-        }
+        assert!(
+            !(1..=8).contains(&id),
+            "The given ID ({id}) is out of the interval [1, 8]."
+        );
         self.validate_port()?;
 
         // Get the color code from the sensor
@@ -564,14 +569,13 @@ impl AiVisionSensor {
 
     /// Sets a color signature for the AI Vision sensor.
     ///
-    /// # Note
+    /// # Panics
     ///
-    /// This function will return an error if the given ID is not in the range [1, 7].
+    /// - Panics if the given ID is not in the range [1, 7].
     ///
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
     ///
     /// # Examples
     ///
@@ -591,9 +595,10 @@ impl AiVisionSensor {
     /// }
     /// ```
     pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
-        if !(1..=7).contains(&id) {
-            return InvalidIdSnafu { id, range: 1..=7 }.fail();
-        }
+        assert!(
+            !(1..=7).contains(&id),
+            "The given ID ({id}) is out of the interval [1, 7]."
+        );
         self.validate_port()?;
 
         let mut color = V5_DeviceAiVisionColor {
@@ -614,10 +619,13 @@ impl AiVisionSensor {
 
     /// Returns the color signature set on the AI Vision sensor with the given ID if it exists.
     ///
+    /// # Panics
+    ///
+    /// - Panics if the given ID is not in the interval [1, 7].
+    ///
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    /// - A [`AiVisionError::InvalidId`] is returned if the given ID is not in the range [1, 7].
     ///
     /// # Examples
     ///
@@ -641,9 +649,10 @@ impl AiVisionSensor {
     /// }
     /// ```
     pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>> {
-        if !(1..=7).contains(&id) {
-            return InvalidIdSnafu { id, range: 1..=7 }.fail();
-        }
+        assert!(
+            !(1..=7).contains(&id),
+            "The given ID ({id}) is out of the interval [1, 7]."
+        );
         self.validate_port()?;
 
         let mut color: V5_DeviceAiVisionColor = unsafe { core::mem::zeroed() };
@@ -1008,20 +1017,6 @@ impl From<AiVisionSensor> for SmartPort {
 pub enum AiVisionError {
     /// An object created by VEXos failed to be converted.
     InvalidObject,
-    /// The given signature ID or argument is out of range.
-    #[snafu(display("The given ID ({id}) is out of the range {range:?}."))]
-    InvalidId {
-        /// The ID that was out of range.
-        id: u8,
-        /// The range of possible values for the ID.
-        range: core::ops::RangeInclusive<u8>,
-    },
-    /// A color signature ID in a given color code is out of range.
-    #[snafu(display("The given color code contains an ID ({id}) that is out of range."))]
-    InvalidIdInCode {
-        /// The ID that was out of range.
-        id: u8,
-    },
     /// Failed to fetch the class name of a model-detected object due it having a invalid
     /// string representation.
     #[snafu(transparent)]

@@ -29,12 +29,17 @@ Before releasing:
 - Fixed error handling for rangefinder port numbers. (#268)
 - Fixed an internal issue regarding units with `Motor::set_position`.
 - Fixed `File::seek` seeking to the wrong position when using `SeekFrom::End` with a negative offset. (#267)
+- Fixed a rare issue with IMU calibration timing out at the start of some programs. (#275)
 - Recursive panics (panics that occur *within* `vexide_panic`'s handler) will now immediately abort rather than potentially causing a stack overflow. (#275)
 
 ### Changed
 
 - Renamed `Once::is_complete` to `Once::is_completed` for consistency with the standard library. (#257) (**Breaking Change**)
 - All `Position` methods are now usable in `const` context. (#254)
+- The `Nul`, `InvalidLine`, and `InvalidColumn` `ControllerError` variants have been removed. These errors now cause panics. (#266) (**Breaking Change**)
+- `DisplayError` has been removed and `Display::draw_buffer` now panics when given a buffer of invalid size. (#266) (**Breaking Change**)
+- The `InvalidId` and `InvalidIdInCode` `AiVisionError` variants have been removed. These errors now cause panics. (#266) (**Breaking Change**)
+- `VisionError::InvalidId` has been removed. Invalid signature IDs given to `VisionSensor` will now cause panics. (#266) (**Breaking Change**)
 
 ### Removed
 

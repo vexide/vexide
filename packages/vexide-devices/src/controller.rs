@@ -225,14 +225,21 @@ impl Future for ControllerScreenWriteFuture<'_> {
             enforce_visible: visible,
         } = state
         {
-            if *visible && (*line == 0 || *line > ControllerScreen::MAX_LINES as u8) {
-                return Poll::Ready(InvalidLineSnafu { line: *line }.fail());
-            }
-            if *column == 0 || *column > ControllerScreen::MAX_COLUMNS as u8 {
-                return Poll::Ready(InvalidColumnSnafu { column: *column }.fail());
-            }
+            assert!(
+                *visible && (*line == 0 || *line > ControllerScreen::MAX_LINES as u8),
+                "Invalid line number ({line}) is greater than the maximum number of lines ({})",
+                ControllerScreen::MAX_LINES
+            );
+            assert!(
+                *column == 0 || *column > ControllerScreen::MAX_COLUMNS as u8,
+                "Invalid column number ({column}) is greater than the maximum number of columns ({})",
+                ControllerScreen::MAX_COLUMNS
+            );
 
-            let text = text.as_deref().map_err(Clone::clone)?;
+            let text = text
+                .as_deref()
+                .map_err(Clone::clone)
+                .expect("A NUL (0x00) character was found in the text input string.");
 
             match validate_connection(controller.id) {
                 Ok(()) => {
@@ -451,14 +458,14 @@ impl ControllerScreen {
     ///
     /// </section>
     ///
+    /// # Panics
+    ///
+    /// - Panics if `line` is greater than or equal to [`Self::MAX_LINES`].
+    /// - Panics if `col` is greater than or equal to [`Self::MAX_COLUMNS`].
+    /// - Panics if a NUL (0x00) character was found anywhere in the specified text.
+    ///
     /// # Errors
     ///
-    /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
-    ///   greater than or equal to [`Self::MAX_LINES`].
-    /// - A [`ControllerError::InvalidColumn`] error is returned if `col` is
-    ///   greater than or equal to [`Self::MAX_COLUMNS`].
-    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
-    ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
     ///
@@ -495,14 +502,14 @@ impl ControllerScreen {
     ///
     /// </section>
     ///
+    /// # Panics
+    ///
+    /// - Panics if `line` is greater than or equal to [`Self::MAX_LINES`].
+    /// - Panics if `col` is greater than or equal to [`Self::MAX_COLUMNS`].
+    /// - Panics if a NUL (0x00) character was found anywhere in the specified text.
+    ///
     /// # Errors
     ///
-    /// - A [`ControllerError::InvalidLine`] error is returned if `col` is
-    ///   greater than or equal to [`Self::MAX_LINES`].
-    /// - A [`ControllerError::InvalidColumn`] error is returned if `col` is
-    ///   greater than or equal to [`Self::MAX_COLUMNS`].
-    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
-    ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
     /// - A [`ControllerError::WriteBusy`] error is returned if a screen write
@@ -528,17 +535,20 @@ impl ControllerScreen {
     ) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
 
-        ensure!(
+        assert!(
             column < Self::MAX_COLUMNS as u8 && column != 0,
-            InvalidColumnSnafu { column }
+            "Invalid column number ({column}) is greater than the maximum number of columns ({})",
+            ControllerScreen::MAX_COLUMNS
         );
-        ensure!(
+        assert!(
             line < Self::MAX_LINES as u8 && line != 0,
-            InvalidLineSnafu { line }
+            "Invalid column number ({column}) is greater than the maximum number of columns ({})",
+            ControllerScreen::MAX_COLUMNS
         );
 
         let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text.as_ref())?;
+        let text = CString::new(text.as_ref())
+            .expect("A NUL (0x00) character was found in the text input string.");
 
         if unsafe {
             vexControllerTextSet(
@@ -973,38 +983,11 @@ pub enum ControllerError {
     /// The controller is not connected to the Brain.
     Offline,
 
-    /// A NUL (0x00) character was found in a string that may not contain NUL characters.
-    #[snafu(transparent)]
-    Nul {
-        /// The source of the error.
-        source: NulError,
-    },
-
     /// Access to controller data is restricted by competition control.
     ///
     /// When this error occurs, the requested data is not available outside of
     /// driver control mode.
     CompetitionControl,
-
-    /// The line number provided is larger than [`ControllerScreen::MAX_LINES`].
-    #[snafu(display(
-        "Invalid line number ({line}) is greater than the maximum number of lines ({})",
-        ControllerScreen::MAX_LINES
-    ))]
-    InvalidLine {
-        /// The line number that was given.
-        line: u8,
-    },
-
-    /// The column number provided is larger than [`ControllerScreen::MAX_COLUMNS`].
-    #[snafu(display(
-        "Invalid column number ({column}) is greater than the maximum number of columns ({})",
-        ControllerScreen::MAX_COLUMNS
-    ))]
-    InvalidColumn {
-        /// The column number that was given.
-        column: u8,
-    },
 
     /// Attempted to write a buffer to the controller's screen before the previous buffer was sent.
     WriteBusy,
