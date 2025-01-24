@@ -21,6 +21,7 @@ pub mod competition;
 pub mod float;
 pub mod fs;
 pub mod io;
+pub mod os;
 pub mod path;
 pub mod program;
 pub mod sync;
