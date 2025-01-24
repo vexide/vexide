@@ -69,12 +69,6 @@ pub enum CompetitionMode {
     Driver,
 }
 
-impl fmt::Display for CompetitionMode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{self:?}")
-    }
-}
-
 /// Represents a type of system used to control competition state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompetitionSystem {
