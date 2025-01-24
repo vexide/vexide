@@ -23,6 +23,8 @@ Before releasing:
 
 ### Added
 
+- Added a self-modifying memory patcher to `vexide_startup` that applies patches over the current program. This will be paired with `cargo-v5` changes to allow for much faster uploading.
+
 ### Fixed
 
 - Fixed error handling for encoder port numbers. (#264)
@@ -36,6 +38,7 @@ Before releasing:
 
 - Renamed `Once::is_complete` to `Once::is_completed` for consistency with the standard library. (#257) (**Breaking Change**)
 - All `Position` methods are now usable in `const` context. (#254)
+- Replaced `vexide_core::allocator::init_heap` with `vexide_core::allocator::claim`, which allows claiming uninitialized memory spans as heap space.
 
 ### Removed
 
