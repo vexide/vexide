@@ -5,6 +5,7 @@ extern crate alloc;
 use alloc::boxed::Box;
 use core::{
     cell::UnsafeCell,
+    fmt,
     future::{Future, IntoFuture},
     marker::{PhantomData, PhantomPinned},
     ops::ControlFlow,
@@ -66,6 +67,12 @@ pub enum CompetitionMode {
     /// connecting, but are typically placed into this mode following the autonomous
     /// period.
     Driver,
+}
+
+impl fmt::Display for CompetitionMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
+    }
 }
 
 /// Represents a type of system used to control competition state.
