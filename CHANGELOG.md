@@ -23,6 +23,8 @@ Before releasing:
 
 ### Added
 
+- Added functions to get vexOS version and uptime. (#278)
+
 ### Fixed
 
 - Fixed error handling for encoder port numbers. (#264)
