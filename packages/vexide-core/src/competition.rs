@@ -5,7 +5,6 @@ extern crate alloc;
 use alloc::boxed::Box;
 use core::{
     cell::UnsafeCell,
-    fmt,
     future::{Future, IntoFuture},
     marker::{PhantomData, PhantomPinned},
     ops::ControlFlow,
