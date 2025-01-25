@@ -911,11 +911,17 @@ impl InertialStatus {
 /// Defines a waiting phase in [`InertialCalibrateFuture`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum CalibrationPhase {
+    /// Waiting for IMU to report its status as something other than 0x0.
+    ///
+    /// This can happen at the start of the program where VEXos takes a bit to
+    /// give us the first sensor packet.
+    Status,
+
     /// Future is currently waiting for the IMU to report [`InertialStatus::CALIBRATING`], indicating
     /// that it has started calibration.
     Start,
 
-    /// Waiting for calibration to end.
+    /// Waiting for calibration to end ([`InertialStatus::CALIBRATING`] to be cleared from status).
     End,
 }
 
@@ -943,14 +949,46 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
         let device = unsafe { this.imu.port.device_handle() };
+
+        // Get the sensor's status flags, which tell us whether or not we are still calibrating.
+        let status = InertialStatus::from_bits_retain(if let Err(err) = this.imu.validate_port() {
+            // IMU got unplugged, so we'll resolve early.
+            return Poll::Ready(Err(err.into()));
+        } else {
+            // Get status flags from VEXos.
+            let flags = unsafe { vexDeviceImuStatusGet(device) };
+
+            // 0xFF is returned when the sensor fails to report flags.
+            if flags == InertialStatus::STATUS_ERROR {
+                return Poll::Ready(BadStatusSnafu.fail());
+            } else if flags == 0x0 {
+                this.state =
+                    InertialCalibrateFutureState::Waiting(Instant::now(), CalibrationPhase::Status);
+            }
+
+            flags
+        });
+
         match this.state {
             // The "calibrate" phase begins the calibration process.
+            //
             // This only happens for one poll of the future (the first one). All future polls will
             // either be waiting for calibration to start or for calibration to end.
             InertialCalibrateFutureState::Calibrate => {
-                if let Err(err) = this.imu.validate_port() {
-                    // IMU isn't plugged in, no need to go any further.
-                    Poll::Ready(Err(err.into()))
+                // Check if the sensor was already calibrating before we recalibrate it ourselves.
+                //
+                // This can happen at the start of program execution or if the sensor loses then regains power.
+                // In those instances, VEXos will automatically start the calibration process without us asking.
+                // Calling [`vexDeviceImuReset`] while calibration is already happening has caused bugs in our
+                // testing, so we instead just want to wait until the calibration attempt has finished.
+                //
+                // See <https://github.com/vexide/vexide/issues/253> for more details.
+                if status.contains(InertialStatus::CALIBRATING) {
+                    // Sensor was already calibrating, so wait for that to finish.
+                    this.state = InertialCalibrateFutureState::Waiting(
+                        Instant::now(),
+                        CalibrationPhase::End,
+                    );
                 } else {
                     // Request that VEXos calibrate the IMU, and transition to pending state.
                     unsafe { vexDeviceImuReset(device) }
@@ -960,9 +998,10 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
                         Instant::now(),
                         CalibrationPhase::Start,
                     );
-                    cx.waker().wake_by_ref();
-                    Poll::Pending
                 }
+
+                cx.waker().wake_by_ref();
+                Poll::Pending
             }
 
             // In this stage, we are either waiting for the calibration status flag to be set (CalibrationPhase::Start),
@@ -971,29 +1010,15 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
             InertialCalibrateFutureState::Waiting(timestamp, phase) => {
                 if timestamp.elapsed()
                     > match phase {
-                        CalibrationPhase::Start => InertialSensor::CALIBRATION_START_TIMEOUT,
+                        CalibrationPhase::Start | CalibrationPhase::Status => {
+                            InertialSensor::CALIBRATION_START_TIMEOUT
+                        }
                         CalibrationPhase::End => InertialSensor::CALIBRATION_END_TIMEOUT,
                     }
                 {
                     // Waiting took too long and exceeded a timeout.
                     return Poll::Ready(CalibrationTimedOutSnafu.fail());
                 }
-
-                let status =
-                    InertialStatus::from_bits_retain(if let Err(err) = this.imu.validate_port() {
-                        // IMU got unplugged, so we'll resolve early.
-                        return Poll::Ready(Err(err.into()));
-                    } else {
-                        // Get status flags from VEXos.
-                        let flags = unsafe { vexDeviceImuStatusGet(device) };
-
-                        // 0xFF is returned when the sensor fails to report flags.
-                        if flags == InertialStatus::STATUS_ERROR {
-                            return Poll::Ready(BadStatusSnafu.fail());
-                        }
-
-                        flags
-                    });
 
                 if status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::Start
                 {
@@ -1006,8 +1031,8 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
                         Instant::now(),
                         CalibrationPhase::End,
                     );
-                    cx.waker().wake_by_ref();
-                    return Poll::Pending;
+                } else if !status.is_empty() && phase == CalibrationPhase::Status {
+                    this.state = InertialCalibrateFutureState::Calibrate;
                 } else if !status.contains(InertialStatus::CALIBRATING)
                     && phase == CalibrationPhase::End
                 {
@@ -1031,8 +1056,8 @@ pub enum InertialError {
     StillCalibrating,
     /// The sensor failed to report its status flags (returned 0xFF).
     BadStatus,
-    #[snafu(transparent)]
     /// Generic port related error.
+    #[snafu(transparent)]
     Port {
         /// The source of the error.
         source: PortError,

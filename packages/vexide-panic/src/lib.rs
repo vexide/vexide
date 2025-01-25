@@ -13,6 +13,7 @@ use alloc::{
     boxed::Box,
     string::{String, ToString},
 };
+use core::sync::atomic::{AtomicBool, Ordering};
 #[allow(unused_imports)]
 use core::{cell::UnsafeCell, fmt::Write};
 
@@ -22,6 +23,8 @@ use vexide_devices::{
     display::{Display, Font, FontFamily, FontSize, Rect, Text},
     math::Point2,
 };
+
+static FIRST_PANIC: AtomicBool = AtomicBool::new(true);
 
 /// Draw an error box to the display.
 ///
@@ -231,7 +234,7 @@ pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
     // functions, which don't panic while holding a lock.
     let mut guard = HOOK
         .try_lock()
-        .expect("failed to set custom panic hook (mutex poisoned or locked)");
+        .expect("failed to set custom panic hook (mutex locked)");
     // Don't do anything that could panic until guard is dropped
     let old_hook = core::mem::replace(&mut *guard, Hook::Default).into_box();
     core::mem::drop(guard);
@@ -241,6 +244,14 @@ pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
 #[panic_handler]
 /// The panic handler for vexide.
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
+    // This can only occur if the panic handler itself has panicked (which can
+    // happen in hooks or if println!() fails), resulting in a potential stack
+    // overflow. In this instance, something is likely very wrong, so it's better
+    // to just abort rather than recursively panicking.
+    if !FIRST_PANIC.swap(false, Ordering::Relaxed) {
+        vexide_core::program::exit();
+    }
+
     // Try to lock the HOOK mutex. If we can't, we'll just use the default panic
     // handler, since it's probably not good to panic in the panic handler and
     // leave the user clueless about what happened.
@@ -263,7 +274,8 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     } else {
         // Since this is in theory unreachable, if it is reached, let's ask the
         // user to file a bug report.
-        println!("Panic handler hook mutex is poisoned. Using default `vexide-panic` panic handler. This should never happen.");
+        // FIXME: use eprintln once armv7a-vex-v5 support in Rust is merged
+        println!("Panic handler hook mutex was locked, so the default panic hook will be used. This should never happen.");
         println!("If you see this, please consider filing a bug: https://github.com/vexide/vexide/issues/new");
         default_panic_hook(info);
     }

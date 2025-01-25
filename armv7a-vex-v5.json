@@ -7,6 +7,7 @@
     "env": "v5",
     "panic-strategy": "abort",
     "relocation-model": "static",
+    "llvm-floatabi": "hard",
     "llvm-target": "armv7a-none-eabihf",
     "features": "+v7,+neon,+vfp3d16,+thumb2",
     "linker": "rust-lld",
