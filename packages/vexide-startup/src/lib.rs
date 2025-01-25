@@ -186,8 +186,8 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         // Fill the `.bss` section of our program's memory with zeroes to ensure that
         // uninitialized data is allocated properly.
         zero_bss(
-            core::ptr::addr_of_mut!(__bss_start),
-            core::ptr::addr_of_mut!(__bss_end),
+            &raw mut __bss_start,
+            &raw mut __bss_end,
         );
     }
 
