@@ -17,6 +17,7 @@ authors = [
 rust-version = "1.75.0"
 
 [package.metadata.v5]
+upload-strategy = "differential"
 slot = 1
 icon = "cool-x"
 compress = true

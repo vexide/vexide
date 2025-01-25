@@ -4,38 +4,28 @@
 //! This is done automatically in the `vex-startup` crate,
 //! so you should not need to call it yourself unless you are writing your own startup implementation.
 
-use core::ptr::addr_of_mut;
-
 use talc::{ErrOnOom, Span, Talc, Talck};
 
 use crate::sync::RawMutex;
 
-unsafe extern "C" {
-    static mut __heap_start: u8;
-    static mut __heap_end: u8;
-}
-
 #[global_allocator]
 static ALLOCATOR: Talck<RawMutex, ErrOnOom> = Talc::new(ErrOnOom).lock();
 
-/// Initializes the heap allocator.
+/// Claims a region of memory as heap space.
 ///
 /// # Safety
-///
-/// This function can only be called once.
+/// - The memory within the `memory` must be valid for reads and writes, and
+///   memory therein (when not allocated to the user) must not be mutated while
+///   the allocator is in use.
+/// - The region encompassed from [`start`, `end`] should not overlap with any
+///   other active heap regions.
 ///
 /// # Panics
 ///
 /// Panics if the `__heap_start` or `__heap_end` symbols set in the linker script are null.
-pub unsafe fn init_heap() {
+pub unsafe fn claim(start: *mut u8, end: *mut u8) {
     //SAFETY: User must ensure that this function is only called once.
     unsafe {
-        ALLOCATOR
-            .lock()
-            .claim(Span::new(
-                addr_of_mut!(__heap_start),
-                addr_of_mut!(__heap_end),
-            ))
-            .unwrap();
+        ALLOCATOR.lock().claim(Span::new(start, end)).unwrap();
     }
 }
