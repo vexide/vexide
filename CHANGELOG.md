@@ -43,8 +43,12 @@ Before releasing:
 - `DisplayError` has been removed and `Display::draw_buffer` now panics when given a buffer of invalid size. (#266) (**Breaking Change**)
 - The `InvalidId` and `InvalidIdInCode` `AiVisionError` variants have been removed. These errors now cause panics. (#266) (**Breaking Change**)
 - `VisionError::InvalidId` has been removed. Invalid signature IDs given to `VisionSensor` will now cause panics. (#266) (**Breaking Change**)
+- The `lock` functions on `Stdin` and `Stdout` are now async. (#265) (**Breaking Change**)
 
 ### Removed
+
+- Removed the `Deref` implementation and `force` method on `LazyLock` to prevent deadlocks. use the async `LazyLock::get` instead. (#265) (**Breaking Change**)
+- Removed the `Read` and `Write` implementations on `Stdin` and `Stdout` respectively to prevent deadlocks. (#265) (**Breaking Change**)
 
 ### New Contributors
 
