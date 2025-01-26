@@ -29,7 +29,7 @@ impl fmt::Display for Version {
     }
 }
 
-/// Returns the current VexOS version.
+/// Returns the current VEXos version.
 #[must_use]
 pub fn system_version() -> Version {
     let version_bytes = unsafe { vexSystemVersion() }.to_be_bytes();
