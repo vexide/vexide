@@ -29,7 +29,7 @@ static mut errno: c_int = 0;
 /// interoptability with libm.
 #[unsafe(no_mangle)] // SAFETY: libm requires this symbol to exist, and this is the only place it is defined
 unsafe extern "C" fn __errno() -> *mut c_int {
-    core::ptr::addr_of_mut!(errno)
+    &raw mut errno
 }
 
 #[link(name = "m")]

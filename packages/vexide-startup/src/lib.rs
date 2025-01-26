@@ -17,6 +17,10 @@ use banner::themes::BannerTheme;
 use bitflags::bitflags;
 
 pub mod banner;
+mod patcher;
+
+/// Load address of user programs.
+const USER_MEMORY_START: u32 = 0x0380_0000;
 
 /// Identifies the type of binary to VEXos.
 #[repr(u32)]
@@ -83,6 +87,9 @@ impl CodeSignature {
 }
 
 unsafe extern "C" {
+    static mut __heap_start: u8;
+    static mut __heap_end: u8;
+
     // These symbols don't have real types, so this is a little bit of a hack.
     static mut __bss_start: u32;
     static mut __bss_end: u32;
@@ -100,8 +107,34 @@ core::arch::global_asm!(
 .global _boot
 
 _boot:
-    ldr sp, =__stack_top @ Load the user stack.
-    b _start             @ Jump to the Rust entrypoint.
+    @ Load the user program stack.
+    @
+    @ This technically isn't required, as VEXos already sets up a stack for CPU1,
+    @ but that stack is relatively small and we have more than enough memory
+    @ available to us for this.
+    ldr sp, =__stack_top
+
+    @ Before any Rust code runs, we need to memcpy the currently running binary to
+    @ 0x07C00000 if a patch file is loaded into memory. See the documentation in
+    @ `patcher/mod.rs` for why we want to do this.
+
+    @ Check for patch magic at 0x07A00000.
+    mov r0, #0x07A00000
+    ldr r0, [r0]
+    ldr r1, =0xB1DF
+    cmp r0, r1
+
+    @ Prepare to memcpy binary to 0x07C00000
+    mov r0, #0x07C00000 @ memcpy dest -> r0
+    mov r1, #0x03800000 @ memcpy src -> r1
+    ldr r2, =0x07A0000C @ the length of the binary is stored at 0x07A0000C
+    ldr r2, [r2] @ memcpy size -> r2
+
+    @ Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
+    bleq __overwriter_aeabi_memcpy
+
+    @ Jump to the Rust entrypoint.
+    b _start
 "#
 );
 
@@ -146,17 +179,26 @@ where
 ///
 /// Must be called once at the start of program execution after the stack has been setup.
 #[inline]
+#[allow(clippy::too_many_lines)]
 pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     #[cfg(target_vendor = "vex")]
     unsafe {
-        // Fill the `.bss` section of our program's memory with zeroes to ensure that uninitialized data is allocated properly.
-        zero_bss(
-            core::ptr::addr_of_mut!(__bss_start),
-            core::ptr::addr_of_mut!(__bss_end),
-        );
+        // Fill the `.bss` section of our program's memory with zeroes to ensure that
+        // uninitialized data is allocated properly.
+        zero_bss(&raw mut __bss_start, &raw mut __bss_end);
+    }
 
-        // Initialize the heap allocator
-        vexide_core::allocator::init_heap();
+    // Initialize the heap allocator using normal bounds
+    unsafe {
+        vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
+    }
+
+    // If this link address is 0x03800000, this implies we were uploaded using
+    // differential uploads by cargo-v5 and may have a patch to apply.
+    if unsafe { vex_sdk::vexSystemLinkAddrGet() } == USER_MEMORY_START {
+        unsafe {
+            patcher::patch();
+        }
     }
 
     // Print the banner
