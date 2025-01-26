@@ -766,10 +766,10 @@ impl Display {
     /// This function copies the pixels in the specified buffer to the specified region of the display.
     /// The stride parameter is defined as the number of pixels per row.
     ///
-    /// # Errors
+    /// # Panics
     ///
-    /// A [`DisplayError::BufferSize`] error is returned if `buf` does not have the correct number of bytes
-    /// to fill the specified region.
+    /// This function panics if `buf` does not have the correct number of bytes to fill the specified
+    /// region.
     pub fn draw_buffer<T, I>(&mut self, region: Rect, buf: T, src_stride: i32)
     where
         T: IntoIterator<Item = I>,
