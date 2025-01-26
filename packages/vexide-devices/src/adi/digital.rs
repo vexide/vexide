@@ -122,11 +122,11 @@ impl AdiDigitalIn {
     }
 }
 
-impl AdiDevice for AdiDigitalIn {
+impl AdiDevice<1> for AdiDigitalIn {
     type PortNumberOutput = u8;
 
-    fn port_number(&self) -> Self::PortNumberOutput {
-        self.port.number()
+    fn port_numbers(&self) -> [u8; 1] {
+        [self.port.number()]
     }
 
     fn expander_port_number(&self) -> Option<u8> {
@@ -388,11 +388,11 @@ impl AdiDigitalOut {
     }
 }
 
-impl AdiDevice for AdiDigitalOut {
+impl AdiDevice<1> for AdiDigitalOut {
     type PortNumberOutput = u8;
 
-    fn port_number(&self) -> Self::PortNumberOutput {
-        self.port.number()
+    fn port_numbers(&self) -> [u8; 1] {
+        [self.port.number()]
     }
 
     fn expander_port_number(&self) -> Option<u8> {

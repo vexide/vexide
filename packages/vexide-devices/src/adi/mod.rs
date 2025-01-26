@@ -157,23 +157,23 @@ impl AdiPort {
     }
 }
 
-impl<T: AdiDevice<PortNumberOutput = u8>> From<T> for AdiPort {
+impl<T: AdiDevice<1>> From<T> for AdiPort {
     fn from(device: T) -> Self {
         // SAFETY: We can do this, since we ensure that the old Smart Port was disposed of.
         // This can effectively be thought as a move out of the device's private `port` field.
-        unsafe { Self::new(device.port_number(), device.expander_port_number()) }
+        unsafe { Self::new(device.port_numbers()[0], device.expander_port_number()) }
     }
 }
 
 impl From<AdiRangeFinder> for (AdiPort, AdiPort) {
     fn from(device: AdiRangeFinder) -> Self {
-        let numbers = device.port_number();
+        let numbers = device.port_numbers();
         let expander_number = device.expander_port_number();
 
         unsafe {
             (
-                AdiPort::new(numbers.0, expander_number),
-                AdiPort::new(numbers.1, expander_number),
+                AdiPort::new(numbers[0], expander_number),
+                AdiPort::new(numbers[1], expander_number),
             )
         }
     }
@@ -181,20 +181,20 @@ impl From<AdiRangeFinder> for (AdiPort, AdiPort) {
 
 impl From<AdiEncoder> for (AdiPort, AdiPort) {
     fn from(device: AdiEncoder) -> Self {
-        let numbers = device.port_number();
+        let numbers = device.port_numbers();
         let expander_number = device.expander_port_number();
 
         unsafe {
             (
-                AdiPort::new(numbers.0, expander_number),
-                AdiPort::new(numbers.1, expander_number),
+                AdiPort::new(numbers[0], expander_number),
+                AdiPort::new(numbers[1], expander_number),
             )
         }
     }
 }
 
 /// Common functionality for a ADI (three-wire) devices.
-pub trait AdiDevice {
+pub trait AdiDevice<const N: usize> {
     /// Update rate of ADI devices.
     const UPDATE_INTERVAL: Duration = ADI_UPDATE_INTERVAL;
 
@@ -205,7 +205,7 @@ pub trait AdiDevice {
     /// Returns the port number of the [`AdiPort`] this device is registered on.
     ///
     /// Ports are numbered starting from 1.
-    fn port_number(&self) -> Self::PortNumberOutput;
+    fn port_numbers(&self) -> [u8; N];
 
     /// Returns the port number of the [`AdiPort`] this device is registered on.
     ///

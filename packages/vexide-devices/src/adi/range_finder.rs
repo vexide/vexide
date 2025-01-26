@@ -153,11 +153,11 @@ impl AdiRangeFinder {
     }
 }
 
-impl AdiDevice for AdiRangeFinder {
+impl AdiDevice<2> for AdiRangeFinder {
     type PortNumberOutput = (u8, u8);
 
-    fn port_number(&self) -> Self::PortNumberOutput {
-        (self.output_port.number(), self.input_port.number())
+    fn port_numbers(&self) -> [u8; 2] {
+        [self.output_port.number(), self.input_port.number()]
     }
 
     fn expander_port_number(&self) -> Option<u8> {
