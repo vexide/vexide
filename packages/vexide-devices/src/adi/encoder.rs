@@ -110,7 +110,7 @@ impl AdiEncoder {
 
         // Top and bottom must be plugged into the same ADI expander.
         ensure!(
-            top_port.expander_index() != bottom_port.expander_index(),
+            top_port.expander_index() == bottom_port.expander_index(),
             ExpanderPortMismatchSnafu {
                 top_port_expander: top_port.expander_number(),
                 bottom_port_expander: bottom_port.expander_number()
