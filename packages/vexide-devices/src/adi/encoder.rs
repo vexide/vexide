@@ -48,7 +48,6 @@
 //! [`RotationSensor`]: crate::smart::rotation::RotationSensor
 //! [`SmartPort`]: crate::smart::SmartPort
 
-use snafu::{ensure, Snafu};
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
@@ -67,12 +66,11 @@ impl AdiEncoder {
 
     /// Create a new encoder sensor from a top and bottom [`AdiPort`].
     ///
-    /// # Errors
+    /// # Panics
     ///
-    /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s,
-    ///   returns [`EncoderError::ExpanderPortMismatch`].
+    /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s.
     /// - If the ports are not directly next to each other or in an invalid position (one port is not in A, C, E, G and
-    ///   the other is not in in B, D, F), returns [`EncoderError::BadPortPlacement`].
+    ///   the other is not in in B, D, F).
     ///
     /// # Examples
     ///
@@ -93,7 +91,8 @@ impl AdiEncoder {
     ///     }
     /// }
     /// ```
-    pub fn new(top_port: AdiPort, bottom_port: AdiPort) -> Result<Self, EncoderError> {
+    #[must_use]
+    pub fn new(top_port: AdiPort, bottom_port: AdiPort) -> Self {
         let top_number = top_port.number();
         let bottom_number = bottom_port.number();
 
@@ -102,34 +101,32 @@ impl AdiEncoder {
         // Might be fixed through #120
 
         // Top and bottom must be plugged into the same ADI expander.
-        ensure!(
-            top_port.expander_index() != bottom_port.expander_index(),
-            ExpanderPortMismatchSnafu {
-                top_port_expander: top_port.expander_number(),
-                bottom_port_expander: bottom_port.expander_number()
-            }
+        assert!(
+            top_port.expander_index() == bottom_port.expander_index(),
+            "The specified top and bottom ports belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
+            top_port.expander_number(),
+            bottom_port.expander_number(),
         );
 
         // Top and bottom must be some combination of (AB, CD, EF, GH) or (BA, CD, FE, HG)
         let top_is_even = top_number % 2 == 0;
-        ensure!(
+        assert!(
             if top_is_even {
                 bottom_number == top_number - 1
             } else {
                 bottom_number == top_number + 1
             },
-            BadPortPlacementSnafu {
-                top_port: top_port.number(),
-                bottom_port: bottom_port.number()
-            }
+            "Encoder ports must be placed directly next to each other and in some combination of AB, CD, EF, GH, or BA, CD, EF, HG. (Got `{}{}`)",
+            adi_port_name(top_number),
+            adi_port_name(bottom_number),
         );
 
         top_port.configure(AdiDeviceType::Encoder);
 
-        Ok(Self {
+        Self {
             top_port,
             bottom_port,
-        })
+        }
     }
 
     /// Returns the distance reading of the encoder sensor in centimeters.
@@ -138,7 +135,9 @@ impl AdiEncoder {
     ///
     /// # Errors
     ///
-    /// If the ADI device could not be accessed, returns [`EncoderError::Port`].
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -159,7 +158,7 @@ impl AdiEncoder {
     ///     }
     /// }
     /// ```
-    pub fn position(&self) -> Result<Position, EncoderError> {
+    pub fn position(&self) -> Result<Position, PortError> {
         self.top_port.validate_expander()?;
         self.top_port.configure(self.device_type());
 
@@ -181,7 +180,9 @@ impl AdiEncoder {
     ///
     /// # Errors
     ///
-    /// If the ADI device could not be accessed, returns [`EncoderError::Port`].
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -200,7 +201,7 @@ impl AdiEncoder {
     ///     _ = encoder.set_position(Position::from_degrees(180));
     /// }
     /// ```
-    pub fn set_position(&self, position: Position) -> Result<(), EncoderError> {
+    pub fn set_position(&self, position: Position) -> Result<(), PortError> {
         self.top_port.validate_expander()?;
 
         unsafe {
@@ -221,7 +222,9 @@ impl AdiEncoder {
     ///
     /// # Errors
     ///
-    /// If the ADI device could not be accessed, returns [`EncoderError::Port`].
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -241,7 +244,7 @@ impl AdiEncoder {
     ///     _ = encoder.reset_position();
     /// }
     /// ```
-    pub fn reset_position(&mut self) -> Result<(), EncoderError> {
+    pub fn reset_position(&mut self) -> Result<(), PortError> {
         self.set_position(Position::default())
     }
 }
@@ -260,41 +263,4 @@ impl AdiDevice for AdiEncoder {
     fn device_type(&self) -> AdiDeviceType {
         AdiDeviceType::Encoder
     }
-}
-
-#[derive(Debug, Snafu)]
-/// Errors that can occur when interacting with an encoder range finder.
-pub enum EncoderError {
-    /// Ports must be placed directly next to each other, with the ports being some combination of (AB, CD, EF, GH) or (BA, CD, EF, HG).
-    #[snafu(display(
-        "Encoder ports must be placed directly next to each other and in some combination of AB, CD, EF, GH, or BA, CD, EF, HG. (Got `{}{}`)",
-        adi_port_name(*top_port),
-        adi_port_name(*bottom_port),
-    ))]
-    BadPortPlacement {
-        /// The bottom port number that caused the error.
-        bottom_port: u8,
-        /// The top port number that caused the error.
-        top_port: u8,
-    },
-
-    /// The specified top and bottom ports belong to different ADI expanders.
-    #[snafu(display(
-        "The specified top and bottom ports belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
-        top_port_expander,
-        bottom_port_expander
-    ))]
-    ExpanderPortMismatch {
-        /// The top port's expander number.
-        top_port_expander: Option<u8>,
-        /// The bottom port's expander number.
-        bottom_port_expander: Option<u8>,
-    },
-
-    /// Generic port related error.
-    #[snafu(transparent)]
-    Port {
-        /// The source of the error.
-        source: PortError,
-    },
 }
