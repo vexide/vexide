@@ -67,7 +67,7 @@ impl AdiRangeFinder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let range_finder = AdiRangeFinder::new(peripherals.adi_a, peripherals.adi_b).expect("Failed to create range finder");
+    ///     let range_finder = AdiRangeFinder::new(peripherals.adi_a, peripherals.adi_b);
     ///     loop {
     ///         let distance = range_finder.distance().expect("Failed to get distance");
     ///         println!("Distance: {} cm", distance);
@@ -130,7 +130,7 @@ impl AdiRangeFinder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let range_finder = AdiRangeFinder::new(peripherals.adi_a, peripherals.adi_b).expect("Failed to create range finder");
+    ///     let range_finder = AdiRangeFinder::new(peripherals.adi_a, peripherals.adi_b);
     ///     loop {
     ///         match range_finder.distance().expect("Failed to get distance") {
     ///             Some(distance) => println!("Distance: {} cm", distance),

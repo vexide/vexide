@@ -83,7 +83,7 @@ impl AdiEncoder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b).expect("could not create encoder");
+    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     loop {
     ///         println!("encoder position: {:?}", encoder.position());
@@ -150,7 +150,7 @@ impl AdiEncoder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b).expect("could not create encoder");
+    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     loop {
     ///         println!("encoder position: {:?}", encoder.position());
@@ -195,7 +195,7 @@ impl AdiEncoder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b).expect("could not create encoder");
+    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     // Treat the encoder as if it were at 180 degrees.
     ///     _ = encoder.set_position(Position::from_degrees(180));
@@ -237,7 +237,7 @@ impl AdiEncoder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b).expect("could not create encoder");
+    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     // Reset the encoder position to zero.
     ///     // This doesn't really do anything in this case, but it's a good example.
