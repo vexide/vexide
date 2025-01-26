@@ -23,7 +23,7 @@ Before releasing:
 
 ### Added
 
-- Added functions to get vexOS version and uptime. (#278)
+- Added functions to get VEXos version and uptime. (#278)
 
 ### Fixed
 

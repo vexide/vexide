@@ -1,6 +1,7 @@
-//! vexOS functions
+//! VEXos functions
 //!
-//! Module for retreiving information about vexOS
+//! This module provides utilities for for interacting and retrieving
+//! information from VEXos.
 
 use core::fmt;
 
