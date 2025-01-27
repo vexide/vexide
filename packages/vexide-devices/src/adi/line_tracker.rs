@@ -6,6 +6,12 @@
 //! In the V5 ecosystem, line trackers can be used to determine whether a robot is on a
 //! white tape line placed on the field. This can be used to determine where a robot is.
 //!
+//! While line trackers can be used in other applications besides line following, they
+//! may not be as reliable when not used in a controlled environment (like pointed down
+//! at a surface). For example, they may not be as reliable when pointed upward and used
+//! to detect objects, because there may be infrared light sources in the environment that
+//! could interfere with the sensor's readings.
+//!
 //! # Hardware Overview
 //!
 //! A line tracker consists of an analog infrared light sensor and an infrared LED.
@@ -19,6 +25,12 @@
 //! The Line Tracking Sensor is an analog sensor, and it internally measures values in the
 //! range of 0 to 4095 from 0-5V. Darker objects reflect less light, and are indicated by
 //! higher numbers. Lighter objects reflect more light, and are indicated by lower numbers.
+//!
+//! Internally, the sensor is comprised of an EE-SB5 photomicrosensor which is manufactured
+//! by Omron mounted in a red cast housing by VEX. The sensor has a standard sensing distance
+//! of 5mm.
+//!
+//! More information about the sensor can be found in the [datasheet](https://omronfs.omron.com/en_US/ecb/products/pdf/en-ee_sb5.pdf).
 //!
 //! # Effective Range
 //!
