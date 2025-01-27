@@ -13,6 +13,17 @@ Before releasing:
 - create new Unreleased section
 - update links at the end of the document
 - add "New Contributors" section if there were any first-time contributors
+- copy and paste the following sections to the top
+
+## [Unreleased]
+
+### Added
+
+### Fixed
+
+### Changed
+
+### Removed
 
 ### New Contributors
 
@@ -20,6 +31,18 @@ Before releasing:
 -->
 
 ## [Unreleased]
+
+### Added
+
+### Fixed
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+## [0.6.0]
 
 ### Added
 
@@ -61,6 +84,9 @@ Before releasing:
 - Removed `EncoderError` and `RangeFinderError`. The respective devices now just return `PortError`. (#271) (**Breaking Change**)
 
 ### New Contributors
+
+- @Saylar27 made their first contribution in #279!
+- @ion908 made their first contribution in #278!
 
 ## [0.5.1]
 
@@ -317,7 +343,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.5.1...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.6.0...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
@@ -326,3 +352,4 @@ Before releasing:
 [0.4.2]: https://github.com/vexide/vexide/compare/v0.4.1...v0.4.2
 [0.5.0]: https://github.com/vexide/vexide/compare/v0.4.2...v0.5.0
 [0.5.1]: https://github.com/vexide/vexide/compare/v0.5.0...v0.5.1
+[0.6.0]: https://github.com/vexide/vexide/compare/v0.5.1...v0.6.0
