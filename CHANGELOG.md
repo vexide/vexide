@@ -23,7 +23,8 @@ Before releasing:
 
 ### Added
 
-- Added functions to get vexOS version and uptime. (#278)
+- Added functions to get VEXos version and uptime. (#278)
+- Added a self-modifying memory patcher to `vexide_startup` that applies patches over the current program. This will be paired with `cargo-v5` changes to allow for much faster uploading.
 
 ### Fixed
 
@@ -31,18 +32,20 @@ Before releasing:
 - Fixed error handling for rangefinder port numbers. (#268)
 - Fixed an internal issue regarding units with `Motor::set_position`.
 - Fixed `File::seek` seeking to the wrong position when using `SeekFrom::End` with a negative offset. (#267)
-- Fixed a rare issue with IMU calibration timing out at the start of some programs. (#275)
+- Fixed a rare issue with IMU calibration timing out at the start of some programs. (#275, #279)
 - Recursive panics (panics that occur *within* `vexide_panic`'s handler) will now immediately abort rather than potentially causing a stack overflow. (#275)
 
 ### Changed
 
 - Renamed `Once::is_complete` to `Once::is_completed` for consistency with the standard library. (#257) (**Breaking Change**)
 - All `Position` methods are now usable in `const` context. (#254)
+- Replaced `vexide_core::allocator::init_heap` with `vexide_core::allocator::claim`, which allows claiming uninitialized memory spans as heap space.
 - The `Nul`, `InvalidLine`, and `InvalidColumn` `ControllerError` variants have been removed. These errors now cause panics. (#266) (**Breaking Change**)
 - `DisplayError` has been removed and `Display::draw_buffer` now panics when given a buffer of invalid size. (#266) (**Breaking Change**)
 - The `InvalidId` and `InvalidIdInCode` `AiVisionError` variants have been removed. These errors now cause panics. (#266) (**Breaking Change**)
 - `VisionError::InvalidId` has been removed. Invalid signature IDs given to `VisionSensor` will now cause panics. (#266) (**Breaking Change**)
 - The `lock` functions on `Stdin` and `Stdout` are now async. (#265) (**Breaking Change**)
+- `Stdin` and `Stdout` instances can no longer be instantiated using struct initialization syntax. Prefer using `stdin()`/`stdout()`. (#281) (**Breaking Change**)
 
 ### Removed
 
