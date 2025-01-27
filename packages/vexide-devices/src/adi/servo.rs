@@ -139,8 +139,6 @@ impl AdiServo {
 }
 
 impl AdiDevice<1> for AdiServo {
-    type PortNumberOutput = u8;
-
     fn port_numbers(&self) -> [u8; 1] {
         [self.port.number()]
     }

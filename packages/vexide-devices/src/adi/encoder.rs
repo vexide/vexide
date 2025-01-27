@@ -250,8 +250,6 @@ impl AdiEncoder {
 }
 
 impl AdiDevice<2> for AdiEncoder {
-    type PortNumberOutput = (u8, u8);
-
     fn port_numbers(&self) -> [u8; 2] {
         [self.top_port.number(), self.bottom_port.number()]
     }

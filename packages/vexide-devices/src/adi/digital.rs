@@ -123,8 +123,6 @@ impl AdiDigitalIn {
 }
 
 impl AdiDevice<1> for AdiDigitalIn {
-    type PortNumberOutput = u8;
-
     fn port_numbers(&self) -> [u8; 1] {
         [self.port.number()]
     }
@@ -389,8 +387,6 @@ impl AdiDigitalOut {
 }
 
 impl AdiDevice<1> for AdiDigitalOut {
-    type PortNumberOutput = u8;
-
     fn port_numbers(&self) -> [u8; 1] {
         [self.port.number()]
     }

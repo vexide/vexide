@@ -120,8 +120,6 @@ impl AdiLightSensor {
 }
 
 impl AdiDevice<1> for AdiLightSensor {
-    type PortNumberOutput = u8;
-
     fn port_numbers(&self) -> [u8; 1] {
         [self.port.number()]
     }

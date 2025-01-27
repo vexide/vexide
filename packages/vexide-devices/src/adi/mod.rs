@@ -198,16 +198,13 @@ pub trait AdiDevice<const N: usize> {
     /// Update rate of ADI devices.
     const UPDATE_INTERVAL: Duration = ADI_UPDATE_INTERVAL;
 
-    /// The type that [`Self::port_number`] should return. This is usually `u8`, but
-    /// occasionally `(u8, u8)` if the device has two ADI wires.
-    type PortNumberOutput;
-
-    /// Returns the port number of the [`AdiPort`] this device is registered on.
+    /// Returns the port numbers of the [`AdiPort`s] this device is registered to.
     ///
     /// Ports are numbered starting from 1.
     fn port_numbers(&self) -> [u8; N];
 
-    /// Returns the port number of the [`AdiPort`] this device is registered on.
+    /// Returns the port number of the [`SmartPort`] this device's expander is connected to,
+    /// or [`None`] if the device is plugged into an onboard ADI port.
     ///
     /// Ports are numbered starting from 1.
     fn expander_port_number(&self) -> Option<u8>;
