@@ -198,7 +198,7 @@ pub trait AdiDevice<const N: usize> {
     /// Update rate of ADI devices.
     const UPDATE_INTERVAL: Duration = ADI_UPDATE_INTERVAL;
 
-    /// Returns the port numbers of the [`AdiPort`s] this device is registered to.
+    /// Returns the port numbers of the [`AdiPort`]s that this device is registered to.
     ///
     /// Ports are numbered starting from 1.
     fn port_numbers(&self) -> [u8; N];
