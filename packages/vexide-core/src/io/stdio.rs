@@ -55,12 +55,14 @@ impl Write for StdoutLock<'_> {
 }
 
 /// A handle to the serial output stream of this program.
-pub struct Stdout;
+///
+/// An instance of this can be obtained using the [`stdout`] function.
+pub struct Stdout(());
 
 /// Constructs a handle to the serial output stream
 #[must_use]
 pub const fn stdout() -> Stdout {
-    Stdout
+    Stdout(())
 }
 
 impl Stdout {
@@ -123,10 +125,12 @@ impl io::Read for StdinLock<'_> {
 }
 
 /// A handle to the serial input stream of this program.
-pub struct Stdin;
+///
+/// An instance of this can be obtained using the [`stdin`] function.
+pub struct Stdin(());
 
 impl Stdin {
-    /// The size of the internal VEXOs serial in buffer.
+    /// The size of the internal VEXos serial in buffer.
     pub const STDIN_BUFFER_SIZE: usize = 4096;
 
     /// Locks the stdin for reading.
@@ -149,7 +153,7 @@ impl Stdin {
 /// Constructs a handle to the serial input stream.
 #[must_use]
 pub const fn stdin() -> Stdin {
-    Stdin
+    Stdin(())
 }
 
 #[macro_export]

@@ -44,6 +44,7 @@ Before releasing:
 - The `InvalidId` and `InvalidIdInCode` `AiVisionError` variants have been removed. These errors now cause panics. (#266) (**Breaking Change**)
 - `VisionError::InvalidId` has been removed. Invalid signature IDs given to `VisionSensor` will now cause panics. (#266) (**Breaking Change**)
 - The `lock` functions on `Stdin` and `Stdout` are now async. (#265) (**Breaking Change**)
+- `Stdin` and `Stdout` instances can no longer be instantiated using struct initialization syntax. Prefer using `stdin()`/`stdout()`. (#281) (**Breaking Change**)
 
 ### Removed
 
