@@ -78,11 +78,9 @@ impl AdiAnalogIn {
     }
 }
 
-impl AdiDevice for AdiAnalogIn {
-    type PortNumberOutput = u8;
-
-    fn port_number(&self) -> Self::PortNumberOutput {
-        self.port.number()
+impl AdiDevice<1> for AdiAnalogIn {
+    fn port_numbers(&self) -> [u8; 1] {
+        [self.port.number()]
     }
 
     fn expander_port_number(&self) -> Option<u8> {

@@ -36,7 +36,6 @@
 //! ports. For the sensor to work properly, the "OUTPUT" wire must be in an odd-numbered slot
 //! (A, C, E, G), and the "INPUT" wire must be in the higher slot next to the input wire.
 
-use snafu::{ensure, Snafu};
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
@@ -55,12 +54,11 @@ pub struct AdiRangeFinder {
 impl AdiRangeFinder {
     /// Create a new rangefinder sensor from an output and input [`AdiPort`].
     ///
-    /// # Errors
+    /// # Panics
     ///
-    /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s,
-    ///   returns [`RangeFinderError::ExpanderPortMismatch`].
-    /// - If the output port is not odd (A, C, E, G), returns [`RangeFinderError::BadInputPort`].
-    /// - If the input port is not the next after the output port, returns [`RangeFinderError::BadOutputPort`].
+    /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s.
+    /// - If the output port is not odd (A, C, E, G).
+    /// - If the input port is not the next after the output port.
     ///
     /// # Examples
     ///
@@ -69,7 +67,7 @@ impl AdiRangeFinder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let range_finder = AdiRangeFinder::new((peripherals.adi_a, peripherals.adi_b)).expect("Failed to create range finder");
+    ///     let range_finder = AdiRangeFinder::new(peripherals.adi_a, peripherals.adi_b);
     ///     loop {
     ///         let distance = range_finder.distance().expect("Failed to get distance");
     ///         println!("Distance: {} cm", distance);
@@ -77,51 +75,53 @@ impl AdiRangeFinder {
     ///     }
     /// }
     /// ```
-    pub fn new((output_port, input_port): (AdiPort, AdiPort)) -> Result<Self, RangeFinderError> {
+    #[must_use]
+    pub fn new(output_port: AdiPort, input_port: AdiPort) -> Self {
         let output_number = output_port.number();
         let input_number = input_port.number();
 
         // Input and output must be plugged into the same ADI expander.
-        ensure!(
-            input_port.expander_index() != output_port.expander_index(),
-            ExpanderPortMismatchSnafu {
-                top_port_expander: input_port.expander_number(),
-                bottom_port_expander: output_port.expander_number()
-            }
+        assert!(
+            input_port.expander_index() == output_port.expander_index(),
+            "The specified output and input ports belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
+            output_port.expander_number(),
+            input_port.expander_number(),
         );
 
         // Output must be on an odd indexed port (A, C, E, G).
-        ensure!(
+        assert!(
             output_number % 2 != 0,
-            BadInputPortSnafu {
-                port: output_number
-            }
+            "The output ADI port provided (`{}`) was not odd numbered (A, C, E, G).",
+            adi_port_name(output_number),
         );
+
         // Input must be directly next to top on the higher port index.
-        ensure!(
+        assert!(
             input_number == output_number + 1,
-            BadOutputPortSnafu {
-                input_port: input_number,
-                output_port: output_number,
-            }
+            "The input ADI port provided (`{}`) was not directly above the output port (`{}`). Instead, it should be port `{}`.",
+            adi_port_name(input_number),
+            adi_port_name(output_number),
+            adi_port_name(output_number + 1),
         );
 
         output_port.configure(AdiDeviceType::RangeFinder);
 
-        Ok(Self {
+        Self {
             output_port,
             input_port,
-        })
+        }
     }
 
-    /// Returns the distance reading of the rangefinder sensor in centimeters.
+    /// Returns the distance reading of the rangefinder sensor in centimeters, or `None` if the sensor was unable
+    /// to find an object in range.
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
     ///
     /// # Errors
     ///
-    /// - A [`RangeFinderError::NoReading`] error is returned if the rangefinder cannot find a valid reading.
-    /// - A [`RangeFinderError::Port`] error is returned if the ADI device could not be accessed.
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -130,31 +130,32 @@ impl AdiRangeFinder {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let range_finder = AdiRangeFinder::new((peripherals.adi_a, peripherals.adi_b)).expect("Failed to create range finder");
+    ///     let range_finder = AdiRangeFinder::new(peripherals.adi_a, peripherals.adi_b);
     ///     loop {
-    ///         let distance = range_finder.distance().expect("Failed to get distance");
-    ///         println!("Distance: {} cm", distance);
+    ///         match range_finder.distance().expect("Failed to get distance") {
+    ///             Some(distance) => println!("Distance: {} cm", distance),
+    ///             None => println!("Can't find anything in range :("),
+    ///         }
+    ///
     ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
-    pub fn distance(&self) -> Result<u16, RangeFinderError> {
+    pub fn distance(&self) -> Result<Option<u16>, PortError> {
         self.output_port.validate_expander()?;
 
         match unsafe {
             vexDeviceAdiValueGet(self.output_port.device_handle(), self.output_port.index())
         } {
-            -1 => NoReadingSnafu.fail(),
-            val => Ok(val as u16),
+            -1 => Ok(None),
+            val => Ok(Some(val as u16)),
         }
     }
 }
 
-impl AdiDevice for AdiRangeFinder {
-    type PortNumberOutput = (u8, u8);
-
-    fn port_number(&self) -> Self::PortNumberOutput {
-        (self.output_port.number(), self.input_port.number())
+impl AdiDevice<2> for AdiRangeFinder {
+    fn port_numbers(&self) -> [u8; 2] {
+        [self.output_port.number(), self.input_port.number()]
     }
 
     fn expander_port_number(&self) -> Option<u8> {
@@ -164,56 +165,4 @@ impl AdiDevice for AdiRangeFinder {
     fn device_type(&self) -> AdiDeviceType {
         AdiDeviceType::RangeFinder
     }
-}
-
-#[derive(Debug, Snafu)]
-/// Errors that can occur when interacting with an rangefinder range finder.
-pub enum RangeFinderError {
-    /// The sensor is unable to return a valid reading.
-    NoReading,
-
-    /// The output wire must be on an odd numbered port (A, C, E, G).
-    // TODO: Change this to be `BadOutputPort`.
-    #[snafu(display(
-        "The output ADI port provided (`{}`) was not odd numbered (A, C, E, G).",
-        adi_port_name(*port)
-    ))]
-    BadInputPort {
-        /// The port number that caused the error.
-        port: u8,
-    },
-
-    /// The input wire must be plugged in directly above the output wire.
-    #[snafu(display(
-        "The input ADI port provided (`{}`) was not directly above the output port (`{}`). Instead, it should be port `{}`.",
-        adi_port_name(*input_port),
-        adi_port_name(*output_port),
-        adi_port_name(*output_port + 1),
-    ))]
-    BadOutputPort {
-        /// The bottom port number that caused the error.
-        input_port: u8,
-        /// The top port number that caused the error.
-        output_port: u8,
-    },
-
-    /// The specified top and bottom ports may belong to different ADI expanders.
-    #[snafu(display(
-        "The specified top and bottom ports may belong to different ADI expanders. Both expanders {:?} and {:?} were provided.",
-        top_port_expander,
-        bottom_port_expander
-    ))]
-    ExpanderPortMismatch {
-        /// The top port's expander number.
-        top_port_expander: Option<u8>,
-        /// The bottom port's expander number.
-        bottom_port_expander: Option<u8>,
-    },
-
-    /// Generic port related error.
-    #[snafu(transparent)]
-    Port {
-        /// The source of the error.
-        source: PortError,
-    },
 }
