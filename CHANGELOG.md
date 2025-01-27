@@ -23,6 +23,7 @@ Before releasing:
 
 ### Added
 
+- Added functions to get VEXos version and uptime. (#278)
 - Added a self-modifying memory patcher to `vexide_startup` that applies patches over the current program. This will be paired with `cargo-v5` changes to allow for much faster uploading.
 
 ### Fixed

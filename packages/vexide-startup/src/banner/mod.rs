@@ -6,13 +6,9 @@
 //!
 //! For a full list of premade themes and more theme documentation, see the [`themes`] module.
 
-use core::time::Duration;
-
 use themes::BannerTheme;
-use vex_sdk::{
-    vexBatteryCapacityGet, vexCompetitionStatus, vexSystemPowerupTimeGet, vexSystemVersion,
-};
-use vexide_core::println;
+use vex_sdk::vexBatteryCapacityGet;
+use vexide_core::{competition, os, println, time};
 
 pub mod themes;
 
@@ -21,13 +17,7 @@ pub mod themes;
 /// This function is used internally in the [`startup`](crate::startup) function to print the banner.
 #[inline]
 pub fn print(theme: BannerTheme) {
-    const DISABLED: u32 = 1 << 0;
-    const AUTONOMOUS: u32 = 1 << 1;
-
     const VEXIDE_VERSION: &str = "0.5.1";
-
-    let system_version = unsafe { vexSystemVersion() }.to_be_bytes();
-    let competition_status = unsafe { vexCompetitionStatus() };
 
     println!(
         "
@@ -35,7 +25,7 @@ pub fn print(theme: BannerTheme) {
 {lp2}  -#%%%%#-  {ls}:%-\x1B[0m{lp2}  -*%%%%#\x1B[0m       ---------------
 {lp3}    *%%%%#=   -#%%%%%+\x1B[0m         ╭─\x1B{mk}🔲 VEXos:\x1B[0m {vexos_version}
 {lp4}      *%%%%%+#%%%%%%%#=\x1B[0m        ├─\x1B{mk}🦀 Rust:\x1B[0m {rust_version}
-{lp5}        *%%%%%%%*-+%%%%%+\x1B[0m      ├─\x1B{mk}🏆 Mode:\x1B[0m {competition_mode}
+{lp5}        *%%%%%%%*-+%%%%%+\x1B[0m      ├─\x1B{mk}🏆 Mode:\x1B[0m {competition_mode:?}
 {lp6}          +%%%*:   .+###%#\x1B[0m     ├─\x1B{mk}🔋 Battery:\x1B[0m {battery}%
 {lp7}           .%:\x1B[0m                 ╰─\x1B{mk}⌚ Uptime:\x1B[0m {uptime:.2?}
 ",
@@ -51,19 +41,10 @@ pub fn print(theme: BannerTheme) {
         mk = theme.metadata_key,
         emoji = theme.emoji,
         vexide_version = VEXIDE_VERSION,
-        vexos_version = format_args!(
-            "{}.{}.{}-r{}",
-            system_version[0], system_version[1], system_version[2], system_version[3],
-        ),
+        vexos_version = os::system_version(),
         battery = unsafe { vexBatteryCapacityGet() } as u8,
         rust_version = compile_time::rustc_version_str!(),
-        competition_mode = if competition_status & DISABLED != 0 {
-            "Disabled"
-        } else if competition_status & AUTONOMOUS != 0 {
-            "Autonomous"
-        } else {
-            "Driver"
-        },
-        uptime = Duration::from_micros(unsafe { vexSystemPowerupTimeGet() }),
+        competition_mode = competition::mode(),
+        uptime = time::uptime(),
     );
 }

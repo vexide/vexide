@@ -8,6 +8,8 @@ use core::{
     time::Duration,
 };
 
+use vex_sdk::vexSystemPowerupTimeGet;
+
 /// Represents a timestamp on a monotonically nondecreasing clock relative to the
 /// start of the user program.
 ///
@@ -178,4 +180,10 @@ impl fmt::Debug for Instant {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
+}
+
+/// Returns the duration that the brain has been turned on.
+#[must_use]
+pub fn uptime() -> Duration {
+    Duration::from_micros(unsafe { vexSystemPowerupTimeGet() })
 }
