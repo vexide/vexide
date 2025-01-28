@@ -13,6 +13,17 @@ Before releasing:
 - create new Unreleased section
 - update links at the end of the document
 - add "New Contributors" section if there were any first-time contributors
+- copy and paste the following sections to the top
+
+## [Unreleased]
+
+### Added
+
+### Fixed
+
+### Changed
+
+### Removed
 
 ### New Contributors
 
@@ -20,6 +31,18 @@ Before releasing:
 -->
 
 ## [Unreleased]
+
+### Added
+
+### Fixed
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+## [0.6.0]
 
 ### Added
 
@@ -39,6 +62,13 @@ Before releasing:
 
 - Renamed `Once::is_complete` to `Once::is_completed` for consistency with the standard library. (#257) (**Breaking Change**)
 - All `Position` methods are now usable in `const` context. (#254)
+- Two-wire ADI devices (`AdiEncoder` and `AdiRangeFinder`) now take their ports as separate arguments instead of a tuple. (#271) (**Breaking Change**)
+- `AdiEncoder` and `AdiRangeFinder` will now panic if invalid port pairings are passed rather than return a `Result`. (#271) (**Breaking Change**)
+- `AdiDevice` is now const-generic over the number of ports used by the device. (#271) (**Breaking Change**)
+- Replaced `AdiDevice::port_number` with `AdiDevice::port_numbers`. (#271) (**Breaking Change**)
+
+### Removed
+
 - Replaced `vexide_core::allocator::init_heap` with `vexide_core::allocator::claim`, which allows claiming uninitialized memory spans as heap space.
 - The `Nul`, `InvalidLine`, and `InvalidColumn` `ControllerError` variants have been removed. These errors now cause panics. (#266) (**Breaking Change**)
 - `DisplayError` has been removed and `Display::draw_buffer` now panics when given a buffer of invalid size. (#266) (**Breaking Change**)
@@ -51,8 +81,12 @@ Before releasing:
 
 - Removed the `Deref` implementation and `force` method on `LazyLock` to prevent deadlocks. use the async `LazyLock::get` instead. (#265) (**Breaking Change**)
 - Removed the `Read` and `Write` implementations on `Stdin` and `Stdout` respectively to prevent deadlocks. (#265) (**Breaking Change**)
+- Removed `EncoderError` and `RangeFinderError`. The respective devices now just return `PortError`. (#271) (**Breaking Change**)
 
 ### New Contributors
+
+- @Saylar27 made their first contribution in #279!
+- @ion908 made their first contribution in #278!
 
 ## [0.5.1]
 
@@ -309,7 +343,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.5.1...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.6.0...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
@@ -318,3 +352,4 @@ Before releasing:
 [0.4.2]: https://github.com/vexide/vexide/compare/v0.4.1...v0.4.2
 [0.5.0]: https://github.com/vexide/vexide/compare/v0.4.2...v0.5.0
 [0.5.1]: https://github.com/vexide/vexide/compare/v0.5.0...v0.5.1
+[0.6.0]: https://github.com/vexide/vexide/compare/v0.5.1...v0.6.0

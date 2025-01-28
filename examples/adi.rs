@@ -13,12 +13,12 @@ async fn main(peripherals: Peripherals) {
     let line_tracker = AdiLineTracker::new(peripherals.adi_b);
 
     // Create an ultrasonic range finder on triport C.
-    let range_finder = AdiRangeFinder::new((peripherals.adi_c, peripherals.adi_d)).unwrap();
+    let range_finder = AdiRangeFinder::new(peripherals.adi_c, peripherals.adi_d);
 
     loop {
         // Print out the sensor values to stdout every 10ms (the update rate of ADI devices).
         println!(
-            "Potentiometer Angle: {}\nLine Tracker Reflectivity: {}%\nUltrasonic Distance: {}\n",
+            "Potentiometer Angle: {}\nLine Tracker Reflectivity: {}%\nUltrasonic Distance: {:?}\n",
             potentiometer.angle().unwrap(),
             line_tracker.reflectivity().unwrap() * 100.0,
             range_finder.distance().unwrap()
