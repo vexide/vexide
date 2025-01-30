@@ -1,6 +1,6 @@
 [package]
 name = "vexide-graphics"
-version = "0.1.9"
+version = "0.1.9-rc.1"
 edition = "2021"
 license = "MIT"
 description = "Graphics driver implementations for vexide"
