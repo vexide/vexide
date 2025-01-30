@@ -842,7 +842,8 @@ impl Controller {
         unsafe { vexControllerConnectionStatusGet(self.id.into()) }.into()
     }
 
-    /// Returns the controller's battery capacity.
+    /// Returns the controller's battery capacity as an f64 in the interval
+    /// [0.0, 1.0].
     ///
     /// # Errors
     ///
@@ -859,13 +860,15 @@ impl Controller {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let controller = peripherals.primary_controller;
-    ///     println!("Controller battery capacity: {}", controller.battery_capacity().unwrap_or(0));
+    ///     println!("Controller battery capacity: {}", controller.battery_capacity().unwrap_or(0.0));
     /// }
     /// ```
-    pub fn battery_capacity(&self) -> Result<i32, ControllerError> {
+    pub fn battery_capacity(&self) -> Result<f64, ControllerError> {
         validate_connection(self.id)?;
 
-        Ok(unsafe { vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryCapacity) })
+        Ok(f64::from(unsafe {
+            vexControllerGet(self.id.into(), V5_ControllerIndex::BatteryCapacity)
+        }) / 100.0)
     }
 
     /// Returns the controller's battery level.
