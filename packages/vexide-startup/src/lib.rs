@@ -189,6 +189,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     }
 
     // Initialize the heap allocator using normal bounds
+    #[cfg(target_vendor = "vex")]
     unsafe {
         vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
     }
