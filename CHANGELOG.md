@@ -44,6 +44,21 @@ Before releasing:
 
 ### New Contributors
 
+## [0.6.1]
+
+### Added
+
+### Fixed
+
+- Fixed docs.rs build failures.
+- Fixed outdated dependencies of vexide-graphics.
+
+### Changed
+
+### Removed
+
+### New Contributors
+
 ## [0.6.0]
 
 ### Added
@@ -345,7 +360,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.6.1...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
@@ -355,3 +370,4 @@ Before releasing:
 [0.5.0]: https://github.com/vexide/vexide/compare/v0.4.2...v0.5.0
 [0.5.1]: https://github.com/vexide/vexide/compare/v0.5.0...v0.5.1
 [0.6.0]: https://github.com/vexide/vexide/compare/v0.5.1...v0.6.0
+[0.6.1]: https://github.com/vexide/vexide/compare/v0.6.0...v0.6.1
