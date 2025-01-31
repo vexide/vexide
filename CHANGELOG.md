@@ -38,6 +38,8 @@ Before releasing:
 
 ### Changed
 
+- `Controller::battery_capacity` now returns a float from 0.0 to 1.0 instead of an i32. (#286) (**Breaking Change**)
+
 ### Removed
 
 ### New Contributors

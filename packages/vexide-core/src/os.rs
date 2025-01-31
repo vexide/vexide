@@ -8,7 +8,7 @@ use core::fmt;
 use vex_sdk::vexSystemVersion;
 
 /// A VEXos version
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Version {
     /// The major version
     pub major: u8,
