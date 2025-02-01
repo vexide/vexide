@@ -34,28 +34,20 @@ Before releasing:
 
 ### Added
 
+- Implemented `PartialOrd` for `Version`. (#288)
+- Added `RadioLink::INTERNAL_BUFFER_SIZE` constant. (#293)
+
 ### Fixed
 
 ### Changed
 
 - `Controller::battery_capacity` now returns a float from 0.0 to 1.0 instead of an i32. (#286) (**Breaking Change**)
+- `RadioLink::open` now panics if `id` is not a valid `CStr` rather than returning a `Result`. (#293) (**Breaking Change**)
+- `SerialPort::open` now returns a `Future` that must be awaited before opening the port. (#293) (**Breaking Change**)
 
 ### Removed
 
-### New Contributors
-
-## [0.6.1]
-
-### Added
-
-### Fixed
-
-- Fixed docs.rs build failures.
-- Fixed outdated dependencies of vexide-graphics.
-
-### Changed
-
-### Removed
+- Removed `SerialError::Port`. `SerialPort` methods can no longer return `PortError`. (#293) (**Breaking Change**)
 
 ### New Contributors
 
@@ -360,7 +352,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.6.1...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.6.0...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
@@ -370,4 +362,3 @@ Before releasing:
 [0.5.0]: https://github.com/vexide/vexide/compare/v0.4.2...v0.5.0
 [0.5.1]: https://github.com/vexide/vexide/compare/v0.5.0...v0.5.1
 [0.6.0]: https://github.com/vexide/vexide/compare/v0.5.1...v0.6.0
-[0.6.1]: https://github.com/vexide/vexide/compare/v0.6.0...v0.6.1
