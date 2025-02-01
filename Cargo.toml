@@ -3,6 +3,12 @@ name = "examples"
 edition = "2021"
 version = "0.0.1"
 
+[package.metadata.v5]
+upload-strategy = "differential"
+slot = 1
+icon = "cool-x"
+compress = true
+
 [dev-dependencies]
 vexide = { path = "packages/vexide" }
 
