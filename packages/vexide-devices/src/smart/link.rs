@@ -50,6 +50,9 @@ unsafe impl Send for RadioLink {}
 unsafe impl Sync for RadioLink {}
 
 impl RadioLink {
+    /// The length of the link's FIFO input and output buffers.
+    pub const INTERNAL_BUFFER_SIZE: usize = 512;
+
     /// Opens a radio link from a VEXNet radio plugged into a Smart Port. Once
     /// opened, other VEXNet functionality such as controller tethering on this
     /// specific radio will be disabled.
