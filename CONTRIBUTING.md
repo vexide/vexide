@@ -1,6 +1,6 @@
 # Contributing to vexide
 
-Thanks for taking the time to help this project improve! All contributions are
+Thanks for taking the time to help this project improve! Your contributions are
 helpful and welcome.
 
 ## Table of Contents
@@ -25,10 +25,8 @@ helpful and welcome.
 
 ## I have a question!
 
-If you just have a question about the library or need help, the best way you can
-get support is by creating a post in the [Q&A Discussions
-category](https://github.com/vexide/vexide/discussions/categories/q-a) or by asking
-in the project's [Discord Server][discord-server].
+If you simply have a question about vexide or need help using it, the best way you can
+get support is by asking in our active [Discord Server][discord-server].
 
 ## Ways to contribute
 
@@ -45,12 +43,13 @@ If the issue you found is closed, feel free to make a new one, but it helps
 to link the one you found under the **Additional information** header.
 
 If the issue you found is open, the best way to help is by leaving a
-comment on it, describing your experience.
+comment on it describing your experience, or by joining our
+[Discord server][discord-server] and telling us about it.
 
 #### Reporting a small problem
 
-If the problem you're reporting is a typo or a just a simple mistake, you might
-want to use the **Small issue** template in the next step.
+If you're reporting a typo or a simple mistake, submit an issue using the
+**Small issue** template, which requires less details than a full bug report.
 
 #### Writing and submitting your report
 
@@ -70,15 +69,17 @@ Additionally, try to do the following:
 
 ### Suggesting features
 
-First of all, thanks for wanting to share your idea! Feature requests help this
-project grow.
+Thanks for sharing your idea! Before submitting your suggestion, please:
 
-Before submitting your suggestion, please consider the following:
-
-- Your idea may have already been discussed. Use the [Issues][issues-page]
-  search bar to see if there are any similar suggestions.
-- Your idea should be within the project's scope. The goal of this project is to
-  provide an opinionated Rust framework for developing VEX V5 robots.
+- Check if your idea is already being discussed by using the [Issues][issues-page]
+  search bar to search for similar suggestions.
+- Ensure your idea is within the project's scope: to provide an opinionated Rust
+  framework for developing VEX V5 robots.
+  * If your idea is about motion control (PID, motion profiles, etc), then you might
+    be interested in [`evian`][evian].
+  * If you're interested in robot simulation support, check out vexide's [simulator].
+  * If you want to contribute to our low-level bindings to the VEX SDK, check out\
+    [`vex-sdk`][vex-sdk].
 
 #### Writing and submitting your suggestion
 
@@ -92,28 +93,14 @@ Additionally, try to do the following:
 - Fill out **as many of the template's headers as possible**.
 - Provide **code samples, photos, or videos** to help readers understand what
   you're saying.
-- Consider **how the suggestion would be implemented**.
+- Explain **how the suggestion would be implemented**.
 
 
 ### Contributing code
 
-The simplest ways to start contributing code to vexide are by checking the [TODO list](./TODO.md) or by finding an
-[Issue][issues-page] to tackle. Each one requests changes to the project, and some are
-more involved than others. Issues with the [good first
-issue][first-issue-search] label are good candidates for your first
-contribution.
-
-When you're ready to start coding, fork the project, then use `git clone` or `gh repo clone` to clone the repository.
-
-#### Project structure
-
-- `.github/`: CI workflows & issue/pull request templates
-- `.devcontainer/`: GitHub Codespaces configuration
-- `.vscode/`: Visual Studio Code configuration
-- `.cargo/`: Cargo configuration
-- `pros/`: Project source code
-- `pros-sys/`: C bindings source code
-- `flake.nix`: Nix package configuration
+The simplest ways to start contributing code to vexide are by finding an unresolved [Issue][issues-page]
+or by asking on our [Discord server][discord-server]. Issues with the [good first issue][first-issue-search]
+label are good candidates for your first contribution.
 
 #### Code styleguide
 
@@ -127,7 +114,7 @@ sequence should be LF (line feed), and the file should end with one trailing new
 #### Committing & commit messages
 
 All vexide projects use [Conventional Commits][conventional-commits-website]
-to keep commit messages informational. Conventional commits have the following form:
+to ensure commit messages are useful. Conventional commits have the following form:
 
 ```
 type(OptionalScope): description
@@ -147,7 +134,7 @@ From this commit, you can easily see that the commit altered **docs** in the
 **contributing** guidelines file by **add**ing an **Acknowledgements section**.
 When writing the commit description, make sure to use the present imperative
 tense ("add ABC" instead of "added ABC" or "adds ABC"). It might help to imagine
-that you are telling someone to do something ("go add ABC").
+you're telling someone to do something ("go add ABC").
 
 Here is a list of common commit types:
 
