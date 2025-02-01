@@ -66,7 +66,7 @@ impl RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager);
     /// }
     /// ```
     #[must_use]
@@ -105,7 +105,7 @@ impl RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     let mut buffer = vec![0; 2048];
     ///
@@ -135,7 +135,7 @@ impl RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     // Write a byte if there's free space in the buffer.
     ///     if link.available_write_bytes().is_ok_and(|available| available > 0) {
@@ -159,7 +159,7 @@ impl RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     // Write a byte if we are connected to another radio.
     ///     if link.is_linked() == Ok(true) {
@@ -193,7 +193,7 @@ impl io::Read for RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     let mut buffer = vec![0; 2048];
     ///
@@ -239,7 +239,7 @@ impl io::Write for RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     _ = link.write(b"yo");
     /// }
