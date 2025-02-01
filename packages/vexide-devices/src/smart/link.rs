@@ -21,7 +21,7 @@
 //!
 //! For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
 
-use alloc::ffi::{CString, NulError};
+use alloc::ffi::CString;
 use core::time::Duration;
 
 use no_std_io::io;
@@ -55,9 +55,9 @@ impl RadioLink {
     /// specific radio will be disabled.
     /// Other radios connected to the Brain can take over this functionality.
     ///
-    /// # Errors
+    /// # Panics
     ///
-    /// - A [`NulError`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
+    /// - Panics if a NUL (0x00) character was found anywhere in the specified `id`.
     ///
     /// # Examples
     ///
@@ -69,10 +69,11 @@ impl RadioLink {
     ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
     /// }
     /// ```
-    pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, NulError> {
-        let id = CString::new(id)?;
+    #[must_use]
+    pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Self {
+        let id = CString::new(id)
+            .expect("CString::new encountered NUL (U+0000) byte in non-terminating position.");
 
-        // That this constructor literally has to be fallible unlike others.
         unsafe {
             vexDeviceGenericRadioConnection(
                 port.device_handle(),
@@ -85,10 +86,10 @@ impl RadioLink {
             );
         }
 
-        Ok(Self {
+        Self {
             device: unsafe { port.device_handle() },
             port,
-        })
+        }
     }
 
     /// Returns the number of bytes that are waiting to be read from the radio's input buffer.
@@ -176,7 +177,6 @@ const RADIO_NOT_LINKED: &str = "The radio has not established a link with anothe
 
 impl io::Read for RadioLink {
     /// Read some bytes sent to the radio into the specified buffer, returning how many bytes were read.
-    ///
     ///
     /// # Errors
     ///
@@ -270,7 +270,6 @@ impl io::Write for RadioLink {
     ///
     /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
     ///   established. Use [`RadioLink::is_linked`] to check this if needed.
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be written to the radio.
     fn flush(&mut self) -> io::Result<()> {
         if !self.is_linked() {
             return Err(io::Error::new(
