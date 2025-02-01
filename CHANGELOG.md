@@ -51,6 +51,21 @@ Before releasing:
 
 ### New Contributors
 
+## [0.6.1]
+
+### Added
+
+### Fixed
+
+- Fixed docs.rs build failures.
+- Fixed outdated dependencies of vexide-graphics.
+
+### Changed
+
+### Removed
+
+### New Contributors
+
 ## [0.6.0]
 
 ### Added
