@@ -23,8 +23,7 @@ async fn main(peripherals: Peripherals) {
         peripherals.port_15,
         "example",
         vexide::devices::smart::link::LinkType::Manager,
-    )
-    .unwrap();
+    );
     // Send a message over vexlink.
     // We dont have to flush because VEXOs does that immediately.
     link.write(b"Hello, world!").unwrap();

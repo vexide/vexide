@@ -21,7 +21,7 @@
 //!
 //! For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
 
-use alloc::ffi::{CString, NulError};
+use alloc::ffi::CString;
 use core::time::Duration;
 
 use no_std_io::io;
@@ -50,14 +50,17 @@ unsafe impl Send for RadioLink {}
 unsafe impl Sync for RadioLink {}
 
 impl RadioLink {
+    /// The length of the link's FIFO input and output buffers.
+    pub const INTERNAL_BUFFER_SIZE: usize = 512;
+
     /// Opens a radio link from a VEXNet radio plugged into a Smart Port. Once
     /// opened, other VEXNet functionality such as controller tethering on this
     /// specific radio will be disabled.
     /// Other radios connected to the Brain can take over this functionality.
     ///
-    /// # Errors
+    /// # Panics
     ///
-    /// - A [`NulError`] error is returned if a NUL (0x00) character was found anywhere in the specified `id`.
+    /// - Panics if a NUL (0x00) character was found anywhere in the specified `id`.
     ///
     /// # Examples
     ///
@@ -66,13 +69,14 @@ impl RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let link = RadioLink::open(port_1, "643A", LinkType::Manager);
     /// }
     /// ```
-    pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Result<Self, NulError> {
-        let id = CString::new(id)?;
+    #[must_use]
+    pub fn open(port: SmartPort, id: &str, link_type: LinkType) -> Self {
+        let id = CString::new(id)
+            .expect("CString::new encountered NUL (U+0000) byte in non-terminating position.");
 
-        // That this constructor literally has to be fallible unlike others.
         unsafe {
             vexDeviceGenericRadioConnection(
                 port.device_handle(),
@@ -85,10 +89,10 @@ impl RadioLink {
             );
         }
 
-        Ok(Self {
+        Self {
             device: unsafe { port.device_handle() },
             port,
-        })
+        }
     }
 
     /// Returns the number of bytes that are waiting to be read from the radio's input buffer.
@@ -104,7 +108,7 @@ impl RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     let mut buffer = vec![0; 2048];
     ///
@@ -134,7 +138,7 @@ impl RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     // Write a byte if there's free space in the buffer.
     ///     if link.available_write_bytes().is_ok_and(|available| available > 0) {
@@ -158,7 +162,7 @@ impl RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     // Write a byte if we are connected to another radio.
     ///     if link.is_linked() == Ok(true) {
@@ -177,7 +181,6 @@ const RADIO_NOT_LINKED: &str = "The radio has not established a link with anothe
 impl io::Read for RadioLink {
     /// Read some bytes sent to the radio into the specified buffer, returning how many bytes were read.
     ///
-    ///
     /// # Errors
     ///
     /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
@@ -193,7 +196,7 @@ impl io::Read for RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     let mut buffer = vec![0; 2048];
     ///
@@ -239,7 +242,7 @@ impl io::Write for RadioLink {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager).unwrap();
+    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     _ = link.write(b"yo");
     /// }
@@ -270,7 +273,6 @@ impl io::Write for RadioLink {
     ///
     /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
     ///   established. Use [`RadioLink::is_linked`] to check this if needed.
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if the data could not be written to the radio.
     fn flush(&mut self) -> io::Result<()> {
         if !self.is_linked() {
             return Err(io::Error::new(
