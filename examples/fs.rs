@@ -10,7 +10,8 @@ extern crate alloc;
 async fn main(_peripherals: Peripherals) {
     let mut file = vexide::core::fs::File::create("foo").unwrap();
     file.write_all(b"bar").unwrap();
-    file.flush().unwrap();
+    drop(file);
+
     let mut file = vexide::core::fs::File::open("foo").unwrap();
     let mut buf = [0; 3];
     file.read(&mut buf).unwrap();
