@@ -20,7 +20,7 @@ use alloc::{ffi::CString, string::String, vec::Vec};
 
 use no_std_io::io::{Read, Seek, Write};
 
-use crate::{io, path::Path, println};
+use crate::{io, path::Path};
 
 mod fs_str;
 
@@ -825,7 +825,7 @@ impl Seek for File {
 impl Drop for File {
     fn drop(&mut self) {
         // We do not need to sync because vexFileClose will do that for us
-        unsafe  {
+        unsafe {
             vex_sdk::vexFileClose(self.fd);
         }
     }
