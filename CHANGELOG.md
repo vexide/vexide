@@ -34,6 +34,9 @@ Before releasing:
 
 ### Added
 
+- Added the `FsString` `PathBuf` types as mutable and owned equivalents to `FsStr` and `Path`. (#296)
+- Added `read_dir`, `ReadDir`, and `DirEntry` to `vexide_core::fs` for directory reading support. (#296)
+
 ### Fixed
 
 - Added a missing `Drop` implementation to `File` that will close and flush the file descriptor. (#295)
