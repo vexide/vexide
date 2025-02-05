@@ -137,6 +137,9 @@ impl FsStr {
         self.inner.len()
     }
 
+    /// Returns a [`Display`] which can be used to display [`FsStr`]s that may contain non-UTF-8 data.
+    /// This may perform lossy conversions. For an implementation that escapes the data, use [`Debug`].
+    #[must_use]
     pub const fn display(&self) -> Display<'_> {
         Display { fs_str: self }
     }
@@ -158,15 +161,33 @@ impl AsRef<FsStr> for str {
     }
 }
 
+/// A type that represents a mutable and owned VEXos filesystem string,
+/// while being cheaply inter-convertible with Rust strings.
+///
+/// [`FsString`] is NOT null terminated. If you need to pass this to VEX SDK filesystem functions,
+/// create a [`CStr`](core::ffi::CStr).
+///
+/// An [`FsString`] is to [`&FsStr`](FsStr) as [`String`] is to [`&str`](str);
+/// the former are owned, while the latter are borrowed references.
 #[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FsString {
     inner: Vec<i8>,
 }
 impl FsString {
-    pub fn new() -> Self {
+    /// Allocates a new, empty, [`FsString`].
+    #[must_use]
+    pub const fn new() -> Self {
         Self { inner: Vec::new() }
     }
 
+    /// Creates a new [`FsString`] from the raw encoded bytes.
+    ///
+    /// # Safety
+    ///
+    /// This function does not check if there are nul bytes withing or terminating the string.
+    /// Passing an invalid [`FsString`] to VEX SDK functions can have unintended consequences,
+    /// including undefined behavior.
+    #[must_use]
     pub unsafe fn from_encoded_bytes_unchecked(bytes: Vec<u8>) -> Self {
         let mut bytes = ManuallyDrop::new(bytes);
         unsafe {
@@ -176,10 +197,18 @@ impl FsString {
         }
     }
 
+    /// Borrows an [`FsString`] as an [`FsStr`].
+    /// This is akin to taking a slice of the entire [`FsString`]
+    #[must_use]
     pub fn as_fs_str(&self) -> &FsStr {
         self
     }
 
+    /// Returns the raw encoded bytes of the [`FsString`]
+    ///
+    //TODO: VERIFY BEFORE DOC COMMENTING
+    // The format of this data should be 7-bit ASCII which is the string format used in FAT32.
+    #[must_use]
     pub fn into_encoded_bytes(mut self) -> Vec<u8> {
         unsafe {
             let parts = (
@@ -192,8 +221,13 @@ impl FsString {
         }
     }
 
+    /// Converts the [`FsString`] to a [`String`], or returns the original [`FsString`] on failure.
+    ///
+    /// # Errors
+    ///
+    /// This function will return the original string in the `Err` variant if the [`FsString`] was not valid UTF-8
     pub fn into_string(mut self) -> Result<String, FsString> {
-        match core::str::from_utf8(&self.as_fs_str().as_encoded_bytes()) {
+        match core::str::from_utf8(self.as_fs_str().as_encoded_bytes()) {
             Ok(_) => Ok(unsafe {
                 let parts = (
                     self.inner.as_mut_ptr(),
@@ -207,10 +241,21 @@ impl FsString {
         }
     }
 
+    /// Extends the [`FsString`] with the given string.
+    ///
+    /// As an example, the stored data in this example will be equivalent to "foobarbaz":
+    /// ```
+    /// let mut foo = FsString::new();
+    /// foo.push("foo");
+    /// foo.push("bar");
+    /// foo.push("baz");
+    /// ```
     pub fn push<S: AsRef<FsStr>>(&mut self, s: S) {
         self.inner.extend_from_slice(&s.as_ref().inner);
     }
 
+    /// Creates a new [`FsString`] with the given capacity.
+    /// For more information on capacity, look at the [`Vec::with_capacity`] documentation.
     #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
@@ -218,18 +263,49 @@ impl FsString {
         }
     }
 
+    /// Clears all data from the [`FsString`].
+    /// This has no effect on the capacity of the [`FsString`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut string = FsString::with_capacity(100);
+    /// string.push("hello :3");
+    /// assert!(string.capacity() >= 100);
+    /// string.clear();
+    /// assert!(string.capacity() >= 100)
+    /// ```
     pub fn clear(&mut self) {
         self.inner.clear();
     }
 
+    /// Returns the capacity of the [`FsString`].
+    /// The capacity of the string will be equivalent to the maximum number of characters unless special characters are used.
+    #[must_use]
     pub fn capacity(&self) -> usize {
         self.inner.capacity()
     }
 
+    /// Reserves at least `additional` bytes in the [`FsString`].
+    ///
+    /// In order to reduce allocations, this function will often reserve more than `additional` bytes.
+    /// For more information on the logic behind reserving bytes, see the [`Vec::reserve`] documentation.
     pub fn reserve(&mut self, additional: usize) {
         self.inner.reserve(additional);
     }
 
+    /// Attempts to reserve at least `additional` bytes in the [`FsString`].
+    ///
+    ///
+    /// In order to reduce allocations, this function will often reserve more than `additional` bytes.
+    /// For more information on the logic behind reserving bytes, see the [`Vec::reserve`] documentation.
+    ///
+    /// # Errors
+    ///
+    /// This function will error under the following conditions:
+    ///
+    /// - The capacity of the [`FsString`] has surpasses [`isize::MAX`] bytes
+    /// - An allocation error occured while reserving space.
     pub fn try_reserve(
         &mut self,
         additional: usize,
@@ -237,10 +313,28 @@ impl FsString {
         self.inner.try_reserve(additional)
     }
 
+    /// Reserves `additional` bytes in the [`FsString`].
+    ///
+    /// # Note
+    ///
+    /// Reserving an exact amount of times can often negatively impact performace.
+    /// you most likely want to use [`FsString::reserve`]
     pub fn reserve_exact(&mut self, additional: usize) {
         self.inner.reserve_exact(additional);
     }
 
+    /// Attempts to reserve `additional` bytes in the [`FsString`].
+    ///
+    /// # Note
+    ///
+    /// Reserving an exact amount of times can often negatively impact performace.
+    /// you most likely want to use [`FsString::reserve`]
+    ///
+    /// # Errors
+    /// This function will error under the following conditions:
+    ///
+    /// - The capacity of the [`FsString`] has surpasses [`isize::MAX`] bytes
+    /// - An allocation error occured while reserving space.
     pub fn try_reserve_exact(
         &mut self,
         additional: usize,
@@ -248,19 +342,29 @@ impl FsString {
         self.inner.try_reserve_exact(additional)
     }
 
+    /// Shrinks the capacity of the [`FsString`] as much as possible.
+    ///
+    /// Depending on the allocator implementation, the [`FsString`] may still have extra capacity.
+    /// See [`core::alloc::Allocator::shrink`] for more info.
     pub fn shrink_to_fit(&mut self) {
         self.inner.shrink_to_fit();
     }
 
+    /// Shrinks the capacity of the [`FsString`] to a lower bound.
     pub fn shrink_to(&mut self, min_capacity: usize) {
         self.inner.shrink_to(min_capacity);
     }
 
+    /// Consumes and converts this [`FsString`] into a `Box<FsStr>`.
+    /// Excess capacity is discarded.
+    #[must_use]
     pub fn into_boxed_fs_str(self) -> Box<FsStr> {
         let raw = Box::into_raw(self.inner.into_boxed_slice()) as *mut FsStr;
         unsafe { Box::from_raw(raw) }
     }
 
+    /// Consumes and leaks this [`FsString`] and converts it to a [`&FsStr`](FsStr).
+    #[must_use]
     pub fn leak<'a>(self) -> &'a mut FsStr {
         unsafe { &mut *(core::ptr::from_mut(self.inner.leak()) as *mut FsStr) }
     }

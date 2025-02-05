@@ -83,7 +83,7 @@ pub struct PathBuf {
 impl PathBuf {
     /// Allocates a new, empty, path.
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             inner: FsString::new(),
         }
