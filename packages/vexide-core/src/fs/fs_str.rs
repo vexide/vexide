@@ -68,7 +68,9 @@ impl FsStr {
     /// Converts an FS string slice to a byte slice. To convert the byte slice back into an FS
     /// string slice, use the [`FsStr::from_encoded_bytes_unchecked`] function.
     ///
-    /// Note: As the encoding is unspecified, any sub-slice of bytes that is not valid UTF-8 should
+    /// # Note
+    ///
+    /// As the encoding is unspecified, any sub-slice of bytes that is not valid UTF-8 should
     /// be treated as opaque and only comparable within the same Rust version built for the same
     /// target platform.  For example, sending the slice over the network or storing it in a file
     /// will likely result in incompatible byte slices.
@@ -77,18 +79,60 @@ impl FsStr {
         unsafe { &*(ptr::from_ref::<[i8]>(&self.inner) as *const [u8]) }
     }
 
+    /// Copies this [`FsStr`] into an owned [`FsString`].
+    ///
+    /// /// # Examples
+    ///
+    /// ```
+    /// let fs_str = FsStr::new("foo");
+    /// let fs_string = fs_str.to_fs_string();
+    /// assert_eq!(ofs_string.as_encoded_bytes(), fs_str.as_encoded_bytes());
+    /// ```
+    #[must_use]
     pub fn to_fs_string(&self) -> FsString {
         FsString {
             inner: self.inner.to_vec(),
         }
     }
 
+    /// Converts an [`FsStr`] into a UTF-8 encoded string.
+    ///
+    /// Any non-UTF-8 sequences are replaced with the unicode
+    /// [`U+FFFD REPLACEMENT CHARACTER`][U+FFFD].
+    ///
+    /// [U+FFFD]: core::char::REPLACEMENT_CHARACTER
+    #[must_use]
     pub fn to_string_lossy(&self) -> Cow<'_, str> {
         String::from_utf8_lossy(self.as_encoded_bytes())
     }
+
+    /// Checks whether or not the [`FsStr`] is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let fs_str = FsStr::new("");
+    /// assert!(fs_str.is_empty());
+    ///
+    /// let fs_str = FsStr::new("foo");
+    /// assert!(!fs_str.is_empty());
+    /// ```
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
+    /// Returns the length of the [`FsStr`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let fs_str = FsStr::new("");
+    /// assert_eq!(fs_str.len(), 0);
+    ///
+    /// let fs_str = FsStr::new("foo");
+    /// assert_eq!(fs_str.len(), 3);
+    /// ```
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.inner.len()
     }
