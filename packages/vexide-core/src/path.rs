@@ -71,11 +71,17 @@ impl AsRef<Path> for &str {
     }
 }
 
+/// An owned, mutable path akin to a `String
+///
+/// This type implements `Deref` to [`Path`],
+/// menaing all methods on a [`Path`] can be used on a [`PathBuf`].
 #[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PathBuf {
     inner: FsString,
 }
+//TODO: reimplement std's funcs
 impl PathBuf {
+    /// Allocates a new, empty, path.
     #[must_use]
     pub fn new() -> Self {
         Self {

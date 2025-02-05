@@ -834,30 +834,115 @@ impl Drop for File {
     }
 }
 
+/// An entry returned by the [`ReadDir`] iterator.
+///
+/// A `DirEntry` represents an item within a directory on the Brain's Micro SD card.
+/// The Brain provides very little metadata on files, so only the base std `DirEntry` methods are supported.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DirEntry {
     base: FsString,
     name: FsString,
 }
 impl DirEntry {
+    /// Returns the full path to the directory item.
+    ///
+    /// This path is creeated by joining the path of the call to [`read_dir`] to the name of the file.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// for entry in fs::read_dir(".").unwrap() {
+    ///    println!("{:?}", entry.path());
+    /// }
+    /// ```
+    ///
+    /// This example will lead to output like:
+    /// ```text
+    /// "somefile.txt"
+    /// "breakingbadseason1.mp4"
+    /// "badapple.mp3"
+    /// ```
+    #[must_use]
     pub fn path(&self) -> PathBuf {
         PathBuf::from(format!("{}/{}", self.base.display(), self.name.display()))
     }
 
+    /// Returns the metadata for the full path to the item.
+    ///
+    /// This is equivalent to calling [`metadata`] with the output from [`DirEntry::path`].
+    ///
+    /// # Errors
+    ///
+    /// This function will error if the path does not exist.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// for entry in read_dir("somepath") {
+    ///     println!(
+    ///         "{:?} is a {}.",
+    ///         entry.path(),
+    ///         match entry.metadata().is_file() {
+    ///             true => "file",
+    ///             false => "folder"
+    ///         }
+    ///     );
+    /// }
+    /// ```
     pub fn metadata(&self) -> io::Result<Metadata> {
         let path = self.path();
         Metadata::from_path(&path)
     }
 
+    /// Returns the file type of the file that this [`DirEntry`] points to.
+    ///
+    /// This function is equivalent to getting the [`FileType`] from the metadata returned by [`DirEntry::metadata`].
+    ///
+    /// # Errors
+    ///
+    /// This function will error if the path does not exist.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// for entry in read_dir("somepath") {
+    ///     println!(
+    ///         "{:?} is a {}.",
+    ///         entry.path(),
+    ///         match entry.file_type().is_file() {
+    ///             true => "file",
+    ///             false => "folder"
+    ///         }
+    ///     );
+    /// }
+    /// ```
     pub fn file_type(&self) -> io::Result<FileType> {
         Ok(self.metadata()?.file_type)
     }
 
+    /// Returns the name of the file not including any leading components.
+    ///
+    /// The following paths will all lead to a file name of `foo`:
+    /// - `./foo`
+    /// - `../foo`
+    /// - `/some/global/foo`
+    ///
+    /// # Examples
+    ///
+    /// ``````
+    #[must_use]
     pub fn file_name(&self) -> FsString {
         self.name.clone()
     }
 }
 
+/// An iterator over the entries of a directory.
+///
+/// This iterator is returned from [`read_dir`] and will yield items of type [`DirEntry`].
+/// Information about the path is exposed through the [`DirEntry`]
+///
+/// Unlike the equivalent iterator in the standard library,
+/// this iterator does not return results as it is infallible.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ReadDir {
     idx: usize,
@@ -880,6 +965,25 @@ impl Iterator for ReadDir {
     }
 }
 
+/// Returns an iterator over the items in a directory.
+///
+/// The returned [`ReadDir`] iterator will yield items of type [`DirEntry`].
+/// This is slightly different from the standard library API which yields items of type `io::Result<DirEntry>`.
+/// This is due to the fact that all directory items are gathered at iterator creation and the iterator itself is infallible.
+///
+/// # Errors
+///
+/// This function will error if:
+/// - The given path does not exist
+/// - The given path does not point to a directory.
+///
+/// # Examples
+///
+/// ```
+/// for entry in vexide::core::fs::read_dir("somefolder") {
+///     println!("{:?}", entry.path);
+/// }
+/// ```
 pub fn read_dir<P: AsRef<Path>>(path: P) -> io::Result<ReadDir> {
     let path = path.as_ref();
     let meta = metadata(path)?;
