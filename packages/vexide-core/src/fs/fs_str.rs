@@ -1,15 +1,37 @@
-use core::ptr;
+use alloc::{borrow::Cow, boxed::Box, string::String, vec::Vec};
+use core::{fmt::Debug, ptr};
+
+pub struct Display<'a> {
+    fs_str: &'a FsStr,
+}
+impl Debug for Display<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        Debug::fmt(&self.fs_str, f)
+    }
+}
+impl alloc::fmt::Display for Display<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        Debug::fmt(&self.fs_str, f)
+    }
+}
 
 /// Borrowed reference to an VEXos filesystem OS string.
 ///
 /// This type represents a borrowed reference to a string in VEXos's preferred
 /// representation for filesystem paths.
 #[repr(transparent)]
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FsStr {
     inner: [i8],
 }
 impl FsStr {
+    pub(crate) unsafe fn from_inner(inner: &[i8]) -> &Self {
+        unsafe { &*(ptr::from_ref(inner) as *const Self) }
+    }
+    pub(crate) unsafe fn from_inner_mut(inner: &mut [i8]) -> &mut Self {
+        unsafe { &mut *(ptr::from_mut(inner) as *mut Self) }
+    }
+
     /// Coerces into an `OsStr` slice.
     ///
     /// # Examples
@@ -54,10 +76,192 @@ impl FsStr {
     pub const fn as_encoded_bytes(&self) -> &[u8] {
         unsafe { &*(ptr::from_ref::<[i8]>(&self.inner) as *const [u8]) }
     }
+
+    pub fn to_fs_string(&self) -> FsString {
+        FsString {
+            inner: self.inner.to_vec(),
+        }
+    }
+
+    pub fn to_string_lossy(&self) -> Cow<'_, str> {
+        String::from_utf8_lossy(self.as_encoded_bytes())
+    }
+    pub fn is_empty(&self) -> bool {
+        self.inner.is_empty()
+    }
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    pub fn display(&self) -> Display<'_> {
+        Display { fs_str: self }
+    }
+}
+impl Debug for FsStr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(&self.as_encoded_bytes().utf8_chunks(), f)
+    }
+}
+impl AsRef<FsStr> for FsStr {
+    fn as_ref(&self) -> &FsStr {
+        self
+    }
 }
 
 impl AsRef<FsStr> for str {
     fn as_ref(&self) -> &FsStr {
         unsafe { FsStr::from_encoded_bytes_unchecked(self.as_bytes()) }
+    }
+}
+
+#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FsString {
+    inner: Vec<i8>,
+}
+impl FsString {
+    pub fn new() -> Self {
+        Self { inner: Vec::new() }
+    }
+
+    pub unsafe fn from_encoded_bytes_unchecked(mut bytes: Vec<u8>) -> Self {
+        unsafe {
+            let parts = (bytes.as_mut_ptr(), bytes.len(), bytes.capacity());
+            let cast_bytes = Vec::from_raw_parts(parts.0 as *mut i8, parts.1, parts.2);
+            Self { inner: cast_bytes }
+        }
+    }
+
+    pub fn as_fs_str(&self) -> &FsStr {
+        self
+    }
+
+    pub fn into_encoded_bytes(mut self) -> Vec<u8> {
+        unsafe {
+            let parts = (
+                self.inner.as_mut_ptr(),
+                self.inner.len(),
+                self.inner.capacity(),
+            );
+            let cast_bytes = Vec::from_raw_parts(parts.0 as *mut u8, parts.1, parts.2);
+            cast_bytes
+        }
+    }
+
+    pub fn into_string(mut self) -> Result<String, FsString> {
+        match core::str::from_utf8(&self.as_fs_str().as_encoded_bytes()) {
+            Ok(_) => Ok(unsafe {
+                let parts = (
+                    self.inner.as_mut_ptr(),
+                    self.inner.len(),
+                    self.inner.capacity(),
+                );
+                let cast_bytes = Vec::from_raw_parts(parts.0 as *mut u8, parts.1, parts.2);
+                String::from_utf8_unchecked(cast_bytes)
+            }),
+            Err(_) => Err(self),
+        }
+    }
+
+    pub fn push<S: AsRef<FsStr>>(&mut self, s: S) {
+        self.inner.extend_from_slice(&s.as_ref().inner);
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            inner: Vec::with_capacity(capacity),
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.inner.clear();
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.inner.capacity()
+    }
+
+    pub fn reserve(&mut self, additional: usize) {
+        self.inner.reserve(additional);
+    }
+
+    pub fn try_reserve(
+        &mut self,
+        additional: usize,
+    ) -> Result<(), alloc::collections::TryReserveError> {
+        self.inner.try_reserve(additional)
+    }
+
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.inner.reserve_exact(additional);
+    }
+
+    pub fn try_reserve_exact(
+        &mut self,
+        additional: usize,
+    ) -> Result<(), alloc::collections::TryReserveError> {
+        self.inner.try_reserve_exact(additional)
+    }
+
+    pub fn shrink_to_fit(&mut self) {
+        self.inner.shrink_to_fit();
+    }
+
+    pub fn shrink_to(&mut self, min_capacity: usize) {
+        self.inner.shrink_to(min_capacity);
+    }
+
+    pub fn into_boxed_fs_str(self) -> Box<FsStr> {
+        let raw = Box::into_raw(self.inner.into_boxed_slice()) as *mut FsStr;
+        unsafe { Box::from_raw(raw) }
+    }
+
+    pub fn leak<'a>(self) -> &'a mut FsStr {
+        unsafe { &mut *(core::ptr::from_mut(self.inner.leak()) as *mut FsStr) }
+    }
+}
+impl Debug for FsString {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(&self.as_encoded_bytes().utf8_chunks(), f)
+    }
+}
+
+impl From<String> for FsString {
+    fn from(value: String) -> Self {
+        unsafe { Self::from_encoded_bytes_unchecked(value.into_bytes()) }
+    }
+}
+
+impl<T: ?Sized + AsRef<FsStr>> From<&T> for FsString {
+    /// Copies any value implementing <code>[AsRef]&lt;[OsStr]&gt;</code>
+    /// into a newly allocated [`OsString`].
+    fn from(s: &T) -> FsString {
+        s.as_ref().to_fs_string()
+    }
+}
+
+impl core::ops::Index<core::ops::RangeFull> for FsString {
+    type Output = FsStr;
+
+    fn index(&self, _index: core::ops::RangeFull) -> &FsStr {
+        unsafe { FsStr::from_inner(self.inner.as_slice()) }
+    }
+}
+
+impl core::ops::IndexMut<core::ops::RangeFull> for FsString {
+    fn index_mut(&mut self, _index: core::ops::RangeFull) -> &mut FsStr {
+        unsafe { FsStr::from_inner_mut(self.inner.as_mut_slice()) }
+    }
+}
+
+impl core::ops::Deref for FsString {
+    type Target = FsStr;
+
+    fn deref(&self) -> &FsStr {
+        &self[..]
+    }
+}
+impl core::ops::DerefMut for FsString {
+    fn deref_mut(&mut self) -> &mut FsStr {
+        &mut self[..]
     }
 }

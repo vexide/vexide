@@ -16,15 +16,18 @@
 //! - Files can be created, but not deleted or renamed.
 //! - Directories cannot be created or enumerated from the Brain, only top-level files.
 
-use alloc::{ffi::CString, string::String, vec::Vec};
+use alloc::{boxed::Box, ffi::CString, format, string::String, vec, vec::Vec};
 
 use no_std_io::io::{Read, Seek, Write};
 
-use crate::{io, path::Path};
+use crate::{
+    io,
+    path::{Path, PathBuf},
+};
 
 mod fs_str;
 
-pub use fs_str::FsStr;
+pub use fs_str::{FsStr, FsString};
 
 /// Options and flags which can be used to configure how a file is opened.
 ///
@@ -829,6 +832,116 @@ impl Drop for File {
             vex_sdk::vexFileClose(self.fd);
         }
     }
+}
+
+pub struct DirEntry {
+    base: FsString,
+    name: FsString,
+}
+impl DirEntry {
+    pub fn path(&self) -> PathBuf {
+        PathBuf::from(format!("{}/{}", self.base.display(), self.name.display()))
+    }
+
+    pub fn metadata(&self) -> io::Result<Metadata> {
+        let path = self.path();
+        Metadata::from_path(&path)
+    }
+
+    pub fn file_type(&self) -> io::Result<FileType> {
+        Ok(self.metadata()?.file_type)
+    }
+
+    pub fn file_name(&self) -> FsString {
+        self.name.clone()
+    }
+}
+
+pub struct ReadDir {
+    idx: usize,
+    filenames: Box<[Option<FsString>]>,
+    base: FsString,
+}
+impl Iterator for ReadDir {
+    type Item = DirEntry;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx >= self.filenames.len() {
+            return None;
+        }
+        let entry = DirEntry {
+            base: self.base.clone(),
+            name: self.filenames[self.idx].take().unwrap(),
+        };
+        self.idx += 1;
+        Some(entry)
+    }
+}
+
+pub fn read_dir<P: AsRef<Path>>(path: P) -> io::Result<ReadDir> {
+    let path = path.as_ref();
+    let meta = metadata(path)?;
+    if meta.is_file() {
+        return Err(io::Error::new(
+            no_std_io::io::ErrorKind::InvalidInput,
+            "Cannot read the entries of a path that is not a directory.",
+        ));
+    }
+
+    let c_path = CString::new(path.as_fs_str().as_encoded_bytes())
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "Path contained a null byte"))?;
+
+    let mut size_guess = 1024;
+    let mut last_buffer_size = None;
+
+    let mut filename_buffer;
+    loop {
+        filename_buffer = vec![0; size_guess];
+
+        unsafe {
+            map_fresult(vex_sdk::vexFileDirectoryGet(
+                c_path.as_ptr(),
+                filename_buffer.as_mut_ptr(),
+                size_guess as _,
+            ))?;
+        }
+
+        let mut len = 0;
+        for (i, byte) in filename_buffer.iter().enumerate().rev() {
+            if *byte != 0 {
+                len = i;
+            }
+        }
+
+        if last_buffer_size == Some(len) {
+            break
+        }
+
+        last_buffer_size.replace(len);
+        size_guess *= 2;
+    }
+
+    let mut file_names = vec![];
+
+    let fs_str = unsafe { FsStr::from_inner(&filename_buffer) };
+
+    let mut filename_start_idx = 0;
+    for (i, byte) in fs_str.as_encoded_bytes().iter().enumerate() {
+        if *byte == b'\n' {
+            let filename = &fs_str.as_encoded_bytes()[filename_start_idx..i];
+            let filename = unsafe { FsString::from_encoded_bytes_unchecked(filename.to_vec()) };
+            file_names.push(Some(filename));
+            filename_start_idx = i + 1;
+        }
+    }
+
+    let base = path.inner.to_fs_string();
+
+    Ok(ReadDir {
+        idx: 0,
+        filenames: file_names.into_boxed_slice(),
+        base,
+    })
 }
 
 fn map_fresult(fresult: vex_sdk::FRESULT) -> io::Result<()> {

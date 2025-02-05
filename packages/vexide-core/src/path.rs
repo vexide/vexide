@@ -3,7 +3,11 @@
 //! This module provides the [`Path`] type for working with VEXos filesystem paths
 //! abstractly. Paths are case sensitive.
 
-use crate::fs::FsStr;
+use core::{borrow::Borrow, ops::Deref};
+
+use alloc::string::String;
+
+use crate::fs::{FsStr, FsString};
 
 /// A slice of a path (akin to [`str`]).
 ///
@@ -64,5 +68,47 @@ impl AsRef<Path> for Path {
 impl AsRef<Path> for &str {
     fn as_ref(&self) -> &Path {
         Path::new(self)
+    }
+}
+
+#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PathBuf {
+    inner: FsString
+}
+impl PathBuf {
+    pub fn new() -> Self {
+        Self {
+            inner: FsString::new()
+        }
+    }
+
+    fn as_path(&self) -> &Path {
+        Path::new(self.as_fs_str())
+    }
+}
+
+impl From<String> for PathBuf {
+    fn from(value: String) -> Self {
+        Self {
+            inner: FsString::from(value),
+        }
+    }
+}
+impl Deref for PathBuf {
+    type Target = Path;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_path()
+    }
+}
+
+impl Borrow<Path> for PathBuf {
+    fn borrow(&self) -> &Path {
+        self.deref()
+    }
+}
+impl AsRef<Path> for PathBuf {
+    fn as_ref(&self) -> &Path {
+        self.as_path()
     }
 }
