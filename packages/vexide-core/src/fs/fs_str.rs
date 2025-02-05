@@ -1,5 +1,5 @@
 use alloc::{borrow::Cow, boxed::Box, string::String, vec::Vec};
-use core::{fmt::Debug, ptr};
+use core::{fmt::Debug, mem::ManuallyDrop, ptr};
 
 pub struct Display<'a> {
     fs_str: &'a FsStr,
@@ -25,10 +25,10 @@ pub struct FsStr {
     inner: [i8],
 }
 impl FsStr {
-    pub(crate) unsafe fn from_inner(inner: &[i8]) -> &Self {
+    pub(crate) const unsafe fn from_inner(inner: &[i8]) -> &Self {
         unsafe { &*(ptr::from_ref(inner) as *const Self) }
     }
-    pub(crate) unsafe fn from_inner_mut(inner: &mut [i8]) -> &mut Self {
+    pub(crate) const unsafe fn from_inner_mut(inner: &mut [i8]) -> &mut Self {
         unsafe { &mut *(ptr::from_mut(inner) as *mut Self) }
     }
 
@@ -86,14 +86,14 @@ impl FsStr {
     pub fn to_string_lossy(&self) -> Cow<'_, str> {
         String::from_utf8_lossy(self.as_encoded_bytes())
     }
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.inner.len()
     }
 
-    pub fn display(&self) -> Display<'_> {
+    pub const fn display(&self) -> Display<'_> {
         Display { fs_str: self }
     }
 }
@@ -123,10 +123,11 @@ impl FsString {
         Self { inner: Vec::new() }
     }
 
-    pub unsafe fn from_encoded_bytes_unchecked(mut bytes: Vec<u8>) -> Self {
+    pub unsafe fn from_encoded_bytes_unchecked(bytes: Vec<u8>) -> Self {
+        let mut bytes = ManuallyDrop::new(bytes);
         unsafe {
             let parts = (bytes.as_mut_ptr(), bytes.len(), bytes.capacity());
-            let cast_bytes = Vec::from_raw_parts(parts.0 as *mut i8, parts.1, parts.2);
+            let cast_bytes = Vec::from_raw_parts(parts.0.cast::<i8>(), parts.1, parts.2);
             Self { inner: cast_bytes }
         }
     }
@@ -142,8 +143,8 @@ impl FsString {
                 self.inner.len(),
                 self.inner.capacity(),
             );
-            let cast_bytes = Vec::from_raw_parts(parts.0 as *mut u8, parts.1, parts.2);
-            cast_bytes
+
+            Vec::from_raw_parts(parts.0.cast::<u8>(), parts.1, parts.2)
         }
     }
 
@@ -155,7 +156,7 @@ impl FsString {
                     self.inner.len(),
                     self.inner.capacity(),
                 );
-                let cast_bytes = Vec::from_raw_parts(parts.0 as *mut u8, parts.1, parts.2);
+                let cast_bytes = Vec::from_raw_parts(parts.0.cast::<u8>(), parts.1, parts.2);
                 String::from_utf8_unchecked(cast_bytes)
             }),
             Err(_) => Err(self),
@@ -166,6 +167,7 @@ impl FsString {
         self.inner.extend_from_slice(&s.as_ref().inner);
     }
 
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             inner: Vec::with_capacity(capacity),
@@ -243,7 +245,8 @@ impl core::ops::Index<core::ops::RangeFull> for FsString {
     type Output = FsStr;
 
     fn index(&self, _index: core::ops::RangeFull) -> &FsStr {
-        unsafe { FsStr::from_inner(self.inner.as_slice()) }
+        let me = unsafe { FsStr::from_inner(self.inner.as_slice()) };
+        me
     }
 }
 

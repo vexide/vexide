@@ -834,6 +834,7 @@ impl Drop for File {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DirEntry {
     base: FsString,
     name: FsString,
@@ -857,6 +858,7 @@ impl DirEntry {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ReadDir {
     idx: usize,
     filenames: Box<[Option<FsString>]>,
@@ -910,11 +912,12 @@ pub fn read_dir<P: AsRef<Path>>(path: P) -> io::Result<ReadDir> {
         for (i, byte) in filename_buffer.iter().enumerate().rev() {
             if *byte != 0 {
                 len = i;
+                break;
             }
         }
 
         if last_buffer_size == Some(len) {
-            break
+            break;
         }
 
         last_buffer_size.replace(len);
