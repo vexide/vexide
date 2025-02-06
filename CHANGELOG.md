@@ -34,6 +34,8 @@ Before releasing:
 
 ### Added
 
+- Added the `FsString` `PathBuf` types as mutable and owned equivalents to `FsStr` and `Path`. (#296)
+- Added `read_dir`, `ReadDir`, and `DirEntry` to `vexide_core::fs` for directory reading support. (#296)
 - Implemented `PartialOrd` for `Version`. (#288)
 - Added `RadioLink::INTERNAL_BUFFER_SIZE` constant. (#293)
 
