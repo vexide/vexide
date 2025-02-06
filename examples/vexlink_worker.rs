@@ -10,7 +10,7 @@ use vexide::prelude::*;
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
-    let mut link = RadioLink::open(peripherals.port_21, "643A", LinkType::Worker).unwrap();
+    let mut link = RadioLink::open(peripherals.port_21, "643A", LinkType::Worker);
 
     println!("[WORKER] Waiting for manager radio...");
 

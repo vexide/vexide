@@ -36,6 +36,8 @@ Before releasing:
 
 - Added the `FsString` `PathBuf` types as mutable and owned equivalents to `FsStr` and `Path`. (#296)
 - Added `read_dir`, `ReadDir`, and `DirEntry` to `vexide_core::fs` for directory reading support. (#296)
+- Implemented `PartialOrd` for `Version`. (#288)
+- Added `RadioLink::INTERNAL_BUFFER_SIZE` constant. (#293)
 
 ### Fixed
 
@@ -44,8 +46,12 @@ Before releasing:
 ### Changed
 
 - `Controller::battery_capacity` now returns a float from 0.0 to 1.0 instead of an i32. (#286) (**Breaking Change**)
+- `RadioLink::open` now panics if `id` is not a valid `CStr` rather than returning a `Result`. (#293) (**Breaking Change**)
+- `SerialPort::open` now returns a `Future` that must be awaited before opening the port. (#293) (**Breaking Change**)
 
 ### Removed
+
+- Removed `SerialError::Port`. `SerialPort` methods can no longer return `PortError`. (#293) (**Breaking Change**)
 
 ### New Contributors
 
