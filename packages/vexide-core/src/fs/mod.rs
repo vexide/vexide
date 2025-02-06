@@ -822,6 +822,15 @@ impl Seek for File {
     }
 }
 
+impl Drop for File {
+    fn drop(&mut self) {
+        // We do not need to sync because vexFileClose will do that for us
+        unsafe {
+            vex_sdk::vexFileClose(self.fd);
+        }
+    }
+}
+
 fn map_fresult(fresult: vex_sdk::FRESULT) -> io::Result<()> {
     // VEX presumably uses a derivative of FatFs (most likely the xilffs library)
     // for sdcard filesystem functions.

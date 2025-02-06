@@ -39,6 +39,8 @@ Before releasing:
 
 ### Fixed
 
+- Added a missing `Drop` implementation to `File` that will close and flush the file descriptor. (#295)
+
 ### Changed
 
 - `Controller::battery_capacity` now returns a float from 0.0 to 1.0 instead of an i32. (#286) (**Breaking Change**)
