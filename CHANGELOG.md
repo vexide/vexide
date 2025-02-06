@@ -34,6 +34,9 @@ Before releasing:
 
 ### Added
 
+- Implemented `PartialOrd` for `Version`. (#288)
+- Added `RadioLink::INTERNAL_BUFFER_SIZE` constant. (#293)
+
 ### Fixed
 
 - Added a missing `Drop` implementation to `File` that will close and flush the file descriptor. (#295)
@@ -41,8 +44,12 @@ Before releasing:
 ### Changed
 
 - `Controller::battery_capacity` now returns a float from 0.0 to 1.0 instead of an i32. (#286) (**Breaking Change**)
+- `RadioLink::open` now panics if `id` is not a valid `CStr` rather than returning a `Result`. (#293) (**Breaking Change**)
+- `SerialPort::open` now returns a `Future` that must be awaited before opening the port. (#293) (**Breaking Change**)
 
 ### Removed
+
+- Removed `SerialError::Port`. `SerialPort` methods can no longer return `PortError`. (#293) (**Breaking Change**)
 
 ### New Contributors
 
