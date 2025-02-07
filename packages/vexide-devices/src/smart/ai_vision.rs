@@ -816,7 +816,7 @@ impl AiVisionSensor {
         Ok(())
     }
 
-    /// Enables and begins the automatic white balance process.
+    /// Unknown Use
     ///
     /// # Errors
     ///
