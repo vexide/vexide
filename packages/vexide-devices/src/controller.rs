@@ -222,16 +222,16 @@ impl Future for ControllerScreenWriteFuture<'_> {
             column,
             text,
             controller,
-            enforce_visible: visible,
+            enforce_visible,
         } = state
         {
             assert!(
-                *visible && (*line == 0 || *line > ControllerScreen::MAX_LINES as u8),
+                (!*enforce_visible) || (*line != 0 || *line <= ControllerScreen::MAX_LINES as u8),
                 "Invalid line number ({line}) is greater than the maximum number of lines ({})",
                 ControllerScreen::MAX_LINES
             );
             assert!(
-                *column == 0 || *column > ControllerScreen::MAX_COLUMNS as u8,
+                *column != 0 || *column <= ControllerScreen::MAX_COLUMNS as u8,
                 "Invalid column number ({column}) is greater than the maximum number of columns ({})",
                 ControllerScreen::MAX_COLUMNS
             );
@@ -536,12 +536,12 @@ impl ControllerScreen {
         validate_connection(self.id)?;
 
         assert!(
-            column < Self::MAX_COLUMNS as u8 && column != 0,
+            column <= Self::MAX_COLUMNS as u8 && column != 0,
             "Invalid column number ({column}) is greater than the maximum number of columns ({})",
             ControllerScreen::MAX_COLUMNS
         );
         assert!(
-            line < Self::MAX_LINES as u8 && line != 0,
+            line <= Self::MAX_LINES as u8 && line != 0,
             "Invalid column number ({column}) is greater than the maximum number of columns ({})",
             ControllerScreen::MAX_COLUMNS
         );
@@ -980,7 +980,7 @@ impl Controller {
     /// }
     /// ```
     pub fn try_rumble(&mut self, pattern: impl AsRef<str>) -> Result<(), ControllerError> {
-        self.screen.try_set_text(pattern, 3, 0)
+        self.screen.try_set_text(pattern, 4, 1)
     }
 }
 
