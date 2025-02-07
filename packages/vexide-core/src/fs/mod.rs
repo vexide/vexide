@@ -27,7 +27,7 @@ use crate::{
 
 mod fs_str;
 
-pub use fs_str::{FsStr, FsString, Display};
+pub use fs_str::{Display, FsStr, FsString};
 
 /// Options and flags which can be used to configure how a file is opened.
 ///
