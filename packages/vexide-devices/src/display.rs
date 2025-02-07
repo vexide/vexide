@@ -343,7 +343,7 @@ impl FontSize {
     ///
     /// # Errors
     ///
-    /// - [`NegativeFontSizeError`] if the given size is negative.
+    /// - [`InvalidFontSizeError`] if the given size is negative.
     pub fn from_float(size: f32) -> Result<Self, InvalidFontSizeError> {
         ensure!(
             size.is_finite() && !size.is_sign_negative(),

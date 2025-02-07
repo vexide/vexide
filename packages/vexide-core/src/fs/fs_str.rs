@@ -1,6 +1,7 @@
 use alloc::{borrow::Cow, boxed::Box, string::String, vec::Vec};
 use core::{fmt::Debug, mem::ManuallyDrop, ptr};
 
+/// A type that allows safely displaying [`FsStr`]s that may contain non-UTF-8 data.
 pub struct Display<'a> {
     fs_str: &'a FsStr,
 }
@@ -382,8 +383,8 @@ impl From<String> for FsString {
 }
 
 impl<T: ?Sized + AsRef<FsStr>> From<&T> for FsString {
-    /// Copies any value implementing <code>[AsRef]&lt;[OsStr]&gt;</code>
-    /// into a newly allocated [`OsString`].
+    /// Copies any value implementing <code>[AsRef]&lt;[FsStr]&gt;</code>
+    /// into a newly allocated [`FsString`].
     fn from(s: &T) -> FsString {
         s.as_ref().to_fs_string()
     }

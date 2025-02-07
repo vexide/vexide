@@ -203,7 +203,7 @@ pub trait AdiDevice<const N: usize> {
     /// Ports are numbered starting from 1.
     fn port_numbers(&self) -> [u8; N];
 
-    /// Returns the port number of the [`SmartPort`] this device's expander is connected to,
+    /// Returns the port number of the [`SmartPort`](crate::smart::SmartPort) this device's expander is connected to,
     /// or [`None`] if the device is plugged into an onboard ADI port.
     ///
     /// Ports are numbered starting from 1.

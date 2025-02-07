@@ -5,7 +5,7 @@
 //!
 //! # Hardware overview
 //!
-//! The ADI gyroscope is a (LY3100ALH MEMS motion sensor)[https://content.vexrobotics.com/docs/276-2333-Datasheet-1011.pdf].
+//! The ADI gyroscope is a (LY3100ALH MEMS motion sensor)[<https://content.vexrobotics.com/docs/276-2333-Datasheet-1011.pdf>].
 //! This means that it can measure the rate of rotation up to ±1000 degrees per second.
 //! VEXos only provides the calculated yaw rotation of the robot.
 //!
