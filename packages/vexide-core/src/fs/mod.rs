@@ -27,7 +27,7 @@ use crate::{
 
 mod fs_str;
 
-pub use fs_str::{FsStr, FsString};
+pub use fs_str::{FsStr, FsString, Display};
 
 /// Options and flags which can be used to configure how a file is opened.
 ///
@@ -926,10 +926,6 @@ impl DirEntry {
     /// - `./foo`
     /// - `../foo`
     /// - `/some/global/foo`
-    ///
-    /// # Examples
-    ///
-    /// ``````
     #[must_use]
     pub fn file_name(&self) -> FsString {
         self.name.clone()

@@ -1,5 +1,5 @@
 use no_std_io::io::{self, Write};
-use vex_sdk::{vexSerialReadChar, vexSerialWriteBuffer};
+use vex_sdk::{vexSerialReadChar, vexSerialWriteBuffer, vexSerialWriteFree};
 
 use crate::sync::{Mutex, MutexGuard};
 
@@ -32,8 +32,13 @@ impl io::Write for StdoutRaw {
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        // Serial buffers are automatically flushed every 2mS by vexTasksRun
-        // in our background processing task.
+        unsafe {
+            while vexSerialWriteFree(STDIO_CHANNEL) < Stdout::INTERNAL_BUFFER_SIZE as _ {
+                // Allow VEXos to flush the buffer by yielding.
+                vex_sdk::vexTasksRun();
+            }
+        }
+
         Ok(())
     }
 }
@@ -156,6 +161,49 @@ pub const fn stdin() -> Stdin {
     Stdin(())
 }
 
+//////////////////////////////
+// Printing implementations //
+//////////////////////////////
+
+#[doc(hidden)]
+#[inline]
+pub fn __print(args: core::fmt::Arguments<'_>) {
+    use alloc::format;
+
+    use crate::io::Write;
+
+    // Panic on print if stdout is not available.
+    // While this is less than ideal,
+    // the alternative is either ingoring the print, a complete deadlock, or writing unsafely without locking.
+    let mut stdout = stdout()
+        .try_lock()
+        .expect("Attempted to print while stdout was already locked.");
+
+    // Format the arguments into a byte buffer before printing them.
+    // This lets us calculate if the bytes will overflow the buffer before printing them.
+    let formatted_bytes = format!("{args}").into_bytes();
+    let remaining_bytes_in_buffer = unsafe { vexSerialWriteFree(STDIO_CHANNEL) as usize };
+
+    // If our print would overflow the buffer and cause a panic, wait for the buffer to clear.
+    // Not only does this prevent a panic (if the panic handler prints it could cause a recursive panic and immediately exit. **Very bad**),
+    // but it also allows prints and device comms inside of tight loops that have a print.
+    //
+    //TODO: In the future we may want to actually handle prints in tight loops
+    //TODO: in a way that makes it more clear that that loop is hogging executor time.
+    //TODO: In the past a lack of serial output was a tell that the executor was being hogged.
+    //TODO: Flushing the serial buffer now removes this tell, though.
+    if remaining_bytes_in_buffer < formatted_bytes.len() {
+        // Flushing is infallible, so we can unwrap here.
+        stdout.flush().unwrap();
+    }
+
+    // Re-use the buffer to write the formatted bytes to the serial output.
+    // This technically should never error because we have already flushed the buffer if it would overflow.
+    if let Err(e) = stdout.write_all(formatted_bytes.as_slice()) {
+        panic!("failed printing to stdout: {e}");
+    }
+}
+
 #[macro_export]
 /// Prints a message to the standard output and appends a newline.
 macro_rules! println {
@@ -172,16 +220,7 @@ pub use println;
 /// Prints a message to the standard output.
 macro_rules! print {
     ($($arg:tt)*) => {{
-		{
-			use $crate::io::Write;
-            // Panic on print if stdout is not available.
-            // While this is less than ideal,
-            // the alternative is either ingoring the print, a complete deadlock, or writing unsafely without locking.
-            let mut stdout =  $crate::io::stdout().try_lock().expect("Attempted to print while stdout was already locked.");
-            if let Err(e) = stdout.write_fmt(format_args!($($arg)*)) {
-                panic!("failed printing to stdout: {e}");
-            }
-		}
+		$crate::io::__print(format_args!($($arg)*))
     }};
 }
 pub use print;

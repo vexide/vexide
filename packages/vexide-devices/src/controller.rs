@@ -924,10 +924,12 @@ impl Controller {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
-    ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Panics
+    ///
+    /// - Panics if a NUL (0x00) character was found anywhere in the specified text.
     ///
     /// # Examples
     ///
@@ -959,10 +961,12 @@ impl Controller {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Nul`] error if a NUL (0x00) character was
-    ///   found anywhere in the specified text.
     /// - A [`ControllerError::Offline`] error is returned if the controller is
     ///   not connected.
+    ///
+    /// # Panics
+    ///
+    /// - Panics if a NUL (0x00) character was found anywhere in the specified text.
     ///
     /// # Examples
     ///

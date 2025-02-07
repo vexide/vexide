@@ -4,7 +4,7 @@
 //!
 //! # Hardware Overview
 //!
-//! Servos are similar in both appearance and function to [`AdiMotor`]s, with the
+//! Servos are similar in both appearance and function to [`AdiMotor`](super::motor::AdiMotor)s, with the
 //! caveat that they are designed to hold a specific *angle* rather than a continious
 //! *speed*. In other words:
 //!
