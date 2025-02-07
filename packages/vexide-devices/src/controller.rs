@@ -13,7 +13,7 @@ use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
     V5_ControllerIndex, V5_ControllerStatus,
 };
-use vexide_core::competition::{self, CompetitionMode};
+use vexide_core::{competition::{self, CompetitionMode}, dbg};
 
 /// Represents the state of a button on the controller.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
@@ -226,12 +226,12 @@ impl Future for ControllerScreenWriteFuture<'_> {
         } = state
         {
             assert!(
-                (!*enforce_visible) || (*line != 0 || *line <= ControllerScreen::MAX_LINES as u8),
+                (!*enforce_visible) || (*line != 0 && *line <= ControllerScreen::MAX_LINES as u8),
                 "Invalid line number ({line}) is greater than the maximum number of lines ({})",
                 ControllerScreen::MAX_LINES
             );
             assert!(
-                *column != 0 || *column <= ControllerScreen::MAX_COLUMNS as u8,
+                *column != 0 && *column <= ControllerScreen::MAX_COLUMNS as u8,
                 "Invalid column number ({column}) is greater than the maximum number of columns ({})",
                 ControllerScreen::MAX_COLUMNS
             );
