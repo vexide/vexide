@@ -184,23 +184,28 @@ pub fn __print(args: core::fmt::Arguments<'_>) {
     let formatted_bytes = format!("{args}").into_bytes();
     let remaining_bytes_in_buffer = unsafe { vexSerialWriteFree(STDIO_CHANNEL) as usize };
 
-    // If our print would overflow the buffer and cause a panic, wait for the buffer to clear.
-    // Not only does this prevent a panic (if the panic handler prints it could cause a recursive panic and immediately exit. **Very bad**),
-    // but it also allows prints and device comms inside of tight loops that have a print.
-    //
-    //TODO: In the future we may want to actually handle prints in tight loops
-    //TODO: in a way that makes it more clear that that loop is hogging executor time.
-    //TODO: In the past a lack of serial output was a tell that the executor was being hogged.
-    //TODO: Flushing the serial buffer now removes this tell, though.
-    if remaining_bytes_in_buffer < formatted_bytes.len() {
-        // Flushing is infallible, so we can unwrap here.
-        stdout.flush().unwrap();
-    }
+    // Write all of our data in chunks the size of the outgoing serial buffer.
+    // This ensures that writes of length greater than [`Stdout::INTERNAL_BUFFER_SIZE`] can still be written
+    // by flushing several times.
+    for chunk in formatted_bytes.chunks(Stdout::INTERNAL_BUFFER_SIZE) {
+        // If this chunk would overflow the buffer and cause a panic during `write_all`, wait for the buffer to clear.
+        // Not only does this prevent a panic (if the panic handler prints it could cause a recursive panic and immediately exit. **Very bad**),
+        // but it also allows prints and device comms inside of tight loops that have a print.
+        //
+        //TODO: In the future we may want to actually handle prints in tight loops
+        //TODO: in a way that makes it more clear that that loop is hogging executor time.
+        //TODO: In the past a lack of serial output was a tell that the executor was being hogged.
+        //TODO: Flushing the serial buffer now removes this tell, though.
+        if remaining_bytes_in_buffer < chunk.len() {
+            // Flushing is infallible, so we can unwrap here.
+            stdout.flush().unwrap();
+        }
 
-    // Re-use the buffer to write the formatted bytes to the serial output.
-    // This technically should never error because we have already flushed the buffer if it would overflow.
-    if let Err(e) = stdout.write_all(formatted_bytes.as_slice()) {
-        panic!("failed printing to stdout: {e}");
+        // Re-use the buffer to write the formatted bytes to the serial output.
+        // This technically should never error because we have already flushed the buffer if it would overflow.
+        if let Err(e) = stdout.write_all(chunk) {
+            panic!("failed printing to stdout: {e}");
+        }
     }
 }
 
