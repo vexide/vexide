@@ -24,7 +24,6 @@ vexide-devices = { workspace = true, optional = true }
 vexide-panic = { workspace = true, optional = true }
 vexide-core = { workspace = true, optional = true }
 vexide-startup = { workspace = true, optional = true }
-vexide-graphics = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
 vex-sdk = { workspace = true }
 
@@ -53,10 +52,6 @@ async = ["dep:vexide-async"]
 devices = ["dep:vexide-devices"]
 dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]
 smart_leds_trait = ["devices", "vexide-devices/smart_leds_trait"]
-
-graphics = ["dep:vexide-graphics"]
-slint = ["vexide-graphics/slint", "graphics"]
-embedded-graphics = ["vexide-graphics/embedded-graphics", "graphics"]
 
 panic = ["dep:vexide-panic"]
 display_panics = ["panic", "vexide-panic/display_panics"]
