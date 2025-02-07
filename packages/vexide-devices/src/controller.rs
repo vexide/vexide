@@ -13,7 +13,7 @@ use vex_sdk::{
     vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
     V5_ControllerIndex, V5_ControllerStatus,
 };
-use vexide_core::{competition::{self, CompetitionMode}, dbg};
+use vexide_core::competition::{self, CompetitionMode};
 
 /// Represents the state of a button on the controller.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
