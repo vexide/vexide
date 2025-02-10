@@ -27,12 +27,12 @@ use vex_sdk::{
     vexDeviceGpsAttitudeGet, vexDeviceGpsDataRateSet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet,
     vexDeviceGpsHeadingGet, vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet,
     vexDeviceGpsOriginSet, vexDeviceGpsQuaternionGet, vexDeviceGpsRawAccelGet,
-    vexDeviceGpsRawGyroGet, vexDeviceGpsRotationGet, vexDeviceGpsStatusGet, V5_DeviceGpsAttitude,
-    V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
+    vexDeviceGpsRawGyroGet, vexDeviceGpsStatusGet, V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion,
+    V5_DeviceGpsRaw, V5_DeviceT,
 };
 use vexide_core::float::Float;
 
-use super::{validate_port, SmartDevice, SmartDeviceType, SmartPort};
+use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{math::Point2, PortError};
 
 /// A GPS sensor plugged into a Smart Port.
@@ -40,9 +40,8 @@ use crate::{math::Point2, PortError};
 pub struct GpsSensor {
     port: SmartPort,
     device: V5_DeviceT,
-
-    /// Internal IMU
-    pub imu: GpsImu,
+    rotation_offset: f64,
+    heading_offset: f64,
 }
 
 // SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
@@ -51,6 +50,9 @@ unsafe impl Send for GpsSensor {}
 unsafe impl Sync for GpsSensor {}
 
 impl GpsSensor {
+    /// The maximum value that can be returned by [`Self::heading`].
+    pub const MAX_HEADING: f64 = 360.0;
+
     /// Creates a new GPS sensor from a [`SmartPort`].
     ///
     /// # Configuration
@@ -79,11 +81,12 @@ impl GpsSensor {
     pub fn new(
         port: SmartPort,
         offset: impl Into<Point2<f64>>,
-        initial_pose: (impl Into<Point2<f64>>, f64),
+        initial_position: impl Into<Point2<f64>>,
+        initial_heading: f64,
     ) -> Self {
         let device = unsafe { port.device_handle() };
 
-        let initial_position = initial_pose.0.into();
+        let initial_position = initial_position.into();
         let offset = offset.into();
 
         unsafe {
@@ -92,19 +95,15 @@ impl GpsSensor {
                 device,
                 initial_position.x,
                 initial_position.y,
-                360.0 - initial_pose.1,
+                initial_heading,
             );
         }
 
         Self {
             device,
-            imu: GpsImu {
-                device,
-                port_number: port.number(),
-                rotation_offset: Default::default(),
-                heading_offset: Default::default(),
-            },
             port,
+            rotation_offset: Default::default(),
+            heading_offset: Default::default(),
         }
     }
 
@@ -184,7 +183,7 @@ impl GpsSensor {
     ///     }
     /// }
     /// ```
-    pub fn pose(&self) -> Result<(Point2<f64>, f64), PortError> {
+    pub fn position(&self) -> Result<Point2<f64>, PortError> {
         self.validate_port()?;
 
         let mut attitude = V5_DeviceGpsAttitude::default();
@@ -192,19 +191,10 @@ impl GpsSensor {
             vexDeviceGpsAttitudeGet(self.device, &mut attitude, false);
         }
 
-        let heading = (360.0
-            - unsafe {
-                vexDeviceGpsRotationGet(self.device) + vexDeviceGpsDegreesGet(self.device)
-            })
-            % 360.0;
-
-        Ok((
-            Point2 {
-                x: attitude.position_x,
-                y: attitude.position_y,
-            },
-            heading,
-        ))
+        Ok(Point2 {
+            x: attitude.position_x,
+            y: attitude.position_y,
+        })
     }
 
     /// Returns the RMS (Root Mean Squared) error for the GPS position reading in meters.
@@ -266,43 +256,6 @@ impl GpsSensor {
         self.validate_port()?;
 
         Ok(unsafe { vexDeviceGpsStatusGet(self.device) })
-    }
-}
-
-impl SmartDevice for GpsSensor {
-    fn port_number(&self) -> u8 {
-        self.port.number()
-    }
-
-    fn device_type(&self) -> SmartDeviceType {
-        SmartDeviceType::Gps
-    }
-}
-impl From<GpsSensor> for SmartPort {
-    fn from(device: GpsSensor) -> Self {
-        device.port
-    }
-}
-
-/// GPS Sensor Internal IMU
-#[derive(Debug, PartialEq)]
-pub struct GpsImu {
-    port_number: u8,
-    device: V5_DeviceT,
-    rotation_offset: f64,
-    heading_offset: f64,
-}
-
-// I'm sure you know the drill at this point...
-unsafe impl Send for GpsImu {}
-unsafe impl Sync for GpsImu {}
-
-impl GpsImu {
-    /// The maximum value that can be returned by [`Self::heading`].
-    pub const MAX_HEADING: f64 = 360.0;
-
-    fn validate_port(&self) -> Result<(), PortError> {
-        validate_port(self.port_number, SmartDeviceType::Gps)
     }
 
     /// Returns the IMU's yaw angle bounded by [0.0, 360.0) degrees.
@@ -809,5 +762,21 @@ impl GpsImu {
         }
 
         Ok(())
+    }
+}
+
+impl SmartDevice for GpsSensor {
+    fn port_number(&self) -> u8 {
+        self.port.number()
+    }
+
+    fn device_type(&self) -> SmartDeviceType {
+        SmartDeviceType::Gps
+    }
+}
+
+impl From<GpsSensor> for SmartPort {
+    fn from(device: GpsSensor) -> Self {
+        device.port
     }
 }
