@@ -121,7 +121,11 @@ impl AdiEncoder {
             adi_port_name(bottom_number),
         );
 
-        top_port.configure(AdiDeviceType::Encoder);
+        if top_number < bottom_number {
+            top_port.configure(AdiDeviceType::Encoder);
+        } else {
+            bottom_port.configure(AdiDeviceType::Encoder);
+        }
 
         Self {
             top_port,
@@ -160,7 +164,6 @@ impl AdiEncoder {
     /// ```
     pub fn position(&self) -> Result<Position, PortError> {
         self.top_port.validate_expander()?;
-        self.top_port.configure(self.device_type());
 
         Ok(Position::from_ticks(
             unsafe {
