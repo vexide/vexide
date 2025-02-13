@@ -247,6 +247,7 @@ Before releasing:
 ### Fixed
 
 - Fixed an issue related to the calling convention of vex-sdk functions causing docs.rs api reference build failures. (#165)
+- Fixed flipped assert logic when writing to the controller screen. (#300)
 
 ### Changed
 
