@@ -90,6 +90,9 @@ unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
 
+    static mut __patcher_ram_start: u8;
+    static mut __patcher_ram_end: u8;
+
     // These symbols don't have real types, so this is a little bit of a hack.
     static mut __bss_start: u32;
     static mut __bss_end: u32;
@@ -186,20 +189,18 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         // Fill the `.bss` section of our program's memory with zeroes to ensure that
         // uninitialized data is allocated properly.
         zero_bss(&raw mut __bss_start, &raw mut __bss_end);
-    }
 
-    // Initialize the heap allocator using normal bounds
-    #[cfg(target_vendor = "vex")]
-    unsafe {
+        // Initialize the heap allocator using normal bounds
         vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
-    }
 
-    // If this link address is 0x03800000, this implies we were uploaded using
-    // differential uploads by cargo-v5 and may have a patch to apply.
-    if unsafe { vex_sdk::vexSystemLinkAddrGet() } == USER_MEMORY_START {
-        unsafe {
+        // If this link address is 0x03800000, this implies we were uploaded using
+        // differential uploads by cargo-v5 and may have a patch to apply.
+        if vex_sdk::vexSystemLinkAddrGet() == USER_MEMORY_START {
             patcher::patch();
         }
+
+        // Reclaim 6mb memory region occupied by patches and program copies as heap space.
+        vexide_core::allocator::claim(&raw mut __patcher_ram_start, &raw mut __patcher_ram_end);
     }
 
     // Print the banner
