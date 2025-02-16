@@ -22,13 +22,9 @@ The vexide runtime is a fairly standard rust monorepo split into 7 subcrates:
 - [`vexide-async`](https://crates.io/crates/vexide_async) implements our cooperative async runtime as well as several important async futures.
 - [`vexide-startup`](https://crates.io/crates/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.
 - [`vexide-panic`](https://crates.io/crates/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
-- [`vexide-graphics`](https://crates.io/crates/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [Slint] and [`embedded-graphics`].
 - [`vexide-macro`](https://crates.io/crates/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
 
 These subcrates are exported from a single [`vexide`](https://github.com/vexide/vexide/blob/main/packages/vexide/src/lib.rs) crate intended to be used as a complete package.
-
-[Slint]: https://slint.dev/
-[`embedded-graphics`]: https://crates.io/crates/embedded-graphics
 
 ## Building
 
