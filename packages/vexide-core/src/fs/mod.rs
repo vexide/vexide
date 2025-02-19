@@ -1003,7 +1003,7 @@ pub fn read_dir<P: AsRef<Path>>(path: P) -> io::Result<ReadDir> {
         unsafe {
             map_fresult(vex_sdk::vexFileDirectoryGet(
                 c_path.as_ptr(),
-                filename_buffer.as_mut_ptr(),
+                filename_buffer.as_mut_ptr().cast(),
                 size_guess as _,
             ))?;
         }
