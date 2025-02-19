@@ -340,6 +340,7 @@ Before releasing:
 - The `no-banner` feature has been removed from `vexide-startup` and must now be toggled through the `vexide:main` attribute. (#102) (**Breaking Change**)
 - Removed the useless ``__rodata_start`` and ``__rodata_end`` symbols.
 - Support for `vexide-math` has been dropped. (#78) (**Breaking Change**)
+- Removed the `vexide-graphics` crate and associated features (containing embedded-graphics and slint drivers) from the main vexide crate due to licensing concerns. These drivers will be available as crates licensed separately from the main `vexide` project. (#297) (**Breaking Change**)
 
 ### New Contributors
 

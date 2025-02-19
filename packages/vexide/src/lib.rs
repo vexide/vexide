@@ -19,11 +19,7 @@
 //! - [`vexide-async`](https://docs.rs/vexide_async) implements our cooperative async runtime as well as several important async futures.
 //! - [`vexide-startup`](https://docs.rs/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.
 //! - [`vexide-panic`](https://docs.rs/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
-//! - [`vexide-graphics`](https://docs.rs/vexide_graphics) implements graphics drivers for some popular embedded Rust graphics libraries like [`slint`] and [`embedded-graphics`].
 //! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
-//!
-//! [`slint`]: https://slint.rs/
-//! [`embedded-graphics`]: https://crates.io/crates/embedded-graphics
 //!
 //! # Usage
 //!
@@ -51,9 +47,6 @@ pub use vexide_core as core;
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
-#[doc(inline)]
-#[cfg(feature = "graphics")]
-pub use vexide_graphics as graphics;
 #[doc(inline)]
 #[cfg(feature = "macro")]
 pub use vexide_macro as r#macro;
@@ -125,8 +118,4 @@ pub mod prelude {
             SmartDevice, SmartPort,
         },
     };
-    #[cfg(all(feature = "graphics", feature = "embedded-graphics"))]
-    pub use vexide_graphics::embedded_graphics::BrainDisplay;
-    #[cfg(all(feature = "graphics", feature = "slint"))]
-    pub use vexide_graphics::slint::initialize_slint_platform;
 }
