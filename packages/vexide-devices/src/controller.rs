@@ -225,11 +225,14 @@ impl Future for ControllerScreenWriteFuture<'_> {
             enforce_visible,
         } = state
         {
-            assert!(
-                (!*enforce_visible) || (*line != 0 && *line <= ControllerScreen::MAX_LINES as u8),
-                "Invalid line number ({line}) is greater than the maximum number of lines ({})",
-                ControllerScreen::MAX_LINES
-            );
+            if *enforce_visible {
+                assert!(
+                    (*line != 0 && *line <= ControllerScreen::MAX_LINES as u8),
+                    "Invalid line number ({line}) is greater than the maximum number of lines ({})",
+                    ControllerScreen::MAX_LINES
+                );
+            }
+
             assert!(
                 *column != 0 && *column <= ControllerScreen::MAX_COLUMNS as u8,
                 "Invalid column number ({column}) is greater than the maximum number of columns ({})",
@@ -542,8 +545,8 @@ impl ControllerScreen {
         );
         assert!(
             line <= Self::MAX_LINES as u8 && line != 0,
-            "Invalid column number ({column}) is greater than the maximum number of columns ({})",
-            ControllerScreen::MAX_COLUMNS
+            "Invalid line number ({line}) is greater than the maximum number of line ({})",
+            ControllerScreen::MAX_LINES
         );
 
         let id: V5_ControllerId = self.id.into();
