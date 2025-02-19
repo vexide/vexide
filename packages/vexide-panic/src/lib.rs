@@ -141,7 +141,7 @@ pub fn default_panic_hook(info: &core::panic::PanicInfo<'_>) {
 
     #[cfg(feature = "display_panics")]
     draw_error(
-        unsafe { &mut Display::new() },
+        &mut unsafe { Display::new() },
         &info.to_string(),
         &backtrace,
     );
