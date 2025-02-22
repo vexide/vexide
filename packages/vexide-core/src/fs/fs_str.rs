@@ -38,7 +38,7 @@ impl FsStr {
     /// # Examples
     ///
     /// ```
-    /// use vexide::core::fs::FsStr;
+    /// use vexide::fs::FsStr;
     ///
     /// let fs_str = FsStr::new("foo");
     /// ```
