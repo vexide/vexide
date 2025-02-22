@@ -25,6 +25,7 @@
 //! Check out our [docs](https://vexide.dev/docs/) for more in-depth usage guides.
 
 #![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(html_logo_url = "https://vexide.dev/images/logo.svg")]
 
 /// Async runtime & executor.
@@ -48,6 +49,10 @@ pub use vexide_async::task;
 ///
 /// - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future
 ///   for or until a specific instant in time.
+///
+/// [`sleep`]: vexide_async::time::sleep
+/// [`sleep_until`]: vexide_async::time::sleep_until
+/// [`Instant`]: vexide_core::time::Instant
 #[cfg(any(feature = "core", feature = "async"))]
 pub mod time {
     #[cfg(feature = "async")]

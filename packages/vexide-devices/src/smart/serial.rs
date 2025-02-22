@@ -157,10 +157,6 @@ impl SerialPort {
     ///     }
     /// }
     /// ```
-    ///
-    /// # Errors
-    ///
-    /// - A [`SerialError::Port`] error is returned if a generic serial device is not currently connected to the Smart Port.
     pub fn read_byte(&mut self) -> Option<u8> {
         let byte = unsafe { vexDeviceGenericSerialReadChar(self.device) };
 

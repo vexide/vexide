@@ -176,7 +176,6 @@ impl OpenOptions {
     ///
     /// [`write()`]: Write::write "io::Write::write"
     /// [`flush()`]: Write::flush "io::Write::flush"
-    /// [stream_position]: Seek::stream_position "io::Seek::stream_position"
     ///
     /// # Examples
     ///
@@ -374,7 +373,6 @@ impl FileType {
     /// only one of these tests may pass.
     ///
     /// [`is_file`]: FileType::is_file
-    /// [`is_symlink`]: FileType::is_symlink
     ///
     /// # Examples
     ///
@@ -492,7 +490,6 @@ impl Metadata {
     /// only one of these tests may pass.
     ///
     /// [`is_file`]: FileType::is_file
-    /// [`is_symlink`]: FileType::is_symlink
     ///
     /// # Examples
     ///
