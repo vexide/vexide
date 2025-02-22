@@ -1,6 +1,6 @@
 [package]
 name = "vexide"
-version = "0.6.1"
+version = "0.7.0-beta.2"
 edition = "2021"
 description = "async/await powered Rust library for VEX V5 Brains"
 keywords = ["Robotics", "bindings", "vex", "v5"]
