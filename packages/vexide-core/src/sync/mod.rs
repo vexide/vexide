@@ -12,6 +12,9 @@ mod rwlock;
 pub use barrier::{Barrier, BarrierWaitFuture};
 pub use condvar::{Condvar, CondvarWaitFuture};
 pub use lazy::LazyLock;
-pub use mutex::{Mutex, MutexGuard, MutexLockFuture, RawMutex};
+pub use mutex::{Mutex, MutexGuard, MutexLockFuture};
 pub use once::{Once, OnceLock};
 pub use rwlock::{RwLock, RwLockReadFuture, RwLockReadGuard, RwLockWriteFuture, RwLockWriteGuard};
+
+// Used for synchronizing stdio
+pub(crate) use mutex::RawMutex;

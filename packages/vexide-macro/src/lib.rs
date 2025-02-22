@@ -90,11 +90,11 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
             ::vexide::startup::startup::<#banner_enabled>(#banner_theme);
 
             #inner
-            let termination: #ret_type = ::vexide::async_runtime::block_on(
+            let termination: #ret_type = ::vexide::runtime::block_on(
                 #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
             );
-            ::vexide::core::program::Termination::report(termination);
-            ::vexide::core::program::exit();
+            ::vexide::program::Termination::report(termination);
+            ::vexide::program::exit();
         }
     }
 }
@@ -217,12 +217,12 @@ mod test {
 
                     #source
 
-                    let termination: () = ::vexide::async_runtime::block_on(
+                    let termination: () = ::vexide::runtime::block_on(
                         main(::vexide::devices::peripherals::Peripherals::take().unwrap())
                     );
 
-                    ::vexide::core::program::Termination::report(termination);
-                    ::vexide::core::program::exit();
+                    ::vexide::program::Termination::report(termination);
+                    ::vexide::program::exit();
                 }
             }
             .to_string()

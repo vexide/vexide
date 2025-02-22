@@ -4,7 +4,7 @@
 use alloc::{boxed::Box, sync::Arc, vec::Vec};
 
 use vexide::{
-    core::sync::{Barrier, Condvar, LazyLock, Mutex, RwLock},
+    sync::{Barrier, Condvar, LazyLock, Mutex, RwLock},
     prelude::*,
 };
 

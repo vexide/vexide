@@ -1,4 +1,4 @@
-//! Utilities for getting competition control state.
+//! Competition control and state.
 
 extern crate alloc;
 

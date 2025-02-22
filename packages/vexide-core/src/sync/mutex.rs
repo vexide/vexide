@@ -26,7 +26,7 @@ impl MutexState {
 }
 
 /// A raw, synchronous, spinning mutex type.
-pub struct RawMutex {
+pub(crate) struct RawMutex {
     state: MutexState,
 }
 impl RawMutex {
@@ -125,7 +125,7 @@ impl<T: ?Sized> Mutex<T> {
     }
 
     /// Gets a mutable reference to the inner data.
-    pub fn get_mut(&mut self) -> &mut T {
+    pub const fn get_mut(&mut self) -> &mut T {
         self.data.get_mut()
     }
 }

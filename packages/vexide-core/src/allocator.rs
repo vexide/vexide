@@ -1,4 +1,6 @@
-//! VEXos heap allocator implemented with the `talc` crate.
+//! Global heap allocator.
+//!
+//! This module provide's vexide's `#[global_allocator]`, which is implemented using the `talc` crate.
 //!
 //! [`claim`] must be called before any heap allocations are made.
 //! This is done automatically in the `vex-startup` crate,
