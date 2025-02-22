@@ -25,7 +25,7 @@ impl Path {
     /// # Examples
     ///
     /// ```
-    /// use vexide::core::path::Path;
+    /// use vexide::path::Path;
     ///
     /// Path::new("foo.txt");
     /// ```
@@ -34,7 +34,7 @@ impl Path {
     ///
     /// ```
     /// use alloc::string::String;
-    /// use vexide::core::path::Path;
+    /// use vexide::path::Path;
     ///
     /// let string = String::from("foo.txt");
     /// let from_string = Path::new(&string);
@@ -50,7 +50,7 @@ impl Path {
     /// # Examples
     ///
     /// ```
-    /// use vexide::core::{path::Path, fs::FsStr};
+    /// use vexide::{path::Path, fs::FsStr};
     ///
     /// let fs_str = Path::new("foo.txt").as_os_str();
     /// assert_eq!(os_str, FsStr::new("foo.txt"));

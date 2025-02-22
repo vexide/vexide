@@ -54,7 +54,7 @@ pub use fs_str::{Display, FsStr, FsString};
 /// Opening a file to read:
 ///
 /// ```no_run
-/// use vexide::core::fs::OpenOptions;
+/// use vexide::fs::OpenOptions;
 ///
 /// let file = OpenOptions::new().read(true).open("foo.txt");
 /// ```
@@ -62,7 +62,7 @@ pub use fs_str::{Display, FsStr, FsString};
 /// Opening a file for writing, as well as creating it if it doesn't exist:
 ///
 /// ```no_run
-/// use vexide::core::fs::OpenOptions;
+/// use vexide::fs::OpenOptions;
 ///
 /// let file = OpenOptions::new()
 ///             .write(true)
@@ -87,7 +87,7 @@ impl OpenOptions {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs::OpenOptions;
+    /// use vexide::fs::OpenOptions;
     ///
     /// let mut options = OpenOptions::new();
     /// let file = options.read(true).open("foo.txt");
@@ -112,7 +112,7 @@ impl OpenOptions {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs::OpenOptions;
+    /// use vexide::fs::OpenOptions;
     ///
     /// let file = OpenOptions::new().read(true).open("foo.txt");
     /// ```
@@ -132,7 +132,7 @@ impl OpenOptions {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs::OpenOptions;
+    /// use vexide::fs::OpenOptions;
     ///
     /// let file = OpenOptions::new().write(true).open("foo.txt");
     /// ```
@@ -176,12 +176,11 @@ impl OpenOptions {
     ///
     /// [`write()`]: Write::write "io::Write::write"
     /// [`flush()`]: Write::flush "io::Write::flush"
-    /// [stream_position]: Seek::stream_position "io::Seek::stream_position"
     ///
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs::OpenOptions;
+    /// use vexide::fs::OpenOptions;
     ///
     /// let file = OpenOptions::new().append(true).open("foo.txt");
     /// ```
@@ -200,7 +199,7 @@ impl OpenOptions {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs::OpenOptions;
+    /// use vexide::fs::OpenOptions;
     ///
     /// let file = OpenOptions::new().write(true).truncate(true).open("foo.txt");
     /// ```
@@ -220,7 +219,7 @@ impl OpenOptions {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs::OpenOptions;
+    /// use vexide::fs::OpenOptions;
     ///
     /// let file = OpenOptions::new().write(true).create(true).open("foo.txt");
     /// ```
@@ -249,7 +248,7 @@ impl OpenOptions {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs::OpenOptions;
+    /// use vexide::fs::OpenOptions;
     ///
     /// let file = OpenOptions::new().write(true)
     ///                              .create_new(true)
@@ -285,7 +284,7 @@ impl OpenOptions {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs::OpenOptions;
+    /// use vexide::fs::OpenOptions;
     ///
     /// let file = OpenOptions::new().read(true).open("foo.txt");
     /// ```
@@ -374,12 +373,11 @@ impl FileType {
     /// only one of these tests may pass.
     ///
     /// [`is_file`]: FileType::is_file
-    /// [`is_symlink`]: FileType::is_symlink
     ///
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs;
+    /// use vexide::fs;
     ///
     /// let metadata = fs::metadata("foo.txt")?;
     /// let file_type = metadata.file_type();
@@ -404,7 +402,7 @@ impl FileType {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs;
+    /// use vexide::fs;
     ///
     /// let metadata = fs::metadata("foo.txt")?;
     /// let file_type = metadata.file_type();
@@ -474,7 +472,7 @@ impl Metadata {
     ///
     /// ```no_run
     /// fn main() -> std::io::Result<()> {
-    ///     use vexide::core::fs;
+    ///     use vexide::fs;
     ///
     ///     let metadata = fs::metadata("foo.txt")?;
     ///
@@ -492,12 +490,11 @@ impl Metadata {
     /// only one of these tests may pass.
     ///
     /// [`is_file`]: FileType::is_file
-    /// [`is_symlink`]: FileType::is_symlink
     ///
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs;
+    /// use vexide::fs;
     ///
     /// let metadata = fs::metadata("foo.txt")?;
     ///
@@ -521,7 +518,7 @@ impl Metadata {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs;
+    /// use vexide::fs;
     ///
     /// let metadata = fs::metadata("foo.txt")?;
     ///
@@ -537,7 +534,7 @@ impl Metadata {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::core::fs;
+    /// use vexide::fs;
     ///
     /// let metadata = fs::metadata("foo.txt")?;
     ///
@@ -976,7 +973,7 @@ impl Iterator for ReadDir {
 /// # Examples
 ///
 /// ```
-/// for entry in vexide::core::fs::read_dir("somefolder") {
+/// for entry in vexide::fs::read_dir("somefolder") {
 ///     println!("{:?}", entry.path);
 /// }
 /// ```
@@ -1162,7 +1159,7 @@ pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<u64> {
 /// # Examples
 ///
 /// ```
-/// use vexide::core::fs::*;
+/// use vexide::fs::*;
 ///
 /// assert!(exists("existent.txt"));
 /// assert!(!exists("nonexistent.txt"));

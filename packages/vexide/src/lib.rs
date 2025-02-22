@@ -10,17 +10,6 @@
 //! If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment
 //! with [vexide-template](https://github.com/vexide/vexide-template).
 //!
-//! ## Project Structure
-//!
-//! The vexide runtime is split into 7 sub-crates. The one you're looking at right now re-exports each of these crates into a single package.
-//!
-//! - [`vexide-core`](https://docs.rs/vexide_core) provides low-level core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
-//! - [`vexide-devices`](https://docs.rs/vexide_devices) contains all device-related bindings for things like motors and sensors.
-//! - [`vexide-async`](https://docs.rs/vexide_async) implements our cooperative async runtime as well as several important async futures.
-//! - [`vexide-startup`](https://docs.rs/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.
-//! - [`vexide-panic`](https://docs.rs/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
-//! - [`vexide-macro`](https://docs.rs/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
-//!
 //! # Usage
 //!
 //! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
@@ -36,20 +25,52 @@
 //! Check out our [docs](https://vexide.dev/docs/) for more in-depth usage guides.
 
 #![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(html_logo_url = "https://vexide.dev/images/logo.svg")]
+
+/// Async runtime & executor.
+#[cfg(feature = "async")]
+pub mod runtime {
+    #[doc(inline)]
+    pub use vexide_async::block_on;
+}
 
 #[doc(inline)]
 #[cfg(feature = "async")]
-pub use vexide_async as async_runtime;
+pub use vexide_async::task;
+
+/// Utilities for tracking time.
+///
+/// This module provides types for measuring time and executing code after a set periods
+/// of time.
+///
+/// - [`Instant`] can measure execution time with high precision.
+///
+/// - [`Sleep`] is a future that does no work and completes at a specific [`Instant`]
+///   in time.
+///
+/// - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future
+///   for or until a specific instant in time.
+///
+/// [`sleep`]: vexide_async::time::sleep
+/// [`sleep_until`]: vexide_async::time::sleep_until
+/// [`Instant`]: vexide_core::time::Instant
+#[cfg(any(feature = "core", feature = "async"))]
+pub mod time {
+    #[doc(inline)]
+    #[cfg(feature = "async")]
+    pub use vexide_async::time::*;
+    #[doc(inline)]
+    #[cfg(feature = "core")]
+    pub use vexide_core::time::*;
+}
+
 #[doc(inline)]
 #[cfg(feature = "core")]
-pub use vexide_core as core;
+pub use vexide_core::{allocator, backtrace, competition, float, fs, io, os, path, program, sync};
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
-#[doc(inline)]
-#[cfg(feature = "macro")]
-pub use vexide_macro as r#macro;
 #[doc(inline)]
 #[cfg(feature = "macro")]
 pub use vexide_macro::main;
@@ -61,24 +82,11 @@ pub use vexide_panic as panic;
 pub use vexide_startup as startup;
 
 /// Commonly used features of vexide.
+///
 /// This module is meant to be glob imported.
 pub mod prelude {
-    #[cfg(feature = "async")]
-    pub use vexide_async::{
-        block_on,
-        task::{spawn, Task},
-        time::{sleep, sleep_until},
-    };
-    #[cfg(feature = "core")]
-    pub use vexide_core::{
-        competition::{Compete, CompeteExt, CompetitionRuntime},
-        dbg,
-        float::Float,
-        io::{BufRead, Read, Seek, Write},
-        print, println,
-    };
     #[cfg(feature = "devices")]
-    pub use vexide_devices::{
+    pub use crate::devices::{
         adi::{
             accelerometer::{AdiAccelerometer, Sensitivity},
             addrled::AdiAddrLed,
@@ -117,5 +125,17 @@ pub mod prelude {
             },
             SmartDevice, SmartPort,
         },
+    };
+    #[cfg(feature = "core")]
+    pub use crate::{
+        competition::{Compete, CompeteExt, CompetitionRuntime},
+        float::Float,
+        io::{dbg, print, println, BufRead, Read, Seek, Write},
+    };
+    #[cfg(feature = "async")]
+    pub use crate::{
+        runtime::block_on,
+        task::{spawn, Task},
+        time::{sleep, sleep_until},
     };
 }

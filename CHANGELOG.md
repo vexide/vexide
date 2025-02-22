@@ -51,10 +51,16 @@ Before releasing:
 - `Controller::battery_capacity` now returns a float from 0.0 to 1.0 instead of an i32. (#286) (**Breaking Change**)
 - `RadioLink::open` now panics if `id` is not a valid `CStr` rather than returning a `Result`. (#293) (**Breaking Change**)
 - `SerialPort::open` now returns a `Future` that must be awaited before opening the port. (#293) (**Breaking Change**)
+- Renamed `vexide::async_runtime` module to `vexide::runtime`. (#305) (**Breaking Change**)
+- The `vexide::async_runtime::task` module is now a top-level `vexide::task` module. (#305) (**Breaking Change**)
+- Merged `vexide::core::time` and `vexide::async_runtime::time` into a single `vexide::time` module. (#305) (**Breaking Change**)
+- Moved `vexide::core` modules to the top-level `vexide` crate. For example, `vexide::core::fs` is now `vexide::fs`. (#305) (**Breaking Change**)
 
 ### Removed
 
 - Removed `SerialError::Port`. `SerialPort` methods can no longer return `PortError`. (#293) (**Breaking Change**)
+- Removed the `vexide::macro` module. (#305) (**Breaking Change**)
+- Removed the `vexide::core` module in favor of top-level modules of the `vexide` crate. (#305) (**Breaking Change**)
 
 ### New Contributors
 

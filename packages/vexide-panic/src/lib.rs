@@ -1,4 +1,4 @@
-//! Panic handler implementation for [`vexide`](https://crates.io/crates/vexide)
+//! Panic handler for [`vexide`](https://crates.io/crates/vexide).
 //!
 //! Supports capturing and printing backtraces to aid in debugging.
 //!

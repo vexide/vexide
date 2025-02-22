@@ -1,4 +1,4 @@
-//! Serial input and output functionality.
+//! Traits, helpers, and type definitions for core I/O functionality.
 //!
 //! This module aims to provide a very similar API to the Rust standard library's `std::io` module.
 

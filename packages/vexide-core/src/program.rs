@@ -1,5 +1,4 @@
-//! Functions for modifying the state of the current
-//! user program.
+//! User program state.
 
 use core::{convert::Infallible, fmt::Debug, time::Duration};
 

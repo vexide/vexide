@@ -1,4 +1,4 @@
-//! Floating Point Numbers
+//! Floating point numbers.
 //!
 //! This module provides implementations of math functions of floating point
 //! primitive types (`f32`, `f64`).

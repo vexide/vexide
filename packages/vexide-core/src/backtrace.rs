@@ -1,4 +1,4 @@
-//! Support for capturing stack backtraces
+//! Support for capturing stack backtraces.
 //!
 //! This module contains the support for capturing a stack backtrace through
 //! the [`Backtrace`] type. Backtraces are helpful to attach to errors,

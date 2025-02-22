@@ -1,4 +1,4 @@
-//! VEXos functions
+//! VEXos-related functionality.
 //!
 //! This module provides utilities for for interacting and retrieving
 //! information from VEXos.

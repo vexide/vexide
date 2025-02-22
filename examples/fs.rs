@@ -5,7 +5,7 @@ use alloc::string::String;
 use core::time::Duration;
 
 use vexide::{
-    core::fs::{metadata, read_dir, File},
+    fs::{metadata, read_dir, File},
     prelude::*,
 };
 extern crate alloc;

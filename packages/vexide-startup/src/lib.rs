@@ -1,4 +1,4 @@
-//! This crate provides a minimal startup routine for user code on the VEX V5 Brain.
+//! Startup routine and behavior in `vexide`.
 //!
 //! - User code begins at an assembly routine called `_boot`, which sets up the stack
 //!   section before jumping to a user-provided `_start` symbol, which should be your

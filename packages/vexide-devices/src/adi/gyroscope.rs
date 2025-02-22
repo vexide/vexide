@@ -106,7 +106,7 @@ impl AdiGyroscope {
     ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
     ///     // Do something with the gyroscope
     ///     _ = gyro.calibrate(Duration::from_secs(2)).await;
-    ///     println!("{:?}, gyro.yaw());
+    ///     println!("{:?}", gyro.yaw());
     /// }
     /// ```
     #[must_use]
