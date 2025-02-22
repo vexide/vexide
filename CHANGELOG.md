@@ -56,6 +56,7 @@ Before releasing:
 - Merged `vexide::core::time` and `vexide::async_runtime::time` into a single `vexide::time` module. (#305) (**Breaking Change**)
 - Moved `vexide::core` modules to the top-level `vexide` crate. For example, `vexide::core::fs` is now `vexide::fs`. (#305) (**Breaking Change**)
 - `InertialSensor::calibrate`, `AdiGyroscope::calibrate`, `DynamicPeripherals` methods, `OpenOptions` methods, and `Text::align` are now callable in `const fn` context. (#308)
+- `vexide::allocator` is no longer cfg-gated to `target_vendor = "vex"`. (#307)
 
 ### Removed
 
