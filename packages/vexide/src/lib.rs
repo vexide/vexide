@@ -50,32 +50,20 @@ pub use vexide_async::task;
 ///   for or until a specific instant in time.
 #[cfg(any(feature = "core", feature = "async"))]
 pub mod time {
-    #[cfg(feature = "core")]
-    pub use vexide_core::time::*;
     #[cfg(feature = "async")]
     pub use vexide_async::time::*;
+    #[cfg(feature = "core")]
+    pub use vexide_core::time::*;
 }
 
 #[cfg(feature = "core")]
-pub use vexide_core::{
-    allocator,
-    backtrace,
-    competition,
-    float,
-    fs,
-    io,
-    os,
-    path,
-    program,
-    sync,
-};
-
-#[doc(inline)]
-#[cfg(feature = "macro")]
-pub use vexide_macro::main;
+pub use vexide_core::{allocator, backtrace, competition, float, fs, io, os, path, program, sync};
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
+#[doc(inline)]
+#[cfg(feature = "macro")]
+pub use vexide_macro::main;
 #[doc(inline)]
 #[cfg(feature = "panic")]
 pub use vexide_panic as panic;
@@ -87,20 +75,6 @@ pub use vexide_startup as startup;
 ///
 /// This module is meant to be glob imported.
 pub mod prelude {
-    #[cfg(feature = "async")]
-    pub use crate::{
-        runtime::block_on,
-        task::{Task, spawn},
-        time::{sleep, sleep_until},
-    };
-
-    #[cfg(feature = "core")]
-    pub use crate::{
-        competition::{Compete, CompeteExt, CompetitionRuntime},
-        float::Float,
-        io::{BufRead, Read, Seek, Write, dbg, print, println},
-    };
-
     #[cfg(feature = "devices")]
     pub use crate::devices::{
         adi::{
@@ -141,5 +115,17 @@ pub mod prelude {
             },
             SmartDevice, SmartPort,
         },
+    };
+    #[cfg(feature = "core")]
+    pub use crate::{
+        competition::{Compete, CompeteExt, CompetitionRuntime},
+        float::Float,
+        io::{dbg, print, println, BufRead, Read, Seek, Write},
+    };
+    #[cfg(feature = "async")]
+    pub use crate::{
+        runtime::block_on,
+        task::{spawn, Task},
+        time::{sleep, sleep_until},
     };
 }

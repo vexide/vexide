@@ -4,8 +4,8 @@
 use alloc::{boxed::Box, sync::Arc, vec::Vec};
 
 use vexide::{
-    sync::{Barrier, Condvar, LazyLock, Mutex, RwLock},
     prelude::*,
+    sync::{Barrier, Condvar, LazyLock, Mutex, RwLock},
 };
 
 extern crate alloc;
