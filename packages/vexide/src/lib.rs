@@ -57,8 +57,10 @@ pub use vexide_async::task;
 /// [`Instant`]: vexide_core::time::Instant
 #[cfg(any(feature = "core", feature = "async"))]
 pub mod time {
+    #[doc(inline)]
     #[cfg(feature = "async")]
     pub use vexide_async::time::*;
+    #[doc(inline)]
     #[cfg(feature = "core")]
     pub use vexide_core::time::*;
 }
