@@ -31,9 +31,11 @@
 /// Async runtime & executor.
 #[cfg(feature = "async")]
 pub mod runtime {
+    #[doc(inline)]
     pub use vexide_async::block_on;
 }
 
+#[doc(inline)]
 #[cfg(feature = "async")]
 pub use vexide_async::task;
 
@@ -61,6 +63,7 @@ pub mod time {
     pub use vexide_core::time::*;
 }
 
+#[doc(inline)]
 #[cfg(feature = "core")]
 pub use vexide_core::{allocator, backtrace, competition, float, fs, io, os, path, program, sync};
 #[doc(inline)]
