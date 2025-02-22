@@ -116,6 +116,7 @@ impl OpenOptions {
     ///
     /// let file = OpenOptions::new().read(true).open("foo.txt");
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn read(&mut self, read: bool) -> &mut Self {
         self.read = read;
         self
@@ -136,6 +137,7 @@ impl OpenOptions {
     ///
     /// let file = OpenOptions::new().write(true).open("foo.txt");
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn write(&mut self, write: bool) -> &mut Self {
         self.write = write;
         self
@@ -184,6 +186,7 @@ impl OpenOptions {
     ///
     /// let file = OpenOptions::new().append(true).open("foo.txt");
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn append(&mut self, append: bool) -> &mut Self {
         self.append = append;
         self
@@ -203,6 +206,7 @@ impl OpenOptions {
     ///
     /// let file = OpenOptions::new().write(true).truncate(true).open("foo.txt");
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn truncate(&mut self, truncate: bool) -> &mut Self {
         self.truncate = truncate;
         self
@@ -223,6 +227,7 @@ impl OpenOptions {
     ///
     /// let file = OpenOptions::new().write(true).create(true).open("foo.txt");
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn create(&mut self, create: bool) -> &mut Self {
         self.write = create;
         self
@@ -254,6 +259,7 @@ impl OpenOptions {
     ///                              .create_new(true)
     ///                              .open("foo.txt");
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn create_new(&mut self, create_new: bool) -> &mut Self {
         self.create_new = create_new;
         self

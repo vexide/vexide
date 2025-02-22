@@ -331,7 +331,7 @@ impl InertialSensor {
     ///     Robot { imu }.compete().await;
     /// }
     /// ```
-    pub fn calibrate(&mut self) -> InertialCalibrateFuture<'_> {
+    pub const fn calibrate(&mut self) -> InertialCalibrateFuture<'_> {
         InertialCalibrateFuture {
             state: InertialCalibrateFutureState::Calibrate,
             imu: self,

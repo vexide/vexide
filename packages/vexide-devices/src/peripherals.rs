@@ -336,7 +336,7 @@ impl DynamicPeripherals {
     ///
     /// This function panics if the provided port is outside the range 1-21.
     /// Ports outside of this range are invalid and cannot be created.
-    pub fn take_smart_port(&mut self, port_number: u8) -> Option<SmartPort> {
+    pub const fn take_smart_port(&mut self, port_number: u8) -> Option<SmartPort> {
         let port_index = port_number as usize - 1;
         self.smart_ports[port_index].take()
     }
@@ -345,7 +345,7 @@ impl DynamicPeripherals {
     /// # Panics
     ///
     /// This function panics if the provided port is outside the range 1-21.
-    pub fn return_smart_port(&mut self, port: SmartPort) {
+    pub const fn return_smart_port(&mut self, port: SmartPort) {
         let port_index = port.number() as usize - 1;
         self.smart_ports[port_index] = Some(port);
     }
@@ -356,7 +356,7 @@ impl DynamicPeripherals {
     ///
     /// This function panics if the provided port is outside the range 1-8.
     /// Slots outside of this range are invalid and cannot be created.
-    pub fn take_adi_port(&mut self, port_number: u8) -> Option<AdiPort> {
+    pub const fn take_adi_port(&mut self, port_number: u8) -> Option<AdiPort> {
         let port_number = port_number as usize - 1;
         self.adi_slots[port_number].take()
     }
@@ -365,13 +365,13 @@ impl DynamicPeripherals {
     /// # Panics
     ///
     /// This function panics if the provided port is outside the range 1-8.
-    pub fn return_adi_port(&mut self, port: AdiPort) {
+    pub const fn return_adi_port(&mut self, port: AdiPort) {
         let port_number = port.number() as usize - 1;
         self.adi_slots[port_number] = Some(port);
     }
 
     /// Creates a [`Display`] only if one has not been created before.
-    pub fn take_display(&mut self) -> Option<Display> {
+    pub const fn take_display(&mut self) -> Option<Display> {
         self.display.take()
     }
     /// Returns a [`Display`] to the dynamic peripherals.
@@ -380,20 +380,20 @@ impl DynamicPeripherals {
     }
 
     /// Creates a primary controller only if one has not been created before.
-    pub fn take_primary_controller(&mut self) -> Option<Controller> {
+    pub const fn take_primary_controller(&mut self) -> Option<Controller> {
         self.primary_controller.take()
     }
     /// Returns the primary controller to the dynamic peripherals.
-    pub fn return_primary_controller(&mut self, controller: Controller) {
+    pub const fn return_primary_controller(&mut self, controller: Controller) {
         self.primary_controller = Some(controller);
     }
 
     /// Creates a partner controller only if one has not been created before.
-    pub fn take_partner_controller(&mut self) -> Option<Controller> {
+    pub const fn take_partner_controller(&mut self) -> Option<Controller> {
         self.partner_controller.take()
     }
     /// Returns the partner controller to the dynamic peripherals.
-    pub fn return_partner_controller(&mut self, controller: Controller) {
+    pub const fn return_partner_controller(&mut self, controller: Controller) {
         self.partner_controller = Some(controller);
     }
 }
