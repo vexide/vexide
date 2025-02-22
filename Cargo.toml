@@ -25,7 +25,7 @@ vexide-async = { version = "0.1.9-beta.2", path = "packages/vexide-async", defau
 vexide-core = { version = "0.7.0-beta.2", path = "packages/vexide-core", default-features = false }
 vexide-devices = { version = "0.7.0-beta.2", path = "packages/vexide-devices", default-features = false }
 vexide-panic = { version = "0.1.9-beta.2", path = "packages/vexide-panic", default-features = false }
-vexide-startup = { version = "0.4.2-beta.2", path = "packages/vexide-startup", default-features = false }
+vexide-startup = { version = "0.4.2-beta.3", path = "packages/vexide-startup", default-features = false }
 vexide-macro = { version = "0.3.2-beta.1", path = "packages/vexide-macro", default-features = false }
 vex-sdk = "0.26.0"
 no_std_io = { version = "0.6.0", features = ["alloc"] }
