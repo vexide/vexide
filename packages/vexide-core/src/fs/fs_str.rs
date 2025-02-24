@@ -201,6 +201,7 @@ impl FsString {
     /// Borrows an [`FsString`] as an [`FsStr`].
     /// This is akin to taking a slice of the entire [`FsString`]
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)] // false-positive. can't be const dereffed
     pub fn as_fs_str(&self) -> &FsStr {
         self
     }

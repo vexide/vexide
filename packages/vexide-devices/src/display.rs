@@ -491,7 +491,7 @@ impl Text {
     }
 
     /// Change text alignment
-    pub fn align(&mut self, horizontal_align: HAlign, vertical_align: VAlign) {
+    pub const fn align(&mut self, horizontal_align: HAlign, vertical_align: VAlign) {
         self.horizontal_align = horizontal_align;
         self.vertical_align = vertical_align;
     }

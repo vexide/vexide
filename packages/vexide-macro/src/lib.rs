@@ -25,7 +25,7 @@ fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
             None => {
                 error.replace(message);
             }
-        };
+        }
     }
     if sig.inputs.len() != 1 {
         let message = syn::Error::new_spanned(sig, WRONG_ARGS_ERR);
@@ -34,7 +34,7 @@ fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
             None => {
                 error.replace(message);
             }
-        };
+        }
     }
 
     match error {

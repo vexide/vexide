@@ -159,7 +159,7 @@ impl AdiGyroscope {
     ///     println!("Calibration completed successfully? {:?}", gyro.calibrate(Duration::from_secs(2)).await.is_ok());
     /// }
     /// ```
-    pub fn calibrate(&mut self, duration: Duration) -> AdiGyroscopeCalibrationFuture<'_> {
+    pub const fn calibrate(&mut self, duration: Duration) -> AdiGyroscopeCalibrationFuture<'_> {
         AdiGyroscopeCalibrationFuture {
             gyro: self,
             state: AdiGyroscopeCalibrationFutureState::Calibrate {
