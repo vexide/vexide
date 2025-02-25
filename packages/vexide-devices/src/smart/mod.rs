@@ -55,6 +55,7 @@ pub mod vision;
 
 use core::time::Duration;
 
+pub use ai_vision::AiVisionSensor;
 pub use distance::DistanceSensor;
 pub use electromagnet::Electromagnet;
 pub use expander::AdiExpander;

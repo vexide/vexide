@@ -1,8 +1,8 @@
 //! GPS Sensor
 //!
-//! This module provides an interface to interact with the VEX V5 GPS Sensor,
-//! which uses computer vision and an inertial measurement unit (IMU) to provide absolute
-//! position tracking within a VEX Robotics Competition field.
+//! This module provides an interface to interact with the VEX V5 Game Position System (GPS)
+//! Sensor, which uses computer vision and an inertial measurement unit (IMU) to provide
+//! absolute position tracking within a VEX Robotics Competition field.
 //!
 //! # Hardware Description
 //!
@@ -55,12 +55,39 @@ impl GpsSensor {
 
     /// Creates a new GPS sensor from a [`SmartPort`].
     ///
-    /// # Configuration
+    /// # Sensor Configuration
     ///
-    /// The sensor requires two parameters to be initially configured, passed as arguments ot this function:
+    /// The sensor requires three measurements to be made at the start of a match, passed as arguments to this function:
     ///
-    /// - `offset`: The physical offset of the sensor from the robot's center of rotation.
-    /// - `initial_pose`: The inital position and heading of the robot.
+    /// ## Sensor Offset
+    ///
+    /// `offset` is the physical offset of the sensor's mounting location from a reference point on the robot.
+    ///
+    /// Offset defines the exact point on the robot that is considered a "source of truth" for the robot's position.
+    /// For example, if you considered the center of your robot to be the reference point for coordinates, then this
+    /// value would be the signed 4-quadrant x and y offset from that point on your robot in meters. Similarly, if you
+    /// considered the sensor itself to be the robot's origin of tracking, then this value would simply be
+    /// `Point2 { x: 0.0, y: 0.0 }`.
+    ///
+    /// ## Initial Robot Position
+    ///
+    /// `initial_position` is an estimate of the robot's initial cartesian coordinates on the field in meters. This
+    /// value helpful for cases when the robot's starting point is near a field wall.
+    ///
+    /// When the GPS Sensor is too close to a field wall to properly read the GPS strips, the sensor will be unable
+    /// to localize the robot's position due the wall's proximity limiting the view of the camera. This can cause the
+    /// sensor inaccurate results at the start of a match, where robots often start directly near a wall.
+    ///
+    /// By providing an estimate of the robot's initial position on the field, this problem is partially mitigated by
+    /// giving the sensor an initial frame of reference to use.
+    ///
+    /// # Initial Robot Heading
+    ///
+    /// `initial_heading` is a value between 0 and 360 degrees that informs the GPS of its heading at the start of the
+    /// match. Similar to `initial_position`, this is useful for improving accuracy when the sensor is in close proximity
+    /// to a field wall, as the sensor's rotation values are continiously checked against the GPS field strips to prevent
+    /// drift over time. If the sensor starts too close to a field wall, providing an `initial_haeding` can help prevent
+    /// this drift at the start of the match.
     ///
     /// # Examples
     ///
@@ -72,9 +99,17 @@ impl GpsSensor {
     ///     // Create a GPS sensor mounted 2 inches forward and 1 inch right of center
     ///     // Starting at position (0, 0) with 90 degree heading
     ///     let gps = GpsSensor::new(
+    ///         // Port 1
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///
+    ///         // Sensor is mounted 0.225 meters to the left and 0.225 meters above the robot's tracking origin.
+    ///         Point2 { x: -0.225, y: 0.225 },
+    ///
+    ///         // Robot's starting point is at the center of the field.
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///
+    ///         // Robot is facing to the right initially.
+    ///         90.0,
     ///     );
     /// }
     /// ```
@@ -107,7 +142,9 @@ impl GpsSensor {
         }
     }
 
-    /// Returns the physical offset of the sensor from the robot's center of rotation.
+    /// Returns the user-configured offset from a reference point on the robot.
+    ///
+    /// This offset value is passed to [`GpsSensor::new`] and can be changed using [`GpsSensor::set_offset`].
     ///
     /// # Errors
     ///
@@ -120,15 +157,29 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
+    ///     let mut gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///
+    ///         // Initial offset value is configured here!
+    ///         //
+    ///         // Let's assume that the sensor is mounted 0.225 meters to the left and 0.225 meters above
+    ///         // our desired tracking origin.
+    ///         Point2 { x: -0.225, y: 0.225 }, // Configure offset value
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         90.0,
     ///     );
     ///
     ///     // Get the configured offset of the sensor
     ///     if let Ok(offset) = gps.offset() {
-    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y);
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is mounted at x=-0.225, y=0.225"
+    ///     }
+    ///
+    ///     // Change the offset to something new
+    ///     _ = gps.set_offset(Point2 { x: 0.0, y: 0.0 });
+    ///
+    ///     // Get the configured offset of the sensor again
+    ///     if let Ok(offset) = gps.offset() {
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is mounted at x=0.0, y=0.0"
     ///     }
     /// }
     /// ```
@@ -141,19 +192,9 @@ impl GpsSensor {
         Ok(data)
     }
 
-    /// Returns the currently computed pose (heading and position) from the sensor.
+    /// Returns an estimate of the robot's location on the field as cartesian coordinates measured in meters.
     ///
-    /// # Important note about heading!
-    ///
-    /// The heading returned here is in a different angle system from [`GpsImu::heading`]! The heading
-    /// returned by this function increases as the sensor turns **counterclockwise**, while the opposite
-    /// is true for [`GpsImu`]. This is done to make it easier to use trig functions with the coordinates
-    /// returned by the sensor, as anything involving cartesian coordinates are expected to be in standard
-    /// unit circle angles. In addition, this function is not affected by [`GpsImu::reset_heading`] or
-    /// [`GpsImu::set_heading`].
-    ///
-    /// > You should **never** attempt to use the [`GpsImu`] angles when dealing with position data from this sensor
-    /// > unless you understand exactly what you're doing.
+    /// The reference point for a robot's position is determined by the sensor's configured [`offset`] value.
     ///
     /// # Errors
     ///
@@ -166,19 +207,21 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
     ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
     ///
     ///     // Get current position and heading
-    ///     if let Ok((position, heading)) = gps.pose() {
+    ///     if let Ok(position) = gps.position() {
     ///         println!(
-    ///             "Robot is at x={}, y={} with heading {}°",
+    ///             "Robot is at x={}, y={}",
     ///             position.x,
     ///             position.y,
-    ///             heading
     ///         );
     ///     }
     /// }
@@ -197,7 +240,9 @@ impl GpsSensor {
         })
     }
 
-    /// Returns the RMS (Root Mean Squared) error for the GPS position reading in meters.
+    /// Returns the RMS (Root Mean Squared) error for the sensor's [position reading] in meters.
+    ///
+    /// [position reading]: GpsSensor::position
     ///
     /// # Errors
     ///
@@ -212,8 +257,9 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
     ///
     ///     // Check position accuracy
@@ -243,8 +289,9 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
     ///
     ///     if let Ok(status) = gps.status() {
@@ -258,17 +305,11 @@ impl GpsSensor {
         Ok(unsafe { vexDeviceGpsStatusGet(self.device) })
     }
 
-    /// Returns the IMU's yaw angle bounded by [0.0, 360.0) degrees.
+    /// Returns the sensor's yaw angle bounded by [0.0, 360.0) degrees.
     ///
     /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
-    /// represented with negative ones.
-    ///
-    /// # Important
-    ///
-    /// This value does not take into account the initial heading passed into [`GpsSensor::new`], and additionally
-    /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
-    /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
-    /// position readings. Prefer using [`GpsSensor::pose`] for that.
+    /// represented with negative ones. If a heading offset has not been set using [`GpsSensor::set_heading`],
+    /// then 90 degrees will located to the right of the field.
     ///
     /// # Errors
     ///
@@ -282,17 +323,16 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
     ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     if let Ok(heading) = imu.heading() {
+    ///     if let Ok(heading) = gps.heading() {
     ///         println!("Heading is {} degrees.", rotation);
     ///     }
     /// }
@@ -307,17 +347,11 @@ impl GpsSensor {
         )
     }
 
-    /// Returns the total number of degrees the IMU has spun about the z-axis.
+    /// Returns the total number of degrees the GPS has spun about the z-axis.
     ///
     /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
-    /// while counterclockwise rotations are represented with negative ones.
-    ///
-    /// # Important
-    ///
-    /// This value does not take into account the initial heading passed into [`GpsSensor::new`], and additionally
-    /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
-    /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
-    /// position readings. Prefer using [`GpsSensor::pose`] for that.
+    /// while counterclockwise rotations are represented with negative ones. If a heading offset has not been set
+    /// using [`GpsSensor::set_rotation`], then 90 degrees will located to the right of the field.
     ///
     /// # Errors
     ///
@@ -331,17 +365,16 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
     ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     if let Ok(rotation) = imu.rotation() {
+    ///     if let Ok(rotation) = gps.rotation() {
     ///         println!("Robot has rotated {} degrees since calibration.", rotation);
     ///     }
     /// }
@@ -351,14 +384,7 @@ impl GpsSensor {
         Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } + self.rotation_offset)
     }
 
-    /// Returns the Euler angles (pitch, yaw, roll) representing the IMU's orientation.
-    ///
-    /// # Important
-    ///
-    /// This value does not take into account the initial heading passed into [`GpsSensor::new`], and additionally
-    /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
-    /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
-    /// position readings. Prefer using [`GpsSensor::pose`] for that.
+    /// Returns the Euler angles (pitch, yaw, roll) representing the GPS's orientation.
     ///
     /// # Errors
     ///
@@ -372,17 +398,16 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
     ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     if let Ok(angles) = imu.euler() {
+    ///     if let Ok(angles) = gps.euler() {
     ///         println!(
     ///             "yaw: {}°, pitch: {}°, roll: {}°",
     ///             angles.a.to_degrees(),
@@ -408,14 +433,7 @@ impl GpsSensor {
         })
     }
 
-    /// Returns a quaternion representing the IMU's orientation.
-    ///
-    /// # Important
-    ///
-    /// This value does not take into account the initial heading passed into [`GpsSensor::new`], and additionally
-    /// uses a different angle system compared to the main [`GpsSensor`] struct (with the positive direction being
-    /// clockwise). As such, this should not be used for doing any kind of math in tandem with the GPS sensor's
-    /// position readings. Prefer using [`GpsSensor::pose`] for that.
+    /// Returns a quaternion representing the sensor's orientation.
     ///
     /// # Errors
     ///
@@ -429,17 +447,16 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
     ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     if let Ok(quaternion) = imu.quaternion() {
+    ///     if let Ok(quaternion) = gps.quaternion() {
     ///         println!(
     ///             "x: {}, y: {}, z: {}, scalar: {}",
     ///             quaternion.v.x,
@@ -468,7 +485,7 @@ impl GpsSensor {
         })
     }
 
-    /// Returns the IMU's raw accelerometer values.
+    /// Returns raw accelerometer values of the sensor's internal IMU.
     ///
     /// # Errors
     ///
@@ -482,16 +499,18 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
     ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
     ///     // Read out accleration values every 10mS
     ///     loop {
-    ///         if let Ok(acceleration) = imu.acceleration() {
+    ///         if let Ok(acceleration) = gps.acceleration() {
     ///             println!(
     ///                 "x: {}G, y: {}G, z: {}G",
     ///                 acceleration.x,
@@ -519,7 +538,7 @@ impl GpsSensor {
         })
     }
 
-    /// Returns the IMU's raw gyroscope values.
+    /// Returns the raw gyroscope values of the sensor's internal IMU.
     ///
     /// # Errors
     ///
@@ -533,16 +552,18 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
     ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
     ///     // Read out angular velocity values every 10mS
     ///     loop {
-    ///         if let Ok(rates) = imu.gyro_rate() {
+    ///         if let Ok(rates) = gps.gyro_rate() {
     ///             println!(
     ///                 "x: {}°/s, y: {}°/s, z: {}°/s",
     ///                 rates.x,
@@ -570,12 +591,9 @@ impl GpsSensor {
         })
     }
 
-    /// Resets the current reading of the IMU's heading to zero.
+    /// Offsets the reading of [`GpsSensor::heading`] to zero.
     ///
-    /// # Important
-    ///
-    /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
-    /// on that function for more information.
+    /// This method has no effect on the values returned by [`GpsSensor::position`].
     ///
     /// # Errors
     ///
@@ -589,33 +607,32 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
+    ///     let mut gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
     ///     sleep(Duration::from_secs(2)).await;
     ///
     ///     // Store heading before reset.
-    ///     let heading = imu.heading().unwrap_or_default();
+    ///     let heading = gps.heading().unwrap_or_default();
     ///
     ///     // Reset heading back to zero.
-    ///     _ = imu.reset_heading();
+    ///     _ = gps.reset_heading();
     /// }
     /// ```
     pub fn reset_heading(&mut self) -> Result<(), PortError> {
         self.set_heading(Default::default())
     }
 
-    /// Resets the current reading of the IMU's rotation to zero.
+    /// Offsets the reading of [`GpsSensor::rotation`] to zero.
     ///
-    /// # Important
-    ///
-    /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
-    /// on that function for more information.
+    /// This method has no effect on the values returned by [`GpsSensor::position`].
     ///
     /// # Errors
     ///
@@ -629,33 +646,32 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
+    ///     let mut gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
     ///     sleep(Duration::from_secs(2)).await;
     ///
     ///     // Store rotation before reset.
-    ///     let rotation = imu.rotation().unwrap_or_default();
+    ///     let rotation = gps.rotation().unwrap_or_default();
     ///
     ///     // Reset rotation back to zero.
-    ///     _ = imu.reset_rotation();
+    ///     _ = gps.reset_rotation();
     /// }
     /// ```
     pub fn reset_rotation(&mut self) -> Result<(), PortError> {
         self.set_rotation(Default::default())
     }
 
-    /// Sets the current reading of the IMU's rotation to target value.
+    /// Offsets the reading of [`GpsSensor::rotation`] to a specified angle value.
     ///
-    /// # Important
-    ///
-    /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
-    /// on that function for more information.
+    /// This method has no effect on the values returned by [`GpsSensor::position`].
     ///
     /// # Errors
     ///
@@ -668,15 +684,19 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
+    ///     let mut gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
     ///     // Set rotation to 90 degrees clockwise.
-    ///     _ = imu.set_rotation(90.0);
+    ///     _ = gps.set_rotation(90.0);
+    ///
+    ///     println!("Rotation: {:?}", gps.rotation());
     /// }
     /// ```
     pub fn set_rotation(&mut self, rotation: f64) -> Result<(), PortError> {
@@ -687,14 +707,9 @@ impl GpsSensor {
         Ok(())
     }
 
-    /// Sets the current reading of the IMU's heading to target value.
+    /// Offsets the reading of [`GpsSensor::heading`] to a specified angle value.
     ///
-    /// Target will default to 360 if above 360 and default to 0 if below 0.
-    ///
-    /// # Important
-    ///
-    /// This has no effect on the "heading" value returned by [`GpsSensor::pose`]. See the notes
-    /// on that function for more information.
+    /// Target will default to `360.0` if above `360.0` and default to `0.0` if below `0.0`.
     ///
     /// # Errors
     ///
@@ -707,15 +722,19 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
+    ///     let mut gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
     ///     // Set heading to 90 degrees clockwise.
-    ///     _ = imu.set_heading(90.0);
+    ///     _ = gps.set_heading(90.0);
+    ///
+    ///     println!("Heading: {:?}", gps.heading());
     /// }
     /// ```
     pub fn set_heading(&mut self, heading: f64) -> Result<(), PortError> {
@@ -726,10 +745,12 @@ impl GpsSensor {
         Ok(())
     }
 
-    /// Sets the internal computation speed of the IMU.
+    /// Sets the internal computation speed of the sensor's internal IMU.
     ///
-    /// This method does NOT change the rate at which user code can read data off the IMU, as the brain will only talk to the
-    /// device every 10mS regardless of how fast data is being sent or computed.
+    /// This method does NOT change the rate at which user code can read data off the GPS, as the
+    /// brain will only talk to the device every 10mS regardless of how fast data is being sent or
+    /// computed. This also has no effect on the speed of methods such as `GpsSensor::position`, as
+    /// it only changes the *internal* computation speed of the sensor's internal IMU.
     ///
     /// # Errors
     ///
@@ -743,15 +764,15 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
+    ///     let mut gps = GpsSensor::new(
     ///         peripherals.port_1,
-    ///         [2.0, 1.0],
-    ///         ([0.0, 0.0], 90.0)
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
     ///     );
-    ///     let imu = gps.imu;
     ///
     ///     // Set to minimum interval.
-    ///     _ = imu.set_data_interval(Duration::from_millis(5));
+    ///     _ = gps.set_data_interval(Duration::from_millis(5));
     /// }
     /// ```
     pub fn set_data_interval(&mut self, interval: Duration) -> Result<(), PortError> {
