@@ -192,6 +192,61 @@ impl GpsSensor {
         Ok(data)
     }
 
+    /// Adjusts the sensor's physical offset from the robot's tracking origin.
+    ///
+    /// This value is also configured initially through [`GpsSensor::new`].
+    ///
+    /// Offset defines the exact point on the robot that is considered a "source of truth" for the robot's position.
+    /// For example, if you considered the center of your robot to be the reference point for coordinates, then this
+    /// value would be the signed 4-quadrant x and y offset from that point on your robot in meters. Similarly, if you
+    /// considered the sensor itself to be the robot's origin of tracking, then this value would simply be
+    /// `Point2 { x: 0.0, y: 0.0 }`.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///
+    ///         // Initial offset value is configured here!
+    ///         //
+    ///         // Let's assume that the sensor is mounted 0.225 meters to the left and 0.225 meters above
+    ///         // our desired tracking origin.
+    ///         Point2 { x: -0.225, y: 0.225 }, // Configure offset value
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         90.0,
+    ///     );
+    ///
+    ///     // Get the configured offset of the sensor
+    ///     if let Ok(offset) = gps.offset() {
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is mounted at x=-0.225, y=0.225"
+    ///     }
+    ///
+    ///     // Change the offset to something new
+    ///     _ = gps.set_offset(Point2 { x: 0.0, y: 0.0 });
+    ///
+    ///     // Get the configured offset of the sensor again
+    ///     if let Ok(offset) = gps.offset() {
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is mounted at x=0.0, y=0.0"
+    ///     }
+    /// }
+    /// ```
+    pub fn set_offset(&mut self, offset: Point2<f64>) -> Result<(), PortError> {
+        self.validate_port()?;
+
+        unsafe { vexDeviceGpsOriginSet(self.device, offset.x, offset.y) }
+
+        Ok(())
+    }
+
     /// Returns an estimate of the robot's location on the field as cartesian coordinates measured in meters.
     ///
     /// The reference point for a robot's position is determined by the sensor's configured [`offset`] value.

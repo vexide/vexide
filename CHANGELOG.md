@@ -38,7 +38,8 @@ Before releasing:
 - Added `read_dir`, `ReadDir`, and `DirEntry` to `vexide_core::fs` for directory reading support. (#296)
 - Implemented `PartialOrd` for `Version`. (#288)
 - Added `RadioLink::INTERNAL_BUFFER_SIZE` constant. (#293)
-- `AiVisionSensor` is now re-exported through `vexide::devices`.
+- `AiVisionSensor` is now re-exported through `vexide::devices`. (#302)
+- Added a new `GpsSensor::set_offset` method that allows reconfiguring the GPS sensor's physical offset after creation. (#302)
 
 ### Fixed
 
