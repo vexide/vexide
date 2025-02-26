@@ -38,6 +38,8 @@ Before releasing:
 - Added `read_dir`, `ReadDir`, and `DirEntry` to `vexide_core::fs` for directory reading support. (#296)
 - Implemented `PartialOrd` for `Version`. (#288)
 - Added `RadioLink::INTERNAL_BUFFER_SIZE` constant. (#293)
+- `AiVisionSensor` is now re-exported through `vexide::devices`. (#302)
+- Added a new `GpsSensor::set_offset` method that allows reconfiguring the GPS sensor's physical offset after creation. (#302)
 
 ### Fixed
 
@@ -57,12 +59,14 @@ Before releasing:
 - Moved `vexide::core` modules to the top-level `vexide` crate. For example, `vexide::core::fs` is now `vexide::fs`. (#305) (**Breaking Change**)
 - `InertialSensor::calibrate`, `AdiGyroscope::calibrate`, `DynamicPeripherals` methods, `OpenOptions` methods, and `Text::align` are now callable in `const fn` context. (#308)
 - `vexide::allocator` is no longer cfg-gated to `target_vendor = "vex"`. (#307)
+- Refactored the GPS Sensor API to provide all functionality through a single struct. (#302) (**Breaking Change**)
 
 ### Removed
 
 - Removed `SerialError::Port`. `SerialPort` methods can no longer return `PortError`. (#293) (**Breaking Change**)
 - Removed the `vexide::macro` module. (#305) (**Breaking Change**)
 - Removed the `vexide::core` module in favor of top-level modules of the `vexide` crate. (#305) (**Breaking Change**)
+- Removed the `GpsImu` struct. This functionality is now provided entirely through `GpsSensor`. (#302) (**Breaking Change**)
 
 ### New Contributors
 
