@@ -1,4 +1,57 @@
 //! Competition control and state.
+//!
+//! This module provides functionality for interacting with competition control in VEXos,
+//! allowing you to read competition state and respond to changes in competition modes.
+//! This is useful for situations where the robot's behavior must adapt based on the
+//! state of the competition, such as transitioning between autonomous and driver-controlled
+//! modes.
+//!
+//! # The [`Compete`] Trait
+//!
+//! The most important item in this module is the [`Compete`] trait, which serves as the
+//! foundation for defining competition-specific behavior in vexide programs. This trait
+//! allows you to declare different functions on a robot struct to be executed when
+//! competition state changes. By implementing [`Compete`], your robot can respond to
+//! changes in the various phases of a competition, such as autonomous operation, driver
+//! control, or downtime between modes.
+//!
+//! ```
+//! #![no_std]
+//! #![no_main]
+//!
+//! use vexide::prelude::*;
+//!
+//! struct MyRobot {}
+//!
+//! impl Compete for MyRobot {
+//!     async fn autonomous(&mut self) {
+//!         println!("Running in autonomous mode!");
+//!     }
+//!
+//!     async fn driver(&mut self) {
+//!         println!("Running in driver mode!");
+//!     }
+//! }
+//!
+//! #[vexide::main]
+//! async fn main(_peripherals: Peripherals) {
+//!     let my_robot = MyRobot {};
+//!     my_robot.compete().await;
+//! }
+//! ```
+//!
+//! By awaiting the [`compete()`] function on our robot, we are handing over execution to
+//! vexide's [`CompetitionRuntime`], which will run a different function on the [`Compete`]
+//! trait depending on what is happening in the match.
+//!
+//! [`compete()`]: CompeteExt::compete
+//!
+//! # Reading Competition State
+//!
+//! In addition to providing hooks into different competition modes, this module also provides
+//! functions for reading information about the competition enviornment, such as the current match
+//! mode, match control hardware, and whether the robot is enabled or disabled. This is provided
+//! by the [`is_connected`], [`system`], [`mode`], and [`status`] functions.
 
 extern crate alloc;
 
@@ -18,7 +71,10 @@ use pin_project::pin_project;
 use vex_sdk::vexCompetitionStatus;
 
 bitflags! {
-    /// The status bits returned by [`vex_sdk::vexCompetitionStatus`].
+    /// The raw status bits returned by [`vex_sdk::vexCompetitionStatus`].
+    ///
+    /// These flags contain all the data made available to user code by VEXos
+    /// about the state of the match.
     #[derive(Debug, Clone, Copy, Eq, PartialEq)]
     pub struct CompetitionStatus: u32 {
         /// Robot is disabled by field control.
@@ -35,7 +91,7 @@ bitflags! {
     }
 }
 
-/// Represents a possible mode that robots can be set in during the competition lifecycle.
+/// A match mode in the competition lifecycle.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompetitionMode {
     /// The Disabled competition mode.
@@ -68,24 +124,55 @@ pub enum CompetitionMode {
     Driver,
 }
 
-/// Represents a type of system used to control competition state.
+/// A type of system used to control match state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompetitionSystem {
-    /// Competition state is controlled by a VEX Field Controller.
+    /// Competition state is controlled by a VEX Field Controller (either [legacy] or [smart] field control).
+    ///
+    /// [legacy]: https://www.vexrobotics.com/275-1401.html?srsltid=AfmBOopaclcyyUtEorMyBF97kTzeFlwzD5VB5TZCJoGOH5v5EosRgs7f
+    /// [smart]: https://kb.vex.com/hc/en-us/articles/9121731684756-VEX-Field-Control-User-Manual
     FieldControl,
 
-    /// Competition state is controlled by a VEXnet competition switch.
+    /// Competition state is controlled by a [VEXnet competition switch].
+    ///
+    /// [VEXnet competition switch]: https://www.vexrobotics.com/276-2335.html
     CompetitionSwitch,
 }
 
 impl CompetitionStatus {
     /// Checks if the robot is connected to a competition control system.
+    ///
+    /// This is equivalent to the standalone [`is_connected`] function in this module.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let status = competition::status();
+    ///
+    /// if status.is_connected() {
+    ///     println!("Connected to competition control");
+    /// }
+    /// ```
     #[must_use]
     pub const fn is_connected(&self) -> bool {
         self.contains(CompetitionStatus::CONNECTED)
     }
 
     /// Returns the current competition mode, or phase from these status flags.
+    ///
+    /// This is equivalent to the standalone [`mode`] function in this module.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let status = competition::status();
+    ///
+    /// match status.mode() {
+    ///     CompetitionMode::Driver => println!("Driver control"),
+    ///     CompetitionMode::Autonomous => println!("Auton"),
+    ///     CompetitionMode::Disabled => println!("DIsabled"),
+    /// }
+    /// ```
     #[must_use]
     pub const fn mode(&self) -> CompetitionMode {
         if self.contains(Self::DISABLED) {
@@ -99,6 +186,20 @@ impl CompetitionStatus {
 
     /// Returns the type of system currently controlling the robot's competition state, or [`None`] if the robot
     /// is not tethered to a competition controller.
+    ///
+    /// This is equivalent to the standalone [`system`] function in this module.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let status = competition::status();
+    ///
+    /// match status.system() {
+    ///     None => println!("Not connected to a match controller"),
+    ///     Some(CompetitionSystem::FieldControl) => println!("Connected to field controller"),
+    ///     Some(CompetitionSystem::CompetitionSwitch) => println!("Connected to competition switch"),
+    /// }
+    /// ```
     #[must_use]
     pub const fn system(&self) -> Option<CompetitionSystem> {
         if self.contains(CompetitionStatus::CONNECTED) {
@@ -113,13 +214,23 @@ impl CompetitionStatus {
     }
 }
 
-/// Returns the current competition status flags.
+/// Returns all competition status flags reported by VEXos.
+///
+/// See [`CompetitionStatus`] for usage and examples.
 #[must_use]
 pub fn status() -> CompetitionStatus {
     CompetitionStatus::from_bits_retain(unsafe { vexCompetitionStatus() })
 }
 
 /// Checks if the robot is connected to a competition control system.
+///
+/// # Example
+///
+/// ```
+/// if competition::is_connected() {
+///     println!("Connected to competition control");
+/// }
+/// ```
 #[must_use]
 pub fn is_connected() -> bool {
     status().is_connected()
@@ -127,12 +238,32 @@ pub fn is_connected() -> bool {
 
 /// Returns the type of system currently controlling the robot's competition state, or [`None`] if the robot
 /// is not tethered to a competition controller.
+///
+/// # Example
+///
+/// ```
+/// match competition::system() {
+///     None => println!("Not connected to a match controller"),
+///     Some(CompetitionSystem::FieldControl) => println!("Connected to field controller"),
+///     Some(CompetitionSystem::CompetitionSwitch) => println!("Connected to competition switch"),
+/// }
+/// ```
 #[must_use]
 pub fn system() -> Option<CompetitionSystem> {
     status().system()
 }
 
 /// Returns the current competition mode, or phase.
+///
+/// ```
+/// let status = competition::status();
+///
+/// match competition::mode() {
+///     CompetitionMode::Driver => println!("Driver control"),
+///     CompetitionMode::Autonomous => println!("Auton"),
+///     CompetitionMode::Disabled => println!("DIsabled"),
+/// }
+/// ```
 #[must_use]
 pub fn mode() -> CompetitionMode {
     status().mode()
@@ -173,7 +304,7 @@ impl CompetitionUpdates {
     }
 }
 
-/// Gets a stream of updates to the competition status.
+/// Returns an async stream of updates to the competition status.
 ///
 /// Yields the current status when first polled, and thereafter whenever the status changes.
 #[must_use]
@@ -183,6 +314,9 @@ pub const fn updates() -> CompetitionUpdates {
 
 /// A future which delegates to different futures depending on the current competition mode.
 /// I.e., a tiny async runtime specifically for writing competition programs.
+///
+/// This runtime provides the internal implementation behind the [`Compete`] trait and the
+/// [`CompetitionBuilder`] struct.
 #[pin_project]
 pub struct CompetitionRuntime<
     Shared: 'static,
@@ -674,36 +808,98 @@ impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
     }
 }
 
-/// A set of tasks to run when the competition is in a particular mode.
+/// A set of functions to run when the competition is in a particular mode.
+///
+/// This trait allows you to declare different functions on a common robot struct to be
+/// executed when competition state changes. By implementing `Compete`, your robot can
+/// respond to changes in the various phases of a competition, such as autonomous operation,
+/// driver control, or downtime between modes.
+///
+/// # Example
+///
+/// ```
+/// #![no_std]
+/// #![no_main]
+///
+/// use vexide::prelude::*;
+///
+/// struct MyRobot {}
+///
+/// impl Compete for MyRobot {
+///     async fn autonomous(&mut self) {
+///         println!("Running in autonomous mode!");
+///     }
+///
+///     async fn driver(&mut self) {
+///         println!("Running in driver mode!");
+///     }
+/// }
+///
+/// #[vexide::main]
+/// async fn main(_peripherals: Peripherals) {
+///     let my_robot = MyRobot {};
+///     my_robot.compete().await;
+/// }
+/// ```
+///
+/// By awaiting the [`compete()`] function on our robot, we are handing over execution to
+/// vexide's [`CompetitionRuntime`], which will run a different function on the [`Compete`]
+/// trait depending on what is happening in the match.
+///
+/// [`compete()`]: CompeteExt::compete
 #[allow(async_fn_in_trait, clippy::unused_async)]
 pub trait Compete: Sized {
-    /// Runs when the competition system is connected.
+    /// Runs when the robot becomes connected into a competition controller.
     ///
     /// See [`CompetitionBuilder::on_connect`] for more information.
     async fn connected(&mut self) {}
 
-    /// Runs when the competition system is disconnected.
+    /// Runs when the robot disconnects from a competition controller.
+    ///
+    /// <div class="warning">
+    ///
+    /// This function does NOT run if connection to the match is lost due to
+    /// a radio issue. It will only execute if the field control wire becomes
+    /// physically disconnected from the controller (i.e.) from unplugging after
+    /// a match ends.
+    ///
+    /// </div>
     ///
     /// See [`CompetitionBuilder::on_disconnect`] for more information.
     async fn disconnected(&mut self) {}
 
     /// Runs when the robot is disabled.
     ///
-    /// See [`CompetitionBuilder::while_disabled`] for more information.
+    /// When in disabled mode, voltage commands to motors are disabled. Motors are forcibly
+    /// locked to the "coast" brake mode and cannot be moved.
+    ///
+    /// Robots may be placed into disabled mode at any point in the competition after
+    /// connecting, but are typically disabled before the autonomous period, between
+    /// autonomous and opcontrol periods, and following the opcontrol period of a match.
     async fn disabled(&mut self) {}
 
     /// Runs when the robot is put into autonomous mode.
     ///
-    /// See [`CompetitionBuilder::while_autonomous`] for more information.
+    /// When in autonomous mode, all motors and sensors may be accessed, however user
+    /// input from controller buttons and joysticks is not available to be read.
+    ///
+    /// Robots may be placed into autonomous mode at any point in the competition after
+    /// connecting, but are typically placed into this mode at the start of a match.
     async fn autonomous(&mut self) {}
 
     /// Runs when the robot is put into driver control mode.
     ///
-    /// See [`CompetitionBuilder::while_driving`] for more information.
+    /// When in opcontrol mode, all device access is available including access to
+    /// controller joystick values for reading user-input from drive team members.
+    ///
+    /// Robots may be placed into opcontrol mode at any point in the competition after
+    /// connecting, but are typically placed into this mode following the autonomous
+    /// period.
     async fn driver(&mut self) {}
 }
 
 /// Extension methods for [`Compete`].
+///
 /// Automatically implemented for any type implementing [`Compete`].
 #[allow(clippy::type_complexity)]
 pub trait CompeteExt: Compete {

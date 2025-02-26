@@ -4,6 +4,15 @@
 //! the [`Backtrace`] type. Backtraces are helpful to attach to errors,
 //! containing information that can be used to get a chain of where an error
 //! was created.
+//!
+//! # Platform Support
+//!
+//! The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform
+//! target. At the moment, this target only platform that vexide supports,
+//! however this may change in the future.
+//!
+//! Additionally, backtraces will be unsupported if vexide is compiled without
+//! the `unwind` feature.
 
 use alloc::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
@@ -16,12 +25,23 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 /// This type stores the backtrace of a captured stack at a certain point in
 /// time. The backtrace is represented as a list of instruction pointers.
 ///
+/// # Platform Support
+///
+/// The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform
+/// target. At the moment, this target only platform that vexide supports,
+/// however this may change in the future.
+///
+/// Additionally, backtraces will be unsupported if vexide is compiled without
+/// the `unwind` feature.
+///
+/// # Example
+///
 /// ```
 /// let backtrace = Backtrace::capture();
 /// println!("{backtrace}");
 /// ```
 ///
-/// ## Symbolication
+/// # Symbolication
 ///
 /// The number stored in each frame is not particularly meaningful to humans on its own.
 /// Using a tool such as `llvm-symbolizer` or `addr2line`, it can be turned into
@@ -45,9 +65,9 @@ impl Backtrace {
     ///
     /// If a backtrace could not be captured, an empty backtrace is returned.
     ///
-    /// ## Platform Support
+    /// # Platform Support
     ///
-    /// Backtraces will be empty on non-armv7a targets (e.g. WebAssembly) or when
+    /// Backtraces will be empty on non-vex targets (e.g. WebAssembly) or when
     /// the `unwind` feature is disabled.
     #[allow(clippy::inline_always)]
     #[inline(always)] // Inlining keeps this function from appearing in backtraces
@@ -63,6 +83,10 @@ impl Backtrace {
 
     /// Captures a backtrace at the current point of execution,
     /// returning an error if the backtrace fails to capture.
+    ///
+    /// # Platform Support
+    ///
+    /// See [`Backtrace::capture`].
     ///
     /// # Errors
     ///

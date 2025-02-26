@@ -1,8 +1,7 @@
 //! Filesystem manipulation operations.
 //!
 //! This module contains basic methods to manipulate the contents of the brain's
-//! micro SDCard card. All methods in this module represent VEXos filesystem
-//! operations.
+//! micro SDCard. All methods in this module represent VEXos filesystem operations.
 //!
 //! # VEXos Limitations
 //!
