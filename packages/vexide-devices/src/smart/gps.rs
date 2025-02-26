@@ -249,7 +249,7 @@ impl GpsSensor {
 
     /// Returns an estimate of the robot's location on the field as cartesian coordinates measured in meters.
     ///
-    /// The reference point for a robot's position is determined by the sensor's configured [`offset`] value.
+    /// The reference point for a robot's position is determined by the sensor's configured [`offset`](`GpsSensor::offset`) value.
     ///
     /// # Errors
     ///
