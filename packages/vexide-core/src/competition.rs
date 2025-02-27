@@ -129,7 +129,7 @@ pub enum CompetitionMode {
 pub enum CompetitionSystem {
     /// Competition state is controlled by a VEX Field Controller (either [legacy] or [smart] field control).
     ///
-    /// [legacy]: https://www.vexrobotics.com/275-1401.html?srsltid=AfmBOopaclcyyUtEorMyBF97kTzeFlwzD5VB5TZCJoGOH5v5EosRgs7f
+    /// [legacy]: https://www.vexrobotics.com/275-1401.html
     /// [smart]: https://kb.vex.com/hc/en-us/articles/9121731684756-VEX-Field-Control-User-Manual
     FieldControl,
 
