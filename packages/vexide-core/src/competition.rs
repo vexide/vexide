@@ -856,14 +856,14 @@ pub trait Compete: Sized {
 
     /// Runs when the robot disconnects from a competition controller.
     ///
-    /// <div class="warning">
+    /// <section class="warning">
     ///
     /// This function does NOT run if connection to the match is lost due to
     /// a radio issue. It will only execute if the field control wire becomes
     /// physically disconnected from the controller (i.e.) from unplugging after
     /// a match ends.
     ///
-    /// </div>
+    /// </section>
     ///
     /// See [`CompetitionBuilder::on_disconnect`] for more information.
     async fn disconnected(&mut self) {}
