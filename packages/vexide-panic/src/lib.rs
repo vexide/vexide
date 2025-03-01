@@ -241,8 +241,8 @@ pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
     old_hook
 }
 
-#[panic_handler]
 /// The panic handler for vexide.
+#[panic_handler]
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     // This can only occur if the panic handler itself has panicked (which can
     // happen in hooks or if println!() fails), resulting in a potential stack

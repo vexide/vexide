@@ -40,6 +40,7 @@ Before releasing:
 - Added `RadioLink::INTERNAL_BUFFER_SIZE` constant. (#293)
 - `AiVisionSensor` is now re-exported through `vexide::devices`. (#302)
 - Added a new `GpsSensor::set_offset` method that allows reconfiguring the GPS sensor's physical offset after creation. (#302)
+- Added the `vexide::program::abort` method to match `std::process::abort`. Unlike `vexide::program::exit`, `abort` attempts to terminate the program as immediately as possible without doing any cleanup to the serial buffer. (#309)
 
 ### Fixed
 

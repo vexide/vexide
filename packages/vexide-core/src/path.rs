@@ -71,7 +71,7 @@ impl AsRef<Path> for &str {
     }
 }
 
-/// An owned, mutable path akin to a `String
+/// An owned, mutable path (akin to `String`).
 ///
 /// This type implements `Deref` to [`Path`],
 /// menaing all methods on a [`Path`] can be used on a [`PathBuf`].

@@ -1,7 +1,7 @@
-//! Floating point numbers.
+//! Floating point arithmetic.
 //!
 //! This module provides implementations of math functions of floating point
-//! primitive types (`f32`, `f64`).
+//! primitive types (`f32`, `f64`) through the [`Float`] trait.
 
 #[cfg(all(target_vendor = "vex", not(feature = "force_rust_libm")))]
 mod newlib;

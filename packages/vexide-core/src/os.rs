@@ -7,7 +7,35 @@ use core::fmt;
 
 use vex_sdk::vexSystemVersion;
 
-/// A VEXos version
+/// A VEXos firmware version.
+///
+/// This type represents a version identifier for VEXos firmware. VEXos is
+/// versioned using a slightly modified [semantic versioning] scheme. To
+/// check the version currently running on a brain, use [`system_version`].
+///
+/// [semantic versioning]: https://semver.org/
+///
+/// This type implements `PartialOrd`, meaning it can be compared to other
+/// instances of itself.
+///
+/// # Example
+///
+/// ```
+/// // VEXos 1.1.5b0
+/// const VEXOS_1_1_5_0: Version = Version {
+///     major: 1,
+///     minor: 1,
+///     build: 5,
+///     beta: 0,
+/// };
+///
+/// // Get the currently running VEXos version
+/// let version = system_version();
+///
+/// if version < VEXOS_1_1_5_0 {
+///     panic!("Update your firmware!");
+/// }
+/// ```
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Version {
     /// The major version
@@ -30,7 +58,28 @@ impl fmt::Display for Version {
     }
 }
 
-/// Returns the current VEXos version.
+/// Returns the currently running VEXos [firmware version] on a brain.
+///
+/// [firmware version]: Version
+///
+/// # Example
+///
+/// ```
+/// // VEXos 1.1.5b0
+/// const VEXOS_1_1_5_0: Version = Version {
+///     major: 1,
+///     minor: 1,
+///     build: 5,
+///     beta: 0,
+/// };
+///
+/// // Get the currently running VEXos version
+/// let version = system_version();
+///
+/// if version < VEXOS_1_1_5_0 {
+///     panic!("Update your firmware!");
+/// }
+/// ```
 #[must_use]
 pub fn system_version() -> Version {
     let version_bytes = unsafe { vexSystemVersion() }.to_be_bytes();

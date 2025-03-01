@@ -3,12 +3,10 @@
 //! Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime,
 //! async executor, device API, and more for the VEX V5 Brain!
 //!
-//! vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which is a set of unmaintained APIs using bindings over [PROS](https://github.com/purduesigbots/pros).
-//!
 //! ## Getting Started
 //!
 //! If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment
-//! with [vexide-template](https://github.com/vexide/vexide-template).
+//! and using vexide's common features.
 //!
 //! # Usage
 //!
@@ -22,7 +20,7 @@
 //! }
 //!```
 //!
-//! Check out our [docs](https://vexide.dev/docs/) for more in-depth usage guides.
+//! Check out our [examples](https://github.com/vexide/vexide/tree/main/examples/) for more examples of different features.
 
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
