@@ -37,6 +37,7 @@ default = [
     "startup",
     "macro",
     "backtraces",
+    "allocator",
 ]
 
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
