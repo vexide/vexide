@@ -1,4 +1,9 @@
-use core::{cell::UnsafeCell, error::Error, fmt::{self, Debug, Display}, mem::MaybeUninit};
+use core::{
+    cell::UnsafeCell,
+    error::Error,
+    fmt::{self, Debug, Display},
+    mem::MaybeUninit,
+};
 
 use super::mutex::Mutex;
 
