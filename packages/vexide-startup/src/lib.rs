@@ -191,6 +191,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         zero_bss(&raw mut __bss_start, &raw mut __bss_end);
 
         // Initialize the heap allocator using normal bounds
+        #[cfg(feature = "allocator")]
         vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
 
         // If this link address is 0x03800000, this implies we were uploaded using
@@ -200,6 +201,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         }
 
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
+        #[cfg(feature = "allocator")]
         vexide_core::allocator::claim(&raw mut __patcher_ram_start, &raw mut __patcher_ram_end);
     }
 
