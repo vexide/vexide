@@ -1,4 +1,4 @@
-use core::{cell::UnsafeCell, error::Error, fmt::Debug, mem::MaybeUninit};
+use core::{cell::UnsafeCell, error::Error, fmt::{self, Debug, Display}, mem::MaybeUninit};
 
 use super::mutex::Mutex;
 
@@ -42,7 +42,9 @@ impl Once {
         }
     }
 
-    /// Runs a closure if and only if this is the first time that call_once has been run.
+    /// Runs a closure if and only if this is the first time that `call_once` or
+    /// [`try_call_once`](Once::try_call_once) has been run.
+    ///
     /// This is useful for making sure that expensive initialization is only run once.
     /// This will block if another task is running a different initialization routine.
     pub async fn call_once<F: FnOnce()>(&self, fun: F) {
@@ -52,12 +54,48 @@ impl Once {
             *state = true;
         }
     }
+
+    /// Runs a closure if and only if this is the first time that [`call_once`](Once::call_once) or
+    /// `try_call_once` has been run.
+    ///
+    /// Unlike [`call_once`](Once::call_once), this function will return an error rather than waiting for
+    /// initialization.
+    ///
+    /// # Errors
+    ///
+    /// This method will return [`TryCallOnceError`] if recursively called during the
+    /// execution of `F`. This can only happen if `F` explicitly tries to call itself,
+    /// or if using `block_on` to execute async code from within the function.
+    pub fn try_call_once<F: FnOnce()>(&self, fun: F) -> Result<(), TryCallOnceError> {
+        let mut state = self.state.try_lock().ok_or(TryCallOnceError(()))?;
+
+        if *state == Self::ONCE_INCOMPLETE {
+            fun();
+            *state = true;
+        }
+
+        Ok(())
+    }
 }
 impl Debug for Once {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Once").finish_non_exhaustive()
     }
 }
+
+/// Error returned by [`Once::try_call_once`] if the inner function was called from
+/// within itself.
+#[derive(Clone, Debug)]
+pub struct TryCallOnceError(());
+
+impl Display for TryCallOnceError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Display::fmt("attempted to recursively call `Once` function", f)
+    }
+}
+
+impl core::error::Error for TryCallOnceError {}
+
 /// A synchronization primitive which can be used to run initialization code once.
 /// This type is thread safe and can be used in statics.
 /// All functions that can block are async.

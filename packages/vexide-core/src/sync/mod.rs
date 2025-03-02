@@ -15,5 +15,5 @@ pub use lazy::LazyLock;
 // Used for synchronizing stdio
 pub(crate) use mutex::RawMutex;
 pub use mutex::{Mutex, MutexGuard, MutexLockFuture};
-pub use once::{Once, OnceLock};
+pub use once::{Once, TryCallOnceError, OnceLock};
 pub use rwlock::{RwLock, RwLockReadFuture, RwLockReadGuard, RwLockWriteFuture, RwLockWriteGuard};

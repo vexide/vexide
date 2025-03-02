@@ -100,5 +100,5 @@ pub async fn main(_p: Peripherals) {
 
     // The value inside a LazyLock is initialized once get is called.
     // This is useful for initializing a value that is expensive to create.
-    println!("Lazy lock: {}", LAZY.get().await);
+    println!("Lazy lock: {}", *LAZY);
 }
