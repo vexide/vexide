@@ -41,9 +41,9 @@ Before releasing:
 - `AiVisionSensor` is now re-exported through `vexide::devices`. (#302)
 - Added a new `GpsSensor::set_offset` method that allows reconfiguring the GPS sensor's physical offset after creation. (#302)
 - Added the `vexide::program::abort` method to match `std::process::abort`. Unlike `vexide::program::exit`, `abort` attempts to terminate the program as immediately as possible without doing any cleanup to the serial buffer. (#309)
-- Added `Deref` implementation back to `LazyLock`, which will panic if lazy initialization is performed recursively. (#309)
-- Added `DerefMut` implementation and `force_mut` functionto `LazyLock`. (#309)
-- Added `Once::try_call_once` which will return an error if called from within itself rather than returning a future. (#309)
+- Added `Deref` implementation back to `LazyLock`, which will panic if lazy initialization is performed recursively. (#310)
+- Added `DerefMut` implementation and `force_mut` functionto `LazyLock`. (#310)
+- Added `Once::try_call_once` which will return an error if called from within itself rather than returning a future. (#310)
 
 ### Fixed
 
@@ -64,7 +64,7 @@ Before releasing:
 - `InertialSensor::calibrate`, `AdiGyroscope::calibrate`, `DynamicPeripherals` methods, `OpenOptions` methods, and `Text::align` are now callable in `const fn` context. (#308)
 - `vexide::allocator` is no longer cfg-gated to `target_vendor = "vex"`. (#307)
 - Refactored the GPS Sensor API to provide all functionality through a single struct. (#302) (**Breaking Change**)
-- Renamed `LazyLock::get` back to `LazyLock::force`. (#309) (**Breaking Change**)
+- Renamed `LazyLock::get` back to `LazyLock::force`. (#310) (**Breaking Change**)
 
 ### Removed
 
