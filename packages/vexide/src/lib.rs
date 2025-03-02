@@ -65,7 +65,10 @@ pub mod time {
 
 #[doc(inline)]
 #[cfg(feature = "core")]
-pub use vexide_core::{allocator, backtrace, competition, float, fs, io, os, path, program, sync};
+pub use vexide_core::{backtrace, competition, float, fs, io, os, path, program, sync};
+#[doc(inline)]
+#[cfg(feature = "allocator")]
+pub use vexide_core::allocator;
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
