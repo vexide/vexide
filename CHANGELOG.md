@@ -65,6 +65,7 @@ Before releasing:
 - `vexide::allocator` is no longer cfg-gated to `target_vendor = "vex"`. (#307)
 - Refactored the GPS Sensor API to provide all functionality through a single struct. (#302) (**Breaking Change**)
 - Renamed `LazyLock::get` back to `LazyLock::force`. (#310) (**Breaking Change**)
+- The default `talc` allocator can now be removed by disabling the `allocator` feature, which is enabled by default. (#311) (**Breaking Change**) 
 
 ### Removed
 
