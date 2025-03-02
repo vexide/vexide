@@ -14,6 +14,7 @@
 
 extern crate alloc;
 
+#[cfg(feature = "allocator")]
 pub mod allocator;
 pub mod backtrace;
 pub mod competition;
