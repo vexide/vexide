@@ -17,7 +17,7 @@ pub mod themes;
 /// This function is used internally in the [`startup`](crate::startup) function to print the banner.
 #[inline]
 pub fn print(theme: BannerTheme) {
-    const VEXIDE_VERSION: &str = "0.6.1";
+    const VEXIDE_VERSION: &str = "0.7.0-rc.1";
 
     println!(
         "
