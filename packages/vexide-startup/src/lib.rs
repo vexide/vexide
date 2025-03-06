@@ -13,79 +13,18 @@
 #![no_std]
 #![allow(clippy::needless_doctest_main)]
 
-use banner::themes::BannerTheme;
-use bitflags::bitflags;
-
 pub mod banner;
+mod code_signature;
 mod patcher;
 
-/// Load address of user programs.
+use banner::themes::BannerTheme;
+pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+
+/// Load address of user programs in memory.
 const USER_MEMORY_START: u32 = 0x0380_0000;
 
-/// Identifies the type of binary to VEXos.
-#[repr(u32)]
-#[non_exhaustive]
-pub enum ProgramType {
-    /// User program binary.
-    User = 0,
-}
-
-/// The owner (originator) of the user program
-#[repr(u32)]
-pub enum ProgramOwner {
-    /// Program is a system binary.
-    System = 0,
-
-    /// Program originated from VEX.
-    Vex = 1,
-
-    /// Program originated from a partner developer.
-    Partner = 2,
-}
-
-bitflags! {
-    /// Program Flags
-    ///
-    /// These bitflags are part of the [`CodeSignature`] that determine some small
-    /// aspects of program behavior when running under VEXos. This struct contains
-    /// the flags with publicly documented behavior.
-    #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
-    pub struct ProgramFlags: u32 {
-        /// Inverts the background color to pure white.
-        const INVERT_DEFAULT_GRAPHICS = 1 << 0;
-
-        /// VEXos scheduler simple tasks will be killed when the program requests exit.
-        const KILL_TASKS_ON_EXIT = 1 << 1;
-
-        /// If VEXos is using the Light theme, inverts the background color to pure white.
-        const THEMED_DEFAULT_GRAPHICS = 1 << 2;
-    }
-}
-
-/// Program Code Signature
-///
-/// The first 16 bytes of a VEX user code binary contain a user code signature,
-/// containing some basic metadata and startup flags about the program. This
-/// signature must be at the start of the binary for booting to occur.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub struct CodeSignature(vex_sdk::vcodesig, [u32; 4]);
-
-impl CodeSignature {
-    /// Creates a new signature given a program type, owner, and flags.
-    #[must_use]
-    pub const fn new(program_type: ProgramType, owner: ProgramOwner, flags: ProgramFlags) -> Self {
-        Self(
-            vex_sdk::vcodesig {
-                magic: vex_sdk::V5_SIG_MAGIC,
-                r#type: program_type as _,
-                owner: owner as _,
-                options: flags.bits(),
-            },
-            [0; 4],
-        )
-    }
-}
-
+// All of these symbols are defined in our linkerscript (link/v5.ld) and don't have real types or
+// values, but a pointer to them points to the address of their location defined in the linkerscript.
 unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
@@ -93,17 +32,17 @@ unsafe extern "C" {
     static mut __patcher_ram_start: u8;
     static mut __patcher_ram_end: u8;
 
-    // These symbols don't have real types, so this is a little bit of a hack.
     static mut __bss_start: u32;
     static mut __bss_end: u32;
 }
 
-// This is the true entrypoint of vexide, containing the first two
-// instructions of user code executed before anything else.
+// This is the true entrypoint of vexide, containing the first instructions
+// of user code executed before anything else. This is written in assembly to
+// ensure that it stays the same across compilations (a requirement of the patcher),
 //
-// This function loads the stack pointer to the stack region specified
-// in our linkerscript, then immediately branches to the Rust entrypoint
-// created by our macro.
+// This routine loads the stack pointer to the stack region specified in our
+// linker script, makes a copy of program memory for the patcher if needed, then
+// branches to the Rust entrypoint (_start) created by the #[vexide::main] macro.
 core::arch::global_asm!(
     r#"
 .section .boot, "ax"
@@ -141,37 +80,6 @@ _boot:
 "#
 );
 
-/// Zeroes the `.bss` section
-///
-/// # Arguments
-///
-/// - `sbss`. Pointer to the start of the `.bss` section.
-/// - `ebss`. Pointer to the open/non-inclusive end of the `.bss` section.
-///   (The value behind this pointer will not be modified)
-/// - Use `T` to indicate the alignment of the `.bss` section.
-///
-/// # Safety
-///
-/// - Must be called exactly once
-/// - `mem::size_of::<T>()` must be non-zero
-/// - `ebss >= sbss`
-/// - `sbss` and `ebss` must be `T` aligned.
-#[inline]
-#[allow(clippy::similar_names)]
-#[cfg(target_vendor = "vex")]
-unsafe fn zero_bss<T>(mut sbss: *mut T, ebss: *mut T)
-where
-    T: Copy,
-{
-    while sbss < ebss {
-        // NOTE: volatile to prevent this from being transformed into `memclr`
-        unsafe {
-            core::ptr::write_volatile(sbss, core::mem::zeroed());
-            sbss = sbss.offset(1);
-        }
-    }
-}
-
 /// Startup Routine
 ///
 /// - Sets up the heap allocator if necessary.
@@ -186,9 +94,13 @@ where
 pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     #[cfg(target_vendor = "vex")]
     unsafe {
-        // Fill the `.bss` section of our program's memory with zeroes to ensure that
-        // uninitialized data is allocated properly.
-        zero_bss(&raw mut __bss_start, &raw mut __bss_end);
+        // Clear the .bss (uninitialized statics) section by filling it with zeroes.
+        // This is required, since the compiler assumes it will be zeroed on first access.
+        core::slice::from_raw_parts_mut(
+            &raw mut __bss_start,
+            (&raw mut __bss_end).offset_from(&raw mut __bss_start) as usize,
+        )
+        .fill(0);
 
         // Initialize the heap allocator using normal bounds
         #[cfg(feature = "allocator")]

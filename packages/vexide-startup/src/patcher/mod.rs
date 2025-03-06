@@ -118,7 +118,7 @@ pub(crate) unsafe fn patch() {
         let new_binary_len = PATCH_MEMORY.offset(4).read(); // length of the new binary after the patch
 
         // Do not proceed with the patch if:
-        // - We have an unexpected PATCH_MAGIC (this is edited after the fact to 0xB2Df intentionally break out of here).
+        // - We have an unexpected PATCH_MAGIC (this is edited after the fact to 0xB2DF intentionally break out of here).
         // - Our patch format version does not match the version in the patch.
         // - There isn't anything to patch.
         if patch_magic != PATCH_MAGIC || patch_version != PATCH_VERSION || patch_len == 0 {
