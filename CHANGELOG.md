@@ -34,6 +34,18 @@ Before releasing:
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+## [0.7.0]
+
+### Added
+
 - Added the `FsString` `PathBuf` types as mutable and owned equivalents to `FsStr` and `Path`. (#296)
 - Added `read_dir`, `ReadDir`, and `DirEntry` to `vexide_core::fs` for directory reading support. (#296)
 - Implemented `PartialOrd` for `Version`. (#288)
@@ -65,7 +77,7 @@ Before releasing:
 - `vexide::allocator` is no longer cfg-gated to `target_vendor = "vex"`. (#307)
 - Refactored the GPS Sensor API to provide all functionality through a single struct. (#302) (**Breaking Change**)
 - Renamed `LazyLock::get` back to `LazyLock::force`. (#310) (**Breaking Change**)
-- The default `talc` allocator can now be removed by disabling the `allocator` feature, which is enabled by default. (#311) (**Breaking Change**) 
+- The default `talc` allocator can now be removed by disabling the `allocator` feature, which is enabled by default. (#311) (**Breaking Change**)
 
 ### Removed
 
@@ -394,7 +406,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.6.1...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.7.0...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
@@ -405,3 +417,4 @@ Before releasing:
 [0.5.1]: https://github.com/vexide/vexide/compare/v0.5.0...v0.5.1
 [0.6.0]: https://github.com/vexide/vexide/compare/v0.5.1...v0.6.0
 [0.6.1]: https://github.com/vexide/vexide/compare/v0.6.0...v0.6.1
+[0.7.0]: https://github.com/vexide/vexide/compare/v0.6.1...v0.7.0
