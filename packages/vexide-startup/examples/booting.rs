@@ -6,7 +6,6 @@
 extern crate alloc;
 use alloc::boxed::Box;
 
-use vex_sdk::vexTasksRun;
 use vexide_core::println;
 use vexide_startup::{
     banner::themes::THEME_DEFAULT, CodeSignature, ProgramFlags, ProgramOwner, ProgramType,
@@ -22,7 +21,6 @@ unsafe extern "C" fn _start() -> ! {
         let test_box = Box::new(100);
         vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
         println!("Hello, world!");
-        vexTasksRun(); // Flush serial
     }
 
     // Exit once we're done.
