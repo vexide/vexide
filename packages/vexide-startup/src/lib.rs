@@ -23,8 +23,10 @@ pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType}
 /// Load address of user programs in memory.
 const USER_MEMORY_START: u32 = 0x0380_0000;
 
-// All of these symbols are defined in our linkerscript (link/v5.ld) and don't have real types or
-// values, but a pointer to them points to the address of their location defined in the linkerscript.
+// Linkerscript Symbols
+//
+// All of these external symbols are defined in our linkerscript (link/v5.ld) and don't have real types
+// or values, but a pointer to them points to the address of their location defined in the linkerscript.
 unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
@@ -41,7 +43,7 @@ unsafe extern "C" {
 // ensure that it stays the same across compilations (a requirement of the patcher),
 //
 // This routine loads the stack pointer to the stack region specified in our
-// linker script, makes a copy of program memory for the patcher if needed, then
+// linkerscript, makes a copy of program memory for the patcher if needed, then
 // branches to the Rust entrypoint (_start) created by the #[vexide::main] macro.
 core::arch::global_asm!(
     r#"
@@ -101,7 +103,7 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         )
         .fill(0);
 
-        // Initialize the heap allocator using normal bounds
+        // Initialize the heap allocator in our heap region defined in the linkerscript
         #[cfg(feature = "allocator")]
         vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
 
