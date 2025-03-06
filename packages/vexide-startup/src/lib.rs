@@ -90,7 +90,6 @@ _boot:
 ///
 /// Must be called once at the start of program execution after the stack has been setup.
 #[inline]
-#[allow(clippy::too_many_lines)]
 pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     #[cfg(target_vendor = "vex")]
     unsafe {
