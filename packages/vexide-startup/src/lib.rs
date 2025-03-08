@@ -97,11 +97,11 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     unsafe {
         // Clear the .bss (uninitialized statics) section by filling it with zeroes.
         // This is required, since the compiler assumes it will be zeroed on first access.
-        core::slice::from_raw_parts_mut(
+        core::ptr::write_bytes(
             &raw mut __bss_start,
+            0,
             (&raw mut __bss_end).offset_from(&raw mut __bss_start) as usize,
-        )
-        .fill(0);
+        );
 
         // Initialize the heap allocator in our heap region defined in the linkerscript
         #[cfg(feature = "allocator")]
