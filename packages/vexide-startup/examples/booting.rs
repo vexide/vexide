@@ -6,7 +6,6 @@
 extern crate alloc;
 use alloc::boxed::Box;
 
-use vex_sdk::vexTasksRun;
 use vexide_core::println;
 use vexide_startup::{
     banner::themes::THEME_DEFAULT, CodeSignature, ProgramFlags, ProgramOwner, ProgramType,
@@ -15,17 +14,21 @@ use vexide_startup::{
 // SAFETY: This symbol is unique and is being used to start the vexide runtime.
 #[unsafe(no_mangle)]
 unsafe extern "C" fn _start() -> ! {
+    // Setup the heap, zero bss, apply patches, etc...
     unsafe {
         vexide_startup::startup::<true>(THEME_DEFAULT);
-
-        // Write something to the screen to test if the program is running
-        let test_box = Box::new(100);
-        vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
-        println!("Hello, world!");
-        vexTasksRun(); // Flush serial
     }
 
-    // Exit once we're done.
+    // Draw something to the screen to test if the program is running.
+    let test_box = Box::new(100);
+    unsafe {
+        vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
+    }
+
+    // Print some data to the terminal.
+    println!("Hello, world!");
+
+    // Exit the program once we're done.
     vexide_core::program::exit();
 }
 
