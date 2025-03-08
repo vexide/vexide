@@ -122,7 +122,6 @@ pub(crate) unsafe fn patch() {
         // - Our patch format version does not match the version in the patch.
         // - There isn't anything to patch.
         if patch_magic != PATCH_MAGIC || patch_version != PATCH_VERSION || patch_len == 0 {
-            // TODO(tropix126): We could reclaim the patch as heap space maybe? Not a high priority.
             return;
         }
 
