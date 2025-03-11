@@ -50,22 +50,22 @@ __overwriter_aeabi_memcpy:
         /* Get copying of tiny blocks out of the way first.  */
         /* Is there at least 4 bytes to copy?  */
         subs    r2, r2, #4
-        blt     copy_less_than_4       /* If n < 4.  */
+        blt     .Lcopy_less_than_4       /* If n < 4.  */
 
         /* Check word alignment.  */
         ands    ip, r0, #3             /* ip = last 2 bits of dst.  */
-        bne     dst_not_word_aligned   /* If dst is not word-aligned.  */
+        bne     .Ldst_not_word_aligned   /* If dst is not word-aligned.  */
 
         /* Get here if dst is word-aligned.  */
         ands    ip, r1, #3             /* ip = last 2 bits of src.  */
-        bne     src_not_word_aligned   /* If src is not word-aligned.  */
-word_aligned:
+        bne     .Lsrc_not_word_aligned   /* If src is not word-aligned.  */
+.Lword_aligned:
         /* Get here if source and dst both are word-aligned.
            The number of bytes remaining to copy is r2+4.  */
 
         /* Is there is at least 64 bytes to copy?  */
         subs    r2, r2, #60
-        blt     copy_less_than_64                /* If r2 + 4 < 64.  */
+        blt     .Lcopy_less_than_64                /* If r2 + 4 < 64.  */
 
         /* First, align the destination buffer to 8-bytes,
            to make sure double loads and stores don't cross cache line boundary,
@@ -83,13 +83,13 @@ word_aligned:
            If dst is not 2w aligned (i.e., the 3rd bit is not set in dst),
            then copy 1 word (4 bytes).  */
         ands    r3, r0, #4
-        beq     two_word_aligned  /* If dst already two-word aligned.  */
+        beq     .Ltwo_word_aligned  /* If dst already two-word aligned.  */
         ldr     r3, [r1], #4
         str     r3, [r0], #4
         subs    r2, r2, #4
-        blt     copy_less_than_64
+        blt     .Lcopy_less_than_64
 
-two_word_aligned:
+.Ltwo_word_aligned:
         /* TODO: Align to cacheline (useful for PLD optimization).  */
 
         /* Every loop iteration copies 64 bytes.  */
@@ -104,12 +104,12 @@ two_word_aligned:
         subs    r2, r2, #64
         bge     1b                     /* If there is more to copy.  */
 
-copy_less_than_64:
+.Lcopy_less_than_64:
 
         /* Get here if less than 64 bytes to copy, -64 <= r2 < 0.
            Restore the count if there is more than 7 bytes to copy.  */
         adds    r2, r2, #56
-        blt     copy_less_than_8
+        blt     .Lcopy_less_than_8
 
         /* Copy 8 bytes at a time.  */
 2:
@@ -118,27 +118,27 @@ copy_less_than_64:
         subs    r2, r2, #8
         bge     2b                     /* If there is more to copy.  */
 
-copy_less_than_8:
+.Lcopy_less_than_8:
 
         /* Get here if less than 8 bytes to copy, -8 <= r2 < 0.
            Check if there is more to copy.  */
         cmn     r2, #8
-        beq     return                          /* If r2 + 8 == 0.  */
+        beq     .Lreturn                          /* If r2 + 8 == 0.  */
 
         /* Restore the count if there is more than 3 bytes to copy.  */
         adds    r2, r2, #4
-        blt     copy_less_than_4
+        blt     .Lcopy_less_than_4
 
         /* Copy 4 bytes.  */
         ldr     r3, [r1], #4
         str     r3, [r0], #4
 
-copy_less_than_4:
+.Lcopy_less_than_4:
         /* Get here if less than 4 bytes to copy, -4 <= r2 < 0.  */
 
         /* Restore the count, check if there is more to copy.  */
         adds    r2, r2, #4
-        beq     return                          /* If r2 == 0.  */
+        beq     .Lreturn                          /* If r2 == 0.  */
 
         /* Get here with r2 is in {{1,2,3}}={{01,10,11}}.  */
         /* Logical shift left r2, insert 0s, update flags.  */
@@ -158,12 +158,12 @@ copy_less_than_4:
         strbcs  r4, [r0], #1
         strbcs  r5, [r0]
 
-return:
+.Lreturn:
         /* Restore registers: optimized pop {{r0, r4, r5, pc}}   */
         ldrd r4, r5, [sp], #8
         pop {{r0, pc}}         /* This is the only return point of memcpy.  */
 
-dst_not_word_aligned:
+.Ldst_not_word_aligned:
 
        /* Get here when dst is not aligned and ip has the last 2 bits of dst,
           i.e., ip is the offset of dst from word.
@@ -193,7 +193,7 @@ dst_not_word_aligned:
        /* Update the count.
           ip holds the number of bytes we have just copied.  */
         subs    r2, r2, ip                        /* r2 = r2 - ip.  */
-        blt     copy_less_than_4                  /* If r2 < ip.  */
+        blt     .Lcopy_less_than_4                  /* If r2 < ip.  */
 
        /* Get here if there are more than 4 bytes to copy.
           Check if src is aligned.  If beforehand src and dst were not word
@@ -201,9 +201,9 @@ dst_not_word_aligned:
 	  word-aligned, and we can copy the rest efficiently (without
 	  shifting).  */
         ands    ip, r1, #3                    /* ip = last 2 bits of src.  */
-        beq     word_aligned                  /* If r1 is word-aligned.  */
+        beq     .Lword_aligned                  /* If r1 is word-aligned.  */
 
-src_not_word_aligned:
+.Lsrc_not_word_aligned:
        /* Get here when src is not word-aligned, but dst is word-aligned.
           The number of bytes that remains to copy is r2+4.  */
 
@@ -228,7 +228,7 @@ src_not_word_aligned:
         /* Get here if less than 64 bytes to copy, -64 <= r2 < 0.
            Check if there is more than 3 bytes to copy.  */
         adds    r2, r2, #60
-        blt     copy_less_than_4
+        blt     .Lcopy_less_than_4
 
 9:
        /* Get here if there is less than 64 but at least 4 bytes to copy,
@@ -238,43 +238,4 @@ src_not_word_aligned:
         subs    r2, r2, #4
         bge     9b
 
-        b       copy_less_than_4
-
-
-	.syntax unified
-	.global __aeabi_memcpy4
-	.type   __aeabi_memcpy4, %function
-__aeabi_memcpy4:
-	/* Assumes that both of its arguments are 4-byte aligned.  */
-
-        push {{r0, lr}}
-        strd r4, r5, [sp, #-8]!
-
-        /* Is there at least 4 bytes to copy?  */
-        subs    r2, r2, #4
-        blt     copy_less_than_4       /* If n < 4.  */
-
-	bl	word_aligned
-
-	.syntax unified
-	.global __aeabi_memcpy8
-	.type   __aeabi_memcpy8, %function
-__aeabi_memcpy8:
-	/* Assumes that both of its arguments are 8-byte aligned.  */
-
-        push {{r0, lr}}
-        strd r4, r5, [sp, #-8]!
-
-	/* Is there at least 4 bytes to copy?  */
-        subs    r2, r2, #4
-        blt     copy_less_than_4	/* If n < 4.  */
-
-        /* Is there at least 8 bytes to copy?  */
-        subs    r2, r2, #4
-        blt     copy_less_than_8	/* If n < 8.  */
-
-	/* Is there at least 64 bytes to copy?  */
-	subs	r2, r2, #56
-	blt	copy_less_than_64	/* if n + 8 < 64.  */
-
-	bl	two_word_aligned
+        b       .Lcopy_less_than_4
