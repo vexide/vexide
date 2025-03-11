@@ -36,11 +36,20 @@ Before releasing:
 
 ### Fixed
 
+- Fixed an issue with `Metadata::len` using the wrong condition. (#314)
+
 ### Changed
+
+- Made `File::tell` Public and Infaliable. (#314)
+- Refactored labels in `overwriter_aeabi_memcpy.S` to reduce collisions. (#314)
 
 ### Removed
 
+- Removed unused `__aeabi_memcpy4` and `__aeabi_memcpy8` labels from `overwriter_aeabi_memcpy.S`. (#314)
+
 ### New Contributors
+
+- GLS <<contact@glstudios.org>> made their first contribution in #314!
 
 ## [0.7.0]
 
