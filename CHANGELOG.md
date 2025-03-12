@@ -41,11 +41,8 @@ Before releasing:
 ### Changed
 
 - Made `File::tell` Public and Infaliable. (#314)
-- Refactored labels in `overwriter_aeabi_memcpy.S` to reduce collisions. (#314)
 
 ### Removed
-
-- Removed unused `__aeabi_memcpy4` and `__aeabi_memcpy8` labels from `overwriter_aeabi_memcpy.S`. (#314)
 
 ### New Contributors
 
