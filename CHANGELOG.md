@@ -40,7 +40,7 @@ Before releasing:
 
 ### Changed
 
-- Made `File::tell` Public and Infaliable. (#314)
+- Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
 
 ### Removed
 
