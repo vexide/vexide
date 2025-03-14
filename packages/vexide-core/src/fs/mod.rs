@@ -560,7 +560,7 @@ impl File {
 
     /// Returns the seek head of the file, in bytes
     #[must_use]
-    pub fn tell(&self) -> u64 {
+    pub fn stream_position(&self) -> u64 {
         let position = unsafe { vex_sdk::vexFileTell(self.fd) };
         debug_assert!(
             position >= 0,
@@ -811,14 +811,14 @@ impl Seek for File {
                     // we have to calculate the offset from the stream position ourselves.
                     map_fresult(vex_sdk::vexFileSeek(
                         self.fd,
-                        try_convert_offset((self.tell() as i64) + offset)?,
+                        try_convert_offset((self.stream_position() as i64) + offset)?,
                         SEEK_SET,
                     ))?;
                 }
             },
         }
 
-        Ok(self.tell())
+        Ok(self.stream_position())
     }
 }
 
