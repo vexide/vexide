@@ -542,7 +542,7 @@ impl Metadata {
     #[allow(clippy::len_without_is_empty)]
     #[must_use]
     pub fn len(&self) -> Option<u64> {
-        self.file_type.is_dir.then_some(self.size)
+        (!self.file_type.is_dir).then_some(self.size)
     }
 }
 
@@ -558,14 +558,15 @@ impl File {
         }
     }
 
-    fn tell(&self) -> io::Result<u64> {
+    /// Returns the seek head of the file, in bytes
+    #[must_use]
+    pub fn stream_position(&self) -> u64 {
         let position = unsafe { vex_sdk::vexFileTell(self.fd) };
-        position.try_into().map_err(|_| {
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Failed to get current location in file",
-            )
-        })
+        debug_assert!(
+            position >= 0,
+            "vexFileTell returned error (negative result)"
+        );
+        position as u64
     }
 
     /// Attempts to open a file in read-only mode.
@@ -810,14 +811,14 @@ impl Seek for File {
                     // we have to calculate the offset from the stream position ourselves.
                     map_fresult(vex_sdk::vexFileSeek(
                         self.fd,
-                        try_convert_offset((self.tell()? as i64) + offset)?,
+                        try_convert_offset((self.stream_position() as i64) + offset)?,
                         SEEK_SET,
                     ))?;
                 }
             },
         }
 
-        self.tell()
+        Ok(self.stream_position())
     }
 }
 

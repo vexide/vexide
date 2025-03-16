@@ -36,11 +36,17 @@ Before releasing:
 
 ### Fixed
 
+- Fixed an issue with `Metadata::len` using the wrong condition. (#314)
+
 ### Changed
+
+- Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
 
 ### Removed
 
 ### New Contributors
+
+- GLS <<contact@glstudios.org>> made their first contribution in #314!
 
 ## [0.7.0]
 
