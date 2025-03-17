@@ -1,14 +1,65 @@
-//! Startup routine and behavior in `vexide`.
+//! User program startup routines.
+//!
+//! This crate provides runtime infrastructure for booting VEX user programs from Rust
+//! code.
 //!
 //! - User code begins at an assembly routine called `_boot`, which sets up the stack
 //!   section before jumping to a user-provided `_start` symbol, which should be your
 //!   rust entrypoint. This routine can be found in `boot.S`.
 //!
-//! - From there, the Rust entrypoint may call the [`startup`] function to finish the
-//!   startup process by clearing the `.bss` section (intended for uninitialized data)
+//! - From there, the Rust `_start` entrypoint may call the [`startup`] function to finish
+//!   the startup process by clearing the `.bss` section (which stores uninitialized data)
 //!   and initializing vexide's heap allocator.
 //!
-//! This crate is NOT a crt0 implementation. No global constructors are called.
+//! This crate does NOT provide a `libc` [crt0 implementation]. No `libc`-style global
+//! constructors are called. This means that the [`__libc_init_array`] function must be
+//! explicitly called if you wish to link to C libraries.
+//!
+//! [crt0 implementation]: https://en.wikipedia.org/wiki/Crt0
+//! [`__libc_init_array`]: https://maskray.me/blog/2021-11-07-init-ctors-init-array
+//!
+//! # Example
+//!
+//! This is an example of a minimal user program that boots without using the main vexide
+//! runtime or the `#[vexide::main]` macro.
+//!
+//! ```
+//! #![no_main]
+//! #![no_std]
+//!
+//! use vexide_startup::{
+//!     CodeSignature, ProgramFlags, ProgramOwner, ProgramType,
+//! };
+//!
+//! // SAFETY: This symbol is unique and is being used to start the runtime.
+//! #[unsafe(no_mangle)]
+//! unsafe extern "C" fn _start() -> ! {
+//!     // Setup the heap, zero bss, apply patches, etc...
+//!     unsafe {
+//!         vexide_startup::startup();
+//!     }
+//!
+//!     // Rust code goes here!
+//!
+//!     // Exit the program once we're done.
+//!     vexide_core::program::exit();
+//! }
+//!
+//! // Program header (placed at the first 20 bytes on the binary).
+//! #[unsafe(link_section = ".code_signature")]
+//! #[used] // This is needed to prevent the linker from removing this object in release builds
+//! static CODE_SIG: CodeSignature = CodeSignature::new(
+//!     ProgramType::User,
+//!     ProgramOwner::Partner,
+//!     ProgramFlags::empty(),
+//! );
+//!
+//! // Panic handler (this would normally be provided by `veixde_panic`).
+//! #[panic_handler]
+//! const fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
+//!     loop {}
+//! }
+//! ```
 
 #![no_std]
 
@@ -16,7 +67,6 @@ pub mod banner;
 mod code_signature;
 mod patcher;
 
-use banner::themes::BannerTheme;
 pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
 /// Load address of user programs in memory.
@@ -42,17 +92,26 @@ unsafe extern "C" {
 // instructions executed by the user processor when the program runs.
 core::arch::global_asm!(include_str!("./boot.S"));
 
-/// Startup Routine
+/// Rust runtime initialization.
 ///
-/// - Sets up the heap allocator if necessary.
-/// - Zeroes the `.bss` section if necessary.
-/// - Prints the startup banner with a specified theme, if enabled.
+/// This function performs some prerequestites to allow Rust code to properly run. It must
+/// be called once before any static data access or heap allocation is done. When using
+/// `vexide`, this function is already called for you by the `#[vexide::main]` macro, so
+/// there's no need to call it yourself.
+///
+/// This function does the following initialization:
+///
+/// - Fills the `.bss` (uninitialized statics) section with zeroes.
+/// - Sets up the global heap allocator if the `allocator` feature is specified.
+/// - Applies [differential upload patches] to the program if a patch file exists in memory.
+///
+/// [differential upload patches]: https://vexide.dev/docs/building-uploading/#uploading-strategies
 ///
 /// # Safety
 ///
-/// Must be called once at the start of program execution after the stack has been setup.
+/// Must be called *once and only once* at the start of program execution.
 #[inline]
-pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
+pub unsafe fn startup() {
     #[cfg(target_vendor = "vex")]
     unsafe {
         // Clear the .bss (uninitialized statics) section by filling it with zeroes.
@@ -76,10 +135,5 @@ pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
         vexide_core::allocator::claim(&raw mut __patcher_ram_start, &raw mut __patcher_ram_end);
-    }
-
-    // Print the banner
-    if BANNER {
-        banner::print(theme);
     }
 }

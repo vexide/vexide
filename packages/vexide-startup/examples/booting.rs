@@ -16,8 +16,11 @@ use vexide_startup::{
 unsafe extern "C" fn _start() -> ! {
     // Setup the heap, zero bss, apply patches, etc...
     unsafe {
-        vexide_startup::startup::<true>(THEME_DEFAULT);
+        vexide_startup::startup();
     }
+
+    // Print the vexide banner
+    vexide_startup::banner::print(THEME_DEFAULT);
 
     // Draw something to the screen to test if the program is running.
     let test_box = Box::new(100);
