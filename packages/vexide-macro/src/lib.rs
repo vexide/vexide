@@ -216,7 +216,8 @@ mod test {
             quote! {
                 #[no_mangle]
                 unsafe extern "C" fn _start() -> ! {
-                    ::vexide::startup::startup::<true>(::vexide::startup::banner::themes::THEME_DEFAULT);
+                    ::vexide::startup::startup();
+                    ::vexide::startup::banner::print(::vexide::startup::banner::themes::THEME_DEFAULT);
 
                     #source
 
@@ -248,8 +249,7 @@ mod test {
                 code_sig: None,
             },
         );
-        assert!(entrypoint.to_string().contains("false"));
-        assert!(!entrypoint.to_string().contains("true"));
+        assert!(!entrypoint.to_string().contains("banner"));
 
         let entrypoint = make_entrypoint(
             &input,
@@ -259,8 +259,7 @@ mod test {
                 code_sig: None,
             },
         );
-        assert!(entrypoint.to_string().contains("true"));
-        assert!(!entrypoint.to_string().contains("false"));
+        assert!(entrypoint.to_string().contains("banner"));
     }
 
     #[test]
