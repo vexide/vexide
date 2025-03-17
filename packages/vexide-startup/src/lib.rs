@@ -11,7 +11,6 @@
 //! This crate is NOT a crt0 implementation. No global constructors are called.
 
 #![no_std]
-#![allow(clippy::needless_doctest_main)]
 
 pub mod banner;
 mod code_signature;
@@ -25,8 +24,9 @@ const USER_MEMORY_START: u32 = 0x0380_0000;
 
 // Linkerscript Symbols
 //
-// All of these external symbols are defined in our linkerscript (link/v5.ld) and don't have real types
-// or values, but a pointer to them points to the address of their location defined in the linkerscript.
+// All of these external symbols are defined in our linkerscript (link/v5.ld) and don't have
+// real types or values, but a pointer to them points to the address of their location defined
+// in the linkerscript.
 unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
