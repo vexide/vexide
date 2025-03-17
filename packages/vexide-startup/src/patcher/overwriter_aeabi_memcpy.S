@@ -26,7 +26,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* NOTE: This ifdef MUST match the one in aeabi_memcpy.c.  */
 .section .overwriter, "ax"
 
 .global __overwriter_aeabi_memcpy

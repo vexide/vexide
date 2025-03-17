@@ -2,7 +2,7 @@
 //!
 //! - User code begins at an assembly routine called `_boot`, which sets up the stack
 //!   section before jumping to a user-provided `_start` symbol, which should be your
-//!   rust entrypoint.
+//!   rust entrypoint. This routine can be found in `boot.S`.
 //!
 //! - From there, the Rust entrypoint may call the [`startup`] function to finish the
 //!   startup process by clearing the `.bss` section (intended for uninitialized data)
@@ -38,49 +38,9 @@ unsafe extern "C" {
     static mut __bss_end: u32;
 }
 
-// This is the true entrypoint of vexide, containing the first instructions
-// of user code executed before anything else. This is written in assembly to
-// ensure that it stays the same across compilations (a requirement of the patcher),
-//
-// This routine loads the stack pointer to the stack region specified in our
-// linkerscript, makes a copy of program memory for the patcher if needed, then
-// branches to the Rust entrypoint (_start) created by the #[vexide::main] macro.
-core::arch::global_asm!(
-    r#"
-.section .boot, "ax"
-.global _boot
-
-_boot:
-    @ Load the user program stack.
-    @
-    @ This technically isn't required, as VEXos already sets up a stack for CPU1,
-    @ but that stack is relatively small and we have more than enough memory
-    @ available to us for this.
-    ldr sp, =__stack_top
-
-    @ Before any Rust code runs, we need to memcpy the currently running binary to
-    @ 0x07C00000 if a patch file is loaded into memory. See the documentation in
-    @ `patcher/mod.rs` for why we want to do this.
-
-    @ Check for patch magic at 0x07A00000.
-    mov r0, #0x07A00000
-    ldr r0, [r0]
-    ldr r1, =0xB1DF
-    cmp r0, r1
-
-    @ Prepare to memcpy binary to 0x07C00000
-    mov r0, #0x07C00000 @ memcpy dest -> r0
-    mov r1, #0x03800000 @ memcpy src -> r1
-    ldr r2, =0x07A0000C @ the length of the binary is stored at 0x07A0000C
-    ldr r2, [r2] @ memcpy size -> r2
-
-    @ Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
-    bleq __overwriter_aeabi_memcpy
-
-    @ Jump to the Rust entrypoint.
-    b _start
-"#
-);
+// Include the first-stage assembly entrypoint. This routine contains the first
+// instructions executed by the user processor when the program runs.
+core::arch::global_asm!(include_str!("./boot.S"));
 
 /// Startup Routine
 ///
