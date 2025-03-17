@@ -4,14 +4,14 @@
 #![no_std]
 
 extern crate alloc;
+
 use alloc::boxed::Box;
 
 use vexide_core::println;
-use vexide_startup::{
-    banner::themes::THEME_DEFAULT, CodeSignature, ProgramFlags, ProgramOwner, ProgramType,
-};
+use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
-// SAFETY: This symbol is unique and is being used to start the vexide runtime.
+// SAFETY: This function is unique and is being used to start the vexide runtime.
+// It will be called by the _boot assembly routine after the stack has been setup.
 #[unsafe(no_mangle)]
 unsafe extern "C" fn _start() -> ! {
     // Setup the heap, zero bss, apply patches, etc...
@@ -19,12 +19,9 @@ unsafe extern "C" fn _start() -> ! {
         vexide_startup::startup();
     }
 
-    // Print the vexide banner
-    vexide_startup::banner::print(THEME_DEFAULT);
-
-    // Draw something to the screen to test if the program is running.
-    let test_box = Box::new(100);
+    let test_box = Box::new(100); // On the heap to demonstrate allocation.
     unsafe {
+        // Draw something to the screen to test if the program is running.
         vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
     }
 

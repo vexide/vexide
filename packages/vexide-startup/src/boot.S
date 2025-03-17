@@ -19,19 +19,17 @@ _boot:
     @ available to us for this.
     @
     @ SAFETY: Doing this should be safe, since VEXos doesn't seem to use its existing
-    @ stack after calling user code. Assuming that the variables on the previous stack
-    @ are never read or written to during the execution of the user program, then this
-    @ should be a safe operation.
+    @ stack after calling user code. This opperation is safe assuming that the variables
+    @ on the previous stack are never read or written to during execution of the program.
     ldr sp, =__stack_top
 
     @ Before any Rust code runs, we need to memcpy the currently running binary to
     @ 0x07C00000 if a patch file is loaded into memory.
     @
     @ We do this since we need an unmodified copy of the base binary to run the
-    @ patcher correctly. Since Rust code will perform modifications by writing to
-    @ `.data` and `.bss`, we can't reference running program memory in the patcher,
-    @ so we must make a carbon copy of it before any Rust code gets the chance to
-    @ write to these sections.
+    @ patcher correctly. Since Rust code will modify the binary by writing to `.data`
+    @ and `.bss`, we can't reference program memory in the patcher so we must make a
+    @ carbon copy of it before any Rust code gets the chance to write to these sections.
 
     @ Check if a patch file is loaded into memory by reading the first four bytes
     @ at the expected location (0x07A00000) and checking if they equal the magic
