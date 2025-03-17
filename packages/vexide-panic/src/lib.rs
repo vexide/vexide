@@ -12,8 +12,10 @@ use alloc::{
     boxed::Box,
     string::{String, ToString},
 };
-use core::sync::atomic::{AtomicBool, Ordering};
-use core::fmt::Write;
+use core::{
+    fmt::Write,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use vexide_core::{backtrace::Backtrace, println, sync::Mutex};
 #[cfg(feature = "display_panics")]
