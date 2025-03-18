@@ -8,14 +8,14 @@
 
 extern crate alloc;
 
-#[allow(unused_imports)]
 use alloc::{
     boxed::Box,
     string::{String, ToString},
 };
-use core::sync::atomic::{AtomicBool, Ordering};
-#[allow(unused_imports)]
-use core::{cell::UnsafeCell, fmt::Write};
+use core::{
+    fmt::Write,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use vexide_core::{backtrace::Backtrace, println, sync::Mutex};
 #[cfg(feature = "display_panics")]

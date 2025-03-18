@@ -13,6 +13,7 @@ __program_ram_end = __program_ram_start + __program_ram_length;
 __patcher_ram_start = 0x07A00000;
 __patcher_ram_length = 0x600000; /* 6mb total, 2mb for each subsection. */
 __patcher_ram_end = __patcher_ram_start + __patcher_ram_length; /* End of CPU1 RWX memory block. */
+__patcher_section_length = 0x200000;
 
 __code_signature_length = 0x20;
 
@@ -138,6 +139,25 @@ SECTIONS {
         . += __stack_length;
         __stack_top = .;
     } > PROGRAM_RAM
+
+    /* Patcher Memory */
+    .patcher_patch (NOLOAD) : {
+        __patcher_patch_start = .;
+        . += __patcher_section_length;
+        __patcher_patch_end = .;
+    } > PATCHER_RAM
+
+    .patcher_base_copy (NOLOAD) : {
+        __patcher_base_start = .;
+        . += __patcher_section_length;
+        __patcher_base_end = .;
+    } > PATCHER_RAM
+
+    .patcher_new (NOLOAD) : {
+        __patcher_new_start = .;
+        . += __patcher_section_length;
+        __patcher_new_end = .;
+    } > PATCHER_RAM
 
     /*
      * `.ARM.attributes` contains arch metadata for compatibility purposes, but we

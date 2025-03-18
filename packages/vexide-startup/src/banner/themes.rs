@@ -1,4 +1,4 @@
-//! Vexide banner customization.
+//! vexide banner customization.
 //!
 //! This module contains multiple premade themes including:
 //! - [The default theme](THEME_DEFAULT)
@@ -50,8 +50,8 @@ macro_rules! ansi_rgb_bold {
     };
 }
 
-#[derive(Clone, Copy, Debug)]
 /// Banner display options
+#[derive(Clone, Copy, Debug)]
 pub struct BannerTheme {
     /// The emoji to be displayed nex to the vexide version
     pub emoji: &'static str,

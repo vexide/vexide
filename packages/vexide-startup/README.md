@@ -7,4 +7,3 @@ This includes:
 - Code signature/program header types
 - BSS section handling
 - Global allocator setup for [`vexide_core`](https://crates.io/crates/vexide_core).
-- vexos background processing
