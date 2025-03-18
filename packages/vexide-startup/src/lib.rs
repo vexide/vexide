@@ -27,9 +27,7 @@
 //! #![no_main]
 //! #![no_std]
 //!
-//! use vexide_startup::{
-//!     CodeSignature, ProgramFlags, ProgramOwner, ProgramType,
-//! };
+//! use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 //!
 //! // SAFETY: This symbol is unique and is being used to start the runtime.
 //! #[unsafe(no_mangle)]
