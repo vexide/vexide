@@ -25,6 +25,7 @@ workspace = true
 
 [features]
 default = ["allocator"]
+libc = []
 allocator = ["vexide-core/allocator"]
 
 [package.metadata.docs.rs]

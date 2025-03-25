@@ -37,6 +37,11 @@ impl<T: Termination, E: Debug> Termination for Result<T, E> {
 
 const FLUSH_TIMEOUT: Duration = Duration::from_millis(15);
 
+unsafe extern "C" {
+    #[cfg(feature = "libc")]
+    unsafe fn __libc_fini_array();
+}
+
 /// Exits the program using `vexSystemExitRequest`.
 ///
 /// This function will block up to 15mS to allow the serial buffer to flush, then either exit the program or
@@ -58,6 +63,9 @@ pub fn exit() -> ! {
     let exit_time = Instant::now();
 
     unsafe {
+        #[cfg(feature = "libc")]
+        __libc_fini_array();
+
         // Force the serial buffer to flush
         while exit_time.elapsed() < FLUSH_TIMEOUT {
             vexTasksRun();

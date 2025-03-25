@@ -16,6 +16,7 @@ use super::{powi_impl, Float};
 /// This is required, since the version of libm we used (an optimized version) from
 /// the arm-none-eabi-gcc toolchain requires this symbol to be present here. In the
 /// future, we may be able to get our own version compiled with -fno-math-errno.
+#[cfg(not(feature = "libc"))]
 #[allow(non_upper_case_globals)]
 static mut errno: c_int = 0;
 
@@ -27,6 +28,7 @@ static mut errno: c_int = 0;
 ///
 /// This function returns a raw pointer to a mutable static. It is intended for
 /// interoptability with libm.
+#[cfg(not(feature = "libc"))]
 #[unsafe(no_mangle)] // SAFETY: libm requires this symbol to exist, and this is the only place it is defined
 unsafe extern "C" fn __errno() -> *mut c_int {
     &raw mut errno

@@ -41,6 +41,7 @@ workspace = true
 
 [features]
 default = ["backtraces"]
+libc = []
 force_rust_libm = ["dep:libm"]
 backtraces = ["dep:vex-libunwind"]
 allocator = ["dep:talc"]
