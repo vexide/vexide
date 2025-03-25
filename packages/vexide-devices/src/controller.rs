@@ -527,7 +527,7 @@ impl ControllerScreen {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
     ///
-    ///     _ = controller.try_set_text("Hello, world!", 0, 0);
+    ///     _ = controller.try_set_text("Hello, world!", 1, 1);
     /// }
     /// ```
     pub fn try_set_text(
@@ -540,12 +540,12 @@ impl ControllerScreen {
 
         assert!(
             column <= Self::MAX_COLUMNS as u8 && column != 0,
-            "Invalid column number ({column}) is greater than the maximum number of columns ({})",
+            "{column} is not a valid controller column number. Must be in the range [1, {}]",
             ControllerScreen::MAX_COLUMNS
         );
         assert!(
             line <= Self::MAX_LINES as u8 && line != 0,
-            "Invalid line number ({line}) is greater than the maximum number of line ({})",
+            "{line} is not a valid controller line number. Must be in the range [1, {}]",
             ControllerScreen::MAX_LINES
         );
 
