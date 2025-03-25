@@ -37,8 +37,8 @@ impl<T: Termination, E: Debug> Termination for Result<T, E> {
 
 const FLUSH_TIMEOUT: Duration = Duration::from_millis(15);
 
+#[cfg(feature = "libc")]
 unsafe extern "C" {
-    #[cfg(feature = "libc")]
     unsafe fn __libc_fini_array();
 }
 

@@ -54,6 +54,7 @@ async = ["dep:vexide-async"]
 devices = ["dep:vexide-devices"]
 dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]
 smart_leds_trait = ["devices", "vexide-devices/smart_leds_trait"]
+libc = ["vexide-core/libc", "vexide-startup/libc"]
 
 panic = ["dep:vexide-panic"]
 display_panics = ["panic", "vexide-panic/display_panics"]
