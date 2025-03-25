@@ -7,7 +7,7 @@ __patcher_overwrite:
 
     @ Execute memcpy to copy our patched program at 0x07E00000 onto active memory.
     ldr r0, =__program_ram_start      @ memcpy dest -> r0
-    ldr r1, =__patcher_base_start     @ memcpy src -> r1
+    ldr r1, =__patcher_new_start      @ memcpy src -> r1
     ldr r2, =__patcher_patch_start+16 @ New binary len is stored as metadata in the patch
     ldr r2, [r2]                      @ memcpy size -> r2
     bl __overwriter_aeabi_memcpy

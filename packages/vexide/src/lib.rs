@@ -5,7 +5,8 @@
 //!
 //! ## Getting Started
 //!
-//! If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment
+//! If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/),
+//! which provide step-by-step instructions for setting up a development environment
 //! and using vexide's common features.
 //!
 //! # Usage
@@ -20,7 +21,8 @@
 //! }
 //!```
 //!
-//! Check out our [examples](https://github.com/vexide/vexide/tree/main/examples/) for more examples of different features.
+//! Check out our [examples](https://github.com/vexide/vexide/tree/main/examples/) for more examples
+//! of different features.
 
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
