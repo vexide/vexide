@@ -7,7 +7,7 @@
 //!
 //! While this module largely mimicks Rust's `std::fs` API, there are several major
 //! limitations in the VEXos filesystem. This module only provides a small subset of
-//! what would normally be expected in a typical Rust enviornment. Notably:
+//! what would normally be expected in a typical Rust environment. Notably:
 //!
 //! - Files cannot be opened as read and write at the same time (only one). To read a
 //!   file that you’ve written to, you’ll need to drop your written file descriptor and

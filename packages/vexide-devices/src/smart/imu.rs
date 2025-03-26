@@ -296,7 +296,7 @@ impl InertialSensor {
     /// }
     /// ```
     ///
-    /// Calibrating in a competition enviornment:
+    /// Calibrating in a competition environment:
     ///
     /// ```
     /// use vexide::prelude::*;
