@@ -1,7 +1,6 @@
 //! User program startup routines.
 //!
-//! This crate provides runtime infrastructure for booting VEX user programs from Rust
-//! (and optionally C) code.
+//! This crate provides runtime infrastructure for booting VEX user programs from Rust code.
 //!
 //! - User code begins at an assembly routine called `_boot`, which sets up the stack
 //!   section before jumping to a user-provided `_start` symbol, which should be your
@@ -11,10 +10,12 @@
 //!   the startup process by clearing the `.bss` section (which stores uninitialized data)
 //!   and initializing vexide's heap allocator.
 //!
-//! If using the `libc` feature, this crate will also provide a [crt0 implementation] that
-//! calls `libc`-style global constructors for compatibility with C static libraries.
+//! This crate does NOT provide a `libc` [crt0 implementation]. No `libc`-style global
+//! constructors are called. This means that the [`__libc_init_array`] function must be
+//! explicitly called if you wish to link to C libraries.
 //!
 //! [crt0 implementation]: https://en.wikipedia.org/wiki/Crt0
+//! [`__libc_init_array`]: https://maskray.me/blog/2021-11-07-init-ctors-init-array
 //!
 //! # Example
 //!
@@ -82,9 +83,6 @@ unsafe extern "C" {
 
     static mut __bss_start: u32;
     static mut __bss_end: u32;
-
-    #[cfg(feature = "libc")]
-    unsafe fn __libc_init_array();
 }
 
 // Include the first-stage assembly entrypoint. This routine contains the first
@@ -134,8 +132,5 @@ pub unsafe fn startup() {
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
         vexide_core::allocator::claim(&raw mut __patcher_ram_start, &raw mut __patcher_ram_end);
-
-        #[cfg(feature = "libc")]
-        __libc_init_array();
     }
 }
