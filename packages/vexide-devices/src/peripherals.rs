@@ -25,7 +25,7 @@
 //!
 //! By extension of this, only one mutable reference to a piece of hardware may exist. This
 //! pattern of treating peripherals as a singleton is fairly common in the Rust embedded scene,
-//! and is extensively coevered in [The Embedded Rust Book](https://docs.rust-embedded.org/book/peripherals/singletons.html).
+//! and is extensively covered in [The Embedded Rust Book](https://docs.rust-embedded.org/book/peripherals/singletons.html).
 //!
 //! # Usage
 //!

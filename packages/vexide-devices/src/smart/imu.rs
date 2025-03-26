@@ -49,7 +49,7 @@
 //!
 //! If the IMU loses power due to a disconnect — even momentarily, all calibration data will be lost
 //! and VEXos will re-initiate calibration automatically. The robot cannot be moving when this occurs
-//! due to the aformentioned unpredictable behavior. As such, it is vital that the IMU maintain a stable
+//! due to the aforementioned unpredictable behavior. As such, it is vital that the IMU maintain a stable
 //! connection to the Brain and voltage supply during operation.
 
 use core::{
@@ -594,7 +594,7 @@ impl InertialSensor {
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
     ///
-    ///     // Read out accleration values every 10mS
+    ///     // Read out acceleration values every 10mS
     ///     loop {
     ///         if let Ok(acceleration) = sensor.acceleration() {
     ///             println!(
