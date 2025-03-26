@@ -11,7 +11,7 @@
 //!   the startup process by clearing the `.bss` section (which stores uninitialized data)
 //!   and initializing vexide's heap allocator.
 //!
-//! If using the `crt0` feature, this crate will also provide a [crt0 implementation] that
+//! If using the `libc` feature, this crate will also provide a [crt0 implementation] that
 //! calls `libc`-style global constructors for compatibility with C static libraries.
 //!
 //! [crt0 implementation]: https://en.wikipedia.org/wiki/Crt0
