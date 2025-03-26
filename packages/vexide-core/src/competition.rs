@@ -49,7 +49,7 @@
 //! # Reading Competition State
 //!
 //! In addition to providing hooks into different competition modes, this module also provides
-//! functions for reading information about the competition enviornment, such as the current match
+//! functions for reading information about the competition environment, such as the current match
 //! mode, match control hardware, and whether the robot is enabled or disabled. This is provided
 //! by the [`is_connected`], [`system`], [`mode`], and [`status`] functions.
 

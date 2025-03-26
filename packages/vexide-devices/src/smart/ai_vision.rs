@@ -596,7 +596,7 @@ impl AiVisionSensor {
     /// ```
     pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
         assert!(
-            !(1..=7).contains(&id),
+            (1..=7).contains(&id),
             "The given ID ({id}) is out of the interval [1, 7]."
         );
         self.validate_port()?;
@@ -650,7 +650,7 @@ impl AiVisionSensor {
     /// ```
     pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>> {
         assert!(
-            !(1..=7).contains(&id),
+            (1..=7).contains(&id),
             "The given ID ({id}) is out of the interval [1, 7]."
         );
         self.validate_port()?;

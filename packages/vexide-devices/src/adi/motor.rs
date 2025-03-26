@@ -20,7 +20,7 @@
 //!
 //! Because these motors are no longer V5RC legal, they are not affected by
 //! competition control restrictions, nor do they have any software-imposed
-//! current limitations beyond the aformentioned PTC circuit.
+//! current limitations beyond the aforementioned PTC circuit.
 //!
 //! [Motor Controller 29]: https://www.vexrobotics.com/276-2193.html
 //! [Motor 393]: https://www.vexrobotics.com/393-motors.html
