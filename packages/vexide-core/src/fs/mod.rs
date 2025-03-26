@@ -5,9 +5,9 @@
 //!
 //! # VEXos Limitations
 //!
-//! While this module largely mimicks Rust's `std::fs` API, there are several major
+//! While this module largely mimics Rust's `std::fs` API, there are several major
 //! limitations in the VEXos filesystem. This module only provides a small subset of
-//! what would normally be expected in a typical Rust enviornment. Notably:
+//! what would normally be expected in a typical Rust environment. Notably:
 //!
 //! - Files cannot be opened as read and write at the same time (only one). To read a
 //!   file that you’ve written to, you’ll need to drop your written file descriptor and
@@ -46,7 +46,7 @@ pub use fs_str::{Display, FsStr, FsString};
 /// - Files MUST be opened in either `read` XOR `write` mode.
 /// - VEXos does not allow you to open a file configured as `read` and `write`
 ///   at the same time. Doing so will return an error with `File::open`. This is
-///   a fundamental limtiation of the OS.
+///   a fundamental limitation of the OS.
 ///
 /// # Examples
 ///
@@ -843,7 +843,7 @@ pub struct DirEntry {
 impl DirEntry {
     /// Returns the full path to the directory item.
     ///
-    /// This path is creeated by joining the path of the call to [`read_dir`] to the name of the file.
+    /// This path is created by joining the path of the call to [`read_dir`] to the name of the file.
     ///
     /// # Examples
     ///

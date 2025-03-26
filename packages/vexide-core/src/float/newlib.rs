@@ -27,8 +27,7 @@ static mut errno: core::ffi::c_int = 0;
 /// # Safety
 ///
 /// This function returns a raw pointer to a mutable static. It is intended for
-/// interoptability with libm.
-#[cfg(not(feature = "libc"))]
+/// compatibility with libm.
 #[unsafe(no_mangle)] // SAFETY: libm requires this symbol to exist, and this is the only place it is defined
 unsafe extern "C" fn __errno() -> *mut core::ffi::c_int {
     &raw mut errno

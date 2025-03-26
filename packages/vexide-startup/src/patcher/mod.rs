@@ -36,7 +36,7 @@ enum PatcherState {
 /// This function builds a modified version of the user program in memory with a binary patch (generated
 /// by `bidiff` in cargo-v5) applied to it, then overwrites (self-modifies) the current program with the
 /// newer version. This allows us to only upload a binary diff of what has changed from the original (the
-/// "base") file, which is significanly smaller than reuploading the entire binary every time.
+/// "base") file, which is significantly smaller than reuploading the entire binary every time.
 ///
 /// # Overview
 ///
@@ -102,7 +102,7 @@ enum PatcherState {
 /// The caller must ensure that the patch loaded at 0x07A00000 has been built using the currently running
 /// binary as the basis for the patch.
 pub(crate) unsafe fn patch() {
-    // First four byets of the patch file MUST be 0xB1DF for the patch to be applied.
+    // First four bytes of the patch file MUST be 0xB1DF for the patch to be applied.
     const PATCH_MAGIC: u32 = 0xB1DF;
 
     // Next four bytes of the patch have to match this version identifier for the patch to be applied.

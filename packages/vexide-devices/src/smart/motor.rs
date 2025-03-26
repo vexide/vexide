@@ -28,7 +28,7 @@
 //!   can disrupt operation. By restricting the stall current to 2.5A, the motor effectively avoids
 //!   undesirable performance dips and ensures that users do not inadvertently cause stall situations.
 //!
-//! - **Motor Count**: Robots that use 8 or fewer 11W motors will have the aformentioned current limit
+//! - **Motor Count**: Robots that use 8 or fewer 11W motors will have the aforementioned current limit
 //!   of 2.5A set for each motor. Robots using more than 8 motors, will have a lower default current limit
 //!   per-motor than 2.5A. This limit is determined in VEXos by a calculation accounting for the number of
 //!   motors plugged in, and the user's manually set current limits using [`Motor::set_current_limit`]. For

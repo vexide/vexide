@@ -563,7 +563,7 @@ impl GpsSensor {
     ///         0.0,
     ///     );
     ///
-    ///     // Read out accleration values every 10mS
+    ///     // Read out acceleration values every 10mS
     ///     loop {
     ///         if let Ok(acceleration) = gps.acceleration() {
     ///             println!(
