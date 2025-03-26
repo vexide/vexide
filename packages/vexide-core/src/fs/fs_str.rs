@@ -308,7 +308,7 @@ impl FsString {
     /// This function will error under the following conditions:
     ///
     /// - The capacity of the [`FsString`] has surpasses [`isize::MAX`] bytes
-    /// - An allocation error occured while reserving space.
+    /// - An allocation error occurred while reserving space.
     pub fn try_reserve(
         &mut self,
         additional: usize,
@@ -320,7 +320,7 @@ impl FsString {
     ///
     /// # Note
     ///
-    /// Reserving an exact amount of times can often negatively impact performace.
+    /// Reserving an exact amount of times can often negatively impact performance.
     /// you most likely want to use [`FsString::reserve`]
     pub fn reserve_exact(&mut self, additional: usize) {
         self.inner.reserve_exact(additional);
@@ -330,14 +330,14 @@ impl FsString {
     ///
     /// # Note
     ///
-    /// Reserving an exact amount of times can often negatively impact performace.
+    /// Reserving an exact amount of times can often negatively impact performance.
     /// you most likely want to use [`FsString::reserve`]
     ///
     /// # Errors
     /// This function will error under the following conditions:
     ///
     /// - The capacity of the [`FsString`] has surpasses [`isize::MAX`] bytes
-    /// - An allocation error occured while reserving space.
+    /// - An allocation error occurred while reserving space.
     pub fn try_reserve_exact(
         &mut self,
         additional: usize,
