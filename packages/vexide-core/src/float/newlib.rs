@@ -7,7 +7,7 @@
 //! More information (and source code) regarding newlib can be found here:
 //! <https://sourceware.org/newlib/>
 
-use core::ffi::{c_double, c_float};
+use core::ffi::{c_double, c_float, c_int};
 
 use super::{powi_impl, Float};
 
@@ -17,7 +17,7 @@ use super::{powi_impl, Float};
 /// the arm-none-eabi-gcc toolchain requires this symbol to be present here. In the
 /// future, we may be able to get our own version compiled with -fno-math-errno.
 #[allow(non_upper_case_globals)]
-static mut errno: core::ffi::c_int = 0;
+static mut errno: c_int = 0;
 
 /// Returns the a pointer to errno in memory
 ///
@@ -28,7 +28,7 @@ static mut errno: core::ffi::c_int = 0;
 /// This function returns a raw pointer to a mutable static. It is intended for
 /// compatibility with libm.
 #[unsafe(no_mangle)] // SAFETY: libm requires this symbol to exist, and this is the only place it is defined
-unsafe extern "C" fn __errno() -> *mut core::ffi::c_int {
+unsafe extern "C" fn __errno() -> *mut c_int {
     &raw mut errno
 }
 
