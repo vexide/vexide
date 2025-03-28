@@ -158,12 +158,12 @@ pub(crate) unsafe fn patch() {
     }
 }
 
-/// Bipatch Algorithm
+/// `bipatch` Algorithm
 ///
 /// This function writes into `new` given an older `base` reference buffer and a [bidiff]-compatible
 /// differential patch buffer that is designed to be applied over the base to build a new binary.
 ///
-/// [bipatch]: https://github.com/divvun/bidiff
+/// [bidiff]: https://github.com/divvun/bidiff
 ///
 /// This is essentially a port of <https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs>
 // NOTE: LLVM should always inline this function since it's only called once.
