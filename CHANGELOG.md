@@ -37,6 +37,9 @@ Before releasing:
 ### Fixed
 
 - Fixed an issue with `Metadata::len` using the wrong condition. (#314)
+- Fixed backwards assertion logic causing a panic in `AiVision::color` and `AiVision::set_color`. (#316)
+- `vexide::startup::startup` no longer handles banner printing and no longer takes arguments. If you wish to print a banner without using `#[vexide::main]`, consider using `vexide::startup::banner::print` instead. (#313) (**Breaking Change**)
+- Symbols within the internal implementation of the patcher's `memcpy` will no longer clash with some libc compiler intrinsics. This should only matter if are linking to C libraries. (#314)
 
 ### Changed
 
