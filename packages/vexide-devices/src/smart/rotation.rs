@@ -9,7 +9,7 @@
 //! The sensor provides absolute rotational position tracking from 0° to 360° with 0.088° accuracy. The
 //! sensor is compromised of two magnets which utilize the [Hall Effect] to indicate angular position. A
 //! chip inside the rotation sensor (a Cortex M0+) then keeps track of the total rotations of the sensor
-//! to determine total position travelled.
+//! to determine total position traveled.
 //!
 //! Position is reported by VEXos in centidegrees before being converted to an instance of [`Position`].
 //!

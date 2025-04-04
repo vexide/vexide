@@ -649,7 +649,7 @@ impl Motor {
     ///
     /// # Accuracy
     ///
-    /// In some cases, this reported value may be noisy or innaccurate, especially for systems where accurate
+    /// In some cases, this reported value may be noisy or inaccurate, especially for systems where accurate
     /// velocity control at high speeds is required (such as flywheels). If the accuracy of this value proves
     /// inadequate, you may opt to perform your own velocity calculations by differentiating [`Motor::position`]
     /// over the reported internal timestamp of the motor using [`Motor::timestamp`].
@@ -958,7 +958,7 @@ impl Motor {
     /// }
     /// ```
     ///
-    /// Reset the position of the motor to 0 degrees (analaogous to [`reset_position`](Motor::reset_position)):
+    /// Reset the position of the motor to 0 degrees (analogous to [`reset_position`](Motor::reset_position)):
     /// ```
     /// use vexide::prelude::*;
     ///

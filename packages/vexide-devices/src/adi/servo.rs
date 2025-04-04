@@ -5,7 +5,7 @@
 //! # Hardware Overview
 //!
 //! Servos are similar in both appearance and function to [`AdiMotor`](super::motor::AdiMotor)s, with the
-//! caveat that they are designed to hold a specific *angle* rather than a continious
+//! caveat that they are designed to hold a specific *angle* rather than a continuous
 //! *speed*. In other words:
 //!
 //! - Motors are designed for continuous rotation, providing variable speed and
@@ -14,7 +14,7 @@
 //!   holding a specific angle within a limited range of motion.
 //!
 //! Servos, similar to motors, are PWM controlled. They use a standard
-//! [servo control](https://en.wikipedia.org/wiki/Servo_control) singal. A PWM input of
+//! [servo control](https://en.wikipedia.org/wiki/Servo_control) signal. A PWM input of
 //! 1ms - 2ms will give full reverse to full forward, while 1.5ms is neutral.
 //!
 //! # Operating Range

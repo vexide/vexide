@@ -11,7 +11,7 @@
 //! cortex-era [Motor 393] and Motor 269 units from VEX. These are fairly
 //! standard DC motors that can be driven using standard voltage control or PWM,
 //! with an integrated PTC breaker designed to prevent damage to the motors in
-//! the event that they are overucurrent or stalled.
+//! the event that they are overcurrent or stalled.
 //!
 //! While this module provides an API similar to that of a [Smart Motor], it is
 //! in reality simply outputting an 8-bit PWM signal, which will be processed by

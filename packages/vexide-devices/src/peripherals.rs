@@ -106,7 +106,7 @@ static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 /// it has been used to create a device.
 ///
 /// If you need to store a peripherals struct for use in multiple functions, use [`DynamicPeripherals`] instead.
-/// This struct is always preferrable to [`DynamicPeripherals`] when possible.
+/// This struct is always preferable to [`DynamicPeripherals`] when possible.
 #[derive(Debug)]
 pub struct Peripherals {
     /// Brain display

@@ -203,7 +203,7 @@ pub struct AiVisionColor {
 /// A color code used by an AI Vision Sensor to detect groups of color blobs.
 ///
 /// The color code can have up to 7 color signatures.
-/// When the colors in a color code are detected next to eachother, the sensor will detect the color code.
+/// When the colors in a color code are detected next to each other, the sensor will detect the color code.
 pub struct AiVisionColorCode([Option<u8>; 7]);
 impl AiVisionColorCode {
     /// Creates a new color code with the given color signature ids.
@@ -435,7 +435,7 @@ impl AiVisionSensor {
     /// ```
     pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<()> {
         assert!(
-            !(1..=8).contains(&id),
+            (1..=8).contains(&id),
             "The given ID ({id}) is out of the interval [1, 8]."
         );
         self.validate_port()?;
@@ -507,7 +507,7 @@ impl AiVisionSensor {
     /// ```
     pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>> {
         assert!(
-            !(1..=8).contains(&id),
+            (1..=8).contains(&id),
             "The given ID ({id}) is out of the interval [1, 8]."
         );
         self.validate_port()?;

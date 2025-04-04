@@ -5,7 +5,7 @@
 //!
 //! # Hardware Overview
 //!
-//! There are two types of radios in a VEXnink connection: "manager" and "worker". A "manager" radio can transmit data at up to 1040 bytes/s
+//! There are two types of radios in a VEXlink connection: "manager" and "worker". A "manager" radio can transmit data at up to 1040 bytes/s
 //! while a "worker" radio can transmit data at up to 520 bytes/s.
 //! A connection should only ever have both types of radios.
 //!
