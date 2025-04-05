@@ -142,7 +142,7 @@ impl InertialSensor {
         Ok(())
     }
 
-    /// Returns the internal status code of the intertial sensor.
+    /// Returns the internal status code of the inertial sensor.
     ///
     /// # Errors
     ///

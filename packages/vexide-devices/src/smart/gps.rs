@@ -85,8 +85,8 @@ impl GpsSensor {
     ///
     /// `initial_heading` is a value between 0 and 360 degrees that informs the GPS of its heading at the start of the
     /// match. Similar to `initial_position`, this is useful for improving accuracy when the sensor is in close proximity
-    /// to a field wall, as the sensor's rotation values are continiously checked against the GPS field strips to prevent
-    /// drift over time. If the sensor starts too close to a field wall, providing an `initial_haeding` can help prevent
+    /// to a field wall, as the sensor's rotation values are continuously checked against the GPS field strips to prevent
+    /// drift over time. If the sensor starts too close to a field wall, providing an `initial_heading` can help prevent
     /// this drift at the start of the match.
     ///
     /// # Examples

@@ -343,7 +343,7 @@ impl VisionSensor {
     ///     _ = sensor.set_signature(1, sig_1);
     ///     _ = sensor.set_signature(2, sig_2);
     ///
-    ///     // Create a code assocating signatures 1 and 2 together.
+    ///     // Create a code associating signatures 1 and 2 together.
     ///     let code = VisionCode::from((1, 2));
     ///
     ///     // Register our code on the sensor. When we call [`VisionSensor::objects`], the associated
@@ -801,7 +801,7 @@ impl VisionSensor {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Place the sensor into "Wi-Fi mode", allowing you to connect to it via a hotspot
-    ///     // and recieve a video stream of its camera froma nother device.
+    ///     // and receive a video stream of its camera from another device.
     ///     _ = sensor.set_mode(VisionMode::WiFi);
     /// }
     /// ```
@@ -850,7 +850,7 @@ impl VisionSensor {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Place the sensor into "Wi-Fi mode", allowing you to connect to it via a hotspot
-    ///     // and recieve a video stream of its camera froma nother device.
+    ///     // and receive a video stream of its camera from another device.
     ///     _ = sensor.set_mode(VisionMode::WiFi);
     ///
     ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
