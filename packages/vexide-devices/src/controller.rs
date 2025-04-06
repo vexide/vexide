@@ -315,13 +315,13 @@ impl ControllerScreen {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
     ///
-    ///     // Write to line 0
-    ///     _ = controller.screen.set_text("Hello, world!", 0, 0).await;
+    ///     // Write to line 1
+    ///     _ = controller.screen.set_text("Hello, world!", 1, 1).await;
     ///
     ///     sleep(Duration::from_millis(500)).await;
     ///
-    ///     // Clear line 0
-    ///     _ = controller.screen.clear_line(0).await;
+    ///     // Clear line 1
+    ///     _ = controller.screen.clear_line(1).await;
     /// }
     /// ```
     #[must_use]
@@ -356,13 +356,13 @@ impl ControllerScreen {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
     ///
-    ///     // Write to line 0
-    ///     _ = controller.screen.set_text("Hello, world!", 0, 0).await;
+    ///     // Write to line 1
+    ///     _ = controller.screen.set_text("Hello, world!", 1, 1).await;
     ///
     ///     sleep(Duration::from_millis(500)).await;
     ///
-    ///     // Clear line 0
-    ///     _ = controller.screen.try_clear_line(0);
+    ///     // Clear line 1
+    ///     _ = controller.screen.try_clear_line(1);
     /// }
     /// ```
     pub fn try_clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
@@ -480,8 +480,8 @@ impl ControllerScreen {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
-    ///     _ = controller.screen.set_text("Hello, world!", 0, 0).await;
-    ///     _ = controller.screen.set_text("Hello, world!", 1, 0).await;
+    ///     _ = controller.screen.set_text("Hello, world!", 1, 1).await;
+    ///     _ = controller.screen.set_text("Hello, world!", 2, 1).await;
     /// }
     /// ```
     #[must_use]
