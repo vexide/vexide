@@ -1,7 +1,5 @@
 use varint_encoding::VarIntReader;
-use vexide_core::{io::{Cursor, Read, Seek, SeekFrom}, println};
-
-extern crate alloc;
+use vexide_core::io::{Cursor, Read, Seek, SeekFrom};
 
 mod varint_encoding;
 
