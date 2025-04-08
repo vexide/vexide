@@ -78,19 +78,16 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
         quote! { ::vexide::startup::banner::themes::THEME_DEFAULT }
     };
 
-    let banner_print = if opts.banner_enabled {
-        quote! {
-            ::vexide::startup::banner::print(#banner_theme);
-        }
+    let banner_enabled = if opts.banner_enabled {
+        quote! { true }
     } else {
-        quote! {}
+        quote! { false }
     };
 
     quote! {
         #[no_mangle]
         unsafe extern "C" fn _start() -> ! {
-            ::vexide::startup::startup();
-            #banner_print
+            ::vexide::startup::startup::<#banner_enabled>(#banner_theme);
 
             #inner
             let termination: #ret_type = ::vexide::runtime::block_on(
@@ -249,7 +246,8 @@ mod test {
                 code_sig: None,
             },
         );
-        assert!(!entrypoint.to_string().contains("banner"));
+        assert!(entrypoint.to_string().contains("false"));
+        assert!(!entrypoint.to_string().contains("true"));
 
         let entrypoint = make_entrypoint(
             &input,
@@ -259,7 +257,8 @@ mod test {
                 code_sig: None,
             },
         );
-        assert!(entrypoint.to_string().contains("banner"));
+        assert!(entrypoint.to_string().contains("false"));
+        assert!(!entrypoint.to_string().contains("true"));
     }
 
     #[test]

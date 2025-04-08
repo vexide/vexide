@@ -1,7 +1,6 @@
 use bitflags::bitflags;
 
 /// Identifies the type of binary to VEXos.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(u32)]
 #[non_exhaustive]
 pub enum ProgramType {
@@ -10,7 +9,6 @@ pub enum ProgramType {
 }
 
 /// The owner (originator) of the user program
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(u32)]
 pub enum ProgramOwner {
     /// Program is a system binary.

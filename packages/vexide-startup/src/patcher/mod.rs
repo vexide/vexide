@@ -1,5 +1,7 @@
 use varint_encoding::VarIntReader;
-use vexide_core::io::{Cursor, Read, Seek, SeekFrom};
+use vexide_core::{io::{Cursor, Read, Seek, SeekFrom}, println};
+
+extern crate alloc;
 
 mod varint_encoding;
 
@@ -11,17 +13,6 @@ mod varint_encoding;
 // In other words, this code is responsible for actually "applying" the patch.
 core::arch::global_asm!(include_str!("./overwriter_aeabi_memcpy.S"));
 core::arch::global_asm!(include_str!("./overwriter.S"));
-
-// Linkerscript Symbols
-//
-// All of these external symbols are defined in our linkerscript (link/v5.ld) and don't have
-// real types or values, but a pointer to them points to the address of their location defined
-// in the linkerscript.
-unsafe extern "C" {
-    static mut __patcher_patch_start: u32;
-    static mut __patcher_base_start: u32;
-    static mut __patcher_new_start: u32;
-}
 
 /// Internal patcher state representing what the patcher is attempting to do.
 #[derive(Debug)]
@@ -109,7 +100,7 @@ pub(crate) unsafe fn patch() {
     const PATCH_VERSION: u32 = 0x1000;
 
     /// Load address of patch files.
-    const PATCH: *mut u32 = &raw mut __patcher_patch_start;
+    const PATCH: *mut u32 = 0x07A0_0000 as _;
 
     unsafe {
         // First few bytes contain some important metadata we'll need to setup the patch.
@@ -134,7 +125,7 @@ pub(crate) unsafe fn patch() {
         // Slice of the copy of user program memory we made in vexide's `_boot` routine before any
         // Rust code had the chance to modify `.bss` or `.data`. This is our base binary.
         let base = Cursor::new(core::slice::from_raw_parts(
-            (&raw mut __patcher_base_start).cast(),
+            0x07C0_0000 as _,
             base_binary_len as usize,
         ));
 
@@ -146,7 +137,7 @@ pub(crate) unsafe fn patch() {
 
         // This is a 2mb slice of uninitialized memory that we've reserved for building the new binary in.
         let new = core::slice::from_raw_parts_mut(
-            (&raw mut __patcher_new_start).cast(),
+            0x07E0_0000 as _,
             new_binary_len as usize,
         );
 

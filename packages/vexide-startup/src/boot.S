@@ -34,16 +34,17 @@ _boot:
     @ Check if a patch file is loaded into memory by reading the first four bytes
     @ at the expected location (0x07A00000) and checking if they equal the magic
     @ header value of 0xB1DF.
-    ldr r0, =__patcher_patch_start
+    mov r0, #0x07A00000
     ldr r0, [r0]
     ldr r1, =0xB1DF
     cmp r0, r1 @ r0 == 0xB1DF?
 
     @ Prepare to memcpy binary to 0x07C00000
-    ldr r0, =__patcher_base_start     @ memcpy dest -> r0
-    ldr r1, =__program_ram_start      @ memcpy src -> r1
-    ldr r2, =__patcher_patch_start+12 @ Base binary len is stored as metadata in the patch
-    ldr r2, [r2]                      @ memcpy size -> r2
+
+    mov r0, #0x07C00000 @ memcpy dest -> r0
+    mov r1, #0x03800000 @ memcpy src -> r1
+    ldr r2, =0x07A0000C @ the length of the binary is stored at 0x07A0000C
+    ldr r2, [r2]        @ memcpy size -> r2
 
     @ Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
     bleq __overwriter_aeabi_memcpy

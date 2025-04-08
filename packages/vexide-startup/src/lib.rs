@@ -64,6 +64,7 @@ pub mod banner;
 mod code_signature;
 mod patcher;
 
+use banner::themes::BannerTheme;
 pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
 /// Load address of user programs in memory.
@@ -108,7 +109,7 @@ core::arch::global_asm!(include_str!("./boot.S"));
 ///
 /// Must be called *once and only once* at the start of program execution.
 #[inline]
-pub unsafe fn startup() {
+pub unsafe fn startup<const BANNER: bool>(theme: BannerTheme) {
     #[cfg(target_vendor = "vex")]
     unsafe {
         // Clear the .bss (uninitialized statics) section by filling it with zeroes.
@@ -133,4 +134,6 @@ pub unsafe fn startup() {
         #[cfg(feature = "allocator")]
         vexide_core::allocator::claim(&raw mut __patcher_ram_start, &raw mut __patcher_ram_end);
     }
+
+    banner::print(theme);
 }
