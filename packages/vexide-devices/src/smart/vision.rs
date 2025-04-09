@@ -115,7 +115,7 @@ impl VisionSensor {
     ///
     /// # Panics
     ///
-    /// - Panics if the given signature ID is not in the interval [0, 7).
+    /// - Panics if the given signature ID is not in the interval [1, 7].
     ///
     /// # Errors
     ///
@@ -143,8 +143,8 @@ impl VisionSensor {
     /// ```
     pub fn set_signature(&mut self, id: u8, signature: VisionSignature) -> Result<(), VisionError> {
         assert!(
-            (1..7).contains(&id),
-            "The given signature ID `{id}` is not in the expected interval [0, 7)."
+            (1..=7).contains(&id),
+            "The given signature ID `{id}` is not in the expected interval [1, 7]."
         );
         self.validate_port()?;
 
@@ -177,8 +177,8 @@ impl VisionSensor {
     /// or `None` if no signature is stored with the given ID.
     fn read_raw_signature(&self, id: u8) -> Result<Option<V5_DeviceVisionSignature>, VisionError> {
         assert!(
-            (1..7).contains(&id),
-            "The given signature ID `{id}` is not in the expected interval [0, 7)."
+            (1..=7).contains(&id),
+            "The given signature ID `{id}` is not in the expected interval [1, 7]."
         );
 
         let mut raw_signature = V5_DeviceVisionSignature::default();
@@ -218,7 +218,7 @@ impl VisionSensor {
     ///
     /// # Panics
     ///
-    /// - Panics if the given signature ID is not in the interval [0, 7).
+    /// - Panics if the given signature ID is not in the interval [1, 7].
     ///
     /// # Errors
     ///
@@ -317,7 +317,7 @@ impl VisionSensor {
     ///
     /// # Panics
     ///
-    /// - Panics if one or more of the given signature IDs are not in the interval [0, 7).
+    /// - Panics if one or more of the given signature IDs are not in the interval [1, 7].
     ///
     /// # Errors
     ///
