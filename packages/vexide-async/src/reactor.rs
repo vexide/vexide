@@ -41,7 +41,7 @@ impl Reactor {
 
     pub fn tick(&mut self) {
         if let Some(sleeper) = self.sleepers.peek_mut() {
-            if sleeper.deadline > Instant::now() {
+            if Instant::now() > sleeper.deadline {
                 PeekMut::<'_, Sleeper>::pop(sleeper).waker.wake();
             }
         }
