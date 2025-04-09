@@ -12,8 +12,8 @@ impl Sleepers {
         self.sleepers.insert(instant, waker);
     }
 
-    pub fn pop(&mut self) -> Option<Waker> {
-        self.sleepers.pop_first().map(|(_, waker)| waker)
+    pub fn pop(&mut self) -> Option<(Instant, Waker)> {
+        self.sleepers.pop_first()
     }
 }
 
@@ -31,8 +31,10 @@ impl Reactor {
     }
 
     pub fn tick(&mut self) {
-        if let Some(sleeper) = self.sleepers.pop() {
-            sleeper.wake();
+        if let Some((time, sleeper)) = self.sleepers.pop() {
+            if time >= Instant::now() {
+                sleeper.wake();
+            }
         }
     }
 }
