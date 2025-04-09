@@ -9,7 +9,10 @@
 //!   for or until a specific instant in time.
 
 use core::{
-    cmp::Reverse, future::Future, pin::Pin, task::{Context, Poll}, time::Duration
+    future::Future,
+    pin::Pin,
+    task::{Context, Poll},
+    time::Duration,
 };
 
 use vexide_core::time::Instant;
