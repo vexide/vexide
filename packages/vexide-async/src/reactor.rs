@@ -15,6 +15,10 @@ impl Sleepers {
     pub fn pop(&mut self) -> Option<(Instant, Waker)> {
         self.sleepers.pop_first()
     }
+
+    pub fn peek(&mut self) -> Option<(&Instant, &Waker)> {
+        self.sleepers.first_key_value()
+    }
 }
 
 pub struct Reactor {
@@ -31,10 +35,8 @@ impl Reactor {
     }
 
     pub fn tick(&mut self) {
-        if let Some((time, sleeper)) = self.sleepers.pop() {
-            if time >= Instant::now() {
-                sleeper.wake();
-            }
+        if self.sleepers.peek().map(|entry| entry.0 > Instant::now()).unwrap_or(false) {
+            self.sleepers.pop()?.1.wake();
         }
     }
 }
