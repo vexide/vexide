@@ -1,42 +1,47 @@
-use alloc::collections::BTreeMap;
+use alloc::collections::{binary_heap::PeekMut, BinaryHeap};
 use core::task::Waker;
 
 use vexide_core::time::Instant;
 
-pub struct Sleepers {
-    sleepers: BTreeMap<Instant, Waker>,
+pub(crate) struct Sleeper {
+    pub deadline: Instant,
+    pub waker: Waker,
 }
 
-impl Sleepers {
-    pub fn push(&mut self, waker: Waker, instant: Instant) {
-        self.sleepers.insert(instant, waker);
+impl PartialEq for Sleeper {
+    fn eq(&self, other: &Self) -> bool {
+        other.deadline.eq(&other.deadline)
     }
-
-    pub fn pop(&mut self) -> Option<(Instant, Waker)> {
-        self.sleepers.pop_first()
+}
+impl PartialOrd for Sleeper {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        Some(self.cmp(other))
     }
+}
 
-    pub fn peek(&mut self) -> Option<(&Instant, &Waker)> {
-        self.sleepers.first_key_value()
+impl Eq for Sleeper {}
+impl Ord for Sleeper {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.deadline.cmp(&other.deadline)
     }
 }
 
 pub struct Reactor {
-    pub(crate) sleepers: Sleepers,
+    pub(crate) sleepers: BinaryHeap<Sleeper>,
 }
 
 impl Reactor {
     pub const fn new() -> Self {
         Self {
-            sleepers: Sleepers {
-                sleepers: BTreeMap::new(),
-            },
+            sleepers: BinaryHeap::new(),
         }
     }
 
     pub fn tick(&mut self) {
-        if self.sleepers.peek().map(|entry| entry.0 > Instant::now()).unwrap_or(false) {
-            self.sleepers.pop()?.1.wake();
+        if let Some(sleeper) = self.sleepers.peek_mut() {
+            if sleeper.deadline > Instant::now() {
+                PeekMut::<'_, Sleeper>::pop(sleeper).waker.wake();
+            }
         }
     }
 }

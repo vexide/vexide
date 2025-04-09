@@ -17,7 +17,7 @@ use core::{
 
 use vexide_core::time::Instant;
 
-use crate::executor::EXECUTOR;
+use crate::{executor::EXECUTOR, reactor::Sleeper};
 
 /// A future that will complete after a certain instant is reached in time.
 #[derive(Debug)]
@@ -31,7 +31,12 @@ impl Future for Sleep {
         if Instant::now() > self.0 {
             Poll::Ready(())
         } else {
-            EXECUTOR.with_reactor(|reactor| reactor.sleepers.push(cx.waker().clone(), self.0));
+            EXECUTOR.with_reactor(|reactor| {
+                reactor.sleepers.push(Sleeper {
+                    deadline: self.0,
+                    waker: cx.waker().clone(),
+                });
+            });
 
             Poll::Pending
         }
