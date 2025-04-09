@@ -17,7 +17,7 @@ pub mod themes;
 /// This function is called by the `#[vexide::main]` macro if the startup banner is enabled.
 #[inline]
 pub fn print(theme: BannerTheme) {
-    const VEXIDE_VERSION: &str = "0.7.1";
+    const VEXIDE_VERSION: &str = "0.7.1-rc.1";
 
     println!(
         "
