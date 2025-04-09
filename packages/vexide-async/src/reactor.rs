@@ -22,7 +22,9 @@ impl PartialOrd for Sleeper {
 impl Eq for Sleeper {}
 impl Ord for Sleeper {
     fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-        self.deadline.cmp(&other.deadline)
+        // NOTE: Sleeper with the earliest deadline (minimum `Instant` ordering) must
+        // have the highest priority in the queue.
+        self.deadline.cmp(&other.deadline).reverse()
     }
 }
 
