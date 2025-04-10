@@ -41,7 +41,7 @@ impl Reactor {
 
     pub fn tick(&mut self) {
         if let Some(sleeper) = self.sleepers.pop() {
-            sleeper.waker.wake_by_ref();
+            sleeper.waker.wake();
         }
     }
 }
