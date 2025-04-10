@@ -1,4 +1,4 @@
-use alloc::collections::{binary_heap::PeekMut, BinaryHeap};
+use alloc::collections::BinaryHeap;
 use core::task::Waker;
 
 use vexide_core::time::Instant;
@@ -40,10 +40,8 @@ impl Reactor {
     }
 
     pub fn tick(&mut self) {
-        if let Some(sleeper) = self.sleepers.peek_mut() {
-            if Instant::now() > sleeper.deadline {
-                PeekMut::<'_, Sleeper>::pop(sleeper).waker.wake();
-            }
+        if let Some(sleeper) = self.sleepers.pop() {
+            sleeper.waker.wake_by_ref();
         }
     }
 }
