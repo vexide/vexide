@@ -36,7 +36,7 @@ impl Executor {
         //   TODO: Make sure that the waker can never be sent off the thread.
         let (runnable, task) = unsafe {
             async_task::spawn_unchecked(future, |runnable| {
-                unsafe { *self.queue.get() }.push_back(runnable);
+                unsafe { &mut *self.queue.get() }.push_back(runnable);
             })
         };
 
@@ -53,9 +53,9 @@ impl Executor {
     }
 
     pub(crate) fn tick(&self) -> bool {
-        unsafe { *self.reactor.get() }.tick();
+        unsafe { &mut *self.reactor.get() }.tick();
 
-        while let Some(runnable) = unsafe { *self.queue.get() }.pop_front() {
+        while let Some(runnable) = unsafe { &mut *self.queue.get() }.pop_front() {
             if runnable.run() {
                 return true;
             }
