@@ -54,17 +54,13 @@ impl Executor {
     pub(crate) fn tick(&self) -> bool {
         self.reactor.borrow_mut().tick();
 
-        let runnable = {
-            let mut queue = self.queue.borrow_mut();
-            queue.pop_front()
-        };
-        match runnable {
-            Some(runnable) => {
-                runnable.run();
-                true
+        let mut queue = self.queue.borrow_mut();
+        while let Some(runnable) = queue.pop_front() {
+            if runnable.run() {
+                return true;
             }
-            None => false,
         }
+        false
     }
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
