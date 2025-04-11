@@ -41,10 +41,10 @@ impl Reactor {
 
     pub fn tick(&mut self) {
         while let Some(sleeper) = self.sleepers.pop() {
+            sleeper.waker.wake();
             if sleeper.deadline < Instant::now() {
                 break;
             }
-            sleeper.waker.wake();
         }
     }
 }
