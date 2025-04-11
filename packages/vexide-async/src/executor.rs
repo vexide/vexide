@@ -1,6 +1,6 @@
 use alloc::{collections::VecDeque, sync::Arc};
 use core::{
-    cell::RefCell,
+    cell::UnsafeCell,
     future::Future,
     pin::Pin,
     sync::atomic::{AtomicBool, Ordering},
@@ -15,8 +15,8 @@ use super::reactor::Reactor;
 pub(crate) static EXECUTOR: Executor = Executor::new();
 
 pub(crate) struct Executor {
-    queue: RefCell<VecDeque<Runnable>>,
-    reactor: RefCell<Reactor>,
+    queue: UnsafeCell<VecDeque<Runnable>>,
+    reactor: UnsafeCell<Reactor>,
 }
 //SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
 unsafe impl Send for Executor {}
@@ -25,8 +25,8 @@ unsafe impl Sync for Executor {}
 impl Executor {
     pub const fn new() -> Self {
         Self {
-            queue: RefCell::new(VecDeque::new()),
-            reactor: RefCell::new(Reactor::new()),
+            queue: UnsafeCell::new(VecDeque::new()),
+            reactor: UnsafeCell::new(Reactor::new()),
         }
     }
 
@@ -36,7 +36,7 @@ impl Executor {
         //   TODO: Make sure that the waker can never be sent off the thread.
         let (runnable, task) = unsafe {
             async_task::spawn_unchecked(future, |runnable| {
-                self.queue.borrow_mut().push_back(runnable);
+                unsafe { *self.queue.get() }.push_back(runnable);
             })
         };
 
@@ -47,15 +47,15 @@ impl Executor {
 
     /// Run the provided closure with the reactor.
     /// Used to ensure the thread safety of the executor.
-    pub(crate) fn with_reactor(&self, f: impl FnOnce(&mut Reactor)) {
-        f(&mut self.reactor.borrow_mut());
+    /// SAFETY: The closure must NOT call with_reactor
+    pub(crate) unsafe fn with_reactor(&self, f: impl FnOnce(&mut Reactor)) {
+        f(unsafe { &mut *self.reactor.get() });
     }
 
     pub(crate) fn tick(&self) -> bool {
-        self.reactor.borrow_mut().tick();
+        unsafe { *self.reactor.get() }.tick();
 
-        let mut queue = self.queue.borrow_mut();
-        while let Some(runnable) = queue.pop_front() {
+        while let Some(runnable) = unsafe { *self.queue.get() }.pop_front() {
             if runnable.run() {
                 return true;
             }
