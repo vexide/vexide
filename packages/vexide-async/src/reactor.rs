@@ -40,7 +40,7 @@ impl Reactor {
     }
 
     pub fn tick(&mut self) {
-        if let Some(sleeper) = self.sleepers.pop() {
+        while let Some(sleeper) = self.sleepers.pop().filter(|sleeper| sleeper.deadline >= Instant::now()) {
             sleeper.waker.wake();
         }
     }
