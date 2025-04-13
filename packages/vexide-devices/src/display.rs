@@ -775,13 +775,18 @@ impl Display {
         T: IntoIterator<Item = I>,
         I: Into<Rgb<u8>>,
     {
+        // Assert a positive stride value. A negative stride might be supported
+        // as it should be (see https://learn.microsoft.com/en-us/windows/win32/medfound/image-stride)
+        // but it seems like it might not work from some preliminary testing
+        // done by @zabackary.
+        assert!(src_stride > 0, "The stride must be a positive value.");
         let mut raw_buf = buf
             .into_iter()
             .map(|i| i.into().into_raw())
             .collect::<Vec<_>>();
         // Convert the coordinates to u32 to avoid overflows when multiplying.
-        let expected_size = ((region.end.x - region.start.x) as u32
-            * (region.end.y - region.start.y) as u32) as usize;
+        let expected_size =
+            (src_stride.unsigned_abs() * (region.end.y - region.start.y) as u32) as usize;
 
         let buffer_size = raw_buf.len();
         assert_eq!(
