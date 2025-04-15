@@ -41,6 +41,7 @@ Before releasing:
 - `vexide::startup::startup` no longer handles banner printing and no longer takes arguments. If you wish to print a banner without using `#[vexide::main]`, consider using `vexide::startup::banner::print` instead. (#313) (**Breaking Change**)
 - Symbols within the internal implementation of the patcher's `memcpy` will no longer clash with some libc compiler intrinsics. This should only matter if are linking to C libraries. (#314)
 - Fixed a signature validation problem in the original `VisionSensor`. (#319)
+- Fixed `AdiDigital*::is_low` improperly returning `is_high` (#324)
 
 ### Changed
 
