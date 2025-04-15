@@ -118,7 +118,7 @@ impl AdiDigitalIn {
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
     pub fn is_low(&self) -> Result<bool, PortError> {
-        Ok(self.level()?.is_high())
+        Ok(self.level()?.is_low())
     }
 }
 
@@ -292,7 +292,7 @@ impl AdiDigitalOut {
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
     pub fn is_low(&self) -> Result<bool, PortError> {
-        Ok(self.level()?.is_high())
+        Ok(self.level()?.is_low())
     }
 
     /// Set the digital logic level to [`LogicLevel::High`]. Analogous to
