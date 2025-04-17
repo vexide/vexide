@@ -31,12 +31,14 @@ impl Future for Sleep {
         if Instant::now() > self.0 {
             Poll::Ready(())
         } else {
-            EXECUTOR.with_reactor(|reactor| {
-                reactor.sleepers.push(Sleeper {
-                    deadline: self.0,
-                    waker: cx.waker().clone(),
+            unsafe {
+                EXECUTOR.with_reactor(|reactor| {
+                    reactor.sleepers.push(Sleeper {
+                        deadline: self.0,
+                        waker: cx.waker().clone(),
+                    });
                 });
-            });
+            }
 
             Poll::Pending
         }
