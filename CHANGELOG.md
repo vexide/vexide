@@ -41,13 +41,14 @@ Before releasing:
 - `vexide::startup::startup` no longer handles banner printing and no longer takes arguments. If you wish to print a banner without using `#[vexide::main]`, consider using `vexide::startup::banner::print` instead. (#313) (**Breaking Change**)
 - Symbols within the internal implementation of the patcher's `memcpy` will no longer clash with some libc compiler intrinsics. This should only matter if are linking to C libraries. (#314)
 - Fixed a signature validation problem in the original `VisionSensor`. (#319)
-- Fixed a validation issue with `Display::draw_buffer` allowing uninitialized memory to be drawn. (#323)
 
 ### Changed
 
 - Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
 
 ### Removed
+
+- Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
 
 ### New Contributors
 
