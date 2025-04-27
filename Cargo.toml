@@ -14,7 +14,6 @@ vexide = { path = "packages/vexide" }
 
 [workspace]
 members = ["packages/*"]
-default-members = [".", "packages/*"]
 resolver = "2"
 
 [workspace.dependencies]
