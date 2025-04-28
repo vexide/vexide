@@ -35,9 +35,6 @@
 //! [`smart_leds_trait`]: https://docs.rs/smart-leds-trait/0.3.0/smart_leds_trait/index.html
 //! [`SmartLedsWrite`]: https://docs.rs/smart-leds-trait/0.3.0/smart_leds_trait/trait.SmartLedsWrite.html
 
-use alloc::{vec, vec::Vec};
-
-use snafu::{ensure, Snafu};
 use vex_sdk::vexDeviceAdiAddrLedSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
@@ -48,38 +45,35 @@ use crate::{
 
 /// WS2812B Addressable LED Strip
 #[derive(Debug, Eq, PartialEq)]
-pub struct AdiAddrLed {
+pub struct AdiAddrLed<const N: usize> {
     port: AdiPort,
-    buf: Vec<u32>,
 }
 
-impl AdiAddrLed {
+impl<const N: usize> AdiAddrLed<N> {
     /// The max number of LED diodes on one strip that a single ADI port can control.
     pub const MAX_LENGTH: usize = 64;
 
-    /// Initialize an LED strip on an ADI port with a given number of diodes.
-    ///
-    /// # Errors
-    ///
-    /// If the `length` parameter exceeds [`Self::MAX_LENGTH`], the function returns
-    /// [`AddrLedError::BufferTooLarge`].
-    pub fn new(port: AdiPort, length: usize) -> Result<Self, AddrLedError> {
-        ensure!(length <= Self::MAX_LENGTH, BufferTooLargeSnafu { length });
-        Ok(Self {
-            port,
-            buf: vec![0; length],
-        })
+    /// Initialize an LED strip with a given length on an ADI port.
+    #[must_use]
+    pub const fn new(port: AdiPort) -> Self {
+        const {
+            assert!(N <= Self::MAX_LENGTH);
+        }
+
+        Self { port }
     }
 
-    fn update(&mut self) {
+    fn update(&mut self, buf: &[u32], offset: usize) {
+        let buf = &buf[offset..buf.len().min(N)];
+
         unsafe {
             vexDeviceAdiAddrLedSet(
                 self.port.device_handle(),
                 self.port.index(),
-                self.buf.as_mut_ptr(),
-                0,
-                self.buf.len() as u32,
-                0,
+                buf.as_ptr().cast_mut(),
+                offset as _,
+                buf.len() as _,
+                Default::default(),
             );
         }
     }
@@ -88,37 +82,32 @@ impl AdiAddrLed {
     ///
     /// # Errors
     ///
-    /// If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
-    pub fn set_all(&mut self, color: impl Into<Rgb<u8>>) -> Result<(), AddrLedError> {
-        _ = self.set_buffer(vec![color.into(); self.buf.len()])?;
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
+    pub fn set_all(&mut self, color: impl Into<Rgb<u8>>) -> Result<(), PortError> {
+        _ = self.set_buffer([color.into(); N])?;
         Ok(())
     }
 
     /// Sets an individual diode color on the strip.
     ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of range for this strip (`index < N`).
+    ///
     /// # Errors
     ///
-    /// - Returns [`AddrLedError::OutOfRange`] if the provided index is out of range
-    ///   of the current buffer length.
-    /// - If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
-    pub fn set_pixel(
-        &mut self,
-        index: usize,
-        color: impl Into<Rgb<u8>>,
-    ) -> Result<(), AddrLedError> {
-        self.port.validate_expander()?;
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
+    pub fn set_pixel(&mut self, index: usize, color: impl Into<Rgb<u8>>) -> Result<(), PortError> {
+        assert!(index < N, "pixel index was out of range for LED strip size");
 
-        if let Some(pixel) = self.buf.get_mut(index) {
-            *pixel = color.into().into_raw();
-            self.update();
-            Ok(())
-        } else {
-            OutOfRangeSnafu {
-                index,
-                length: self.buf.len(),
-            }
-            .fail()
-        }
+        self.port.validate_expander()?;
+        self.update(&[color.into().into_raw()], index);
+
+        Ok(())
     }
 
     /// Attempt to write an iterator of colors to the LED strip. Returns how many colors were
@@ -126,30 +115,31 @@ impl AdiAddrLed {
     ///
     /// # Errors
     ///
-    /// If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
-    pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
+    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    ///   something else was connected.
+    pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, PortError>
     where
         T: IntoIterator<Item = I>,
         I: Into<Rgb<u8>>,
     {
         self.port.validate_expander()?;
 
-        let old_length = self.buf.len();
+        let mut buf = [0; N];
+        let mut len = 0;
 
-        self.buf = iter
-            .into_iter()
-            .map(|i| i.into().into_raw())
-            .collect::<Vec<_>>();
+        for (pixel, color) in buf.iter_mut().zip(iter.into_iter()) {
+            *pixel = color.into().into_raw();
+            len += 1;
+        }
 
-        self.buf.resize(old_length, 0); // Preserve previous strip length.
+        self.update(&buf, 0);
 
-        self.update();
-
-        Ok(self.buf.len())
+        Ok(len)
     }
 }
 
-impl AdiDevice<1> for AdiAddrLed {
+impl<const N: usize> AdiDevice<1> for AdiAddrLed<N> {
     fn port_numbers(&self) -> [u8; 1] {
         [self.port.number()]
     }
@@ -164,8 +154,8 @@ impl AdiDevice<1> for AdiAddrLed {
 }
 
 #[cfg(feature = "smart_leds_trait")]
-impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
-    type Error = AddrLedError;
+impl<const N: usize> smart_leds_trait::SmartLedsWrite for AdiAddrLed<N> {
+    type Error = PortError;
     type Color = Rgb<u8>;
 
     fn write<T, I>(&mut self, iterator: T) -> Result<(), Self::Error>
@@ -175,46 +165,14 @@ impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
     {
         self.port.validate_expander()?;
 
-        let buf = iterator
-            .into_iter()
-            .map(|i| i.into().into_raw())
-            .collect::<Vec<_>>();
+        let mut buf = [0; N];
 
-        ensure!(
-            buf.len() <= Self::MAX_LENGTH,
-            BufferTooLargeSnafu { length: buf.len() }
-        );
+        for (pixel, color) in buf.iter_mut().zip(iterator.into_iter()) {
+            *pixel = color.into().into_raw();
+        }
 
-        self.buf = buf;
-        self.update();
+        self.update(&buf, 0);
 
         Ok(())
     }
-}
-
-/// Errors that can occur when interacting with an [`AdiAddrLed`] strip.
-#[derive(Debug, Snafu)]
-pub enum AddrLedError {
-    /// The provided index was not in range of the current buffer's length.
-    #[snafu(display("Index `{index}` is out of range for buffer of length `{length}`"))]
-    OutOfRange {
-        /// The index that was out of range
-        index: usize,
-        /// The length of the buffer
-        length: usize,
-    },
-
-    /// The length of the provided buffer exceeded the maximum strip length (of 64) that ADI can control.
-    #[snafu(display("Buffer length `{length}` exceeds maximum strip length of `64`"))]
-    BufferTooLarge {
-        /// The length of the buffer that was too large
-        length: usize,
-    },
-
-    /// Generic ADI related error.
-    #[snafu(transparent)]
-    Port {
-        /// The source of the error
-        source: PortError,
-    },
 }
