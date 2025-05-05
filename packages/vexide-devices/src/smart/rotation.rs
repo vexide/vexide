@@ -255,7 +255,7 @@ impl RotationSensor {
     ///     _ = sensor.set_data_interval(RotationSensor::MIN_DATA_INTERVAL);
     /// }
     /// ```
-    pub fn set_computation_interval(&mut self, interval: Duration) -> Result<(), PortError> {
+    pub fn set_data_interval(&mut self, interval: Duration) -> Result<(), PortError> {
         self.validate_port()?;
 
         let mut time_ms = interval

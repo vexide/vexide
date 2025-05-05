@@ -7,7 +7,7 @@ use core::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-/// A opaque fixed-point raw angular position reading from a sensor.
+/// A opaque, fixed-point raw angular position reading from a sensor.
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Position(i64);
 
