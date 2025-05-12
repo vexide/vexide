@@ -193,7 +193,7 @@ impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
 }
 
 /// Errors that can occur when interacting with an [`AdiAddrLed`] strip.
-#[derive(Debug, Snafu)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum AddrLedError {
     /// The provided index was not in range of the current buffer's length.
     #[snafu(display("Index `{index}` is out of range for buffer of length `{length}`"))]
