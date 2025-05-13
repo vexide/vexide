@@ -270,7 +270,7 @@ impl Future for ControllerScreenWriteFuture<'_> {
         }
 
         if let ControllerScreenWriteFutureState::Complete { result } = state {
-            Poll::Ready(result.clone())
+            Poll::Ready(*result)
         } else {
             Poll::Pending
         }
