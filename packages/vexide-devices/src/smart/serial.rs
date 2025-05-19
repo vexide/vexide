@@ -371,7 +371,7 @@ impl From<SerialPort> for SmartPort {
 }
 
 /// Errors that can occur when interacting with a [`SerialPort`].
-#[derive(Debug, Snafu)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum SerialError {
     /// Internal write error occurred.
     WriteFailed,

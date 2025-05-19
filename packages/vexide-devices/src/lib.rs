@@ -56,8 +56,8 @@ use smart::SmartDeviceType;
 use snafu::Snafu;
 use vexide_core::io;
 
-#[derive(Debug, Snafu)]
 /// Generic errors that can take place when using ports on the V5 Brain.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum PortError {
     /// No device is plugged into the port.
     #[snafu(display("Expected a device to be connected to port {port}"))]

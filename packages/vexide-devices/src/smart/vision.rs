@@ -1381,8 +1381,8 @@ impl From<LedMode> for V5VisionLedMode {
     }
 }
 
-#[derive(Debug, Snafu)]
 /// Errors that can occur when using a vision sensor.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum VisionError {
     /// Objects cannot be detected while Wi-Fi mode is enabled.
     WifiMode,

@@ -34,6 +34,8 @@ Before releasing:
 
 ### Added
 
+- Added several missing derived trait implementations for many device error types. (#331)
+
 ### Fixed
 
 - Fixed an issue with `Metadata::len` using the wrong condition. (#314)
