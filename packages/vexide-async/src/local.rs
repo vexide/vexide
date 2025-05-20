@@ -225,6 +225,10 @@ impl<T: 'static> LocalKey<Cell<T>> {
 
 impl<T: 'static> LocalKey<RefCell<T>> {
     /// Immutably borrows from the [`RefCell`] and applies the obtained reference to `f`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently mutably borrowed.
     pub fn with_borrow<F, R>(&'static self, f: F) -> R
     where
         F: FnOnce(&T) -> R,
@@ -233,6 +237,10 @@ impl<T: 'static> LocalKey<RefCell<T>> {
     }
 
     /// Mutably borrows from the [`RefCell`] and applies the obtained reference to `f`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently borrowed.
     pub fn with_borrow_mut<F, R>(&'static self, f: F) -> R
     where
         F: FnOnce(&mut T) -> R,
@@ -241,11 +249,19 @@ impl<T: 'static> LocalKey<RefCell<T>> {
     }
 
     /// Sets the contained value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently borrowed.
     pub fn set(&'static self, value: T) {
         self.with_borrow_mut(|refmut| *refmut = value);
     }
 
     /// Takes the contained value, leaving [`Default::default()`] in its place.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently borrowed.
     pub fn take(&'static self) -> T
     where
         T: Default,
@@ -254,6 +270,10 @@ impl<T: 'static> LocalKey<RefCell<T>> {
     }
 
     /// Replaces the contained value with `value`, returning the old contained value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is currently borrowed.
     pub fn replace(&'static self, value: T) -> T {
         self.with(|cell| cell.replace(value))
     }
