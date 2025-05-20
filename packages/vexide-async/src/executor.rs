@@ -7,37 +7,52 @@ use core::{
     task::{Context, Poll},
 };
 
-use async_task::{Runnable, Task};
 use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
+use crate::{
+    local::{Tls, TlsReg},
+    task::Task,
+};
 
-pub(crate) static EXECUTOR: Executor = Executor::new();
+type Runnable = async_task::Runnable<Tls>;
+
+pub(crate) static EXECUTOR: Executor = unsafe { Executor::new() };
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
     reactor: RefCell<Reactor>,
+    tls_reg: RefCell<TlsReg>,
 }
 //SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
 unsafe impl Send for Executor {}
 unsafe impl Sync for Executor {}
 
 impl Executor {
-    pub const fn new() -> Self {
+    pub const unsafe fn new() -> Self {
         Self {
             queue: RefCell::new(VecDeque::new()),
             reactor: RefCell::new(Reactor::new()),
+            tls_reg: RefCell::new(unsafe { TlsReg::new() }),
         }
     }
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
+        let tls = Tls::new_alloc();
+
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
         //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
         //   TODO: Make sure that the waker can never be sent off the thread.
         let (runnable, task) = unsafe {
-            async_task::spawn_unchecked(future, |runnable| {
-                self.queue.borrow_mut().push_back(runnable);
-            })
+            async_task::Builder::new().metadata(tls).spawn_unchecked(
+                move |_| future,
+                |runnable| {
+                    self.queue.borrow_mut().push_back(runnable);
+                },
+            )
+            // async_task::spawn_unchecked(future, |runnable| {
+            //     self.queue.borrow_mut().push_back(runnable);
+            // })
         };
 
         runnable.schedule();
@@ -58,12 +73,16 @@ impl Executor {
             let mut queue = self.queue.borrow_mut();
             queue.pop_front()
         };
-        match runnable {
-            Some(runnable) => {
-                runnable.run();
-                true
+
+        if let Some(runnable) = runnable {
+            unsafe {
+                self.tls_reg.borrow_mut().set(runnable.metadata());
             }
-            None => false,
+
+            runnable.run();
+            true
+        } else {
+            false
         }
     }
 

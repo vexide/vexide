@@ -10,6 +10,8 @@ extern crate alloc;
 mod executor;
 mod reactor;
 
+#[allow(missing_docs)]
+pub mod local;
 pub mod task;
 pub mod time;
 
