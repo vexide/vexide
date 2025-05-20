@@ -20,7 +20,7 @@ fn tls_layout() -> Layout {
     .unwrap()
 }
 
-pub struct Tls {
+pub(crate) struct Tls {
     mem: *const (),
 }
 

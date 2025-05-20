@@ -4,6 +4,10 @@ use core::future::Future;
 
 use crate::local::Tls;
 
+pub struct TaskMetadata {
+    pub(crate) tls: Tls,
+}
+
 /// A spawned task.
 ///
 /// A [`Task`] can be awaited to retrieve the output of its future.
@@ -37,7 +41,7 @@ use crate::local::Tls;
 /// // Wait for the task's output.
 /// assert_eq!(future::block_on(task), 3);
 /// ```
-pub type Task<T> = async_task::Task<T, Tls>;
+pub type Task<T> = async_task::Task<T, TaskMetadata>;
 
 /// A spawned task with a fallible response.
 ///
@@ -47,7 +51,7 @@ pub type Task<T> = async_task::Task<T, Tls>;
 ///
 /// This can be useful to avoid the panic produced when polling the `Task`
 /// future if the executor dropped its `Runnable`.
-pub type FallibleTask<T> = async_task::FallibleTask<T, Tls>;
+pub type FallibleTask<T> = async_task::FallibleTask<T, TaskMetadata>;
 
 use crate::executor::EXECUTOR;
 

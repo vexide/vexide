@@ -10,9 +10,12 @@ use core::{
 use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
-use crate::{local::Tls, task::Task};
+use crate::{
+    local::Tls,
+    task::{Task, TaskMetadata},
+};
 
-type Runnable = async_task::Runnable<Tls>;
+type Runnable = async_task::Runnable<TaskMetadata>;
 
 pub(crate) static EXECUTOR: Executor = unsafe { Executor::new() };
 
@@ -34,18 +37,22 @@ impl Executor {
     }
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
-        let tls = Tls::new_alloc();
+        let metadata = TaskMetadata {
+            tls: Tls::new_alloc(),
+        };
 
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
         //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
         //   TODO: Make sure that the waker can never be sent off the thread.
         let (runnable, task) = unsafe {
-            async_task::Builder::new().metadata(tls).spawn_unchecked(
-                move |_| future,
-                |runnable| {
-                    self.queue.borrow_mut().push_back(runnable);
-                },
-            )
+            async_task::Builder::new()
+                .metadata(metadata)
+                .spawn_unchecked(
+                    move |_| future,
+                    |runnable| {
+                        self.queue.borrow_mut().push_back(runnable);
+                    },
+                )
             // async_task::spawn_unchecked(future, |runnable| {
             //     self.queue.borrow_mut().push_back(runnable);
             // })
@@ -72,7 +79,7 @@ impl Executor {
 
         if let Some(runnable) = runnable {
             unsafe {
-                runnable.metadata().set_current_tls();
+                runnable.metadata().tls.set_current_tls();
             }
 
             runnable.run();
