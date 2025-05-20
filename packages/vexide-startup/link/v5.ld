@@ -94,14 +94,14 @@ SECTIONS {
         __bss_end = .;
     } > PROGRAM_RAM
 	
-	/*
-	 * Task-local data
-	 */
-	.tdata : {
-		__tdata_start = .;
-		*(.tdata .tdata.*)
-		__tdata_end = .;
-	} > PROGRAM_RAM
+    /*
+     * Task-local data
+     */
+    .tdata : {
+        __tdata_start = .;
+        *(.tdata .tdata.*)
+        __tdata_end = .;
+    } > PROGRAM_RAM
 
     /*
      * ARM Stack Unwinding Sections
