@@ -28,9 +28,11 @@ unsafe extern "C" {
 static TLS_PTR: AtomicUsize = AtomicUsize::new(0);
 
 fn tls_layout() -> Layout {
+    const MAX_ALIGNMENT: usize = 16;
+
     Layout::from_size_align(
         unsafe { (&raw const __tdata_end).byte_offset_from_unsigned(&raw const __tdata_start) },
-        16,
+        MAX_ALIGNMENT,
     )
     .unwrap()
 }
