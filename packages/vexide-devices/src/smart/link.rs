@@ -322,7 +322,7 @@ pub enum LinkType {
 }
 
 /// Errors that can occur when interacting with a [`RadioLink`].
-#[derive(Debug, Snafu)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum LinkError {
     /// Not linked with another radio.
     NotLinked,

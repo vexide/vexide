@@ -34,6 +34,8 @@ Before releasing:
 
 ### Added
 
+- Added several missing derived trait implementations for many device error types. (#331)
+
 ### Fixed
 
 - Fixed an issue with `Metadata::len` using the wrong condition. (#314)
@@ -46,6 +48,7 @@ Before releasing:
 ### Changed
 
 - Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
+- Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 
 ### Removed
 

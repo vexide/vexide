@@ -823,7 +823,7 @@ impl Display {
 }
 
 /// An error that occurs when a negative or non-finite font size is attempted to be created.
-#[derive(Debug, Clone, Copy, Snafu)]
+#[derive(Debug, Clone, Copy, PartialEq, Snafu)]
 #[snafu(display("Attempted to create a font size with a negative/non-finite value ({value})."))]
 pub struct InvalidFontSizeError {
     /// The negative value that was attempted to be used as a font size.

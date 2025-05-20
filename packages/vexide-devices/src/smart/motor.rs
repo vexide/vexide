@@ -1679,8 +1679,8 @@ impl From<MotorTuningConstants> for V5_DeviceMotorPid {
     }
 }
 
-#[derive(Debug, Snafu)]
 /// Errors that can occur when using a motor.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum MotorError {
     /// Failed to communicate with the motor while attempting to read flags.
     Busy,
