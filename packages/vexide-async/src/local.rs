@@ -116,7 +116,7 @@ unsafe impl<T> Send for LocalKey<T> {}
 
 /// Declares task-local variables in [`LocalKey`]s of the same names.
 ///
-/// # Syntax
+/// # Examples
 ///
 /// ```
 /// task_local! {
