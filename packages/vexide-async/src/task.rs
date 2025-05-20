@@ -4,6 +4,8 @@ use core::future::Future;
 
 use crate::local::Tls;
 
+/// Internal metadata used by the executor. Users should not need to access this, and this is only
+/// public because it appears in the public type aliases [`Task`] and [`FallibleTask`].
 pub struct TaskMetadata {
     pub(crate) tls: Tls,
 }
