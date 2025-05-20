@@ -1,8 +1,8 @@
 use core::{
     alloc::Layout,
-    arch::asm,
     cell::{Cell, RefCell},
     ptr,
+    sync::atomic::{AtomicUsize, Ordering},
 };
 
 unsafe extern "C" {
@@ -10,20 +10,7 @@ unsafe extern "C" {
     static mut __tdata_end: u8;
 }
 
-fn get_tls_ptr() -> *const () {
-    let ptr: *const ();
-    // Safety: This is atomic and the environment is single-threaded
-    unsafe {
-        asm!("mrc p15 0, {}, c13, c0, 2", out(reg) ptr);
-    }
-    ptr
-}
-
-unsafe fn set_tls_ptr(ptr: *const ()) {
-    unsafe {
-        asm!("mrc p15, 0, {}, c13, c0, 2", in(reg) ptr);
-    }
-}
+static TLS_PTR: AtomicUsize = AtomicUsize::new(0);
 
 fn tls_layout() -> Layout {
     Layout::from_size_align(
@@ -31,21 +18,6 @@ fn tls_layout() -> Layout {
         16,
     )
     .unwrap()
-}
-
-pub(crate) struct TlsReg(());
-
-impl TlsReg {
-    pub const unsafe fn new() -> Self {
-        Self(())
-    }
-
-    #[expect(clippy::unused_self)]
-    pub unsafe fn set(&mut self, tls: &Tls) {
-        unsafe {
-            set_tls_ptr(tls.mem);
-        }
-    }
 }
 
 pub struct Tls {
@@ -65,6 +37,10 @@ impl Tls {
         Self {
             mem: mem as *const (),
         }
+    }
+
+    pub unsafe fn set_current_tls(&self) {
+        TLS_PTR.store(self.mem as usize, Ordering::Relaxed);
     }
 }
 
@@ -135,8 +111,7 @@ impl<T: 'static> Key<T> {
     where
         F: FnOnce(&T) -> R,
     {
-        let ptr = unsafe { get_tls_ptr().cast::<T>().byte_add(self.offset()) };
-
+        let ptr = (self.offset() + TLS_PTR.load(Ordering::Relaxed)) as *const T;
         f(unsafe { &*ptr })
     }
 }

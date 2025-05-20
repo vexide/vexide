@@ -10,10 +10,7 @@ use core::{
 use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
-use crate::{
-    local::{Tls, TlsReg},
-    task::Task,
-};
+use crate::{local::Tls, task::Task};
 
 type Runnable = async_task::Runnable<Tls>;
 
@@ -22,8 +19,8 @@ pub(crate) static EXECUTOR: Executor = unsafe { Executor::new() };
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
     reactor: RefCell<Reactor>,
-    tls_reg: RefCell<TlsReg>,
 }
+
 //SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
 unsafe impl Send for Executor {}
 unsafe impl Sync for Executor {}
@@ -33,7 +30,6 @@ impl Executor {
         Self {
             queue: RefCell::new(VecDeque::new()),
             reactor: RefCell::new(Reactor::new()),
-            tls_reg: RefCell::new(unsafe { TlsReg::new() }),
         }
     }
 
@@ -76,7 +72,7 @@ impl Executor {
 
         if let Some(runnable) = runnable {
             unsafe {
-                self.tls_reg.borrow_mut().set(runnable.metadata());
+                runnable.metadata().set_current_tls();
             }
 
             runnable.run();
