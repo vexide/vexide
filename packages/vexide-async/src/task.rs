@@ -26,22 +26,16 @@ pub struct TaskMetadata {
 /// # Examples
 ///
 /// ```
-/// use smol::{future, Executor};
-/// use std::thread;
-///
-/// let ex = Executor::new();
+/// use vexide::async_runtime::spawn;
 ///
 /// // Spawn a future onto the executor.
-/// let task = ex.spawn(async {
+/// let task = spawn(async {
 ///     println!("Hello from a task!");
 ///     1 + 2
 /// });
 ///
-/// // Run an executor thread.
-/// thread::spawn(move || future::block_on(ex.run(future::pending::<()>())));
-///
 /// // Wait for the task's output.
-/// assert_eq!(future::block_on(task), 3);
+/// assert_eq!(task.await, 3);
 /// ```
 pub type Task<T> = async_task::Task<T, TaskMetadata>;
 
