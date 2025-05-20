@@ -17,7 +17,8 @@ use core::{
     alloc::Layout,
     cell::{BorrowError, BorrowMutError, Cell, RefCell},
     ptr,
-    sync::atomic::{AtomicUsize, Ordering},
+    ptr::null_mut,
+    sync::atomic::{AtomicPtr, Ordering},
 };
 
 unsafe extern "C" {
@@ -25,7 +26,7 @@ unsafe extern "C" {
     static mut __tdata_end: u8;
 }
 
-static TLS_PTR: AtomicUsize = AtomicUsize::new(0);
+static TLS_PTR: AtomicPtr<()> = AtomicPtr::new(null_mut());
 
 fn tls_layout() -> Layout {
     const MAX_ALIGNMENT: usize = 16;
@@ -57,7 +58,7 @@ impl Tls {
     }
 
     pub unsafe fn set_current_tls(&self) {
-        TLS_PTR.store(self.mem as usize, Ordering::Relaxed);
+        TLS_PTR.store(self.mem.cast_mut(), Ordering::Relaxed);
     }
 }
 
@@ -190,7 +191,13 @@ impl<T: 'static> LocalKey<T> {
     where
         F: FnOnce(&T) -> R,
     {
-        let ptr = (self.offset() + TLS_PTR.load(Ordering::Relaxed)) as *const T;
+        let ptr = unsafe {
+            TLS_PTR
+                .load(Ordering::Relaxed)
+                .byte_add(self.offset())
+                .cast()
+        };
+
         f(unsafe { &*ptr })
     }
 }
