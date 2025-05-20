@@ -84,7 +84,7 @@ impl Drop for Tls {
 ///     static PHI: f64 = 1.61803;
 ///     static COUNTER: Cell<u32> = Cell::new(0);
 ///     static NAMES: RefCell<Vec<String>> = RefCell::new(Vec::new());
-/// };
+/// }
 ///
 /// // LocalKey::with accepts a function and applies it to a reference, returning whatever value
 /// // the function returned
@@ -123,7 +123,7 @@ unsafe impl<T> Send for LocalKey<T> {}
 ///     static PHI: f64 = 1.61803;
 ///     static COUNTER: Cell<u32> = Cell::new(0);
 ///     static NAMES: RefCell<Vec<String>> = RefCell::new(Vec::new());
-/// };
+/// }
 /// ```
 // allows matching `const` expressions
 #[expect(edition_2024_expr_fragment_specifier)]
