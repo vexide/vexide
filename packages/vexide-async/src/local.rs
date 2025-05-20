@@ -39,7 +39,7 @@ fn tls_layout() -> Layout {
 }
 
 pub(crate) struct Tls {
-    mem: *const (),
+    mem: *mut (),
 }
 
 impl Tls {
@@ -52,20 +52,18 @@ impl Tls {
             ptr::copy_nonoverlapping(&raw const __tdata_start, mem, tls_layout.size());
         }
 
-        Self {
-            mem: mem as *const (),
-        }
+        Self { mem: mem.cast() }
     }
 
     pub unsafe fn set_current_tls(&self) {
-        TLS_PTR.store(self.mem.cast_mut(), Ordering::Relaxed);
+        TLS_PTR.store(self.mem, Ordering::Relaxed);
     }
 }
 
 impl Drop for Tls {
     fn drop(&mut self) {
         unsafe {
-            alloc::alloc::dealloc(self.mem.cast_mut().cast(), tls_layout());
+            alloc::alloc::dealloc(self.mem.cast(), tls_layout());
         }
     }
 }
