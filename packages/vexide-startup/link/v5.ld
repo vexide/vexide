@@ -95,7 +95,7 @@ SECTIONS {
     } > PROGRAM_RAM
 	
 	/*
-	 * Thread local data
+	 * Task-local data
 	 */
 	.tdata : {
 		__tdata_start = .;
