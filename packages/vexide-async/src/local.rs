@@ -86,7 +86,7 @@ unsafe impl<T> Send for Key<T> {}
 // allows matching `const` expressions
 #[expect(edition_2024_expr_fragment_specifier)]
 #[macro_export]
-macro_rules! thread_local {
+macro_rules! task_local {
     {
         $(#[$attr:meta])*
         $vis:vis static $name:ident: $type:ty = $init:expr;
