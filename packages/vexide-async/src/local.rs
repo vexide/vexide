@@ -85,7 +85,7 @@ macro_rules! task_local {
 
     {
         $(#[$attr:meta])*
-        $vis:vis static $name:ident: $type:ty = $init:expr_2021;
+        $vis:vis static $name:ident: $type:ty = $init:expr;
         $($rest:tt)*
     } => {
         $crate::thread_local!($vis static $name: $type = $init;);
