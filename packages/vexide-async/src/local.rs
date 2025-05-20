@@ -179,7 +179,7 @@ impl<T: 'static> LocalKey<T> {
     ///
     /// ```
     /// task_local! {
-    ///     static PHI: 1.61803;
+    ///     static PHI: f64 = 1.61803;
     /// }
     ///
     /// let double_phi = PHI.with(|&phi| phi * 2.0);
