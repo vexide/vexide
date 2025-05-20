@@ -52,12 +52,12 @@ impl Drop for Tls {
     }
 }
 
-pub struct Key<T: 'static> {
+pub struct LocalKey<T: 'static> {
     inner_static: &'static T,
 }
 
-unsafe impl<T> Sync for Key<T> {}
-unsafe impl<T> Send for Key<T> {}
+unsafe impl<T> Sync for LocalKey<T> {}
+unsafe impl<T> Send for LocalKey<T> {}
 
 // allows matching `const` expressions
 #[expect(edition_2024_expr_fragment_specifier)]
@@ -68,7 +68,7 @@ macro_rules! task_local {
         $vis:vis static $name:ident: $type:ty = $init:expr;
     } => {
         $(#[$attr])*
-        $vis static $name: Key<$type> = {
+        $vis static $name: LocalKey<$type> = {
             #[repr(transparent)]
             struct Opaque<T>(T);
 
@@ -78,7 +78,7 @@ macro_rules! task_local {
             static INNER: Opaque<$type> = Opaque($init);
 
             unsafe {
-                Key::new(&INNER.0)
+                LocalKey::new(&INNER.0)
             }
         };
     };
@@ -93,7 +93,7 @@ macro_rules! task_local {
     }
 }
 
-impl<T: 'static> Key<T> {
+impl<T: 'static> LocalKey<T> {
     /// # Safety
     ///
     /// `inner_static` must point to valid memory in the .tdata section.
@@ -116,7 +116,7 @@ impl<T: 'static> Key<T> {
     }
 }
 
-impl<T: 'static> Key<Cell<T>> {
+impl<T: 'static> LocalKey<Cell<T>> {
     pub fn get(&'static self) -> T
     where
         T: Copy,
@@ -140,7 +140,7 @@ impl<T: 'static> Key<Cell<T>> {
     }
 }
 
-impl<T: 'static> Key<RefCell<T>> {
+impl<T: 'static> LocalKey<RefCell<T>> {
     pub fn with_borrow<F, R>(&'static self, f: F) -> R
     where
         F: FnOnce(&T) -> R,
