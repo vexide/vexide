@@ -15,7 +15,7 @@
 
 use core::{
     alloc::Layout,
-    cell::{Cell, RefCell},
+    cell::{BorrowError, BorrowMutError, Cell, RefCell},
     ptr,
     sync::atomic::{AtomicUsize, Ordering},
 };
@@ -228,7 +228,8 @@ impl<T: 'static> LocalKey<RefCell<T>> {
     ///
     /// # Panics
     ///
-    /// Panics if the value is currently mutably borrowed.
+    /// Panics if the value is currently mutably borrowed. For a non-panicking variant, use
+    /// [`LocalKey::with_borrow`].
     pub fn with_borrow<F, R>(&'static self, f: F) -> R
     where
         F: FnOnce(&T) -> R,
@@ -240,12 +241,43 @@ impl<T: 'static> LocalKey<RefCell<T>> {
     ///
     /// # Panics
     ///
-    /// Panics if the value is currently borrowed.
+    /// Panics if the value is currently borrowed. For a non-panicking variant, use
+    /// [`LocalKey::with_borrow_mut`].
     pub fn with_borrow_mut<F, R>(&'static self, f: F) -> R
     where
         F: FnOnce(&mut T) -> R,
     {
         self.with(|cell| f(&mut cell.borrow_mut()))
+    }
+
+    /// Tries to immutably borrow the contained value, returning an error if it is currently
+    /// mutably borrowed, and applies the obtained reference to `f`.
+    ///
+    /// This is the non-panicking variant of [`LocalKey::with_borrow`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BorrowError`] if the contained value is currently mutably borrowed.
+    pub fn try_with_borrow<F, R>(&'static self, f: F) -> Result<R, BorrowError>
+    where
+        F: FnOnce(&T) -> R,
+    {
+        self.with(|cell| cell.try_borrow().map(|value| f(&value)))
+    }
+
+    /// Tries to mutably borrow the contained value, returning an error if it is currently borrowed,
+    /// and applies the obtained reference to `f`.
+    ///
+    /// This is the non-panicking variant of [`LocalKey::with_borrow_mut`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BorrowMutError`] if the contained value is currently borrowed.
+    pub fn try_with_borrow_mut<F, R>(&'static self, f: F) -> Result<R, BorrowMutError>
+    where
+        F: FnOnce(&T) -> R,
+    {
+        self.with(|cell| cell.try_borrow_mut().map(|value| f(&value)))
     }
 
     /// Sets the contained value.
