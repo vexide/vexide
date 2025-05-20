@@ -53,9 +53,6 @@ impl Executor {
                         self.queue.borrow_mut().push_back(runnable);
                     },
                 )
-            // async_task::spawn_unchecked(future, |runnable| {
-            //     self.queue.borrow_mut().push_back(runnable);
-            // })
         };
 
         runnable.schedule();
