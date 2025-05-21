@@ -46,13 +46,18 @@ impl TaskLocalStorage {
     #[must_use]
     pub fn new_alloc() -> Self {
         let tls_layout = tls_layout();
-        let mem = unsafe { alloc::alloc::alloc(tls_layout) };
 
-        unsafe {
-            ptr::copy_nonoverlapping(&raw const __tdata_start, mem, tls_layout.size());
+        if tls_layout.size() == 0 {
+            Self { mem: null_mut() }
+        } else {
+            let mem = unsafe { alloc::alloc::alloc(tls_layout) };
+
+            unsafe {
+                ptr::copy_nonoverlapping(&raw const __tdata_start, mem, tls_layout.size());
+            }
+
+            Self { mem: mem.cast() }
         }
-
-        Self { mem: mem.cast() }
     }
 
     pub unsafe fn set_current_tls(&self) {
@@ -62,6 +67,10 @@ impl TaskLocalStorage {
 
 impl Drop for TaskLocalStorage {
     fn drop(&mut self) {
+        if self.mem.is_null() {
+            return;
+        }
+
         unsafe {
             alloc::alloc::dealloc(self.mem.cast(), tls_layout());
         }
