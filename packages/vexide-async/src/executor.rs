@@ -11,7 +11,7 @@ use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
 use crate::{
-    local::Tls,
+    local::TaskLocalStorage,
     task::{Task, TaskMetadata},
 };
 
@@ -38,7 +38,7 @@ impl Executor {
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
         let metadata = TaskMetadata {
-            tls: Tls::new_alloc(),
+            tls: TaskLocalStorage::new_alloc(),
         };
 
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.

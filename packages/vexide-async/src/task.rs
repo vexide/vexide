@@ -2,12 +2,12 @@
 
 use core::future::Future;
 
-use crate::local::Tls;
+use crate::local::TaskLocalStorage;
 
 // public because it's used in Task<T> and InfallibleTask<T>
 #[doc(hidden)]
 pub struct TaskMetadata {
-    pub(crate) tls: Tls,
+    pub(crate) tls: TaskLocalStorage,
 }
 
 /// A spawned task.

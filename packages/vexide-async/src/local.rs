@@ -38,11 +38,11 @@ fn tls_layout() -> Layout {
     .unwrap()
 }
 
-pub(crate) struct Tls {
+pub(crate) struct TaskLocalStorage {
     mem: *mut (),
 }
 
-impl Tls {
+impl TaskLocalStorage {
     #[must_use]
     pub fn new_alloc() -> Self {
         let tls_layout = tls_layout();
@@ -60,7 +60,7 @@ impl Tls {
     }
 }
 
-impl Drop for Tls {
+impl Drop for TaskLocalStorage {
     fn drop(&mut self) {
         unsafe {
             alloc::alloc::dealloc(self.mem.cast(), tls_layout());
