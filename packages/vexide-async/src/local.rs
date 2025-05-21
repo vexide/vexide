@@ -44,7 +44,7 @@ pub(crate) struct TaskLocalStorage {
 
 impl TaskLocalStorage {
     #[must_use]
-    pub fn new_alloc() -> Self {
+    pub fn new() -> Self {
         let tls_layout = tls_layout();
 
         if tls_layout.size() == 0 {
