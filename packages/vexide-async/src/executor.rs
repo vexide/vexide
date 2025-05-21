@@ -11,13 +11,13 @@ use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
 use crate::{
-    local::TaskLocalStorage,
+    local::{set_tls_ptr, TaskLocalStorage},
     task::{Task, TaskMetadata},
 };
 
 type Runnable = async_task::Runnable<TaskMetadata>;
 
-pub(crate) static EXECUTOR: Executor = unsafe { Executor::new() };
+pub(crate) static EXECUTOR: Executor = Executor::new();
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
@@ -29,7 +29,7 @@ unsafe impl Send for Executor {}
 unsafe impl Sync for Executor {}
 
 impl Executor {
-    pub const unsafe fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             queue: RefCell::new(VecDeque::new()),
             reactor: RefCell::new(Reactor::new()),
@@ -75,11 +75,11 @@ impl Executor {
         };
 
         if let Some(runnable) = runnable {
-            unsafe {
-                runnable.metadata().tls.set_current_tls();
-            }
-
+            let old_ptr = unsafe { runnable.metadata().tls.set_current_tls() };
             runnable.run();
+
+            unsafe { set_tls_ptr(old_ptr) };
+
             true
         } else {
             false
