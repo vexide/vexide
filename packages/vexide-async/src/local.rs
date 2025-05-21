@@ -168,9 +168,7 @@ macro_rules! task_local {
 }
 
 impl<T: 'static> LocalKey<T> {
-    /// # Safety
-    ///
-    /// `inner_static` must point to valid memory in the .tdata section.
+    #[doc(hidden)]
     pub const unsafe fn new(inner_static: &'static T) -> Self {
         Self { inner_static }
     }
