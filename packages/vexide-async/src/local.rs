@@ -234,7 +234,7 @@ impl<T: 'static> LocalKey<RefCell<T>> {
     /// # Panics
     ///
     /// Panics if the value is currently mutably borrowed. For a non-panicking variant, use
-    /// [`LocalKey::with_borrow`].
+    /// [`LocalKey::try_with_borrow`].
     pub fn with_borrow<F, R>(&'static self, f: F) -> R
     where
         F: FnOnce(&T) -> R,
@@ -247,7 +247,7 @@ impl<T: 'static> LocalKey<RefCell<T>> {
     /// # Panics
     ///
     /// Panics if the value is currently borrowed. For a non-panicking variant, use
-    /// [`LocalKey::with_borrow_mut`].
+    /// [`LocalKey::try_with_borrow_mut`].
     pub fn with_borrow_mut<F, R>(&'static self, f: F) -> R
     where
         F: FnOnce(&mut T) -> R,
