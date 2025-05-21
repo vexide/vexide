@@ -38,7 +38,7 @@ impl Executor {
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
         let metadata = TaskMetadata {
-            tls: TaskLocalStorage::new_alloc(),
+            tls: TaskLocalStorage::new(),
         };
 
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
