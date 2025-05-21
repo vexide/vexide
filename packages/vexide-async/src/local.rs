@@ -28,6 +28,10 @@ unsafe extern "C" {
 
 static TLS_PTR: AtomicPtr<()> = AtomicPtr::new(null_mut());
 
+pub(crate) unsafe fn set_tls_ptr(ptr: *mut ()) {
+    TLS_PTR.store(ptr, Ordering::Relaxed);
+}
+
 fn tls_layout() -> Layout {
     const MAX_ALIGNMENT: usize = 16;
 
@@ -60,8 +64,9 @@ impl TaskLocalStorage {
         }
     }
 
-    pub unsafe fn set_current_tls(&self) {
-        TLS_PTR.store(self.mem, Ordering::Relaxed);
+    #[must_use]
+    pub unsafe fn set_current_tls(&self) -> *mut () {
+        TLS_PTR.swap(self.mem, Ordering::Relaxed)
     }
 }
 
