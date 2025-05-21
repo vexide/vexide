@@ -31,7 +31,7 @@ fn tls_layout() -> Layout {
     const MAX_ALIGNMENT: usize = 16;
 
     Layout::from_size_align(
-        unsafe { (&raw const __tdata_end).byte_offset_from_unsigned(&raw const __tdata_start) },
+        unsafe { (&raw const __tdata_end).offset_from(&raw const __tdata_end) } as usize,
         MAX_ALIGNMENT,
     )
     .unwrap()
