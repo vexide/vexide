@@ -5,11 +5,6 @@
 //! they implement [`Send`] and [`Sync`], regardless of what the underlying data does or does not
 //! implement.
 //!
-//! This is especially useful for interior mutability in globals. Normally, you would not be able
-//! to store a [`RefCell`] inside of a static variable since it isn't safe in multitasked contexts.
-//! Task-locals can eliminate this problem by making sure the variable never leaves the current
-//! task.
-//!
 //! Task-locals can be declared using the [`task_local`] macro, which creates a [`LocalKey`] with
 //! the same name that can be used to access the local.
 
