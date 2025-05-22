@@ -143,7 +143,8 @@ macro_rules! task_local {
         $vis:vis static $name:ident: $type:ty = $init:expr;
     } => {
         $(#[$attr])*
-        $vis static $name: $crate::local::LocalKey<$type> = {
+        // publicly reexported in crate::task
+        $vis static $name: $crate::task::LocalKey<$type> = {
             #[repr(transparent)]
             struct Opaque<T>(T);
 
@@ -153,7 +154,7 @@ macro_rules! task_local {
             static INNER: Opaque<$type> = Opaque($init);
 
             unsafe {
-                $crate::local::LocalKey::new(&INNER.0)
+                $crate::task::LocalKey::new(&INNER.0)
             }
         };
     };

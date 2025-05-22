@@ -39,6 +39,7 @@ pub type Task<T> = async_task::Task<T, TaskMetadata>;
 pub type FallibleTask<T> = async_task::FallibleTask<T, TaskMetadata>;
 
 use crate::executor::EXECUTOR;
+pub use crate::{local::LocalKey, task_local};
 
 /// Spawns a new async task that can be controlled with the returned task handle.
 pub fn spawn<T>(future: impl Future<Output = T> + 'static) -> Task<T> {
