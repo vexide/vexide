@@ -97,10 +97,10 @@ SECTIONS {
     /*
      * Task-local data
      */
-    .tdata : {
-        __tdata_start = .;
-        *(.tdata .tdata.*)
-        __tdata_end = .;
+    .vexide_tdata : {
+        __vexide_tdata_start = .;
+        *(.tdata1 .tdata1.*)
+        __vexide_tdata_end = .;
     } > PROGRAM_RAM
 
     /*
