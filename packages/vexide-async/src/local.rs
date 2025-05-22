@@ -162,8 +162,8 @@ macro_rules! task_local {
         $vis:vis static $name:ident: $type:ty = $init:expr;
         $($rest:tt)*
     } => {
-        $crate::thread_local!($vis static $name: $type = $init;);
-        $crate::thread_local!($($rest)*);
+        $crate::task_local!($vis static $name: $type = $init;);
+        $crate::task_local!($($rest)*);
     }
 }
 
