@@ -152,7 +152,7 @@ macro_rules! task_local {
             static INNER: Opaque<$type> = Opaque($init);
 
             unsafe {
-                LocalKey::new(&INNER.0)
+                $crate::local::LocalKey::new(&INNER.0)
             }
         };
     };
