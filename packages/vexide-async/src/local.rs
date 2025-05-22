@@ -17,8 +17,8 @@ use core::{
 };
 
 unsafe extern "C" {
-    static mut __tdata_start: u8;
-    static mut __tdata_end: u8;
+    static mut __vexide_tdata_start: u8;
+    static mut __vexide_tdata_end: u8;
 }
 
 static TLS_PTR: AtomicPtr<()> = AtomicPtr::new(null_mut());
@@ -31,7 +31,8 @@ fn tls_layout() -> Layout {
     const MAX_ALIGNMENT: usize = 16;
 
     Layout::from_size_align(
-        unsafe { (&raw const __tdata_end).offset_from(&raw const __tdata_end) } as usize,
+        unsafe { (&raw const __vexide_tdata_end).offset_from(&raw const __vexide_tdata_end) }
+            as usize,
         MAX_ALIGNMENT,
     )
     .unwrap()
@@ -52,7 +53,7 @@ impl TaskLocalStorage {
             let mem = unsafe { alloc::alloc::alloc(tls_layout) };
 
             unsafe {
-                ptr::copy_nonoverlapping(&raw const __tdata_start, mem, tls_layout.size());
+                ptr::copy_nonoverlapping(&raw const __vexide_tdata_start, mem, tls_layout.size());
             }
 
             Self { mem: mem.cast() }
@@ -148,7 +149,7 @@ macro_rules! task_local {
 
             unsafe impl<T> Sync for Opaque<T> {}
 
-            #[unsafe(link_section = ".tdata")]
+            #[unsafe(link_section = ".vexide_tdata")]
             static INNER: Opaque<$type> = Opaque($init);
 
             unsafe {
@@ -177,7 +178,7 @@ impl<T: 'static> LocalKey<T> {
         unsafe {
             ptr::from_ref(self.inner_static)
                 .cast::<u8>()
-                .offset_from(&raw const __tdata_start) as usize
+                .offset_from(&raw const __vexide_tdata_start) as usize
         }
     }
 
