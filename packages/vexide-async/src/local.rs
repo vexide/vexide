@@ -142,7 +142,7 @@ macro_rules! task_local {
         $vis:vis static $name:ident: $type:ty = $init:expr;
     } => {
         $(#[$attr])*
-        $vis static $name: LocalKey<$type> = {
+        $vis static $name: $crate::local::LocalKey<$type> = {
             #[repr(transparent)]
             struct Opaque<T>(T);
 
