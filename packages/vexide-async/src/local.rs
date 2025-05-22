@@ -175,7 +175,9 @@ impl<T: 'static> LocalKey<T> {
 
     fn offset(&'static self) -> usize {
         unsafe {
-            ptr::from_ref(self.inner_static).byte_offset_from_unsigned(&raw const __tdata_start)
+            ptr::from_ref(self.inner_static)
+                .cast::<u8>()
+                .offset_from(&raw const __tdata_start) as usize
         }
     }
 
