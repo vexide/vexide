@@ -11,7 +11,7 @@ use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
 use crate::{
-    local::{set_tls_ptr, TaskLocalStorage},
+    local::{is_tls_null, set_tls_ptr, TaskLocalStorage},
     task::{Task, TaskMetadata},
 };
 
@@ -87,6 +87,13 @@ impl Executor {
     }
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
+        // indicative of entry point task
+        if is_tls_null() {
+            unsafe {
+                _ = TaskLocalStorage::new().set_current_tls();
+            }
+        }
+
         let woken = Arc::new(AtomicBool::new(true));
 
         let waker = waker_fn({

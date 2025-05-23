@@ -23,6 +23,10 @@ unsafe extern "C" {
 
 static TLS_PTR: AtomicPtr<()> = AtomicPtr::new(null_mut());
 
+pub(crate) fn is_tls_null() -> bool {
+    TLS_PTR.load(Ordering::Relaxed).is_null()
+}
+
 pub(crate) unsafe fn set_tls_ptr(ptr: *mut ()) {
     TLS_PTR.store(ptr, Ordering::Relaxed);
 }
