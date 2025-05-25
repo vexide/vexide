@@ -52,6 +52,8 @@ Before releasing:
 
 ### Removed
 
+- Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
+
 ### New Contributors
 
 - GLS <<contact@glstudios.org>> made their first contribution in #314!
