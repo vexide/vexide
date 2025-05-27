@@ -53,17 +53,14 @@ use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 use super::{AdiDevice, AdiDeviceType, AdiPort};
 use crate::{adi::adi_port_name, position::Position, PortError};
 
-/// Optical Shaft Encoder
+/// ADI Shaft Encoder
 #[derive(Debug, Eq, PartialEq)]
-pub struct AdiEncoder {
+pub struct AdiEncoder<const TICKS_PER_REVOLUTION: u32 = 360> {
     top_port: AdiPort,
     bottom_port: AdiPort,
 }
 
-impl AdiEncoder {
-    /// Number of encoder ticks (unique sensor readings) per revolution for the encoder.
-    pub const TICKS_PER_REVOLUTION: u32 = 360;
-
+impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     /// Create a new encoder sensor from a top and bottom [`AdiPort`].
     ///
     /// # Panics
@@ -172,7 +169,7 @@ impl AdiEncoder {
                     self.top_port.index(),
                 ))
             },
-            360,
+            TICKS_PER_REVOLUTION,
         ))
     }
 
@@ -211,7 +208,7 @@ impl AdiEncoder {
             vexDeviceAdiValueSet(
                 self.top_port.device_handle(),
                 self.top_port.index(),
-                position.as_ticks(360) as i32,
+                position.as_ticks(TICKS_PER_REVOLUTION) as i32,
             );
         }
 
