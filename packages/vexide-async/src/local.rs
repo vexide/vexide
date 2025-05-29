@@ -35,7 +35,7 @@ fn tls_layout() -> Layout {
     const MAX_ALIGNMENT: usize = 16;
 
     Layout::from_size_align(
-        unsafe { (&raw const __vexide_tdata_end).offset_from(&raw const __vexide_tdata_end) }
+        unsafe { (&raw const __vexide_tdata_end).offset_from(&raw const __vexide_tdata_start) }
             as usize,
         MAX_ALIGNMENT,
     )
