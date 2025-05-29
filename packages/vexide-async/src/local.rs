@@ -11,8 +11,8 @@
 use core::{
     alloc::Layout,
     cell::{BorrowError, BorrowMutError, Cell, RefCell},
-    ptr,
-    ptr::null_mut,
+    fmt::Debug,
+    ptr::{self, null_mut},
     sync::atomic::{AtomicPtr, Ordering},
 };
 
@@ -31,15 +31,19 @@ pub(crate) unsafe fn set_tls_ptr(ptr: *mut ()) {
     TLS_PTR.store(ptr, Ordering::Relaxed);
 }
 
-fn tls_layout() -> Layout {
+const fn tls_layout() -> Layout {
     const MAX_ALIGNMENT: usize = 16;
 
-    Layout::from_size_align(
+    let Ok(layout) = Layout::from_size_align(
         unsafe { (&raw const __vexide_tdata_end).offset_from(&raw const __vexide_tdata_start) }
             as usize,
         MAX_ALIGNMENT,
-    )
-    .unwrap()
+    ) else {
+        // Creating the layout can only fail if the size of the TLS section is out of range of isize.
+        // Bins with a tls section this large cant be uploaded, so this branch should never be hit.
+        panic!("Failed to create TLS layout. The size of the TLS section is too large. This is an internal vexide bug.");
+    };
+    layout
 }
 
 pub(crate) struct TaskLocalStorage {
@@ -122,6 +126,23 @@ impl Drop for TaskLocalStorage {
 /// ```
 pub struct LocalKey<T: 'static> {
     inner_static: &'static T,
+}
+impl<T> Debug for LocalKey<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        // Workaround for `DebugStruct::field_with` being unstable.
+        struct PtrFmt<T>(*const T);
+        impl<T> Debug for PtrFmt<T> {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                write!(f, "{:p}", self.0)
+            }
+        }
+
+        let ptr = self.inner_static as *const T;
+
+        f.debug_struct("LocalKey")
+            .field("inner_static", &PtrFmt(ptr))
+            .finish()
+    }
 }
 
 unsafe impl<T> Sync for LocalKey<T> {}

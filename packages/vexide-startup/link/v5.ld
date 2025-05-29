@@ -93,13 +93,13 @@ SECTIONS {
         *(.bss .bss.*)
         __bss_end = .;
     } > PROGRAM_RAM
-	
+
     /*
      * Task-local data
      */
     .vexide_tdata : {
         __vexide_tdata_start = .;
-        *(.tdata1 .tdata1.*)
+        *(.vexide_tdata .vexide_tdata.*)
         __vexide_tdata_end = .;
     } > PROGRAM_RAM
 
