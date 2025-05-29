@@ -74,6 +74,7 @@ impl Executor {
             queue.pop_front()
         };
 
+        #[allow(if_let_rescope)]
         if let Some(runnable) = runnable {
             let old_ptr = unsafe { runnable.metadata().tls.set_current_tls() };
             runnable.run();
