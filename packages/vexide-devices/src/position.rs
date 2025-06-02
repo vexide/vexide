@@ -1,88 +1,124 @@
 //! Angular Position Type
 //!
-//! Standard return type for sensors measuring rotational position
+//! Used by devices such as [`Motor`], [`RotationSensor`], and [`AdiEncoder`]
+//! that are able to measure their own rotation.
+//!
+//! [`Motor`]: crate::devices::smart::Motor
+//! [`RotationSensor`]: crate::devices::smart::RotationSensor
+//! [`AdiEncoder`]: crate::devices::adi::AdiEncoder
 
 use core::{
-    f64::consts::TAU,
+    f64::{
+        self,
+        consts::{PI, TAU},
+    },
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-/// A opaque fixed-point raw angular position reading from a sensor.
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-pub struct Position(i64);
+/// Opaque type for storing unit-agnostic angular position (a signed displacement
+/// from some rotation representing `Position::ZERO`, or zero degrees).
+///
+/// Used by devices such as [`Motor`], [`RotationSensor`], and [`AdiEncoder`]
+/// that are able to measure their own rotation.
+///
+/// # Non-modularity
+///
+/// This type is unbounded and is NOT modular 2π. This means that
+/// `Position::from_degrees(0) != Position::from_degrees(360)`, for instance.
+///
+/// # Precision
+///
+/// This type internally stores angles as *radians* inside of an `f64`. This may
+/// be subject to change in the future.
+#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Position(f64);
 
 impl Position {
-    /// Arbitrary number that's large enough to represent all VEX sensors without precision loss.
-    ///
-    /// At this time, this represents the least common multiple between the rotation sensor's TPR and
-    /// an ungeared motor encoder's TPR.
-    pub(crate) const INTERNAL_TPR: u32 = 4_608_000; // LCM of 36000 and 4096
+    /// Position representing zero rotation.
+    pub const ZERO: Self = Self(0.0);
+
+    // MARK: Creation
 
     /// Creates a position from a custom tick reading with a given ticks-per-revolution value.
     ///
     /// Essentially scales this value to the internal 36000 ticks per revolution.
+    #[inline]
     #[must_use]
-    pub const fn from_ticks(ticks: i64, tpr: u32) -> Self {
-        Self(ticks * Self::INTERNAL_TPR as i64 / tpr as i64)
+    pub const fn from_ticks(ticks: f64, ticks_per_revolution: u32) -> Self {
+        Self::from_revolutions(ticks / ticks_per_revolution as f64)
     }
 
     /// Creates a position from a specified number of degrees.
+    #[inline]
     #[must_use]
     pub const fn from_degrees(degrees: f64) -> Self {
-        Self(((degrees / 360.0) * (Self::INTERNAL_TPR as f64)) as i64)
+        Self(degrees.to_radians())
     }
 
     /// Creates a position from a specified number of radians.
+    #[inline]
     #[must_use]
     pub const fn from_radians(radians: f64) -> Self {
-        Self(((radians / TAU) * (Self::INTERNAL_TPR as f64)) as i64)
+        Self(radians)
     }
 
-    /// Creates a position from a specified number of revolutions.
+    /// Creates a position from a specified number of gradians.
     #[must_use]
-    pub const fn from_revolutions(revolutions: f64) -> Self {
-        Self((revolutions * (Self::INTERNAL_TPR as f64)) as i64)
+    pub const fn from_gradians(gradians: f64) -> Self {
+        Self(gradians * (PI / 200.0))
+    }
+
+    /// Creates a position from a specified number of revolutions (full turns).
+    #[inline]
+    #[must_use]
+    pub const fn from_revolutions(turns: f64) -> Self {
+        Self(turns * TAU)
+    }
+
+    // MARK: Conversion
+
+    /// Returns this position's value scaled to a raw tick value with the provided TPR.
+    #[inline]
+    #[must_use]
+    pub const fn as_ticks(&self, ticks_per_revolution: u32) -> f64 {
+        self.0 / TAU * (ticks_per_revolution as f64)
     }
 
     /// Returns the number of degrees rotated in this position.
-    ///
-    /// This function's conversion from an internal representation may cause a loss of precision.
+    #[inline]
     #[must_use]
-    #[allow(clippy::cast_precision_loss)]
     pub const fn as_degrees(&self) -> f64 {
-        (self.0 * 360) as f64 / (Self::INTERNAL_TPR as f64)
+        self.0.to_degrees()
     }
 
     /// Returns the number of radians rotated in this position.
-    ///
-    /// This function's conversion from an internal representation may cause a loss of precision.
+    #[inline]
     #[must_use]
-    #[allow(clippy::cast_precision_loss)]
     pub const fn as_radians(&self) -> f64 {
-        self.0 as f64 / (Self::INTERNAL_TPR as f64) * TAU
+        self.0
     }
 
-    /// Returns the number of revolutions rotated in this position.
-    ///
-    /// This function's conversion from an internal representation may cause a loss of precision.
+    /// Returns the number of gradians rotated in this position.
+    #[inline]
     #[must_use]
-    #[allow(clippy::cast_precision_loss)]
-    pub const fn as_revolutions(&self) -> f64 {
-        self.0 as f64 / (Self::INTERNAL_TPR as f64)
+    pub const fn as_gradians(&self) -> f64 {
+        self.0 * (200.0 / PI)
     }
 
-    /// Returns this position's value scaled to another tick value with a different TPR.
-    ///
-    /// This function's conversion from an internal representation may cause a loss of precision.
+    /// Returns the number of revolutions (full turns) rotated in this position.
+    #[inline]
     #[must_use]
-    pub const fn as_ticks(&self, tpr: u32) -> i64 {
-        (self.0 * tpr as i64) / Self::INTERNAL_TPR as i64
+    pub fn as_revolutions(&self) -> f64 {
+        self.0 / TAU
     }
 }
+
+// MARK: Operators
 
 impl Add<Position> for Position {
     type Output = Self;
 
+    #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         Self(self.0 + rhs.0)
     }
@@ -91,47 +127,54 @@ impl Add<Position> for Position {
 impl Sub<Position> for Position {
     type Output = Self;
 
+    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         Self(self.0 - rhs.0)
     }
 }
 
-impl Mul<i64> for Position {
+impl Mul<f64> for Position {
     type Output = Self;
 
-    fn mul(self, rhs: i64) -> Self::Output {
+    #[inline]
+    fn mul(self, rhs: f64) -> Self::Output {
         Self(self.0 * rhs)
     }
 }
 
-impl Div<i64> for Position {
+impl Div<f64> for Position {
     type Output = Self;
 
-    fn div(self, rhs: i64) -> Self::Output {
+    #[inline]
+    fn div(self, rhs: f64) -> Self::Output {
         Self(self.0 / rhs)
     }
 }
 
 impl AddAssign<Position> for Position {
+    #[inline]
     fn add_assign(&mut self, rhs: Self) {
         self.0 += rhs.0;
     }
 }
 
 impl SubAssign<Position> for Position {
+    #[inline]
     fn sub_assign(&mut self, rhs: Self) {
         self.0 -= rhs.0;
     }
 }
 
-impl MulAssign<i64> for Position {
-    fn mul_assign(&mut self, rhs: i64) {
+impl MulAssign<f64> for Position {
+    #[inline]
+    fn mul_assign(&mut self, rhs: f64) {
         self.0 *= rhs;
     }
 }
 
-impl DivAssign<i64> for Position {
-    fn div_assign(&mut self, rhs: i64) {
+impl DivAssign<f64> for Position {
+    #[inline]
+    fn div_assign(&mut self, rhs: f64) {
         self.0 /= rhs;
     }
 }
@@ -139,6 +182,7 @@ impl DivAssign<i64> for Position {
 impl Neg for Position {
     type Output = Self;
 
+    #[inline]
     fn neg(self) -> Self::Output {
         Self(-self.0)
     }

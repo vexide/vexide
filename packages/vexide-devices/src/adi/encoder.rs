@@ -163,12 +163,9 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
         self.top_port.validate_expander()?;
 
         Ok(Position::from_ticks(
-            unsafe {
-                i64::from(vexDeviceAdiValueGet(
-                    self.top_port.device_handle(),
-                    self.top_port.index(),
-                ))
-            },
+            f64::from(unsafe {
+                vexDeviceAdiValueGet(self.top_port.device_handle(), self.top_port.index())
+            }),
             TICKS_PER_REVOLUTION,
         ))
     }
