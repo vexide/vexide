@@ -7,10 +7,15 @@ use core::{
     task::{Context, Poll},
 };
 
-use async_task::{Runnable, Task};
 use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
+use crate::{
+    local::{is_tls_null, set_tls_ptr, TaskLocalStorage},
+    task::{Task, TaskMetadata},
+};
+
+type Runnable = async_task::Runnable<TaskMetadata>;
 
 pub(crate) static EXECUTOR: Executor = Executor::new();
 
@@ -18,6 +23,7 @@ pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
     reactor: RefCell<Reactor>,
 }
+
 //SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
 unsafe impl Send for Executor {}
 unsafe impl Sync for Executor {}
@@ -31,13 +37,22 @@ impl Executor {
     }
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
+        let metadata = TaskMetadata {
+            tls: TaskLocalStorage::new(),
+        };
+
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
         //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
         //   TODO: Make sure that the waker can never be sent off the thread.
         let (runnable, task) = unsafe {
-            async_task::spawn_unchecked(future, |runnable| {
-                self.queue.borrow_mut().push_back(runnable);
-            })
+            async_task::Builder::new()
+                .metadata(metadata)
+                .spawn_unchecked(
+                    move |_| future,
+                    |runnable| {
+                        self.queue.borrow_mut().push_back(runnable);
+                    },
+                )
         };
 
         runnable.schedule();
@@ -58,16 +73,28 @@ impl Executor {
             let mut queue = self.queue.borrow_mut();
             queue.pop_front()
         };
-        match runnable {
-            Some(runnable) => {
-                runnable.run();
-                true
-            }
-            None => false,
+
+        #[allow(if_let_rescope)]
+        if let Some(runnable) = runnable {
+            let old_ptr = unsafe { runnable.metadata().tls.set_current_tls() };
+            runnable.run();
+
+            unsafe { set_tls_ptr(old_ptr) };
+
+            true
+        } else {
+            false
         }
     }
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
+        // indicative of entry point task
+        if is_tls_null() {
+            unsafe {
+                _ = TaskLocalStorage::new().set_current_tls();
+            }
+        }
+
         let woken = Arc::new(AtomicBool::new(true));
 
         let waker = waker_fn({

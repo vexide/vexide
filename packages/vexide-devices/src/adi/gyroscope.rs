@@ -213,7 +213,7 @@ impl AdiDevice<1> for AdiGyroscope {
 }
 
 /// Errors that can occur when interacting with an [`AdiGyroscope`].
-#[derive(Debug, Snafu)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum AdiGyroscopeError {
     /// Generic ADI related error.
     #[snafu(transparent)]

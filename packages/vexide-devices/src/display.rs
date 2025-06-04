@@ -764,13 +764,12 @@ impl Display {
     /// Draw a buffer of pixels to a specified region of the display.
     ///
     /// This function copies the pixels in the specified buffer to the specified region of the display.
-    /// The stride parameter is defined as the number of pixels per row.
     ///
     /// # Panics
     ///
     /// This function panics if `buf` does not have the correct number of bytes to fill the specified
     /// region.
-    pub fn draw_buffer<T, I>(&mut self, region: Rect, buf: T, src_stride: i32)
+    pub fn draw_buffer<T, I>(&mut self, region: Rect, buf: T)
     where
         T: IntoIterator<Item = I>,
         I: Into<Rgb<u8>>,
@@ -780,8 +779,8 @@ impl Display {
             .map(|i| i.into().into_raw())
             .collect::<Vec<_>>();
         // Convert the coordinates to u32 to avoid overflows when multiplying.
-        let expected_size = ((region.end.x - region.start.x) as u32
-            * (region.end.y - region.start.y) as u32) as usize;
+        let expected_size = ((region.end.y - region.start.y) as u32
+            * (region.end.x - region.start.x) as u32) as usize;
 
         let buffer_size = raw_buf.len();
         assert_eq!(
@@ -797,7 +796,7 @@ impl Display {
                 i32::from(region.end.x),
                 i32::from(region.end.y + Self::HEADER_HEIGHT),
                 raw_buf.as_mut_ptr(),
-                src_stride,
+                i32::from(region.end.x - region.start.x + 1),
             );
         }
     }
@@ -823,7 +822,7 @@ impl Display {
 }
 
 /// An error that occurs when a negative or non-finite font size is attempted to be created.
-#[derive(Debug, Clone, Copy, Snafu)]
+#[derive(Debug, Clone, Copy, PartialEq, Snafu)]
 #[snafu(display("Attempted to create a font size with a negative/non-finite value ({value})."))]
 pub struct InvalidFontSizeError {
     /// The negative value that was attempted to be used as a font size.

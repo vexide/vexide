@@ -235,7 +235,7 @@ pub struct DistanceObject {
 }
 
 /// Errors that can occur when using a distance sensor.
-#[derive(Debug, Snafu)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum DistanceError {
     /// The sensor's status code is 0x00
     /// Need to wait for the sensor to finish initializing

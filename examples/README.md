@@ -81,6 +81,10 @@ Explains and showcases several features of vexide's async executor including:
 
 Demonstrates the usage of the asynchronous synchronization primitives included in [`vexide-core`](https://docs.rs/vexide/0.4.2/vexide/core/sync/index.html).
 
+### [`task_local_storage`](./task_local_storage.rs)
+
+Showcases the use of task-local storage across multiple tasks.
+
 ## Macro
 
 Examples related to the `vexide::main` macro.

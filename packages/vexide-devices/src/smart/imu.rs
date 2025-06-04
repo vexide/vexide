@@ -1048,7 +1048,7 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
 }
 
 /// Errors that can occur when interacting with an Inertial Sensor.
-#[derive(Debug, Snafu)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum InertialError {
     /// The sensor took longer than three seconds to calibrate.
     CalibrationTimedOut,

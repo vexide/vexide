@@ -34,6 +34,9 @@ Before releasing:
 
 ### Added
 
+- Added several missing derived trait implementations for many device error types. (#331)
+- Added support for task-local data storage using the new `task_local!` macro. This is closely modeled after `thread_local!`s in the standard library. (#333)
+
 ### Fixed
 
 - Fixed an issue with `Metadata::len` using the wrong condition. (#314)
@@ -46,12 +49,16 @@ Before releasing:
 ### Changed
 
 - Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
+- Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 
 ### Removed
+
+- Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
 
 ### New Contributors
 
 - GLS <<contact@glstudios.org>> made their first contribution in #314!
+- @fibonacci61 made their first contribution in #333!
 
 ## [0.7.0]
 
