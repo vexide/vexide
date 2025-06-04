@@ -55,7 +55,10 @@ impl<const N: usize> AdiAddrLed<N> {
     #[must_use]
     pub const fn new(port: AdiPort) -> Self {
         const {
-            assert!(N <= Self::MAX_LENGTH, "AdiAddrLed strip size exceeded MAX_LENGTH (64)");
+            assert!(
+                N <= Self::MAX_LENGTH,
+                "AdiAddrLed strip size exceeded MAX_LENGTH (64)"
+            );
         }
 
         Self { port }
