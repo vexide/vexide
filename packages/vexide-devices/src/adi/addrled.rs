@@ -62,8 +62,6 @@ impl<const N: usize> AdiAddrLed<N> {
     }
 
     fn update(&mut self, buf: &[u32], offset: usize) {
-        let buf = &buf[offset..buf.len().min(N)];
-
         unsafe {
             vexDeviceAdiAddrLedSet(
                 self.port.device_handle(),
