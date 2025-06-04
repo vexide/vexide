@@ -45,7 +45,7 @@ pub mod servo;
 pub use accelerometer::{AdiAccelerometer, Sensitivity};
 pub use analog::AdiAnalogIn;
 pub use digital::{AdiDigitalIn, AdiDigitalOut};
-pub use encoder::AdiEncoder;
+pub use encoder::{AdiEncoder, AdiOpticalEncoder};
 pub use gyroscope::AdiGyroscope;
 pub use light_sensor::AdiLightSensor;
 pub use line_tracker::AdiLineTracker;
@@ -179,8 +179,8 @@ impl From<AdiRangeFinder> for (AdiPort, AdiPort) {
     }
 }
 
-impl From<AdiEncoder> for (AdiPort, AdiPort) {
-    fn from(device: AdiEncoder) -> Self {
+impl<const TICKS_PER_REVOLUTION: u32> From<AdiEncoder<TICKS_PER_REVOLUTION>> for (AdiPort, AdiPort) {
+    fn from(device: AdiEncoder<TICKS_PER_REVOLUTION>) -> Self {
         let numbers = device.port_numbers();
         let expander_number = device.expander_port_number();
 
