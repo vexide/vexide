@@ -270,7 +270,7 @@ impl Future for ControllerScreenWriteFuture<'_> {
         }
 
         if let ControllerScreenWriteFutureState::Complete { result } = state {
-            Poll::Ready(result.clone())
+            Poll::Ready(*result)
         } else {
             Poll::Pending
         }
@@ -988,7 +988,7 @@ impl Controller {
 }
 
 /// Errors that can occur when interacting with the controller.
-#[derive(Clone, Debug, Snafu)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Snafu)]
 pub enum ControllerError {
     /// The controller is not connected to the Brain.
     Offline,

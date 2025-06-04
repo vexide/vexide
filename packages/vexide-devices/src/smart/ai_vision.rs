@@ -1012,8 +1012,8 @@ impl From<AiVisionSensor> for SmartPort {
     }
 }
 
-#[derive(Debug, Snafu)]
 /// Errors that can occur when using a vision sensor.
+#[derive(Debug, Clone, Eq, PartialEq, Snafu)]
 pub enum AiVisionError {
     /// An object created by VEXos failed to be converted.
     InvalidObject,

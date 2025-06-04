@@ -24,7 +24,7 @@
 //!
 //! [Motor Controller 29]: https://www.vexrobotics.com/276-2193.html
 //! [Motor 393]: https://www.vexrobotics.com/393-motors.html
-//! [Smart Motors]: crate::smart::motor
+//! [Smart Motor]: crate::smart::motor
 
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
