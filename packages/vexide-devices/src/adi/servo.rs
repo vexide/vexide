@@ -38,16 +38,10 @@ pub struct AdiServo {
 
 impl AdiServo {
     /// Maximum controllable position of the servo.
-    pub const MAX_POSITION: Position = Position::from_ticks(
-        ((50.0 / 360.0) * (Position::INTERNAL_TPR as f64)) as i64,
-        Position::INTERNAL_TPR,
-    );
+    pub const MAX_POSITION: Position = Position::from_degrees(50.0);
 
     /// Minimum controllable position of the servo.
-    pub const MIN_POSITION: Position = Position::from_ticks(
-        ((-50.0 / 360.0) * (Position::INTERNAL_TPR as f64)) as i64,
-        Position::INTERNAL_TPR,
-    );
+    pub const MIN_POSITION: Position = Position::from_degrees(-50.0);
 
     /// Create a servo from an [`AdiPort`].
     ///

@@ -222,7 +222,7 @@ impl RotationSensor {
         if new_direction != self.direction() {
             self.direction_offset = self.position()?;
             self.raw_direction_offset = Position::from_ticks(
-                i64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
+                f64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
                 Self::TICKS_PER_REVOLUTION,
             );
             self.direction = new_direction;
@@ -320,7 +320,7 @@ impl RotationSensor {
         self.validate_port()?;
 
         let mut delta_position = Position::from_ticks(
-            i64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
+            f64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
             Self::TICKS_PER_REVOLUTION,
         ) - self.raw_direction_offset;
 
@@ -365,7 +365,7 @@ impl RotationSensor {
         }
 
         Ok(Position::from_ticks(
-            i64::from(raw_angle),
+            f64::from(raw_angle),
             Self::TICKS_PER_REVOLUTION,
         ))
     }
