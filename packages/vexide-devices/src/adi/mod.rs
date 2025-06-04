@@ -179,7 +179,9 @@ impl From<AdiRangeFinder> for (AdiPort, AdiPort) {
     }
 }
 
-impl<const TICKS_PER_REVOLUTION: u32> From<AdiEncoder<TICKS_PER_REVOLUTION>> for (AdiPort, AdiPort) {
+impl<const TICKS_PER_REVOLUTION: u32> From<AdiEncoder<TICKS_PER_REVOLUTION>>
+    for (AdiPort, AdiPort)
+{
     fn from(device: AdiEncoder<TICKS_PER_REVOLUTION>) -> Self {
         let numbers = device.port_numbers();
         let expander_number = device.expander_port_number();
