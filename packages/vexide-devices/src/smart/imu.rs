@@ -457,7 +457,7 @@ impl InertialSensor {
 
         let mut data = V5_DeviceImuQuaternion::default();
         unsafe {
-            vexDeviceImuQuaternionGet(self.device, &mut data);
+            vexDeviceImuQuaternionGet(self.device, &raw mut data);
         }
 
         Ok(Quaternion {
@@ -509,7 +509,7 @@ impl InertialSensor {
 
         let mut data = V5_DeviceImuAttitude::default();
         unsafe {
-            vexDeviceImuAttitudeGet(self.device, &mut data);
+            vexDeviceImuAttitudeGet(self.device, &raw mut data);
         }
 
         Ok(EulerAngles {
@@ -561,7 +561,7 @@ impl InertialSensor {
 
         let mut data = V5_DeviceImuRaw::default();
         unsafe {
-            vexDeviceImuRawGyroGet(self.device, &mut data);
+            vexDeviceImuRawGyroGet(self.device, &raw mut data);
         }
 
         Ok(Vector3 {
@@ -614,7 +614,7 @@ impl InertialSensor {
 
         let mut data = V5_DeviceImuRaw::default();
         unsafe {
-            vexDeviceImuRawAccelGet(self.device, &mut data);
+            vexDeviceImuRawAccelGet(self.device, &raw mut data);
         }
 
         Ok(Vector3 {

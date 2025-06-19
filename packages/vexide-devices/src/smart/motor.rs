@@ -79,6 +79,7 @@ pub struct Motor {
     target: MotorControl,
     device: V5_DeviceT,
 
+    #[allow(clippy::struct_field_names)]
     motor_type: MotorType,
 }
 
@@ -843,7 +844,7 @@ impl Motor {
         self.validate_port()?;
 
         let mut timestamp: u32 = 0;
-        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device, &mut timestamp) };
+        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device, &raw mut timestamp) };
 
         Ok((ticks, SmartDeviceTimestamp(timestamp)))
     }
@@ -1405,7 +1406,7 @@ impl Motor {
         self.validate_port()?;
 
         let mut constants = V5_DeviceMotorPid::from(constants);
-        unsafe { vexDeviceMotorVelocityPidSet(self.device, &mut constants) }
+        unsafe { vexDeviceMotorVelocityPidSet(self.device, &raw mut constants) }
 
         Ok(())
     }
@@ -1455,7 +1456,7 @@ impl Motor {
         self.validate_port()?;
 
         let mut constants = V5_DeviceMotorPid::from(constants);
-        unsafe { vexDeviceMotorPositionPidSet(self.device, &mut constants) }
+        unsafe { vexDeviceMotorPositionPidSet(self.device, &raw mut constants) }
 
         Ok(())
     }

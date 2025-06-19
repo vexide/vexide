@@ -187,7 +187,7 @@ impl GpsSensor {
         self.validate_port()?;
 
         let mut data = Point2 { x: 0.0, y: 0.0 };
-        unsafe { vexDeviceGpsOriginGet(self.device, &mut data.x, &mut data.y) }
+        unsafe { vexDeviceGpsOriginGet(self.device, &raw mut data.x, &raw mut data.y) }
 
         Ok(data)
     }
@@ -286,7 +286,7 @@ impl GpsSensor {
 
         let mut attitude = V5_DeviceGpsAttitude::default();
         unsafe {
-            vexDeviceGpsAttitudeGet(self.device, &mut attitude, false);
+            vexDeviceGpsAttitudeGet(self.device, &raw mut attitude, false);
         }
 
         Ok(Point2 {
@@ -477,7 +477,7 @@ impl GpsSensor {
 
         let mut data = V5_DeviceGpsAttitude::default();
         unsafe {
-            vexDeviceGpsAttitudeGet(self.device, &mut data, false);
+            vexDeviceGpsAttitudeGet(self.device, &raw mut data, false);
         }
 
         Ok(mint::EulerAngles {
@@ -527,7 +527,7 @@ impl GpsSensor {
 
         let mut data = V5_DeviceGpsQuaternion::default();
         unsafe {
-            vexDeviceGpsQuaternionGet(self.device, &mut data);
+            vexDeviceGpsQuaternionGet(self.device, &raw mut data);
         }
 
         Ok(mint::Quaternion {
@@ -583,7 +583,7 @@ impl GpsSensor {
 
         let mut data = V5_DeviceGpsRaw::default();
         unsafe {
-            vexDeviceGpsRawAccelGet(self.device, &mut data);
+            vexDeviceGpsRawAccelGet(self.device, &raw mut data);
         }
 
         Ok(mint::Vector3 {
@@ -636,7 +636,7 @@ impl GpsSensor {
 
         let mut data = V5_DeviceGpsRaw::default();
         unsafe {
-            vexDeviceGpsRawGyroGet(self.device, &mut data);
+            vexDeviceGpsRawGyroGet(self.device, &raw mut data);
         }
 
         Ok(mint::Vector3 {

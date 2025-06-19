@@ -168,7 +168,7 @@ impl VisionSensor {
             ..Default::default()
         };
 
-        unsafe { vexDeviceVisionSignatureSet(self.device, &mut signature) }
+        unsafe { vexDeviceVisionSignatureSet(self.device, &raw mut signature) }
 
         Ok(())
     }
@@ -182,8 +182,9 @@ impl VisionSensor {
         );
 
         let mut raw_signature = V5_DeviceVisionSignature::default();
-        let read_operation =
-            unsafe { vexDeviceVisionSignatureGet(self.device, u32::from(id), &mut raw_signature) };
+        let read_operation = unsafe {
+            vexDeviceVisionSignatureGet(self.device, u32::from(id), &raw mut raw_signature)
+        };
 
         if !read_operation {
             return Ok(None);
@@ -206,7 +207,7 @@ impl VisionSensor {
     fn write_signature_type(&mut self, id: u8, sig_type: u32) -> Result<(), VisionError> {
         if let Some(mut sig) = self.read_raw_signature(id)? {
             sig.mType = sig_type;
-            unsafe { vexDeviceVisionSignatureSet(self.device, &mut sig) }
+            unsafe { vexDeviceVisionSignatureSet(self.device, &raw mut sig) }
         } else {
             return ReadingFailedSnafu.fail();
         }
@@ -718,7 +719,7 @@ impl VisionSensor {
         for i in 0..object_count {
             let mut object = V5_DeviceVisionObject::default();
 
-            if unsafe { vexDeviceVisionObjectGet(self.device, i as u32, &mut object) } == 0 {
+            if unsafe { vexDeviceVisionObjectGet(self.device, i as u32, &raw mut object) } == 0 {
                 return ReadingFailedSnafu.fail();
             }
 
