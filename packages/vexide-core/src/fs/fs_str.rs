@@ -285,7 +285,7 @@ impl FsString {
     /// Returns the capacity of the [`FsString`].
     /// The capacity of the string will be equivalent to the maximum number of characters unless special characters are used.
     #[must_use]
-    pub fn capacity(&self) -> usize {
+    pub const fn capacity(&self) -> usize {
         self.inner.capacity()
     }
 
