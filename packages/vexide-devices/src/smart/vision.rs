@@ -182,8 +182,9 @@ impl VisionSensor {
         );
 
         let mut raw_signature = V5_DeviceVisionSignature::default();
-        let read_operation =
-            unsafe { vexDeviceVisionSignatureGet(self.device, u32::from(id), &raw mut raw_signature) };
+        let read_operation = unsafe {
+            vexDeviceVisionSignatureGet(self.device, u32::from(id), &raw mut raw_signature)
+        };
 
         if !read_operation {
             return Ok(None);
