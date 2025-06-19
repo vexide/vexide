@@ -50,10 +50,12 @@ Before releasing:
 
 - Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
+- Overhauled the `AdiAddrLed` API. This API no longer dynamically allocates, and should handle errors more sensibly. Strip length is now a const generic parameter (`AdiAddrled<N>` where `N` is the number of diodes on the LED strip). (#325) (**Breaking Change**)
 
 ### Removed
 
 - Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
+- Removed `AddrLedError` error. This device now will just return `PortError`, since the other error states are now either unreachable or will panic at runtime. (#325) (**Breaking Change**)
 
 ### New Contributors
 
