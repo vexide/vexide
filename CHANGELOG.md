@@ -45,6 +45,7 @@ Before releasing:
 - Symbols within the internal implementation of the patcher's `memcpy` will no longer clash with some libc compiler intrinsics. This should only matter if are linking to C libraries. (#314)
 - Fixed a signature validation problem in the original `VisionSensor`. (#319)
 - Fixed `AdiDigital*::is_low` improperly returning `is_high` (#324)
+- Fixed an issue where writing to the controller screen would sometimes be unreliable in fast loops (#336)
 
 ### Changed
 
