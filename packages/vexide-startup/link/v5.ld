@@ -13,17 +13,17 @@ OUTPUT_FORMAT("elf32-littlearm")
 ENTRY(_boot)
 
 __program_ram_start = 0x03800000;
-__program_ram_length = 0x04200000; /* This is actually 0x04800000, but we don't want the stack colliding with the patch. */
+__program_ram_length = 42M; /* This is actually 0x04800000 (48M), but we don't want the stack colliding with the patch. */
 __program_ram_end = __program_ram_start + __program_ram_length;
 
 __patcher_ram_start = 0x07A00000;
-__patcher_ram_length = 0x600000; /* 6mb total, 2mb for each subsection. */
+__patcher_ram_length = 6M; /* 6mb total, 2mb for each subsection. */
 __patcher_ram_end = __patcher_ram_start + __patcher_ram_length; /* End of CPU1 RWX memory block. */
-__patcher_section_length = 0x200000;
+__patcher_section_length = 2M;
 
 __code_signature_length = 0x20;
 
-__stack_length = 0x400000;
+__stack_length = 4M;
 __heap_end = __program_ram_end - __stack_length;
 __program_length = __heap_start - __program_ram_start;
 
