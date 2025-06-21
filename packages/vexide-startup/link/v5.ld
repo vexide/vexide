@@ -1,3 +1,9 @@
+/*
+ * Portions of this linker script are derived from the picolibc project.
+ * License: Copyright © 2019 Keith Packard (BSD-3-Clause)
+ * <https://github.com/picolibc/picolibc/blob/main/picolibc.ld.in>
+ */
+
 OUTPUT_FORMAT("elf32-littlearm")
 
 /*
@@ -20,10 +26,6 @@ __code_signature_length = 0x20;
 __stack_length = 0x400000;
 __heap_end = __program_ram_end - __stack_length;
 __program_length = __heap_start - __program_ram_start;
-
-/* see https://github.com/llvm/llvm-project/blob/main/libunwind/src/AddressSpace.hpp#L78 */
-__eh_frame_hdr_start = SIZEOF(.eh_frame_hdr) > 0 ? ADDR(.eh_frame_hdr) : 0;
-__eh_frame_hdr_end = SIZEOF(.eh_frame_hdr) > 0 ? . : 0;
 
 MEMORY {
     /*
@@ -73,8 +75,33 @@ SECTIONS {
         *(.boot)
         /* Stage 2 patcher. */
         *(.overwriter)
+
+        /* libc constructor code */
+		KEEP(*(SORT_BY_NAME(.init) SORT_BY_NAME(.init.*)))
+
         /* Rest of the program. */
         *(.text .text.*)
+
+        /* libc destructor code */
+		KEEP(*(.fini .fini.*))
+
+		/* Need to align the following function pointers correctly */
+		. = ALIGN(4);
+
+        /* lists of constructors and destructors */
+		PROVIDE_HIDDEN(__preinit_array_start = .);
+		KEEP(*(.preinit_array))
+		PROVIDE_HIDDEN(__preinit_array_end = .);
+
+		PROVIDE_HIDDEN(__init_array_start = .);
+		KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
+		KEEP(*(.init_array .ctors))
+		PROVIDE_HIDDEN(__init_array_end = .);
+
+		PROVIDE_HIDDEN(__fini_array_start = .);
+		KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
+		KEEP(*(.fini_array .dtors))
+		PROVIDE_HIDDEN(__fini_array_end = .);
     } > PROGRAM_RAM
 
     /*
@@ -82,16 +109,50 @@ SECTIONS {
      */
     .rodata : {
         *(.rodata .rodata.*)
+		*(.srodata .srodata.*)
+
+        /* Global Offset Table, used for resolving globals */
+        *(.got*)
     } > PROGRAM_RAM
+
+    /*
+     * ARM Stack Unwinding Sections
+     *
+     * These sections are added by the compiler in some cases to facilitate stack unwinding.
+     * __eh_frame_start and similar symbols are used by libunwind.
+     */
+
+    .except_ordered : {
+        __extab_start = .;
+		*(.gcc_except_table *.gcc_except_table.*)
+        *(.ARM.extab*)
+        __extab_end = .;
+    } > PROGRAM_RAM
+
+    .eh_frame_hdr : {
+        /* see https://github.com/llvm/llvm-project/blob/main/libunwind/src/AddressSpace.hpp#L78 */
+        PROVIDE(__eh_frame_hdr_start = .);
+        KEEP(*(.eh_frame_hdr))
+        PROVIDE(__eh_frame_hdr_end = .);
+    } > PROGRAM_RAM
+
+    .eh_frame : {
+        PROVIDE(__eh_frame_start = .);
+        KEEP(*(.eh_frame))
+        PROVIDE(__eh_frame_end = .);
+    } > PROGRAM_RAM
+
+    .except_unordered : {
+        PROVIDE(__exidx_start = .);
+        *(.ARM.exidx*)
+        PROVIDE(__exidx_end = .);
+    } > PROGRAM_RAM
+
+    /* -- Data intended to be mutable begins here. -- */
 
     .data : {
         *(.data .data.*)
-    } > PROGRAM_RAM
-
-    .bss : {
-        __bss_start = .;
-        *(.bss .bss.*)
-        __bss_end = .;
+		*(.sdata .sdata.* .sdata2.*)
     } > PROGRAM_RAM
 
     /*
@@ -103,35 +164,14 @@ SECTIONS {
         __vexide_tdata_end = .;
     } > PROGRAM_RAM
 
-    /*
-     * ARM Stack Unwinding Sections
-     *
-     * These sections are added by the compiler in some cases to facilitate stack unwinding.
-     * __eh_frame_start and similar symbols are used by libunwind.
-     */
-    .eh_frame_hdr : {
-        KEEP(*(.eh_frame_hdr))
-    } > PROGRAM_RAM
-
-    .eh_frame : {
-        __eh_frame_start = .;
-       KEEP(*(.eh_frame))
-        __eh_frame_end = .;
-    } > PROGRAM_RAM
-
-    .ARM.exidx : {
-        __exidx_start = .;
-        *(.ARM.exidx*)
-        __exidx_end = .;
-    } > PROGRAM_RAM
-
-    .ARM.extab : {
-        __extab_start = .;
-        *(.ARM.extab*)
-        __extab_end = .;
-    } > PROGRAM_RAM
-
     /* -- End of loadable sections - anything beyond this point shouldn't go in the BIN. -- */
+
+    .bss (NOLOAD) : {
+        __bss_start = .;
+		*(.sbss*)
+        *(.bss .bss.*)
+        __bss_end = .;
+    } > PROGRAM_RAM
 
     /*
      * Active memory sections for the stack/heap.
@@ -175,4 +215,16 @@ SECTIONS {
     /DISCARD/ : {
         *(.ARM.attributes*)
     }
+
+    /*
+     * These sections are useful for debugging but shouldn't end up in the final
+     * binary, so they are only stored in the ELF and not loaded into memory.
+     */
+
+    /* ELF metadata sections */
+    .symtab   0 : { *(.symtab) }
+    .strtab   0 : { *(.strtab) }
+    .shstrtab 0 : { *(.shstrtab) }
+    .debug    0 : { *(.debug*) }
+    .comment  0 : { *(.comment) }
 }

@@ -18,7 +18,10 @@
     "target-pointer-width": "32",
     "executables": true,
     "post-link-args": {
-        "ld.lld": ["-Tv5.ld"]
+        "ld.lld": [
+            "-Tv5.ld",
+            "--orphan-handling=error"
+        ]
     },
     "has-thumb-interworking": true,
     "default-uwtable": true,
