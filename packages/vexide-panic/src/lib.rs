@@ -14,7 +14,7 @@ use alloc::{
 };
 use core::{
     fmt::Write,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::atomic::{AtomicBool, AtomicU8, Ordering},
 };
 
 use vexide_core::{backtrace::Backtrace, println, sync::Mutex};
@@ -24,7 +24,7 @@ use vexide_devices::{
     math::Point2,
 };
 
-static FIRST_PANIC: AtomicBool = AtomicBool::new(true);
+static RECURSIVE_PANICS: AtomicU8 = AtomicU8::new(0);
 
 /// Draw an error box to the display.
 ///
@@ -244,40 +244,53 @@ pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
 /// The panic handler for vexide.
 #[panic_handler]
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
-    // This can only occur if the panic handler itself has panicked (which can
-    // happen in hooks or if println!() fails), resulting in a potential stack
-    // overflow. In this instance, something is likely very wrong, so it's better
-    // to just abort rather than recursively panicking.
-    if !FIRST_PANIC.swap(false, Ordering::Relaxed) {
-        vexide_core::program::exit();
-    }
+    let num_previous_panics = RECURSIVE_PANICS.fetch_add(1, Ordering::Relaxed);
 
-    // Try to lock the HOOK mutex. If we can't, we'll just use the default panic
-    // handler, since it's probably not good to panic in the panic handler and
-    // leave the user clueless about what happened.
-    //
-    // We should be able to lock the mutex, since we know that the mutex is only
-    // otherwise locked in `take_hook` and `set_hook`, which don't panic.
+    match num_previous_panics {
+        0 => {
+            // Try to lock the HOOK mutex. If we can't, we'll just use the default panic
+            // handler, since it's probably not good to panic in the panic handler and
+            // leave the user clueless about what happened.
+            //
+            // We should be able to lock the mutex, since we know that the mutex is only
+            // otherwise locked in `take_hook` and `set_hook`, which don't panic.
 
-    // Allow if_let_rescope lint since we actually prefer the Rust 2024 rescope
-    // in this case.
-    // Formerly, in the `else` branch, the lock would be held to the end of the
-    // block, but it doesn't in the 2024 edition of Rust. That behavior is
-    // actually preferable here.
-    #[allow(if_let_rescope)]
-    if let Some(mut guard) = HOOK.try_lock() {
-        let hook = core::mem::replace(&mut *guard, Hook::Default);
-        // Drop the guard first to avoid preventing set_hook or take_hook from
-        // getting a hook
-        core::mem::drop(guard);
-        (hook.into_box())(info);
-    } else {
-        // Since this is in theory unreachable, if it is reached, let's ask the
-        // user to file a bug report.
-        // FIXME: use eprintln once armv7a-vex-v5 support in Rust is merged
-        println!("Panic handler hook mutex was locked, so the default panic hook will be used. This should never happen.");
-        println!("If you see this, please consider filing a bug: https://github.com/vexide/vexide/issues/new");
-        default_panic_hook(info);
+            // Allow if_let_rescope lint since we actually prefer the Rust 2024 rescope
+            // in this case.
+            // Formerly, in the `else` branch, the lock would be held to the end of the
+            // block, but it doesn't in the 2024 edition of Rust. That behavior is
+            // actually preferable here.
+            #[allow(if_let_rescope)]
+            if let Some(mut guard) = HOOK.try_lock() {
+                let hook = core::mem::replace(&mut *guard, Hook::Default);
+                // Drop the guard first to avoid preventing set_hook or take_hook from
+                // getting a hook
+                core::mem::drop(guard);
+                (hook.into_box())(info);
+            } else {
+                // Since this is in theory unreachable, if it is reached, let's ask the
+                // user to file a bug report.
+                // FIXME: use eprintln once armv7a-vex-v5 support in Rust is merged
+                println!("Panic handler hook mutex was locked, so the default panic hook will be used. This should never happen.");
+                println!("If you see this, please consider filing a bug: https://github.com/vexide/vexide/issues/new");
+                panic(info);
+            }
+        }
+
+        // This happens when a panic hook itself panics. This is likely because of buggy
+        // user-defined panic handling logic, so we fall back to the default to ensure
+        // there is at least some indication of what's happening here.
+        1 => {
+            default_panic_hook(info);
+        }
+
+        // This can only occur if the vexide panic handler itself has panicked (which
+        // could happen, for example, if println!() fails), resulting in a potential stack
+        // overflow. In this instance, something is likely very wrong, so it's better
+        // to just abort rather than recursively panicking.
+        _ => {
+            vexide_core::program::abort();
+        }
     }
 
     // enter into an endless loop if the panic hook didn't exit the program
