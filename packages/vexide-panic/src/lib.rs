@@ -14,7 +14,7 @@ use alloc::{
 };
 use core::{
     fmt::Write,
-    sync::atomic::{AtomicBool, AtomicU8, Ordering},
+    sync::atomic::{AtomicU8, Ordering},
 };
 
 use vexide_core::{backtrace::Backtrace, println, sync::Mutex};
