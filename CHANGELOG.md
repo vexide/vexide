@@ -48,6 +48,7 @@ Before releasing:
 
 ### Changed
 
+- If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
 - Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 - Moved the `_boot` routine to a naked function. (#337)
