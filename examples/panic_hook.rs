@@ -22,7 +22,7 @@ async fn main(_peripherals: Peripherals) {
         // Show the panic message on the primary controller
         block_on(async {
             let mut controller_primary = unsafe { Controller::new(ControllerId::Primary) };
-            let _ = controller_primary.screen.set_text("Panic!", 0, 0).await;
+            let _ = controller_primary.screen.set_text("Panic!", 1, 0).await;
         });
 
         // Fill the screen with red to indicate a panic
