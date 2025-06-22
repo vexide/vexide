@@ -19,7 +19,7 @@
             cargo-v5'
             pkgs.llvmPackages.bintools
             pkgs.cargo-binutils
-            (pkgs.rust-bin.nightly."2025-02-18".default.override {
+            (pkgs.rust-bin.nightly."2025-06-19".default.override {
               extensions = [ "rust-analyzer" "rust-src" "clippy" ];
             })
           ];
