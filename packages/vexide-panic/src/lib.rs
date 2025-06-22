@@ -24,7 +24,18 @@ use vexide_devices::{
     math::Point2,
 };
 
-static RECURSIVE_PANICS: AtomicU8 = AtomicU8::new(0);
+/// Recursive panic counter.
+///
+/// This is an atomic counter that tracks the number of recursive panics that have
+/// occurred. A "recursive panic" is a panic that originates from within the panic handler
+/// itself. This can happen if a user-defined panic hook happens to call a function that
+/// panics, or in rare occasions can happen if the default panic runtime runs out of heap
+/// or fails to print to stdout.
+///
+/// If a recursive panic keeps happening, a stack overflow can occur which is undesirable.
+/// This counter allows us to abort the program immediately if we've recursively panicked
+/// more than once. See the [`panic`] function further down this file for more information.
+static PANIC_COUNT: AtomicU8 = AtomicU8::new(0);
 
 /// Draw an error box to the display.
 ///
@@ -244,9 +255,9 @@ pub fn take_hook() -> Box<dyn Fn(&core::panic::PanicInfo<'_>) + Send> {
 /// The panic handler for vexide.
 #[panic_handler]
 pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
-    let num_previous_panics = RECURSIVE_PANICS.fetch_add(1, Ordering::Relaxed);
+    let previous_panic_count = PANIC_COUNT.fetch_add(1, Ordering::Relaxed);
 
-    match num_previous_panics {
+    match previous_panic_count {
         0 => {
             // Try to lock the HOOK mutex. If we can't, we'll just use the default panic
             // handler, since it's probably not good to panic in the panic handler and
@@ -270,7 +281,6 @@ pub fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
             } else {
                 // Since this is in theory unreachable, if it is reached, let's ask the
                 // user to file a bug report.
-                // FIXME: use eprintln once armv7a-vex-v5 support in Rust is merged
                 println!("Panic handler hook mutex was locked, so the default panic hook will be used. This should never happen.");
                 println!("If you see this, please consider filing a bug: https://github.com/vexide/vexide/issues/new");
                 panic(info);
