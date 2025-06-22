@@ -89,42 +89,10 @@ impl<R: Read> VarIntReader for R {
 ///
 /// Uses zigzag encoding (also described there) for signed integer representation.
 pub trait VarInt: Sized + Copy {
-    /// Returns the number of bytes this number needs in its encoded form. Note: This varies
-    /// depending on the actual number you want to encode.
-    fn required_space(self) -> usize;
     /// Decode a value from the slice. Returns the value and the number of bytes read from the
     /// slice (can be used to read several consecutive values from a big slice)
     /// return None if all bytes has MSB set.
     fn decode_var(src: &[u8]) -> Option<(Self, usize)>;
-    /// Encode a value into the slice. The slice must be at least `required_space()` bytes long.
-    /// The number of bytes taken by the encoded integer is returned.
-    fn encode_var(self, src: &mut [u8]) -> usize;
-}
-
-/// How many bytes an integer uses when being encoded as a VarInt.
-#[inline]
-const fn required_encoded_space_unsigned(mut v: u64) -> usize {
-    if v == 0 {
-        return 1;
-    }
-
-    let mut logcounter = 0;
-    while v > 0 {
-        logcounter += 1;
-        v >>= 7;
-    }
-    logcounter
-}
-
-/// How many bytes an integer uses when being encoded as a VarInt.
-#[inline]
-const fn required_encoded_space_signed(v: i64) -> usize {
-    required_encoded_space_unsigned(zigzag_encode(v))
-}
-
-#[inline]
-const fn zigzag_encode(from: i64) -> u64 {
-    ((from << 1) ^ (from >> 63)) as u64
 }
 
 // see: http://stackoverflow.com/a/2211086/56332
@@ -136,10 +104,6 @@ const fn zigzag_decode(from: u64) -> i64 {
 }
 
 impl VarInt for u64 {
-    fn required_space(self) -> usize {
-        required_encoded_space_unsigned(self)
-    }
-
     #[inline]
     fn decode_var(src: &[u8]) -> Option<(Self, usize)> {
         let mut result: u64 = 0;
@@ -163,29 +127,9 @@ impl VarInt for u64 {
             None
         }
     }
-
-    #[inline]
-    fn encode_var(self, dst: &mut [u8]) -> usize {
-        debug_assert!(dst.len() >= self.required_space());
-        let mut n = self;
-        let mut i = 0;
-
-        while n >= 0x80 {
-            dst[i] = MSB | (n as u8);
-            i += 1;
-            n >>= 7;
-        }
-
-        dst[i] = n as u8;
-        i + 1
-    }
 }
 
 impl VarInt for i64 {
-    fn required_space(self) -> usize {
-        required_encoded_space_signed(self)
-    }
-
     #[inline]
     fn decode_var(src: &[u8]) -> Option<(Self, usize)> {
         if let Some((result, size)) = u64::decode_var(src) {
@@ -194,38 +138,14 @@ impl VarInt for i64 {
             None
         }
     }
-
-    #[inline]
-    fn encode_var(self, dst: &mut [u8]) -> usize {
-        debug_assert!(dst.len() >= self.required_space());
-        let mut n: u64 = zigzag_encode(self);
-        let mut i = 0;
-
-        while n >= 0x80 {
-            dst[i] = MSB | (n as u8);
-            i += 1;
-            n >>= 7;
-        }
-
-        dst[i] = n as u8;
-        i + 1
-    }
 }
 
 macro_rules! impl_varint {
     ($t:ty, unsigned) => {
         impl VarInt for $t {
-            fn required_space(self) -> usize {
-                required_encoded_space_unsigned(self as u64)
-            }
-
             fn decode_var(src: &[u8]) -> Option<(Self, usize)> {
                 let (n, s) = u64::decode_var(src)?;
                 Some((n as Self, s))
-            }
-
-            fn encode_var(self, dst: &mut [u8]) -> usize {
-                (self as u64).encode_var(dst)
             }
         }
     };
