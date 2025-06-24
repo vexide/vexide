@@ -52,10 +52,12 @@ Before releasing:
 
 ### Changed
 
+- If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
 - Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
 - The `Position` type now stores encoder positions as a floating-point number rather than a fixed-point number. (#328) (**Breaking Change**)
 - The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
+- Moved the `_boot` routine to a naked function. (#337)
 
 ### Removed
 
