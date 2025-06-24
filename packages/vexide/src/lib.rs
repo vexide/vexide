@@ -95,7 +95,7 @@ pub mod prelude {
             addrled::AdiAddrLed,
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},
-            encoder::AdiEncoder,
+            encoder::{AdiEncoder, AdiOpticalEncoder},
             gyroscope::AdiGyroscope,
             light_sensor::AdiLightSensor,
             line_tracker::AdiLineTracker,

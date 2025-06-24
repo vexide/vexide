@@ -34,6 +34,10 @@ Before releasing:
 
 ### Added
 
+- Added support for custom encoders with different resolutions when using `AdiEncoder`. (#328) (**Breaking Change**)
+- Added the `AdiOpticalEncoder` for simplifying the creation of VEX optical encoders with the new `AdiEncoder` API. (#328) (**Breaking Change**)
+- Added `Position::ZERO` constant. (#328)
+- Added the ability to create/convert `Position` instances to/from gradians. (#328)
 - Added several missing derived trait implementations for many device error types. (#331)
 - Added support for task-local data storage using the new `task_local!` macro. This is closely modeled after `thread_local!`s in the standard library. (#333)
 
@@ -50,6 +54,8 @@ Before releasing:
 
 - If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
 - Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
+- The `Position` type now stores encoder positions as a floating-point number rather than a fixed-point number. (#328) (**Breaking Change**)
+- The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 - Moved the `_boot` routine to a naked function. (#337)
 
