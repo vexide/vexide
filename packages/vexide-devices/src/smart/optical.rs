@@ -412,7 +412,7 @@ impl OpticalSensor {
         self.validate_port()?;
 
         let mut data = V5_DeviceOpticalRgb::default();
-        unsafe { vexDeviceOpticalRgbGet(self.device, &mut data) };
+        unsafe { vexDeviceOpticalRgbGet(self.device, &raw mut data) };
 
         Ok(data.into())
     }
@@ -426,7 +426,7 @@ impl OpticalSensor {
         self.validate_port()?;
 
         let mut data = V5_DeviceOpticalRaw::default();
-        unsafe { vexDeviceOpticalRawGet(self.device, &mut data) };
+        unsafe { vexDeviceOpticalRawGet(self.device, &raw mut data) };
 
         Ok(data.into())
     }
@@ -469,7 +469,7 @@ impl OpticalSensor {
         unsafe { vexDeviceOpticalGestureEnable(self.device) };
 
         let mut gesture = V5_DeviceOpticalGesture::default();
-        let direction = match unsafe { vexDeviceOpticalGestureGet(self.device, &mut gesture) } {
+        let direction = match unsafe { vexDeviceOpticalGestureGet(self.device, &raw mut gesture) } {
             // see: https://github.com/purduesigbots/pros/blob/master/include/pros/optical.h#L37
             1 => GestureDirection::Up,
             2 => GestureDirection::Down,

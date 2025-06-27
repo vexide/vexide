@@ -79,6 +79,7 @@ pub struct Motor {
     target: MotorControl,
     device: V5_DeviceT,
 
+    #[allow(clippy::struct_field_names)]
     motor_type: MotorType,
 }
 
@@ -322,7 +323,7 @@ impl Motor {
                 #[allow(clippy::cast_precision_loss)]
                 vexDeviceMotorAbsoluteTargetSet(
                     self.device,
-                    position.as_ticks(gearset.ticks_per_revolution()) as f64,
+                    position.as_ticks(gearset.ticks_per_revolution()),
                     velocity,
                 );
             },
@@ -811,7 +812,7 @@ impl Motor {
     pub fn position(&self) -> Result<Position, MotorError> {
         let gearset = self.gearset()?;
         Ok(Position::from_ticks(
-            unsafe { vexDeviceMotorPositionGet(self.device) } as i64,
+            unsafe { vexDeviceMotorPositionGet(self.device) },
             gearset.ticks_per_revolution(),
         ))
     }
@@ -843,7 +844,7 @@ impl Motor {
         self.validate_port()?;
 
         let mut timestamp: u32 = 0;
-        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device, &mut timestamp) };
+        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device, &raw mut timestamp) };
 
         Ok((ticks, SmartDeviceTimestamp(timestamp)))
     }
@@ -968,7 +969,6 @@ impl Motor {
     ///     motor.set_position(Position::from_degrees(0.0)).unwrap();
     /// }
     /// ```
-    #[allow(clippy::cast_precision_loss)]
     pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
         let gearset = self.gearset()?;
 
@@ -976,7 +976,7 @@ impl Motor {
             vexDeviceMotorPositionSet(
                 self.device,
                 // NOTE: No precision loss since ticks are not fractional.
-                position.as_ticks(gearset.ticks_per_revolution()) as f64,
+                position.as_ticks(gearset.ticks_per_revolution()),
             );
         }
 
@@ -1405,7 +1405,7 @@ impl Motor {
         self.validate_port()?;
 
         let mut constants = V5_DeviceMotorPid::from(constants);
-        unsafe { vexDeviceMotorVelocityPidSet(self.device, &mut constants) }
+        unsafe { vexDeviceMotorVelocityPidSet(self.device, &raw mut constants) }
 
         Ok(())
     }
@@ -1455,7 +1455,7 @@ impl Motor {
         self.validate_port()?;
 
         let mut constants = V5_DeviceMotorPid::from(constants);
-        unsafe { vexDeviceMotorPositionPidSet(self.device, &mut constants) }
+        unsafe { vexDeviceMotorPositionPidSet(self.device, &raw mut constants) }
 
         Ok(())
     }

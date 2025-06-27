@@ -1,7 +1,7 @@
-use varint_encoding::VarIntReader;
+use varint_decode::VarIntReader;
 use vexide_core::io::{Cursor, Read, Seek, SeekFrom};
 
-mod varint_encoding;
+mod varint_decode;
 
 // Assembly implementation of the patch overwriter (`__patcher_overwrite`).
 //

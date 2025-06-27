@@ -18,7 +18,7 @@ use snafu::Snafu;
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::{position::Position, PortError};
+use crate::PortError;
 
 /// The magic number returned by the ADI device when the gyroscope is still calibrating.
 const CALIBRATING_MAGIC: i32 = -0x8000;
@@ -168,7 +168,7 @@ impl AdiGyroscope {
         }
     }
 
-    /// Returns the measured yaw rotation of the gyroscope.
+    /// Returns the measured yaw rotation of the gyroscope in degrees.
     ///
     /// # Errors
     ///
@@ -184,17 +184,17 @@ impl AdiGyroscope {
     /// async fn main(peripherals: Peripherals) {
     ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
     ///     _ = gyro.calibrate(Duration::from_secs(2)).await;
-    ///     println!("Yaw: {:?}", gyro.yaw());
+    ///     println!("Yaw: {}", gyro.yaw());
     /// }
     /// ```
-    pub fn yaw(&self) -> Result<Position, AdiGyroscopeError> {
+    pub fn yaw(&self) -> Result<f64, AdiGyroscopeError> {
         if self.is_calibrating()? {
             return Err(AdiGyroscopeError::StillCalibrating);
         }
         let value = unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) };
         let value = f64::from(value) / 10.0;
 
-        Ok(Position::from_degrees(value))
+        Ok(value)
     }
 }
 
