@@ -108,7 +108,7 @@ SECTIONS {
      * Global/uninitialized/static/constant data sections.
      */
     .rodata : {
-        *(.rodata .rodata.*)
+        *(.rodata .rodata1 .rodata.*)
 		*(.srodata .srodata.*)
 
         /* Global Offset Table, used for resolving globals */
@@ -151,7 +151,7 @@ SECTIONS {
     /* -- Data intended to be mutable begins here. -- */
 
     .data : {
-        *(.data .data.*)
+        *(.data .data1 .data.*)
 		*(.sdata .sdata.* .sdata2.*)
     } > PROGRAM_RAM
 
