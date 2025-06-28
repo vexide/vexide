@@ -164,10 +164,40 @@ SECTIONS {
         __vexide_tdata_end = .;
     } > PROGRAM_RAM
 
+    /*
+     * .tdata must be at least as aligned as .tbss so memcpy-ing the entire
+     * TLS block to an address with alignment `__tls_align` works as expected.
+     *
+     * See: https://github.com/picolibc/picolibc/commit/de46cd909e6cad136e4c97c45c74f47cb4b00426
+     */
+
+    .tdata : ALIGN(__tls_align) {
+        __tls_base = .;
+        __tdata_start = .;
+
+        *(.tdata .tdata.*)
+
+        __tdata_end = .;
+    } > USER_RAM
+
     /* -- End of loadable sections - anything beyond this point shouldn't go in the BIN. -- */
 
-    .bss (NOLOAD) : {
+    /* __bss_start includes .tbss because both of them need to be zeroed on startup */
+    .tbss (NOLOAD) : {
         __bss_start = .;
+        __tbss_start = .;
+
+        *(.tbss .tbss.*)
+        *(.tcommon)
+
+        __tls_end = .;
+        __tbss_end = .;
+    } > USER_RAM
+
+    __tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss));
+    __arm32_tls_tcb_offset = MAX(8, __tls_align);
+
+    .bss (NOLOAD) : {
 		*(.sbss*)
         *(.bss .bss.*)
 
