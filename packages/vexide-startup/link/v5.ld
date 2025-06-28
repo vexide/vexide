@@ -178,7 +178,7 @@ SECTIONS {
      *
      * Because these are (NOLOAD), they will not influence the final size of the binary.
      */
-    .heap (NOLOAD) : ALIGN(4) {
+    .heap (NOLOAD) : ALIGN(8) {
         __heap_start = .;
         . = __heap_end;
     } > PROGRAM_RAM
