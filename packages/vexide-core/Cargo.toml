@@ -20,7 +20,7 @@ authors = [
 vex-sdk = { workspace = true }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 snafu = { workspace = true }
-talc = {  version = "4.3.1", optional = true }
+talc = { version = "4.3.1", optional = true }
 lock_api = "0.4.11"
 bitflags = "2.4.2"
 futures-core = { version = "0.3.30", default-features = false, features = [
@@ -44,6 +44,7 @@ default = ["backtraces"]
 force_rust_libm = ["dep:libm"]
 backtraces = ["dep:vex-libunwind"]
 allocator = ["dep:talc"]
+libc = []                          # links with libc
 
 [package.metadata.docs.rs]
 targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
