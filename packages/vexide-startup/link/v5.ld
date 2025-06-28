@@ -178,7 +178,7 @@ SECTIONS {
         *(.tdata .tdata.*)
 
         __tdata_end = .;
-    } > USER_RAM
+    } > PROGRAM_RAM
 
     /* -- End of loadable sections - anything beyond this point shouldn't go in the BIN. -- */
 
@@ -192,7 +192,7 @@ SECTIONS {
 
         __tls_end = .;
         __tbss_end = .;
-    } > USER_RAM
+    } > PROGRAM_RAM
 
     __tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss));
     __arm32_tls_tcb_offset = MAX(8, __tls_align);
