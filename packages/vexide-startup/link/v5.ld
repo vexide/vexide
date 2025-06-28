@@ -170,7 +170,10 @@ SECTIONS {
         __bss_start = .;
 		*(.sbss*)
         *(.bss .bss.*)
-        __bss_end = .;
+
+		/* Align the heap */
+		. = ALIGN(8);
+		__bss_end = .;
     } > PROGRAM_RAM
 
     /*
@@ -178,7 +181,7 @@ SECTIONS {
      *
      * Because these are (NOLOAD), they will not influence the final size of the binary.
      */
-    .heap (NOLOAD) : ALIGN(8) {
+    .heap (NOLOAD) : {
         __heap_start = .;
         . = __heap_end;
     } > PROGRAM_RAM
