@@ -4,11 +4,20 @@
     clippy::upper_case_acronyms
 )]
 
+mod alloc;
+
 use core::ffi::{c_char, c_int};
 
 use no_std_io::io::{Read, Write};
 
 use crate::io::{stdin, stdout};
+
+mod errors {
+    use core::ffi::c_int;
+
+    pub const EINVAL: c_int = 22;
+    pub const ENOMEM: c_int = 12;
+}
 
 mod picolibc {
     // Force linking to the C standard library.
