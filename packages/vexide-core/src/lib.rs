@@ -21,6 +21,8 @@ pub mod competition;
 pub mod float;
 pub mod fs;
 pub mod io;
+#[cfg(feature = "libc")]
+mod libc_interop;
 pub mod os;
 pub mod path;
 pub mod program;

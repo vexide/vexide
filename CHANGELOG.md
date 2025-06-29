@@ -40,6 +40,7 @@ Before releasing:
 - Added the ability to create/convert `Position` instances to/from gradians. (#328)
 - Added several missing derived trait implementations for many device error types. (#331)
 - Added support for task-local data storage using the new `task_local!` macro. This is closely modeled after `thread_local!`s in the standard library. (#333)
+- Added several link sections required for C interop (#338)
 
 ### Fixed
 
@@ -49,6 +50,7 @@ Before releasing:
 - Symbols within the internal implementation of the patcher's `memcpy` will no longer clash with some libc compiler intrinsics. This should only matter if are linking to C libraries. (#314)
 - Fixed a signature validation problem in the original `VisionSensor`. (#319)
 - Fixed `AdiDigital*::is_low` improperly returning `is_high` (#324)
+- The `__eh_frame_hdr_end` symbol, related to backtrace capturing, is now correctly set to the end of the `.eh_frame_hdr` section. (#338)
 
 ### Changed
 
@@ -58,6 +60,10 @@ Before releasing:
 - The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 - Moved the `_boot` routine to a naked function. (#337)
+- Reordered exception handling link sections to live next to other read-only data. (#338)
+- The BSS (uninitialized data) link section is no longer included in binary outputs to improve upload speeds. (#338)
+- Placing data in a link section which isn't included in vexide's linker script is now a hard error. (#338) (**Breaking Change**)
+- Some symbols related to exception handling are now removed from the final output if they are left unused. (#338)
 
 ### Removed
 

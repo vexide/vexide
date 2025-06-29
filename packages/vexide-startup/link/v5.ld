@@ -1,3 +1,9 @@
+/*
+ * Portions of this linker script are derived from the picolibc project.
+ * License: Copyright © 2019 Keith Packard (BSD-3-Clause)
+ * <https://github.com/picolibc/picolibc/blob/main/picolibc.ld.in>
+ */
+
 OUTPUT_FORMAT("elf32-littlearm")
 
 /*
@@ -7,23 +13,19 @@ OUTPUT_FORMAT("elf32-littlearm")
 ENTRY(_boot)
 
 __program_ram_start = 0x03800000;
-__program_ram_length = 0x04200000; /* This is actually 0x04800000, but we don't want the stack colliding with the patch. */
+__program_ram_length = 42M; /* This is actually 0x04800000 (48M), but we don't want the stack colliding with the patch. */
 __program_ram_end = __program_ram_start + __program_ram_length;
 
 __patcher_ram_start = 0x07A00000;
-__patcher_ram_length = 0x600000; /* 6mb total, 2mb for each subsection. */
+__patcher_ram_length = 6M; /* 6mb total, 2mb for each subsection. */
 __patcher_ram_end = __patcher_ram_start + __patcher_ram_length; /* End of CPU1 RWX memory block. */
-__patcher_section_length = 0x200000;
+__patcher_section_length = 2M;
 
 __code_signature_length = 0x20;
 
-__stack_length = 0x400000;
+__stack_length = 4M;
 __heap_end = __program_ram_end - __stack_length;
 __program_length = __heap_start - __program_ram_start;
-
-/* see https://github.com/llvm/llvm-project/blob/main/libunwind/src/AddressSpace.hpp#L78 */
-__eh_frame_hdr_start = SIZEOF(.eh_frame_hdr) > 0 ? ADDR(.eh_frame_hdr) : 0;
-__eh_frame_hdr_end = SIZEOF(.eh_frame_hdr) > 0 ? . : 0;
 
 MEMORY {
     /*
@@ -73,25 +75,84 @@ SECTIONS {
         *(.boot)
         /* Stage 2 patcher. */
         *(.overwriter)
+
+        /* libc constructor code */
+		KEEP(*(SORT_BY_NAME(.init) SORT_BY_NAME(.init.*)))
+
         /* Rest of the program. */
         *(.text .text.*)
+
+        /* libc destructor code */
+		KEEP(*(.fini .fini.*))
+
+		/* Need to align the following function pointers correctly */
+		. = ALIGN(4);
+
+        /* lists of constructors and destructors */
+		PROVIDE_HIDDEN(__preinit_array_start = .);
+		KEEP(*(.preinit_array))
+		PROVIDE_HIDDEN(__preinit_array_end = .);
+
+		PROVIDE_HIDDEN(__init_array_start = .);
+		KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
+		KEEP(*(.init_array .ctors))
+		PROVIDE_HIDDEN(__init_array_end = .);
+
+		PROVIDE_HIDDEN(__fini_array_start = .);
+		KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
+		KEEP(*(.fini_array .dtors))
+		PROVIDE_HIDDEN(__fini_array_end = .);
     } > PROGRAM_RAM
 
     /*
      * Global/uninitialized/static/constant data sections.
      */
     .rodata : {
-        *(.rodata .rodata.*)
+        *(.rodata .rodata1 .rodata.*)
+		*(.srodata .srodata.*)
+
+        /* Global Offset Table, used for resolving globals */
+        *(.got*)
     } > PROGRAM_RAM
+
+    /*
+     * ARM Stack Unwinding Sections
+     *
+     * These sections are added by the compiler in some cases to facilitate stack unwinding.
+     * __eh_frame_start and similar symbols are used by libunwind.
+     */
+
+    .except_ordered : {
+        __extab_start = .;
+		*(.gcc_except_table *.gcc_except_table.*)
+        *(.ARM.extab*)
+        __extab_end = .;
+    } > PROGRAM_RAM
+
+    .eh_frame_hdr : {
+        /* see https://github.com/llvm/llvm-project/blob/main/libunwind/src/AddressSpace.hpp#L78 */
+        PROVIDE(__eh_frame_hdr_start = .);
+        KEEP(*(.eh_frame_hdr))
+        PROVIDE(__eh_frame_hdr_end = .);
+    } > PROGRAM_RAM
+
+    .eh_frame : {
+        PROVIDE(__eh_frame_start = .);
+        KEEP(*(.eh_frame))
+        PROVIDE(__eh_frame_end = .);
+    } > PROGRAM_RAM
+
+    .except_unordered : {
+        PROVIDE(__exidx_start = .);
+        *(.ARM.exidx*)
+        PROVIDE(__exidx_end = .);
+    } > PROGRAM_RAM
+
+    /* -- Data intended to be mutable begins here. -- */
 
     .data : {
-        *(.data .data.*)
-    } > PROGRAM_RAM
-
-    .bss : {
-        __bss_start = .;
-        *(.bss .bss.*)
-        __bss_end = .;
+        *(.data .data1 .data.*)
+		*(.sdata .sdata.* .sdata2.*)
     } > PROGRAM_RAM
 
     /*
@@ -104,41 +165,53 @@ SECTIONS {
     } > PROGRAM_RAM
 
     /*
-     * ARM Stack Unwinding Sections
+     * .tdata must be at least as aligned as .tbss so memcpy-ing the entire
+     * TLS block to an address with alignment `__tls_align` works as expected.
      *
-     * These sections are added by the compiler in some cases to facilitate stack unwinding.
-     * __eh_frame_start and similar symbols are used by libunwind.
+     * See: https://github.com/picolibc/picolibc/commit/de46cd909e6cad136e4c97c45c74f47cb4b00426
      */
-    .eh_frame_hdr : {
-        KEEP(*(.eh_frame_hdr))
-    } > PROGRAM_RAM
 
-    .eh_frame : {
-        __eh_frame_start = .;
-       KEEP(*(.eh_frame))
-        __eh_frame_end = .;
-    } > PROGRAM_RAM
+    .tdata : ALIGN(__tls_align) {
+        __tls_base = .;
+        __tdata_start = .;
 
-    .ARM.exidx : {
-        __exidx_start = .;
-        *(.ARM.exidx*)
-        __exidx_end = .;
-    } > PROGRAM_RAM
+        *(.tdata .tdata.*)
 
-    .ARM.extab : {
-        __extab_start = .;
-        *(.ARM.extab*)
-        __extab_end = .;
+        __tdata_end = .;
     } > PROGRAM_RAM
 
     /* -- End of loadable sections - anything beyond this point shouldn't go in the BIN. -- */
+
+    /* __bss_start includes .tbss because both of them need to be zeroed on startup */
+    .tbss (NOLOAD) : {
+        __bss_start = .;
+        __tbss_start = .;
+
+        *(.tbss .tbss.*)
+        *(.tcommon)
+
+        __tls_end = .;
+        __tbss_end = .;
+    } > PROGRAM_RAM
+
+    __tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss));
+    __arm32_tls_tcb_offset = MAX(8, __tls_align);
+
+    .bss (NOLOAD) : {
+		*(.sbss*)
+        *(.bss .bss.*)
+
+		/* Align the heap */
+		. = ALIGN(8);
+		__bss_end = .;
+    } > PROGRAM_RAM
 
     /*
      * Active memory sections for the stack/heap.
      *
      * Because these are (NOLOAD), they will not influence the final size of the binary.
      */
-    .heap (NOLOAD) : ALIGN(4) {
+    .heap (NOLOAD) : {
         __heap_start = .;
         . = __heap_end;
     } > PROGRAM_RAM
@@ -175,4 +248,63 @@ SECTIONS {
     /DISCARD/ : {
         *(.ARM.attributes*)
     }
+
+    /*
+     * These sections are useful for debugging but shouldn't end up in the final
+     * binary, so they are only stored in the ELF and not loaded into memory.
+     */
+
+    /* ELF metadata sections */
+    .symtab   0 : { *(.symtab) }
+    .strtab   0 : { *(.strtab) }
+    .shstrtab 0 : { *(.shstrtab) }
+
+
+	/* Stabs debugging sections.  */
+	.stab          0 : { *(.stab) }
+	.stabstr       0 : { *(.stabstr) }
+	.stab.excl     0 : { *(.stab.excl) }
+	.stab.exclstr  0 : { *(.stab.exclstr) }
+	.stab.index    0 : { *(.stab.index) }
+	.stab.indexstr 0 : { *(.stab.indexstr) }
+	.comment       0 : { *(.comment) }
+	.gnu.build.attributes : { *(.gnu.build.attributes .gnu.build.attributes.*) }
+	/* DWARF debug sections.
+	   Symbols in the DWARF debugging sections are relative to the beginning
+	   of the section so we begin them at 0.  */
+	/* DWARF 1.  */
+	.debug          0 : { *(.debug) }
+	.line           0 : { *(.line) }
+	/* GNU DWARF 1 extensions.  */
+	.debug_srcinfo  0 : { *(.debug_srcinfo) }
+	.debug_sfnames  0 : { *(.debug_sfnames) }
+	/* DWARF 1.1 and DWARF 2.  */
+	.debug_aranges  0 : { *(.debug_aranges) }
+	.debug_pubnames 0 : { *(.debug_pubnames) }
+	/* DWARF 2.  */
+	.debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
+	.debug_abbrev   0 : { *(.debug_abbrev) }
+	.debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end) }
+	.debug_frame    0 : { *(.debug_frame) }
+	.debug_str      0 : { *(.debug_str) }
+	.debug_loc      0 : { *(.debug_loc) }
+	.debug_macinfo  0 : { *(.debug_macinfo) }
+	/* SGI/MIPS DWARF 2 extensions.  */
+	.debug_weaknames 0 : { *(.debug_weaknames) }
+	.debug_funcnames 0 : { *(.debug_funcnames) }
+	.debug_typenames 0 : { *(.debug_typenames) }
+	.debug_varnames  0 : { *(.debug_varnames) }
+	/* DWARF 3.  */
+	.debug_pubtypes 0 : { *(.debug_pubtypes) }
+	.debug_ranges   0 : { *(.debug_ranges) }
+	/* DWARF 5.  */
+	.debug_addr     0 : { *(.debug_addr) }
+	.debug_line_str 0 : { *(.debug_line_str) }
+	.debug_loclists 0 : { *(.debug_loclists) }
+	.debug_macro    0 : { *(.debug_macro) }
+	.debug_names    0 : { *(.debug_names) }
+	.debug_rnglists 0 : { *(.debug_rnglists) }
+	.debug_str_offsets 0 : { *(.debug_str_offsets) }
+	.debug_sup      0 : { *(.debug_sup) }
+	.gnu.attributes 0 : { KEEP (*(.gnu.attributes)) }
 }

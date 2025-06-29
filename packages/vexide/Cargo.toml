@@ -46,6 +46,7 @@ core = ["dep:vexide-core"]
 backtraces = ["core", "vexide-core/backtraces"]
 force_rust_libm = ["core", "vexide-core/force_rust_libm"]
 allocator = ["core", "vexide-core/allocator", "vexide-startup/allocator"]
+libc = ["core", "vexide-core/libc"]
 
 startup = ["dep:vexide-startup"]
 
