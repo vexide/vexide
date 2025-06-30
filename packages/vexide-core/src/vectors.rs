@@ -10,15 +10,18 @@ global_asm!(
 .arm
 
 vectors:
-    b vexSystemBoot_wrapper @ Defined by SDK
+    b {boot} @ Defined by SDK
     nop @ TODO (b undefined_instruction_handler) - use data abort for now
     nop @ b svc - use data abort for now
     nop @ b prefetch_abort - use data abort for now
-    b data_abort
+    b {data_abort}
     nop @ Placeholder for address exception vector
-    b . @ b irq
+    b {irq}
     b . @ b fiq
-"#
+    "#,
+    boot = sym boot,
+    data_abort = sym data_abort,
+    irq = sym irq,
 );
 
 /// Enable vexide's CPU exception handling logic by installing
@@ -34,12 +37,13 @@ pub unsafe fn install_vector_table() {
             "dsb",
             "isb",
             out("r0") _,
+            options(nostack, preserves_flags)
         );
     }
 }
 
 #[unsafe(no_mangle)]
-unsafe extern "C" fn vexSystemBoot_wrapper() -> ! {
+unsafe extern "C" fn boot() -> ! {
     unsafe {
         vex_sdk::vexSystemBoot();
 
@@ -102,13 +106,87 @@ unsafe extern "C" fn data_abort() -> ! {
 
         @ Pass it to our handler using the C ABI:
         mov r0, sp                     @ set param 0
-        ldr r2, =exception_handler + 1 @ Set up switching to thumb mode: +1 = call in thumb
+        ldr r2, ={exception_handler} + 1 @ Set up switching to thumb mode: +1 = call in thumb
         bx r2                          @ Actually call the function now
         ",
+        exception_handler = sym exception_handler,
     );
 }
 
+mod interrupt_controller {
+    use core::ptr;
+
+    pub const BASE_ADDRESS: usize = 0xF8F0_1000;
+
+    const CPU_INTERFACE_OFFSET: isize = -0xf00;
+    pub const CPU_INTERFACE_ADDRESS: usize = BASE_ADDRESS.wrapping_add_signed(CPU_INTERFACE_OFFSET);
+
+    const INTERRUPT_ACKNOWLEDGE_OFFSET: isize = 0x0C;
+    pub const INTERRUPT_ACKNOWLEDGE_REGISTER_ADDRESS: usize =
+        CPU_INTERFACE_ADDRESS.wrapping_add_signed(INTERRUPT_ACKNOWLEDGE_OFFSET);
+}
+
+#[unsafe(naked)]
 #[unsafe(no_mangle)]
+unsafe extern "C" fn irq() {
+    naked_asm!(
+        "
+.arm
+        @ Requirements for reentrant interrupt handlers:
+        @ <https://developer.arm.com/documentation/dui0203/j/handling-processor-exceptions/armv6-and-earlier--armv7-a-and-armv7-r-profiles/interrupt-handlers>
+
+        sub lr, lr, #4  @ Apply an offset to link register so that it points at address
+                        @ of return instruction (see Fault::instruction_pointer docs).
+        srsdb sp!, #19  @ Save LR & SPSR to supervisor mode stack
+
+        @ Switch to supervisor mode
+        @ Note: traditionally you would switch to system mode here,
+        @ but PROS uses supervisor mode when it calls the IRQ handler
+        @ (and it works) so we're going to use that behavior. This is
+        @ presumably because user programs run in system mode by default.
+        cps #19
+
+        @ These registers aren't preserved by the APPCS calling convention
+        @ or our own assembly code so we save them on the stack to make sure
+        @ they're the same when we return from the IRQ.
+        push {{r0-r3,r12}}
+
+        @ Align the stack to 8 bytes by subtracting 4 bytes if neccesary
+        @ r1 holds the adjustment so we can undo it with an `add` later
+        and r1, sp, #0b0100   @ Is the `4` bit set? If so, set r1 to 4
+        sub sp, sp, r1          @ Align stack by giving extra space if needed
+
+        @ Pull interrupt id out of the the interrupt controller's ICCIAR register
+        @ (Reading it automatically awknowledges the IRQ.)
+        @ r0 is used as first param to function call
+        ldr r0, ={icciar}   @ Store constant, then dereference it
+        ldr r0, [r0]
+
+        @ Call interrupt handler
+        push {{r1,lr}}              @ AAPCS callee-saved registers (only the ones we're using)
+        ldr r2, ={irq_handler} + 1  @ Set up switching to thumb mode: +1 = call in thumb
+        bx r2                       @ Actually call the function now
+        pop {{r1,lr}}               @ Restore callee-saved registers
+
+        @ Disable IRQs again in case our handler enabled them.
+        @ We're not able to handle reentrancy right now since
+        @ our code is restoring the state from before *this* IRQ.
+        cpsid i   @ Turn off the IRQ flag.
+        dsb       @ Ensure the change is propogated before
+        isb       @ we continue executing.
+
+        @ Undo the changes we made at the beginning to prevent side effects
+        add sp, sp, r1      @ Revert stack alignment
+        pop {{r0-r3,r12}}   @ Restore general purpose registers
+        rfeia sp!           @ Return from exception: restore SPSR (into CPSR register)
+                            @ and LR from the stack, then jump to LR.
+                            @ This is the counterpart to the `srsdb` call
+        ",
+        icciar = const interrupt_controller::INTERRUPT_ACKNOWLEDGE_REGISTER_ADDRESS,
+        irq_handler = sym irq_handler,
+    );
+}
+
 extern "C" fn exception_handler(fault: &mut Fault) -> ! {
     println!(">>>> Abort! Code: {:?} <<<<", fault.cause);
     unsafe {
