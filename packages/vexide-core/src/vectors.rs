@@ -146,7 +146,7 @@ unsafe extern "C" fn irq() {
         @ presumably because user programs run in system mode by default.
         cps #19
 
-        @ These registers aren't preserved by the APPCS calling convention
+        @ These registers aren't preserved by the AAPCS calling convention
         @ or our own assembly code so we save them on the stack to make sure
         @ they're the same when we return from the IRQ.
         push {{r0-r3,r12}}
