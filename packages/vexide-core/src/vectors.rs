@@ -29,6 +29,10 @@ pub unsafe fn install_vector_table() {
             "ldr r0, =vectors",
             // Set VBAR; see <https://developer.arm.com/documentation/ddi0601/2025-06/AArch32-Registers/VBAR--Vector-Base-Address-Register>
             "mcr p15, 0, r0, c12, c0, 0",
+            // Ensure the write takes effect before any exception occurs
+            // in the pipeline.
+            "dsb",
+            "isb",
             out("r0") _,
         );
     }
@@ -83,6 +87,10 @@ unsafe extern "C" fn data_abort() -> ! {
     naked_asm!(
         "
 .arm
+        dsb             @ Workaround for Cortex A9 erratum (id 775420)
+                        @ It's possible VEX's boards aren't susceptible to this,
+                        @ but it's included out of an abundance of caution.
+
         @ Create `Fault` struct in the stack:
         sub sp, sp, #4    @ Align the stack: 4 extra bytes at end of struct means 64 bytes total,
                           @ which will keep the stack aligned to 8 bytes after we add all our data.
@@ -113,5 +121,14 @@ extern "C" fn exception_handler(fault: &mut Fault) -> ! {
         unsafe {
             vex_sdk::vexTasksRun();
         }
+    }
+}
+
+/// Processes an Interrupt Request (IRQ) with the given ID.
+///
+/// The ID should be obtained from one of the Interrupt Acknowledge Registers (IARs).
+unsafe extern "C" fn irq_handler(interrupt_id: u32) {
+    unsafe {
+        vex_sdk::vexSystemApplicationIRQHandler(interrupt_id);
     }
 }
