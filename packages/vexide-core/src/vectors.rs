@@ -1,3 +1,4 @@
+use alloc::format;
 use core::arch::{asm, global_asm, naked_asm};
 
 use crate::println;
@@ -10,16 +11,19 @@ global_asm!(
 .arm
 
 vectors:
-    b {boot} @ Defined by SDK
-    nop @ TODO (b undefined_instruction_handler) - use data abort for now
-    nop @ b svc - use data abort for now
-    nop @ b prefetch_abort - use data abort for now
+    b {boot}
+    b {undefined_instruction}
+    b {supervisor_call}
+    b {prefetch_abort}
     b {data_abort}
     nop @ Placeholder for address exception vector
     b {irq}
-    b . @ b fiq
+    b . @ TODO
     "#,
     boot = sym boot,
+    undefined_instruction = sym undefined_instruction,
+    supervisor_call = sym supervisor_call,
+    prefetch_abort = sym prefetch_abort,
     data_abort = sym data_abort,
     irq = sym irq,
 );
@@ -53,7 +57,7 @@ unsafe extern "C" fn boot() -> ! {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[repr(u32)]
 enum FaultType {
     UndefinedInstruction = 0,
@@ -85,37 +89,55 @@ struct Fault {
     registers: [u32; 13],
 }
 
-#[unsafe(naked)]
-#[unsafe(no_mangle)]
-unsafe extern "C" fn data_abort() -> ! {
-    naked_asm!(
-        "
-.arm
-        dsb             @ Workaround for Cortex A9 erratum (id 775420)
-                        @ It's possible VEX's boards aren't susceptible to this,
-                        @ but it's included out of an abundance of caution.
+#[expect(edition_2024_expr_fragment_specifier)]
+macro_rules! abort_handler {
+    (
+        $name:ident:
+        lr_offset = $lr_offset:expr,
+        cause = $cause:expr$(,)?
+    ) => {
+        #[unsafe(naked)]
+        #[unsafe(no_mangle)]
+        unsafe extern "C" fn $name() -> ! {
+            naked_asm!(
+                "
+        .arm
+                dsb             @ Workaround for Cortex A9 erratum (id 775420)
 
-        @ Create `Fault` struct in the stack:
-        sub sp, sp, #4    @ Align the stack: 4 extra bytes at end of struct means 64 bytes total,
-                          @ which will keep the stack aligned to 8 bytes after we add all our data.
-        push {{r0-r12}}   @ Save general-purpose registers for debugging
-        mov r0, 3         @ Cause is `FaultType::DataAbort`. We will push this later.
-        sub r1, lr, #8    @ Get instruction pointer by undoing offset (LR_abt - 8)
-                          @ (see `Fault::instruction_pointer` for details on the offsets)
-        push {{r0, r1}}   @ Keep building up our struct; add `cause` and I.P.
+                @ Disable interrupts
+                cpsid i
+                dsb
+                isb
 
-        @ Pass it to our handler using the C ABI:
-        mov r0, sp                     @ set param 0
-        ldr r2, ={exception_handler} + 1 @ Set up switching to thumb mode: +1 = call in thumb
-        bx r2                          @ Actually call the function now
-        ",
-        exception_handler = sym exception_handler,
-    );
+                sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
+                                            @ of return instruction (see Fault::instruction_pointer docs).
+
+                @ Create `Fault` struct in the stack:
+                sub sp, sp, #4    @ Align the stack: 4 extra bytes at end of struct means 64 bytes total,
+                                  @ which will keep the stack aligned to 8 bytes after we add all our data.
+                push {{r0-r12}}   @ Save general-purpose registers for debugging
+                mov r0, {cause}   @ We will push this later.
+                push {{r0, lr}}   @ Keep building up our struct; add `cause` and I.P.
+
+                @ Pass it to our handler using the C ABI:
+                mov r0, sp                     @ set param 0
+                ldr r2, ={exception_handler}
+                bx r2                          @ Actually call the function now
+                ",
+                exception_handler = sym exception_handler,
+                lr_offset = const $lr_offset,
+                cause = const $cause as u32,
+            );
+        }
+    };
 }
 
-mod interrupt_controller {
-    use core::ptr;
+abort_handler!(undefined_instruction: lr_offset = 4, cause = FaultType::UndefinedInstruction);
+abort_handler!(supervisor_call: lr_offset = 4, cause = FaultType::SupervisorCall);
+abort_handler!(prefetch_abort: lr_offset = 4, cause = FaultType::PrefetchAbort);
+abort_handler!(data_abort: lr_offset = 8, cause = FaultType::DataAbort);
 
+mod interrupt_controller {
     pub const BASE_ADDRESS: usize = 0xF8F0_1000;
 
     const CPU_INTERFACE_OFFSET: isize = -0xf00;
@@ -164,8 +186,7 @@ unsafe extern "C" fn irq() {
 
         @ Call interrupt handler
         push {{r1,lr}}              @ AAPCS callee-saved registers (only the ones we're using)
-        ldr r2, ={irq_handler} + 1  @ Set up switching to thumb mode: +1 = call in thumb
-        bx r2                       @ Actually call the function now
+        blx {irq_handler}           @ Actually call the function now
         pop {{r1,lr}}               @ Restore callee-saved registers
 
         @ Disable IRQs again in case our handler enabled them.
@@ -187,12 +208,33 @@ unsafe extern "C" fn irq() {
     );
 }
 
-extern "C" fn exception_handler(fault: &mut Fault) -> ! {
-    println!(">>>> Abort! Code: {:?} <<<<", fault.cause);
+unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
+    unsafe {
+        vex_sdk::vexSerialWriteChar(1, b'*');
+        vex_sdk::vexTasksRun();
+
+        println!("***\n-> Cause: {:?}", (*fault).cause);
+        println!("-> IP: 0x{:x?}", (*fault).instruction_pointer);
+        println!("-> Regs: {:x?}", (*fault).registers);
+
+        let buf = format!(">>>> Abort! Fault ptr: {fault:x?} <<<<\n");
+        vex_sdk::vexSerialWriteBuffer(1, buf.as_ptr(), buf.len() as u32);
+
+        while vex_sdk::vexSerialWriteFree(1) < 2048 {
+            vex_sdk::vexTasksRun();
+        }
+
+        match (*fault).cause {
+            FaultType::DataAbort => vex_sdk::vexSystemDataAbortInterrupt(),
+            FaultType::PrefetchAbort => vex_sdk::vexSystemPrefetchAbortInterrupt(),
+            FaultType::SupervisorCall => vex_sdk::vexSystemSWInterrupt(),
+            FaultType::UndefinedInstruction => vex_sdk::vexSystemUndefinedException(),
+        }
+    }
+
     unsafe {
         vex_sdk::vexDisplayForegroundColor(0xFF_00_00);
         vex_sdk::vexDisplayRectFill(0, 0, 500, 500);
-        vex_sdk::vexSystemUndefinedException();
     }
 
     loop {
