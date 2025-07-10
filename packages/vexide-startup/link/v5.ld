@@ -75,6 +75,10 @@ SECTIONS {
         *(.overwriter)
         /* Rest of the program. */
         *(.text .text.*)
+
+        /* Vector table */
+		. = ALIGN(128);
+        *(.vectors)
     } > PROGRAM_RAM
 
     /*

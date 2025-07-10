@@ -30,6 +30,8 @@ vectors:
 
 /// Enable vexide's CPU exception handling logic by installing
 /// its custom vector table.
+///
+/// This should be called one time to enable the exception handler.
 pub unsafe fn install_vector_table() {
     unsafe {
         asm!(
@@ -230,16 +232,9 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
             FaultType::SupervisorCall => vex_sdk::vexSystemSWInterrupt(),
             FaultType::UndefinedInstruction => vex_sdk::vexSystemUndefinedException(),
         }
-    }
 
-    unsafe {
-        vex_sdk::vexDisplayForegroundColor(0xFF_00_00);
-        vex_sdk::vexDisplayRectFill(0, 0, 500, 500);
-    }
-
-    loop {
-        unsafe {
-            vex_sdk::vexTasksRun();
+        loop {
+            asm!("nop");
         }
     }
 }
