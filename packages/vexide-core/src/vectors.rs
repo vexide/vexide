@@ -18,7 +18,7 @@ vectors:
     b {data_abort}
     nop @ Placeholder for address exception vector
     b {irq}
-    b . @ TODO
+    b . @ TODO (FIQ not used right now)
     "#,
     boot = sym boot,
     undefined_instruction = sym undefined_instruction,
@@ -70,6 +70,7 @@ enum FaultType {
 
 #[repr(C)]
 struct Fault {
+    stack_pointer: u32,
     cause: FaultType,
     /// The address at which the fault occurred.
     ///
@@ -115,11 +116,13 @@ macro_rules! abort_handler {
                                             @ of return instruction (see Fault::instruction_pointer docs).
 
                 @ Create `Fault` struct in the stack:
-                sub sp, sp, #4    @ Align the stack: 4 extra bytes at end of struct means 64 bytes total,
-                                  @ which will keep the stack aligned to 8 bytes after we add all our data.
-                push {{r0-r12}}   @ Save general-purpose registers for debugging
-                mov r0, {cause}   @ We will push this later.
-                push {{r0, lr}}   @ Keep building up our struct; add `cause` and I.P.
+                push {{r0-r12}}     @ Save general-purpose registers for debugging
+                mov r0, {cause}     @ We will push this later.
+                push {{r0, lr}}     @ Keep building up our struct; add `cause` and I.P.
+
+                @ Storing original stack pointer needs two steps
+                stmdb sp, {{sp}}^  @ Get the user/system mode's stack pointer
+                sub sp, sp, #4     @ Move *our* stack pointer to the beginning of the struct
 
                 @ Pass it to our handler using the C ABI:
                 mov r0, sp                     @ set param 0
@@ -212,18 +215,54 @@ unsafe extern "C" fn irq() {
 
 unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
     unsafe {
-        vex_sdk::vexSerialWriteChar(1, b'*');
-        vex_sdk::vexTasksRun();
+        let Fault {
+            cause,
+            instruction_pointer,
+            stack_pointer,
+            registers,
+        } = *fault;
 
-        println!("***\n-> Cause: {:?}", (*fault).cause);
-        println!("-> IP: 0x{:x?}", (*fault).instruction_pointer);
-        println!("-> Regs: {:x?}", (*fault).registers);
+        println!("\n\n*** {cause:?} EXCEPTION ***");
+        println!("  at address 0x{instruction_pointer:x?}");
 
-        let buf = format!(">>>> Abort! Fault ptr: {fault:x?} <<<<\n");
-        vex_sdk::vexSerialWriteBuffer(1, buf.as_ptr(), buf.len() as u32);
+        match cause {
+            FaultType::DataAbort => {
+                let abort = data_abort_info();
+                let verb = if abort.is_write() {
+                    "writing to"
+                } else {
+                    "reading from"
+                };
 
-        while vex_sdk::vexSerialWriteFree(1) < 2048 {
-            vex_sdk::vexTasksRun();
+                println!("  while {verb} address 0x{:x?}", abort.address);
+            }
+            FaultType::UndefinedInstruction => todo!(),
+            FaultType::SupervisorCall => todo!(),
+            FaultType::PrefetchAbort => todo!(),
+        }
+
+        println!("\nCPU registers at time of fault (r0-r12, in hexadecimal):\n{registers:x?}\n");
+        println!("help: This indicates the misuse of `unsafe` code.");
+        println!("      Use a symbolizer tool to determine the file and line of the crash.");
+
+        let profile = if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        };
+        println!("      (e.g. llvm-symbolizer -e ./target/armv7a-vex-v5/{profile}/program_name 0x{instruction_pointer:x?})");
+
+        #[cfg(feature = "backtraces")]
+        {
+            let gprs = backtrace::GPRS {
+                r: registers,
+                lr: instruction_pointer,
+                pc: instruction_pointer,
+                sp: stack_pointer,
+            };
+            let context = backtrace::make_unwind_context(gprs);
+            let result = backtrace::print_backtrace(&context);
+            println!("backtrace result: {result:?}");
         }
 
         match (*fault).cause {
@@ -245,5 +284,97 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
 unsafe extern "C" fn irq_handler(interrupt_id: u32) {
     unsafe {
         vex_sdk::vexSystemApplicationIRQHandler(interrupt_id);
+    }
+}
+
+/// A representation of a data abort exception
+#[derive(Debug, Clone, Copy)]
+struct DataAbort {
+    /// A bitfield with information about the fault.
+    status: u32,
+    /// The address at which the last fault occurred
+    address: u32,
+}
+
+impl DataAbort {
+    /// Returns whether the abort was caused by a write operation.
+    pub const fn is_write(self) -> bool {
+        const WRITE_NOT_READ_BIT: u32 = 1 << 11;
+        self.status & WRITE_NOT_READ_BIT != 0
+    }
+}
+
+fn data_abort_info() -> DataAbort {
+    let address: u32;
+    let status: u32;
+
+    unsafe {
+        core::arch::asm!(
+            "mrc p15, 0, {fsr}, c5, c0, 0",
+            "mrc p15, 0, {far}, c6, c0, 0",
+            fsr = out(reg) status,
+            far = out(reg) address,
+        );
+    }
+
+    DataAbort { status, address }
+}
+
+#[cfg(feature = "backtraces")]
+mod backtrace {
+    use core::mem::transmute;
+
+    use vex_libunwind::{registers::UNW_REG_IP, UnwindContext, UnwindCursor, UnwindError};
+    use vex_libunwind_sys::{unw_context_t, unw_init_local, CONTEXT_SIZE};
+
+    use crate::println;
+
+    #[repr(C)]
+    pub struct GPRS {
+        pub r: [u32; 13],
+        pub sp: u32,
+        pub lr: u32,
+        pub pc: u32,
+    }
+
+    const REGISTERS_DATA_SIZE: usize = size_of::<unw_context_t>() - size_of::<GPRS>();
+    #[repr(C)]
+    struct Registers_arm {
+        gprs: GPRS,
+        data: [u8; REGISTERS_DATA_SIZE],
+    }
+
+    /// Create an unwind context using custom registers instead of ones captured
+    /// from the current processor state.
+    ///
+    /// This is based on the ARM implementation of __unw_getcontext:
+    /// <https://github.com/llvm/llvm-project/blob/6fc3b40b2cfc33550dd489072c01ffab16535840/libunwind/src/UnwindRegistersSave.S#L834>
+    pub fn make_unwind_context(gprs: GPRS) -> UnwindContext {
+        let context = Registers_arm {
+            gprs,
+            // This matches the behavior of __unw_getcontext, which leaves
+            // this data uninitialized.
+            data: [0; REGISTERS_DATA_SIZE],
+        };
+
+        // SAFETY: `context` is a valid `unw_context_t` because it has its
+        // general-purpose registers field set.
+        UnwindContext::from(unsafe { transmute::<Registers_arm, unw_context_t>(context) })
+    }
+
+    pub fn print_backtrace(context: &UnwindContext) -> Result<(), UnwindError> {
+        let mut cursor = UnwindCursor::new(context)?;
+
+        println!("\nstack backtrace:");
+        loop {
+            println!("0x{:x?}", cursor.register(UNW_REG_IP)?);
+
+            if !cursor.step()? {
+                break;
+            }
+        }
+        println!();
+
+        Ok(())
     }
 }
