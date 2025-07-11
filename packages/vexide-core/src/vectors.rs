@@ -30,9 +30,7 @@ vectors:
 
 /// Enable vexide's CPU exception handling logic by installing
 /// its custom vector table.
-///
-/// This should be called one time to enable the exception handler.
-pub unsafe fn install_vector_table() {
+pub fn install_vector_table() {
     unsafe {
         asm!(
             "ldr r0, =vectors",
