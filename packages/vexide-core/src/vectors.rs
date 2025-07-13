@@ -124,8 +124,7 @@ macro_rules! abort_handler {
 
                 @ Pass it to our handler using the C ABI:
                 mov r0, sp                     @ set param 0
-                ldr r2, ={exception_handler}
-                bx r2                          @ Actually call the function now
+                blx {exception_handler}        @ Actually call the function now
                 ",
 //         "
 // .arm
