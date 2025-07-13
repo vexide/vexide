@@ -1,9 +1,9 @@
-use alloc::format;
 use core::arch::{asm, global_asm, naked_asm};
 
-use crate::println;
+use crate::{io::STDIO_CHANNEL, println};
 
-// Custom ARM vector table for improved exception handling
+// Custom ARM vector table. Pointing the VBAR coproc. register at this
+// will configure the CPU to jump to these functions on an exception.
 global_asm!(
     r#"
 .section .vectors, "ax"
@@ -29,7 +29,7 @@ vectors:
 );
 
 /// Enable vexide's CPU exception handling logic by installing
-/// its custom vector table.
+/// its custom vector table. (Temporary internal API)
 pub fn install_vector_table() {
     unsafe {
         asm!(
@@ -72,7 +72,7 @@ struct Fault {
     cause: FaultType,
     /// The address at which the fault occurred.
     ///
-    /// This is calculated using the link register, which is set to this address
+    /// This is calculated using the Link Register (`lr`), which is set to this address
     /// plus an offset when an exception occurs.
     ///
     /// Offsets:
@@ -85,7 +85,7 @@ struct Fault {
     /// [da-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Data-Abort-exception
     /// [pf-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Prefetch-Abort-exception
     /// [svc-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Supervisor-Call--SVC--exception
-    instruction_pointer: u32,
+    instruction_address: u32,
     /// Registers r0 through r12
     registers: [u32; 13],
 }
@@ -106,9 +106,9 @@ macro_rules! abort_handler {
                 dsb             @ Workaround for Cortex A9 erratum (id 775420)
 
                 @ Disable interrupts
-                cpsid i
-                dsb
-                isb
+                @ cpsid i
+                @ dsb
+                @ isb
 
                 sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
                                             @ of return instruction (see Fault::instruction_pointer docs).
@@ -127,6 +127,14 @@ macro_rules! abort_handler {
                 ldr r2, ={exception_handler}
                 bx r2                          @ Actually call the function now
                 ",
+//         "
+// .arm
+//                 dsb
+//                 stmdb	sp!,{{r0-r3,r12,lr}}
+//                 blx	{exception_handler}
+//                 ldmia	sp!,{{r0-r3,r12,lr}}
+//                 subs	pc, lr, #{lr_offset}
+// ",
                 exception_handler = sym exception_handler,
                 lr_offset = const $lr_offset,
                 cause = const $cause as u32,
@@ -140,15 +148,29 @@ abort_handler!(supervisor_call: lr_offset = 4, cause = FaultType::SupervisorCall
 abort_handler!(prefetch_abort: lr_offset = 4, cause = FaultType::PrefetchAbort);
 abort_handler!(data_abort: lr_offset = 8, cause = FaultType::DataAbort);
 
+/// MMIO interface for the Generic Interrupt Controller v1
+///
+/// GICv1 docs: <https://documentation-service.arm.com/static/5f8ff151f86e16515cdbf95b>
 mod interrupt_controller {
-    pub const BASE_ADDRESS: usize = 0xF8F0_1000;
+    /// The base address of the GIC's [CPU interface] on Zynq-7000 SOCs (e.g. VEX V5).
+    ///
+    /// Source: <https://docs.amd.com/r/en-US/ug585-zynq-7000-SoC-TRM/CPU-Private-Bus-Registers>
+    ///
+    /// [CPU interface]: <https://developer.arm.com/documentation/ihi0048/a/GIC-Partitioning/About-GIC-partitioning?lang=en>
+    pub const CPU_INTERFACE_BASE_ADDRESS: usize = 0xF8F0_0100;
 
-    const CPU_INTERFACE_OFFSET: isize = -0xf00;
-    pub const CPU_INTERFACE_ADDRESS: usize = BASE_ADDRESS.wrapping_add_signed(CPU_INTERFACE_OFFSET);
+    /// The base address of the GIC's [distributor] on Zynq-7000 SOCs (e.g. VEX V5).
+    ///
+    /// Source: <https://docs.amd.com/r/en-US/ug585-zynq-7000-SoC-TRM/CPU-Private-Bus-Registers>
+    ///
+    /// [distributor]: <https://developer.arm.com/documentation/ihi0048/a/GIC-Partitioning/The-Distributor?lang=en>
+    pub const DISTRIBUTOR_BASE_ADDRESS: usize = 0xF8F0_1000;
 
-    const INTERRUPT_ACKNOWLEDGE_OFFSET: isize = 0x0C;
-    pub const INTERRUPT_ACKNOWLEDGE_REGISTER_ADDRESS: usize =
-        CPU_INTERFACE_ADDRESS.wrapping_add_signed(INTERRUPT_ACKNOWLEDGE_OFFSET);
+    /// The address of the Interrupt Acknowledge Register (ICCIAR)
+    pub const INTERRUPT_ACKNOWLEDGE_REGISTER_ADDRESS: usize = CPU_INTERFACE_BASE_ADDRESS + 0x0C;
+
+    /// The address of the End of Interrupt Register (ICCEOIR)
+    pub const END_OF_INTERRUPT_REGISTER_ADDRESS: usize = CPU_INTERFACE_BASE_ADDRESS + 0x10;
 }
 
 #[unsafe(naked)]
@@ -156,57 +178,63 @@ mod interrupt_controller {
 unsafe extern "C" fn irq() {
     naked_asm!(
         "
-.arm
-        @ Requirements for reentrant interrupt handlers:
-        @ <https://developer.arm.com/documentation/dui0203/j/handling-processor-exceptions/armv6-and-earlier--armv7-a-and-armv7-r-profiles/interrupt-handlers>
+    .arm
+            @ Requirements for reentrant interrupt handlers:
+            @ <https://developer.arm.com/documentation/dui0203/j/handling-processor-exceptions/armv6-and-earlier--armv7-a-and-armv7-r-profiles/interrupt-handlers>
+            @ (Accessed July 2025)
 
-        sub lr, lr, #4  @ Apply an offset to link register so that it points at address
-                        @ of return instruction (see Fault::instruction_pointer docs).
-        srsdb sp!, #19  @ Save LR & SPSR to supervisor mode stack
+            sub lr, lr, #4  @ Apply an offset to link register so that it points at address
+                            @ of return instruction (see Fault::instruction_pointer docs).
+            srsdb sp!, #19  @ Save LR & SPSR to supervisor mode stack
 
-        @ Switch to supervisor mode
-        @ Note: traditionally you would switch to system mode here,
-        @ but PROS uses supervisor mode when it calls the IRQ handler
-        @ (and it works) so we're going to use that behavior. This is
-        @ presumably because user programs run in system mode by default.
-        cps #19
+            @ Switch to supervisor mode
+            @ Note: traditionally you would switch to system mode here,
+            @ but PROS uses supervisor mode when it calls the IRQ handler
+            @ (and it works) so we're going to use that behavior. This is
+            @ presumably because user programs run in system mode by default.
+            cps #19
 
-        @ These registers aren't preserved by the AAPCS calling convention
-        @ or our own assembly code so we save them on the stack to make sure
-        @ they're the same when we return from the IRQ.
-        push {{r0-r3,r12}}
+            @ These registers aren't preserved by the AAPCS calling convention
+            @ or our own assembly code so we save them on the stack to make sure
+            @ they're the same when we return from the IRQ.
+            push {{r0-r3,r12}}
 
-        @ Align the stack to 8 bytes by subtracting 4 bytes if neccesary
-        @ r1 holds the adjustment so we can undo it with an `add` later
-        and r1, sp, #0b0100   @ Is the `4` bit set? If so, set r1 to 4
-        sub sp, sp, r1          @ Align stack by giving extra space if needed
+            @ Align the stack to 8 bytes by subtracting 4 bytes if neccesary
+            @ r1 holds the adjustment so we can undo it with an `add` later
+            and r1, sp, #0b0100   @ Is the `4` bit set? If so, set r1 to 4
+            sub sp, sp, r1          @ Align stack by giving extra space if needed
 
-        @ Pull interrupt id out of the the interrupt controller's ICCIAR register
-        @ (Reading it automatically awknowledges the IRQ.)
-        @ r0 is used as first param to function call
-        ldr r0, ={icciar}   @ Store constant, then dereference it
-        ldr r0, [r0]
+            @ Pull interrupt id out of the the interrupt controller's ICCIAR register
+            @ (Reading it will automatically awknowledge the IRQ.)
+            @ r0 is used as first param to function call
+            ldr r0, ={icciar}   @ Store constant, then dereference it
+            ldr r0, [r0]
 
-        @ Call interrupt handler
-        push {{r1,lr}}              @ AAPCS callee-saved registers (only the ones we're using)
-        blx {irq_handler}           @ Actually call the function now
-        pop {{r1,lr}}               @ Restore callee-saved registers
+            @ Call interrupt handler
+            push {{r0,r1,lr}}              @ AAPCS callee-saved registers (only the ones we're using)
+            blx {irq_handler}           @ Actually call the function now
+            pop {{r0,r1,lr}}               @ Restore callee-saved registers
 
-        @ Disable IRQs again in case our handler enabled them.
-        @ We're not able to handle reentrancy right now since
-        @ our code is restoring the state from before *this* IRQ.
-        cpsid i   @ Turn off the IRQ flag.
-        dsb       @ Ensure the change is propogated before
-        isb       @ we continue executing.
+            @ Disable IRQs again in case our handler enabled them.
+            @ We're not able to handle reentrancy right now since
+            @ our code is restoring the state from before *this* IRQ.
+            cpsid i   @ Turn off the IRQ flag.
+            dsb       @ Ensure the change is propogated before
+            isb       @ we continue executing.
 
-        @ Undo the changes we made at the beginning to prevent side effects
-        add sp, sp, r1      @ Revert stack alignment
-        pop {{r0-r3,r12}}   @ Restore general purpose registers
-        rfeia sp!           @ Return from exception: restore SPSR (into CPSR register)
-                            @ and LR from the stack, then jump to LR.
-                            @ This is the counterpart to the `srsdb` call
-        ",
+            @ Tell GIC we're done processing the interrupt
+            ldr r2, ={icceoir}
+            str	r0, [r2]
+
+            @ Undo the changes we made at the beginning to prevent side effects
+            add sp, sp, r1      @ Revert stack alignment
+            pop {{r0-r3,r12}}   @ Restore general purpose registers
+            rfeia sp!           @ Return from exception: restore SPSR (into CPSR register)
+                                @ and LR from the stack, then jump to LR.
+                                @ This is the counterpart to the `srsdb` call
+            ",
         icciar = const interrupt_controller::INTERRUPT_ACKNOWLEDGE_REGISTER_ADDRESS,
+        icceoir = const interrupt_controller::END_OF_INTERRUPT_REGISTER_ADDRESS,
         irq_handler = sym irq_handler,
     );
 }
@@ -215,64 +243,93 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
     unsafe {
         let Fault {
             cause,
-            instruction_pointer,
+            instruction_address: instruction_pointer,
             stack_pointer,
             registers,
         } = *fault;
 
-        println!("\n\n*** {cause:?} EXCEPTION ***");
-        println!("  at address 0x{instruction_pointer:x?}");
-
         match cause {
             FaultType::DataAbort => {
-                let abort = data_abort_info();
-                let verb = if abort.is_write() {
-                    "writing to"
-                } else {
-                    "reading from"
-                };
-
-                println!("  while {verb} address 0x{:x?}", abort.address);
+                vex_sdk::vexDisplayForegroundColor(0xFF_00_00);
             }
-            FaultType::UndefinedInstruction => todo!(),
-            FaultType::SupervisorCall => todo!(),
-            FaultType::PrefetchAbort => todo!(),
+            FaultType::PrefetchAbort => {
+                vex_sdk::vexDisplayForegroundColor(0x00_FF_00);
+            }
+            FaultType::UndefinedInstruction => {
+                vex_sdk::vexDisplayForegroundColor(0x00_00_FF);
+            }
+            FaultType::SupervisorCall => {
+                vex_sdk::vexDisplayForegroundColor(0xFF_FF_FF);
+            }
         }
 
-        println!("\nCPU registers at time of fault (r0-r12, in hexadecimal):\n{registers:x?}\n");
-        println!("help: This indicates the misuse of `unsafe` code.");
-        println!("      Use a symbolizer tool to determine the file and line of the crash.");
+        vex_sdk::vexDisplayRectFill(0, 0, 100, 100);
 
-        let profile = if cfg!(debug_assertions) {
-            "debug"
-        } else {
-            "release"
-        };
-        println!("      (e.g. llvm-symbolizer -e ./target/armv7a-vex-v5/{profile}/program_name 0x{instruction_pointer:x?})");
-
-        #[cfg(feature = "backtraces")]
-        {
-            let gprs = backtrace::GPRS {
-                r: registers,
-                lr: instruction_pointer,
-                pc: instruction_pointer,
-                sp: stack_pointer,
-            };
-            let context = backtrace::make_unwind_context(gprs);
-            let result = backtrace::print_backtrace(&context);
-            println!("backtrace result: {result:?}");
-        }
-
-        match (*fault).cause {
-            FaultType::DataAbort => vex_sdk::vexSystemDataAbortInterrupt(),
-            FaultType::PrefetchAbort => vex_sdk::vexSystemPrefetchAbortInterrupt(),
-            FaultType::SupervisorCall => vex_sdk::vexSystemSWInterrupt(),
-            FaultType::UndefinedInstruction => vex_sdk::vexSystemUndefinedException(),
-        }
+        vex_sdk::vexSerialWriteChar(1, b'*');
+        vex_sdk::vexSerialWriteChar(1, b'*');
+        vex_sdk::vexSerialWriteChar(1, b'*');
+        vex_sdk::vexSerialWriteChar(1, b'*');
+        vex_sdk::vexSerialWriteChar(1, b'*');
 
         loop {
-            asm!("nop");
+            vex_sdk::vexTasksRun();
         }
+
+        // asm!("dsb", "isb");
+
+        // println!("\n\n*** {cause:?} EXCEPTION ***");
+        // println!("  at address 0x{instruction_pointer:x?}");
+
+        // match cause {
+        //     FaultType::DataAbort => {
+        //         let abort = data_abort_info();
+        //         let verb = if abort.is_write() {
+        //             "writing to"
+        //         } else {
+        //             "reading from"
+        //         };
+
+        //         println!("  while {verb} address 0x{:x?}", abort.address);
+        //     }
+        //     FaultType::UndefinedInstruction => todo!(),
+        //     FaultType::SupervisorCall => todo!(),
+        //     FaultType::PrefetchAbort => todo!(),
+        // }
+
+        // println!("\nCPU registers at time of fault (r0-r12, in hexadecimal):\n{registers:x?}\n");
+        // println!("help: This indicates the misuse of `unsafe` code.");
+        // println!("      Use a symbolizer tool to determine the file and line of the crash.");
+
+        // let profile = if cfg!(debug_assertions) {
+        //     "debug"
+        // } else {
+        //     "release"
+        // };
+        // println!("      (e.g. llvm-symbolizer -e ./target/armv7a-vex-v5/{profile}/program_name 0x{instruction_pointer:x?})");
+
+        // #[cfg(feature = "backtraces")]
+        // {
+        //     let gprs = backtrace::GPRS {
+        //         r: registers,
+        //         lr: instruction_pointer,
+        //         pc: instruction_pointer,
+        //         sp: stack_pointer,
+        //     };
+        //     let context = backtrace::make_unwind_context(gprs);
+        //     let result = backtrace::print_backtrace(&context);
+        //     println!("backtrace result: {result:?}");
+        // }
+
+        // match (*fault).cause {
+        //     FaultType::DataAbort => vex_sdk::vexSystemDataAbortInterrupt(),
+        //     FaultType::PrefetchAbort => vex_sdk::vexSystemPrefetchAbortInterrupt(),
+        //     FaultType::SupervisorCall => vex_sdk::vexSystemSWInterrupt(),
+        //     FaultType::UndefinedInstruction => vex_sdk::vexSystemUndefinedException(),
+        // }
+
+        // loop {
+        //     asm!("nop");
+        // }
     }
 }
 
