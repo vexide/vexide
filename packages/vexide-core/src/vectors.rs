@@ -127,39 +127,35 @@ macro_rules! abort_handler {
         #[unsafe(no_mangle)]
         unsafe extern "C" fn $name() -> ! {
             naked_asm!(
-                "
-        .arm
-                dsb             @ Workaround for Cortex A9 erratum (id 775420)
+        //         "
+        // .arm
+        //         dsb             @ Workaround for Cortex A9 erratum (id 775420)
 
-                @ Disable interrupts
-                @ cpsid i
-                @ dsb
-                @ isb
+        //         sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
+        //                                     @ of return instruction (see Fault::instruction_pointer docs).
 
-                sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
-                                            @ of return instruction (see Fault::instruction_pointer docs).
+        //         @ Create `Fault` struct in the stack:
+        //         push {{r0-r12}}     @ Save general-purpose registers for debugging
+        //         mov r0, {cause}     @ We will push this later.
+        //         push {{r0, lr}}     @ Keep building up our struct; add `cause` and I.P.
 
-                @ Create `Fault` struct in the stack:
-                push {{r0-r12}}     @ Save general-purpose registers for debugging
-                mov r0, {cause}     @ We will push this later.
-                push {{r0, lr}}     @ Keep building up our struct; add `cause` and I.P.
+        //         @ Storing original stack pointer needs two steps
+        //         stmdb sp, {{sp}}^  @ Get the user/system mode's stack pointer
+        //         sub sp, sp, #4     @ Move *our* stack pointer to the beginning of the struct
 
-                @ Storing original stack pointer needs two steps
-                stmdb sp, {{sp}}^  @ Get the user/system mode's stack pointer
-                sub sp, sp, #4     @ Move *our* stack pointer to the beginning of the struct
-
-                @ Pass it to our handler using the C ABI:
-                mov r0, sp                     @ set param 0
-                blx {exception_handler}        @ Actually call the function now
-                ",
-//         "
-// .arm
-//                 dsb
-//                 stmdb	sp!,{{r0-r3,r12,lr}}
-//                 blx	{exception_handler}
-//                 ldmia	sp!,{{r0-r3,r12,lr}}
-//                 subs	pc, lr, #{lr_offset}
-// ",
+        //         @ Pass it to our handler using the C ABI:
+        //         mov r0, sp                     @ set param 0
+        //         blx {exception_handler}        @ Actually call the function now
+        //         ",
+        "
+.arm
+                dsb
+                stmdb	sp!,{{r0-r3,r12,lr}}
+                mov r0, {cause}
+                blx	{exception_handler}
+                ldmia	sp!,{{r0-r3,r12,lr}}
+                subs	pc, lr, #{lr_offset}
+        ",
                 exception_handler = sym exception_handler,
                 lr_offset = const $lr_offset,
                 cause = const $cause as u32,
@@ -280,14 +276,14 @@ unsafe extern "C" fn irq() {
     );
 }
 
-unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
+unsafe extern "C" fn exception_handler(cause: FaultType /* fault: *const Fault */) -> ! {
     unsafe {
-        let Fault {
-            cause,
-            instruction_address: instruction_pointer,
-            stack_pointer,
-            registers,
-        } = *fault;
+        // let Fault {
+        //     cause,
+        //     instruction_address: instruction_pointer,
+        //     stack_pointer,
+        //     registers,
+        // } = *fault;
 
         match cause {
             FaultType::DataAbort => {
@@ -306,11 +302,10 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
 
         vex_sdk::vexDisplayRectFill(0, 0, 100, 100);
 
-        vex_sdk::vexSerialWriteChar(1, b'*');
-        vex_sdk::vexSerialWriteChar(1, b'*');
-        vex_sdk::vexSerialWriteChar(1, b'*');
-        vex_sdk::vexSerialWriteChar(1, b'*');
-        vex_sdk::vexSerialWriteChar(1, b'*');
+        vex_sdk::vexDisplayString(5, c"ERROR!".as_ptr());
+
+        let msg = "ERROR!\n";
+        vex_sdk::vexSerialWriteBuffer(1, msg.as_ptr(), msg.len() as u32);
 
         loop {
             vex_sdk::vexTasksRun();
