@@ -1,4 +1,7 @@
-use core::arch::{asm, global_asm, naked_asm};
+use core::{
+    arch::{asm, global_asm, naked_asm},
+    ffi::c_void,
+};
 
 use crate::{io::STDIO_CHANNEL, println};
 
@@ -54,9 +57,42 @@ fiq:
     fiq_handler = sym fiq_handler,
 );
 
+const TIMER_PRIORITY_MASK: u32 = 30 << 3;
+const MAX_API_CALL_MASK: u32 = 18 << 3;
+
+pub unsafe fn init_rtos() {
+    extern "aapcs" fn timer_handler(_data: *mut c_void) {
+        unsafe {
+            vex_sdk::vexSystemTimerClearInterrupt();
+        }
+    }
+
+    unsafe {
+        vex_sdk::vexSystemTimerStop();
+
+        install_vector_table();
+
+        vex_sdk::vexSystemTimerReinitForRtos(TIMER_PRIORITY_MASK, timer_handler);
+
+        asm!("cpsid i", "dsb", "isb");
+        core::ptr::write_volatile(
+            interrupt_controller::ICCPMR_PRIORITY_MASK_REGISTER as *mut u32,
+            0xFF,
+        );
+        asm!("dsb", "isb", "cpsie i", "dsb", "isb");
+    }
+}
+
+// unique: 32
+// shift: 3
+// lowest: 31
+// lowest usable: 30
+// max api call: 18
+// priority: 240
+
 /// Enable vexide's CPU exception handling logic by installing
 /// its custom vector table. (Temporary internal API)
-pub fn install_vector_table() {
+fn install_vector_table() {
     unsafe {
         asm!(
             "ldr r0, =vectors",
@@ -192,6 +228,8 @@ mod interrupt_controller {
 
     /// The address of the End of Interrupt Register (ICCEOIR)
     pub const END_OF_INTERRUPT_REGISTER_ADDRESS: usize = CPU_INTERFACE_BASE_ADDRESS + 0x10;
+
+    pub const ICCPMR_PRIORITY_MASK_REGISTER: usize = CPU_INTERFACE_BASE_ADDRESS + 0x04;
 }
 
 #[unsafe(naked)]
@@ -238,10 +276,10 @@ unsafe extern "C" fn irq() {
             ldr r0, ={icciar}   @ Store constant, then dereference it
             ldr r0, [r0]
 
-            @ Call interrupt handler
-            push {{r0,r1,lr}}              @ AAPCS callee-saved registers (only the ones we're using)
+            @ Call interrupt handler (LR is pushed twice to keep alignment)
+            push {{r0,r1,lr,lr}}        @ AAPCS callee-saved registers (only the ones we're using)
             blx {irq_handler}           @ Actually call the function now
-            pop {{r0,r1,lr}}               @ Restore callee-saved registers
+            pop {{r0,r1,lr,lr}}         @ Restore callee-saved registers
 
             @ Disable IRQs again in case our handler enabled them.
             @ We're not able to handle reentrancy right now since
@@ -284,6 +322,14 @@ unsafe extern "C" fn exception_handler(cause: FaultType /* fault: *const Fault *
         //     stack_pointer,
         //     registers,
         // } = *fault;
+
+        // shenanigans
+        asm!("cpsid i", "dsb", "isb");
+        core::ptr::write_volatile(
+            interrupt_controller::ICCPMR_PRIORITY_MASK_REGISTER as *mut u32,
+            MAX_API_CALL_MASK,
+        );
+        asm!("dsb", "isb", "cpsie i", "dsb", "isb");
 
         match cause {
             FaultType::DataAbort => {
