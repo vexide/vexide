@@ -18,7 +18,32 @@ vectors:
     b {data_abort}
     nop @ Placeholder for address exception vector
     b {irq}
-    b . @ TODO (FIQ not used right now)
+    @ `b fiq` would go here, but the beginning of the FIQ
+    @ handler is in the same place so there's no need.
+
+fiq:
+    push {{r0-r3,r12,lr}} @ Preserve AAPCS callee-saved registers
+
+	vpush {{d0-d7}}       @ Preserve hard-float registers
+	vpush {{d16-d31}}
+	vmrs r1, fpscr
+	push {{r1}}
+	vmrs r1, fpexc
+	push {{r1}}
+
+    blx	{fiq_handler}
+
+    pop {{r0-r3,r12,lr}}  @ Restore state
+
+	pop 	{{r1}}
+	vmsr    fpexc, r1
+	pop 	{{r1}}
+	vmsr    fpscr, r1
+	vpop    {{d16-d31}}
+	vpop    {{d0-d7}}
+
+    subs pc, lr, #4       @ Return to previous code (LR is offset by the
+                          @ size of a single instruction)
     "#,
     boot = sym boot,
     undefined_instruction = sym undefined_instruction,
@@ -26,6 +51,7 @@ vectors:
     prefetch_abort = sym prefetch_abort,
     data_abort = sym data_abort,
     irq = sym irq,
+    fiq_handler = sym fiq_handler,
 );
 
 /// Enable vexide's CPU exception handling logic by installing
@@ -198,6 +224,13 @@ unsafe extern "C" fn irq() {
             @ they're the same when we return from the IRQ.
             push {{r0-r3,r12}}
 
+            vpush {{d0-d7}}        @ Preserve hard-float registers
+            vpush {{d16-d31}}
+            vmrs r1, fpscr
+            push {{r1}}
+            vmrs r1, fpexc
+            push {{r1}}
+
             @ Align the stack to 8 bytes by subtracting 4 bytes if neccesary
             @ r1 holds the adjustment so we can undo it with an `add` later
             and r1, sp, #0b0100   @ Is the `4` bit set? If so, set r1 to 4
@@ -226,8 +259,17 @@ unsafe extern "C" fn irq() {
             str	r0, [r2]
 
             @ Undo the changes we made at the beginning to prevent side effects
-            add sp, sp, r1      @ Revert stack alignment
+            add sp, sp, r1        @ Revert stack alignment
+
+            pop 	{{r1}}        @ Restore hard-float registers
+            vmsr    fpexc, r1
+            pop 	{{r1}}
+            vmsr    fpscr, r1
+            vpop    {{d16-d31}}
+            vpop    {{d0-d7}}
+
             pop {{r0-r3,r12}}   @ Restore general purpose registers
+
             rfeia sp!           @ Return from exception: restore SPSR (into CPSR register)
                                 @ and LR from the stack, then jump to LR.
                                 @ This is the counterpart to the `srsdb` call
@@ -332,12 +374,19 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
     }
 }
 
-/// Processes an Interrupt Request (IRQ) with the given ID.
+/// Process an Interrupt Request (IRQ) with the given ID.
 ///
 /// The ID should be obtained from one of the Interrupt Acknowledge Registers (IARs).
 unsafe extern "C" fn irq_handler(interrupt_id: u32) {
     unsafe {
         vex_sdk::vexSystemApplicationIRQHandler(interrupt_id);
+    }
+}
+
+/// Process a Fast Interrupt Request (FIQ).
+unsafe extern "C" fn fiq_handler() {
+    unsafe {
+        vex_sdk::vexSystemFIQInterrupt();
     }
 }
 
