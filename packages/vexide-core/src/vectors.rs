@@ -57,7 +57,7 @@ fiq:
 
 /// Enable vexide's CPU exception handling logic by installing
 /// its custom vector table. (Temporary internal API)
-fn install_vector_table() {
+pub fn install_vector_table() {
     unsafe {
         asm!(
             "ldr r0, =vectors",
