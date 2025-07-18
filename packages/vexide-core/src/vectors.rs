@@ -3,8 +3,6 @@ use core::{
     ffi::c_void,
 };
 
-use crate::{io::STDIO_CHANNEL, println};
-
 // Custom ARM vector table. Pointing the VBAR coproc. register at this
 // will configure the CPU to jump to these functions on an exception.
 global_asm!(
@@ -56,39 +54,6 @@ fiq:
     irq = sym irq,
     fiq_handler = sym fiq_handler,
 );
-
-const TIMER_PRIORITY_MASK: u32 = 30 << 3;
-const MAX_API_CALL_MASK: u32 = 18 << 3;
-
-pub unsafe fn init_rtos() {
-    extern "aapcs" fn timer_handler(_data: *mut c_void) {
-        unsafe {
-            vex_sdk::vexSystemTimerClearInterrupt();
-        }
-    }
-
-    unsafe {
-        vex_sdk::vexSystemTimerStop();
-
-        install_vector_table();
-
-        vex_sdk::vexSystemTimerReinitForRtos(TIMER_PRIORITY_MASK, timer_handler);
-
-        asm!("cpsid i", "dsb", "isb");
-        core::ptr::write_volatile(
-            interrupt_controller::ICCPMR_PRIORITY_MASK_REGISTER as *mut u32,
-            0xFF,
-        );
-        asm!("dsb", "isb", "cpsie i", "dsb", "isb");
-    }
-}
-
-// unique: 32
-// shift: 3
-// lowest: 31
-// lowest usable: 30
-// max api call: 18
-// priority: 240
 
 /// Enable vexide's CPU exception handling logic by installing
 /// its custom vector table. (Temporary internal API)
@@ -161,37 +126,17 @@ macro_rules! abort_handler {
     ) => {
         #[unsafe(naked)]
         #[unsafe(no_mangle)]
+        #[instruction_set(arm::a32)]
         unsafe extern "C" fn $name() -> ! {
             naked_asm!(
-        //         "
-        // .arm
-        //         dsb             @ Workaround for Cortex A9 erratum (id 775420)
-
-        //         sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
-        //                                     @ of return instruction (see Fault::instruction_pointer docs).
-
-        //         @ Create `Fault` struct in the stack:
-        //         push {{r0-r12}}     @ Save general-purpose registers for debugging
-        //         mov r0, {cause}     @ We will push this later.
-        //         push {{r0, lr}}     @ Keep building up our struct; add `cause` and I.P.
-
-        //         @ Storing original stack pointer needs two steps
-        //         stmdb sp, {{sp}}^  @ Get the user/system mode's stack pointer
-        //         sub sp, sp, #4     @ Move *our* stack pointer to the beginning of the struct
-
-        //         @ Pass it to our handler using the C ABI:
-        //         mov r0, sp                     @ set param 0
-        //         blx {exception_handler}        @ Actually call the function now
-        //         ",
-        "
-.arm
+                "
                 dsb
                 stmdb	sp!,{{r0-r3,r12,lr}}
                 mov r0, {cause}
                 blx	{exception_handler}
                 ldmia	sp!,{{r0-r3,r12,lr}}
                 subs	pc, lr, #{lr_offset}
-        ",
+                ",
                 exception_handler = sym exception_handler,
                 lr_offset = const $lr_offset,
                 cause = const $cause as u32,
@@ -234,84 +179,103 @@ mod interrupt_controller {
 
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
+#[instruction_set(arm::a32)]
 unsafe extern "C" fn irq() {
     naked_asm!(
+        // Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+        // Licensed under MIT License
+        // http://www.FreeRTOS.org
         "
-    .arm
-            @ Requirements for reentrant interrupt handlers:
-            @ <https://developer.arm.com/documentation/dui0203/j/handling-processor-exceptions/armv6-and-earlier--armv7-a-and-armv7-r-profiles/interrupt-handlers>
-            @ (Accessed July 2025)
+        /* Return to the interrupted instruction. */
+        SUB		lr, lr, #4
 
-            sub lr, lr, #4  @ Apply an offset to link register so that it points at address
-                            @ of return instruction (see Fault::instruction_pointer docs).
-            srsdb sp!, #19  @ Save LR & SPSR to supervisor mode stack
+        /* Push the return address and SPSR. */
+        PUSH	{{lr}}
+        MRS		lr, SPSR
+        PUSH	{{lr}}
 
-            @ Switch to supervisor mode
-            @ Note: traditionally you would switch to system mode here,
-            @ but PROS uses supervisor mode when it calls the IRQ handler
-            @ (and it works) so we're going to use that behavior. This is
-            @ presumably because user programs run in system mode by default.
-            cps #19
+        /* Change to supervisor mode to allow reentry. */
+        CPS		#{svc_mode}
 
-            @ These registers aren't preserved by the AAPCS calling convention
-            @ or our own assembly code so we save them on the stack to make sure
-            @ they're the same when we return from the IRQ.
-            push {{r0-r3,r12}}
+        /* Push used registers. */
+        PUSH	{{r0-r4, r12}}
 
-            vpush {{d0-d7}}        @ Preserve hard-float registers
-            vpush {{d16-d31}}
-            vmrs r1, fpscr
-            push {{r1}}
-            vmrs r1, fpexc
-            push {{r1}}
+        /* Read value from the interrupt acknowledge register, which is stored in r0
+        for future parameter and interrupt clearing use. */
+        LDR 	r2, ={icciar}
+        LDR		r0, [r2]
 
-            @ Align the stack to 8 bytes by subtracting 4 bytes if neccesary
-            @ r1 holds the adjustment so we can undo it with an `add` later
-            and r1, sp, #0b0100   @ Is the `4` bit set? If so, set r1 to 4
-            sub sp, sp, r1          @ Align stack by giving extra space if needed
+        /* Ensure bit 2 of the stack pointer is clear.  r2 holds the bit 2 value for
+        future use.  _RB_ Does this ever actually need to be done provided the start
+        of the stack is 8-byte aligned? */
+        MOV		r2, sp
+        AND		r2, r2, #4
+        SUB		sp, sp, r2
 
-            @ Pull interrupt id out of the the interrupt controller's ICCIAR register
-            @ (Reading it will automatically awknowledge the IRQ.)
-            @ r0 is used as first param to function call
-            ldr r0, ={icciar}   @ Store constant, then dereference it
-            ldr r0, [r0]
+        /* Call the interrupt handler.  r4 pushed to maintain alignment. */
+        PUSH	{{r0-r4, lr}}
+        BLX		{irq_handler}
+        POP		{{r0-r4, lr}}
+        ADD		sp, sp, r2
 
-            @ Call interrupt handler (LR is pushed twice to keep alignment)
-            push {{r0,r1,lr,lr}}        @ AAPCS callee-saved registers (only the ones we're using)
-            blx {irq_handler}           @ Actually call the function now
-            pop {{r0,r1,lr,lr}}         @ Restore callee-saved registers
+        CPSID	i
+        DSB
+        ISB
 
-            @ Disable IRQs again in case our handler enabled them.
-            @ We're not able to handle reentrancy right now since
-            @ our code is restoring the state from before *this* IRQ.
-            cpsid i   @ Turn off the IRQ flag.
-            dsb       @ Ensure the change is propogated before
-            isb       @ we continue executing.
+        /* Write the value read from ICCIAR to ICCEOIR. */
+        LDR 	r4, ={icceoir}
+        STR		r0, [r4]
 
-            @ Tell GIC we're done processing the interrupt
-            ldr r2, ={icceoir}
-            str	r0, [r2]
-
-            @ Undo the changes we made at the beginning to prevent side effects
-            add sp, sp, r1        @ Revert stack alignment
-
-            pop 	{{r1}}        @ Restore hard-float registers
-            vmsr    fpexc, r1
-            pop 	{{r1}}
-            vmsr    fpscr, r1
-            vpop    {{d16-d31}}
-            vpop    {{d0-d7}}
-
-            pop {{r0-r3,r12}}   @ Restore general purpose registers
-
-            rfeia sp!           @ Return from exception: restore SPSR (into CPSR register)
-                                @ and LR from the stack, then jump to LR.
-                                @ This is the counterpart to the `srsdb` call
-            ",
+        /* No context switch.  Restore used registers, LR_irq and SPSR before
+        returning. */
+        POP		{{r0-r4, r12}}
+        CPS		#{irq_mode}
+        POP		{{LR}}
+        MSR		SPSR_cxsf, LR
+        POP		{{LR}}
+        MOVS	PC, LR
+        ",
         icciar = const interrupt_controller::INTERRUPT_ACKNOWLEDGE_REGISTER_ADDRESS,
         icceoir = const interrupt_controller::END_OF_INTERRUPT_REGISTER_ADDRESS,
+        irq_mode = const 0x12,
+        svc_mode = const 0x13,
         irq_handler = sym irq_handler,
     );
+}
+
+#[unsafe(naked)]
+#[instruction_set(arm::a32)]
+unsafe extern "C" fn irq_handler(icciar: u32) {
+    naked_asm!(
+        // Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+        // Licensed under MIT License
+        "
+        PUSH	{{LR}}
+        FMRX	R1,  FPSCR
+        VPUSH	{{D0-D15}}
+        VPUSH	{{D16-D31}}
+        PUSH	{{R1}}
+
+        BLX		{fpu_safe_irq_handler}
+
+        POP		{{R0}}
+        VPOP	{{D16-D31}}
+        VPOP	{{D0-D15}}
+        VMSR	FPSCR, R0
+
+        POP {{PC}}
+        ",
+        fpu_safe_irq_handler = sym fpu_safe_irq_handler,
+    )
+}
+
+/// Process an Interrupt Request (IRQ) with the given ID.
+///
+/// The ID should be obtained from one of the Interrupt Acknowledge Registers (IARs).
+unsafe extern "C" fn fpu_safe_irq_handler(interrupt_id: u32) {
+    unsafe {
+        vex_sdk::vexSystemApplicationIRQHandler(interrupt_id);
+    }
 }
 
 unsafe extern "C" fn exception_handler(cause: FaultType /* fault: *const Fault */) -> ! {
@@ -322,14 +286,6 @@ unsafe extern "C" fn exception_handler(cause: FaultType /* fault: *const Fault *
         //     stack_pointer,
         //     registers,
         // } = *fault;
-
-        // shenanigans
-        asm!("cpsid i", "dsb", "isb");
-        core::ptr::write_volatile(
-            interrupt_controller::ICCPMR_PRIORITY_MASK_REGISTER as *mut u32,
-            MAX_API_CALL_MASK,
-        );
-        asm!("dsb", "isb", "cpsie i", "dsb", "isb");
 
         match cause {
             FaultType::DataAbort => {
@@ -412,15 +368,6 @@ unsafe extern "C" fn exception_handler(cause: FaultType /* fault: *const Fault *
         // loop {
         //     asm!("nop");
         // }
-    }
-}
-
-/// Process an Interrupt Request (IRQ) with the given ID.
-///
-/// The ID should be obtained from one of the Interrupt Acknowledge Registers (IARs).
-unsafe extern "C" fn irq_handler(interrupt_id: u32) {
-    unsafe {
-        vex_sdk::vexSystemApplicationIRQHandler(interrupt_id);
     }
 }
 
