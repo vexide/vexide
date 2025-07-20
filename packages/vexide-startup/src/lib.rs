@@ -67,6 +67,7 @@ mod patcher;
 use core::arch::naked_asm;
 
 pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+use patcher::PATCH_MAGIC;
 
 /// Load address of user programs in memory.
 const USER_MEMORY_START: u32 = 0x0380_0000;
@@ -124,7 +125,7 @@ unsafe extern "C" fn _boot() {
         // header value of 0xB1DF.
         "ldr r0, =__patcher_patch_start",
         "ldr r0, [r0]",
-        "ldr r1, =0x1BDF",
+        "ldr r1, ={patch_magic}",
         "cmp r0, r1", // r0 == 0xB1DF?
         // Prepare to memcpy binary to 0x07C00000
         "ldr r0, =__patcher_base_start",     // memcpy dest -> r0
@@ -135,6 +136,7 @@ unsafe extern "C" fn _boot() {
         "bleq __overwriter_aeabi_memcpy",
         // Jump to the Rust entrypoint.
         "b _start",
+        patch_magic = const PATCH_MAGIC,
     )
 }
 

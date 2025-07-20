@@ -3,6 +3,9 @@ use vexide_core::io::{Cursor, Read, Seek, SeekFrom};
 
 mod varint_decode;
 
+/// First four bytes of a patch file.
+pub const PATCH_MAGIC: u32 = 0xB1DF;
+
 // Assembly implementation of the patch overwriter (`__patcher_overwrite`).
 //
 // The overwriter is responsible for self-modifying the currently running code
@@ -102,10 +105,8 @@ enum PatcherState {
 /// The caller must ensure that the patch loaded at 0x07A00000 has been built using the currently running
 /// binary as the basis for the patch.
 pub(crate) unsafe fn patch() {
-    // First four bytes of the patch file MUST be 0xB1DF for the patch to be applied.
-    const PATCH_MAGIC: u32 = 0xB1DF;
-
-    // Next four bytes of the patch have to match this version identifier for the patch to be applied.
+    // The first four bytes after the patch magic have to match this version identifier for the
+    // patch to be applied.
     const PATCH_VERSION: u32 = 0x1000;
 
     /// Load address of patch files.
