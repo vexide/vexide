@@ -58,6 +58,7 @@ Before releasing:
 - The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 - Moved the `_boot` routine to a naked function. (#337)
+- `Display::erase` now no longer takes a color argument and instead uses the background color specified in the startup banner, since the behavior was unsupported by VEXos. (#350) (**Breaking Change**)
 
 ### Removed
 
