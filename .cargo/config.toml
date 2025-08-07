@@ -1,5 +1,8 @@
 [build]
-target = "./armv7a-vex-v5.json"
+target = "armv7a-vex-v5"
+rustflags = [
+    # "-Clink-arg=--defsym=__vcodesig_magic=0xdeadbeef",
+]
 
 [target."cfg(target_vendor = \"vex\")"]
 runner = "cargo v5 run --file"

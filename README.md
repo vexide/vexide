@@ -1,5 +1,49 @@
 # vexide
 
+> [!IMPORTANT]
+>
+> This branch contains a version of vexide refactored to prepare for adding VEX V5 support
+> to the upstream Rust compiler & standard library. It has different usage requirements
+> than the trunk edition of vexide; for instance, until our changes are merged, you must
+> use our fork of Rust.
+>
+> ## Building Rust
+>
+> Clone the `minimal-armv7a-vex-v5` branch of [our fork of Rust](https://github.com/vexide/rust),
+> then run `./x setup`. Specify "compiler" if you intend to make changes to Rust, or "dist"
+> if you just want to use vexide.
+>
+> You will need to update `bootstrap.toml` to something like the following:
+>
+> ```toml
+> # See bootstrap.example.toml for documentation of available options
+> #
+> profile = "compiler"  # Includes one of the default files in src/bootstrap/defaults
+> change-id = 144675
+>
+> llvm.download-ci-llvm = true
+>
+> [rust]
+> # Effectively copies the LLVM linker (downloaded from CI) to the Rust build outputs
+> lld = true
+> # optional; makes the build output bigger, but subsequent builds are faster
+> incremental = true
+> ```
+>
+> Build it with `./x build`.
+>
+> Run `rustup toolchain link vexv5 build/host/stage1` to give this toolchain a name.
+>
+> ## Building vexide
+>
+> `cargo v5 upload` will tell Cargo to use the old JSON-based target. You will need to
+> build and upload in two steps to avoid this.
+>
+> ```shell
+> cargo +vexv5 build --example basic
+> cargo v5 upload --file target/armv7a-vex-v5/debug/examples/basic
+> ```
+
 Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime, async executor, device API, and more for the VEX V5 Brain!
 
 vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which is a set of unmaintained APIs using bindings over [PROS](https://github.com/purduesigbots/pros).
