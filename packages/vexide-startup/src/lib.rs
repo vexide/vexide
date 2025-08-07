@@ -62,14 +62,14 @@
 
 pub mod banner;
 mod code_signature;
-mod patcher;
+// mod patcher;
 
 use core::arch::naked_asm;
 
 pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
-/// Load address of user programs in memory.
-const USER_MEMORY_START: u32 = 0x0380_0000;
+// /// Load address of user programs in memory.
+// const USER_MEMORY_START: u32 = 0x0380_0000;
 
 // Linkerscript Symbols
 //
@@ -80,8 +80,8 @@ unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
 
-    static mut __patcher_ram_start: u8;
-    static mut __patcher_ram_end: u8;
+    // static mut __patcher_ram_start: u8;
+    // static mut __patcher_ram_end: u8;
 
     static mut __bss_start: u32;
     static mut __bss_end: u32;
@@ -122,17 +122,17 @@ unsafe extern "C" fn _boot() {
         // Check if a patch file is loaded into memory by reading the first four bytes
         // at the expected location (0x07A00000) and checking if they equal the magic
         // header value of 0xB1DF.
-        "ldr r0, =__patcher_patch_start",
-        "ldr r0, [r0]",
-        "ldr r1, =0x1BDF",
-        "cmp r0, r1", // r0 == 0xB1DF?
-        // Prepare to memcpy binary to 0x07C00000
-        "ldr r0, =__patcher_base_start",     // memcpy dest -> r0
-        "ldr r1, =__program_ram_start",      // memcpy src -> r1
-        "ldr r2, =__patcher_patch_start+12", // Base binary len is stored as metadata in the patch
-        "ldr r2, [r2]",                      // memcpy size -> r2
-        // Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
-        "bleq __overwriter_aeabi_memcpy",
+        // "ldr r0, =__patcher_patch_start",
+        // "ldr r0, [r0]",
+        // "ldr r1, =0x1BDF",
+        // "cmp r0, r1", // r0 == 0xB1DF?
+        // // Prepare to memcpy binary to 0x07C00000
+        // "ldr r0, =__patcher_base_start",     // memcpy dest -> r0
+        // "ldr r1, =__program_ram_start",      // memcpy src -> r1
+        // "ldr r2, =__patcher_patch_start+12", // Base binary len is stored as metadata in the patch
+        // "ldr r2, [r2]",                      // memcpy size -> r2
+        // // Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
+        // "bleq __overwriter_aeabi_memcpy",
         // Jump to the Rust entrypoint.
         "b _start",
     )
@@ -174,12 +174,12 @@ pub unsafe fn startup() {
 
         // If this link address is 0x03800000, this implies we were uploaded using
         // differential uploads by cargo-v5 and may have a patch to apply.
-        if vex_sdk::vexSystemLinkAddrGet() == USER_MEMORY_START {
-            patcher::patch();
-        }
+        // if vex_sdk::vexSystemLinkAddrGet() == USER_MEMORY_START {
+        //     patcher::patch();
+        // }
 
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
-        #[cfg(feature = "allocator")]
-        vexide_core::allocator::claim(&raw mut __patcher_ram_start, &raw mut __patcher_ram_end);
+        // #[cfg(feature = "allocator")]
+        // vexide_core::allocator::claim(&raw mut __patcher_ram_start, &raw mut __patcher_ram_end);
     }
 }

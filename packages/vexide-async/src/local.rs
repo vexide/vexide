@@ -16,10 +16,10 @@ use core::{
     sync::atomic::{AtomicPtr, Ordering},
 };
 
-unsafe extern "C" {
-    static mut __vexide_tdata_start: u8;
-    static mut __vexide_tdata_end: u8;
-}
+// unsafe extern "C" {
+//     static mut __vexide_tdata_start: u8;
+//     static mut __vexide_tdata_end: u8;
+// }
 
 static TLS_PTR: AtomicPtr<()> = AtomicPtr::new(null_mut());
 

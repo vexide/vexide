@@ -10,7 +10,7 @@ extern crate alloc;
 mod executor;
 mod reactor;
 
-mod local;
+// mod local;
 pub mod task;
 pub mod time;
 

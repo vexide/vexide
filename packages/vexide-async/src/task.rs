@@ -2,12 +2,12 @@
 
 use core::future::Future;
 
-use crate::local::TaskLocalStorage;
+// use crate::local::TaskLocalStorage;
 
 // public because it's used in Task<T> and InfallibleTask<T>
 #[doc(hidden)]
 pub struct TaskMetadata {
-    pub(crate) tls: TaskLocalStorage,
+    // pub(crate) tls: TaskLocalStorage,
 }
 
 /// A spawned task.
@@ -38,7 +38,7 @@ pub type Task<T> = async_task::Task<T, TaskMetadata>;
 /// A spawned task with a fallible response.
 pub type FallibleTask<T> = async_task::FallibleTask<T, TaskMetadata>;
 
-pub use crate::{local::LocalKey, task_local};
+// pub use crate::{local::LocalKey, task_local};
 
 /// Spawns a new async task that can be controlled with the returned task handle.
 pub fn spawn<T>(future: impl Future<Output = T> + 'static) -> Task<T> {
