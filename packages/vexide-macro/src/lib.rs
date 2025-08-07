@@ -43,23 +43,24 @@ fn verify_function_sig(sig: &Signature) -> Result<(), syn::Error> {
     }
 }
 
-// fn make_code_sig(opts: MacroOpts) -> proc_macro2::TokenStream {
-//     let sig = if let Some(code_sig) = opts.code_sig {
-//         quote! { #code_sig }
-//     } else {
-//         quote! {  ::vexide::startup::CodeSignature::new(
-//             ::vexide::startup::ProgramType::User,
-//             ::vexide::startup::ProgramOwner::Partner,
-//             ::vexide::startup::ProgramFlags::empty(),
-//         ) }
-//     };
+fn make_code_sig(opts: MacroOpts) -> proc_macro2::TokenStream {
+    let sig = if let Some(code_sig) = opts.code_sig {
+        quote! { #code_sig }
+    } else {
+        quote! {  ::vexide::startup::CodeSignature::new(
+            ::vexide::startup::ProgramType::User,
+            ::vexide::startup::ProgramOwner::Partner,
+            ::vexide::startup::ProgramFlags::empty(),
+        ) }
+    };
 
-//     quote! {
-//         #[link_section = ".code_signature"]
-//         #[used] // This is needed to prevent the linker from removing this object in release builds
-//         static CODE_SIGNATURE: ::vexide::startup::CodeSignature = #sig;
-//     }
-// }
+    quote! {
+        #[cfg(target_os = "none")]
+        #[link_section = ".code_signature"]
+        #[used] // This is needed to prevent the linker from removing this object in release builds
+        static CODE_SIGNATURE: ::vexide::startup::CodeSignature = #sig;
+    }
+}
 
 fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream {
     match verify_function_sig(&inner.sig) {
@@ -182,11 +183,11 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     let opts = MacroOpts::from(parse_macro_input!(attrs as Attrs));
 
     let entrypoint = make_entrypoint(&item, opts.clone());
-    // let code_signature = make_code_sig(opts);
+    let code_signature = make_code_sig(opts);
 
     quote! {
         const _: () = {
-            // #code_signature
+            #code_signature
 
             #entrypoint
         };

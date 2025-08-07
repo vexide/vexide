@@ -7,6 +7,15 @@
 > than the trunk edition of vexide; for instance, until our changes are merged, you must
 > use our fork of Rust.
 >
+> <details>
+> <summary>Click to view details</summary>
+>
+> vexide will automatically detect if you are using the builtin Rust target by checking for
+> `cfg(not(target_os = "none"))` and adapt by enabling or disabling features as available.
+>
+> Currently, differential uploading and task-locals are unsupported when using the builtin Rust
+> target because they require modifications to a program's memory layout at link-time.
+>
 > ## Building Rust
 >
 > Clone the `minimal-armv7a-vex-v5` branch of [our fork of Rust](https://github.com/vexide/rust),
@@ -30,19 +39,28 @@
 > incremental = true
 > ```
 >
-> Build it with `./x build`.
+> Build it with `./x build library compiler cargo clippy proc-macro-srv-cli` (the last 3 arguments
+> help rust-analyzer work properly).
 >
-> Run `rustup toolchain link vexv5 build/host/stage1` to give this toolchain a name.
+> Run `rustup toolchain link vexv5 build/host/stage1` to give this toolchain a name ("vexv5").
 >
 > ## Building vexide
+>
+> Tell Cargo to use the new "vexv5" toolchain in this directory:
+>
+> ```shell
+> rustup override set vexv5
+> ```
 >
 > `cargo v5 upload` will tell Cargo to use the old JSON-based target. You will need to
 > build and upload in two steps to avoid this.
 >
 > ```shell
-> cargo +vexv5 build --example basic
+> cargo build --example basic
 > cargo v5 upload --file target/armv7a-vex-v5/debug/examples/basic
 > ```
+>
+> </summary>
 
 Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime, async executor, device API, and more for the VEX V5 Brain!
 

@@ -11,9 +11,10 @@ use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
 use crate::{
-    // local::{is_tls_null, set_tls_ptr, TaskLocalStorage},
     task::{Task, TaskMetadata},
 };
+#[cfg(target_os = "none")]
+use crate::local::{is_tls_null, set_tls_ptr, TaskLocalStorage};
 
 type Runnable = async_task::Runnable<TaskMetadata>;
 
@@ -38,7 +39,8 @@ impl Executor {
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
         let metadata = TaskMetadata {
-            // tls: TaskLocalStorage::new(),
+            #[cfg(target_os = "none")]
+            tls: TaskLocalStorage::new(),
         };
 
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
@@ -76,10 +78,12 @@ impl Executor {
 
         #[allow(if_let_rescope)]
         if let Some(runnable) = runnable {
-            // let old_ptr = unsafe { runnable.metadata().tls.set_current_tls() };
+            #[cfg(target_os = "none")]
+            let old_ptr = unsafe { runnable.metadata().tls.set_current_tls() };
             runnable.run();
 
-            // unsafe { set_tls_ptr(old_ptr) };
+            #[cfg(target_os = "none")]
+            unsafe { set_tls_ptr(old_ptr) };
 
             true
         } else {
@@ -89,11 +93,12 @@ impl Executor {
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
         // indicative of entry point task
-        // if is_tls_null() {
-        //     unsafe {
-        //         _ = TaskLocalStorage::new().set_current_tls();
-        //     }
-        // }
+        #[cfg(target_os = "none")]
+        if is_tls_null() {
+            unsafe {
+                _ = TaskLocalStorage::new().set_current_tls();
+            }
+        }
 
         let woken = Arc::new(AtomicBool::new(true));
 
