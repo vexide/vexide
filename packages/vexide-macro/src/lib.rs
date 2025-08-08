@@ -182,11 +182,11 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     let opts = MacroOpts::from(parse_macro_input!(attrs as Attrs));
 
     let entrypoint = make_entrypoint(&item, opts.clone());
-    let code_signature = make_code_sig(opts);
+    // let code_signature = make_code_sig(opts);
 
     quote! {
         const _: () = {
-            #code_signature
+            // #code_signature
 
             #entrypoint
         };
