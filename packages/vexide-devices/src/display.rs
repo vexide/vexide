@@ -753,10 +753,16 @@ impl Display {
         shape.stroke(self, color);
     }
 
-    /// Wipe the entire display buffer, filling it with a specified color.
-    pub fn erase(&mut self, color: impl Into<Rgb<u8>>) {
+    // Link to docs is to docs.rs because non-dependency docs cannot be automatically linked to.
+    /// Wipe the entire display buffer, filling it with the default background color.
+    ///
+    /// You can change this background color by configuring the appropriate theme
+    /// startup options using the startup [`CodeSignature`]'s [`ProgramFlags`].
+    ///
+    /// [`CodeSignature`]: https://docs.rs/vexide-startup/latest/vexide_startup/struct.CodeSignature.html
+    /// [`ProgramFlags`]: https://docs.rs/vexide-startup/latest/vexide_startup/struct.ProgramFlags.html
+    pub fn erase(&mut self) {
         unsafe {
-            vexDisplayBackgroundColor(color.into().into_raw());
             vexDisplayErase();
         };
     }
