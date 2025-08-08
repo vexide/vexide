@@ -1,98 +1,79 @@
 OUTPUT_FORMAT("elf32-littlearm")
-
-/*
- * _boot is an assembly routine defined in src/lib.rs that sets
- * up the stack pointer before jumping to _start (Rust entrypoint).
- */
 ENTRY(_boot)
 
-__program_ram_start = 0x03800000;
-__program_ram_length = 0x04200000; /* This is actually 0x04800000, but we don't want the stack colliding with the patch. */
-__program_ram_end = __program_ram_start + __program_ram_length;
+/*
+ * PROVIDE() is used here so that users can override default values.
+ * This is intended to give developers the option to use this Rust
+ * target even if the default values in this linker script aren't
+ * suitable for their needs.
+ *
+ * For example: `-C link-arg=--defsym=__stack_length=8M` could
+ * be used to increase the stack size above the value set in this
+ * file.
+ */
 
-__patcher_ram_start = 0x07A00000;
-__patcher_ram_length = 0x600000; /* 6mb total, 2mb for each subsection. */
-__patcher_ram_end = __patcher_ram_start + __patcher_ram_length; /* End of CPU1 RWX memory block. */
-__patcher_section_length = 0x200000;
+PROVIDE(__vcodesig_magic = 0x35585658);     /* XVX5                 */
+PROVIDE(__vcodesig_type = 0);               /* V5_SIG_TYPE_USER     */
+PROVIDE(__vcodesig_owner = 2);              /* V5_SIG_OWNER_PARTNER */
+PROVIDE(__vcodesig_options = 0);            /* none (0)             */
 
-__code_signature_length = 0x20;
+__user_ram_start = 0x03800000;
+__user_ram_end   = 0x08000000;
+/* (0x48 =) 72 MiB length */
+__user_ram_length = __user_ram_start - __user_ram_end;
 
-__stack_length = 0x400000;
-__heap_end = __program_ram_end - __stack_length;
-__program_length = __heap_start - __program_ram_start;
+/*
+ * VEXos provides a method for pre-loading a "linked file" at a specified
+ * address in User RAM, conventionally near the end, after the primary
+ * program binary. We need to be sure not to place any data in that location,
+ * so we allow the user of this linker script to inform the start address of
+ * this blob.
+ */
+PROVIDE(__linked_file_start = __user_ram_end);
+PROVIDE(__linked_file_end = __user_ram_end);
 
-/* see https://github.com/llvm/llvm-project/blob/main/libunwind/src/AddressSpace.hpp#L78 */
-__eh_frame_hdr_start = SIZEOF(.eh_frame_hdr) > 0 ? ADDR(.eh_frame_hdr) : 0;
-__eh_frame_hdr_end = SIZEOF(.eh_frame_hdr) > 0 ? . : 0;
+PROVIDE(__stack_length = 4M);
+PROVIDE(__stack_top = __linked_file_start);
+PROVIDE(__stack_bottom = __linked_file_start - __stack_length);
 
 MEMORY {
-    /*
-     * Memory available for (initial) use by the user program.
-     *
-     * This is technically all the way from 0x03800000-0x8000000, but we reserve
-     * the last 6mb for the patcher, which is later reclaimed as heap space.
-     */
-    PROGRAM_RAM (RWX) : ORIGIN = __program_ram_start, LENGTH = __program_ram_length
-
-    /*
-     * Memory reserved for the patcher.
-     *
-     * We reserve last 6mb of the CPU1 RWX region for storing data relating to patch
-     * uploading. This region is further split into three 2mb "subsections":
-     *
-     * - The first 2mb are where the actual patch itself is loaded to.
-     * - The next 2mb is a buffer where the running user program is copied to, which
-     *   will serve as a reference for building the patched binary. We can't use active
-     *   memory to do this, since statics and unwind tables will be written to at runtime,
-     *   messing with the patch.
-     * - The final 2mb is where the new patched binary will be constructed and eventually
-     *   memcpy'd back to __program_ram_start.
-     *
-     * Following the patch process (or if we don't need to patch), this entire region is
-     * claimed as heap space.
-     */
-    PATCHER_RAM (RWX) : ORIGIN = __patcher_ram_start, LENGTH = __patcher_ram_length
+    USER_RAM (RWX) : ORIGIN = __user_ram_start, LENGTH = __user_ram_length
 }
 
 SECTIONS {
     /*
-     * VEXos expects program binaries to have a 32-byte header called a "code signature",
-     * at their start, which tells the OS that we are a valid program and configures some
+     * VEXos expects program binaries to have a 32-byte header called a "code signature"
+     * at their start which tells the OS that we are a valid program and configures some
      * miscellaneous startup behavior.
      */
     .code_signature : {
-        KEEP(*(.code_signature))
-        . = __program_ram_start + __code_signature_length;
-    } > PROGRAM_RAM
+        LONG(__vcodesig_magic)
+        LONG(__vcodesig_type)
+        LONG(__vcodesig_owner)
+        LONG(__vcodesig_options)
+
+        FILL(0)
+        . = __user_ram_start + 0x20;
+    } > USER_RAM
 
     /*
      * Executable program instructions.
      */
     .text : {
-        /* _boot routine (always runs first, must be at 0x03800020) */
+        /* _boot routine (entry point from VEXos, must be at 0x03800020) */
         *(.boot)
-        /* Stage 2 patcher. */
-        *(.overwriter)
-        /* Rest of the program. */
+
+        /* The rest of the program. */
         *(.text .text.*)
-    } > PROGRAM_RAM
+    } > USER_RAM
 
     /*
      * Global/uninitialized/static/constant data sections.
      */
     .rodata : {
-        *(.rodata .rodata.*)
-    } > PROGRAM_RAM
-
-    .data : {
-        *(.data .data.*)
-    } > PROGRAM_RAM
-
-    .bss : {
-        __bss_start = .;
-        *(.bss .bss.*)
-        __bss_end = .;
-    } > PROGRAM_RAM
+        *(.rodata .rodata1 .rodata.*)
+        *(.srodata .srodata.*)
+    } > USER_RAM
 
     /*
      * Task-local data
@@ -101,7 +82,7 @@ SECTIONS {
         __vexide_tdata_start = .;
         *(.vexide_tdata .vexide_tdata.*)
         __vexide_tdata_end = .;
-    } > PROGRAM_RAM
+    } > USER_RAM
 
     /*
      * ARM Stack Unwinding Sections
@@ -109,64 +90,68 @@ SECTIONS {
      * These sections are added by the compiler in some cases to facilitate stack unwinding.
      * __eh_frame_start and similar symbols are used by libunwind.
      */
+
+    .except_ordered : {
+        PROVIDE(__extab_start = .);
+        *(.gcc_except_table *.gcc_except_table.*)
+        *(.ARM.extab*)
+        PROVIDE(__extab_end = .);
+    } > USER_RAM
+
     .eh_frame_hdr : {
+        /* see https://github.com/llvm/llvm-project/blob/main/libunwind/src/AddressSpace.hpp#L78 */
+        PROVIDE(__eh_frame_hdr_start = .);
         KEEP(*(.eh_frame_hdr))
-    } > PROGRAM_RAM
+        PROVIDE(__eh_frame_hdr_end = .);
+    } > USER_RAM
 
     .eh_frame : {
-        __eh_frame_start = .;
-       KEEP(*(.eh_frame))
-        __eh_frame_end = .;
-    } > PROGRAM_RAM
+        PROVIDE(__eh_frame_start = .);
+        KEEP(*(.eh_frame))
+        PROVIDE(__eh_frame_end = .);
+    } > USER_RAM
 
-    .ARM.exidx : {
-        __exidx_start = .;
+    .except_unordered : {
+        PROVIDE(__exidx_start = .);
         *(.ARM.exidx*)
-        __exidx_end = .;
-    } > PROGRAM_RAM
+        PROVIDE(__exidx_end = .);
+    } > USER_RAM
 
-    .ARM.extab : {
-        __extab_start = .;
-        *(.ARM.extab*)
-        __extab_end = .;
-    } > PROGRAM_RAM
+    /* -- Data intended to be mutable at runtime begins here. -- */
 
-    /* -- End of loadable sections - anything beyond this point shouldn't go in the BIN. -- */
+    .data : {
+        *(.data .data1 .data.*)
+        *(.sdata .sdata.* .sdata2.*)
+    } > USER_RAM
+
+    /* -- End of loadable sections - anything beyond this point shouldn't go in the binary uploaded to the device. -- */
+
+    .bss (NOLOAD) : {
+        __bss_start = .;
+        *(.sbss*)
+        *(.bss .bss.*)
+
+        /* Align the heap */
+        . = ALIGN(8);
+        __bss_end = .;
+    } > USER_RAM
 
     /*
      * Active memory sections for the stack/heap.
      *
      * Because these are (NOLOAD), they will not influence the final size of the binary.
      */
-    .heap (NOLOAD) : ALIGN(4) {
+    .heap (NOLOAD) : {
         __heap_start = .;
-        . = __heap_end;
-    } > PROGRAM_RAM
+        . = __stack_bottom;
+        __heap_end = .;
+    } > USER_RAM
 
     .stack (NOLOAD) : ALIGN(8) {
         __stack_bottom = .;
         . += __stack_length;
         __stack_top = .;
-    } > PROGRAM_RAM
-
-    /* Patcher Memory */
-    .patcher_patch (NOLOAD) : {
-        __patcher_patch_start = .;
-        . += __patcher_section_length;
-        __patcher_patch_end = .;
-    } > PATCHER_RAM
-
-    .patcher_base_copy (NOLOAD) : {
-        __patcher_base_start = .;
-        . += __patcher_section_length;
-        __patcher_base_end = .;
-    } > PATCHER_RAM
-
-    .patcher_new (NOLOAD) : {
-        __patcher_new_start = .;
-        . += __patcher_section_length;
-        __patcher_new_end = .;
-    } > PATCHER_RAM
+    } > USER_RAM
 
     /*
      * `.ARM.attributes` contains arch metadata for compatibility purposes, but we

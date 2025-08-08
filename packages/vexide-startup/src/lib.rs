@@ -81,8 +81,8 @@ unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
 
-    static mut __patcher_ram_start: u8;
-    static mut __patcher_ram_end: u8;
+    static mut __linked_file_start: u8;
+    static mut __linked_file_end: u8;
 
     static mut __bss_start: u32;
     static mut __bss_end: u32;
@@ -129,7 +129,7 @@ unsafe extern "C" fn _boot() {
         "cmp r0, r1", // r0 == 0xB1DF?
         // Prepare to memcpy binary to 0x07C00000
         "ldr r0, =__patcher_base_start",     // memcpy dest -> r0
-        "ldr r1, =__program_ram_start",      // memcpy src -> r1
+        "ldr r1, =__user_ram_start",         // memcpy src -> r1
         "ldr r2, =__patcher_patch_start+12", // Base binary len is stored as metadata in the patch
         "ldr r2, [r2]",                      // memcpy size -> r2
         // Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
@@ -182,6 +182,6 @@ pub unsafe fn startup() {
 
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
-        vexide_core::allocator::claim(&raw mut __patcher_ram_start, &raw mut __patcher_ram_end);
+        vexide_core::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
     }
 }
