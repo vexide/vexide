@@ -45,3 +45,14 @@ SECTIONS {
         __patcher_new_end = .;
     } > USER_RAM
 } INSERT AFTER .stack;
+
+SECTIONS {
+    /*
+     * Task-local data
+     */
+    .vexide_tdata : {
+        __vexide_tdata_start = .;
+        *(.vexide_tdata .vexide_tdata.*)
+        __vexide_tdata_end = .;
+    } > USER_RAM
+} INSERT AFTER .rodata;
