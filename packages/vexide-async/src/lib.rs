@@ -10,8 +10,7 @@ extern crate alloc;
 mod executor;
 mod reactor;
 
-#[cfg(target_os = "none")]
-mod local;
+pub mod local;
 pub mod task;
 pub mod time;
 

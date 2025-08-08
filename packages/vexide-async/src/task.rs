@@ -1,15 +1,14 @@
 //! Asynchronous tasks.
 
+use alloc::rc::Rc;
 use core::future::Future;
 
-#[cfg(target_os = "none")]
 use crate::local::TaskLocalStorage;
 
 // public because it's used in Task<T> and InfallibleTask<T>
 #[doc(hidden)]
 pub struct TaskMetadata {
-    #[cfg(target_os = "none")]
-    pub(crate) tls: TaskLocalStorage,
+    pub(crate) tls: Rc<TaskLocalStorage>,
 }
 
 /// A spawned task.

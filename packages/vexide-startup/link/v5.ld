@@ -95,15 +95,6 @@ SECTIONS {
     } > PROGRAM_RAM
 
     /*
-     * Task-local data
-     */
-    .vexide_tdata : {
-        __vexide_tdata_start = .;
-        *(.vexide_tdata .vexide_tdata.*)
-        __vexide_tdata_end = .;
-    } > PROGRAM_RAM
-
-    /*
      * ARM Stack Unwinding Sections
      *
      * These sections are added by the compiler in some cases to facilitate stack unwinding.

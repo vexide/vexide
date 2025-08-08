@@ -1,4 +1,4 @@
-use alloc::{collections::VecDeque, sync::Arc};
+use alloc::{collections::VecDeque, rc::Rc, sync::Arc};
 use core::{
     cell::RefCell,
     future::Future,
@@ -11,10 +11,9 @@ use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
 use crate::{
+    local::TaskLocalStorage,
     task::{Task, TaskMetadata},
 };
-#[cfg(target_os = "none")]
-use crate::local::{is_tls_null, set_tls_ptr, TaskLocalStorage};
 
 type Runnable = async_task::Runnable<TaskMetadata>;
 
@@ -39,8 +38,7 @@ impl Executor {
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
         let metadata = TaskMetadata {
-            #[cfg(target_os = "none")]
-            tls: TaskLocalStorage::new(),
+            tls: Rc::new(TaskLocalStorage::new()),
         };
 
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
@@ -78,12 +76,9 @@ impl Executor {
 
         #[allow(if_let_rescope)]
         if let Some(runnable) = runnable {
-            #[cfg(target_os = "none")]
-            let old_ptr = unsafe { runnable.metadata().tls.set_current_tls() };
-            runnable.run();
-
-            #[cfg(target_os = "none")]
-            unsafe { set_tls_ptr(old_ptr) };
+            TaskLocalStorage::scope(runnable.metadata().tls.clone(), || {
+                runnable.run();
+            });
 
             true
         } else {
