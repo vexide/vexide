@@ -1,5 +1,5 @@
 [build]
-target = "./armv7a-vex-v5.json"
+target = "armv7a-vex-v5"
 rustflags = ["-Clink-arg=-Tvexide.ld"]
 
 [target."cfg(target_vendor = \"vex\")"]
