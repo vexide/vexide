@@ -56,7 +56,7 @@ cargo v5 build --example basic --release
 ```
 
 > [!NOTE]
-> If you don't want to use `cargo-v5` to build your project, you can effectively do the same thing that it's doing by running `cargo build --target ./armv7a-vex-v5.json -Zbuild-std=core,alloc,compiler_builtins`
+> If you don't want to use `cargo-v5` to build your project, you can effectively do the same thing that it's doing by running `cargo build --target armv7a-vex-v5 -Zbuild-std=core,alloc,compiler_builtins`
 
 ## Testing Your Changes
 

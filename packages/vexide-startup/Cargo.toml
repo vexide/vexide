@@ -28,4 +28,4 @@ default = ["allocator"]
 allocator = ["vexide-core/allocator"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
+targets = ["armv7a-vex-v5"] # Not actually, but this is at least close.

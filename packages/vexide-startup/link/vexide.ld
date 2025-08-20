@@ -1,8 +1,14 @@
-/* This file contains vexide-specific memory layout options */
+/*
+ * This file contains vexide-specific memory layout options.
+ *
+ * This file is designed to augment the builtin linkerscript for
+ * the `armv7a-vex-v5` target in rustc, which may be found here:
+ * <https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/armv7a_vex_v5_linker_script.ld>
+ */
 
-__patcher_section_length = 2M;
 /* 6MiB total, 2MiB for each subsection. (start = 0x07a00000) */
-__linked_file_start = __linked_file_end - (__patcher_section_length * 3);
+__patcher_section_length = 2M;
+__linked_file_length = __patcher_section_length * 3;
 
 OVERWRITE_SECTIONS {
     /* Allow users to specify their code signature from Rust source code */
@@ -17,7 +23,7 @@ OVERWRITE_SECTIONS {
         /* _boot routine (entry point from VEXos, must be at 0x03800020) */
         *(.boot)
 
-        /* Stage 2 patcher. */
+        /* Patch overwriter routine. */
         *(.overwriter)
 
         /* The rest of the program. */
