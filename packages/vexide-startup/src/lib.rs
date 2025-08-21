@@ -64,6 +64,9 @@ pub mod banner;
 mod code_signature;
 mod patcher;
 
+#[cfg(feature = "jumptable")]
+use vex_sdk_jumptable as _;
+
 use core::arch::naked_asm;
 
 pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
