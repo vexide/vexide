@@ -18,13 +18,15 @@ authors = [
 bitflags = "2.4.2"
 vex-sdk = { workspace = true }
 vexide-core = { workspace = true }
+vex-sdk-jumptable = { workspace = true, optional = true }
 compile-time = "0.2.0"
 
 [lints]
 workspace = true
 
 [features]
-default = ["allocator"]
+default = ["allocator", "jumptable"]
+jumptable = ["dep:vex-sdk-jumptable"]
 allocator = ["vexide-core/allocator"]
 
 [package.metadata.docs.rs]
