@@ -175,7 +175,7 @@ fn bipatch<B: Read + Seek, P: Read>(mut old: B, mut patch: P, mut new: &mut [u8]
         Add(usize),
         Copy(usize),
     }
-    
+
     let mut buf = [0u8; 4096];
     let mut state = PatcherState::Initial;
 
