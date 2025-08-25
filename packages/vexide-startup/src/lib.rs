@@ -53,7 +53,7 @@ pub mod banner;
 
 #[cfg(feature = "panic-hook")]
 mod panic_hook;
-#[cfg(target_os = "vexos")]
+#[cfg(all(target_os = "vexos", not(vexide_upload_strategy = "monolith")))]
 mod patcher;
 mod sdk;
 
@@ -88,7 +88,7 @@ unsafe extern "C" {
 #[unsafe(link_section = ".vexide_boot")]
 #[unsafe(no_mangle)]
 #[unsafe(naked)]
-#[cfg(target_os = "vexos")]
+#[cfg(all(target_os = "vexos", not(vexide_upload_strategy = "monolith")))]
 unsafe extern "C" fn _vexide_boot() {
     core::arch::naked_asm!(
         // Load the stack pointer to point to our stack section.
@@ -126,6 +126,27 @@ unsafe extern "C" fn _vexide_boot() {
         // Jump to the Rust entrypoint.
         "b _start",
         patch_magic = const patcher::PATCH_MAGIC,
+    )
+}
+
+#[unsafe(link_section = ".vexide_boot")]
+#[unsafe(no_mangle)]
+#[unsafe(naked)]
+#[cfg(all(target_os = "vexos", vexide_upload_strategy = "monolith"))]
+unsafe extern "C" fn _vexide_boot() {
+    core::arch::naked_asm!(
+        // Load the stack pointer to point to our stack section.
+        //
+        // This technically isn't required, as VEXos already sets up a stack for CPU1,
+        // but that stack is relatively small and we have more than enough memory
+        // available to us for this.
+        //
+        // SAFETY: Doing this should be safe, since VEXos doesn't seem to use its existing
+        // stack after calling user code. This operation is safe assuming that the variables
+        // on the previous stack are never read or written to during execution of the program.
+        "ldr sp, =__stack_top",
+        // Jump to the Rust entrypoint.
+        "b _start",
     )
 }
 
@@ -176,6 +197,7 @@ pub unsafe fn startup() {
 
         // If this link address is 0x03800000, this implies we were uploaded using
         // differential uploads by cargo-v5 and may have a patch to apply.
+        #[cfg(not(vexide_upload_strategy = "monolith"))]
         if vexide_core::program::linked_file().addr() == (&raw const __user_ram_start).addr() {
             patcher::patch();
         }
