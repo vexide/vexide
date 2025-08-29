@@ -49,7 +49,7 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
         },
     );
 
-    display.fill(&error_box_rect, (255, 0, 0));
+    display.fill(&error_box_rect, (139, 0, 0));
     display.stroke(&error_box_rect, (255, 255, 255));
 
     let mut buffer = String::new();
