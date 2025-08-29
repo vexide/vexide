@@ -17,8 +17,12 @@ authors = [
 [dependencies]
 bitflags = "2.4.2"
 vex-sdk = { workspace = true }
+vexide-core = { workspace = true }
 vex-sdk-jumptable = { workspace = true, optional = true }
 talc = { version = "4.3.1", optional = true }
+compile-time = "0.2.0"
+embedded-io = "0.6.1"
+embedded-io-extras = "0.0.2"
 
 [build-dependencies]
 vex-sdk-build = { version = "0.0.1", optional = true }

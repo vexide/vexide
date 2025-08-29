@@ -3,19 +3,12 @@
 //! The async executor supports spawning tasks and blocking on futures.
 //! It has a reactor to improve the performance of some futures.
 
-#![feature(never_type)]
-
 mod executor;
 mod reactor;
-mod local;
 
+mod local;
 pub mod task;
 pub mod time;
-pub mod backtrace;
-pub mod competition;
-pub mod sync;
-pub mod os;
-pub mod banner;
 
 use core::future::Future;
 
