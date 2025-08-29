@@ -1,7 +1,8 @@
-use alloc::collections::BinaryHeap;
-use core::task::Waker;
-
-use vexide_core::time::Instant;
+use std::{
+    collections::BinaryHeap,
+    time::Instant,
+    task::Waker,
+};
 
 pub(crate) struct Sleeper {
     pub deadline: Instant,

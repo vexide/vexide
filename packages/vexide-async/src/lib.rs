@@ -3,10 +3,6 @@
 //! The async executor supports spawning tasks and blocking on futures.
 //! It has a reactor to improve the performance of some futures.
 
-#![no_std]
-
-extern crate alloc;
-
 mod executor;
 mod reactor;
 

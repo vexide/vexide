@@ -64,10 +64,10 @@ use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
     vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
-    vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode,
-    V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw, V5_DeviceT,
+    vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, vexSystemHighResTimeGet,
+    V5ImuOrientationMode, V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw,
+    V5_DeviceT,
 };
-use vexide_core::time::Instant;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
@@ -931,7 +931,7 @@ enum InertialCalibrateFutureState {
     Calibrate,
     /// Wait for the IMU to either begin calibrating or end calibration, depending on the
     /// designated [`CalibrationPhase`].
-    Waiting(Instant, CalibrationPhase),
+    Waiting(u64, CalibrationPhase),
 }
 
 /// Future that calibrates an IMU
@@ -962,8 +962,10 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
             if flags == InertialStatus::STATUS_ERROR {
                 return Poll::Ready(BadStatusSnafu.fail());
             } else if flags == 0x0 {
-                this.state =
-                    InertialCalibrateFutureState::Waiting(Instant::now(), CalibrationPhase::Status);
+                this.state = InertialCalibrateFutureState::Waiting(
+                    unsafe { vex_sdk::vexSystemHighResTimeGet() },
+                    CalibrationPhase::Status,
+                );
             }
 
             flags
@@ -986,7 +988,7 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
                 if status.contains(InertialStatus::CALIBRATING) {
                     // Sensor was already calibrating, so wait for that to finish.
                     this.state = InertialCalibrateFutureState::Waiting(
-                        Instant::now(),
+                        unsafe { vexSystemHighResTimeGet() },
                         CalibrationPhase::End,
                     );
                 } else {
@@ -995,7 +997,7 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
 
                     // Change to waiting for calibration to start.
                     this.state = InertialCalibrateFutureState::Waiting(
-                        Instant::now(),
+                        unsafe { vexSystemHighResTimeGet() },
                         CalibrationPhase::Start,
                     );
                 }
@@ -1008,7 +1010,10 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
             // indicating that calibration has begun, or we are waiting for the calibration status flag to be cleared,
             // indicating that calibration has finished (CalibrationFlag::End).
             InertialCalibrateFutureState::Waiting(timestamp, phase) => {
-                if timestamp.elapsed()
+                let elapsed =
+                    Duration::from_micros(unsafe { vexSystemHighResTimeGet() } - timestamp);
+
+                if elapsed
                     > match phase {
                         CalibrationPhase::Start | CalibrationPhase::Status => {
                             InertialSensor::CALIBRATION_START_TIMEOUT
@@ -1028,7 +1033,7 @@ impl core::future::Future for InertialCalibrateFuture<'_> {
                     // We now know that the sensor is actually calibrating, so we transition to
                     // [`CalibrationPhase::End`] and reset the timeout timestamp to wait for calibration to finish.
                     this.state = InertialCalibrateFutureState::Waiting(
-                        Instant::now(),
+                        unsafe { vexSystemHighResTimeGet() },
                         CalibrationPhase::End,
                     );
                 } else if !status.is_empty() && phase == CalibrationPhase::Status {

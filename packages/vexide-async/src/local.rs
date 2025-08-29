@@ -58,7 +58,7 @@ impl TaskLocalStorage {
         if tls_layout.size() == 0 {
             Self { mem: null_mut() }
         } else {
-            let mem = unsafe { alloc::alloc::alloc(tls_layout) };
+            let mem = unsafe { std::alloc::alloc(tls_layout) };
 
             unsafe {
                 ptr::copy_nonoverlapping(&raw const __vexide_tdata_start, mem, tls_layout.size());
@@ -81,7 +81,7 @@ impl Drop for TaskLocalStorage {
         }
 
         unsafe {
-            alloc::alloc::dealloc(self.mem.cast(), tls_layout());
+            std::alloc::dealloc(self.mem.cast(), tls_layout());
         }
     }
 }
