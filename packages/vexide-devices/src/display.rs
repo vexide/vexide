@@ -15,7 +15,6 @@ use vex_sdk::{
     vexDisplayScrollRect, vexDisplayString, vexDisplayStringHeightGet, vexDisplayStringWidthGet,
     vexDisplayTextSize, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
-use vexide_core::float::Float;
 
 use crate::{
     math::Point2,
@@ -301,8 +300,8 @@ const fn gcd(mut a: i32, mut b: i32) -> i32 {
 #[allow(clippy::cast_precision_loss)]
 fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
     // Separate the integral and fractional parts of the input.
-    let integral_part = input.floor();
-    let fractional_part = input.fract();
+    let integral_part = libm::floorf(input);
+    let fractional_part = input - libm::truncf(input);
 
     // If the fractional part is 0, return the integral part.
     if fractional_part == 0.0 {
@@ -311,10 +310,10 @@ fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
 
     let precision = precision as f32;
 
-    let gcd = gcd((fractional_part * precision).round() as _, precision as _);
+    let gcd = gcd(libm::roundf(fractional_part * precision) as _, precision as _);
 
     let denominator = precision as i32 / gcd;
-    let numerator = (fractional_part * precision).round() as i32 / gcd;
+    let numerator = libm::roundf(fractional_part * precision) as i32 / gcd;
 
     (
         // Add back the integral part to the numerator.

@@ -132,7 +132,6 @@ pub mod prelude {
     #[cfg(feature = "core")]
     pub use crate::{
         competition::{Compete, CompeteExt, CompetitionRuntime},
-        float::Float,
         io::{dbg, print, println, BufRead, Read, Seek, Write},
     };
     #[cfg(feature = "async")]
