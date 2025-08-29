@@ -179,33 +179,6 @@ const RADIO_NOT_LINKED: &str = "The radio has not established a link with anothe
 
 #[cfg(feature = "std")]
 impl std::io::Read for RadioLink {
-    /// Read some bytes sent to the radio into the specified buffer, returning how many bytes were read.
-    ///
-    /// # Errors
-    ///
-    /// - An error with the kind [`io::ErrorKind::AddrNotAvailable`] is returned if there is no device connected.
-    /// - An error with the kind [`io::ErrorKind::AddrInUse`] is returned a device other than a radio is connected.
-    /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
-    ///   established. Use [`RadioLink::is_linked`] to check this if needed.
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal read error occurred.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
-    ///
-    ///     let mut buffer = vec![0; 2048];
-    ///
-    ///     loop {
-    ///         _ = link.read(&mut buffer);
-    ///         sleep(core::time::Duration::from_millis(10)).await;
-    ///     }
-    /// }
-    /// ```
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         if !self.is_linked() {
             return Err(std::io::Error::new(
@@ -228,26 +201,6 @@ impl std::io::Read for RadioLink {
 
 #[cfg(feature = "std")]
 impl std::io::Write for RadioLink {
-    /// Write a buffer into the radio's output buffer, returning how many bytes were written.
-    ///
-    /// # Errors
-    ///
-    /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
-    ///   established. Use [`RadioLink::is_linked`] to check this if needed.
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal write error occurred.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
-    ///
-    ///     _ = link.write(b"yo");
-    /// }
-    /// ```
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         if !self.is_linked() {
             return Err(std::io::Error::new(
@@ -266,20 +219,56 @@ impl std::io::Write for RadioLink {
         }
     }
 
-    /// This function does nothing.
-    ///
-    /// VEXLink immediately sends and clears data sent into the write buffer.
-    ///
-    /// # Errors
-    ///
-    /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
-    ///   established. Use [`RadioLink::is_linked`] to check this if needed.
     fn flush(&mut self) -> std::io::Result<()> {
         if !self.is_linked() {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::NotConnected,
                 RADIO_NOT_LINKED,
             ));
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::ErrorType for RadioLink {
+    type Error = LinkError;
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Read for RadioLink {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, LinkError> {
+        if !self.is_linked() {
+            return Err(LinkError::NotLinked);
+        }
+
+        match unsafe {
+            vexDeviceGenericRadioReceive(self.device, buf.as_mut_ptr(), buf.len() as u16)
+        } {
+            -1 => Err(LinkError::ReadFailed),
+            received => Ok(received as usize),
+        }
+    }
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Write for RadioLink {
+    fn write(&mut self, buf: &[u8]) -> Result<usize, LinkError> {
+        if !self.is_linked() {
+            return Err(LinkError::NotLinked);
+        }
+
+        match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), buf.len() as u16) }
+        {
+            -1 => Err(LinkError::WriteFailed),
+            written => Ok(written as usize),
+        }
+    }
+
+    fn flush(&mut self) -> Result<(), LinkError> {
+        if !self.is_linked() {
+            return Err(LinkError::NotLinked);
         }
 
         Ok(())
@@ -333,4 +322,14 @@ pub enum LinkError {
 
     /// Internal read error occurred.
     ReadFailed,
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Error for LinkError {
+    fn kind(&self) -> embedded_io::ErrorKind {
+        match self {
+            Self::NotLinked => embedded_io::ErrorKind::NotConnected,
+            _ => embedded_io::ErrorKind::Other,
+        }
+    }
 }
