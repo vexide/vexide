@@ -90,7 +90,7 @@ impl AdiRangeFinder {
 
         // Output must be on an odd indexed port (A, C, E, G).
         assert!(
-            output_number % 2 != 0,
+            !output_number.is_multiple_of(2),
             "The output ADI port provided (`{}`) was not odd numbered (A, C, E, G).",
             adi_port_name(output_number),
         );

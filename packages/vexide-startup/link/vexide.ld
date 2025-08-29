@@ -31,7 +31,7 @@ OVERWRITE_SECTIONS {
     } > USER_RAM
 
     /DISCARD/ : {
-        /* Strip out _boot section from libstd (replaced with .vexide_boot section). */
+        /* Strip out libstd's _boot routine (replaced with .vexide_boot section). */
         *(.text.boot)
     }
 }

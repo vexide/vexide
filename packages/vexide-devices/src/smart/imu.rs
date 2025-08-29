@@ -67,7 +67,7 @@ use vex_sdk::{
     vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, V5ImuOrientationMode,
     V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw, V5_DeviceT,
 };
-use vexide_core::{float::Float, time::Instant};
+use vexide_core::time::Instant;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
@@ -411,10 +411,10 @@ impl InertialSensor {
         self.validate()?;
         // The result needs to be [0, 360). Adding a significantly negative offset could take us
         // below 0. Adding a significantly positive offset could take us above 360.
-        Ok(
-            (unsafe { vexDeviceImuDegreesGet(self.device) } + self.heading_offset)
-                .rem_euclid(Self::MAX_HEADING),
-        )
+        Ok(crate::math::rem_euclid(
+            unsafe { vexDeviceImuDegreesGet(self.device) } + self.heading_offset,
+            Self::MAX_HEADING,
+        ))
     }
 
     /// Returns a quaternion representing the Inertial Sensor’s current orientation.

@@ -18,7 +18,6 @@ extern crate alloc;
 pub mod allocator;
 pub mod backtrace;
 pub mod competition;
-pub mod float;
 pub mod fs;
 pub mod io;
 pub mod os;

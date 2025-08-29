@@ -30,7 +30,6 @@ use vex_sdk::{
     vexDeviceGpsRawGyroGet, vexDeviceGpsStatusGet, V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion,
     V5_DeviceGpsRaw, V5_DeviceT,
 };
-use vexide_core::float::Float;
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::{math::Point2, PortError};
@@ -397,8 +396,10 @@ impl GpsSensor {
         Ok(
             // The result needs to be [0, 360). Adding a significantly negative offset could take us
             // below 0. Adding a significantly positive offset could take us above 360.
-            (unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset)
-                .rem_euclid(Self::MAX_HEADING),
+            crate::math::rem_euclid(
+                unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset,
+                Self::MAX_HEADING,
+            ),
         )
     }
 
