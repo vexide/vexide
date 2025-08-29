@@ -30,9 +30,9 @@ vex-sdk-build = { version = "0.0.1", optional = true }
 workspace = true
 
 [features]
-default = ["allocator", "panic_hook", "vex-sdk-jumptable"]
-panic_hook = ["dep:vexide-devices"]
-panic_backtraces = ["vexide-core/backtraces"]
+default = ["allocator", "panic-hook", "vex-sdk-jumptable"]
+panic-hook = ["dep:vexide-devices"]
+panic-backtraces = ["vexide-core/backtraces"]
 vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
 vex-sdk-build = ["dep:vex-sdk-build"]
 allocator = ["dep:talc"]

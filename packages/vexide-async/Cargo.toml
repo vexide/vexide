@@ -18,8 +18,8 @@ authors = [
 
 [dependencies]
 async-task = { version = "4.5.0", default-features = false }
-vexide-core = { workspace = true }
 waker-fn = "1.1.1"
+vexide-core = { workspace = true }
 vex-sdk = { workspace = true }
 
 [lints]

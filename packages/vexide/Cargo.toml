@@ -20,7 +20,7 @@ rust-version = "1.75.0"
 
 [dependencies]
 vexide-async = { workspace = true, optional = true }
-vexide-devices = { workspace = true, optional = true }
+vexide-devices = { workspace = true, optional = true, features = ["std"] }
 vexide-core = { workspace = true, optional = true }
 vexide-startup = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
@@ -35,7 +35,7 @@ default = [
     "macro",
     "backtraces",
     "allocator",
-    "panic_hook",
+    "panic-hook",
     "vex-sdk-jumptable",
 ]
 
@@ -44,17 +44,17 @@ macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 async = ["dep:vexide-async"]
 
 core = ["dep:vexide-core"]
-backtraces = ["core", "vexide-core/backtraces", "vexide-startup/panic_backtraces"]
+backtraces = ["core", "vexide-core/backtraces", "vexide-startup/panic-backtraces"]
 
 startup = ["dep:vexide-startup"]
 allocator = ["startup", "vexide-startup/allocator"]
-panic_hook = ["startup", "vexide-startup/panic_hook"]
+panic-hook = ["startup", "vexide-startup/panic-hook"]
 vex-sdk-jumptable = ["startup", "vexide-startup/vex-sdk-jumptable"]
 vex-sdk-build = ["startup", "vexide-startup/vex-sdk-build"]
 
 devices = ["dep:vexide-devices"]
-dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]
-smart_leds_trait = ["devices", "vexide-devices/smart_leds_trait"]
+smart-leds-trait = ["devices", "vexide-devices/smart-leds-trait"]
+dangerous-motor-tuning = ["devices", "vexide-devices/dangerous-motor-tuning"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]

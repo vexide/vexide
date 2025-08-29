@@ -67,7 +67,7 @@ pub mod banner;
 mod code_signature;
 mod patcher;
 
-#[cfg(feature = "panic_hook")]
+#[cfg(feature = "panic-hook")]
 mod panic_hook;
 
 #[cfg(feature = "vex-sdk-jumptable")]
@@ -186,7 +186,7 @@ pub unsafe fn startup() {
         crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
 
         // Register custom panic hook if needed.
-        #[cfg(feature = "panic_hook")]
+        #[cfg(feature = "panic-hook")]
         std::panic::set_hook(Box::new(panic_hook::hook));
     }
 }

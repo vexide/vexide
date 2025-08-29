@@ -28,7 +28,6 @@ vexide-startup = { version = "0.4.2", path = "packages/vexide-startup", default-
 vexide-macro = { version = "0.3.2", path = "packages/vexide-macro", default-features = false }
 vex-sdk = { git = "https://github.com/vexide/vex-sdk.git" }
 vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk.git" }
-no_std_io = { version = "0.6.0", features = ["alloc"] }
 
 [workspace.lints.rust]
 rust_2018_idioms = { level = "warn", priority = -1 }
