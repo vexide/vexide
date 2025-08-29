@@ -35,20 +35,22 @@ default = [
     "macro",
     "backtraces",
     "allocator",
+    "panic_hook",
     "vex-sdk-jumptable",
 ]
 
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
+
+async = ["dep:vexide-async"]
 
 core = ["dep:vexide-core"]
 backtraces = ["core", "vexide-core/backtraces"]
 
 startup = ["dep:vexide-startup"]
 allocator = ["startup", "vexide-startup/allocator"]
+panic_hook = ["startup", "vexide-startup/panic_hook"]
 vex-sdk-jumptable = ["startup", "vexide-startup/vex-sdk-jumptable"]
 vex-sdk-build = ["startup", "vexide-startup/vex-sdk-build"]
-
-async = ["dep:vexide-async"]
 
 devices = ["dep:vexide-devices"]
 dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]

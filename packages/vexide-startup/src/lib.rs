@@ -67,6 +67,9 @@ pub mod banner;
 mod code_signature;
 mod patcher;
 
+#[cfg(feature = "panic_hook")]
+mod panic_hook;
+
 #[cfg(feature = "vex-sdk-jumptable")]
 use vex_sdk_jumptable as _;
 
@@ -181,5 +184,9 @@ pub unsafe fn startup() {
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
         crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
+
+        // Register custom panic hook if needed.
+        #[cfg(feature = "panic_hook")]
+        std::panic::set_hook(Box::new(panic_hook::hook));
     }
 }
