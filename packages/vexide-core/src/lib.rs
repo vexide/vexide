@@ -20,6 +20,5 @@ pub mod backtrace;
 pub mod competition;
 pub mod io;
 pub mod os;
-pub mod program;
 pub mod sync;
 pub mod time;
