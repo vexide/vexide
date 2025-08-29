@@ -60,11 +60,15 @@
 
 #![no_std]
 
+// Cannot use two SDK providers at once.
+#[cfg(all(feature = "vex-sdk-build", feature = "vex-sdk-jumptable"))]
+compile_error!("features `vex-sdk-jumptable` and `vex-sdk-build` are mutually exclusive");
+
 pub mod banner;
 mod code_signature;
 mod patcher;
 
-#[cfg(feature = "jumptable")]
+#[cfg(feature = "vex-sdk-jumptable")]
 use vex_sdk_jumptable as _;
 
 use core::arch::naked_asm;
