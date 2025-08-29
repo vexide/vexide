@@ -21,7 +21,6 @@ rust-version = "1.75.0"
 [dependencies]
 vexide-async = { workspace = true, optional = true }
 vexide-devices = { workspace = true, optional = true }
-vexide-panic = { workspace = true, optional = true }
 vexide-core = { workspace = true, optional = true }
 vexide-startup = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
@@ -31,8 +30,6 @@ vex-sdk = { workspace = true }
 default = [
     "async",
     "devices",
-    "panic",
-    "display_panics",
     "core",
     "startup",
     "macro",
@@ -56,9 +53,6 @@ async = ["dep:vexide-async"]
 devices = ["dep:vexide-devices"]
 dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]
 smart_leds_trait = ["devices", "vexide-devices/smart_leds_trait"]
-
-panic = ["dep:vexide-panic"]
-display_panics = ["panic", "vexide-panic/display_panics"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]
