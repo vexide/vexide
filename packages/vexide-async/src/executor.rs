@@ -1,5 +1,5 @@
-use alloc::{collections::VecDeque, sync::Arc};
-use core::{
+use std::{
+    collections::VecDeque, sync::Arc,
     cell::RefCell,
     future::Future,
     pin::Pin,
