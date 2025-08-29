@@ -277,30 +277,6 @@ impl SerialPort {
 
 #[cfg(feature = "std")]
 impl std::io::Read for SerialPort {
-    /// Read some bytes from this serial port into the specified buffer, returning
-    /// how many bytes were read.
-    ///
-    /// # Errors
-    ///
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal read error occurred.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200).await;
-    ///
-    ///     let mut buffer = vec![0; 2048];
-    ///
-    ///     loop {
-    ///         _ = serial.read(&mut buffer);
-    ///         sleep(core::time::Duration::from_millis(10)).await;
-    ///     }
-    /// }
-    /// ```
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         match unsafe {
             vexDeviceGenericSerialReceive(self.device, buf.as_mut_ptr(), buf.len() as i32)
@@ -316,25 +292,6 @@ impl std::io::Read for SerialPort {
 
 #[cfg(feature = "std")]
 impl std::io::Write for SerialPort {
-    /// Write a buffer into the serial port's output buffer, returning how many bytes
-    /// were written.
-    ///
-    /// # Errors
-    ///
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal write error occurred.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200).await;
-    ///
-    ///     _ = serial.write(b"yo");
-    /// }
-    /// ```
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         match unsafe { vexDeviceGenericSerialTransmit(self.device, buf.as_ptr(), buf.len() as i32) }
         {
@@ -346,12 +303,39 @@ impl std::io::Write for SerialPort {
         }
     }
 
-    /// This function does nothing.
-    ///
-    /// Generic serial does not use traditional buffers, so data in the output buffer is immediately sent.
-    ///
-    /// If you wish to *clear* both the read and write buffers, you can use [`Self::clear_buffers`].
     fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::ErrorType for SerialPort {
+    type Error = SerialError;
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Read for SerialPort {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, SerialError> {
+        match unsafe {
+            vexDeviceGenericSerialReceive(self.device, buf.as_mut_ptr(), buf.len() as i32)
+        } {
+            -1 => Err(SerialError::ReadFailed),
+            received => Ok(received as usize),
+        }
+    }
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Write for SerialPort {
+    fn write(&mut self, buf: &[u8]) -> Result<usize, SerialError> {
+        match unsafe { vexDeviceGenericSerialTransmit(self.device, buf.as_ptr(), buf.len() as i32) }
+        {
+            -1 => Err(SerialError::WriteFailed),
+            written => Ok(written as usize),
+        }
+    }
+
+    fn flush(&mut self) -> Result<(), SerialError> {
         Ok(())
     }
 }
@@ -379,6 +363,13 @@ pub enum SerialError {
 
     /// Internal read error occurred.
     ReadFailed,
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Error for SerialError {
+    fn kind(&self) -> embedded_io::ErrorKind {
+        embedded_io::ErrorKind::Other
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
