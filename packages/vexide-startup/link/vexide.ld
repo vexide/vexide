@@ -32,7 +32,7 @@ OVERWRITE_SECTIONS {
 
     /DISCARD/ : {
         /* Strip out libstd's _boot routine (replaced with .vexide_boot section). */
-        *(.text.boot)
+        *(.boot)
     }
 }
 
