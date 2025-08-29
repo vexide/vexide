@@ -169,14 +169,6 @@ unsafe extern "C" fn _boot() {
 pub unsafe fn startup() {
     #[cfg(target_vendor = "vex")]
     unsafe {
-        // Clear the .bss (uninitialized statics) section by filling it with zeroes.
-        // This is required, since the compiler assumes it will be zeroed on first access.
-        core::ptr::write_bytes(
-            &raw mut __bss_start,
-            0,
-            (&raw mut __bss_end).offset_from(&raw mut __bss_start) as usize,
-        );
-
         // Initialize the heap allocator in our heap region defined in the linkerscript
         #[cfg(feature = "allocator")]
         vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
