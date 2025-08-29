@@ -24,7 +24,6 @@
 use alloc::ffi::CString;
 use core::time::Duration;
 
-use no_std_io::io;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus, vexDeviceGenericRadioReceive,
@@ -178,7 +177,8 @@ impl RadioLink {
 
 const RADIO_NOT_LINKED: &str = "The radio has not established a link with another radio.";
 
-impl io::Read for RadioLink {
+#[cfg(feature = "std")]
+impl std::io::Read for RadioLink {
     /// Read some bytes sent to the radio into the specified buffer, returning how many bytes were read.
     ///
     /// # Errors
@@ -206,10 +206,10 @@ impl io::Read for RadioLink {
     ///     }
     /// }
     /// ```
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         if !self.is_linked() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotConnected,
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotConnected,
                 RADIO_NOT_LINKED,
             ));
         }
@@ -217,8 +217,8 @@ impl io::Read for RadioLink {
         match unsafe {
             vexDeviceGenericRadioReceive(self.device, buf.as_mut_ptr(), buf.len() as u16)
         } {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::InvalidData,
+            -1 => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
                 "Internal read error occurred.",
             )),
             received => Ok(received as usize),
@@ -226,7 +226,8 @@ impl io::Read for RadioLink {
     }
 }
 
-impl io::Write for RadioLink {
+#[cfg(feature = "std")]
+impl std::io::Write for RadioLink {
     /// Write a buffer into the radio's output buffer, returning how many bytes were written.
     ///
     /// # Errors
@@ -247,18 +248,18 @@ impl io::Write for RadioLink {
     ///     _ = link.write(b"yo");
     /// }
     /// ```
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         if !self.is_linked() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotConnected,
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotConnected,
                 RADIO_NOT_LINKED,
             ));
         }
 
         match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), buf.len() as u16) }
         {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::Other,
+            -1 => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
                 "Internal write error occurred.",
             )),
             written => Ok(written as usize),
@@ -273,10 +274,10 @@ impl io::Write for RadioLink {
     ///
     /// - An error with the kind [`io::ErrorKind::NotConnected`] is returned if a connection with another radio has not been
     ///   established. Use [`RadioLink::is_linked`] to check this if needed.
-    fn flush(&mut self) -> io::Result<()> {
+    fn flush(&mut self) -> std::io::Result<()> {
         if !self.is_linked() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotConnected,
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotConnected,
                 RADIO_NOT_LINKED,
             ));
         }

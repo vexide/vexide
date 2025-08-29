@@ -21,17 +21,19 @@ vex-sdk = { workspace = true }
 snafu = { workspace = true }
 mint = "0.5.9"
 rgb = "0.8.50"
-no_std_io = { version = "0.6.0", features = ["alloc"] }
 bitflags = "2.4.2"
-smart-leds-trait = { version = "0.3.0", optional = true }
 libm = "0.2.15"
+embedded-io = { version = "0.6.1", optional = true }
+smart-leds-trait = { version = "0.3.0", optional = true }
 
 [lints]
 workspace = true
 
 [features]
-dangerous_motor_tuning = []
-smart_leds_trait = ["dep:smart-leds-trait"]
+std = []
+dangerous-motor-tuning = []
+embedded-io = ["dep:embedded-io"]
+smart-leds-trait = ["dep:smart-leds-trait"]
 
 [package.metadata.docs.rs]
 all-features = true # Show optional APIs

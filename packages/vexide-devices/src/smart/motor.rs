@@ -66,7 +66,7 @@ use vex_sdk::{
     vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet,
     V5MotorBrakeMode, V5MotorGearset, V5_DeviceT,
 };
-#[cfg(feature = "dangerous_motor_tuning")]
+#[cfg(feature = "dangerous-motor-tuning")]
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
@@ -1397,7 +1397,7 @@ impl Motor {
     ///     motor.set_velocity_tuning_constants(constants).unwrap();
     /// }
     /// ```
-    #[cfg(feature = "dangerous_motor_tuning")]
+    #[cfg(feature = "dangerous-motor-tuning")]
     pub fn set_velocity_tuning_constants(
         &mut self,
         constants: MotorTuningConstants,
@@ -1447,7 +1447,7 @@ impl Motor {
     ///     motor.set_position_tuning_constants(constants).unwrap();
     /// }
     /// ```
-    #[cfg(feature = "dangerous_motor_tuning")]
+    #[cfg(feature = "dangerous-motor-tuning")]
     pub fn set_position_tuning_constants(
         &mut self,
         constants: MotorTuningConstants,
@@ -1630,7 +1630,7 @@ impl From<Gearset> for V5MotorGearset {
 /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
 /// well-known or understood, as we have no reference for what these constants should look
 /// like.
-// #[cfg(feature = "dangerous_motor_tuning")]
+// #[cfg(feature = "dangerous-motor-tuning")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MotorTuningConstants {
     /// The feedforward constant.
@@ -1662,7 +1662,7 @@ pub struct MotorTuningConstants {
     pub sample_rate: Duration,
 }
 
-#[cfg(feature = "dangerous_motor_tuning")]
+#[cfg(feature = "dangerous-motor-tuning")]
 impl From<MotorTuningConstants> for V5_DeviceMotorPid {
     fn from(value: MotorTuningConstants) -> Self {
         Self {
