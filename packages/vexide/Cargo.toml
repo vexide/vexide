@@ -62,4 +62,8 @@ panic = ["dep:vexide-panic"]
 display_panics = ["panic", "vexide-panic/display_panics"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-vex-v5"] # Not actually, but this is at least close.
+targets = ["armv7a-vex-v5"]
+cargo-args=[
+    "-Zbuild-std=core,alloc,compiler_builtins",
+    "-Zbuild-std-features=compiler-builtins-mem"
+]
