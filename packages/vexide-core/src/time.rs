@@ -2,11 +2,7 @@
 //!
 //! This module provides an implementation of [`Instant`] built on the VEXos high-resolution timer.
 
-use core::{
-    fmt,
-    ops::{Add, AddAssign, Sub, SubAssign},
-    time::Duration,
-};
+use core::time::Duration;
 
 use vex_sdk::vexSystemPowerupTimeGet;
 
