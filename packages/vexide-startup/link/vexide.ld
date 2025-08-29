@@ -21,7 +21,7 @@ OVERWRITE_SECTIONS {
     /* Ensure .overwriter is placed after .boot but before .text */
     .text : {
         /* _boot routine (entry point from VEXos, must be at 0x03800020) */
-        *(.boot)
+        *(.vexide_boot)
 
         /* Patch overwriter routine. */
         *(.overwriter)
@@ -29,6 +29,11 @@ OVERWRITE_SECTIONS {
         /* The rest of the program. */
         *(.text .text.*)
     } > USER_RAM
+
+    /DISCARD/ : {
+        /* Strip out _boot section from libstd (replaced with .vexide_boot section). */
+        *(.text.boot)
+    }
 }
 
 SECTIONS {
