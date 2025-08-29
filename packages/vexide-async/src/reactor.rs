@@ -1,8 +1,4 @@
-use std::{
-    collections::BinaryHeap,
-    time::Instant,
-    task::Waker,
-};
+use std::{collections::BinaryHeap, task::Waker, time::Instant};
 
 pub(crate) struct Sleeper {
     pub deadline: Instant,

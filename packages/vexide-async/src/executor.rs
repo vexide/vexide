@@ -1,9 +1,12 @@
 use std::{
-    collections::VecDeque, sync::Arc,
     cell::RefCell,
+    collections::VecDeque,
     future::Future,
     pin::Pin,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
     task::{Context, Poll},
 };
 

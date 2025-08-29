@@ -23,10 +23,9 @@ use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericSerialBaudrate, vexDeviceGenericSerialEnable, vexDeviceGenericSerialFlush,
     vexDeviceGenericSerialPeekChar, vexDeviceGenericSerialReadChar,
-    vexDeviceGenericSerialReceiveAvail,
-    vexDeviceGenericSerialWriteChar, vexDeviceGenericSerialWriteFree, V5_DeviceT,
+    vexDeviceGenericSerialReceiveAvail, vexDeviceGenericSerialWriteChar,
+    vexDeviceGenericSerialWriteFree, V5_DeviceT,
 };
-
 #[cfg(any(feature = "std", feature = "embedded-io"))]
 use vex_sdk::{vexDeviceGenericSerialReceive, vexDeviceGenericSerialTransmit};
 

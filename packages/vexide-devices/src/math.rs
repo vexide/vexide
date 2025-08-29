@@ -11,5 +11,9 @@ pub use mint::{EulerAngles, Point2, Quaternion, Vector3};
 #[inline]
 pub(crate) fn rem_euclid(x: f64, rhs: f64) -> f64 {
     let r = x % rhs;
-    if r < 0.0 { r + libm::fabs(rhs) } else { r }
+    if r < 0.0 {
+        r + libm::fabs(rhs)
+    } else {
+        r
+    }
 }

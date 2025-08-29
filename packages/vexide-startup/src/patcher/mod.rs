@@ -1,5 +1,6 @@
-use varint_decode::VarIntReader;
 use std::io::{Cursor, Read, Seek, SeekFrom};
+
+use varint_decode::VarIntReader;
 
 mod varint_decode;
 

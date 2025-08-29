@@ -310,7 +310,10 @@ fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
 
     let precision = precision as f32;
 
-    let gcd = gcd(libm::roundf(fractional_part * precision) as _, precision as _);
+    let gcd = gcd(
+        libm::roundf(fractional_part * precision) as _,
+        precision as _,
+    );
 
     let denominator = precision as i32 / gcd;
     let numerator = libm::roundf(fractional_part * precision) as i32 / gcd;

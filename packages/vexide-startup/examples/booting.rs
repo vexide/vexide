@@ -2,7 +2,13 @@
 
 use std::time::Duration;
 
-use vexide_devices::{peripherals::Peripherals, smart::{Motor, motor::{Direction, Gearset}}};
+use vexide_devices::{
+    peripherals::Peripherals,
+    smart::{
+        motor::{Direction, Gearset},
+        Motor,
+    },
+};
 use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
 fn main() {
