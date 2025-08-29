@@ -62,6 +62,7 @@
 #[cfg(all(feature = "vex-sdk-build", feature = "vex-sdk-jumptable"))]
 compile_error!("features `vex-sdk-jumptable` and `vex-sdk-build` are mutually exclusive");
 
+pub mod allocator;
 pub mod banner;
 mod code_signature;
 mod patcher;
@@ -169,7 +170,7 @@ pub unsafe fn startup() {
     unsafe {
         // Initialize the heap allocator in our heap region defined in the linkerscript
         #[cfg(feature = "allocator")]
-        vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
+        crate::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
 
         // If this link address is 0x03800000, this implies we were uploaded using
         // differential uploads by cargo-v5 and may have a patch to apply.
@@ -179,6 +180,6 @@ pub unsafe fn startup() {
 
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
-        vexide_core::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
+        crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
     }
 }

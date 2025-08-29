@@ -6,12 +6,10 @@
 //! This is done automatically for you in the `vexide-startup` crate, so you should not need to call
 //! it yourself unless you are writing your own startup routine implementation.
 
-use talc::{ErrOnOom, Span, Talc, Talck};
-
-use crate::sync::RawMutex;
+use talc::{locking::AssumeUnlockable, ErrOnOom, Span, Talc, Talck};
 
 #[global_allocator]
-static ALLOCATOR: Talck<RawMutex, ErrOnOom> = Talc::new(ErrOnOom).lock();
+static ALLOCATOR: Talck<AssumeUnlockable, ErrOnOom> = Talc::new(ErrOnOom).lock();
 
 /// Claims a region of memory as heap space.
 ///

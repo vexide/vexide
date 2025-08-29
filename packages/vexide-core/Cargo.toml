@@ -20,7 +20,6 @@ authors = [
 vex-sdk = { workspace = true }
 no_std_io = { version = "0.6.0", features = ["alloc"] }
 snafu = { workspace = true }
-talc = { version = "4.3.1", optional = true }
 lock_api = "0.4.11"
 bitflags = "2.4.2"
 futures-core = { version = "0.3.30", default-features = false, features = [
@@ -38,7 +37,6 @@ workspace = true
 [features]
 default = ["backtraces"]
 backtraces = ["dep:vex-libunwind"]
-allocator = ["dep:talc"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]
