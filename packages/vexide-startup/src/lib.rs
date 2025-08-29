@@ -58,8 +58,6 @@
 //! }
 //! ```
 
-#![no_std]
-
 // Cannot use two SDK providers at once.
 #[cfg(all(feature = "vex-sdk-build", feature = "vex-sdk-jumptable"))]
 compile_error!("features `vex-sdk-jumptable` and `vex-sdk-build` are mutually exclusive");
@@ -107,7 +105,7 @@ unsafe extern "C" {
 #[unsafe(link_section = ".vexide_boot")]
 #[unsafe(no_mangle)]
 #[unsafe(naked)]
-unsafe extern "C" fn _boot() {
+unsafe extern "C" fn _vexide_boot() {
     naked_asm!(
         // Load the stack pointer to point to our stack section.
         //

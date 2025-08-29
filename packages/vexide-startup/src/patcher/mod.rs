@@ -1,5 +1,5 @@
 use varint_decode::VarIntReader;
-use vexide_core::io::{Cursor, Read, Seek, SeekFrom};
+use std::io::{Cursor, Read, Seek, SeekFrom};
 
 mod varint_decode;
 

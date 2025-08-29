@@ -70,7 +70,7 @@ pub mod time {
 pub use vexide_core::allocator;
 #[doc(inline)]
 #[cfg(feature = "core")]
-pub use vexide_core::{backtrace, competition, io, os, sync};
+pub use vexide_core::{backtrace, competition, os, sync};
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
@@ -129,7 +129,6 @@ pub mod prelude {
     #[cfg(feature = "core")]
     pub use crate::{
         competition::{Compete, CompeteExt, CompetitionRuntime},
-        io::{dbg, print, println, BufRead, Read, Seek, Write},
     };
     #[cfg(feature = "async")]
     pub use crate::{
