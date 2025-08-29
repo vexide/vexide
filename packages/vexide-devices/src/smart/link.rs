@@ -26,10 +26,11 @@ use core::time::Duration;
 
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus, vexDeviceGenericRadioReceive,
-    vexDeviceGenericRadioReceiveAvail, vexDeviceGenericRadioTransmit,
-    vexDeviceGenericRadioWriteFree, V5_DeviceT,
+    vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus,
+    vexDeviceGenericRadioReceiveAvail, vexDeviceGenericRadioWriteFree, V5_DeviceT,
 };
+#[cfg(any(feature = "std", feature = "embedded-io"))]
+use vex_sdk::{vexDeviceGenericRadioReceive, vexDeviceGenericRadioTransmit};
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 
@@ -175,6 +176,7 @@ impl RadioLink {
     }
 }
 
+#[cfg(feature = "std")]
 const RADIO_NOT_LINKED: &str = "The radio has not established a link with another radio.";
 
 #[cfg(feature = "std")]
