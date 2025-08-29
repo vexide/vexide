@@ -30,4 +30,4 @@ dcache_clean_range:
     cpsie i @ Unmask interrupts
 
     @ Jump to modified code
-    b _boot
+    b _vexide_boot

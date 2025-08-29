@@ -18,7 +18,6 @@ extern crate alloc;
 pub mod allocator;
 pub mod backtrace;
 pub mod competition;
-pub mod io;
 pub mod os;
 pub mod sync;
 pub mod time;
