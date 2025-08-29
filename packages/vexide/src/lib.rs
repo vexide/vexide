@@ -66,9 +66,6 @@ pub mod time {
 }
 
 #[doc(inline)]
-#[cfg(feature = "allocator")]
-pub use vexide_startup::allocator;
-#[doc(inline)]
 #[cfg(feature = "core")]
 pub use vexide_core::{backtrace, competition, os, sync};
 #[doc(inline)]
@@ -80,11 +77,16 @@ pub use vexide_macro::main;
 #[doc(inline)]
 #[cfg(feature = "startup")]
 pub use vexide_startup as startup;
+#[doc(inline)]
+#[cfg(feature = "allocator")]
+pub use vexide_startup::allocator;
 
 /// Commonly used features of vexide.
 ///
 /// This module is meant to be glob imported.
 pub mod prelude {
+    #[cfg(feature = "core")]
+    pub use crate::competition::{Compete, CompeteExt, CompetitionRuntime};
     #[cfg(feature = "devices")]
     pub use crate::devices::{
         adi::{
@@ -125,10 +127,6 @@ pub mod prelude {
             },
             SmartDevice, SmartPort,
         },
-    };
-    #[cfg(feature = "core")]
-    pub use crate::{
-        competition::{Compete, CompeteExt, CompetitionRuntime},
     };
     #[cfg(feature = "async")]
     pub use crate::{

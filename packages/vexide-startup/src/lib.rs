@@ -70,13 +70,12 @@ mod patcher;
 #[cfg(feature = "panic-hook")]
 mod panic_hook;
 
-#[cfg(feature = "vex-sdk-jumptable")]
-use vex_sdk_jumptable as _;
-
 use core::arch::naked_asm;
 
 pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 use patcher::PATCH_MAGIC;
+#[cfg(feature = "vex-sdk-jumptable")]
+use vex_sdk_jumptable as _;
 
 /// Load address of user programs in memory.
 const USER_MEMORY_START: u32 = 0x0380_0000;

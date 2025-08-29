@@ -1,35 +1,31 @@
 //! Minimal example of setting up program booting without the `#[vexide::main]` attribute macro.
 
-#![no_main]
-#![no_std]
+use std::time::Duration;
 
-extern crate alloc;
-
-use alloc::boxed::Box;
-
-use vexide_core::println;
+use vexide_devices::{
+    peripherals::Peripherals,
+    smart::{
+        motor::{Direction, Gearset},
+        Motor,
+    },
+};
 use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
-// SAFETY: This function is unique and is being used to start the vexide runtime.
-// It will be called by the _boot assembly routine after the stack has been setup.
-#[unsafe(no_mangle)]
-unsafe extern "C" fn _start() -> ! {
+fn main() {
     // Setup the heap, zero bss, apply patches, etc...
+    // SAFETY: Called once at program startup.
     unsafe {
         vexide_startup::startup();
     }
 
-    let test_box = Box::new(100); // On the heap to demonstrate allocation.
-    unsafe {
-        // Draw something to the screen to test if the program is running.
-        vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
-    }
+    println!("Hey");
 
-    // Print some data to the terminal.
-    println!("Hello, world!");
+    // Spin a motor
+    let peripherals = Peripherals::take().unwrap();
+    let mut m = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    m.set_voltage(12.0).unwrap();
 
-    // Exit the program once we're done.
-    vexide_core::program::exit();
+    std::thread::sleep(Duration::from_secs(5));
 }
 
 // SAFETY: The code signature needs to be in this section so it may be found by VEXos.
@@ -40,8 +36,3 @@ static CODE_SIG: CodeSignature = CodeSignature::new(
     ProgramOwner::Partner,
     ProgramFlags::empty(),
 );
-
-#[panic_handler]
-const fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
-    loop {}
-}
