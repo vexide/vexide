@@ -21,12 +21,16 @@ vexide-core = { workspace = true }
 vex-sdk-jumptable = { workspace = true, optional = true }
 compile-time = "0.2.0"
 
+[build-dependencies]
+vex-sdk-build = { version = "0.0.1", optional = true }
+
 [lints]
 workspace = true
 
 [features]
-default = ["allocator", "jumptable"]
-jumptable = ["dep:vex-sdk-jumptable"]
+default = ["allocator", "vex-sdk-jumptable"]
+vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
+vex-sdk-build = ["dep:vex-sdk-build"]
 allocator = ["vexide-core/allocator"]
 
 [package.metadata.docs.rs]
