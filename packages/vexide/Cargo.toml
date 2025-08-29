@@ -44,7 +44,7 @@ macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 async = ["dep:vexide-async"]
 
 core = ["dep:vexide-core"]
-backtraces = ["core", "vexide-core/backtraces"]
+backtraces = ["core", "vexide-core/backtraces", "vexide-startup/panic_backtraces"]
 
 startup = ["dep:vexide-startup"]
 allocator = ["startup", "vexide-startup/allocator"]
