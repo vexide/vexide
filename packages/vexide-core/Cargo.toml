@@ -1,0 +1,46 @@
+[package]
+name = "vexide-core"
+version = "0.7.0"
+edition = "2021"
+license = "MIT"
+description = "Core functionality for vexide"
+keywords = ["Robotics", "bindings", "vex", "v5"]
+categories = ["api-bindings", "no-std", "science::robotics"]
+repository = "https://github.com/vexide/vexide"
+authors = [
+    "vexide",
+    "Gavin Niederman <gavinniederman@gmail.com>",
+    "doinkythederp <doinkythederp@icloud.com>",
+    "Tropical",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+vex-sdk = { workspace = true }
+no_std_io = { version = "0.6.0", features = ["alloc"] }
+snafu = { workspace = true }
+lock_api = "0.4.11"
+bitflags = "2.4.2"
+futures-core = { version = "0.3.30", default-features = false, features = [
+    "alloc",
+] }
+pin-project = "1.1.5"
+replace_with = { version = "0.1.7", default-features = false }
+
+[target.'cfg(target_vendor = "vex")'.dependencies]
+vex-libunwind = { version = "0.1.0", git = "https://github.com/vexide/vex-libunwind.git", tag = "v0.1.0", optional = true }
+
+[lints]
+workspace = true
+
+[features]
+default = ["backtraces"]
+backtraces = ["dep:vex-libunwind"]
+
+[package.metadata.docs.rs]
+targets = ["armv7a-vex-v5"]
+cargo-args=[
+    "-Zbuild-std=core,alloc,compiler_builtins",
+    "-Zbuild-std-features=compiler-builtins-mem"
+]

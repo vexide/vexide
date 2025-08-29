@@ -29,15 +29,48 @@
 #![doc(html_logo_url = "https://vexide.dev/images/logo.svg")]
 
 /// Async runtime & executor.
-#[cfg(feature = "rt")]
+#[cfg(feature = "async")]
 pub mod runtime {
     #[doc(inline)]
-    pub use vexide_runtime::block_on;
+    pub use vexide_async::block_on;
 }
 
 #[doc(inline)]
-#[cfg(feature = "rt")]
-pub use vexide_runtime::{task, time, backtrace, competition, os, sync, banner};
+#[cfg(feature = "async")]
+pub use vexide_async::task;
+
+/// Utilities for tracking time.
+///
+/// This module provides types for measuring time and executing code after a set periods
+/// of time.
+///
+/// - [`Instant`] can measure execution time with high precision.
+///
+/// - [`Sleep`] is a future that does no work and completes at a specific [`Instant`]
+///   in time.
+///
+/// - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future
+///   for or until a specific instant in time.
+///
+/// [`sleep`]: vexide_async::time::sleep
+/// [`sleep_until`]: vexide_async::time::sleep_until
+/// [`Instant`]: vexide_core::time::Instant
+#[cfg(any(feature = "core", feature = "async"))]
+pub mod time {
+    #[doc(inline)]
+    #[cfg(feature = "async")]
+    pub use vexide_async::time::*;
+    #[doc(inline)]
+    #[cfg(feature = "core")]
+    pub use vexide_core::time::*;
+}
+
+#[doc(inline)]
+#[cfg(feature = "allocator")]
+pub use vexide_startup::allocator;
+#[doc(inline)]
+#[cfg(feature = "core")]
+pub use vexide_core::{backtrace, competition, os, sync};
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
@@ -93,9 +126,12 @@ pub mod prelude {
             SmartDevice, SmartPort,
         },
     };
-    #[cfg(feature = "rt")]
+    #[cfg(feature = "core")]
     pub use crate::{
         competition::{Compete, CompeteExt, CompetitionRuntime},
+    };
+    #[cfg(feature = "async")]
+    pub use crate::{
         runtime::block_on,
         task::{spawn, Task},
         time::{sleep, sleep_until},
