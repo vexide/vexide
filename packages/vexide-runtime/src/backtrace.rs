@@ -14,7 +14,7 @@
 //! Additionally, backtraces will be unsupported if vexide is compiled without
 //! the `unwind` feature.
 
-use alloc::vec::Vec;
+use std::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
 
 #[cfg(all(target_vendor = "vex", feature = "backtraces"))]

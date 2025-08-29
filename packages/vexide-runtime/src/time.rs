@@ -8,16 +8,23 @@
 //! * [`sleep`] and [`sleep_until`] provide ways to yield control away from a future
 //!   for or until a specific instant in time.
 
-use core::{
+use std::{
     future::Future,
     pin::Pin,
     task::{Context, Poll},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
-use std::time::Instant;
+use vex_sdk::vexSystemPowerupTimeGet;
 
 use crate::{executor::EXECUTOR, reactor::Sleeper};
+
+
+/// Returns the duration that the brain has been turned on.
+#[must_use]
+pub fn uptime() -> Duration {
+    Duration::from_micros(unsafe { vexSystemPowerupTimeGet() })
+}
 
 /// A future that will complete after a certain instant is reached in time.
 #[derive(Debug)]

@@ -8,7 +8,7 @@
 
 use themes::BannerTheme;
 use vex_sdk::vexBatteryCapacityGet;
-use vexide_core::{competition, os, time};
+use crate::{competition, os, time};
 
 pub mod themes;
 

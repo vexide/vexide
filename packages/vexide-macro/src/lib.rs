@@ -75,12 +75,12 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
     let banner_theme = if let Some(theme) = opts.banner_theme {
         quote! { #theme }
     } else {
-        quote! { ::vexide::startup::banner::themes::THEME_DEFAULT }
+        quote! { ::vexide::banner::themes::THEME_DEFAULT }
     };
 
     let banner_print = if opts.banner_enabled {
         quote! {
-            ::vexide::startup::banner::print(#banner_theme);
+            ::vexide::banner::print(#banner_theme);
         }
     } else {
         quote! {}
