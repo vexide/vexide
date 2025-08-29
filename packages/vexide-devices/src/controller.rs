@@ -10,10 +10,9 @@ use core::{cell::RefCell, future::Future, task::Poll, time::Duration};
 
 use snafu::{ensure, Snafu};
 use vex_sdk::{
-    vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
-    V5_ControllerIndex, V5_ControllerStatus,
+    vexCompetitionStatus, vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet,
+    V5_ControllerId, V5_ControllerIndex, V5_ControllerStatus,
 };
-use vexide_core::competition::{self, CompetitionMode};
 
 /// Represents the state of a button on the controller.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
@@ -732,8 +731,17 @@ impl Controller {
     /// }
     /// ```
     pub fn state(&self) -> Result<ControllerState, ControllerError> {
+        // This is effectively `competition::mode() == CompetitionMode::Driver`,
+        // but we don't depend on `vexide_core`
         ensure!(
-            competition::mode() == CompetitionMode::Driver,
+            {
+                const COMPETITION_DISABLED: u32 = 1 << 0;
+                const COMPETITION_AUTONOMOUS: u32 = 1 << 1;
+
+                let status = unsafe { vexCompetitionStatus() };
+
+                (status & COMPETITION_DISABLED == 0) && (status & COMPETITION_AUTONOMOUS == 0)
+            },
             CompetitionControlSnafu
         );
         validate_connection(self.id)?;

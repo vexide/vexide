@@ -17,7 +17,6 @@ authors = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vexide-core = { workspace = true }
 vex-sdk = { workspace = true }
 snafu = { workspace = true }
 mint = "0.5.9"
