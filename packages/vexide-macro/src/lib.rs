@@ -95,7 +95,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
             #banner_print
             #inner
 
-            ::vexide::executor::block_on(
+            ::vexide::runtime::block_on(
                 #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
             )
         }
