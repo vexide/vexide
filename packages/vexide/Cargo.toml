@@ -26,7 +26,6 @@ vexide-core = { workspace = true, optional = true }
 vexide-startup = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
 vex-sdk = { workspace = true }
-vex-sdk-jumptable = { workspace = true, optional = true }
 
 [features]
 default = [
@@ -39,7 +38,7 @@ default = [
     "macro",
     "backtraces",
     "allocator",
-    "jumptable",
+    "vex-sdk-jumptable",
 ]
 
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
@@ -49,8 +48,9 @@ backtraces = ["core", "vexide-core/backtraces"]
 force_rust_libm = ["core", "vexide-core/force_rust_libm"]
 allocator = ["core", "vexide-core/allocator", "vexide-startup/allocator"]
 
-startup = ["dep:vexide-startup", "vexide-startup/jumptable"]
-jumptable = ["startup", "vexide-startup/jumptable"]
+startup = ["dep:vexide-startup"]
+vex-sdk-jumptable = ["startup", "vexide-startup/vex-sdk-jumptable"]
+vex-sdk-build = ["startup", "vexide-startup/vex-sdk-build"]
 
 async = ["dep:vexide-async"]
 

@@ -227,7 +227,7 @@ impl Future for ControllerScreenWriteFuture<'_> {
         {
             if *enforce_visible {
                 assert!(
-                    (*line != 0 && *line <= ControllerScreen::MAX_LINES as u8),
+                    *line != 0 && *line <= ControllerScreen::MAX_LINES as u8,
                     "Invalid line number ({line}) is greater than the maximum number of lines ({})",
                     ControllerScreen::MAX_LINES
                 );

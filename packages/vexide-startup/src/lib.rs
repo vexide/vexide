@@ -104,7 +104,7 @@ unsafe extern "C" {
 /// This routine loads the stack pointer to the stack region specified in our
 /// linkerscript, makes a copy of program memory for the patcher if needed, then
 /// branches to the Rust entrypoint (_start) created by the #[vexide::main] macro.
-#[unsafe(link_section = ".boot")]
+#[unsafe(link_section = ".vexide_boot")]
 #[unsafe(no_mangle)]
 #[unsafe(naked)]
 unsafe extern "C" fn _boot() {
