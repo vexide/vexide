@@ -87,17 +87,17 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
     };
 
     quote! {
-        #[no_mangle]
-        unsafe extern "C" fn _start() -> ! {
-            ::vexide::startup::startup();
-            #banner_print
+        fn main() -> #ret_type {
+            unsafe {
+                ::vexide::startup::startup();
+            }
 
+            #banner_print
             #inner
-            let termination: #ret_type = ::vexide::runtime::block_on(
+
+            ::vexide::executor::block_on(
                 #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
-            );
-            ::vexide::program::Termination::report(termination);
-            ::vexide::program::exit();
+            )
         }
     }
 }
@@ -187,9 +187,9 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     quote! {
         const _: () = {
             #code_signature
-
-            #entrypoint
         };
+
+        #entrypoint
     }
     .into()
 }
