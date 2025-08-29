@@ -19,18 +19,16 @@ rust-version = "1.75.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vexide-async = { workspace = true, optional = true }
 vexide-devices = { workspace = true, optional = true }
-vexide-core = { workspace = true, optional = true }
+vexide-runtime = { workspace = true, optional = true }
 vexide-startup = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
 vex-sdk = { workspace = true }
 
 [features]
 default = [
-    "async",
+    "rt",
     "devices",
-    "core",
     "startup",
     "macro",
     "backtraces",
@@ -38,17 +36,15 @@ default = [
     "vex-sdk-jumptable",
 ]
 
-macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
+macro = ["dep:vexide-macro", "startup", "rt", "devices"]
 
-core = ["dep:vexide-core"]
-backtraces = ["core", "vexide-core/backtraces"]
+rt = ["dep:vexide-runtime"]
+backtraces = ["rt", "vexide-runtime/backtraces"]
 
 startup = ["dep:vexide-startup"]
 allocator = ["startup", "vexide-startup/allocator"]
 vex-sdk-jumptable = ["startup", "vexide-startup/vex-sdk-jumptable"]
 vex-sdk-build = ["startup", "vexide-startup/vex-sdk-build"]
-
-async = ["dep:vexide-async"]
 
 devices = ["dep:vexide-devices"]
 dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]

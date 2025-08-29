@@ -1,9 +1,9 @@
 [package]
-name = "vexide-async"
-version = "0.1.9"
+name = "vexide-runtime"
+version = "0.0.1"
 edition = "2021"
 license = "MIT"
-description = "The async executor at the core of vexide"
+description = "Async executor and core runtime for vexide"
 keywords = ["Robotics", "bindings", "async", "vex", "v5"]
 categories = ["no-std", "science::robotics", "asynchronous"]
 repository = "https://github.com/vexide/vexide"
@@ -18,12 +18,28 @@ authors = [
 
 [dependencies]
 async-task = { version = "4.5.0", default-features = false }
-vexide-core = { workspace = true }
 waker-fn = "1.1.1"
 vex-sdk = { workspace = true }
+no_std_io = { version = "0.6.0", features = ["alloc"] }
+snafu = { workspace = true }
+lock_api = "0.4.11"
+bitflags = "2.4.2"
+futures-core = { version = "0.3.30", default-features = false, features = [
+    "alloc",
+] }
+pin-project = "1.1.5"
+replace_with = { version = "0.1.7", default-features = false }
+compile-time = "0.2.0"
+
+[target.'cfg(target_vendor = "vex")'.dependencies]
+vex-libunwind = { version = "0.1.0", git = "https://github.com/vexide/vex-libunwind.git", tag = "v0.1.0", optional = true }
 
 [lints]
 workspace = true
+
+[features]
+default = ["backtraces"]
+backtraces = ["dep:vex-libunwind"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]

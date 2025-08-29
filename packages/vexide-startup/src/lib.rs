@@ -63,7 +63,6 @@
 compile_error!("features `vex-sdk-jumptable` and `vex-sdk-build` are mutually exclusive");
 
 pub mod allocator;
-pub mod banner;
 mod code_signature;
 mod patcher;
 

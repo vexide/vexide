@@ -21,8 +21,7 @@ snafu = { version = "0.8.0", default-features = false, features = [
     "rust_1_61",
     "unstable-core-error",
 ] }
-vexide-async = { version = "0.1.9", path = "packages/vexide-async", default-features = false }
-vexide-core = { version = "0.7.0", path = "packages/vexide-core", default-features = false }
+vexide-runtime = { version = "0.0.1", path = "packages/vexide-runtime", default-features = false }
 vexide-devices = { version = "0.7.0", path = "packages/vexide-devices", default-features = false }
 vexide-startup = { version = "0.4.2", path = "packages/vexide-startup", default-features = false }
 vexide-macro = { version = "0.3.2", path = "packages/vexide-macro", default-features = false }
