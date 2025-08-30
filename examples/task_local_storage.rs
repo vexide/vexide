@@ -1,7 +1,4 @@
-#![no_main]
-#![no_std]
-
-use core::{cell::Cell, time::Duration};
+use std::{cell::Cell, time::Duration};
 
 use vexide::prelude::*;
 

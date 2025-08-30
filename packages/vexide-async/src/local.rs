@@ -35,7 +35,9 @@ const fn tls_layout() -> Layout {
     const MAX_ALIGNMENT: usize = 16;
 
     let Ok(layout) = Layout::from_size_align(
-        unsafe { (&raw const __vexide_tdata_end).offset_from_unsigned(&raw const __vexide_tdata_start) },
+        unsafe {
+            (&raw const __vexide_tdata_end).offset_from_unsigned(&raw const __vexide_tdata_start)
+        },
         MAX_ALIGNMENT,
     ) else {
         // Creating the layout can only fail if the size of the TLS section is out of range of isize.

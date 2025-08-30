@@ -16,9 +16,6 @@
 //! control, or downtime between modes.
 //!
 //! ```
-//! #![no_std]
-//! #![no_main]
-//!
 //! use vexide::prelude::*;
 //!
 //! struct MyRobot {}
@@ -818,9 +815,6 @@ impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
 /// # Example
 ///
 /// ```
-/// #![no_std]
-/// #![no_main]
-///
 /// use vexide::prelude::*;
 ///
 /// struct MyRobot {}

@@ -1,6 +1,3 @@
-#![no_main]
-#![no_std]
-
 use vexide::{
     prelude::*,
     startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType},

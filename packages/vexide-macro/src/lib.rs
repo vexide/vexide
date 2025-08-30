@@ -124,10 +124,9 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// for a vexide program. The function must take a single argument of type `Peripherals`.
 ///
 /// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
-/// # use core::fmt::Write;
+/// use vexide::prelude::*;
+/// use std::fmt::Write;
+///
 /// #[vexide::main]
 /// async fn main(mut peripherals: Peripherals) {
 ///     write!(peripherals.display, "Hello, vexide!").unwrap();
@@ -139,9 +138,8 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// This includes disabling the banner or using a custom banner theme:
 ///
 /// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
+/// use vexide::prelude::*;
+///
 /// #[vexide::main(banner(enabled = false))]
 /// async fn main(_p: Peripherals) {
 ///    println!("This is the only serial output from this program!")
@@ -149,10 +147,9 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// ```
 ///
 /// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
+/// use vexide::prelude::*;
 /// use vexide::startup::banner::themes::THEME_SYNTHWAVE;
+///
 /// #[vexide::main(banner(theme = THEME_SYNTHWAVE))]
 /// async fn main(_p: Peripherals) {
 ///    println!("This program has a synthwave themed banner!")
@@ -162,15 +159,15 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// A custom code signature may be used to further configure the behavior of the program.
 ///
 /// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
-/// # use vexide::startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+/// use vexide::prelude::*;
+/// use vexide::startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+///
 /// static CODE_SIG: CodeSignature = CodeSignature::new(
 ///     ProgramType::User,
 ///     ProgramOwner::Partner,
 ///     ProgramFlags::empty(),
 /// );
+///
 /// #[vexide::main(code_sig = CODE_SIG)]
 /// async fn main(_p: Peripherals) {
 ///    println!("Hello world!")

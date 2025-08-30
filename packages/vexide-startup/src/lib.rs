@@ -1,14 +1,16 @@
-//! User program startup routines.
+//! User program startup and runtime support.
 //!
-//! This crate provides runtime infrastructure for booting VEX user programs from Rust code.
+//! This crate provides runtime infrastructure for booting vexide programs from Rust code.
+//! This infrastructure includes a more optimized heap allocator, differential uploading
+//! support, and a panic hook that draws panic messages to the screen and captures backtraces.
 //!
-//! - User code begins at an assembly routine called `_boot`, which sets up the stack
-//!   section before jumping to a user-provided `_start` symbol, which should be your
-//!   rust entrypoint.
+//! - User code begins at an assembly routine called `_vexide_boot`, which sets up the stack
+//!   section before jumping to the `_start` routine defined in libstd, which then calls the
+//!   `main` function.
 //!
-//! - From there, the Rust `_start` entrypoint may call the [`startup`] function to finish
-//!   the startup process by clearing the `.bss` section (which stores uninitialized data)
-//!   and initializing vexide's heap allocator.
+//! - From there, consumers must call the [`startup`] function to finish the startup process
+//!   by applying differential upload patches, claiming heap space, and setting up this crate's
+//!   custom panic hook.
 //!
 //! This crate does NOT provide a `libc` [crt0 implementation]. No `libc`-style global
 //! constructors are called. This means that the [`__libc_init_array`] function must be
@@ -23,23 +25,16 @@
 //! runtime or the `#[vexide::main]` macro.
 //!
 //! ```
-//! #![no_main]
-//! #![no_std]
-//!
 //! use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 //!
 //! // SAFETY: This symbol is unique and is being used to start the runtime.
-//! #[unsafe(no_mangle)]
-//! unsafe extern "C" fn _start() -> ! {
+//! fn main() {
 //!     // Setup the heap, zero bss, apply patches, etc...
 //!     unsafe {
 //!         vexide_startup::startup();
 //!     }
 //!
 //!     // Rust code goes here!
-//!
-//!     // Exit the program once we're done.
-//!     vexide_core::program::exit();
 //! }
 //!
 //! // Program header (placed at the first 20 bytes on the binary).
@@ -50,12 +45,6 @@
 //!     ProgramOwner::Partner,
 //!     ProgramFlags::empty(),
 //! );
-//!
-//! // Panic handler (this would normally be provided by `veixde_panic`).
-//! #[panic_handler]
-//! const fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
-//!     loop {}
-//! }
 //! ```
 
 // Cannot use two SDK providers at once.
@@ -67,14 +56,16 @@ pub mod allocator;
 pub mod banner;
 
 mod code_signature;
-mod patcher;
 #[cfg(feature = "panic-hook")]
 mod panic_hook;
+mod patcher;
 
 use core::arch::naked_asm;
 
 pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 use patcher::PATCH_MAGIC;
+
+// Bring `vex_sdk_jumptable` into scope to allow its symbols be resolved by the linker.
 #[cfg(feature = "vex-sdk-jumptable")]
 use vex_sdk_jumptable as _;
 
@@ -83,9 +74,9 @@ const USER_MEMORY_START: u32 = 0x0380_0000;
 
 // Linkerscript Symbols
 //
-// All of these external symbols are defined in our linkerscript (link/v5.ld) and don't have
-// real types or values, but a pointer to them points to the address of their location defined
-// in the linkerscript.
+// All of these external symbols are defined by either Rust's armv7a-vex-v5 linkerscript, our ours
+// (see link/vexide.ld). These symbols don't have real types or values, but a pointer to them points
+// to the address of their location defined in the linkerscript.
 unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
@@ -105,7 +96,7 @@ unsafe extern "C" {
 ///
 /// This routine loads the stack pointer to the stack region specified in our
 /// linkerscript, makes a copy of program memory for the patcher if needed, then
-/// branches to the Rust entrypoint (_start) created by the #[vexide::main] macro.
+/// branches to the Rust entrypoint (_start) defined in libstd.
 #[unsafe(link_section = ".vexide_boot")]
 #[unsafe(no_mangle)]
 #[unsafe(naked)]
@@ -137,10 +128,10 @@ unsafe extern "C" fn _vexide_boot() {
         "ldr r1, ={patch_magic}",
         "cmp r0, r1", // r0 == 0xB1DF?
         // Prepare to memcpy binary to 0x07C00000
-        "ldr r0, =__patcher_base_start",     // memcpy dest -> r0
-        "ldr r1, =__user_ram_start",         // memcpy src -> r1
+        "ldr r0, =__patcher_base_start", // memcpy dest -> r0
+        "ldr r1, =__user_ram_start", // memcpy src -> r1
         "ldr r2, =__patcher_patch_start+12", // Base binary len is stored as metadata in the patch
-        "ldr r2, [r2]",                      // memcpy size -> r2
+        "ldr r2, [r2]", // memcpy size -> r2
         // Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
         "bleq __overwriter_aeabi_memcpy",
         // Jump to the Rust entrypoint.
@@ -149,20 +140,23 @@ unsafe extern "C" fn _vexide_boot() {
     )
 }
 
-/// Rust runtime initialization.
+/// vexide runtime initialization.
 ///
-/// This function performs some prerequisites to allow Rust code to properly run. It must
-/// be called once before any static data access or heap allocation is done. When using
-/// `vexide`, this function is already called for you by the `#[vexide::main]` macro, so
-/// there's no need to call it yourself.
+/// This function performs some prerequisites to allow vexide programs to properly run. It
+/// must be called once at startup before any heap allocation is done. When using `vexide`,
+/// this function is already called for you by the `#[vexide::main]` macro, so there's no
+/// need to call it yourself.
 ///
 /// This function does the following initialization:
 ///
-/// - Fills the `.bss` (uninitialized statics) section with zeroes.
 /// - Sets up the global heap allocator if the `allocator` feature is specified.
 /// - Applies [differential upload patches] to the program if a patch file exists in memory.
+/// - Registers a custom [panic hook] to allow panic messages to be drawn to the screen and
+///   backtraces to be collected. This can be enabled/disabled using the `panic-hook` and
+///   `panic-backtraces` features.
 ///
 /// [differential upload patches]: https://vexide.dev/docs/building-uploading/#uploading-strategies
+/// [panic hook]: https://doc.rust-lang.org/std/panic/fn.set_hook.html
 ///
 /// # Safety
 ///

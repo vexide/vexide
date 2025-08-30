@@ -1,6 +1,3 @@
-#![no_std]
-#![no_main]
-
 use vexide::prelude::*;
 
 /// 6-motor drivetrain robot with tank controls.

@@ -25,9 +25,6 @@
 //! argument to your `main` function:
 //!
 //! ```
-//! #![no_std]
-//! #![no_main]
-//!
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
