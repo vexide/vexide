@@ -44,7 +44,12 @@ macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 async = ["dep:vexide-async"]
 
 core = ["dep:vexide-core"]
-backtraces = ["core", "vexide-core/backtraces", "vexide-startup/panic-backtraces"]
+backtraces = [
+    "core",
+    "startup",
+    "vexide-core/backtraces",
+    "vexide-startup/panic-backtraces",
+]
 
 startup = ["dep:vexide-startup"]
 allocator = ["startup", "vexide-startup/allocator"]
@@ -59,7 +64,7 @@ dangerous-motor-tuning = ["devices", "vexide-devices/dangerous-motor-tuning"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]
-cargo-args=[
+cargo-args = [
     "-Zbuild-std=core,alloc,compiler_builtins",
-    "-Zbuild-std-features=compiler-builtins-mem"
+    "-Zbuild-std-features=compiler-builtins-mem",
 ]
