@@ -62,11 +62,12 @@
 #[cfg(all(feature = "vex-sdk-build", feature = "vex-sdk-jumptable"))]
 compile_error!("features `vex-sdk-jumptable` and `vex-sdk-build` are mutually exclusive");
 
+#[cfg(feature = "allocator")]
 pub mod allocator;
 pub mod banner;
+
 mod code_signature;
 mod patcher;
-
 #[cfg(feature = "panic-hook")]
 mod panic_hook;
 
@@ -150,7 +151,7 @@ unsafe extern "C" fn _vexide_boot() {
 
 /// Rust runtime initialization.
 ///
-/// This function performs some prerequestites to allow Rust code to properly run. It must
+/// This function performs some prerequisites to allow Rust code to properly run. It must
 /// be called once before any static data access or heap allocation is done. When using
 /// `vexide`, this function is already called for you by the `#[vexide::main]` macro, so
 /// there's no need to call it yourself.

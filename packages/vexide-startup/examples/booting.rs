@@ -1,13 +1,10 @@
-//! Minimal example of setting up program booting without the `#[vexide::main]` attribute macro.
+//! Minimal example of setting up a program without the `#[vexide::main]` attribute macro.
 
 use std::time::Duration;
 
 use vexide_devices::{
     peripherals::Peripherals,
-    smart::{
-        motor::{Direction, Gearset},
-        Motor,
-    },
+    smart::motor::{Direction, Gearset, Motor},
 };
 use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 
@@ -20,19 +17,10 @@ fn main() {
 
     println!("Hey");
 
-    // Spin a motor
+    // Try to spin a motor
     let peripherals = Peripherals::take().unwrap();
     let mut m = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    m.set_voltage(12.0).unwrap();
+    _ = m.set_voltage(12.0);
 
     std::thread::sleep(Duration::from_secs(5));
 }
-
-// SAFETY: The code signature needs to be in this section so it may be found by VEXos.
-#[unsafe(link_section = ".code_signature")]
-#[used] // This is needed to prevent the linker from removing this object in release builds
-static CODE_SIG: CodeSignature = CodeSignature::new(
-    ProgramType::User,
-    ProgramOwner::Partner,
-    ProgramFlags::empty(),
-);
