@@ -53,6 +53,7 @@ vex-sdk-jumptable = ["startup", "vexide-startup/vex-sdk-jumptable"]
 vex-sdk-build = ["startup", "vexide-startup/vex-sdk-build"]
 
 devices = ["dep:vexide-devices"]
+embedded-io = ["devices", "vexide-devices/embedded-io"]
 smart-leds-trait = ["devices", "vexide-devices/smart-leds-trait"]
 dangerous-motor-tuning = ["devices", "vexide-devices/dangerous-motor-tuning"]
 
