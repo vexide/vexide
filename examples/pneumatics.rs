@@ -12,7 +12,7 @@ impl Compete for Robot {
 
             // Toggle the solenoid if button A got pressed.
             if controller_state.button_a.is_now_pressed() {
-                self.solenoid.toggle().ok();
+                _ = self.solenoid.toggle();
             }
 
             sleep(Controller::UPDATE_INTERVAL).await;
