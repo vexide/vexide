@@ -14,14 +14,12 @@ impl Compete for Robot {
 
             // Move the left motors using the left stick's y-axis
             for motor in self.left_motors.iter_mut() {
-                _ = motor
-                    .set_voltage(controller_state.left_stick.y() * Motor::V5_MAX_VOLTAGE);
+                _ = motor.set_voltage(controller_state.left_stick.y() * Motor::V5_MAX_VOLTAGE);
             }
 
             // Move the right motors using the left stick's y-axis
             for motor in self.right_motors.iter_mut() {
-                _ = motor
-                    .set_voltage(controller_state.right_stick.y() * Motor::V5_MAX_VOLTAGE);
+                _ = motor.set_voltage(controller_state.right_stick.y() * Motor::V5_MAX_VOLTAGE);
             }
 
             sleep(Controller::UPDATE_INTERVAL).await;

@@ -1,4 +1,5 @@
-use std::{vec, str};
+use std::{str, vec};
+
 use vexide::prelude::*;
 
 #[vexide::main]
