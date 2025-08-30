@@ -1,6 +1,3 @@
-#![no_std]
-#![no_main]
-
 use vexide::prelude::*;
 
 struct Robot {

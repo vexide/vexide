@@ -1,7 +1,7 @@
 //! # vexide
 //!
-//! Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime,
-//! async executor, device API, and more for the VEX V5 Brain!
+//! Open-source Rust runtime for VEX V5 robots. vexide provides a runtime, async executor, hardware
+//! APIs, and more for the VEX V5 Brain!
 //!
 //! ## Getting Started
 //!
@@ -12,6 +12,7 @@
 //! # Usage
 //!
 //! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
+//!
 //! ```rust
 //! use vexide::prelude::*;
 //!
@@ -44,8 +45,6 @@ pub use vexide_async::task;
 /// This module provides types for measuring time and executing code after a set periods
 /// of time.
 ///
-/// - [`Instant`] can measure execution time with high precision.
-///
 /// - [`Sleep`] is a future that does no work and completes at a specific [`Instant`]
 ///   in time.
 ///
@@ -54,7 +53,6 @@ pub use vexide_async::task;
 ///
 /// [`sleep`]: vexide_async::time::sleep
 /// [`sleep_until`]: vexide_async::time::sleep_until
-/// [`Instant`]: vexide_core::time::Instant
 #[cfg(any(feature = "core", feature = "async"))]
 pub mod time {
     #[doc(inline)]

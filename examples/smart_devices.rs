@@ -1,7 +1,4 @@
-#![no_std]
-#![no_main]
-
-use core::time::Duration;
+use std::time::Duration;
 
 use vexide::prelude::*;
 

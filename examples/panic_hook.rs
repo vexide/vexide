@@ -1,7 +1,4 @@
-#![no_main]
-#![no_std]
-
-use core::time::Duration;
+use std::time::Duration;
 
 use vexide::{
     devices::{

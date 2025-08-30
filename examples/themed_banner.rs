@@ -1,6 +1,3 @@
-#![no_main]
-#![no_std]
-
 use vexide::{prelude::*, startup::banner::themes::THEME_SYNTHWAVE};
 
 #[vexide::main(banner(theme = THEME_SYNTHWAVE))]

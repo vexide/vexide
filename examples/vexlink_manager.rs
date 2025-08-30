@@ -1,11 +1,4 @@
-#![no_main]
-#![no_std]
-
-extern crate alloc;
-
-use alloc::vec;
-use core::str;
-
+use std::{vec, str};
 use vexide::prelude::*;
 
 #[vexide::main]
