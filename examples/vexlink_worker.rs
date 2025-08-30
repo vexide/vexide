@@ -1,4 +1,5 @@
-use std::{vec, str};
+use std::{str, vec};
+
 use vexide::prelude::*;
 
 #[vexide::main]
@@ -21,6 +22,7 @@ async fn main(peripherals: Peripherals) {
             link.read(&mut read).unwrap();
             println!("[MANAGER] {}", str::from_utf8(&read).unwrap());
         }
+
         sleep(RadioLink::UPDATE_INTERVAL).await;
     }
 }

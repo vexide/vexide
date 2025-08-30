@@ -5,8 +5,9 @@
 //!
 //! [`v5-drivecode`]: https://github.com/jpearman/v5-drivecode
 
-use vexide::prelude::*;
 use std::time::Duration;
+
+use vexide::prelude::*;
 
 struct Clawbot {
     left_motor: Motor,
@@ -22,18 +23,14 @@ struct Clawbot {
 impl Compete for Clawbot {
     async fn autonomous(&mut self) {
         // Basic example autonomous that moves the drivetrain 10 revolutions forwards.
-        self.left_motor
-            .set_target(MotorControl::Position(
-                Position::from_revolutions(10.0),
-                100,
-            ))
-            ;
-        self.right_motor
-            .set_target(MotorControl::Position(
-                Position::from_revolutions(10.0),
-                100,
-            ))
-            ;
+        _ = self.left_motor.set_target(MotorControl::Position(
+            Position::from_revolutions(10.0),
+            100,
+        ));
+        _ = self.right_motor.set_target(MotorControl::Position(
+            Position::from_revolutions(10.0),
+            100,
+        ));
 
         loop {
             sleep(Duration::from_millis(10)).await;
@@ -49,11 +46,11 @@ impl Compete for Clawbot {
             // Limit Switch State
             let limit_switch_pressed = self.arm_limit_switch.is_high().unwrap_or_default();
 
-            let c_state = self.controller.state().unwrap_or_default();
+            let state = self.controller.state().unwrap_or_default();
 
             // Simple arcade drive
-            let forward = c_state.right_stick.y();
-            let turn = c_state.right_stick.x();
+            let forward = state.right_stick.y();
+            let turn = state.right_stick.x();
             let mut left_voltage = (forward + turn) * Motor::V5_MAX_VOLTAGE;
             let mut right_voltage = (forward - turn) * Motor::V5_MAX_VOLTAGE;
 
@@ -68,18 +65,18 @@ impl Compete for Clawbot {
             _ = self.right_motor.set_voltage(right_voltage);
 
             // Arm control using the R1 and R2 buttons on the controller.
-            if c_state.button_l1.is_pressed() {
+            if state.button_l1.is_pressed() {
                 _ = self.arm.set_voltage(12.0);
-            } else if c_state.button_l2.is_pressed() {
+            } else if state.button_l2.is_pressed() {
                 _ = self.arm.set_voltage(-12.0);
             } else {
                 _ = self.arm.brake(BrakeMode::Hold);
             }
 
             // Claw control using the L1 and L2 buttons on the controller.
-            if c_state.button_l1.is_pressed() {
+            if state.button_l1.is_pressed() {
                 _ = self.claw.set_voltage(12.0);
-            } else if c_state.button_l2.is_pressed() && !limit_switch_pressed {
+            } else if state.button_l2.is_pressed() && !limit_switch_pressed {
                 _ = self.claw.set_voltage(-12.0);
             } else {
                 _ = self.claw.brake(BrakeMode::Hold);
@@ -96,7 +93,7 @@ impl Compete for Clawbot {
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
     // Configuring devices and handing off control to the [`Competition`] API.
-    ClawBot {
+    Clawbot {
         left_motor: Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward),
         right_motor: Motor::new(peripherals.port_10, Gearset::Green, Direction::Reverse),
         claw: Motor::new(peripherals.port_3, Gearset::Green, Direction::Forward),

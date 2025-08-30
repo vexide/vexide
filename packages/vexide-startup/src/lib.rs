@@ -64,7 +64,6 @@ use core::arch::naked_asm;
 
 pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 use patcher::PATCH_MAGIC;
-
 // Bring `vex_sdk_jumptable` into scope to allow its symbols be resolved by the linker.
 #[cfg(feature = "vex-sdk-jumptable")]
 use vex_sdk_jumptable as _;
