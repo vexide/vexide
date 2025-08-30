@@ -8,7 +8,7 @@
 use vexide::prelude::*;
 use std::time::Duration;
 
-struct ClawBot {
+struct Clawbot {
     left_motor: Motor,
     right_motor: Motor,
     claw: Motor,
@@ -19,7 +19,7 @@ struct ClawBot {
     controller: Controller,
 }
 
-impl Compete for ClawBot {
+impl Compete for Clawbot {
     async fn autonomous(&mut self) {
         // Basic example autonomous that moves the drivetrain 10 revolutions forwards.
         self.left_motor
@@ -27,13 +27,13 @@ impl Compete for ClawBot {
                 Position::from_revolutions(10.0),
                 100,
             ))
-            .ok();
+            ;
         self.right_motor
             .set_target(MotorControl::Position(
                 Position::from_revolutions(10.0),
                 100,
             ))
-            .ok();
+            ;
 
         loop {
             sleep(Duration::from_millis(10)).await;
@@ -64,25 +64,25 @@ impl Compete for ClawBot {
             }
 
             // Set the drive motors to our arcade control values.
-            self.left_motor.set_voltage(left_voltage).ok();
-            self.right_motor.set_voltage(right_voltage).ok();
+            _ = self.left_motor.set_voltage(left_voltage);
+            _ = self.right_motor.set_voltage(right_voltage);
 
             // Arm control using the R1 and R2 buttons on the controller.
             if c_state.button_l1.is_pressed() {
-                self.arm.set_voltage(12.0).ok();
+                _ = self.arm.set_voltage(12.0);
             } else if c_state.button_l2.is_pressed() {
-                self.arm.set_voltage(-12.0).ok();
+                _ = self.arm.set_voltage(-12.0);
             } else {
-                self.arm.brake(BrakeMode::Hold).ok();
+                _ = self.arm.brake(BrakeMode::Hold);
             }
 
             // Claw control using the L1 and L2 buttons on the controller.
             if c_state.button_l1.is_pressed() {
-                self.claw.set_voltage(12.0).ok();
+                _ = self.claw.set_voltage(12.0);
             } else if c_state.button_l2.is_pressed() && !limit_switch_pressed {
-                self.claw.set_voltage(-12.0).ok();
+                _ = self.claw.set_voltage(-12.0);
             } else {
-                self.claw.brake(BrakeMode::Hold).ok();
+                _ = self.claw.brake(BrakeMode::Hold);
             }
 
             // Sleep some time, since we're limited by how fast the controller updates.
