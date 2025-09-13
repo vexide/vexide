@@ -1,6 +1,9 @@
+#[cfg(not(vexide_upload_strategy = "monolith"))]
 use varint_decode::VarIntReader;
+#[cfg(not(vexide_upload_strategy = "monolith"))]
 use vexide_core::io::{Cursor, Read, Seek, SeekFrom};
 
+#[cfg(not(vexide_upload_strategy = "monolith"))]
 mod varint_decode;
 
 /// First four bytes of a patch file.
@@ -12,7 +15,9 @@ pub const PATCH_MAGIC: u32 = 0xB1DF;
 // in memory with the new version built at 0x07E00000 by the first patcher stage.
 //
 // In other words, this code is responsible for actually "applying" the patch.
+#[cfg(not(vexide_upload_strategy = "monolith"))]
 core::arch::global_asm!(include_str!("./overwriter_aeabi_memcpy.S"));
+#[cfg(not(vexide_upload_strategy = "monolith"))]
 core::arch::global_asm!(include_str!("./overwriter.S"));
 
 // Linkerscript Symbols
@@ -24,14 +29,6 @@ unsafe extern "C" {
     static mut __patcher_patch_start: u32;
     static mut __patcher_base_start: u32;
     static mut __patcher_new_start: u32;
-}
-
-/// Internal patcher state representing what the patcher is attempting to do.
-#[derive(Debug)]
-enum PatcherState {
-    Initial,
-    Add(usize),
-    Copy(usize),
 }
 
 /// Differential Upload Patcher
@@ -104,6 +101,7 @@ enum PatcherState {
 ///
 /// The caller must ensure that the patch loaded at 0x07A00000 has been built using the currently running
 /// binary as the basis for the patch.
+#[cfg(not(vexide_upload_strategy = "monolith"))]
 pub(crate) unsafe fn patch() {
     // The first four bytes after the patch magic have to match this version identifier for the
     // patch to be applied.
@@ -168,7 +166,16 @@ pub(crate) unsafe fn patch() {
 ///
 /// This is essentially a port of <https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs>
 // NOTE: LLVM should always inline this function since it's only called once.
+#[cfg(not(vexide_upload_strategy = "monolith"))]
 fn bipatch<B: Read + Seek, P: Read>(mut old: B, mut patch: P, mut new: &mut [u8]) {
+    /// Internal patcher state representing what the patcher is attempting to do.
+    #[derive(Debug)]
+    enum PatcherState {
+        Initial,
+        Add(usize),
+        Copy(usize),
+    }
+
     let mut buf = [0u8; 4096];
     let mut state = PatcherState::Initial;
 

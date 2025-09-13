@@ -69,6 +69,7 @@ use core::arch::naked_asm;
 pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 use patcher::PATCH_MAGIC;
 
+#[cfg(not(vexide_upload_strategy = "monolith"))]
 /// Load address of user programs in memory.
 const USER_MEMORY_START: u32 = 0x0380_0000;
 
@@ -176,6 +177,7 @@ pub unsafe fn startup() {
 
         // If this link address is 0x03800000, this implies we were uploaded using
         // differential uploads by cargo-v5 and may have a patch to apply.
+        #[cfg(not(vexide_upload_strategy = "monolith"))]
         if vex_sdk::vexSystemLinkAddrGet() == USER_MEMORY_START {
             patcher::patch();
         }

@@ -1,6 +1,6 @@
 /* This file contains vexide-specific memory layout options */
 
-__patcher_section_length = 2M;
+PROVIDE(__patcher_section_length = 2M);
 /* 6MiB total, 2MiB for each subsection. (start = 0x07a00000) */
 __linked_file_start = __linked_file_end - (__patcher_section_length * 3);
 
