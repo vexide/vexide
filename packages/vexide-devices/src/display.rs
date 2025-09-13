@@ -10,8 +10,8 @@ use core::{ffi::CStr, mem, ptr::addr_of_mut, time::Duration};
 use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDisplayBackgroundColor, vexDisplayCircleDraw, vexDisplayCircleFill, vexDisplayCopyRect,
-    vexDisplayErase, vexDisplayFontNamedSet, vexDisplayForegroundColor, vexDisplayLineDraw,
-    vexDisplayPixelSet, vexDisplayPrintf, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
+    vexDisplayFontNamedSet, vexDisplayForegroundColor, vexDisplayLineDraw, vexDisplayPixelSet,
+    vexDisplayPrintf, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
     vexDisplayScrollRect, vexDisplayString, vexDisplayStringHeightGet, vexDisplayStringWidthGet,
     vexDisplayTextSize, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
 };
@@ -755,10 +755,18 @@ impl Display {
 
     /// Wipe the entire display buffer, filling it with a specified color.
     pub fn erase(&mut self, color: impl Into<Rgb<u8>>) {
-        unsafe {
-            vexDisplayBackgroundColor(color.into().into_raw());
-            vexDisplayErase();
-        };
+        // We don't use `vexDisplayErase` here because it doesn't take a color
+        // and we want to preserve the API.
+        Rect::from_dimensions(
+            Point2 { x: 0, y: 0 },
+            // Technically max x/y position is one pixel less than this and the
+            // SDK that Rect::fill uses inclusive coordinates, but it doesn't
+            // matter that much and this way we don't have to do any
+            // subtraction (though it would probably be inlined anyway).
+            Display::HORIZONTAL_RESOLUTION as _,
+            Display::VERTICAL_RESOLUTION as _,
+        )
+        .fill(self, color);
     }
 
     /// Draw a buffer of pixels to a specified region of the display.
