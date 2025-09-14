@@ -3,6 +3,10 @@ name = "examples"
 edition = "2021"
 version = "0.0.1"
 
+[profile.release]
+opt-level = "z"
+lto = "fat"
+
 [package.metadata.v5]
 upload-strategy = "differential"
 slot = 1
@@ -27,7 +31,6 @@ vexide-devices = { version = "0.7.0", path = "packages/vexide-devices", default-
 vexide-startup = { version = "0.4.2", path = "packages/vexide-startup", default-features = false }
 vexide-macro = { version = "0.3.2", path = "packages/vexide-macro", default-features = false }
 vex-sdk = { git = "https://github.com/vexide/vex-sdk.git" }
-vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk.git" }
 
 [workspace.lints.rust]
 rust_2018_idioms = { level = "warn", priority = -1 }
