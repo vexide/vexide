@@ -203,9 +203,7 @@ impl<T: 'static> LocalKey<T> {
 
     fn offset(&'static self) -> usize {
         unsafe {
-            ptr::from_ref(self.inner_static)
-                .cast::<u8>()
-                .offset_from_unsigned(&raw const __vexide_tdata_start)
+            ptr::from_ref(self.inner_static).byte_offset_from_unsigned(&raw const __vexide_tdata_start)
         }
     }
 
@@ -226,12 +224,13 @@ impl<T: 'static> LocalKey<T> {
     where
         F: FnOnce(&T) -> R,
     {
-        let ptr = unsafe {
-            TLS_PTR
-                .load(Ordering::Relaxed)
-                .byte_add(self.offset())
-                .cast()
-        };
+        let tls_ptr = TLS_PTR.load(Ordering::Relaxed);
+        assert!(
+            !tls_ptr.is_null(),
+            "cannot access task-locals outside of a task"
+        );
+
+        let ptr = unsafe { tls_ptr.byte_add(self.offset()).cast() };
 
         f(unsafe { &*ptr })
     }
