@@ -20,7 +20,7 @@ pub(crate) fn rem_euclid(x: f64, rhs: f64) -> f64 {
 }
 
 #[cfg(not(feature = "std"))]
-pub use libm::{roundf, floorf, truncf};
+pub use libm::{floorf, roundf, truncf};
 
 #[cfg(feature = "std")]
 #[inline]
