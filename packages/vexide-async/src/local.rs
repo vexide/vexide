@@ -204,8 +204,7 @@ impl<T: 'static> LocalKey<T> {
     fn offset(&'static self) -> usize {
         unsafe {
             ptr::from_ref(self.inner_static)
-                .cast::<u8>()
-                .offset_from_unsigned(&raw const __vexide_tdata_start)
+                .byte_offset_from_unsigned(&raw const __vexide_tdata_start)
         }
     }
 

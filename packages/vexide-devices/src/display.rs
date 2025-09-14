@@ -300,8 +300,8 @@ const fn gcd(mut a: i32, mut b: i32) -> i32 {
 #[allow(clippy::cast_precision_loss)]
 fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
     // Separate the integral and fractional parts of the input.
-    let integral_part = libm::floorf(input);
-    let fractional_part = input - libm::truncf(input);
+    let integral_part = crate::math::floorf(input);
+    let fractional_part = input - crate::math::truncf(input);
 
     // If the fractional part is 0, return the integral part.
     if fractional_part == 0.0 {
@@ -311,12 +311,12 @@ fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
     let precision = precision as f32;
 
     let gcd = gcd(
-        libm::roundf(fractional_part * precision) as _,
+        crate::math::roundf(fractional_part * precision) as _,
         precision as _,
     );
 
     let denominator = precision as i32 / gcd;
-    let numerator = libm::roundf(fractional_part * precision) as i32 / gcd;
+    let numerator = crate::math::roundf(fractional_part * precision) as i32 / gcd;
 
     (
         // Add back the integral part to the numerator.
