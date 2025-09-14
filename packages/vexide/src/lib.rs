@@ -1,7 +1,7 @@
 //! # vexide
 //!
-//! Open-source Rust runtime for VEX V5 robots. vexide provides a runtime, async executor, hardware
-//! APIs, and more for the VEX V5 Brain!
+//! Open-source Rust runtime for VEX V5 robots. vexide provides a runtime, async executor,
+//! hardware APIs, and more for the VEX V5 Brain!
 //!
 //! ## Getting Started
 //!
@@ -13,11 +13,11 @@
 //!
 //! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
 //!
-//! ```rust
+//! ```
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
-//! async fn main() {
+//! async fn main(peripherals: Peripherals) {
 //!     println!("Hello, world!");
 //! }
 //!```

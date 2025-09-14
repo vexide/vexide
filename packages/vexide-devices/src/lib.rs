@@ -1,16 +1,17 @@
-//! Hardware abstractions and functionality for peripherals on the V5 Brain.
+//! VEX hardware abstractions and peripheral access.
 //!
 //! # Overview
 //!
-//! This crate provides APIs for interfacing with VEX hardware and peripherals.
+//! This crate provides APIs for interfacing with hardware and peripherals sold by VEX
+//! robotics.
 //!
-//! The V5 Brain features 21 RJ9 serial ports (known as "Smart Ports") for communicating
+//! The VEX V5 Brain features 21 RJ9 serial ports (known as "Smart Ports") for communicating
 //! with newer V5 devices, as well as six three-wire ports with analog-to-digital conversion
 //! capability for compatibility with legacy Cortex devices. The Brain also has a screen,
 //! battery, and usually a controller for reading user input.
 //!
 //! Hardware access begins at the [`Peripherals`](crate::peripherals::Peripherals) API, where
-//! singleton access to the brain's I/O and peripherals can be obtained:
+//! a singleton to the brain's available I/O and peripherals can be obtained:
 //!
 //! ```
 //! let peripherals = Peripherals::take().unwrap();
@@ -28,7 +29,7 @@
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
-//! async fn main(peripherals: Peripherals) {
+//! async fn main(_peripherals: Peripherals) {
 //!     println!("o.o what's this? {:?}", peripherals);
 //! }
 //! ```

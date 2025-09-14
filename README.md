@@ -1,28 +1,22 @@
 # vexide
 
-Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime, async executor, device API, and more for the VEX V5 Brain!
-
-vexide is the successor to [pros-rs](https://github.com/vexide/pros-rs) which is a set of unmaintained APIs using bindings over [PROS](https://github.com/purduesigbots/pros).
-
-> [!WARNING]
-> vexide is still considered experimental, but can be used today. Check out our [docs](https://vexide.dev/docs) on how to get started.
+Open-source Rust runtime for VEX robots. vexide provides a safe and efficient set of APIs and tools for programming VEX robots in Rust!
 
 ## Getting Started
 
-vexide is published on [crates.io](https://crates.io/crates/vexide) and can be used like a normal embedded Rust crate.
+vexide is published on [crates.io](https://crates.io/crates/vexide) and can be used like a normal Rust crate.
 
 If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment with [vexide-template](https://github.com/vexide/vexide-template). You can also use our [examples](./examples/) as a reference for your own projects.
 
 ## Project Structure
 
-The vexide runtime is a fairly standard rust monorepo split into 7 subcrates:
+The vexide runtime is a fairly standard rust monorepo split into 5 subcrates:
 
-- [`vexide-core`](https://crates.io/crates/vexide_core) provides lowlevel core functionality for programs, such as allocators, synchronization primitives, serial printing, I/O and timers.
-- [`vexide-devices`](https://crates.io/crates/vexide_devices) contains all device-related bindings for things like motors and sensors.
-- [`vexide-async`](https://crates.io/crates/vexide_async) implements our cooperative async runtime as well as several important async futures.
-- [`vexide-startup`](https://crates.io/crates/vexide_startup) contains bare-metal startup code required to get freestanding user programs running on the Brain.
-- [`vexide-panic`](https://crates.io/crates/vexide_panic) contains our [panic handler](https://doc.rust-lang.org/nomicon/panic-handler.html).
-- [`vexide-macro`](https://crates.io/crates/vexide_macro) contains the source code for the `#[vexide::main]` proc-macro.
+- [`vexide-core`](https://crates.io/crates/vexide_core) provides common low-level system APIs, such as competition control, synchronization primitives, and backtrace collection.
+- [`vexide-devices`](https://crates.io/crates/vexide_devices) provides APIs for all VEX peripherals and hardware, allowing you to control motors and sensors from Rust code.
+- [`vexide-async`](https://crates.io/crates/vexide_async) implements vexide's async executor and runtime, as well as a few common futures.
+- [`vexide-startup`](https://crates.io/crates/vexide_startup) contains bare-metal runtime initialization code for booting a freestanding vexide program on the V5 brain.
+- [`vexide-macro`](https://crates.io/crates/vexide_macro) implements the `#[vexide::main]` proc-macro.
 
 These subcrates are exported from a single [`vexide`](https://github.com/vexide/vexide/blob/main/packages/vexide/src/lib.rs) crate intended to be used as a complete package.
 
@@ -35,7 +29,7 @@ rustup override set nightly
 rustup component add rust-src
 ```
 
-This project is compiled like any other Rust project with one caveat - we have our own dedicated wrapper over `cargo` called `cargo-v5`, which passes some additional arguments to `cargo` to correctly build for the platform.
+This project is compiled like any other Rust project with one caveat - we have our own dedicated wrapper over `cargo` called `cargo-v5`, which wraps the normal `cargo build` command and allows for uploading to a VEX brain over USB.
 
 You can install that tool with the following command:
 
@@ -56,7 +50,7 @@ cargo v5 build --example basic --release
 ```
 
 > [!NOTE]
-> If you don't want to use `cargo-v5` to build your project, you can effectively do the same thing that it's doing by running `cargo build --target armv7a-vex-v5 -Zbuild-std=core,alloc,compiler_builtins`
+> Using `cargo-v5` is optional if you just want to test if your changes compile. In order to upload programs or examples, you will need to use `cargo-v5`.
 
 ## Testing Your Changes
 
