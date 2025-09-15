@@ -211,19 +211,17 @@ mod test {
         assert_eq!(
             output.to_string(),
             quote! {
-                #[no_mangle]
-                unsafe extern "C" fn _start() -> ! {
-                    ::vexide::startup::startup();
-                    ::vexide::startup::banner::print(::vexide::startup::banner::themes::THEME_DEFAULT);
+                fn main() -> () {
+                    unsafe {
+                        ::vexide::startup::startup();
+                    }
 
+                    ::vexide::startup::banner::print(::vexide::startup::banner::themes::THEME_DEFAULT);
                     #source
 
-                    let termination: () = ::vexide::runtime::block_on(
+                    ::vexide::runtime::block_on(
                         main(::vexide::devices::peripherals::Peripherals::take().unwrap())
-                    );
-
-                    ::vexide::program::Termination::report(termination);
-                    ::vexide::program::exit();
+                    )
                 }
             }
             .to_string()
