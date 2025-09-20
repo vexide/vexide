@@ -27,7 +27,7 @@ pub(crate) struct Executor {
     reactor: RefCell<Reactor>,
 }
 
-//SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
+// SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
 unsafe impl Send for Executor {}
 unsafe impl Sync for Executor {}
 
