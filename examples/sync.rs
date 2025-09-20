@@ -15,6 +15,31 @@ static LAZY: LazyLock<Box<u32>> = LazyLock::new(|| Box::new(42));
 
 #[vexide::main]
 pub async fn main(_p: Peripherals) {
+    // Mutexes allow sharing state between tasks by ensuring that only one task has access to the
+    // data at a point in time.
+    let state = Arc::new(Mutex::new(0));
+
+    // Spawn two tasks. Each will share access to `state` using a Mutex guard.
+    let t1 = spawn({
+        let state = state.clone();
+        async move {
+            *state.lock().await += 1;
+        }
+    });
+
+    let t2 = spawn({
+        let state = state.clone();
+        async move {
+            *state.lock().await += 2;
+        }
+    });
+
+    // Wait for both tasks to complete.
+    t1.await;
+    t2.await;
+
+    println!("state is {}", state.lock().await);
+
     // Barriers are a tool for making a number of tasks reach the exact same point in execution before continuing.
 
     // Create a barrier that will wait for 10 tasks to reach it.
