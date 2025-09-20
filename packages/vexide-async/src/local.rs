@@ -15,10 +15,11 @@ use std::{
     collections::btree_map::BTreeMap,
     mem, ptr,
     rc::Rc,
-    sync::atomic::{AtomicU32, Ordering},
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        LazyLock, Mutex,
+    },
 };
-
-use vexide_core::sync::{LazyLock, Mutex};
 
 /// A variable stored in task-local storage.
 ///
