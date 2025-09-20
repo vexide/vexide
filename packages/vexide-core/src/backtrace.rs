@@ -12,7 +12,7 @@
 //! however this may change in the future.
 //!
 //! Additionally, backtraces will be unsupported if vexide is compiled without
-//! the `unwind` feature.
+//! the `backtraces` feature.
 
 use alloc::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
@@ -32,7 +32,7 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 /// however this may change in the future.
 ///
 /// Additionally, backtraces will be unsupported if vexide is compiled without
-/// the `unwind` feature.
+/// the `backtraces` feature.
 ///
 /// # Example
 ///
@@ -68,7 +68,7 @@ impl Backtrace {
     /// # Platform Support
     ///
     /// Backtraces will be empty on non-vex targets (e.g. WebAssembly) or when
-    /// the `unwind` feature is disabled.
+    /// the `backtraces` feature is disabled.
     #[allow(clippy::inline_always)]
     #[inline(always)] // Inlining keeps this function from appearing in backtraces
     #[allow(clippy::missing_const_for_fn)]
@@ -78,7 +78,7 @@ impl Backtrace {
         return Self::try_capture().unwrap_or(Self { frames: Vec::new() });
 
         #[cfg(not(all(target_os = "vexos", feature = "backtraces")))]
-        return Self { frames: Vec::new() };
+        Self { frames: Vec::new() }
     }
 
     /// Captures a backtrace at the current point of execution,
@@ -91,29 +91,34 @@ impl Backtrace {
     /// # Errors
     ///
     /// This function errors when the program's unwind info is corrupted.
-    #[inline(never)] // Make sure there's always a frame to remove
-    #[cfg(all(target_os = "vexos", feature = "backtraces"))]
+    #[cfg_attr(all(target_os = "vexos", feature = "backtraces"), inline(never))] // Make sure there's always a frame to remove
     pub fn try_capture() -> Result<Self, UnwindError> {
-        let context = UnwindContext::new()?;
-        let mut cursor = UnwindCursor::new(&context)?;
+        #[cfg(all(target_os = "vexos", feature = "backtraces"))]
+        {
+            let context = UnwindContext::new()?;
+            let mut cursor = UnwindCursor::new(&context)?;
 
-        let mut frames = Vec::new();
+            let mut frames = Vec::new();
 
-        // Procedure based on mini_backtrace crate.
+            // Procedure based on mini_backtrace crate.
 
-        // Step once before taking the backtrace to skip the current frame.
-        while cursor.step()? {
-            let mut instruction_pointer = cursor.register(registers::UNW_REG_IP)?;
+            // Step once before taking the backtrace to skip the current frame.
+            while cursor.step()? {
+                let mut instruction_pointer = cursor.register(registers::UNW_REG_IP)?;
 
-            // Adjust IP to point inside the function — this improves symbolization quality.
-            if !cursor.is_signal_frame()? {
-                instruction_pointer -= 1;
+                // Adjust IP to point inside the function — this improves symbolization quality.
+                if !cursor.is_signal_frame()? {
+                    instruction_pointer -= 1;
+                }
+
+                frames.push(instruction_pointer as *const c_void);
             }
 
-            frames.push(instruction_pointer as *const c_void);
+            Ok(Self { frames })
         }
 
-        Ok(Self { frames })
+        #[cfg(not(all(target_os = "vexos", feature = "backtraces")))]
+        Ok(Self { frames: Vec::new() })
     }
 }
 
