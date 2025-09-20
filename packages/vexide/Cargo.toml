@@ -56,7 +56,6 @@ allocator = ["startup", "vexide-startup/allocator"]
 panic-hook = ["startup", "vexide-startup/panic-hook"]
 vex-sdk-jumptable = ["startup", "vexide-startup/vex-sdk-jumptable"]
 vex-sdk-build = ["startup", "vexide-startup/vex-sdk-build"]
-vex-sdk-mock = ["startup", "vexide-startup/vex-sdk-mock"]
 
 devices = ["dep:vexide-devices"]
 embedded-io = ["devices", "vexide-devices/embedded-io"]

@@ -57,11 +57,10 @@ pub mod banner;
 
 #[cfg(feature = "panic-hook")]
 mod panic_hook;
+
+#[cfg(target_os = "vexos")]
 mod patcher;
 
-use core::arch::naked_asm;
-
-use patcher::PATCH_MAGIC;
 // Bring `vex_sdk_jumptable` into scope to allow its symbols be resolved by the linker.
 #[cfg(feature = "vex-sdk-jumptable")]
 use vex_sdk_jumptable as _;
@@ -71,6 +70,7 @@ use vex_sdk_jumptable as _;
 // All of these external symbols are defined by either Rust's armv7a-vex-v5 linkerscript, our ours
 // (see link/vexide.ld). These symbols don't have real types or values, but a pointer to them points
 // to the address of their location defined in the linkerscript.
+#[cfg(target_os = "vexos")]
 unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
@@ -96,8 +96,9 @@ unsafe extern "C" {
 #[unsafe(link_section = ".vexide_boot")]
 #[unsafe(no_mangle)]
 #[unsafe(naked)]
+#[cfg(target_os = "vexos")]
 unsafe extern "C" fn _vexide_boot() {
-    naked_asm!(
+    core::arch::naked_asm!(
         // Load the stack pointer to point to our stack section.
         //
         // This technically isn't required, as VEXos already sets up a stack for CPU1,
@@ -132,7 +133,7 @@ unsafe extern "C" fn _vexide_boot() {
         "bleq __overwriter_aeabi_memcpy",
         // Jump to the Rust entrypoint.
         "b _start",
-        patch_magic = const PATCH_MAGIC,
+        patch_magic = const patcher::PATCH_MAGIC,
     )
 }
 
@@ -174,15 +175,15 @@ unsafe extern "C" fn _vexide_boot() {
 /// Must be called *once and only once* at the start of program execution.
 #[inline]
 pub unsafe fn startup() {
+    #[cfg(target_os = "vexos")]
     unsafe {
         // Initialize the heap allocator in our heap region defined in the linkerscript
-
         #[cfg(feature = "allocator")]
         crate::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
 
         // If this link address is 0x03800000, this implies we were uploaded using
         // differential uploads by cargo-v5 and may have a patch to apply.
-        if vexide_core::program::linked_file().addr() == (&raw mut __user_ram_start).addr() {
+        if vexide_core::program::linked_file().addr() == (&raw const __user_ram_start).addr() {
             patcher::patch();
         }
 
