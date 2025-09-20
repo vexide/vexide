@@ -100,3 +100,21 @@ impl CodeSignature {
         ProgramOptions::from_bits_retain(self.0.options)
     }
 }
+
+/// Returns the code signature of the currently running program.
+#[must_use]
+#[inline]
+pub fn code_signature() -> CodeSignature {
+    unsafe extern "C" {
+        // Defined in https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/armv7a_vex_v5_linker_script.ld.
+        static __user_ram_start: CodeSignature;
+    }
+
+    unsafe { core::ptr::read(&raw const __user_ram_start) }
+}
+
+/// Returns a pointer to the currently linked file, or `None` if no program is linked.
+#[inline]
+pub fn linked_file() -> Option<NonNull<()>> {
+    NonNull::new(unsafe { vexSystemLinkAddrGet() as *mut () })
+}
