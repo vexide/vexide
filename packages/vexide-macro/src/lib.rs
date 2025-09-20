@@ -47,17 +47,17 @@ fn make_code_sig(opts: MacroOpts) -> proc_macro2::TokenStream {
     let sig = if let Some(code_sig) = opts.code_sig {
         quote! { #code_sig }
     } else {
-        quote! {  ::vexide::startup::CodeSignature::new(
-            ::vexide::startup::ProgramType::User,
-            ::vexide::startup::ProgramOwner::Partner,
-            ::vexide::startup::ProgramFlags::empty(),
+        quote! {  ::vexide::program::CodeSignature::new(
+            ::vexide::program::ProgramType::User,
+            ::vexide::program::ProgramOwner::Partner,
+            ::vexide::program::ProgramOptions::empty(),
         ) }
     };
 
     quote! {
         #[link_section = ".code_signature"]
         #[used] // This is needed to prevent the linker from removing this object in release builds
-        static CODE_SIGNATURE: ::vexide::startup::CodeSignature = #sig;
+        static CODE_SIGNATURE: ::vexide::program::CodeSignature = #sig;
     }
 }
 
@@ -160,12 +160,12 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 ///
 /// ```ignore
 /// use vexide::prelude::*;
-/// use vexide::startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+/// use vexide::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
 ///
 /// static CODE_SIG: CodeSignature = CodeSignature::new(
 ///     ProgramType::User,
 ///     ProgramOwner::Partner,
-///     ProgramFlags::empty(),
+///     ProgramOptions::empty(),
 /// );
 ///
 /// #[vexide::main(code_sig = CODE_SIG)]

@@ -25,7 +25,7 @@
 //! runtime or the `#[vexide::main]` macro.
 //!
 //! ```
-//! use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+//! use vexide_core::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
 //!
 //! // SAFETY: This symbol is unique and is being used to start the runtime.
 //! fn main() {
@@ -43,7 +43,7 @@
 //! static CODE_SIG: CodeSignature = CodeSignature::new(
 //!     ProgramType::User,
 //!     ProgramOwner::Partner,
-//!     ProgramFlags::empty(),
+//!     ProgramOptions::empty(),
 //! );
 //! ```
 
@@ -55,21 +55,16 @@ compile_error!("features `vex-sdk-jumptable` and `vex-sdk-build` are mutually ex
 pub mod allocator;
 pub mod banner;
 
-mod code_signature;
 #[cfg(feature = "panic-hook")]
 mod panic_hook;
 mod patcher;
 
 use core::arch::naked_asm;
-
-pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 use patcher::PATCH_MAGIC;
+
 // Bring `vex_sdk_jumptable` into scope to allow its symbols be resolved by the linker.
 #[cfg(feature = "vex-sdk-jumptable")]
 use vex_sdk_jumptable as _;
-
-/// Load address of user programs in memory.
-const USER_MEMORY_START: u32 = 0x0380_0000;
 
 // Linkerscript Symbols
 //
@@ -79,6 +74,8 @@ const USER_MEMORY_START: u32 = 0x0380_0000;
 unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
+
+    static mut __user_ram_start: u8;
 
     static mut __linked_file_start: u8;
     static mut __linked_file_end: u8;
@@ -148,14 +145,29 @@ unsafe extern "C" fn _vexide_boot() {
 ///
 /// This function does the following initialization:
 ///
-/// - Sets up the global heap allocator if the `allocator` feature is specified.
-/// - Applies [differential upload patches] to the program if a patch file exists in memory.
+/// - Sets up the global heap allocator by [claiming](crate::allocator::claim) the default
+///   heap region if the `allocator` feature is specified.
+/// - Applies [differential upload patches] to the program if a patch file exists in memory
+///   and resets the program if necessary.
 /// - Registers a custom [panic hook] to allow panic messages to be drawn to the screen and
 ///   backtraces to be collected. This can be enabled/disabled using the `panic-hook` and
 ///   `panic-backtraces` features.
 ///
 /// [differential upload patches]: https://vexide.dev/docs/building-uploading/#uploading-strategies
 /// [panic hook]: https://doc.rust-lang.org/std/panic/fn.set_hook.html
+///
+/// # Examples
+///
+/// ```
+/// // Not using the `#[vexide::main]` macro here.
+/// fn main() {
+///     unsafe {
+///         vexide_startup::startup(); // Call this once at the start of main.
+///     }
+///
+///     println!("Hi.");
+/// }
+/// ```
 ///
 /// # Safety
 ///
@@ -170,16 +182,16 @@ pub unsafe fn startup() {
 
         // If this link address is 0x03800000, this implies we were uploaded using
         // differential uploads by cargo-v5 and may have a patch to apply.
-        if vex_sdk::vexSystemLinkAddrGet() == USER_MEMORY_START {
+        if vex_sdk::vexSystemLinkAddrGet() == (&raw mut __user_ram_start).addr() {
             patcher::patch();
         }
 
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
         crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
-
-        // Register custom panic hook if needed.
-        #[cfg(feature = "panic-hook")]
-        std::panic::set_hook(Box::new(panic_hook::hook));
     }
+
+    // Register custom panic hook if needed.
+    #[cfg(feature = "panic-hook")]
+    std::panic::set_hook(Box::new(panic_hook::hook));
 }

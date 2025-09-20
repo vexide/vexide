@@ -83,6 +83,7 @@ impl fmt::Display for Version {
 #[must_use]
 pub fn system_version() -> Version {
     let version_bytes = unsafe { vexSystemVersion() }.to_be_bytes();
+
     Version {
         major: version_bytes[0],
         minor: version_bytes[1],

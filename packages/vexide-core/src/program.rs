@@ -1,3 +1,8 @@
+//! User program state.
+
+use core::ptr::NonNull;
+
+use vex_sdk::vexSystemLinkAddrGet;
 use bitflags::bitflags;
 
 /// Identifies the type of binary to VEXos.
@@ -24,13 +29,13 @@ pub enum ProgramOwner {
 }
 
 bitflags! {
-    /// Program Flags
+    /// Program Startup Options
     ///
     /// These bitflags are part of the [`CodeSignature`] and determine some small
     /// aspects of program behavior when running under VEXos. This struct contains
     /// the flags with publicly documented behavior.
     #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
-    pub struct ProgramFlags: u32 {
+    pub struct ProgramOptions: u32 {
         /// Inverts the background color to pure white.
         const INVERT_DEFAULT_GRAPHICS = 1 << 0;
 
@@ -59,15 +64,39 @@ pub struct CodeSignature(vex_sdk::vcodesig, [u32; 4]);
 impl CodeSignature {
     /// Creates a new signature given a program type, owner, and flags.
     #[must_use]
-    pub const fn new(program_type: ProgramType, owner: ProgramOwner, flags: ProgramFlags) -> Self {
+    pub const fn new(
+        program_type: ProgramType,
+        owner: ProgramOwner,
+        options: ProgramOptions,
+    ) -> Self {
         Self(
             vex_sdk::vcodesig {
                 magic: vex_sdk::V5_SIG_MAGIC,
                 r#type: program_type as _,
                 owner: owner as _,
-                options: flags.bits(),
+                options: options.bits(),
             },
             [0; 4],
         )
+    }
+
+    pub const fn owner(&self) -> ProgramOwner {
+        match self.0.owner {
+            0 => ProgramOwner::System,
+            1 => ProgramOwner::Vex,
+            2 => ProgramOwner::Partner,
+            _ => unreachable!(),
+        }
+    }
+
+    pub const fn program_type(&self) -> ProgramType {
+        match self.0.r#type {
+            0 => ProgramType::User,
+            _ => unreachable!(),
+        }
+    }
+
+    pub const fn options(&self) -> ProgramOptions {
+        ProgramOptions::from_bits_retain(self.0.options)
     }
 }

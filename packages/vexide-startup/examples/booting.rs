@@ -13,10 +13,9 @@ use vexide_devices::{
     peripherals::Peripherals,
     smart::motor::{Direction, Gearset, Motor},
 };
-use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+use vexide_core::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
 
-/// The code signature encodes some metadata about this program
-/// at startup to VEXos.
+/// The code signature encodes some metadata about this program at startup to VEXos.
 ///
 /// `vexide-startup` allows you to customize your program's code
 /// signature by placing data into the `.code_signature` section of
@@ -27,7 +26,7 @@ use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
 static CODE_SIG: CodeSignature = CodeSignature::new(
     ProgramType::User,
     ProgramOwner::Partner,
-    ProgramFlags::empty(),
+    ProgramOptions::empty(),
 );
 
 fn main() {
