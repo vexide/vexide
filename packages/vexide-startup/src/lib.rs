@@ -47,9 +47,19 @@
 //! );
 //! ```
 
-// Cannot use two SDK providers at once.
-#[cfg(all(feature = "vex-sdk-build", feature = "vex-sdk-jumptable"))]
-compile_error!("features `vex-sdk-jumptable` and `vex-sdk-build` are mutually exclusive");
+// Ensure only one SDK implementation is used. If more than one is used, this will cause a linker error
+// anyways, but we want to fail as early as possible here with an actually comprehensible error message.
+#[allow(dead_code)]
+const _: () = {
+    if (cfg!(feature = "vex-sdk-jumptable") as usize)
+        + (cfg!(feature = "vex-sdk-download") as usize)
+        + (cfg!(feature = "vex-sdk-pros") as usize)
+        + (cfg!(feature = "vex-sdk-mock") as usize)
+        > 1
+    {
+        panic!("Only one `vex-sdk` implementation may be used at a time.");
+    }
+};
 
 #[cfg(feature = "allocator")]
 pub mod allocator;
@@ -61,9 +71,12 @@ mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
 
-// Bring `vex_sdk_jumptable` into scope to allow its symbols be resolved by the linker.
 #[cfg(feature = "vex-sdk-jumptable")]
 use vex_sdk_jumptable as _;
+#[cfg(feature = "vex-sdk-mock")]
+use vex_sdk_mock as _;
+#[cfg(feature = "vex-sdk-pros")]
+use vex_sdk_pros as _;
 
 // Linkerscript Symbols
 //

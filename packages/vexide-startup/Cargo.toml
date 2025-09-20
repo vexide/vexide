@@ -16,15 +16,18 @@ authors = [
 
 [dependencies]
 bitflags = "2.4.2"
-vex-sdk = { workspace = true }
 vexide-core = { workspace = true }
 vexide-devices = { workspace = true, optional = true }
-vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
 talc = { version = "4.3.1", optional = true }
 compile-time = "0.2.0"
 
+vex-sdk = { workspace = true }
+vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
+vex-sdk-pros = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
+vex-sdk-mock = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
+
 [build-dependencies]
-vex-sdk-build = { version = "0.0.1", optional = true }
+vex-sdk-download = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
 
 [lints]
 workspace = true
@@ -33,8 +36,11 @@ workspace = true
 allocator = ["dep:talc"]
 panic-hook = ["dep:vexide-devices"]
 panic-backtraces = ["panic-hook", "vexide-core/backtraces"]
+
 vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
-vex-sdk-build = ["dep:vex-sdk-build"]
+vex-sdk-download = ["dep:vex-sdk-download"]
+vex-sdk-pros = ["dep:vex-sdk-pros"]
+vex-sdk-mock = ["dep:vex-sdk-mock"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]

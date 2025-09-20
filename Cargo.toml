@@ -14,7 +14,7 @@ icon = "cool-x"
 compress = true
 
 [dev-dependencies]
-vexide = { path = "packages/vexide", features = ["full", "vex-sdk-jumptable"] }
+vexide = { path = "packages/vexide", features = ["full", "vex-sdk-pros"] }
 
 [workspace]
 members = ["packages/*"]
