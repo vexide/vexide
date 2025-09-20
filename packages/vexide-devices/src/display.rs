@@ -21,7 +21,7 @@ use crate::{
     rgb::{Rgb, RgbExt},
 };
 
-/// Represents the physical display on the V5 Brain.
+/// The physical display and touchscreen on a VEX Brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Display {
     writer_buffer: String,
@@ -135,7 +135,7 @@ pub struct Line {
 }
 
 impl Line {
-    /// Create a new line with a given start and end coordinate.
+    /// Creates a new line with the given start and endpoints.
     pub fn new(start: impl Into<Point2<i16>>, end: impl Into<Point2<i16>>) -> Self {
         Self {
             start: start.into(),
@@ -326,8 +326,9 @@ fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
 }
 
 impl FontSize {
-    /// Create a custom fractional font size.
-    /// If you want to create a font size from a floating-point size, use [`FontSize::from_float`] instead.
+    /// Creates a custom fractional font size.
+    ///
+    /// If you wish to create a font size from a floating-point size, use [`FontSize::from_float`] instead.
     #[must_use]
     pub const fn new(numerator: u32, denominator: u32) -> Self {
         Self {
@@ -336,9 +337,9 @@ impl FontSize {
         }
     }
 
-    /// Create a fractional font size from a floating-point size.
+    /// Creates a fractional font size from a floating-point size.
     ///
-    /// # Note
+    /// # Precision
     ///
     /// This function is lossy, but negligibly so.
     /// The highest the denominator can be is 10000.
@@ -565,15 +566,18 @@ impl Text {
 /// A touch event on the display.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct TouchEvent {
-    /// Touch state.
+    /// Touch state (pressed, released, held).
     pub state: TouchState,
+
     /// X coordinate of the touch.
     pub x: i16,
     /// Y coordinate of the touch.
     pub y: i16,
-    /// how many times the display has been pressed.
+
+    /// Number of times the display has been pressed.
     pub press_count: i32,
-    /// how many times the display has been released.
+
+    /// Number of times the display has been released.
     pub release_count: i32,
 }
 
@@ -691,6 +695,7 @@ impl Display {
     }
 
     /// Flushes the displays double buffer if it is enabled.
+    ///
     /// This is a no-op with the [`Immediate`](RenderMode::Immediate) rendering mode,
     /// but is necessary for anything to be displayed on the displayed when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
     pub fn render(&mut self) {
@@ -728,12 +733,21 @@ impl Display {
         }
     }
 
-    /// Draw a filled object to the display.
+    /// Draws a filled shape to the display with the specified color.
+    ///
+    /// Any type implementing the [`Fill`] trait (such as [`Rect`] or [`Circle`]) may be drawn using this method.
     pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
         shape.fill(self, color);
     }
 
-    /// Fill text with a specified color and background color to the display.
+    /// Draws an outlined shape to the display with the specified color.
+    ///
+    /// Any type implementing the [`Stroke`] trait (such as [`Rect`] or [`Circle`]) may be drawn using this method.
+    pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Rgb<u8>>) {
+        shape.stroke(self, color);
+    }
+
+    /// Draws a line of text with the specified color and background color to the display.
     ///
     /// # Example
     ///
@@ -750,12 +764,7 @@ impl Display {
         text.draw(self, color, bg_color);
     }
 
-    /// Draw an outlined object to the display.
-    pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Rgb<u8>>) {
-        shape.stroke(self, color);
-    }
-
-    /// Wipe the entire display buffer, filling it with a specified color.
+    /// Clears the entire display, filling it with the specified color.
     pub fn erase(&mut self, color: impl Into<Rgb<u8>>) {
         // We don't use `vexDisplayErase` here because it doesn't take a color
         // and we want to preserve the API.
@@ -771,7 +780,7 @@ impl Display {
         .fill(self, color);
     }
 
-    /// Draw a buffer of pixels to a specified region of the display.
+    /// Draws a buffer of pixels to a specified region of the display.
     ///
     /// This function copies the pixels in the specified buffer to the specified region of the display.
     ///
@@ -811,7 +820,9 @@ impl Display {
         }
     }
 
-    /// Returns the current touch status of the display.
+    /// Returns the last recorded state of the display's touchscreen.
+    ///
+    /// See [`TouchEvent`] for more information.
     #[must_use]
     pub fn touch_status(&self) -> TouchEvent {
         // `vexTouchDataGet` (probably) doesn't read from the given status pointer, so this is fine.
