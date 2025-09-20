@@ -6,7 +6,7 @@ use std::{
 
 use vexide::{
     prelude::*,
-    sync::{Barrier, Condvar, Mutex, RwLock},
+    sync::{Barrier, Mutex, RwLock},
 };
 
 // A lazily initialized static.
@@ -65,37 +65,6 @@ pub async fn main(_p: Peripherals) {
     let reader3 = lock.read().await;
     assert_eq!(*reader3, 1);
     println!("writing works");
-
-    // Condvars are a tool for waiting for a value in a Mutex to change.
-
-    // Create a a Mutex and a Condvar.
-    let pair = Arc::new((Mutex::new(false), Condvar::new()));
-
-    // Move a clone of the arc of the pair into a new task.
-    let pair2 = Arc::clone(&pair);
-    let task = spawn(async move {
-        let (lock, cvar) = &*pair2;
-        // Change the value in our Mutex.
-        let mut started = lock.lock().await;
-        *started = true;
-        // Notify the outside task that the value has changed.
-        cvar.notify_one();
-    });
-
-    // Wait for the value in the Mutex to change.
-    // Under normal circumstances, this wouldn't work because we are keeping the mutex locked forever in a loop.
-    // Condvars are special, however.
-    // When you wait on a condvar, it will unlock the mutex allowing other tasks to mutate the value inside.
-    // Once the Condvar is notified, it will wait to relock the mutex and return a gaurd.
-    let (lock, cvar) = &*pair;
-    let mut started = lock.lock().await;
-    while !*started {
-        // Update started with the new value of the mutex.
-        started = cvar.wait(started).await;
-    }
-    println!("condvar works");
-    // Cleanup the task.
-    task.await;
 
     // The value inside a LazyLock is initialized once get is called.
     // This is useful for initializing a value that is expensive to create.

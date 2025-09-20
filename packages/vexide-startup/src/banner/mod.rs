@@ -12,7 +12,7 @@ use vexide_core::{competition, os, time};
 
 pub mod themes;
 
-/// Prints the startup banner to stdout.
+/// Prints vexide's startup banner to stdout.
 ///
 /// This function is called by the `#[vexide::main]` macro if the startup banner is enabled.
 #[inline]
