@@ -65,7 +65,7 @@ pub mod time {
 
 #[doc(inline)]
 #[cfg(feature = "core")]
-pub use vexide_core::{backtrace, competition, os, sync};
+pub use vexide_core::{backtrace, competition, program, os, sync};
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
