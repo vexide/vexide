@@ -54,7 +54,6 @@ const _: () = {
     if (cfg!(feature = "vex-sdk-jumptable") as usize)
         + (cfg!(feature = "vex-sdk-download") as usize)
         + (cfg!(feature = "vex-sdk-pros") as usize)
-        + (cfg!(feature = "vex-sdk-mock") as usize)
         > 1
     {
         panic!("Only one `vex-sdk` implementation may be used at a time.");
@@ -71,11 +70,11 @@ mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
 
-#[cfg(feature = "vex-sdk-jumptable")]
-use vex_sdk_jumptable as _;
 #[cfg(feature = "vex-sdk-mock")]
 use vex_sdk_mock as _;
-#[cfg(feature = "vex-sdk-pros")]
+#[cfg(all(feature = "vex-sdk-jumptable", not(feature = "vex-sdk-mock")))]
+use vex_sdk_jumptable as _;
+#[cfg(all(feature = "vex-sdk-pros", not(feature = "vex-sdk-mock")))]
 use vex_sdk_pros as _;
 
 // Linkerscript Symbols
