@@ -1,7 +1,6 @@
 //! Asynchronous tasks.
 
-use alloc::rc::Rc;
-use core::future::Future;
+use std::{rc::Rc, future::Future};
 
 use crate::local::TaskLocalStorage;
 
