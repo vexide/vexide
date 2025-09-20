@@ -20,13 +20,7 @@ pub use task::spawn;
 
 pub mod sync {
     pub use async_lock::{
-        Mutex,
-        MutexGuard,
-        Barrier,
-        BarrierWaitResult,
-        OnceCell,
-        RwLock,
-        RwLockReadGuard,
+        Barrier, BarrierWaitResult, Mutex, MutexGuard, OnceCell, RwLock, RwLockReadGuard,
         RwLockWriteGuard,
     };
 }

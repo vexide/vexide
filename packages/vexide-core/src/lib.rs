@@ -24,5 +24,5 @@ extern crate alloc;
 pub mod backtrace;
 pub mod competition;
 pub mod os;
-pub mod time;
 pub mod program;
+pub mod time;

@@ -1,23 +1,26 @@
 //! Smart Motors
 //!
-//! This module provides abstractions for interacting with VEX V5 Smart Motors, supporting both
+//! This module provides abstractions for interacting with VEX Smart Motors, supporting both
 //! the 11W and 5.5W variants.
 //!
 //! # Overview
 //!
-//! The V5 Smart Motors come in two variants: [an 11W model](https://www.vexrobotics.com/276-4840.html) with interchangeable gear cartridges
-//! and [a 5.5W model](https://www.vexrobotics.com/276-4842.html) with a fixed gearing. The 11W motor supports three cartridge options: a red
-//! cartridge providing 100 RPM, a green cartridge for 200 RPM, and a blue cartridge delivering
-//! 600 RPM. The 5.5W motor comes with a non-interchangeable 200 RPM gear cartridge.
+//! The V5 Smart Motors come in two variants: [an 11W model](https://www.vexrobotics.com/276-4840.html),
+//! with interchangeable gear cartridges and [a 5.5W model](https://www.vexrobotics.com/276-4842.html),
+//! with a fixed gearing. The 11W motor supports three cartridge options, which will gear the motor down
+//! from its base RPM of 3600: a red cartridge providing 100 RPM output, a green cartridge for 200 RPM, and
+//! a blue cartridge for 600 RPM. The 5.5W motor comes with a non-interchangeable 200 RPM gear cartridge.
 //!
-//! Motor position and velocity is measured by an onboard integrated encoder.
-//!
-//! More in depth specs for the 11W motor can be found [here](https://kb.vex.com/hc/en-us/articles/360060929971-Understanding-V5-Smart-Motors).
+//! Smart Motors feature several integrated sensors, including an encoder for measuring the velocity
+//! and position of the motor, a temperature sensor for detecting overheats, and sensors for measuring
+//! output voltage, current, and efficiency.
 //!
 //! Communication between a Smart motor and the V5 Brain occur at two different intervals. While
 //! the motor communicates with the Brain every 5 milliseconds (and commands can be written to
 //! the motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively
 //! places the date *write* interval at 5mS and the data *read* interval at 10mS.
+//!
+//! More in-depth specs for the 11W motor can be found [here](https://kb.vex.com/hc/en-us/articles/360060929971-Understanding-V5-Smart-Motors).
 //!
 //! # Current Limitations
 //!
@@ -39,7 +42,7 @@
 //!
 //! # Motor Control
 //!
-//! Each motor contains a sophisticated control system built around a Cortex M0 microcontroller.
+//! Each motor contains a sophisticated control system built around a Cortex M0+ microcontroller.
 //! The microcontroller continuously monitors position, speed, direction, voltage, current, and
 //! temperature through integrated sensors.
 //!
@@ -249,6 +252,7 @@ impl Motor {
     pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
         Self::new_with_type(port, gearset, direction, MotorType::V5)
     }
+
     /// Creates a new 5.5W (EXP) Smart Motor.
     ///
     /// See [`Motor::new`] to create a 11W (V5) Smart Motor.
@@ -787,7 +791,16 @@ impl Motor {
         Ok(f64::from(unsafe { vexDeviceMotorVoltageGet(self.device) }) / 1000.0)
     }
 
-    /// Returns the current position of the motor.
+    /// Returns the angular position of the motor as measured by the IME (integrated motor encoder).
+    ///
+    /// This is returned as an instance of the [`Position`] struct, which may be converted to degrees,
+    /// radians, revolutions, etc...
+    ///
+    /// # Gearing affects position!
+    ///
+    /// Position measurements are dependent on the Motor's [`Gearset`], and may be reported incorrectly if the
+    /// motor is configured with the incorrect gearset variant. Make sure that the motor is configured with the
+    /// same gearset as its physical cartridge color.
     ///
     /// # Errors
     ///
@@ -820,6 +833,14 @@ impl Motor {
     /// Returns the most recently recorded raw encoder tick data from the motor's IME
     /// along with a timestamp of the internal clock of the motor indicating when the
     /// data was recorded.
+    ///
+    /// The motor's integrated encoder has a TPR of 4096. Gearset is not taken into
+    /// consideration when dealing with the raw value, meaning this measurement will be
+    /// taken relative to the motor's internal position *before* being geared down from
+    /// 3600RPM.
+    ///
+    /// Methods such as [`Motor::reset_position`] and [`Motor::set_position`] do not
+    /// change the value of this raw measurement.
     ///
     /// # Errors
     ///
@@ -1040,6 +1061,8 @@ impl Motor {
     }
 
     /// Returns the current limit for the motor in amps.
+    ///
+    /// This limit can be configured with the [`Motor::set_current_limit`] method.
     ///
     /// # Errors
     ///

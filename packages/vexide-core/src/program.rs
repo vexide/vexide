@@ -2,8 +2,8 @@
 
 use core::ptr::NonNull;
 
-use vex_sdk::vexSystemLinkAddrGet;
 use bitflags::bitflags;
+use vex_sdk::vexSystemLinkAddrGet;
 
 /// Identifies the type of binary to VEXos.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

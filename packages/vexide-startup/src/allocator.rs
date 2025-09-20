@@ -11,6 +11,7 @@
 
 use talc::{locking::AssumeUnlockable, ErrOnOom, Span, Talc, Talck};
 
+#[cfg(target_os = "vexos")]
 #[global_allocator]
 static ALLOCATOR: Talck<AssumeUnlockable, ErrOnOom> = Talc::new(ErrOnOom).lock();
 
@@ -30,6 +31,7 @@ static ALLOCATOR: Talck<AssumeUnlockable, ErrOnOom> = Talc::new(ErrOnOom).lock()
 /// Panics if the `__heap_start` or `__heap_end` symbols set in the linker script are null.
 pub unsafe fn claim(start: *mut u8, end: *mut u8) {
     //SAFETY: User must ensure that this function is only called once.
+    #[cfg(target_os = "vexos")]
     unsafe {
         ALLOCATOR.lock().claim(Span::new(start, end)).unwrap();
     }
