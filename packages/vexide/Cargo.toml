@@ -36,7 +36,6 @@ default = [
     "backtraces",
     "allocator",
     "panic-hook",
-    "vex-sdk-jumptable",
 ]
 
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
