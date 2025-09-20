@@ -18,6 +18,7 @@ use core::future::Future;
 use executor::EXECUTOR;
 pub use task::spawn;
 
+#[cfg(feature = "sync")]
 pub mod sync {
     pub use async_lock::{
         Barrier, BarrierWaitResult, Mutex, MutexGuard, OnceCell, RwLock, RwLockReadGuard,
