@@ -191,11 +191,46 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
+/// Wraps a Rust unit test in vexide's async runtime.
+///
+/// This macro should be accompanied with an SDK provider capable of running
+/// vexide programs on a host system for unit tests, such as `vex-sdk-mock`.
+#[proc_macro_attribute]
+pub fn test(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+
+    // Ensure it's async
+    if input.sig.asyncness.is_none() {
+        return syn::Error::new_spanned(
+            input.sig.fn_token,
+            "#[vexide::test] requires an async fn",
+        )
+        .to_compile_error()
+        .into();
+    }
+
+    let vis = &input.vis;
+    let ident = &input.sig.ident;
+    let inputs = &input.sig.inputs;
+    let block = &input.block;
+
+    quote! {
+        #[::core::prelude::v1::test]
+        #vis fn #ident() {
+            async fn #ident(#inputs) #block
+
+            ::vexide::runtime::block_on(
+                #ident(unsafe { ::vexide::devices::peripherals::Peripherals::steal() })
+            )
+        }
+    }.into()
+}
+
 #[cfg(test)]
 mod test {
     use syn::Ident;
 
-    use super::*;
+    use super::{make_code_sig, make_entrypoint};
 
     #[test]
     fn wraps_main_fn() {

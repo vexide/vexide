@@ -22,11 +22,13 @@ talc = { version = "4.3.1", optional = true }
 compile-time = "0.2.0"
 
 vex-sdk = { workspace = true }
-vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
-vex-sdk-pros = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
 vex-sdk-mock = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
 
-[build-dependencies]
+[target.'cfg(target_os = "vexos")'.dependencies]
+vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
+vex-sdk-pros = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
+
+[target.'cfg(target_os = "vexos")'.build-dependencies]
 vex-sdk-download = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
 
 [lints]

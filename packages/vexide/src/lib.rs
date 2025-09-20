@@ -74,7 +74,7 @@ pub use vexide_core::{backtrace, competition, os, program};
 pub use vexide_devices as devices;
 #[doc(inline)]
 #[cfg(feature = "macro")]
-pub use vexide_macro::main;
+pub use vexide_macro::{main, test};
 #[doc(inline)]
 #[cfg(feature = "startup")]
 pub use vexide_startup as startup;

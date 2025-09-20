@@ -47,35 +47,15 @@
 //! );
 //! ```
 
-// Ensure only one SDK implementation is used. If more than one is used, this will cause a linker error
-// anyways, but we want to fail as early as possible here with an actually comprehensible error message.
-#[allow(dead_code)]
-const _: () = {
-    if (cfg!(feature = "vex-sdk-jumptable") as usize)
-        + (cfg!(feature = "vex-sdk-download") as usize)
-        + (cfg!(feature = "vex-sdk-pros") as usize)
-        > 1
-    {
-        panic!("Only one `vex-sdk` implementation may be used at a time.");
-    }
-};
-
 #[cfg(feature = "allocator")]
 pub mod allocator;
 pub mod banner;
 
 #[cfg(feature = "panic-hook")]
 mod panic_hook;
-
 #[cfg(target_os = "vexos")]
 mod patcher;
-
-#[cfg(feature = "vex-sdk-mock")]
-use vex_sdk_mock as _;
-#[cfg(all(feature = "vex-sdk-jumptable", not(feature = "vex-sdk-mock")))]
-use vex_sdk_jumptable as _;
-#[cfg(all(feature = "vex-sdk-pros", not(feature = "vex-sdk-mock")))]
-use vex_sdk_pros as _;
+mod sdk;
 
 // Linkerscript Symbols
 //
