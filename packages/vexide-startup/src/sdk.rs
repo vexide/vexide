@@ -2,7 +2,7 @@
 //! resolve the symbols.
 
 // vex-sdk-mock takes priority over other SDKs to satisfy the resolver.
-#[all(not(target_os = "vexos"), feature = "vex-sdk-mock")]
+#[cfg(all(not(target_os = "vexos"), feature = "vex-sdk-mock"))]
 use vex_sdk_mock as _;
 
 // Ensure only one SDK implementation is used. If more than one is used,
@@ -24,17 +24,14 @@ const _: () = {
 
 // If an unsupported SDK is specified on a non-VEXos target and we aren't
 // using vex-sdk-mock, throw a compiler error.
-#[cfg(any(
-    all(
-        any(
-            feature = "vex-sdk-jumptable",
-            feature = "vex-sdk-download",
-            feature = "vex-sdk-pros"
-        ),
-        not(target_os = "vexos"),
-        not(feature = "vex-sdk-mock")
+#[cfg(all(
+    any(
+        feature = "vex-sdk-jumptable",
+        feature = "vex-sdk-download",
+        feature = "vex-sdk-pros"
     ),
-    all(target_os = "vexos", feature = "vex-sdk-mock")
+    not(target_os = "vexos"),
+    not(feature = "vex-sdk-mock")
 ))]
 compile_error!("The specified `vex-sdk` backend is unsupported on this target.");
 
