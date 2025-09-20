@@ -12,12 +12,12 @@
 //! however this may change in the future.
 //!
 //! Additionally, backtraces will be unsupported if vexide is compiled without
-//! the `unwind` feature.
+//! the `backtraces` feature.
 
 use alloc::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
 
-#[cfg(all(target_vendor = "vex", feature = "backtraces"))]
+#[cfg(all(target_os = "vexos", feature = "backtraces"))]
 use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 
 /// A captured stack backtrace.
@@ -32,7 +32,7 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 /// however this may change in the future.
 ///
 /// Additionally, backtraces will be unsupported if vexide is compiled without
-/// the `unwind` feature.
+/// the `backtraces` feature.
 ///
 /// # Example
 ///
@@ -68,16 +68,16 @@ impl Backtrace {
     /// # Platform Support
     ///
     /// Backtraces will be empty on non-vex targets (e.g. WebAssembly) or when
-    /// the `unwind` feature is disabled.
+    /// the `backtraces` feature is disabled.
     #[allow(clippy::inline_always)]
     #[inline(always)] // Inlining keeps this function from appearing in backtraces
     #[allow(clippy::missing_const_for_fn)]
     #[must_use]
     pub fn capture() -> Self {
-        #[cfg(all(target_vendor = "vex", feature = "backtraces"))]
+        #[cfg(all(target_os = "vexos", feature = "backtraces"))]
         return Self::try_capture().unwrap_or(Self { frames: Vec::new() });
 
-        #[cfg(not(all(target_vendor = "vex", feature = "backtraces")))]
+        #[cfg(not(all(target_os = "vexos", feature = "backtraces")))]
         return Self { frames: Vec::new() };
     }
 
@@ -92,7 +92,7 @@ impl Backtrace {
     ///
     /// This function errors when the program's unwind info is corrupted.
     #[inline(never)] // Make sure there's always a frame to remove
-    #[cfg(all(target_vendor = "vex", feature = "backtraces"))]
+    #[cfg(all(target_os = "vexos", feature = "backtraces"))]
     pub fn try_capture() -> Result<Self, UnwindError> {
         let context = UnwindContext::new()?;
         let mut cursor = UnwindCursor::new(&context)?;

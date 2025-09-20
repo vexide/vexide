@@ -36,9 +36,6 @@
 //! program's entrypoint function:
 //!
 //! ```
-//! #![no_std]
-//! #![no_main]
-//!
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
@@ -50,9 +47,6 @@
 //! You can then move ports or other peripherals out of this struct to create your devices:
 //!
 //! ```
-//! #![no_std]
-//! #![no_main]
-//!
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]

@@ -1,9 +1,12 @@
-use alloc::{collections::VecDeque, sync::Arc};
-use core::{
+use std::{
     cell::RefCell,
+    collections::VecDeque,
     future::Future,
     pin::Pin,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
     task::{Context, Poll},
 };
 
@@ -24,7 +27,7 @@ pub(crate) struct Executor {
     reactor: RefCell<Reactor>,
 }
 
-//SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
+// SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
 unsafe impl Send for Executor {}
 unsafe impl Sync for Executor {}
 

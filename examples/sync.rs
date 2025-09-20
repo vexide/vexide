@@ -1,14 +1,13 @@
-#![no_std]
-#![no_main]
-
-use alloc::{boxed::Box, sync::Arc, vec::Vec};
+use std::{
+    boxed::Box,
+    sync::{Arc, LazyLock},
+    vec::Vec,
+};
 
 use vexide::{
     prelude::*,
-    sync::{Barrier, Condvar, LazyLock, Mutex, RwLock},
+    sync::{Barrier, Mutex, RwLock},
 };
-
-extern crate alloc;
 
 // A lazily initialized static.
 // Lazy locks don't need to be used on statics, but they can be.
@@ -16,6 +15,31 @@ static LAZY: LazyLock<Box<u32>> = LazyLock::new(|| Box::new(42));
 
 #[vexide::main]
 pub async fn main(_p: Peripherals) {
+    // Mutexes allow sharing state between tasks by ensuring that only one task has access to the
+    // data at a point in time.
+    let state = Arc::new(Mutex::new(0));
+
+    // Spawn two tasks. Each will share access to `state` using a Mutex guard.
+    let t1 = spawn({
+        let state = state.clone();
+        async move {
+            *state.lock().await += 1;
+        }
+    });
+
+    let t2 = spawn({
+        let state = state.clone();
+        async move {
+            *state.lock().await += 2;
+        }
+    });
+
+    // Wait for both tasks to complete.
+    t1.await;
+    t2.await;
+
+    println!("state is {}", state.lock().await);
+
     // Barriers are a tool for making a number of tasks reach the exact same point in execution before continuing.
 
     // Create a barrier that will wait for 10 tasks to reach it.
@@ -66,37 +90,6 @@ pub async fn main(_p: Peripherals) {
     let reader3 = lock.read().await;
     assert_eq!(*reader3, 1);
     println!("writing works");
-
-    // Condvars are a tool for waiting for a value in a Mutex to change.
-
-    // Create a a Mutex and a Condvar.
-    let pair = Arc::new((Mutex::new(false), Condvar::new()));
-
-    // Move a clone of the arc of the pair into a new task.
-    let pair2 = Arc::clone(&pair);
-    let task = spawn(async move {
-        let (lock, cvar) = &*pair2;
-        // Change the value in our Mutex.
-        let mut started = lock.lock().await;
-        *started = true;
-        // Notify the outside task that the value has changed.
-        cvar.notify_one();
-    });
-
-    // Wait for the value in the Mutex to change.
-    // Under normal circumstances, this wouldn't work because we are keeping the mutex locked forever in a loop.
-    // Condvars are special, however.
-    // When you wait on a condvar, it will unlock the mutex allowing other tasks to mutate the value inside.
-    // Once the Condvar is notified, it will wait to relock the mutex and return a gaurd.
-    let (lock, cvar) = &*pair;
-    let mut started = lock.lock().await;
-    while !*started {
-        // Update started with the new value of the mutex.
-        started = cvar.wait(started).await;
-    }
-    println!("condvar works");
-    // Cleanup the task.
-    task.await;
 
     // The value inside a LazyLock is initialized once get is called.
     // This is useful for initializing a value that is expensive to create.

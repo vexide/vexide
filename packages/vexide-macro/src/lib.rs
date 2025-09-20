@@ -47,17 +47,17 @@ fn make_code_sig(opts: MacroOpts) -> proc_macro2::TokenStream {
     let sig = if let Some(code_sig) = opts.code_sig {
         quote! { #code_sig }
     } else {
-        quote! {  ::vexide::startup::CodeSignature::new(
-            ::vexide::startup::ProgramType::User,
-            ::vexide::startup::ProgramOwner::Partner,
-            ::vexide::startup::ProgramFlags::empty(),
+        quote! {  ::vexide::program::CodeSignature::new(
+            ::vexide::program::ProgramType::User,
+            ::vexide::program::ProgramOwner::Partner,
+            ::vexide::program::ProgramOptions::empty(),
         ) }
     };
 
     quote! {
         #[link_section = ".code_signature"]
         #[used] // This is needed to prevent the linker from removing this object in release builds
-        static CODE_SIGNATURE: ::vexide::startup::CodeSignature = #sig;
+        static CODE_SIGNATURE: ::vexide::program::CodeSignature = #sig;
     }
 }
 
@@ -87,17 +87,17 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
     };
 
     quote! {
-        #[no_mangle]
-        unsafe extern "C" fn _start() -> ! {
-            ::vexide::startup::startup();
-            #banner_print
+        fn main() -> #ret_type {
+            unsafe {
+                ::vexide::startup::startup();
+            }
 
+            #banner_print
             #inner
-            let termination: #ret_type = ::vexide::runtime::block_on(
+
+            ::vexide::runtime::block_on(
                 #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
-            );
-            ::vexide::program::Termination::report(termination);
-            ::vexide::program::exit();
+            )
         }
     }
 }
@@ -124,10 +124,9 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// for a vexide program. The function must take a single argument of type `Peripherals`.
 ///
 /// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
-/// # use core::fmt::Write;
+/// use vexide::prelude::*;
+/// use std::fmt::Write;
+///
 /// #[vexide::main]
 /// async fn main(mut peripherals: Peripherals) {
 ///     write!(peripherals.display, "Hello, vexide!").unwrap();
@@ -139,9 +138,8 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// This includes disabling the banner or using a custom banner theme:
 ///
 /// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
+/// use vexide::prelude::*;
+///
 /// #[vexide::main(banner(enabled = false))]
 /// async fn main(_p: Peripherals) {
 ///    println!("This is the only serial output from this program!")
@@ -149,10 +147,9 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// ```
 ///
 /// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
+/// use vexide::prelude::*;
 /// use vexide::startup::banner::themes::THEME_SYNTHWAVE;
+///
 /// #[vexide::main(banner(theme = THEME_SYNTHWAVE))]
 /// async fn main(_p: Peripherals) {
 ///    println!("This program has a synthwave themed banner!")
@@ -162,15 +159,15 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// A custom code signature may be used to further configure the behavior of the program.
 ///
 /// ```ignore
-/// # #![no_std]
-/// # #![no_main]
-/// # use vexide::prelude::*;
-/// # use vexide::startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+/// use vexide::prelude::*;
+/// use vexide::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
+///
 /// static CODE_SIG: CodeSignature = CodeSignature::new(
 ///     ProgramType::User,
 ///     ProgramOwner::Partner,
-///     ProgramFlags::empty(),
+///     ProgramOptions::empty(),
 /// );
+///
 /// #[vexide::main(code_sig = CODE_SIG)]
 /// async fn main(_p: Peripherals) {
 ///    println!("Hello world!")
@@ -187,9 +184,9 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     quote! {
         const _: () = {
             #code_signature
-
-            #entrypoint
         };
+
+        #entrypoint
     }
     .into()
 }
@@ -214,19 +211,17 @@ mod test {
         assert_eq!(
             output.to_string(),
             quote! {
-                #[no_mangle]
-                unsafe extern "C" fn _start() -> ! {
-                    ::vexide::startup::startup();
-                    ::vexide::startup::banner::print(::vexide::startup::banner::themes::THEME_DEFAULT);
+                fn main() -> () {
+                    unsafe {
+                        ::vexide::startup::startup();
+                    }
 
+                    ::vexide::startup::banner::print(::vexide::startup::banner::themes::THEME_DEFAULT);
                     #source
 
-                    let termination: () = ::vexide::runtime::block_on(
+                    ::vexide::runtime::block_on(
                         main(::vexide::devices::peripherals::Peripherals::take().unwrap())
-                    );
-
-                    ::vexide::program::Termination::report(termination);
-                    ::vexide::program::exit();
+                    )
                 }
             }
             .to_string()

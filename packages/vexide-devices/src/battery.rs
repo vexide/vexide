@@ -1,6 +1,7 @@
 //! Robot Battery
 //!
-//! Utilities for getting information about the robot's battery.
+//! This module provides APIs for reading information about the robot's
+//! battery and state of charge.
 
 use vex_sdk::{
     vexBatteryCapacityGet, vexBatteryCurrentGet, vexBatteryTemperatureGet, vexBatteryVoltageGet,

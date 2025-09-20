@@ -35,8 +35,9 @@ const fn tls_layout() -> Layout {
     const MAX_ALIGNMENT: usize = 16;
 
     let Ok(layout) = Layout::from_size_align(
-        unsafe { (&raw const __vexide_tdata_end).offset_from(&raw const __vexide_tdata_start) }
-            as usize,
+        unsafe {
+            (&raw const __vexide_tdata_end).offset_from_unsigned(&raw const __vexide_tdata_start)
+        },
         MAX_ALIGNMENT,
     ) else {
         // Creating the layout can only fail if the size of the TLS section is out of range of isize.
@@ -58,7 +59,7 @@ impl TaskLocalStorage {
         if tls_layout.size() == 0 {
             Self { mem: null_mut() }
         } else {
-            let mem = unsafe { alloc::alloc::alloc(tls_layout) };
+            let mem = unsafe { std::alloc::alloc(tls_layout) };
 
             unsafe {
                 ptr::copy_nonoverlapping(&raw const __vexide_tdata_start, mem, tls_layout.size());
@@ -81,7 +82,7 @@ impl Drop for TaskLocalStorage {
         }
 
         unsafe {
-            alloc::alloc::dealloc(self.mem.cast(), tls_layout());
+            std::alloc::dealloc(self.mem.cast(), tls_layout());
         }
     }
 }
@@ -202,8 +203,8 @@ impl<T: 'static> LocalKey<T> {
 
     fn offset(&'static self) -> usize {
         unsafe {
-            ptr::from_ref(self.inner_static).byte_offset_from(&raw const __vexide_tdata_start)
-                as usize
+            ptr::from_ref(self.inner_static)
+                .byte_offset_from_unsigned(&raw const __vexide_tdata_start)
         }
     }
 

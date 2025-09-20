@@ -20,43 +20,38 @@ rust-version = "1.75.0"
 
 [dependencies]
 vexide-async = { workspace = true, optional = true }
-vexide-devices = { workspace = true, optional = true }
-vexide-panic = { workspace = true, optional = true }
+vexide-devices = { workspace = true, optional = true, features = ["std"] }
 vexide-core = { workspace = true, optional = true }
 vexide-startup = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
 vex-sdk = { workspace = true }
 
 [features]
-default = [
-    "async",
-    "devices",
-    "panic",
-    "display_panics",
-    "core",
-    "startup",
-    "macro",
-    "backtraces",
-    "allocator",
-]
+default = ["async", "devices", "core"]
+full = ["default", "startup", "backtraces", "allocator", "panic-hook", "macro"]
 
 macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
 
+async = ["dep:vexide-async"]
+sync = ["async", "vexide-async/sync"]
+
 core = ["dep:vexide-core"]
 backtraces = ["core", "vexide-core/backtraces"]
-force_rust_libm = ["core", "vexide-core/force_rust_libm"]
-allocator = ["core", "vexide-core/allocator", "vexide-startup/allocator"]
 
 startup = ["dep:vexide-startup"]
-
-async = ["dep:vexide-async"]
+allocator = ["startup", "vexide-startup/allocator"]
+panic-hook = ["startup", "vexide-startup/panic-hook"]
+vex-sdk-jumptable = ["startup", "vexide-startup/vex-sdk-jumptable"]
+vex-sdk-build = ["startup", "vexide-startup/vex-sdk-build"]
 
 devices = ["dep:vexide-devices"]
-dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]
-smart_leds_trait = ["devices", "vexide-devices/smart_leds_trait"]
-
-panic = ["dep:vexide-panic"]
-display_panics = ["panic", "vexide-panic/display_panics"]
+embedded-io = ["devices", "vexide-devices/embedded-io"]
+smart-leds-trait = ["devices", "vexide-devices/smart-leds-trait"]
+dangerous-motor-tuning = ["devices", "vexide-devices/dangerous-motor-tuning"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
+targets = ["armv7a-vex-v5"]
+cargo-args = [
+    "-Zbuild-std=core,alloc,compiler_builtins",
+    "-Zbuild-std-features=compiler-builtins-mem",
+]

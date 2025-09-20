@@ -15,11 +15,13 @@ use core::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-/// Opaque type for storing unit-agnostic angular position (a signed displacement
-/// from some rotation representing `Position::ZERO`, or zero degrees).
+/// Stores an angular position/rotation.
 ///
-/// Used by devices such as [`Motor`], [`RotationSensor`], and [`AdiEncoder`]
-/// that are able to measure their own rotation.
+/// This type stores a unit-agnostic angular position (a signed displacement
+/// from some rotation representing `Position::ZERO`).
+///
+/// This type is used by devices such as [`Motor`], [`RotationSensor`], and
+/// [`AdiEncoder`] that measure their own rotation.
 ///
 /// # Non-modularity
 ///

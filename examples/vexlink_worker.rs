@@ -1,10 +1,4 @@
-#![no_main]
-#![no_std]
-
-extern crate alloc;
-
-use alloc::vec;
-use core::str;
+use std::{str, vec};
 
 use vexide::prelude::*;
 
@@ -28,6 +22,7 @@ async fn main(peripherals: Peripherals) {
             link.read(&mut read).unwrap();
             println!("[MANAGER] {}", str::from_utf8(&read).unwrap());
         }
+
         sleep(RadioLink::UPDATE_INTERVAL).await;
     }
 }

@@ -6,13 +6,13 @@
 //!
 //! For a full list of premade themes and more theme documentation, see the [`themes`] module.
 
-use themes::BannerTheme;
-use vex_sdk::vexBatteryCapacityGet;
-use vexide_core::{competition, os, println, time};
-
 pub mod themes;
 
-/// Prints the startup banner to stdout.
+use themes::BannerTheme;
+use vex_sdk::vexBatteryCapacityGet;
+use vexide_core::{competition, os, time};
+
+/// Prints vexide's startup banner to stdout.
 ///
 /// This function is called by the `#[vexide::main]` macro if the startup banner is enabled.
 #[inline]

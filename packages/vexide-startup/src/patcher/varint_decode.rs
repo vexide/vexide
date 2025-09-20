@@ -1,4 +1,4 @@
-use vexide_core::io::{self, Read};
+use std::io::{self, Read};
 
 /// VarIntProcessor encapsulates the logic for decoding a VarInt byte-by-byte.
 #[derive(Default)]
