@@ -40,6 +40,10 @@ pub mod runtime {
 #[cfg(feature = "async")]
 pub use vexide_async::task;
 
+#[doc(inline)]
+#[cfg(feature = "async")]
+pub use vexide_async::sync;
+
 /// Utilities for tracking time.
 ///
 /// This module provides types for measuring time and executing code after a set periods
@@ -65,7 +69,7 @@ pub mod time {
 
 #[doc(inline)]
 #[cfg(feature = "core")]
-pub use vexide_core::{backtrace, competition, program, os, sync};
+pub use vexide_core::{backtrace, competition, program, os};
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;

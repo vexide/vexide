@@ -1,8 +1,12 @@
-use std::{boxed::Box, sync::Arc, vec::Vec};
+use std::{
+    boxed::Box,
+    sync::{Arc, LazyLock},
+    vec::Vec,
+};
 
 use vexide::{
     prelude::*,
-    sync::{Barrier, Condvar, LazyLock, Mutex, RwLock},
+    sync::{Barrier, Condvar, Mutex, RwLock},
 };
 
 // A lazily initialized static.

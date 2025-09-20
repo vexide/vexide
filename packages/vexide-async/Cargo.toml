@@ -18,6 +18,7 @@ authors = [
 
 [dependencies]
 async-task = { version = "4.5.0", default-features = false }
+async-lock = "3.4.1"
 waker-fn = "1.1.1"
 vexide-core = { workspace = true }
 vex-sdk = { workspace = true }
