@@ -1,7 +1,7 @@
 //! Low-level common functionality in [`vexide`](https://crates.io/crates/vexide).
 //!
 //! This crate has historically served many purposes, but today provides a set
-//! of common safe wrappers around various system APIs used in many of `vexide`'s
+//! of common safe wrappers around various system APIs used in some of `vexide`'s
 //! crates. Most of these modules are re-exported from the top-level [`vexide`]
 //! crate.
 //!
@@ -12,9 +12,6 @@
 //! - OS version information ([`os`]).
 //! - User program state ([`program`]).
 //! - Extended system time APIs ([`time`]).
-//!
-//! This crate also implements vexide's [synchronization primitives](crate::sync),
-//! which are executor agnostic and therefore not in `vexide-async`.
 
 #![no_std]
 #![feature(never_type)]
