@@ -16,9 +16,12 @@ authors = [
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+sync = ["dep:async-lock"]
+
 [dependencies]
 async-task = { version = "4.5.0", default-features = false }
-async-lock = "3.4.1"
+async-lock = { version = "3.4.1", optional = true }
 waker-fn = "1.1.1"
 vex-sdk = { workspace = true }
 

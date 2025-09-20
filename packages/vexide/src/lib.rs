@@ -37,7 +37,7 @@ pub mod runtime {
 }
 
 #[doc(inline)]
-#[cfg(feature = "async")]
+#[cfg(all(feature = "async", feature = "sync"))]
 pub use vexide_async::sync;
 #[doc(inline)]
 #[cfg(feature = "async")]

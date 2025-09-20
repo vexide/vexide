@@ -13,8 +13,8 @@ slot = 1
 icon = "cool-x"
 compress = true
 
-[target.dev-dependencies]
-vexide = { path = "packages/vexide", features = ["vex-sdk-jumptable"] }
+[dev-dependencies]
+vexide = { path = "packages/vexide", features = ["full", "vex-sdk-jumptable"] }
 
 [workspace]
 members = ["packages/*"]
