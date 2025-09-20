@@ -3,6 +3,7 @@ use std::{
     collections::VecDeque,
     future::Future,
     pin::Pin,
+    rc::Rc,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
@@ -14,7 +15,7 @@ use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
 use crate::{
-    local::{is_tls_null, set_tls_ptr, TaskLocalStorage},
+    local::TaskLocalStorage,
     task::{Task, TaskMetadata},
 };
 
@@ -41,7 +42,7 @@ impl Executor {
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
         let metadata = TaskMetadata {
-            tls: TaskLocalStorage::new(),
+            tls: Rc::new(TaskLocalStorage::new()),
         };
 
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
@@ -79,10 +80,9 @@ impl Executor {
 
         #[allow(if_let_rescope)]
         if let Some(runnable) = runnable {
-            let old_ptr = unsafe { runnable.metadata().tls.set_current_tls() };
-            runnable.run();
-
-            unsafe { set_tls_ptr(old_ptr) };
+            TaskLocalStorage::scope(runnable.metadata().tls.clone(), || {
+                runnable.run();
+            });
 
             true
         } else {
@@ -92,6 +92,7 @@ impl Executor {
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
         // indicative of entry point task
+        #[cfg(target_os = "none")]
         if is_tls_null() {
             unsafe {
                 _ = TaskLocalStorage::new().set_current_tls();
