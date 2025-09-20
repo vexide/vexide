@@ -60,8 +60,8 @@ mod panic_hook;
 mod patcher;
 
 use core::arch::naked_asm;
-use patcher::PATCH_MAGIC;
 
+use patcher::PATCH_MAGIC;
 // Bring `vex_sdk_jumptable` into scope to allow its symbols be resolved by the linker.
 #[cfg(feature = "vex-sdk-jumptable")]
 use vex_sdk_jumptable as _;
@@ -177,12 +177,13 @@ pub unsafe fn startup() {
     #[cfg(target_vendor = "vex")]
     unsafe {
         // Initialize the heap allocator in our heap region defined in the linkerscript
+
         #[cfg(feature = "allocator")]
         crate::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
 
         // If this link address is 0x03800000, this implies we were uploaded using
         // differential uploads by cargo-v5 and may have a patch to apply.
-        if vex_sdk::vexSystemLinkAddrGet() == (&raw mut __user_ram_start).addr() {
+        if vexide_core::program::linked_file().addr() == (&raw mut __user_ram_start).addr() {
             patcher::patch();
         }
 

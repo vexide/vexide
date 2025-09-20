@@ -113,8 +113,11 @@ pub fn code_signature() -> CodeSignature {
     unsafe { core::ptr::read(&raw const __user_ram_start) }
 }
 
-/// Returns a pointer to the currently linked file, or `None` if no program is linked.
+/// Returns a raw pointer to the currently linked file.
+///
+/// If no file is linked to the current program, this function will
+/// return a null pointer.
 #[inline]
-pub fn linked_file() -> Option<NonNull<()>> {
-    NonNull::new(unsafe { vexSystemLinkAddrGet() as *mut () })
+pub fn linked_file() -> *mut () {
+    unsafe { vexSystemLinkAddrGet() as *mut () }
 }
