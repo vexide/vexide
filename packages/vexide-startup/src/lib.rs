@@ -174,7 +174,6 @@ unsafe extern "C" fn _vexide_boot() {
 /// Must be called *once and only once* at the start of program execution.
 #[inline]
 pub unsafe fn startup() {
-    #[cfg(target_vendor = "vex")]
     unsafe {
         // Initialize the heap allocator in our heap region defined in the linkerscript
 

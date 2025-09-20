@@ -17,7 +17,7 @@
 use alloc::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
 
-#[cfg(all(target_vendor = "vex", feature = "backtraces"))]
+#[cfg(all(target_os = "vexos", feature = "backtraces"))]
 use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 
 /// A captured stack backtrace.
@@ -74,10 +74,10 @@ impl Backtrace {
     #[allow(clippy::missing_const_for_fn)]
     #[must_use]
     pub fn capture() -> Self {
-        #[cfg(all(target_vendor = "vex", feature = "backtraces"))]
+        #[cfg(all(target_os = "vexos", feature = "backtraces"))]
         return Self::try_capture().unwrap_or(Self { frames: Vec::new() });
 
-        #[cfg(not(all(target_vendor = "vex", feature = "backtraces")))]
+        #[cfg(not(all(target_os = "vexos", feature = "backtraces")))]
         return Self { frames: Vec::new() };
     }
 
@@ -92,7 +92,7 @@ impl Backtrace {
     ///
     /// This function errors when the program's unwind info is corrupted.
     #[inline(never)] // Make sure there's always a frame to remove
-    #[cfg(all(target_vendor = "vex", feature = "backtraces"))]
+    #[cfg(all(target_os = "vexos", feature = "backtraces"))]
     pub fn try_capture() -> Result<Self, UnwindError> {
         let context = UnwindContext::new()?;
         let mut cursor = UnwindCursor::new(&context)?;
