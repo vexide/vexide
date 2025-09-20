@@ -53,17 +53,18 @@ pub mod smart;
 use smart::SmartDeviceType;
 use snafu::Snafu;
 
-/// Generic errors that can take place when using ports on the V5 Brain.
+/// Errors that can occur when performing operations on [Smartport-connected devices](smart).
+/// Most smart devices will return this type when an error occurs.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum PortError {
-    /// No device is plugged into the port.
+    /// No device was plugged into the port, when one was expected.
     #[snafu(display("Expected a device to be connected to port {port}"))]
     Disconnected {
         /// The port that was expected to have a device
         port: u8,
     },
 
-    /// An incorrect type of device is plugged into the port.
+    /// The wrong type of device is plugged into the port.
     #[snafu(display(
         "Expected a {expected:?} device on port {port}, but found a {actual:?} device"
     ))]

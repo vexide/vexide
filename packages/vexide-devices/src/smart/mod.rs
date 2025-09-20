@@ -3,18 +3,21 @@
 //! This module provides abstractions for devices connected through VEX Smart Ports. This
 //! includes motors, many common sensors, vexlink, and raw serial access.
 //!
-//! # Hardware Overview
+//! # Overview
 //!
 //! The V5 Brain features 21 RJ9 4p4c connector ports (known as "Smart Ports") for communicating with
 //! newer V5 peripherals. Smart Port devices have a variable sample rate (unlike ADI, which is limited
 //! to 10ms), and can support basic data transfer over serial.
 //!
-//! # Smart Port Devices
+//! # Devices
 //!
-//! Most devices can be created with a `new` function that generally takes a [`SmartPort`] instance from [`Peripherals`](crate::peripherals::Peripherals)
-//! along with other device-specific parameters. All sensors are thread safe, however sensors can only be safely constructed
-//! using the [`peripherals`] API. The general device construction pattern looks like this:
-//! ```no_run
+//! Most devices can be created with a `new` function that generally takes a [`SmartPort`]
+//! instance from [`Peripherals`](crate::peripherals::Peripherals) along with other
+//! device-specific parameters. All devices are thread safe due to being singletons, however
+//! sensors can only be safely constructed using the [`peripherals`] API. The general device
+//! construction pattern looks like this:
+//!
+//! ```
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
@@ -186,14 +189,16 @@ pub struct SmartPort {
 }
 
 impl SmartPort {
-    /// Creates a new Smart Port on a specified index.
+    /// Creates a new Smart Port on a specified port number.
     ///
     /// # Safety
     ///
     /// Creating new `SmartPort`s is inherently unsafe due to the possibility of constructing
     /// more than one device on the same port index allowing multiple mutable references to
-    /// the same hardware device. This violates rust's borrow checked guarantees. Prefer using
+    /// the same hardware device. This violates Rust's borrow checker guarantees. Prefer using
     /// [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    ///
+    /// For more information on safely creating peripherals, see [this page](https://vexide.dev/docs/peripherals/).
     ///
     /// # Examples
     ///
@@ -289,24 +294,38 @@ impl SmartPort {
 #[repr(u8)]
 pub enum SmartDeviceType {
     /// Smart Motor
+    ///
+    /// This corresponds to the [`Motor`] device.
     Motor,
 
     /// Rotation Sensor
+    ///
+    /// This corresponds to the [`RotationSensor`] device.
     Rotation,
 
     /// Inertial Sensor
+    ///
+    /// This corresponds to the [`InertialSensor`] device.
     Imu,
 
     /// Distance Sensor
+    ///
+    /// This corresponds to the [`DistanceSensor`] device.
     Distance,
 
     /// Vision Sensor
+    ///
+    /// This corresponds to the [`VisionSensor`] device.
     Vision,
 
     /// AI Vision Sensor
+    ///
+    /// This corresponds to the [`AiVisionSensor`] device.
     AiVision,
 
     /// Workcell Electromagnet
+    ///
+    /// This corresponds to the [`Electromagnet`] device.
     Electromagnet,
 
     /// CTE Workcell Light Tower
@@ -316,9 +335,13 @@ pub enum SmartDeviceType {
     Arm,
 
     /// Optical Sensor
+    ///
+    /// This corresponds to the [`OpticalSensor`] device.
     Optical,
 
     /// GPS Sensor
+    ///
+    /// This corresponds to the [`GpsSensor`] device.
     Gps,
 
     /// Smart Radio
@@ -326,10 +349,12 @@ pub enum SmartDeviceType {
 
     /// ADI Expander
     ///
-    /// This variant is also internally to represent the Brain's onboard ADI slots.
+    /// This corresponds to the [`AdiExpander`] device.
     Adi,
 
     /// Generic Serial Port
+    ///
+    /// This corresponds to the [`SerialPort`] device.
     GenericSerial,
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,
@@ -384,7 +409,7 @@ impl From<SmartDeviceType> for V5_DeviceType {
 /// Represents a timestamp on a Smart device's internal clock.
 ///
 /// This type offers no guarantees that the device's clock is in sync with the internal
-/// clock of the Brain, and thus cannot be safely compared with [`vexide_core::time::Instant`]s.
+/// clock of the Brain, and thus cannot be safely compared with `Instant`s.
 ///
 /// There is additionally no guarantee that this is in sync with other Smart devices,
 /// or even the same device if a disconnect occurred causing the clock to reset. As such,

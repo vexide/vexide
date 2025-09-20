@@ -9,11 +9,11 @@
 
 use std::time::Duration;
 
+use vexide_core::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
 use vexide_devices::{
     peripherals::Peripherals,
     smart::motor::{Direction, Gearset, Motor},
 };
-use vexide_core::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
 
 /// The code signature encodes some metadata about this program at startup to VEXos.
 ///

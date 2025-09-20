@@ -1,9 +1,9 @@
-//! ADI Ports & Devices
+//! Analog/Digital Interface (ADI) Ports & Devices
 //!
 //! This module provides abstractions for devices connected through VEX's Analog/Digital Interface
-//! (ADI) ports, also known as the "three-wire ports" or "triports".
+//! (ADI) ports, also known as "three-wire ports" or "triports".
 //!
-//! # Hardware Overview
+//! # Overview
 //!
 //! The V5 Brain features 8 three-wire connector ports on its left side that allow connecting
 //! simple analog and digital devices to the brain. These commonly include VEX's legacy sensors
@@ -81,13 +81,17 @@ pub struct AdiPort {
 impl AdiPort {
     pub(crate) const INTERNAL_ADI_PORT_NUMBER: u8 = 22;
 
-    /// Create a new port.
+    /// Creates a new ADI port on the specified port number and [`ADIExpander`] port number.
     ///
     /// # Safety
     ///
-    /// Creating new [`AdiPort`]s is inherently unsafe due to the possibility of constructing
+    /// Creating new `AdiPort`s is inherently unsafe due to the possibility of constructing
     /// more than one device on the same port index allowing multiple mutable references to
-    /// the same hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    /// the same hardware device. This violates Rust's borrow checker guarantees. Prefer using
+    /// [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    ///
+    /// For more information on safely creating peripherals, see [this page](https://vexide.dev/docs/peripherals/).
+    ///
     #[must_use]
     pub const unsafe fn new(number: u8, expander_number: Option<u8>) -> Self {
         Self {
@@ -218,24 +222,31 @@ pub trait AdiDevice<const N: usize> {
 /// Represents a possible type of device that can be registered on a [`AdiPort`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum AdiDeviceType {
-    /// Undefined Device Type
+    /// Undefined device
     ///
-    /// Interestingly, this port type appears to NOT be used
-    /// for devices that are unconfigured (they are configured
-    /// as [`Self::AnalogIn`] by default, since that's enum variant 0
-    /// in the SDK's API).
+    /// Interestingly, this port type appears to NOT be used for devices that are
+    /// unconfigured (they are configured as [`Self::AnalogIn`] by default. The
+    /// use of this variant is unknown.
     Undefined,
 
     /// Generic digital input
+    ///
+    /// This corresponds to the [`AdiDigitalIn`] device.
     DigitalIn,
 
     /// Generic digital output
+    ///
+    /// This corresponds to the [`AdiDigitalOut`] device.
     DigitalOut,
 
     /// 12-bit Generic analog input
+    ///
+    /// This corresponds to the [`AdiAnalogIn`] device.
     AnalogIn,
 
     /// 8-git generic PWM output
+    ///
+    /// This corresponds to the [`AdiPwmOut`] device.
     PwmOut,
 
     /// Limit Switch / Bumper Switch
@@ -245,33 +256,55 @@ pub enum AdiDeviceType {
     SwitchV2,
 
     /// Cortex-era potentiometer
+    ///
+    /// This corresponds to the [`AdiPotentiometer`] device
+    /// when configured with [`PotentiometerType::Legacy`].
     Potentiometer,
 
     /// V2 Potentiometer
+    ///
+    /// This corresponds to the [`AdiPotentiometer`] device
+    /// when configured with [`PotentiometerType::V2`].
     PotentiometerV2,
 
     /// Cortex-era yaw-rate gyroscope
+    ///
+    /// This corresponds to the [`AdiGyro`] device.
     Gyro,
 
     /// Cortex-era servo motor
+    ///
+    /// This corresponds to the [`AdiServo`] device.
     Servo,
 
     /// Quadrature Encoder
+    ///
+    /// This corresponds to the [`AdiEncoder`] device.
     Encoder,
 
     /// Ultrasonic Sensor/Sonar
+    ///
+    /// This corresponds to the [`AdiRangeFinder`] device.
     RangeFinder,
 
     /// Cortex-era Line Tracker
+    ///
+    /// This corresponds to the [`AdiLineTracker`] device.
     LineTracker,
 
     /// Cortex-era Light Sensor
+    ///
+    /// This corresponds to the [`AdiLightSensor`] device.
     LightSensor,
 
     /// Cortex-era 3-Axis Accelerometer
+    ///
+    /// This corresponds to the [`AdiAccelerometer`] device.
     Accelerometer,
 
     /// MC29 Controller Output
+    ///
+    /// This corresponds to the [`AdiMotor`] device.
     ///
     /// This differs from [`Self::PwmOut`] in that it is specifically designed for controlling
     /// legacy ADI motors. Rather than taking a u8 for output, it takes a i8 allowing negative
@@ -279,6 +312,8 @@ pub enum AdiDeviceType {
     Motor,
 
     /// Slew-rate limited motor PWM output
+    ///
+    /// This corresponds to the [`AdiMotor`] device when configured with `slew: true`.
     MotorSlew,
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,
