@@ -9,6 +9,7 @@
 //! it yourself unless you are writing your own startup routine implementation or need to claim a new
 //! heap region.
 
+#[cfg(target_os = "vexos")]
 use talc::{locking::AssumeUnlockable, ErrOnOom, Span, Talc, Talck};
 
 #[cfg(target_os = "vexos")]
@@ -29,6 +30,7 @@ static ALLOCATOR: Talck<AssumeUnlockable, ErrOnOom> = Talc::new(ErrOnOom).lock()
 /// # Panics
 ///
 /// Panics if the `__heap_start` or `__heap_end` symbols set in the linker script are null.
+#[allow(unused_variables)] // Silences warnings when not compiling for VEXos
 pub unsafe fn claim(start: *mut u8, end: *mut u8) {
     //SAFETY: User must ensure that this function is only called once.
     #[cfg(target_os = "vexos")]

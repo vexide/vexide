@@ -9,7 +9,7 @@
 mod executor;
 mod reactor;
 
-mod local;
+pub mod local;
 pub mod task;
 pub mod time;
 

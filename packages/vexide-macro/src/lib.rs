@@ -201,12 +201,9 @@ pub fn test(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // Ensure it's async
     if input.sig.asyncness.is_none() {
-        return syn::Error::new_spanned(
-            input.sig.fn_token,
-            "#[vexide::test] requires an async fn",
-        )
-        .to_compile_error()
-        .into();
+        return syn::Error::new_spanned(input.sig.fn_token, "#[vexide::test] requires an async fn")
+            .to_compile_error()
+            .into();
     }
 
     let vis = &input.vis;
@@ -223,7 +220,8 @@ pub fn test(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 #ident(unsafe { ::vexide::devices::peripherals::Peripherals::steal() })
             )
         }
-    }.into()
+    }
+    .into()
 }
 
 #[cfg(test)]

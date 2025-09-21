@@ -37,13 +37,7 @@ compile_error!("The specified `vex-sdk` backend is unsupported on this target. C
 
 // vex-sdk-jumptable and vex-sdk-pros may only be used on vexos targets or
 // if vex-sdk-mock isn't specified already.
-#[cfg(all(
-    target_os = "vexos",
-    feature = "vex-sdk-jumptable"
-))]
+#[cfg(all(target_os = "vexos", feature = "vex-sdk-jumptable"))]
 use vex_sdk_jumptable as _;
-#[cfg(all(
-    target_os = "vexos",
-    feature = "vex-sdk-pros"
-))]
+#[cfg(all(target_os = "vexos", feature = "vex-sdk-pros"))]
 use vex_sdk_pros as _;
