@@ -12,5 +12,5 @@ static CODE_SIG: CodeSignature = CodeSignature::new(
 
 #[vexide::main(code_sig = CODE_SIG)]
 async fn main(_peripherals: Peripherals) {
-    println!("Hello, world!");
+    println!("Code signature is: {:?}", vexide::program::code_signature());
 }

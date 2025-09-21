@@ -112,12 +112,24 @@ impl CodeSignature {
 #[must_use]
 #[inline]
 pub fn code_signature() -> CodeSignature {
-    unsafe extern "C" {
-        // Defined in https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/armv7a_vex_v5_linker_script.ld.
-        static __user_ram_start: CodeSignature;
+    #[cfg(target_os = "vexos")]
+    {
+        unsafe extern "C" {
+            // Defined in https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/armv7a_vex_v5_linker_script.ld.
+            static __user_ram_start: CodeSignature;
+        }
+
+        unsafe { core::ptr::read(&raw const __user_ram_start) }
     }
 
-    unsafe { core::ptr::read(&raw const __user_ram_start) }
+    // TODO: Return real data on non-vexos targets, either through some special
+    // symbol name or a linker section.
+    #[cfg(not(target_os = "vexos"))]
+    CodeSignature::new(
+        ProgramType::User,
+        ProgramOwner::Partner,
+        ProgramOptions::empty()
+    )
 }
 
 /// Returns a raw pointer to the currently linked file.
