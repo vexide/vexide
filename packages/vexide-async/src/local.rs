@@ -106,6 +106,7 @@ macro_rules! task_local {
         $crate::task_local!($($rest)*);
     }
 }
+pub use task_local;
 
 impl<T: 'static> LocalKey<T> {
     #[doc(hidden)]
