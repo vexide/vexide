@@ -33,7 +33,6 @@ workspace = true
 std = []
 dangerous-motor-tuning = []
 embedded-io = ["dep:embedded-io"]
-smart-leds-trait = ["dep:smart-leds-trait"]
 
 [package.metadata.docs.rs]
 all-features = true # Show optional APIs
