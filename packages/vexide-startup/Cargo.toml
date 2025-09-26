@@ -31,7 +31,7 @@ vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk.git", optional = 
 vex-sdk-pros = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
 
 [target.'cfg(target_os = "vexos")'.build-dependencies]
-vex-sdk-download = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
+vex-sdk-vexcode = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
 
 [lints]
 workspace = true
@@ -42,7 +42,7 @@ panic-hook = ["dep:vexide-devices"]
 backtrace = ["vexide-core/backtrace"]
 
 vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
-vex-sdk-download = ["dep:vex-sdk-download"]
+vex-sdk-vexcode = ["dep:vex-sdk-vexcode"]
 vex-sdk-pros = ["dep:vex-sdk-pros"]
 vex-sdk-mock = ["dep:vex-sdk-mock"]
 

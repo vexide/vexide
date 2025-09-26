@@ -14,7 +14,7 @@ use vex_sdk_mock as _;
 #[allow(dead_code)]
 const _: () = {
     if (cfg!(feature = "vex-sdk-jumptable") as usize)
-        + (cfg!(feature = "vex-sdk-download") as usize)
+        + (cfg!(feature = "vex-sdk-vexcode") as usize)
         + (cfg!(feature = "vex-sdk-pros") as usize)
         > 1
     {
@@ -27,7 +27,7 @@ const _: () = {
 #[cfg(all(
     any(
         feature = "vex-sdk-jumptable",
-        feature = "vex-sdk-download",
+        feature = "vex-sdk-vexcode",
         feature = "vex-sdk-pros"
     ),
     not(target_os = "vexos"),

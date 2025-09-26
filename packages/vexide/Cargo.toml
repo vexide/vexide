@@ -43,7 +43,7 @@ panic-hook = ["vexide-startup/panic-hook"]
 
 allocator = ["dep:vexide-startup", "vexide-startup/allocator"]
 vex-sdk-jumptable = ["vexide-startup/vex-sdk-jumptable"]
-vex-sdk-download = ["vexide-startup/vex-sdk-download"]
+vex-sdk-vexcode = ["vexide-startup/vex-sdk-vexcode"]
 vex-sdk-pros = ["vexide-startup/vex-sdk-pros"]
 vex-sdk-mock = ["vexide-startup/vex-sdk-mock"]
 
