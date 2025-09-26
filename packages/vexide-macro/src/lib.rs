@@ -93,6 +93,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
                 ::vexide::startup::startup();
             }
 
+
             #banner_print
             #inner
 

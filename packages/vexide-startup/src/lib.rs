@@ -55,6 +55,8 @@ pub mod banner;
 mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
+#[cfg(target_os = "vexos")]
+mod vectors;
 mod sdk;
 
 // Linkerscript Symbols
@@ -183,6 +185,8 @@ pub unsafe fn startup() {
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
         crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
+
+        vectors::install_vector_table();
     }
 
     // Register custom panic hook if needed.

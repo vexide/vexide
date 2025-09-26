@@ -26,6 +26,8 @@ OVERWRITE_SECTIONS {
         /* Patch overwriter routine. */
         *(.overwriter)
 
+        KEEP(*(.vectors))
+
         /* The rest of the program. */
         *(.text .text.*)
     } > USER_RAM
