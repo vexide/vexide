@@ -39,7 +39,7 @@ workspace = true
 [features]
 allocator = ["dep:talc"]
 panic-hook = ["dep:vexide-devices"]
-panic-backtraces = ["panic-hook", "vexide-core/backtraces"]
+backtraces = ["panic-hook", "vexide-core/backtraces"]
 
 vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
 vex-sdk-download = ["dep:vex-sdk-download"]

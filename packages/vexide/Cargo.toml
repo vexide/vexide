@@ -36,7 +36,7 @@ async = ["dep:vexide-async"]
 sync = ["async", "vexide-async/sync"]
 
 core = ["dep:vexide-core"]
-backtraces = ["core", "vexide-core/backtraces"]
+backtraces = ["core", "vexide-core/backtraces", "vexide-startup/backtraces"]
 
 startup = ["dep:vexide-startup"]
 allocator = ["startup", "vexide-startup/allocator"]
