@@ -24,14 +24,14 @@ compile-time = "0.2.0"
 vex-sdk = { workspace = true }
 
 [target.'cfg(not(target_os = "vexos"))'.dependencies]
-vex-sdk-mock = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
+vex-sdk-mock = { version = "0.0.1", optional = true }
 
 [target.'cfg(target_os = "vexos")'.dependencies]
-vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
-vex-sdk-pros = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
+vex-sdk-jumptable = { version = "0.0.2", optional = true }
+vex-sdk-pros = { version = "0.0.1", optional = true }
 
 [target.'cfg(target_os = "vexos")'.build-dependencies]
-vex-sdk-vexcode = { git = "https://github.com/vexide/vex-sdk.git", optional = true }
+vex-sdk-vexcode = { version = "0.0.1", optional = true }
 
 [lints]
 workspace = true
