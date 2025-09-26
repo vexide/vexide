@@ -29,7 +29,7 @@
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
-//! async fn main(_peripherals: Peripherals) {
+//! async fn main(peripherals: Peripherals) {
 //!     println!("o.o what's this? {:?}", peripherals);
 //! }
 //! ```

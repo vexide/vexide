@@ -91,14 +91,6 @@ impl Executor {
     }
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
-        // indicative of entry point task
-        #[cfg(target_os = "none")]
-        if is_tls_null() {
-            unsafe {
-                _ = TaskLocalStorage::new().set_current_tls();
-            }
-        }
-
         let woken = Arc::new(AtomicBool::new(true));
 
         let waker = waker_fn({
