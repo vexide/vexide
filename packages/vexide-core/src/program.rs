@@ -137,6 +137,7 @@ pub fn code_signature() -> CodeSignature {
 /// If no file is linked to the current program, this function will
 /// return a null pointer.
 #[inline]
+#[must_use]
 pub fn linked_file() -> *mut () {
     unsafe { vexSystemLinkAddrGet() as *mut () }
 }
