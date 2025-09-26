@@ -37,6 +37,7 @@ vexide-macro = { version = "0.3.2", path = "packages/vexide-macro", default-feat
 vex-sdk = "0.27.1"
 vex-sdk-mock = "0.0.1"
 vex-libunwind = { version = "0.3.0", git = "https://github.com/vexide/vex-libunwind.git" }
+vex-libunwind-sys = { version = "0.1.0", git = "https://github.com/vexide/vex-libunwind.git" }
 
 [workspace.lints.rust]
 rust_2018_idioms = { level = "warn", priority = -1 }
