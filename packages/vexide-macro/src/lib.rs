@@ -1,4 +1,4 @@
-//! This crate provides a procedural macro for marking the entrypoint of a [vexide](https://vexide.dev) program.
+//! This crate provides procedural macros for [vexide](https://vexide.dev) crates.
 
 use parse::{Attrs, MacroOpts};
 use proc_macro::TokenStream;
@@ -191,6 +191,16 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
+#[proc_macro_attribute]
+pub fn main_fail(_args: TokenStream, _item: TokenStream) -> TokenStream {
+    syn::Error::new(
+        proc_macro2::Span::call_site(),
+        "The #[vexide::main] macro requires the `core`, `async`, `startup`, and `devices` features to be enabled.",
+    )
+    .to_compile_error()
+    .into()
+}
+
 /// Wraps a Rust unit test in vexide's async runtime.
 ///
 /// This macro should be accompanied with an SDK provider capable of running
@@ -221,6 +231,16 @@ pub fn test(_attr: TokenStream, item: TokenStream) -> TokenStream {
             )
         }
     }
+    .into()
+}
+
+#[proc_macro_attribute]
+pub fn test_fail(_args: TokenStream, _item: TokenStream) -> TokenStream {
+    syn::Error::new(
+        proc_macro2::Span::call_site(),
+        "The #[vexide::test] macro requires the `core`, `async`, `startup`, and `devices` features to be enabled.",
+    )
+    .to_compile_error()
     .into()
 }
 

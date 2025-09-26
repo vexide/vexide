@@ -143,8 +143,8 @@ unsafe extern "C" fn _vexide_boot() {
 /// - Applies [differential upload patches] to the program if a patch file exists in memory
 ///   and resets the program if necessary.
 /// - Registers a custom [panic hook] to allow panic messages to be drawn to the screen and
-///   backtraces to be collected. This can be enabled/disabled using the `panic-hook` and
-///   `backtraces` features.
+///   backtrace to be collected. This can be enabled/disabled using the `panic-hook` and
+///   `backtrace` features.
 ///
 /// [differential upload patches]: https://vexide.dev/docs/building-uploading/#uploading-strategies
 /// [panic hook]: https://doc.rust-lang.org/std/panic/fn.set_hook.html

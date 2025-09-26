@@ -24,7 +24,7 @@ rgb = "0.8.50"
 bitflags = "2.4.2"
 libm = "0.2.15"
 embedded-io = { version = "0.6.1", optional = true }
-smart-leds-trait = { version = "0.3.0", optional = true }
+smart-leds-trait = "0.3.0"
 
 [lints]
 workspace = true

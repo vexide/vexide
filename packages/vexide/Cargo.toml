@@ -28,28 +28,28 @@ vex-sdk = { workspace = true }
 
 [features]
 default = ["async", "devices", "core"]
-full = ["default", "startup", "backtraces", "allocator", "panic-hook", "macro"]
+full = ["default", "startup", "backtrace", "allocator", "panic-hook", "macros"]
 
-macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
+macros = ["dep:vexide-macro"]
 
 async = ["dep:vexide-async"]
-sync = ["async", "vexide-async/sync"]
+sync = ["dep:vexide-async", "vexide-async/sync"]
 
 core = ["dep:vexide-core"]
-backtraces = ["core", "vexide-core/backtraces", "vexide-startup/backtraces"]
+backtrace = ["dep:vexide-core", "vexide-core/backtrace", "vexide-startup/backtrace"]
 
 startup = ["dep:vexide-startup"]
-allocator = ["startup", "vexide-startup/allocator"]
-panic-hook = ["startup", "vexide-startup/panic-hook"]
-vex-sdk-jumptable = ["startup", "vexide-startup/vex-sdk-jumptable"]
-vex-sdk-download = ["startup", "vexide-startup/vex-sdk-download"]
-vex-sdk-pros = ["startup", "vexide-startup/vex-sdk-pros"]
-vex-sdk-mock = ["startup", "vexide-startup/vex-sdk-mock"]
+panic-hook = ["vexide-startup/panic-hook"]
+
+allocator = ["dep:vexide-startup", "vexide-startup/allocator"]
+vex-sdk-jumptable = ["vexide-startup/vex-sdk-jumptable"]
+vex-sdk-download = ["vexide-startup/vex-sdk-download"]
+vex-sdk-pros = ["vexide-startup/vex-sdk-pros"]
+vex-sdk-mock = ["vexide-startup/vex-sdk-mock"]
 
 devices = ["dep:vexide-devices"]
-embedded-io = ["devices", "vexide-devices/embedded-io"]
-smart-leds-trait = ["devices", "vexide-devices/smart-leds-trait"]
-dangerous-motor-tuning = ["devices", "vexide-devices/dangerous-motor-tuning"]
+embedded-io = ["vexide-devices/embedded-io"]
+dangerous-motor-tuning = ["vexide-devices/dangerous-motor-tuning"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]
