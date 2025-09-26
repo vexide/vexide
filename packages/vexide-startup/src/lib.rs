@@ -186,6 +186,7 @@ pub unsafe fn startup() {
         #[cfg(feature = "allocator")]
         crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
 
+        #[cfg(feature = "abort-handler")]
         abort_handler::install_vector_table();
     }
 

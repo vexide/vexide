@@ -1,4 +1,3 @@
-use std::sync::atomic::{AtomicBool, Ordering};
 use core::arch::{asm, global_asm, naked_asm};
 
 // Custom ARM vector table. Pointing the VBAR coprocessor. register at this
@@ -46,9 +45,8 @@ pub fn install_vector_table() {
 #[repr(u32)]
 enum FaultType {
     UndefinedInstruction = 0,
-    SupervisorCall = 1,
-    PrefetchAbort = 2,
-    DataAbort = 3,
+    PrefetchAbort = 1,
+    DataAbort = 2,
 }
 
 #[repr(C)]
@@ -121,7 +119,7 @@ abort_handler!(data_abort: lr_offset = 8, cause = FaultType::DataAbort);
 
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
-pub extern "C" fn svc() -> ! {
+pub extern "aapcs" fn svc() -> ! {
     core::arch::naked_asm!(
         "
         stmdb sp!,{{r0-r3,r12,lr}}
@@ -139,7 +137,7 @@ pub extern "C" fn svc() -> ! {
 
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
-pub extern "C" fn fiq() -> ! {
+pub extern "aapcs" fn fiq() -> ! {
     core::arch::naked_asm!(
         "
             stmdb sp!,{{r0-r3,r12,lr}}
@@ -168,7 +166,7 @@ pub extern "C" fn fiq() -> ! {
 
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
-pub extern "C" fn irq() -> ! {
+pub extern "aapcs" fn irq() -> ! {
     core::arch::naked_asm!(
         "
             stmdb sp!,{{r0-r3,r12,lr}}
@@ -195,7 +193,7 @@ pub extern "C" fn irq() -> ! {
     )
 }
 
-unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
+unsafe extern "aapcs" fn exception_handler(fault: *const Fault) -> ! {
     unsafe {
         // how and why
         core::arch::asm!("cpsie i");
@@ -208,8 +206,12 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
             stack_pointer,
             registers,
         } = *fault;
-        println!("\n\n*** {cause:?} EXCEPTION ***");
-        println!("  at address 0x{instruction_pointer:x?}");
+        println!("\n\n*** {} Exception ***", match cause {
+            FaultType::DataAbort => "Data Abort",
+            FaultType::UndefinedInstruction => "Undefined Instruction",
+            FaultType::PrefetchAbort => "Prefetch Abort",
+        });
+        println!("  at address {instruction_pointer:#x}");
 
         match cause {
             FaultType::DataAbort => {
@@ -220,14 +222,13 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
                     "reading from"
                 };
 
-                println!("  while {verb} address 0x{:x?}", abort.address);
+                println!("  while {verb} address {:#x}", abort.address);
             }
             FaultType::UndefinedInstruction => {},
-            FaultType::SupervisorCall => {},
             FaultType::PrefetchAbort => {},
         }
 
-        println!("\nCPU registers at time of fault (r0-r12, in hexadecimal):\n{registers:x?}\n");
+        println!("\nCPU registers at time of fault (r0-r12, in hexadecimal):\n{registers:#x?}\n");
         println!("help: This indicates the misuse of `unsafe` code.");
         println!("      Use a symbolizer tool to determine the file and line of the crash.");
 
@@ -236,11 +237,11 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
         } else {
             "release"
         };
-        println!("      (e.g. llvm-symbolizer -e ./target/armv7a-vex-v5/{profile}/program_name 0x{instruction_pointer:x?})");
+        println!("      (e.g. llvm-symbolizer -e ./target/armv7a-vex-v5/{profile}/program_name {instruction_pointer:#x})");
 
         #[cfg(feature = "backtrace")]
         {
-            let gprs = backtrace::GPRS {
+            let gprs = backtrace::Gprs {
                 r: registers,
                 lr: instruction_pointer,
                 pc: instruction_pointer,
@@ -254,7 +255,6 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
         match (*fault).cause {
             FaultType::DataAbort => vex_sdk::vexSystemDataAbortInterrupt(),
             FaultType::PrefetchAbort => vex_sdk::vexSystemPrefetchAbortInterrupt(),
-            FaultType::SupervisorCall => vex_sdk::vexSystemSWInterrupt(),
             FaultType::UndefinedInstruction => vex_sdk::vexSystemUndefinedException(),
         }
 
@@ -302,20 +302,21 @@ mod backtrace {
     use core::mem::transmute;
 
     use vex_libunwind::{registers::UNW_REG_IP, UnwindContext, UnwindCursor, UnwindError};
-    use vex_libunwind_sys::{unw_context_t, unw_init_local, CONTEXT_SIZE};
+    use vex_libunwind_sys::unw_context_t;
 
     #[repr(C)]
-    pub struct GPRS {
+    pub struct Gprs {
         pub r: [u32; 13],
         pub sp: u32,
         pub lr: u32,
         pub pc: u32,
     }
 
-    const REGISTERS_DATA_SIZE: usize = size_of::<unw_context_t>() - size_of::<GPRS>();
+    const REGISTERS_DATA_SIZE: usize = size_of::<unw_context_t>() - size_of::<Gprs>();
+
     #[repr(C)]
     struct Registers_arm {
-        gprs: GPRS,
+        gprs: Gprs,
         data: [u8; REGISTERS_DATA_SIZE],
     }
 
@@ -324,12 +325,12 @@ mod backtrace {
     ///
     /// This is based on the ARM implementation of __unw_getcontext:
     /// <https://github.com/llvm/llvm-project/blob/6fc3b40b2cfc33550dd489072c01ffab16535840/libunwind/src/UnwindRegistersSave.S#L834>
-    pub fn make_unwind_context(gprs: GPRS) -> UnwindContext {
+    pub fn make_unwind_context(gprs: Gprs) -> UnwindContext {
         let context = Registers_arm {
             gprs,
             // This matches the behavior of __unw_getcontext, which leaves
             // this data uninitialized.
-            data: [0; REGISTERS_DATA_SIZE],
+            data: [0; _],
         };
 
         // SAFETY: `context` is a valid `unw_context_t` because it has its
