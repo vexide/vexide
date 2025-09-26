@@ -26,7 +26,7 @@ OVERWRITE_SECTIONS {
         /* Patch overwriter routine. */
         *(.overwriter)
 
-        KEEP(*(.vectors))
+        *(.vector_table)
 
         /* The rest of the program. */
         *(.text .text.*)
