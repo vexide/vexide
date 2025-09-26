@@ -272,11 +272,13 @@ impl ErasedTaskLocal {
         }
     }
 
+    /// # Safety
+    ///
+    /// Caller guarantees T is the right type
     unsafe fn get<T: 'static>(&self) -> &T {
         if cfg!(debug_assertions) {
             self.value.downcast_ref().unwrap()
         } else {
-            // Caller guarantees T is the right type
             unsafe { &*ptr::from_ref(&*self.value).cast() }
         }
     }
