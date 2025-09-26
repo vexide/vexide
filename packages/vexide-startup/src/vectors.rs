@@ -84,11 +84,12 @@ macro_rules! abort_handler {
     ) => {
         #[unsafe(naked)]
         #[unsafe(no_mangle)]
+        #[instruction_set(arm::a32)]
         unsafe extern "C" fn $name() -> ! {
             naked_asm!(
                 "
         .arm
-                dsb             @ Workaround for Cortex A9 erratum (id 775420)
+                dsb             @ Workaround for Cortex-A9 erratum (id 775420)
 
                 sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
                                             @ of return instruction (see Fault::instruction_pointer docs).
@@ -207,26 +208,6 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
             stack_pointer,
             registers,
         } = *fault;
-
-        match cause {
-            FaultType::DataAbort => {
-                vex_sdk::vexDisplayForegroundColor(0xFF_00_00);
-            }
-            FaultType::PrefetchAbort => {
-                vex_sdk::vexDisplayForegroundColor(0x00_FF_00);
-            }
-            FaultType::UndefinedInstruction => {
-                vex_sdk::vexDisplayForegroundColor(0x00_00_FF);
-            }
-            FaultType::SupervisorCall => {
-                vex_sdk::vexDisplayForegroundColor(0xFF_FF_FF);
-            }
-        }
-
-        vex_sdk::vexDisplayRectFill(0, 0, 100, 100);
-
-        vex_sdk::vexTasksRun();
-
         println!("\n\n*** {cause:?} EXCEPTION ***");
         println!("  at address 0x{instruction_pointer:x?}");
 
@@ -257,22 +238,25 @@ unsafe extern "C" fn exception_handler(fault: *const Fault) -> ! {
         };
         println!("      (e.g. llvm-symbolizer -e ./target/armv7a-vex-v5/{profile}/program_name 0x{instruction_pointer:x?})");
 
-        // let gprs = backtrace::GPRS {
-        //     r: registers,
-        //     lr: instruction_pointer,
-        //     pc: instruction_pointer,
-        //     sp: stack_pointer,
-        // };
-        // let context = backtrace::make_unwind_context(gprs);
-        // let result = backtrace::print_backtrace(&context);
-        // println!("backtrace result: {result:?}");
+        #[cfg(feature = "backtrace")]
+        {
+            let gprs = backtrace::GPRS {
+                r: registers,
+                lr: instruction_pointer,
+                pc: instruction_pointer,
+                sp: stack_pointer,
+            };
+            let context = backtrace::make_unwind_context(gprs);
+            let result = backtrace::print_backtrace(&context);
+            println!("backtrace result: {result:?}");
+        }
 
-        // match (*fault).cause {
-        //     FaultType::DataAbort => vex_sdk::vexSystemDataAbortInterrupt(),
-        //     FaultType::PrefetchAbort => vex_sdk::vexSystemPrefetchAbortInterrupt(),
-        //     FaultType::SupervisorCall => vex_sdk::vexSystemSWInterrupt(),
-        //     FaultType::UndefinedInstruction => vex_sdk::vexSystemUndefinedException(),
-        // }
+        match (*fault).cause {
+            FaultType::DataAbort => vex_sdk::vexSystemDataAbortInterrupt(),
+            FaultType::PrefetchAbort => vex_sdk::vexSystemPrefetchAbortInterrupt(),
+            FaultType::SupervisorCall => vex_sdk::vexSystemSWInterrupt(),
+            FaultType::UndefinedInstruction => vex_sdk::vexSystemUndefinedException(),
+        }
 
         loop {
             vex_sdk::vexTasksRun();
@@ -313,6 +297,7 @@ fn data_abort_info() -> DataAbort {
     DataAbort { status, address }
 }
 
+#[cfg(feature = "backtrace")]
 mod backtrace {
     use core::mem::transmute;
 
