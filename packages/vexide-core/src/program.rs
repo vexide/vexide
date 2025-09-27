@@ -109,8 +109,8 @@ impl CodeSignature {
 }
 
 /// Returns the code signature of the currently running program.
-#[must_use]
 #[inline]
+#[must_use]
 pub fn code_signature() -> CodeSignature {
     #[cfg(target_os = "vexos")]
     {

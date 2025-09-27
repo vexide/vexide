@@ -213,10 +213,7 @@ impl std::io::Write for RadioLink {
 
         match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), buf.len() as u16) }
         {
-            -1 => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Internal write error occurred.",
-            )),
+            -1 => Err(std::io::Error::other("Internal write error occurred.")),
             written => Ok(written as usize),
         }
     }

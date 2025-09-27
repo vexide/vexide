@@ -193,6 +193,7 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
 
 /// Prints a failure message indicating that the required features for the [`main`] macro are not enabled.
 #[proc_macro_attribute]
+#[doc(hidden)]
 pub fn main_fail(_args: TokenStream, _item: TokenStream) -> TokenStream {
     syn::Error::new(
         proc_macro2::Span::call_site(),
@@ -237,6 +238,7 @@ pub fn test(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
 /// Prints a failure message indicating that the required features for the [`test`] macro are not enabled.
 #[proc_macro_attribute]
+#[doc(hidden)]
 pub fn test_fail(_args: TokenStream, _item: TokenStream) -> TokenStream {
     syn::Error::new(
         proc_macro2::Span::call_site(),

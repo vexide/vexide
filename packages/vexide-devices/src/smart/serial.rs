@@ -283,10 +283,7 @@ impl std::io::Read for SerialPort {
         match unsafe {
             vexDeviceGenericSerialReceive(self.device, buf.as_mut_ptr(), buf.len() as i32)
         } {
-            -1 => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Internal read error occurred.",
-            )),
+            -1 => Err(std::io::Error::other("Internal read error occurred.")),
             received => Ok(received as usize),
         }
     }
@@ -297,10 +294,7 @@ impl std::io::Write for SerialPort {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         match unsafe { vexDeviceGenericSerialTransmit(self.device, buf.as_ptr(), buf.len() as i32) }
         {
-            -1 => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Internal write error occurred.",
-            )),
+            -1 => Err(std::io::Error::other("Internal write error occurred.")),
             written => Ok(written as usize),
         }
     }
