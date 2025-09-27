@@ -194,3 +194,13 @@ pub unsafe fn startup() {
     #[cfg(feature = "panic-hook")]
     std::panic::set_hook(Box::new(panic_hook::hook));
 }
+
+#[cfg(any(feature = "abort-handler", feature = "panic-hook"))]
+#[allow(unused)]
+pub(crate) mod colors {
+    use vexide_devices::rgb::Rgb;
+
+    pub const RED: Rgb<u8> = Rgb::new(0x8B, 0x00, 0x00);
+    pub const WHITE: Rgb<u8> = Rgb::new(0xFF, 0xFF, 0xFF);
+    pub const BLACK: Rgb<u8> = Rgb::new(0x00, 0x00, 0x00);
+}

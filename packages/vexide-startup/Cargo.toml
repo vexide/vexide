@@ -53,7 +53,7 @@ vex-sdk-pros = ["dep:vex-sdk-pros"]
 vex-sdk-mock = ["dep:vex-sdk-mock"]
 
 [build-dependencies]
-qrcode = "0.14.1"
+qrcode = { version = "0.14.1", default-features = false }
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]

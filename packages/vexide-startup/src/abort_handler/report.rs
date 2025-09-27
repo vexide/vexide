@@ -5,13 +5,17 @@ use std::{
 
 use talc::{ErrOnOom, Span, Talc};
 use vexide_devices::{
-    display::{Display, Font, FontFamily, FontSize, HAlign, Rect, RenderMode, Text, VAlign},
+    display::{Display, Font, FontFamily, FontSize, Rect, RenderMode, Text},
     peripherals::Peripherals,
-    rgb::Rgb,
 };
 
-use super::fault::{Fault, FaultException};
-use crate::{__heap_end, __heap_start, abort_handler::fault::FaultStatus, allocator::ALLOCATOR};
+use super::fault::Fault;
+use crate::{
+    __heap_end, __heap_start,
+    abort_handler::fault::FaultStatus,
+    allocator::ALLOCATOR,
+    colors::{BLACK, RED, WHITE},
+};
 
 pub struct AbortWriter(());
 
@@ -156,10 +160,6 @@ pub unsafe extern "aapcs" fn fault_exception_handler(fault: *const Fault) -> ! {
     }
 }
 
-const RED: Rgb<u8> = Rgb::new(0xFF, 0x20, 0x20);
-const WHITE: Rgb<u8> = Rgb::new(0xFF, 0xFF, 0xFF);
-const BLACK: Rgb<u8> = Rgb::new(0x00, 0x00, 0x00);
-
 struct DrawState<'a> {
     display: &'a mut Display,
     y_pos: i16,
@@ -197,12 +197,17 @@ fn report_display(display: &mut Display, fault: &Fault, status: &FaultStatus) {
     let source = status.source_description();
     let (action, _) = status.action_description();
 
-    let entire_screen = Rect::new(
-        [0, 0],
-        [Display::HORIZONTAL_RESOLUTION, Display::VERTICAL_RESOLUTION],
+    let msg_width = 342;
+    let background = Rect::from_dimensions(
+        [10, 10],
+        msg_width,
+        Display::VERTICAL_RESOLUTION as u16 - 10 * 2,
     );
 
-    display.fill(&entire_screen, RED);
+    display.fill(&background, RED);
+    display.stroke(&background, WHITE);
+
+    draw_docs_qr_code(&mut *display, msg_width as i16 + 10 + 10, 10);
 
     let mut state = DrawState {
         display,
@@ -215,29 +220,16 @@ fn report_display(display: &mut Display, fault: &Fault, status: &FaultStatus) {
     state.details(&format!(" while {action} address {:#x}", fault.address(),));
 
     state.y_pos += 5;
-    state.title("vexide.dev/docs/aborts");
-    state.y_pos += 5;
+    state.help(&format!("Source: {source}"));
+    state.y_pos += 10;
 
     state.help(HELP_MESSAGE);
     state.y_pos += 5;
-    state.help("Additional debugging information has been logged to the serial console.");
-    state.y_pos += 8;
-
-    state.help("*     Visit the link above for help!!");
+    state.help("Additional debugging information has been logged");
+    state.help("to the serial console.");
 
     state.y_pos += 8;
-
-    state.help(&format!("Source: {source}"));
-
-    state.x_pos = 400;
-    state.y_pos -= 38;
-
-    // The face is here for emotional support.
-    // Users will be understandably terrified that their program has undefined behavior...
-    // (Not to worry: vexide is here to help.)
-    state.help(r"\(@w@)/");
-
-    draw_docs_qr_code(&mut *display, 365, 15);
+    state.details("vexide.dev/docs/aborts");
 }
 
 fn draw_docs_qr_code(display: &mut Display, base_x: i16, base_y: i16) {
@@ -252,9 +244,11 @@ fn draw_docs_qr_code(display: &mut Display, base_x: i16, base_y: i16) {
 
     let quiet_zone = 1;
     let real_width_with_quiet_zone = (qr_width + quiet_zone * 2) * resolution as usize;
+    let padded_base_x = base_x + quiet_zone as i16 * resolution as i16;
+    let padded_base_y = base_y + quiet_zone as i16 * resolution as i16;
 
     let background = Rect::from_dimensions(
-        [base_x - resolution as i16, base_y - resolution as i16],
+        [base_x, base_y],
         real_width_with_quiet_zone as u16,
         real_width_with_quiet_zone as u16,
     );
@@ -270,8 +264,8 @@ fn draw_docs_qr_code(display: &mut Display, base_x: i16, base_y: i16) {
 
             if is_dark {
                 let display_coords = [
-                    base_x + x as i16 * resolution as i16,
-                    base_y + y as i16 * resolution as i16,
+                    padded_base_x + x as i16 * resolution as i16,
+                    padded_base_y + y as i16 * resolution as i16,
                 ];
                 display.fill(
                     &Rect::from_dimensions(display_coords, resolution, resolution),

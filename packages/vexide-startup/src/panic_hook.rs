@@ -11,6 +11,8 @@ use vexide_devices::{
     math::Point2,
 };
 
+use crate::colors::{RED, WHITE};
+
 /// Draw an error box to the display.
 ///
 /// This function is internally used by the vexide panic handler for displaying
@@ -49,8 +51,8 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
         },
     );
 
-    display.fill(&error_box_rect, (139, 0, 0));
-    display.stroke(&error_box_rect, (255, 255, 255));
+    display.fill(&error_box_rect, RED);
+    display.stroke(&error_box_rect, WHITE);
 
     let mut buffer = String::new();
     let mut line: i16 = 0;
