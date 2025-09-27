@@ -251,9 +251,8 @@ mod test {
     use quote::quote;
     use syn::{Ident, ItemFn};
 
-    use crate::{MacroOpts, NO_SYNC_ERR, NO_UNSAFE_ERR, WRONG_ARGS_ERR};
-
     use super::{make_code_sig, make_entrypoint};
+    use crate::{MacroOpts, NO_SYNC_ERR, NO_UNSAFE_ERR, WRONG_ARGS_ERR};
 
     #[test]
     fn wraps_main_fn() {
