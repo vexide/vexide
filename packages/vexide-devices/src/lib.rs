@@ -77,3 +77,29 @@ pub enum PortError {
         port: u8,
     },
 }
+
+#[cfg(feature = "std")]
+impl From<PortError> for std::io::Error {
+    fn from(value: PortError) -> Self {
+        match value {
+            PortError::Disconnected { .. } => std::io::Error::new(
+                std::io::ErrorKind::AddrNotAvailable,
+                "A device is not connected to the specified port.",
+            ),
+            PortError::IncorrectDevice { .. } => std::io::Error::new(
+                std::io::ErrorKind::AddrInUse,
+                "Port is in use as another device.",
+            ),
+        }
+    }
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Error for PortError {
+    fn kind(&self) -> embedded_io::ErrorKind {
+        match self {
+            PortError::Disconnected { .. } => embedded_io::ErrorKind::AddrNotAvailable,
+            PortError::IncorrectDevice { .. } => embedded_io::ErrorKind::AddrInUse,
+        }
+    }
+}
