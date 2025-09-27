@@ -29,7 +29,7 @@ jobs:
               uses: actions-rs/cargo@v1
               with:
                   command: check
-                  args: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --bins --features "full vex-sdk-jumptable" --examples
+                  args: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --bins --examples
     lint:
         name: Lint
         runs-on: ubuntu-latest
