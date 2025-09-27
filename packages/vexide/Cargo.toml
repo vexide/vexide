@@ -27,7 +27,7 @@ vexide-macro = { workspace = true, optional = true }
 vex-sdk = { workspace = true }
 
 [features]
-default = ["async", "devices", "core"]
+default = ["async", "sync", "devices", "core"]
 full = ["default", "startup", "backtrace", "allocator", "panic-hook", "macros"]
 
 macros = ["dep:vexide-macro"]
@@ -36,7 +36,11 @@ async = ["dep:vexide-async"]
 sync = ["dep:vexide-async", "vexide-async/sync"]
 
 core = ["dep:vexide-core"]
-backtrace = ["dep:vexide-core", "vexide-core/backtrace", "vexide-startup/backtrace"]
+backtrace = [
+    "dep:vexide-core",
+    "vexide-core/backtrace",
+    "vexide-startup/backtrace",
+]
 
 startup = ["dep:vexide-startup"]
 panic-hook = ["vexide-startup/panic-hook"]

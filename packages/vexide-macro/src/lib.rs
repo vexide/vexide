@@ -248,7 +248,10 @@ pub fn test_fail(_args: TokenStream, _item: TokenStream) -> TokenStream {
 
 #[cfg(test)]
 mod test {
-    use syn::Ident;
+    use quote::quote;
+    use syn::{Ident, ItemFn};
+
+    use crate::{MacroOpts, NO_SYNC_ERR, NO_UNSAFE_ERR, WRONG_ARGS_ERR};
 
     use super::{make_code_sig, make_entrypoint};
 
@@ -325,7 +328,7 @@ mod test {
 
         println!("{}", code_sig.to_string());
         assert!(code_sig.to_string().contains(
-            "static CODE_SIGNATURE : :: vexide :: startup :: CodeSignature = __custom_code_sig_ident__ ;"
+            "static CODE_SIGNATURE : :: vexide :: program :: CodeSignature = __custom_code_sig_ident__ ;"
         ));
     }
 
