@@ -114,3 +114,21 @@ impl Executor {
         }
     }
 }
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use vex_sdk_mock as _;
+
+    #[test]
+    fn spawns_task() {
+        let executor = Executor::new();
+
+        let result = executor.block_on(executor.spawn(async {
+            1
+        }));
+
+        assert_eq!(result, 1);
+    }
+}

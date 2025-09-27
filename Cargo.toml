@@ -35,6 +35,7 @@ vexide-devices = { version = "0.7.0", path = "packages/vexide-devices", default-
 vexide-startup = { version = "0.4.2", path = "packages/vexide-startup", default-features = false }
 vexide-macro = { version = "0.3.2", path = "packages/vexide-macro", default-features = false }
 vex-sdk = "0.27.1"
+vex-sdk-mock = "0.0.1"
 vex-libunwind = { version = "0.1.0", git = "https://github.com/vexide/vex-libunwind.git", tag = "v0.1.0" }
 
 [workspace.lints.rust]
