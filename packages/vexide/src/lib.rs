@@ -67,18 +67,32 @@ pub mod time {
 }
 
 #[doc(inline)]
-#[cfg(feature = "core")]
-pub use vexide_core::{competition, os, program};
-#[doc(inline)]
 #[cfg(feature = "backtrace")]
 pub use vexide_core::backtrace;
+#[doc(inline)]
+#[cfg(feature = "core")]
+pub use vexide_core::{competition, os, program};
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
 #[doc(inline)]
-#[cfg(all(feature = "macros", feature = "core", feature = "async", feature = "startup", feature = "devices"))]
+#[cfg(all(
+    feature = "macros",
+    feature = "core",
+    feature = "async",
+    feature = "startup",
+    feature = "devices"
+))]
 pub use vexide_macro::{main, test};
-#[cfg(all(feature = "macros", not(all(feature = "core", feature = "async", feature = "startup", feature = "devices"))))]
+#[cfg(all(
+    feature = "macros",
+    not(all(
+        feature = "core",
+        feature = "async",
+        feature = "startup",
+        feature = "devices"
+    ))
+))]
 pub use vexide_macro::{main_fail as main, test_fail as test};
 #[doc(inline)]
 #[cfg(feature = "startup")]

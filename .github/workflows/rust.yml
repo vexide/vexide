@@ -23,13 +23,13 @@ jobs:
               uses: actions-rs/cargo@v1
               with:
                   command: check
-                  args: --features "full vex-sdk-jumptable" -p vexide
+                  args: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem -p vexide --features "full vex-sdk-jumptable"
 
             - name: Check Examples
               uses: actions-rs/cargo@v1
               with:
                   command: check
-                  args: --bins --features "full vex-sdk-jumptable" --examples
+                  args: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --bins --features "full vex-sdk-jumptable" --examples
     lint:
         name: Lint
         runs-on: ubuntu-latest
@@ -42,7 +42,7 @@ jobs:
               with:
                   reporter: "github-pr-check"
                   github_token: ${{ secrets.GITHUB_TOKEN }}
-                  clippy_flags: --lib --bins --examples --features "full vex-sdk-jumptable"
+                  clippy_flags: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --lib --bins --examples --features "full vex-sdk-jumptable"
     test:
         name: Test
         runs-on: ubuntu-latest

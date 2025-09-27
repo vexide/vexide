@@ -1,5 +1,4 @@
-use std::time::Duration;
-use std::io::Write;
+use std::{io::Write, time::Duration};
 
 use vexide::prelude::*;
 

@@ -3,7 +3,7 @@
 use std::{future::Future, rc::Rc};
 
 use crate::local::TaskLocalStorage;
-pub use crate::local::{LocalKey, task_local};
+pub use crate::local::{task_local, LocalKey};
 
 // public because it's used in Task<T> and InfallibleTask<T>
 #[doc(hidden)]

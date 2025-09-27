@@ -128,7 +128,7 @@ pub fn code_signature() -> CodeSignature {
     CodeSignature::new(
         ProgramType::User,
         ProgramOwner::Partner,
-        ProgramOptions::empty()
+        ProgramOptions::empty(),
     )
 }
 
