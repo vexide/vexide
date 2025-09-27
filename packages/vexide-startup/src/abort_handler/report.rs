@@ -12,7 +12,7 @@ use vexide_devices::{
 use super::fault::Fault;
 use crate::{
     __heap_end, __heap_start,
-    abort_handler::fault::FaultStatus,
+    abort_handler::fault::{FaultException, FaultStatus},
     allocator::ALLOCATOR,
     colors::{BLACK, RED, WHITE},
 };
@@ -201,7 +201,7 @@ fn report_display(display: &mut Display, fault: &Fault, status: &FaultStatus) {
     let background = Rect::from_dimensions(
         [10, 10],
         msg_width,
-        Display::VERTICAL_RESOLUTION as u16 - 10 * 2,
+        Display::VERTICAL_RESOLUTION as u16 - 10 - 35,
     );
 
     display.fill(&background, RED);
@@ -215,7 +215,13 @@ fn report_display(display: &mut Display, fault: &Fault, status: &FaultStatus) {
         x_pos: 20,
     };
 
-    state.title(&format!("{}!", fault.exception));
+    if fault.exception == FaultException::UndefinedInstruction {
+        // This has a shorter message to prevent horizontal overflow.
+        state.title(&format!("{}!", fault.exception));
+    } else {
+        state.title(&format!("{} Error!", fault.exception));
+    }
+
     state.details(&format!(" at address {:#x}", fault.program_counter));
     state.details(&format!(" while {action} address {:#x}", fault.address(),));
 

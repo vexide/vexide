@@ -74,7 +74,7 @@ impl Fault {
 }
 
 /// Type of exception causing a fault to be raised.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum FaultException {
     UndefinedInstruction = 0,
