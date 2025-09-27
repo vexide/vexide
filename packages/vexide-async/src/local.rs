@@ -294,6 +294,7 @@ static CURRENT_TLS: Mutex<TLSContainer> = Mutex::new(TLSContainer(None));
 // Used when outside of a task
 static FALLBACK_TLS: Mutex<TaskLocalStorage> = Mutex::new(TaskLocalStorage::new());
 
+#[derive(Debug)]
 pub(crate) struct TaskLocalStorage {
     locals: UnsafeCell<BTreeMap<u32, ErasedTaskLocal>>,
 }
