@@ -1,21 +1,16 @@
 use std::{
+    ffi::CStr,
     fmt::{self, Write},
-    ptr,
 };
 
-use talc::{ErrOnOom, Span, Talc};
 use vexide_devices::{
-    display::{
-        Display, Font, FontFamily, FontSize, Rect, RenderMode, Text, TouchState,
-    },
+    display::{Display, Font, FontFamily, FontSize, Rect, RenderMode, TouchState},
     peripherals::Peripherals,
 };
 
 use super::fault::Fault;
 use crate::{
-    __heap_end, __heap_start,
     abort_handler::fault::{FaultException, FaultStatus},
-    allocator::ALLOCATOR,
     colors::{BLACK, RED, WHITE},
 };
 
@@ -75,27 +70,8 @@ pub unsafe extern "aapcs" fn fault_exception_handler(fault: *const Fault) -> ! {
 
     report_serial(&fault, &fault_status);
 
-    // Before this we haven't needed to allocate, but display drawing does need the allocator.
-    // If we fail after this, it shouldn't be too much of an issue because we've already printed
-    // the fault.
-
-    // Since we could have aborted anywhere - including in the middle of an allocation,
-    // we must treat the allocator as uninitialized memory and all existing allocations as invalid.
-    // Thus, we use `ptr::write` to install a new allocator without dropping the old one.
-    unsafe {
-        // lock() is a no-op here since we're using `AssumeUnlockable`.
-        let mut alloc = ALLOCATOR.lock();
-        ptr::write(&raw mut *alloc, Talc::new(ErrOnOom));
-
-        // I solemnly swear I will not access any old allocations!
-        // We will not be returning from this function, so this should be fine as long
-        // as no heap-allocated globals are accessed. Those would be invalidated anyways.
-        _ = alloc.claim(Span::new(&raw mut __heap_start, &raw mut __heap_end));
-    }
-
-    // This is similar to above - the previous instances of Peripherals are out-of-scope now.
+    // The previous instances of Peripherals are out-of-scope now.
     let mut peripherals = unsafe { Peripherals::steal() };
-
     report_display(&mut peripherals.display, &fault, &fault_status);
 }
 
@@ -172,53 +148,54 @@ fn report_display(display: &mut Display, fault: &Fault, status: &FaultStatus) ->
 
     let qr_zone = draw_docs_qr_code(&mut *display, msg_width as i16 + 10 + 10, 10);
 
-    let mut state = DrawState {
-        display,
-        y_pos: 20,
-        x_pos: 20,
-    };
+    let mut state = DrawState::new(display, 20, 20);
 
     if fault.exception == FaultException::UndefinedInstruction {
         // This has a shorter message to prevent horizontal overflow.
-        state.title(&format!("{}!", fault.exception));
+        state.title(format_args!("{}!", fault.exception));
     } else {
-        state.title(&format!("{} Error!", fault.exception));
+        state.title(format_args!("{} Error!", fault.exception));
     }
 
-    state.details(&format!(" at address {:#x}", fault.program_counter));
-    state.details(&format!(" while {action} address {:#x}", fault.address(),));
+    state.details(format_args!(" at address {:#x}", fault.program_counter));
+    state.details(format_args!(
+        " while {action} address {:#x}",
+        fault.address(),
+    ));
 
     state.y_pos += 5;
-    state.help(&format!("Source: {source}"));
+    state.help(format_args!("Source: {source}"));
     state.y_pos += 10;
 
-    state.help(HELP_MESSAGE);
+    state.help(format_args!("{HELP_MESSAGE}"));
     state.y_pos += 5;
-    state.help("Additional debugging information has been logged");
-    state.help("to the serial console.");
-    state.help("(Tap QR Code to log the debug info again.)");
+    state.help(format_args!(
+        "Additional debugging information has been logged"
+    ));
+    state.help(format_args!("to the serial console."));
+    state.help(format_args!("(Tap QR Code to log the debug info again.)"));
 
     state.y_pos += 3;
-    state.details("vexide.dev/docs/aborts");
+    state.details(format_args!("vexide.dev/docs/aborts"));
 
     let mut prev_touch_state = display.touch_status().state;
 
     loop {
         unsafe {
             vex_sdk::vexTasksRun();
-
-            let touch = display.touch_status();
-
-            if prev_touch_state != TouchState::Released
-                && touch.state == TouchState::Released
-                && (qr_zone.start.x..=qr_zone.end.x).contains(&touch.x)
-                && (qr_zone.start.y..=qr_zone.end.y).contains(&touch.y)
-            {
-                report_serial(fault, status);
-            }
-
-            prev_touch_state = touch.state;
         }
+
+        let touch = display.touch_status();
+
+        if prev_touch_state != TouchState::Released
+            && touch.state == TouchState::Released
+            && (qr_zone.start.x..=qr_zone.end.x).contains(&touch.x)
+            && (qr_zone.start.y..=qr_zone.end.y).contains(&touch.y)
+        {
+            report_serial(fault, status);
+        }
+
+        prev_touch_state = touch.state;
     }
 }
 
@@ -273,36 +250,58 @@ fn draw_docs_qr_code(display: &mut Display, base_x: i16, base_y: i16) -> Rect {
 
 /// Line-based text writer.
 struct DrawState<'a> {
-    display: &'a mut Display,
+    _display: &'a mut Display,
+    text: heapless::String<1024>,
     y_pos: i16,
     x_pos: i16,
 }
 
-impl DrawState<'_> {
+impl<'a> DrawState<'a> {
+    pub const fn new(display: &'a mut Display, y_pos: i16, x_pos: i16) -> Self {
+        Self {
+            _display: display,
+            text: heapless::String::new(),
+            y_pos,
+            x_pos,
+        }
+    }
+
     /// Large, title-sized text
-    pub fn title(&mut self, text: &str) {
-        self.draw(text, Font::new(FontSize::LARGE, FontFamily::Proportional));
+    pub fn title(&mut self, args: fmt::Arguments<'_>) {
+        self.draw(args, Font::new(FontSize::LARGE, FontFamily::Proportional));
         self.y_pos += 30;
     }
 
     /// Medium-sized text
-    pub fn details(&mut self, text: &str) {
-        self.draw(text, Font::new(FontSize::MEDIUM, FontFamily::Proportional));
+    pub fn details(&mut self, args: fmt::Arguments<'_>) {
+        self.draw(args, Font::new(FontSize::MEDIUM, FontFamily::Proportional));
         self.y_pos += 20;
     }
 
     /// Compact text for longer messages
-    pub fn help(&mut self, text: &str) {
-        self.draw(text, Font::new(FontSize::SMALL, FontFamily::Proportional));
+    pub fn help(&mut self, args: fmt::Arguments<'_>) {
+        self.draw(args, Font::new(FontSize::SMALL, FontFamily::Proportional));
         self.y_pos += 15;
     }
 
     /// Common functionality for drawing
-    fn draw(&mut self, text: &str, font: Font) {
-        self.display.draw_text(
-            &Text::new(text, font, [self.x_pos, self.y_pos]),
-            WHITE,
-            None,
-        );
+    fn draw(&mut self, args: fmt::Arguments<'_>, font: Font) {
+        _ = write!(self.text, "{args}\0");
+
+        // This isn't done through the Display API to avoid allocations.
+        if let Ok(c_str) = CStr::from_bytes_with_nul(self.text.as_bytes()) {
+            font.apply_to_sdk();
+            unsafe {
+                vex_sdk::vexDisplayForegroundColor(0xFF_FF_FF);
+                vex_sdk::vexDisplayPrintf(
+                    self.x_pos.into(),
+                    (self.y_pos + Display::HEADER_HEIGHT).into(),
+                    false.into(),
+                    c"%s".as_ptr(),
+                    c_str.as_ptr(),
+                );
+            }
+        }
+        self.text.clear();
     }
 }

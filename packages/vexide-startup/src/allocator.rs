@@ -14,7 +14,7 @@ use talc::{locking::AssumeUnlockable, ErrOnOom, Span, Talc, Talck};
 
 #[cfg(target_os = "vexos")]
 #[global_allocator]
-pub(crate) static ALLOCATOR: Talck<AssumeUnlockable, ErrOnOom> = Talc::new(ErrOnOom).lock();
+static ALLOCATOR: Talck<AssumeUnlockable, ErrOnOom> = Talc::new(ErrOnOom).lock();
 
 /// Claims a region of memory as heap space.
 ///
