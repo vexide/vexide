@@ -23,7 +23,8 @@ use vexide_devices::{
 // SAFETY: The code signature needs to be in this section so it may be found by VEXos.
 #[unsafe(link_section = ".code_signature")]
 #[used] // This is needed to prevent the linker from removing this object in release builds
-static CODE_SIG: CodeSignature = CodeSignature::new(
+#[unsafe(no_mangle)]
+static __VEXIDE_CODE_SIGNATURE: CodeSignature = CodeSignature::new(
     ProgramType::User,
     ProgramOwner::Partner,
     ProgramOptions::empty(),

@@ -10,11 +10,10 @@ use core::{cell::RefCell, future::Future, task::Poll, time::Duration};
 
 use snafu::{ensure, Snafu};
 use vex_sdk::{
-    vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet,
-    V5_ControllerId, V5_ControllerIndex, V5_ControllerStatus,
+    vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
+    V5_ControllerIndex, V5_ControllerStatus,
 };
-
-use vexide_core::competition;
+use vexide_core::competition::{self, CompetitionMode};
 
 /// Represents the state of a button on the controller.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]

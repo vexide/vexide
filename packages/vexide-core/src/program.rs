@@ -125,11 +125,13 @@ pub fn code_signature() -> CodeSignature {
     // TODO: Return real data on non-vexos targets, either through some special
     // symbol name or a linker section.
     #[cfg(not(target_os = "vexos"))]
-    CodeSignature::new(
-        ProgramType::User,
-        ProgramOwner::Partner,
-        ProgramOptions::empty(),
-    )
+    {
+        unsafe extern "C" {
+            static __VEXIDE_CODE_SIGNATURE: CodeSignature;
+        }
+
+        unsafe { __VEXIDE_CODE_SIGNATURE }
+    }
 }
 
 /// Returns a raw pointer to the currently linked file.

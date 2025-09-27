@@ -57,7 +57,8 @@ fn make_code_sig(opts: MacroOpts) -> proc_macro2::TokenStream {
     quote! {
         #[link_section = ".code_signature"]
         #[used] // This is needed to prevent the linker from removing this object in release builds
-        static CODE_SIGNATURE: ::vexide::program::CodeSignature = #sig;
+        #[unsafe(no_mangle)]
+        static __VEXIDE_CODE_SIGNATURE: ::vexide::program::CodeSignature = #sig;
     }
 }
 
@@ -329,7 +330,7 @@ mod test {
 
         println!("{}", code_sig.to_string());
         assert!(code_sig.to_string().contains(
-            "static CODE_SIGNATURE : :: vexide :: program :: CodeSignature = __custom_code_sig_ident__ ;"
+            "static __VEXIDE_CODE_SIGNATURE : :: vexide :: program :: CodeSignature = __custom_code_sig_ident__ ;"
         ));
     }
 
