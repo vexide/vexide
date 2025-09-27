@@ -23,10 +23,3 @@ proc-macro = true
 
 [lints]
 workspace = true
-
-[package.metadata.docs.rs]
-targets = ["armv7a-vex-v5"]
-cargo-args=[
-    "-Zbuild-std=core,alloc,compiler_builtins",
-    "-Zbuild-std-features=compiler-builtins-mem"
-]

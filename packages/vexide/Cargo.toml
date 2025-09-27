@@ -58,6 +58,6 @@ dangerous-motor-tuning = ["vexide-devices/dangerous-motor-tuning"]
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]
 cargo-args = [
-    "-Zbuild-std=core,alloc,compiler_builtins",
+    "-Zbuild-std=std,panic_abort",
     "-Zbuild-std-features=compiler-builtins-mem",
 ]
