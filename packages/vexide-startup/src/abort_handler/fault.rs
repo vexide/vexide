@@ -163,16 +163,16 @@ impl FaultStatus {
         }
     }
 
-    pub fn action_description(&self) -> &'static str {
+    pub fn action_description(&self) -> (&'static str, &'static str) {
         match self {
             FaultStatus::DataFault(_) => {
                 if self.is_write() {
-                    "writing to"
+                    ("writing", "to")
                 } else {
-                    "reading from"
+                    ("reading", "from")
                 }
             }
-            FaultStatus::InstructionFault(_) => "fetching instruction at",
+            FaultStatus::InstructionFault(_) => ("fetching", "instruction at"),
         }
     }
 }

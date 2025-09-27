@@ -1,4 +1,3 @@
-
 use std::fmt::Write;
 
 use vex_libunwind::{registers::UNW_REG_IP, UnwindContext, UnwindCursor, UnwindError};

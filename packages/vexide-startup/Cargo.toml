@@ -44,13 +44,16 @@ workspace = true
 [features]
 allocator = ["dep:talc"]
 panic-hook = ["dep:vexide-devices"]
-abort-handler = ["dep:vexide-devices", "dep:vex-libunwind", "dep:vex-libunwind-sys"]
+abort-handler = ["dep:vexide-devices", "allocator", "dep:vex-libunwind", "dep:vex-libunwind-sys"]
 backtrace = ["vexide-core/backtrace"]
 
 vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
 vex-sdk-vexcode = ["dep:vex-sdk-vexcode"]
 vex-sdk-pros = ["dep:vex-sdk-pros"]
 vex-sdk-mock = ["dep:vex-sdk-mock"]
+
+[build-dependencies]
+qrcode = "0.14.1"
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]

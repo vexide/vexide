@@ -66,8 +66,8 @@ mod sdk;
 // to the address of their location defined in the linkerscript.
 #[cfg(target_os = "vexos")]
 unsafe extern "C" {
-    static mut __heap_start: u8;
-    static mut __heap_end: u8;
+    pub(crate) static mut __heap_start: u8;
+    pub(crate) static mut __heap_end: u8;
 
     static mut __user_ram_start: u8;
 

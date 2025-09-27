@@ -127,8 +127,6 @@ pub extern "aapcs" fn irq() -> ! {
     )
 }
 
-
-
 #[expect(edition_2024_expr_fragment_specifier)]
 macro_rules! fault_exception_vector {
     (
