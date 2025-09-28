@@ -296,7 +296,7 @@ impl AdiDigitalOut {
     }
 
     /// Set the digital logic level to [`LogicLevel::High`]. Analogous to
-    /// [`Self::set_level(LogicLevel::High)`].
+    /// [`Self::set_level(LogicLevel::High)`](Self::set_level).
     ///
     /// # Errors
     ///
@@ -324,8 +324,7 @@ impl AdiDigitalOut {
         self.set_level(LogicLevel::High)
     }
 
-    /// Set the digital logic level to [`LogicLevel::Low`]. Analogous to
-    /// [`Self::set_level(LogicLevel::Low)`].
+    /// Set the digital logic level to [`LogicLevel::Low`]. Analogous to [`Self::set_level(LogicLevel::Low)`](Self::set_level).
     ///
     /// # Errors
     ///

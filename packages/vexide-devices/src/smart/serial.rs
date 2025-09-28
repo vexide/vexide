@@ -33,11 +33,13 @@ use super::{SmartDevice, SmartDeviceType, SmartPort};
 
 /// A Smart Port configured as a generic RS-485 serial port.
 ///
-/// This struct implements the [`Read`] and [`Write`] traits from vexide's `io` module
-/// for reading/writing to the serial port.
+/// This struct implements the [`std::io::Read`] and [`std::io::Write`] traits if the `std`
+/// feature is enabled. Alternatively, the `embedded_io` enabled implementations of the
+/// [`embedded_io::Read`] and [`embedded_io::Write`] for this struct if `vexide_devices`
+/// is being used in a `no_std` environment.
 ///
-/// [`Read`]: vexide_core::io::Read
-/// [`Write`]: vexide_core::io::Write
+/// [`embedded_io::Read`]: https://docs.rs/embedded-io/0.6.1/embedded_io/trait.Read.html
+/// [`embedded_io::Write`]: https://docs.rs/embedded-io/0.6.1/embedded_io/trait.Write.html
 #[derive(Debug, Eq, PartialEq)]
 pub struct SerialPort {
     port: SmartPort,

@@ -17,7 +17,7 @@
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
-//! async fn main(peripherals: Peripherals) {
+//! async fn main(_peripherals: Peripherals) {
 //!     println!("Hello, world!");
 //! }
 //!```
@@ -25,7 +25,6 @@
 //! Check out our [examples](https://github.com/vexide/vexide/tree/main/examples/) for more examples
 //! of different features.
 
-#![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(html_logo_url = "https://vexide.dev/images/logo.svg")]
 
@@ -56,6 +55,7 @@ pub use vexide_async::task;
 ///
 /// [`sleep`]: vexide_async::time::sleep
 /// [`sleep_until`]: vexide_async::time::sleep_until
+/// [`Instant`]: std::time::Instant
 #[cfg(any(feature = "core", feature = "async"))]
 pub mod time {
     #[doc(inline)]

@@ -5,6 +5,8 @@
 //! crates. Most of these modules are re-exported from the top-level [`vexide`]
 //! crate.
 //!
+//! [`vexide`]: https://docs.rs/vexide/
+//!
 //! This crate includes:
 //! - Competition control, including the [`Compete`](crate::competition::Compete)
 //!   trait ([`competition`]).

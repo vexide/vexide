@@ -18,6 +18,14 @@ use core::future::Future;
 use executor::EXECUTOR;
 pub use task::spawn;
 
+/// Synchronization primitives for async code.
+///
+/// vexide programs often use async [tasks](crate::task) to run multiple
+/// operations concurrently. These primitives provide methods for tasks to
+/// safely communicate with each other and share data. This is vexide's
+/// async equivalent to the [`std::sync` module].
+///
+/// [`std::sync` module]: https://doc.rust-lang.org/stable/std/sync/index.html
 #[cfg(feature = "sync")]
 pub mod sync {
     pub use async_lock::{

@@ -81,7 +81,9 @@ pub struct AdiPort {
 impl AdiPort {
     pub(crate) const INTERNAL_ADI_PORT_NUMBER: u8 = 22;
 
-    /// Creates a new ADI port on the specified port number and [`ADIExpander`] port number.
+    /// Creates a new ADI port on the specified port number and [`AdiExpander`] port number.
+    ///
+    /// [`AdiExpander`]: crate::smart::expander::AdiExpander
     ///
     /// # Safety
     ///
@@ -269,7 +271,7 @@ pub enum AdiDeviceType {
 
     /// Cortex-era yaw-rate gyroscope
     ///
-    /// This corresponds to the [`AdiGyro`] device.
+    /// This corresponds to the [`AdiGyroscope`] device.
     Gyro,
 
     /// Cortex-era servo motor

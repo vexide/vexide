@@ -3,9 +3,9 @@
 //! Used by devices such as [`Motor`], [`RotationSensor`], and [`AdiEncoder`]
 //! that are able to measure their own rotation.
 //!
-//! [`Motor`]: crate::devices::smart::Motor
-//! [`RotationSensor`]: crate::devices::smart::RotationSensor
-//! [`AdiEncoder`]: crate::devices::adi::AdiEncoder
+//! [`AdiEncoder`]: crate::adi::encoder::AdiEncoder
+//! [`RotationSensor`]: crate::smart::rotation::RotationSensor
+//! [`Motor`]: crate::smart::motor::Motor
 
 use core::{
     f64::{
@@ -22,6 +22,10 @@ use core::{
 ///
 /// This type is used by devices such as [`Motor`], [`RotationSensor`], and
 /// [`AdiEncoder`] that measure their own rotation.
+///
+/// [`RotationSensor`]: crate::smart::rotation::RotationSensor
+/// [`Motor`]: crate::smart::motor::Motor
+/// [`AdiEncoder`]: crate::adi::encoder::AdiEncoder
 ///
 /// # Non-modularity
 ///
