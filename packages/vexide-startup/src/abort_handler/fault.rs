@@ -85,7 +85,7 @@ pub enum FaultException {
 impl Display for FaultException {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
-            FaultException::DataAbort => "Data Abort",
+            FaultException::DataAbort => "Memory Permission",
             FaultException::UndefinedInstruction => "Undefined Instruction",
             FaultException::PrefetchAbort => "Prefetch Abort",
         };
