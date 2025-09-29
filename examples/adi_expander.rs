@@ -14,6 +14,6 @@ async fn main(peripherals: Peripherals) {
         // Print out the sensor values to stdout every 10ms (the update rate of ADI devices).
         println!("Potentiometer Angle: {}", potentiometer.angle().unwrap(),);
 
-        sleep(AdiDevice::UPDATE_INTERVAL).await;
+        sleep(AdiPotentiometer::UPDATE_INTERVAL).await;
     }
 }
