@@ -6,8 +6,16 @@
  * <https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/armv7a_vex_v5_linker_script.ld>
  */
 
-/* 6MiB total, 2MiB for each subsection. (start = 0x07a00000) */
+__abort_stack_size = 1M;
+__undefined_stack_size = 1M;
+
+__stack_length = 4M + __abort_stack_size + __undefined_stack_size;
+
+__abort_stack_top = __stack_bottom + __abort_stack_size;
+__undefined_stack_top = __stack_bottom + __abort_stack_size + __undefined_stack_size;
+
 __patcher_section_length = 2M;
+/* 6MiB total, 2MiB for each subsection. (start = 0x07a00000) */
 __linked_file_length = __patcher_section_length * 3;
 
 OVERWRITE_SECTIONS {

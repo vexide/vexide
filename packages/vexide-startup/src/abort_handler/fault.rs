@@ -1,4 +1,7 @@
-use std::fmt::{self, Display};
+use std::fmt::Display;
+
+use vex_libunwind::UnwindContext;
+use vex_libunwind_sys::unw_context_t;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -27,49 +30,37 @@ pub struct Fault {
 }
 
 impl Fault {
-    pub fn load_status(&self) -> FaultStatus {
-        let status: u32;
+    /// Create an unwind context using custom registers instead of ones captured
+    /// from the current processor state.
+    ///
+    /// This is based on the ARM implementation of __unw_getcontext:
+    /// <https://github.com/llvm/llvm-project/blob/6fc3b40b2cfc33550dd489072c01ffab16535840/libunwind/src/UnwindRegistersSave.S#L834>
+    pub fn unwind_context(&self) -> UnwindContext {
+        #[repr(C)]
+        struct RawUnwindContext {
+            // Value of each general-purpose register in the order of r0-r12, sp, lr, pc.
+            r: [u32; 13],
+            sp: u32,
+            lr: u32,
+            pc: u32,
 
-        // https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/Virtual-Memory-System-Architecture--VMSA-/CP15-registers-for-a-VMSA-implementation/CP15-c5--Fault-status-registers
-        match self.exception {
-            FaultException::DataAbort => unsafe {
-                core::arch::asm!(
-                    "mrc p15, 0, {dfsr}, c5, c0, 0",
-                    dfsr = out(reg) status,
-                );
-
-                FaultStatus::DataFault(status)
-            },
-            FaultException::PrefetchAbort | FaultException::UndefinedInstruction => unsafe {
-                core::arch::asm!(
-                    "mrc p15, 0, {ifsr}, c5, c0, 1",
-                    ifsr = out(reg) status,
-                );
-
-                FaultStatus::InstructionFault(status)
-            },
-        }
-    }
-
-    pub fn address(&self) -> u32 {
-        let address: u32;
-
-        match self.exception {
-            FaultException::DataAbort => unsafe {
-                core::arch::asm!(
-                    "mrc p15, 0, {dfar}, c6, c0, 0",
-                    dfar = out(reg) address,
-                );
-            },
-            FaultException::PrefetchAbort | FaultException::UndefinedInstruction => unsafe {
-                core::arch::asm!(
-                    "mrc p15, 0, {ifar}, c6, c0, 1",
-                    ifar = out(reg) address,
-                );
-            },
+            /// Padding (unused on ARM).
+            data: [u8; const { size_of::<unw_context_t>() - size_of::<u32>() * 16 }],
         }
 
-        address
+        // SAFETY: `context` is a valid `unw_context_t` because it has its
+        // general-purpose registers field set.
+        UnwindContext::from(unsafe {
+            core::mem::transmute::<RawUnwindContext, unw_context_t>(RawUnwindContext {
+                r: self.registers,
+                sp: self.stack_pointer,
+                lr: self.link_register,
+                pc: self.program_counter,
+                // This matches the behavior of __unw_getcontext, which leaves
+                // this data uninitialized.
+                data: [0; _],
+            })
+        })
     }
 }
 
@@ -83,96 +74,121 @@ pub enum FaultException {
 }
 
 impl Display for FaultException {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let name = match self {
-            FaultException::DataAbort => "Memory Permission",
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            FaultException::DataAbort => "Data Abort",
             FaultException::UndefinedInstruction => "Undefined Instruction",
             FaultException::PrefetchAbort => "Prefetch Abort",
-        };
-
-        write!(f, "{name}")
+        })
     }
 }
 
-pub enum FaultStatus {
-    DataFault(u32),
-    InstructionFault(u32),
+impl Fault {
+    pub fn address(&self) -> u32 {
+        let address: u32;
+
+        match self.exception {
+            FaultException::DataAbort => unsafe {
+                core::arch::asm!(
+                    "mrc p15, 0, {dfar}, c6, c0, 0",
+                    dfar = out(reg) address,
+                );
+
+                address
+            },
+            FaultException::PrefetchAbort => unsafe {
+                core::arch::asm!(
+                    "mrc p15, 0, {ifar}, c6, c0, 1",
+                    ifar = out(reg) address,
+                );
+
+                address
+            },
+            FaultException::UndefinedInstruction => self.program_counter,
+        }
+    }
 }
 
-impl FaultStatus {
-    pub fn source(&self) -> u8 {
-        let fsr = match self {
-            FaultStatus::DataFault(dfsr) => dfsr,
-            FaultStatus::InstructionFault(ifsr) => ifsr,
-        };
+impl Display for Fault {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        const DFSR_WRITE_NOT_READ_BIT: u32 = 1 << 11;
 
-        (fsr & 0b1111) as u8
-    }
+        let addr = self.address();
 
-    pub fn source_description(&self) -> &'static str {
-        // https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/Virtual-Memory-System-Architecture--VMSA-/Fault-Status-and-Fault-Address-registers-in-a-VMSA-implementation/Fault-Status-Register-encodings-for-the-VMSA?lang=en#CBHHADIB
-
-        let source = self.source();
-
-        match self {
-            FaultStatus::DataFault(_) => match source {
-                0b00001 => "Alignment fault	(MMU)",
-                0b00100 => "Instruction cache maintenance fault",
-                0b01100 | 0b01110 => "Translation table walk synchronous external abort",
-                0b11100 | 0b11110 => "Translation table walk synchronous parity error",
-                0b00101 | 0b00111 => "Translation fault (MMU)",
-                0b00011 | 0b00110 => "Access Flag fault (MMU)",
-                0b01001 | 0b01011 => "Domain fault (MMU)",
-                0b01101 | 0b01111 => "Permission fault (MMU)",
-                0b00010 => "Debug event",
-                0b01000 => "Synchronous external abort",
-                0b10100 => "implementation defined (Lockdown)",
-                0b11010 => "implementation defined (Coprocessor abort)",
-                0b11001 => "Memory access synchronous parity error",
-                0b10110 => "Asynchronous external abort",
-                0b11000 => {
-                    "Memory access asynchronous parity error (Including on translation table walk)"
+        match self.exception {
+            FaultException::DataAbort => {
+                let mut dfsr: u32 = 0;
+                unsafe {
+                    core::arch::asm!(
+                        "mrc p15, 0, {dfsr}, c5, c0, 0",
+                        dfsr = out(reg) dfsr,
+                    );
                 }
-                _ => "unknown",
-            },
-            FaultStatus::InstructionFault(_) => match source {
-                0b01100 | 0b01110 => "Translation table walk synchronous external abort",
-                0b11100 | 0b11110 => "Translation table walk synchronous parity error",
-                0b00101 | 0b00111 => "Translation fault (MMU)",
-                0b00011 | 0b00110 => "Access Flag fault (MMU)",
-                0b01001 | 0b01011 => "Domain fault (MMU)",
-                0b01101 | 0b01111 => "Permission fault (MMU)",
-                0b00010 => "Debug event",
-                0b01000 => "Synchronous external abort",
-                0b10100 => "implementation defined (Lockdown)",
-                0b11010 => "implementation defined (Coprocessor abort)",
-                0b11001 => "Memory access synchronous parity error",
-                _ => "unknown",
-            },
-        }
-    }
 
-    pub fn is_write(&self) -> bool {
-        match self {
-            FaultStatus::DataFault(dfsr) => {
-                const WRITE_NOT_READ_BIT: u32 = 1 << 11;
+                f.write_str(match (dfsr & 0b1111) as u8 {
+                    0b00001 => "Alignment fault	(MMU)",
+                    0b00100 => "Instruction cache maintenance fault",
+                    0b01100 | 0b01110 => "Translation table walk synchronous external abort",
+                    0b11100 | 0b11110 => "Translation table walk synchronous parity error",
+                    0b00101 | 0b00111 => "Translation fault (MMU)",
+                    0b00011 | 0b00110 => "Access Flag fault (MMU)",
+                    0b01001 | 0b01011 => "Domain fault (MMU)",
+                    0b01101 | 0b01111 => "Permission fault (MMU)",
+                    0b00010 => "Debug event",
+                    0b01000 => "Synchronous external abort",
+                    0b10100 => "implementation defined (Lockdown)",
+                    0b11010 => "implementation defined (Coprocessor abort)",
+                    0b11001 => "Memory access synchronous parity error",
+                    0b10110 => "Asynchronous external abort",
+                    0b11000 => {
+                        "Memory access asynchronous parity error (Including on translation table walk)"
+                    }
+                    _ => "<unknown>",
+                })?;
+                f.write_str(" while ")?;
 
-                dfsr & WRITE_NOT_READ_BIT != 0
-            }
-            FaultStatus::InstructionFault(_ifsr) => false,
-        }
-    }
-
-    pub fn action_description(&self) -> (&'static str, &'static str) {
-        match self {
-            FaultStatus::DataFault(_) => {
-                if self.is_write() {
-                    ("writing", "to")
+                f.write_str(if dfsr & DFSR_WRITE_NOT_READ_BIT != 0 {
+                    "writing to "
                 } else {
-                    ("reading", "from")
-                }
+                    "reading from "
+                })?;
+
+                write!(f, "0x{addr:x}")?;
             }
-            FaultStatus::InstructionFault(_) => ("fetching", "instruction at"),
+            FaultException::PrefetchAbort => {
+                let mut ifsr: u32;
+
+                unsafe {
+                    core::arch::asm!(
+                        "mrc p15, 0, {ifsr}, c5, c0, 1",
+                        ifsr = out(reg) ifsr,
+                    );
+                }
+
+                f.write_str(match (ifsr & 0b1111) as u8 {
+                    0b01100 | 0b01110 => "Translation table walk synchronous external abort",
+                    0b11100 | 0b11110 => "Translation table walk synchronous parity error",
+                    0b00101 | 0b00111 => "Translation fault (MMU)",
+                    0b00011 | 0b00110 => "Access Flag fault (MMU)",
+                    0b01001 | 0b01011 => "Domain fault (MMU)",
+                    0b01101 | 0b01111 => "Permission fault (MMU)",
+                    0b00010 => "Debug event",
+                    0b01000 => "Synchronous external abort",
+                    0b10100 => "implementation defined (Lockdown)",
+                    0b11010 => "implementation defined (Coprocessor abort)",
+                    0b11001 => "Memory access synchronous parity error",
+                    _ => "<unknown>",
+                })?;
+
+                write!(f, " while fetching address 0x{addr:x}")?;
+            }
+            FaultException::UndefinedInstruction => {
+                write!(f, "Failed to decode instruction 0x{:x}", unsafe {
+                    core::ptr::read_volatile(self.program_counter as *const u32)
+                })?;
+            }
         }
+
+        Ok(())
     }
 }

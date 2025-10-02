@@ -14,11 +14,10 @@
 //! Additionally, backtraces will be unsupported if vexide is compiled without
 //! the `backtrace` feature.
 
-use alloc::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
 
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
+use vex_libunwind::{registers, UnwindContext, UnwindCursor};
 
 /// A captured stack backtrace.
 ///
@@ -54,10 +53,14 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 ///
 /// main at /path/to/project/src/main.rs:21:9
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Backtrace {
     /// The instruction pointers of each frame in the backtrace.
-    pub frames: Vec<*const c_void>,
+    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
+    context: Option<UnwindContext>,
+
+    #[cfg(not(all(target_os = "vexos", feature = "backtrace")))]
+    _context: (),
 }
 
 impl Backtrace {
@@ -71,14 +74,15 @@ impl Backtrace {
     /// the `backtrace` feature is disabled.
     #[allow(clippy::inline_always)]
     #[inline(always)] // Inlining keeps this function from appearing in backtraces
-    #[allow(clippy::missing_const_for_fn)]
     #[must_use]
     pub fn capture() -> Self {
         #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-        return Self::try_capture().unwrap_or(Self { frames: Vec::new() });
+        return Self {
+            context: UnwindContext::new().ok(),
+        };
 
         #[cfg(not(all(target_os = "vexos", feature = "backtrace")))]
-        return Self { frames: Vec::new() };
+        return Self { _context: () };
     }
 
     /// Captures a backtrace at the current point of execution,
@@ -121,15 +125,17 @@ impl Backtrace {
 }
 
 impl Display for Backtrace {
+    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "stack backtrace:")?;
-        for (i, frame) in self.frames.iter().enumerate() {
-            writeln!(f, "{i:>3}: {frame:?}")?;
+        for (i, frame) in self.iter().enumerate() {
+            writeln!(f, "{i:>3}: 0x{:x}", frame.addr() as usize)?;
         }
-        write!(
-            f,
-            "note: Use a symbolizer to convert stack frames to human-readable function names."
-        )?;
         Ok(())
+    }
+
+    #[cfg(not(all(target_os = "vexos", feature = "backtrace")))]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        writeln!(f, "disabled backtrace")?;
     }
 }
