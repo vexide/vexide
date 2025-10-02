@@ -4,7 +4,7 @@ mod fault;
 mod report;
 
 use fault::{Fault, FaultException};
-use vex_sdk::{V5_TouchEvent, V5_TouchStatus, vexTasksRun, vexTouchDataGet};
+use vex_sdk::{vexTasksRun, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus};
 
 // Custom ARM vector table. Pointing the VBAR coprocessor. register at this
 // will configure the CPU to jump to these functions on an exception.
@@ -204,14 +204,16 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
 
     report::report_fault(&fault);
 
-    let mut prev_touch_event = V5_TouchEvent::kTouchEventPress;
+    let mut prev_touch_event = V5_TouchEvent::kTouchEventRelease;
     loop {
         let mut status = V5_TouchStatus::default();
         unsafe {
             vexTouchDataGet(&raw mut status);
         }
 
-        if status.lastEvent == V5_TouchEvent::kTouchEventRelease && status.lastEvent != prev_touch_event {
+        if status.lastEvent == V5_TouchEvent::kTouchEventRelease
+            && prev_touch_event != V5_TouchEvent::kTouchEventRelease
+        {
             report::report_fault(&fault);
         }
 

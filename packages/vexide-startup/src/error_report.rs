@@ -54,26 +54,26 @@ impl ErrorReport {
             vex_sdk::vexDisplayTextSize(1, 5);
         }
         for (i, reg) in regs.iter().enumerate() {
-            unsafe {
-                let x = 50 + (i as i32 % 4) * 95;
-                match i {
-                    0..=12 => {
-                        let format = c" r%d: 0x%08x";
+            let x = 50 + (i as i32 % 4) * 95;
+            match i {
+                0..=12 => unsafe {
+                    let format = c" r%d: 0x%08x";
 
-                        vex_sdk::vexDisplayPrintf(
-                            x,
-                            self.y_offset,
-                            0,
-                            if i < 10 {
-                                format.as_ptr()
-                            } else {
-                                format[1..].as_ptr()
-                            },
-                            i,
-                            *reg,
-                        );
-                    }
-                    13..16 => vex_sdk::vexDisplayPrintf(
+                    vex_sdk::vexDisplayPrintf(
+                        x,
+                        self.y_offset,
+                        0,
+                        if i < 10 {
+                            format.as_ptr()
+                        } else {
+                            format[1..].as_ptr()
+                        },
+                        i,
+                        *reg,
+                    );
+                },
+                13..16 => unsafe {
+                    vex_sdk::vexDisplayPrintf(
                         x,
                         self.y_offset,
                         0,
@@ -85,13 +85,13 @@ impl ErrorReport {
                         },
                         *reg,
                         i,
-                    ),
-                    _ => {}
-                }
+                    );
+                },
+                _ => {}
+            }
 
-                if i % 4 == 3 {
-                    self.y_offset += 10;
-                }
+            if i % 4 == 3 {
+                self.y_offset += 10;
             }
         }
 
@@ -104,9 +104,9 @@ impl ErrorReport {
         }
         let mut i = 0;
         for frame in trace {
-            unsafe {
-                let format = c"  %d: 0x%08x";
+            let format = c"  %d: 0x%08x";
 
+            unsafe {
                 vex_sdk::vexDisplayPrintf(
                     50 + (i % 4) * 95,
                     self.y_offset,
@@ -119,13 +119,13 @@ impl ErrorReport {
                     i,
                     frame.addr() as u32,
                 );
-
-                if i % 4 == 3 {
-                    self.y_offset += 10;
-                }
-
-                i += 1;
             }
+
+            if i % 4 == 3 {
+                self.y_offset += 10;
+            }
+
+            i += 1;
         }
 
         if i % 4 != 0 {

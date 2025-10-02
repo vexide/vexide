@@ -117,7 +117,7 @@ impl Display for Fault {
 
         match self.exception {
             FaultException::DataAbort => {
-                let mut dfsr: u32 = 0;
+                let dfsr: u32;
                 unsafe {
                     core::arch::asm!(
                         "mrc p15, 0, {dfsr}, c5, c0, 0",
@@ -156,8 +156,7 @@ impl Display for Fault {
                 write!(f, "0x{addr:x}")?;
             }
             FaultException::PrefetchAbort => {
-                let mut ifsr: u32;
-
+                let ifsr: u32;
                 unsafe {
                     core::arch::asm!(
                         "mrc p15, 0, {ifsr}, c5, c0, 1",
