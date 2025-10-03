@@ -159,7 +159,7 @@ macro_rules! fault_exception_vector {
                 dsb @ Workaround for Cortex-A9 erratum (id 775420)
 
                 sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
-                                            @ of return instruction (see Abort::instruction_pointer docs).
+                                            @ of return instruction (see Abort::program_counter docs).
 
                 sub sp, sp, #4 @ Ensure stack is aligned to 8 after we're done here.
 
