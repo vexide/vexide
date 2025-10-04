@@ -30,18 +30,21 @@ pub(crate) fn rem_euclid(x: f64, rhs: f64) -> f64 {
 
 #[cfg(feature = "std")]
 #[inline]
+#[allow(clippy::missing_const_for_fn)]
 pub(crate) fn roundf(x: f32) -> f32 {
     x.round()
 }
 
 #[cfg(feature = "std")]
 #[inline]
+#[allow(clippy::missing_const_for_fn)]
 pub(crate) fn floorf(x: f32) -> f32 {
     x.floor()
 }
 
 #[cfg(feature = "std")]
 #[inline]
+#[allow(clippy::missing_const_for_fn)]
 pub(crate) fn truncf(x: f32) -> f32 {
     x.trunc()
 }

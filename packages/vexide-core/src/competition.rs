@@ -58,7 +58,7 @@ use core::{
     future::{Future, IntoFuture},
     marker::{PhantomData, PhantomPinned},
     ops::ControlFlow,
-    pin::{pin, Pin},
+    pin::Pin,
     task::{self, Poll},
 };
 

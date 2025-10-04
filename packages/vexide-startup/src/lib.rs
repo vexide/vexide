@@ -166,6 +166,7 @@ unsafe extern "C" fn _vexide_boot() {
 ///
 /// Must be called *once and only once* at the start of program execution.
 #[inline]
+#[allow(clippy::needless_doctest_main)]
 pub unsafe fn startup() {
     #[cfg(target_os = "vexos")]
     unsafe {

@@ -23,7 +23,7 @@ async fn main(peripherals: Peripherals) {
     );
     // Send a message over vexlink.
     // We dont have to flush because VEXOs does that immediately.
-    link.write(b"Hello, world!").unwrap();
+    _ = link.write(b"Hello, world!").unwrap();
 
     // Create a new distance sensor on Smart Port 16.
     // This constructor is infallible.

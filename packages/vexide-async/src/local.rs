@@ -13,13 +13,15 @@ use std::{
     boxed::Box,
     cell::{BorrowError, BorrowMutError, Cell, RefCell, UnsafeCell},
     collections::btree_map::BTreeMap,
-    mem, ptr,
+    ptr,
     rc::Rc,
     sync::{
         atomic::{AtomicU32, Ordering},
-        LazyLock, Mutex,
+        LazyLock,
     },
 };
+
+use crate::executor::Executor;
 
 /// A variable stored in task-local storage.
 ///
@@ -284,23 +286,24 @@ impl ErasedTaskLocal {
     }
 }
 
-struct TLSContainer(Option<Rc<TaskLocalStorage>>);
-// SAFETY: this is always used from the same thread, so it's okay to store it in a static
-unsafe impl Send for TLSContainer {}
-
-// The lifetime for this data is however long the current task lasts, so be careful not to hold
-// onto it after that happens.
-static CURRENT_TLS: Mutex<TLSContainer> = Mutex::new(TLSContainer(None));
-// Used when outside of a task
-static FALLBACK_TLS: Mutex<TaskLocalStorage> = Mutex::new(TaskLocalStorage::new());
+// Fallback TLS block for when reading from outside of a task.
+#[cfg(not(target_os = "vexos"))]
+thread_local! {
+    static FALLBACK_TLS: TaskLocalStorage = TaskLocalStorage::new();
+}
+#[cfg(target_os = "vexos")]
+static FALLBACK_TLS: TaskLocalStorage = TaskLocalStorage::new();
 
 #[derive(Debug)]
 pub(crate) struct TaskLocalStorage {
     locals: UnsafeCell<BTreeMap<u32, ErasedTaskLocal>>,
 }
 
-// SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
+// SAFETY: safe, because threads and interrupts dont exist on VEXos.
+#[cfg(target_os = "vexos")]
 unsafe impl Send for TaskLocalStorage {}
+#[cfg(target_os = "vexos")]
+unsafe impl Sync for TaskLocalStorage {}
 
 impl TaskLocalStorage {
     pub(crate) const fn new() -> Self {
@@ -310,15 +313,13 @@ impl TaskLocalStorage {
     }
 
     pub(crate) fn scope(value: Rc<TaskLocalStorage>, scope: impl FnOnce()) {
-        let mut current_tls = CURRENT_TLS.try_lock().unwrap();
-        let outer_scope = mem::replace(&mut *current_tls, TLSContainer(Some(value)));
-        drop(current_tls);
+        let outer_scope = Executor::with(|ex| (*ex.tls.borrow_mut()).replace(value));
 
         scope();
 
-        let mut current_tls = CURRENT_TLS.try_lock().unwrap();
-        *current_tls = outer_scope;
-        drop(current_tls);
+        Executor::with(|ex| {
+            *ex.tls.borrow_mut() = outer_scope;
+        });
     }
 
     /// Gets the Task Local Storage data for the current task.
@@ -326,14 +327,17 @@ impl TaskLocalStorage {
     where
         F: FnOnce(&Self) -> R,
     {
-        let current = CURRENT_TLS.try_lock().unwrap();
+        Executor::with(|ex| {
+            if let Some(tls) = ex.tls.borrow().as_ref() {
+                f(tls)
+            } else {
+                #[cfg(target_os = "vexos")]
+                return f(&FALLBACK_TLS);
 
-        if let Some(tls) = &current.0 {
-            f(tls)
-        } else {
-            let fallback = FALLBACK_TLS.try_lock().unwrap();
-            f(&fallback)
-        }
+                #[cfg(not(target_os = "vexos"))]
+                return FALLBACK_TLS.with(|fallback| f(fallback));
+            }
+        })
     }
 
     /// Gets a reference to the Task Local Storage item identified by the given key.

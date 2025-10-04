@@ -328,7 +328,6 @@ mod test {
             )),
         });
 
-        println!("{}", code_sig.to_string());
         assert!(code_sig.to_string().contains(
             "static __VEXIDE_CODE_SIGNATURE : :: vexide :: program :: CodeSignature = __custom_code_sig_ident__ ;"
         ));

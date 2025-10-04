@@ -21,15 +21,22 @@ use crate::{
 
 type Runnable = async_task::Runnable<TaskMetadata>;
 
-pub(crate) static EXECUTOR: Executor = Executor::new();
+#[cfg(not(target_os = "vexos"))]
+thread_local! {
+    static EXECUTOR: Executor = Executor::new();
+}
+#[cfg(target_os = "vexos")]
+static EXECUTOR: Executor = Executor::new();
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
     reactor: RefCell<Reactor>,
+    pub(crate) tls: RefCell<Option<Rc<TaskLocalStorage>>>,
 }
 
-// SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
+#[cfg(target_os = "vexos")]
 unsafe impl Send for Executor {}
+#[cfg(target_os = "vexos")]
 unsafe impl Sync for Executor {}
 
 impl Executor {
@@ -37,7 +44,16 @@ impl Executor {
         Self {
             queue: RefCell::new(VecDeque::new()),
             reactor: RefCell::new(Reactor::new()),
+            tls: RefCell::new(None),
         }
+    }
+
+    pub(crate) fn with<F: FnOnce(&Executor) -> R, R>(f: F) -> R {
+        #[cfg(target_os = "vexos")]
+        return f(&EXECUTOR);
+
+        #[cfg(not(target_os = "vexos"))]
+        return EXECUTOR.with(f);
     }
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {

@@ -25,7 +25,7 @@ static ALLOCATOR: Talck<AssumeUnlockable, ErrOnOom> = Talc::new(ErrOnOom).lock()
 ///   the allocator is in use.
 ///
 ///  - The region encompassed from [`start`, `end`] should not overlap with any
-///   other active heap regions.
+///    other active heap regions.
 ///
 /// # Panics
 ///

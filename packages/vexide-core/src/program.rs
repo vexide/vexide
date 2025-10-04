@@ -81,6 +81,7 @@ impl CodeSignature {
     /// Returns the program owner specified by this signature.
     ///
     /// See [`ProgramOwner`] for more info.
+    #[must_use]
     pub const fn owner(&self) -> ProgramOwner {
         match self.0.owner {
             0 => ProgramOwner::System,
@@ -93,6 +94,7 @@ impl CodeSignature {
     /// Returns the program type specified by this signature.
     ///
     /// See [`ProgramType`] for more info.
+    #[must_use]
     pub const fn program_type(&self) -> ProgramType {
         match self.0.r#type {
             0 => ProgramType::User,
@@ -103,6 +105,7 @@ impl CodeSignature {
     /// Returns the program startup options specified by this signature.
     ///
     /// See [`ProgramOptions`] for more info.
+    #[must_use]
     pub const fn options(&self) -> ProgramOptions {
         ProgramOptions::from_bits_retain(self.0.options)
     }

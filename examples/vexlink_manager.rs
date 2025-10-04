@@ -17,12 +17,12 @@ async fn main(peripherals: Peripherals) {
 
     println!("[MANAGER] Found worker - link established.");
 
-    link.write(b"Hi from manager :3").unwrap();
+    _ = link.write(b"Hi from manager :3").unwrap();
 
     loop {
         if link.unread_bytes().unwrap() > 0 {
             let mut read = vec![0; link.unread_bytes().unwrap()];
-            link.read(&mut read).unwrap();
+            _ = link.read(&mut read).unwrap();
             println!("[WORKER] {}", str::from_utf8(&read).unwrap());
         }
         sleep(RadioLink::UPDATE_INTERVAL).await;

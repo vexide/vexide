@@ -60,7 +60,7 @@ fn draw_error(display: &mut Display, msg: &str, backtrace: &Backtrace) {
             buffer.push(character);
         }
 
-        if character == '\n' || ((buffer.len() % LINE_MAX_WIDTH == 0) && (i > 0)) {
+        if character == '\n' || (buffer.len().is_multiple_of(LINE_MAX_WIDTH) && (i > 0)) {
             draw_text(display, &buffer, line);
             line += 1;
             buffer.clear();
