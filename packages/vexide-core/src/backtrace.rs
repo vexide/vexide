@@ -93,27 +93,31 @@ impl Backtrace {
     /// This function errors when the program's unwind info is corrupted.
     #[inline(never)] // Make sure there's always a frame to remove
     #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-    pub fn try_capture() -> Result<Self, UnwindError> {
-        let context = UnwindContext::new()?;
-        let mut cursor = UnwindCursor::new(&context)?;
+    fn try_capture() -> Result<Self, UnwindError> {
+        UnwindContext::capture(|context| {
+            let mut cursor = UnwindCursor::new(&context)?;
+            let mut frames = Vec::new();
 
-        let mut frames = Vec::new();
+            // Procedure based on mini_backtrace crate.
 
-        // Procedure based on mini_backtrace crate.
+            // Step once before taking the backtrace to skip the current frame.
+            loop {
+                let mut instruction_pointer = cursor.register(registers::UNW_REG_IP)?;
 
-        // Step once before taking the backtrace to skip the current frame.
-        while cursor.step()? {
-            let mut instruction_pointer = cursor.register(registers::UNW_REG_IP)?;
+                // Adjust IP to point inside the function — this improves symbolization quality.
+                if !cursor.is_signal_frame()? {
+                    instruction_pointer -= 1;
+                }
 
-            // Adjust IP to point inside the function — this improves symbolization quality.
-            if !cursor.is_signal_frame()? {
-                instruction_pointer -= 1;
+                frames.push(instruction_pointer as *const c_void);
+
+                if !cursor.step()? {
+                    break;
+                }
             }
 
-            frames.push(instruction_pointer as *const c_void);
-        }
-
-        Ok(Self { frames })
+            Ok(Self { frames })
+        })
     }
 }
 

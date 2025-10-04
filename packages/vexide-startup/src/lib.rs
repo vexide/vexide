@@ -134,14 +134,14 @@ unsafe extern "C" fn _vexide_boot() {
 /// This function performs some prerequisites to allow vexide programs to properly run. It
 /// must be called once at startup before any heap allocation is done. When using `vexide`,
 /// this function is already called for you by the `#[vexide::main]` macro, so there's no
-/// need to call it yourself.
+/// need to call it yourself (doing so would cause **undefined behavior**).
 ///
 /// This function does the following initialization:
 ///
 /// - Sets up the global heap allocator by [claiming](crate::allocator::claim) the default
 ///   heap region if the `allocator` feature is specified.
 /// - Applies [differential upload patches] to the program if a patch file exists in memory
-///   and resets the program if necessary.
+///   and restarts the program if necessary.
 /// - Registers a custom [panic hook] to allow panic messages to be drawn to the screen and
 ///   backtrace to be collected. This can be enabled/disabled using the `panic-hook` and
 ///   `backtrace` features.
