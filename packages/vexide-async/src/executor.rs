@@ -48,7 +48,7 @@ impl Executor {
         }
     }
 
-    pub(crate) fn with<F: FnOnce(&Executor) -> R, R>(f: F) -> R {
+    pub(crate) fn with_global<F: FnOnce(&Executor) -> R, R>(f: F) -> R {
         #[cfg(target_os = "vexos")]
         return f(&EXECUTOR);
 

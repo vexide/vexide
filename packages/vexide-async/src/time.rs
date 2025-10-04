@@ -31,7 +31,7 @@ impl Future for Sleep {
         if Instant::now() > self.0 {
             Poll::Ready(())
         } else {
-            Executor::with(|ex| {
+            Executor::with_global(|ex| {
                 ex.with_reactor(|reactor| {
                     reactor.sleepers.push(Sleeper {
                         deadline: self.0,

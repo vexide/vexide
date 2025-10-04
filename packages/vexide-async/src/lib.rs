@@ -39,7 +39,7 @@ pub mod sync {
 ///
 /// Does not poll all futures to completion.
 pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
-    Executor::with(|ex| {
+    Executor::with_global(|ex| {
         let task = ex.spawn(future);
         ex.block_on(task)
     })

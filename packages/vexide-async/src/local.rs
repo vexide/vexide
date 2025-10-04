@@ -313,11 +313,11 @@ impl TaskLocalStorage {
     }
 
     pub(crate) fn scope(value: Rc<TaskLocalStorage>, scope: impl FnOnce()) {
-        let outer_scope = Executor::with(|ex| (*ex.tls.borrow_mut()).replace(value));
+        let outer_scope = Executor::with_global(|ex| (*ex.tls.borrow_mut()).replace(value));
 
         scope();
 
-        Executor::with(|ex| {
+        Executor::with_global(|ex| {
             *ex.tls.borrow_mut() = outer_scope;
         });
     }
@@ -327,7 +327,7 @@ impl TaskLocalStorage {
     where
         F: FnOnce(&Self) -> R,
     {
-        Executor::with(|ex| {
+        Executor::with_global(|ex| {
             if let Some(tls) = ex.tls.borrow().as_ref() {
                 f(tls)
             } else {

@@ -42,5 +42,5 @@ pub type FallibleTask<T> = async_task::FallibleTask<T, TaskMetadata>;
 
 /// Spawns a new async task that can be controlled with the returned task handle.
 pub fn spawn<T>(future: impl Future<Output = T> + 'static) -> Task<T> {
-    Executor::with(|ex| ex.spawn(future))
+    Executor::with_global(|ex| ex.spawn(future))
 }
