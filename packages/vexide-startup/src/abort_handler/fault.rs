@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
+#[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind::UnwindContext;
+#[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind_sys::unw_context_t;
 
 #[derive(Clone, Copy)]
@@ -35,7 +37,8 @@ impl Fault {
     ///
     /// This is based on the ARM implementation of __unw_getcontext:
     /// <https://github.com/llvm/llvm-project/blob/6fc3b40b2cfc33550dd489072c01ffab16535840/libunwind/src/UnwindRegistersSave.S#L834>
-    pub fn unwind_context(&self) -> UnwindContext<'_> {
+    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
+    pub unsafe fn unwind_context(&self) -> UnwindContext<'_> {
         #[repr(C)]
         struct RawUnwindContext {
             // Value of each general-purpose register in the order of r0-r12, sp, lr, pc.

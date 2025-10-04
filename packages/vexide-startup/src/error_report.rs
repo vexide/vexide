@@ -97,7 +97,8 @@ impl ErrorReport {
         self.y_offset += 10;
     }
 
-    pub fn write_backtrace(&mut self, trace: &[u32]) {
+    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
+    pub fn write_backtrace(&mut self, trace: impl Iterator<Item = u32>) {
         unsafe {
             vex_sdk::vexDisplayTextSize(1, 5);
         }
@@ -189,5 +190,42 @@ impl Write for ErrorReport {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(all(target_os = "vexos", feature = "backtrace"))]
+pub mod backtrace {
+    use vex_libunwind::{registers, UnwindCursor};
+
+    /// An iterator that lazily walks up the stack, yielding frames in a backtrace.
+    pub struct BacktraceIter<'a> {
+        pub cursor: Option<UnwindCursor<'a>>,
+    }
+
+    impl<'a> BacktraceIter<'a> {
+        pub const fn new(cursor: UnwindCursor<'a>) -> Self {
+            Self {
+                cursor: Some(cursor),
+            }
+        }
+    }
+
+    impl Iterator for BacktraceIter<'_> {
+        type Item = u32;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            let cursor = self.cursor.as_mut()?;
+
+            let mut instruction_pointer = cursor.register(registers::UNW_REG_IP).ok()?;
+            if !cursor.is_signal_frame().ok()? {
+                instruction_pointer -= 1;
+            }
+
+            if !cursor.step().ok()? {
+                self.cursor = None;
+            }
+
+            Some(instruction_pointer as u32)
+        }
     }
 }

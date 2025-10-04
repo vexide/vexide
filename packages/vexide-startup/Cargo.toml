@@ -43,8 +43,8 @@ workspace = true
 [features]
 allocator = ["dep:talc"]
 panic-hook = []
-abort-handler = ["dep:vex-libunwind", "dep:vex-libunwind-sys"]
-backtrace = ["vexide-core/backtrace"]
+abort-handler = []
+backtrace = ["dep:vex-libunwind", "dep:vex-libunwind-sys"]
 
 vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
 vex-sdk-vexcode = ["dep:vex-sdk-vexcode"]

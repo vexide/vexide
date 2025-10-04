@@ -1,10 +1,12 @@
 use std::fmt::{self, Write};
 
+#[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind::UnwindCursor;
-use vexide_core::backtrace::Backtrace;
 
 use super::fault::Fault;
-use crate::{error_report::ErrorReport};
+#[cfg(all(target_os = "vexos", feature = "backtrace"))]
+use crate::error_report::backtrace::BacktraceIter;
+use crate::error_report::ErrorReport;
 
 pub struct SerialWriter(());
 
@@ -54,8 +56,7 @@ pub fn report_fault(fault: &Fault) {
 
     let title = format_args!(
         "{} exception at 0x{:x}:",
-        fault.exception,
-        fault.program_counter
+        fault.exception, fault.program_counter
     );
     _ = writeln!(serial, "\n{title}\n{fault}\n");
     _ = writeln!(dialog, "{title}\n{fault}");
@@ -84,16 +85,20 @@ pub fn report_fault(fault: &Fault) {
         arr
     });
 
-    let context = fault.unwind_context();
-    let cursor = UnwindCursor::new(&context);
+    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
+    if let Ok(cursor) = UnwindCursor::new(&unsafe { fault.unwind_context() }) {
+        _ = writeln!(dialog, "stack backtrace (check terminal):");
+        dialog.write_backtrace(BacktraceIter::new(cursor.clone()));
 
-    _ = writeln!(serial, "{trace}");
-    _ = writeln!(dialog, "stack backtrace (check terminal):");
-    dialog.write_backtrace(trace.into_iter());
+        _ = writeln!(serial, "stack backtrace:");
+        for (i, frame) in BacktraceIter::new(cursor).enumerate() {
+            _ = writeln!(serial, "{i:>3}: 0x{frame:x}");
+        }
+    }
 
     _ = writeln!(
         serial,
-        "help: this CPU fault indicates the misuse of unsafe code."
+        "\nhelp: this CPU fault indicates the misuse of unsafe code."
     );
     _ = writeln!(
         serial,

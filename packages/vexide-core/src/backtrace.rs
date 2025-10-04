@@ -17,7 +17,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-use core::{ffi::c_void, fmt::Display};
+use core::fmt::Display;
 
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
@@ -132,7 +132,7 @@ impl Display for Backtrace {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "stack backtrace:")?;
         for (i, frame) in self.frames.iter().enumerate() {
-            writeln!(f, "{i:>3}: {frame:?}")?;
+            writeln!(f, "{i:>3}: 0x{:x}", *frame as usize)?;
         }
         write!(
             f,
