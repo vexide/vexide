@@ -35,7 +35,7 @@ impl Fault {
     ///
     /// This is based on the ARM implementation of __unw_getcontext:
     /// <https://github.com/llvm/llvm-project/blob/6fc3b40b2cfc33550dd489072c01ffab16535840/libunwind/src/UnwindRegistersSave.S#L834>
-    pub fn unwind_context(&self) -> UnwindContext {
+    pub fn unwind_context(&self) -> UnwindContext<'_> {
         #[repr(C)]
         struct RawUnwindContext {
             // Value of each general-purpose register in the order of r0-r12, sp, lr, pc.
@@ -50,17 +50,19 @@ impl Fault {
 
         // SAFETY: `context` is a valid `unw_context_t` because it has its
         // general-purpose registers field set.
-        UnwindContext::from(unsafe {
-            core::mem::transmute::<RawUnwindContext, unw_context_t>(RawUnwindContext {
-                r: self.registers,
-                sp: self.stack_pointer,
-                lr: self.link_register,
-                pc: self.program_counter,
-                // This matches the behavior of __unw_getcontext, which leaves
-                // this data uninitialized.
-                data: [0; _],
-            })
-        })
+        unsafe {
+            UnwindContext::from_raw(core::mem::transmute::<RawUnwindContext, unw_context_t>(
+                RawUnwindContext {
+                    r: self.registers,
+                    sp: self.stack_pointer,
+                    lr: self.link_register,
+                    pc: self.program_counter,
+                    // This matches the behavior of __unw_getcontext, which leaves
+                    // this data uninitialized.
+                    data: [0; _],
+                },
+            ))
+        }
     }
 }
 

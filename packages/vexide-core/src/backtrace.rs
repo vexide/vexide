@@ -14,10 +14,13 @@
 //! Additionally, backtraces will be unsupported if vexide is compiled without
 //! the `backtrace` feature.
 
+extern crate alloc;
+
+use alloc::vec::Vec;
 use core::{ffi::c_void, fmt::Display};
 
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-use vex_libunwind::{registers, UnwindContext, UnwindCursor};
+use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 
 /// A captured stack backtrace.
 ///
@@ -53,14 +56,10 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor};
 ///
 /// main at /path/to/project/src/main.rs:21:9
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Backtrace {
     /// The instruction pointers of each frame in the backtrace.
-    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-    context: Option<UnwindContext>,
-
-    #[cfg(not(all(target_os = "vexos", feature = "backtrace")))]
-    _context: (),
+    frames: Vec<*const ()>,
 }
 
 impl Backtrace {
@@ -74,15 +73,20 @@ impl Backtrace {
     /// the `backtrace` feature is disabled.
     #[allow(clippy::inline_always)]
     #[inline(always)] // Inlining keeps this function from appearing in backtraces
+    #[allow(clippy::missing_const_for_fn)]
     #[must_use]
     pub fn capture() -> Self {
         #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-        return Self {
-            context: UnwindContext::new().ok(),
-        };
+        return Self::try_capture().unwrap_or(Self { frames: Vec::new() });
 
         #[cfg(not(all(target_os = "vexos", feature = "backtrace")))]
-        return Self { _context: () };
+        return Self { frames: Vec::new() };
+    }
+
+    /// Returns a slice of instruction pointers at every captured frame of the backtrace.
+    #[must_use]
+    pub const fn frames(&self) -> &[*const ()] {
+        self.frames.as_slice()
     }
 
     /// Captures a backtrace at the current point of execution,
@@ -111,7 +115,7 @@ impl Backtrace {
                     instruction_pointer -= 1;
                 }
 
-                frames.push(instruction_pointer as *const c_void);
+                frames.push(instruction_pointer as *const ());
 
                 // Step to the next frame, break if there is none.
                 if !cursor.step()? {
@@ -125,17 +129,15 @@ impl Backtrace {
 }
 
 impl Display for Backtrace {
-    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "stack backtrace:")?;
-        for (i, frame) in self.iter().enumerate() {
-            writeln!(f, "{i:>3}: 0x{:x}", frame.addr() as usize)?;
+        for (i, frame) in self.frames.iter().enumerate() {
+            writeln!(f, "{i:>3}: {frame:?}")?;
         }
+        write!(
+            f,
+            "note: Use a symbolizer to convert stack frames to human-readable function names."
+        )?;
         Ok(())
-    }
-
-    #[cfg(not(all(target_os = "vexos", feature = "backtrace")))]
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        writeln!(f, "disabled backtrace")?;
     }
 }

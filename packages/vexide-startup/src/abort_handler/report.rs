@@ -1,5 +1,6 @@
 use std::fmt::{self, Write};
 
+use vex_libunwind::UnwindCursor;
 use vexide_core::backtrace::Backtrace;
 
 use super::fault::Fault;
@@ -83,7 +84,8 @@ pub fn report_fault(fault: &Fault) {
         arr
     });
 
-    let trace = Backtrace::from(fault.unwind_context());
+    let context = fault.unwind_context();
+    let cursor = UnwindCursor::new(&context);
 
     _ = writeln!(serial, "{trace}");
     _ = writeln!(dialog, "stack backtrace (check terminal):");

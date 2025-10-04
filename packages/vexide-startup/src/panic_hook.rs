@@ -7,6 +7,8 @@ use std::{fmt::Write, panic::PanicHookInfo};
 
 use vexide_core::backtrace::Backtrace;
 
+use crate::error_report::ErrorReport;
+
 /// Panic hook for vexide programs.
 ///
 /// This extends the default `libstd` panic handler with support for capturing

@@ -1,7 +1,5 @@
 use std::fmt::Write;
 
-use vexide_core::backtrace::BacktraceFrame;
-
 pub struct ErrorReport {
     pub y_offset: i32,
 
@@ -49,6 +47,7 @@ impl ErrorReport {
         }
     }
 
+    #[allow(unused)]
     pub fn write_registers(&mut self, regs: [u32; 16]) {
         unsafe {
             vex_sdk::vexDisplayTextSize(1, 5);
@@ -98,7 +97,7 @@ impl ErrorReport {
         self.y_offset += 10;
     }
 
-    pub fn write_backtrace(&mut self, trace: impl Iterator<Item = BacktraceFrame>) {
+    pub fn write_backtrace(&mut self, trace: &[u32]) {
         unsafe {
             vex_sdk::vexDisplayTextSize(1, 5);
         }
@@ -117,7 +116,7 @@ impl ErrorReport {
                         format[1..].as_ptr()
                     },
                     i,
-                    frame.addr() as u32,
+                    frame,
                 );
             }
 
@@ -170,7 +169,7 @@ impl Write for ErrorReport {
                         Self::BOX_MARGIN + Self::BOX_PADDING,
                         self.y_offset,
                         0,
-                        self.buf.as_ptr(),
+                        self.buf.as_ptr().cast(),
                     );
                 }
                 self.y_offset += Self::LINE_HEIGHT;
