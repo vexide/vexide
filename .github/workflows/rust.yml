@@ -57,11 +57,6 @@ jobs:
                   toolchain: nightly-2025-09-26
                   override: true
 
-            # Currently other crates do not compile in test mode as
-            # `cargo test` doesn't work with our target. `vexide-macro`
-            # is an exception because it is a proc-macro crate.
-            # This isn't actually a big issue at the time of writing because
-            # those crates don't have tests.
             - name: Test
               uses: actions-rs/cargo@v1
               with:
