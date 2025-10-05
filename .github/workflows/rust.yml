@@ -62,7 +62,7 @@ jobs:
             # is an exception because it is a proc-macro crate.
             # This isn't actually a big issue at the time of writing because
             # those crates don't have tests.
-            - name: Test vexide-macro
+            - name: Test
               uses: actions-rs/cargo@v1
               with:
                   command: test
