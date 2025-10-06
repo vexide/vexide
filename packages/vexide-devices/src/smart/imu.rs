@@ -300,7 +300,7 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// struct Robot {
     ///     imu: InertialSensor,
@@ -353,7 +353,7 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -390,7 +390,7 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -429,7 +429,7 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -482,7 +482,7 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -532,7 +532,7 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -585,7 +585,7 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -641,7 +641,7 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -679,7 +679,7 @@ impl InertialSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
