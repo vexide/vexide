@@ -30,7 +30,11 @@ pub(crate) fn rem_euclid(x: f64, rhs: f64) -> f64 {
 
 #[cfg(feature = "std")]
 #[inline]
-#[allow(clippy::missing_const_for_fn)]
+#[allow(
+    clippy::missing_const_for_fn,
+    reason = "The const-ness of these functions should be consistent
+    on std and no-std."
+)]
 pub(crate) fn roundf(x: f32) -> f32 {
     x.round()
 }
