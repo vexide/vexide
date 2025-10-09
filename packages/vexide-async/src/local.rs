@@ -21,7 +21,7 @@ use std::{
     },
 };
 
-use crate::executor::Executor;
+use crate::executor::{Executor, EXECUTOR};
 
 /// A variable stored in task-local storage.
 ///
@@ -287,23 +287,14 @@ impl ErasedTaskLocal {
 }
 
 // Fallback TLS block for when reading from outside of a task.
-#[cfg(not(target_os = "vexos"))]
 thread_local! {
     static FALLBACK_TLS: TaskLocalStorage = TaskLocalStorage::new();
 }
-#[cfg(target_os = "vexos")]
-static FALLBACK_TLS: TaskLocalStorage = TaskLocalStorage::new();
 
 #[derive(Debug)]
 pub(crate) struct TaskLocalStorage {
     locals: UnsafeCell<BTreeMap<u32, ErasedTaskLocal>>,
 }
-
-// SAFETY: safe, because threads and interrupts dont exist on VEXos.
-#[cfg(target_os = "vexos")]
-unsafe impl Send for TaskLocalStorage {}
-#[cfg(target_os = "vexos")]
-unsafe impl Sync for TaskLocalStorage {}
 
 impl TaskLocalStorage {
     pub(crate) const fn new() -> Self {
@@ -313,11 +304,11 @@ impl TaskLocalStorage {
     }
 
     pub(crate) fn scope(value: Rc<TaskLocalStorage>, scope: impl FnOnce()) {
-        let outer_scope = Executor::with_global(|ex| (*ex.tls.borrow_mut()).replace(value));
+        let outer_scope = EXECUTOR.with(|ex| (*ex.tls.borrow_mut()).replace(value));
 
         scope();
 
-        Executor::with_global(|ex| {
+        EXECUTOR.with(|ex| {
             *ex.tls.borrow_mut() = outer_scope;
         });
     }
@@ -327,14 +318,10 @@ impl TaskLocalStorage {
     where
         F: FnOnce(&Self) -> R,
     {
-        Executor::with_global(|ex| {
+        EXECUTOR.with(|ex| {
             if let Some(tls) = ex.tls.borrow().as_ref() {
                 f(tls)
             } else {
-                #[cfg(target_os = "vexos")]
-                return f(&FALLBACK_TLS);
-
-                #[cfg(not(target_os = "vexos"))]
                 return FALLBACK_TLS.with(|fallback| f(fallback));
             }
         })

@@ -15,7 +15,7 @@ use core::{
 };
 use std::time::Instant;
 
-use crate::{executor::Executor, reactor::Sleeper};
+use crate::{executor::EXECUTOR, reactor::Sleeper};
 
 /// A future that will complete after a certain instant is reached in time.
 ///
@@ -31,7 +31,7 @@ impl Future for Sleep {
         if Instant::now() > self.0 {
             Poll::Ready(())
         } else {
-            Executor::with_global(|ex| {
+            EXECUTOR.with(|ex| {
                 ex.with_reactor(|reactor| {
                     reactor.sleepers.push(Sleeper {
                         deadline: self.0,

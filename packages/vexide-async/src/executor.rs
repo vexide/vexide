@@ -21,23 +21,15 @@ use crate::{
 
 type Runnable = async_task::Runnable<TaskMetadata>;
 
-#[cfg(not(target_os = "vexos"))]
 thread_local! {
-    static EXECUTOR: Executor = Executor::new();
+    pub(crate) static EXECUTOR: Executor = const { Executor::new() };
 }
-#[cfg(target_os = "vexos")]
-static EXECUTOR: Executor = Executor::new();
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
     reactor: RefCell<Reactor>,
     pub(crate) tls: RefCell<Option<Rc<TaskLocalStorage>>>,
 }
-
-#[cfg(target_os = "vexos")]
-unsafe impl Send for Executor {}
-#[cfg(target_os = "vexos")]
-unsafe impl Sync for Executor {}
 
 impl Executor {
     pub const fn new() -> Self {
@@ -46,14 +38,6 @@ impl Executor {
             reactor: RefCell::new(Reactor::new()),
             tls: RefCell::new(None),
         }
-    }
-
-    pub(crate) fn with_global<F: FnOnce(&Executor) -> R, R>(f: F) -> R {
-        #[cfg(target_os = "vexos")]
-        return f(&EXECUTOR);
-
-        #[cfg(not(target_os = "vexos"))]
-        return EXECUTOR.with(f);
     }
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {

@@ -3,7 +3,7 @@
 use std::{future::Future, rc::Rc};
 
 pub use crate::local::{task_local, LocalKey};
-use crate::{executor::Executor, local::TaskLocalStorage};
+use crate::{executor::EXECUTOR, local::TaskLocalStorage};
 
 // public because it's used in Task<T> and InfallibleTask<T>
 #[doc(hidden)]
@@ -42,5 +42,5 @@ pub type FallibleTask<T> = async_task::FallibleTask<T, TaskMetadata>;
 
 /// Spawns a new async task that can be controlled with the returned task handle.
 pub fn spawn<T>(future: impl Future<Output = T> + 'static) -> Task<T> {
-    Executor::with_global(|ex| ex.spawn(future))
+    EXECUTOR.with(|ex| ex.spawn(future))
 }
