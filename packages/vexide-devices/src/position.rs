@@ -209,6 +209,7 @@ mod test {
         assert_eq!(Position::ZERO.as_radians(), 0.0);
         assert_eq!(Position::ZERO.as_degrees(), 0.0);
         assert_eq!(Position::ZERO.as_revolutions(), 0.0);
+        assert_eq!(Position::ZERO + Position::ZERO, Position::ZERO);
     }
 
     #[test]

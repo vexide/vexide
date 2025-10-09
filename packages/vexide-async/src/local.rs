@@ -21,7 +21,7 @@ use std::{
     },
 };
 
-use crate::executor::{Executor, EXECUTOR};
+use crate::executor::EXECUTOR;
 
 /// A variable stored in task-local storage.
 ///

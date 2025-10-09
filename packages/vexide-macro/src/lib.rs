@@ -55,7 +55,7 @@ fn make_code_sig(opts: MacroOpts) -> proc_macro2::TokenStream {
     };
 
     quote! {
-        #[link_section = ".code_signature"]
+        #[cfg_attr(target_os = "vexos", link_section = ".code_signature")]
         #[used] // This is needed to prevent the linker from removing this object in release builds
         #[unsafe(no_mangle)]
         static __VEXIDE_CODE_SIGNATURE: ::vexide::program::CodeSignature = #sig;

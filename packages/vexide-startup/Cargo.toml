@@ -33,6 +33,9 @@ vex-sdk-pros = { version = "0.0.1", optional = true }
 [build-dependencies]
 vex-sdk-vexcode = { version = "0.0.1", optional = true }
 
+[dev-dependencies]
+vexide-devices = {  workspace = true }
+
 [lints]
 workspace = true
 

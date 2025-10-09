@@ -130,10 +130,10 @@ pub fn code_signature() -> CodeSignature {
     #[cfg(not(target_os = "vexos"))]
     {
         unsafe extern "C" {
-            static __VEXIDE_CODE_SIGNATURE: CodeSignature;
+            safe static __VEXIDE_CODE_SIGNATURE: CodeSignature;
         }
 
-        unsafe { __VEXIDE_CODE_SIGNATURE }
+        __VEXIDE_CODE_SIGNATURE
     }
 }
 

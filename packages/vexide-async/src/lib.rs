@@ -17,7 +17,7 @@ use core::future::Future;
 
 pub use task::spawn;
 
-use crate::executor::{Executor, EXECUTOR};
+use crate::executor::EXECUTOR;
 
 /// Synchronization primitives for async code.
 ///

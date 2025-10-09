@@ -98,8 +98,6 @@ impl Backtrace {
             let mut cursor = UnwindCursor::new(&context)?;
             let mut frames = Vec::new();
 
-            // Procedure based on mini_backtrace crate.
-
             // Step once before taking the backtrace to skip the current frame.
             loop {
                 let mut instruction_pointer = cursor.register(registers::UNW_REG_IP)?;
