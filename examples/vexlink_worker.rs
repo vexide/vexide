@@ -1,10 +1,7 @@
-#![no_main]
-#![no_std]
-
-extern crate alloc;
-
-use alloc::vec;
-use core::str;
+use std::{
+    io::{Read, Write},
+    str, vec,
+};
 
 use vexide::prelude::*;
 
@@ -20,14 +17,15 @@ async fn main(peripherals: Peripherals) {
 
     println!("[WORKER] Found manager - link established.");
 
-    link.write(b"Hi from worker :3").unwrap();
+    link.write_all(b"Hi from worker :3").unwrap();
 
     loop {
         if link.unread_bytes().unwrap() > 0 {
             let mut read = vec![0; link.unread_bytes().unwrap()];
-            link.read(&mut read).unwrap();
+            _ = link.read(&mut read).unwrap();
             println!("[MANAGER] {}", str::from_utf8(&read).unwrap());
         }
+
         sleep(RadioLink::UPDATE_INTERVAL).await;
     }
 }

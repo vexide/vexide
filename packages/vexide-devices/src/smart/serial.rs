@@ -19,24 +19,27 @@ use core::{
     task::{Context, Poll},
 };
 
-use no_std_io::io;
 use snafu::Snafu;
 use vex_sdk::{
     vexDeviceGenericSerialBaudrate, vexDeviceGenericSerialEnable, vexDeviceGenericSerialFlush,
-    vexDeviceGenericSerialPeekChar, vexDeviceGenericSerialReadChar, vexDeviceGenericSerialReceive,
-    vexDeviceGenericSerialReceiveAvail, vexDeviceGenericSerialTransmit,
-    vexDeviceGenericSerialWriteChar, vexDeviceGenericSerialWriteFree, V5_DeviceT,
+    vexDeviceGenericSerialPeekChar, vexDeviceGenericSerialReadChar,
+    vexDeviceGenericSerialReceiveAvail, vexDeviceGenericSerialWriteChar,
+    vexDeviceGenericSerialWriteFree, V5_DeviceT,
 };
+#[cfg(any(feature = "std", feature = "embedded-io"))]
+use vex_sdk::{vexDeviceGenericSerialReceive, vexDeviceGenericSerialTransmit};
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 
 /// A Smart Port configured as a generic RS-485 serial port.
 ///
-/// This struct implements the [`Read`] and [`Write`] traits from vexide's `io` module
-/// for reading/writing to the serial port.
+/// This struct implements the [`std::io::Read`] and [`std::io::Write`] traits if the `std`
+/// feature is enabled. Alternatively, the `embedded_io` enabled implementations of the
+/// [`embedded_io::Read`] and [`embedded_io::Write`] for this struct if `vexide_devices`
+/// is being used in a `no_std` environment.
 ///
-/// [`Read`]: vexide_core::io::Read
-/// [`Write`]: vexide_core::io::Write
+/// [`embedded_io::Read`]: https://docs.rs/embedded-io/0.6.1/embedded_io/trait.Read.html
+/// [`embedded_io::Write`]: https://docs.rs/embedded-io/0.6.1/embedded_io/trait.Write.html
 #[derive(Debug, Eq, PartialEq)]
 pub struct SerialPort {
     port: SmartPort,
@@ -276,81 +279,61 @@ impl SerialPort {
     }
 }
 
-impl io::Read for SerialPort {
-    /// Read some bytes from this serial port into the specified buffer, returning
-    /// how many bytes were read.
-    ///
-    /// # Errors
-    ///
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal read error occurred.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200).await;
-    ///
-    ///     let mut buffer = vec![0; 2048];
-    ///
-    ///     loop {
-    ///         _ = serial.read(&mut buffer);
-    ///         sleep(core::time::Duration::from_millis(10)).await;
-    ///     }
-    /// }
-    /// ```
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+#[cfg(feature = "std")]
+impl std::io::Read for SerialPort {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         match unsafe {
             vexDeviceGenericSerialReceive(self.device, buf.as_mut_ptr(), buf.len() as i32)
         } {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Internal read error occurred.",
-            )),
+            -1 => Err(std::io::Error::other("Internal read error occurred.")),
             received => Ok(received as usize),
         }
     }
 }
 
-impl io::Write for SerialPort {
-    /// Write a buffer into the serial port's output buffer, returning how many bytes
-    /// were written.
-    ///
-    /// # Errors
-    ///
-    /// - An error with the kind [`io::ErrorKind::Other`] is returned if an unexpected internal write error occurred.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200).await;
-    ///
-    ///     _ = serial.write(b"yo");
-    /// }
-    /// ```
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+#[cfg(feature = "std")]
+impl std::io::Write for SerialPort {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         match unsafe { vexDeviceGenericSerialTransmit(self.device, buf.as_ptr(), buf.len() as i32) }
         {
-            -1 => Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Internal write error occurred.",
-            )),
+            -1 => Err(std::io::Error::other("Internal write error occurred.")),
             written => Ok(written as usize),
         }
     }
 
-    /// This function does nothing.
-    ///
-    /// Generic serial does not use traditional buffers, so data in the output buffer is immediately sent.
-    ///
-    /// If you wish to *clear* both the read and write buffers, you can use [`Self::clear_buffers`].
-    fn flush(&mut self) -> io::Result<()> {
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::ErrorType for SerialPort {
+    type Error = SerialError;
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Read for SerialPort {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, SerialError> {
+        match unsafe {
+            vexDeviceGenericSerialReceive(self.device, buf.as_mut_ptr(), buf.len() as i32)
+        } {
+            -1 => Err(SerialError::ReadFailed),
+            received => Ok(received as usize),
+        }
+    }
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Write for SerialPort {
+    fn write(&mut self, buf: &[u8]) -> Result<usize, SerialError> {
+        match unsafe { vexDeviceGenericSerialTransmit(self.device, buf.as_ptr(), buf.len() as i32) }
+        {
+            -1 => Err(SerialError::WriteFailed),
+            written => Ok(written as usize),
+        }
+    }
+
+    fn flush(&mut self) -> Result<(), SerialError> {
         Ok(())
     }
 }
@@ -378,6 +361,13 @@ pub enum SerialError {
 
     /// Internal read error occurred.
     ReadFailed,
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Error for SerialError {
+    fn kind(&self) -> embedded_io::ErrorKind {
+        embedded_io::ErrorKind::Other
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

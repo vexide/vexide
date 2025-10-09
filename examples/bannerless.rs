@@ -1,6 +1,3 @@
-#![no_main]
-#![no_std]
-
 use vexide::prelude::*;
 
 #[vexide::main(banner(enabled = false))]

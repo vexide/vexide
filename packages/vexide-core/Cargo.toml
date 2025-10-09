@@ -18,32 +18,25 @@ authors = [
 
 [dependencies]
 vex-sdk = { workspace = true }
-no_std_io = { version = "0.6.0", features = ["alloc"] }
-snafu = { workspace = true }
-talc = { version = "4.3.1", optional = true }
-lock_api = "0.4.11"
 bitflags = "2.4.2"
 futures-core = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
 pin-project = "1.1.5"
-replace_with = { version = "0.1.7", default-features = false }
-libm = { version = "0.2.8", optional = true }
 
 [target.'cfg(target_vendor = "vex")'.dependencies]
-vex-libunwind = { version = "0.1.0", git = "https://github.com/vexide/vex-libunwind.git", tag = "v0.1.0", optional = true }
-
-[target.'cfg(not(target_vendor = "vex"))'.dependencies]
-libm = "0.2.8"
+vex-libunwind = { workspace = true, optional = true }
 
 [lints]
 workspace = true
 
 [features]
-default = ["backtraces"]
-force_rust_libm = ["dep:libm"]
-backtraces = ["dep:vex-libunwind"]
-allocator = ["dep:talc"]
+default = ["backtrace"]
+backtrace = ["dep:vex-libunwind"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
+targets = ["armv7a-vex-v5"]
+cargo-args=[
+    "-Zbuild-std=core,alloc,compiler_builtins",
+    "-Zbuild-std-features=compiler-builtins-mem"
+]

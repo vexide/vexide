@@ -16,20 +16,20 @@ jobs:
               uses: actions-rs/toolchain@v1
               with:
                   profile: minimal
-                  toolchain: nightly-2025-06-19
+                  toolchain: nightly-2025-09-26
                   override: true
 
             - name: Check Crates
               uses: actions-rs/cargo@v1
               with:
                   command: check
-                  args: --all-features -p vexide
+                  args: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem -p vexide --features "full vex-sdk-jumptable"
 
             - name: Check Examples
               uses: actions-rs/cargo@v1
               with:
                   command: check
-                  args: --bins --all-features --examples
+                  args: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --bins --examples
     lint:
         name: Lint
         runs-on: ubuntu-latest
@@ -42,7 +42,7 @@ jobs:
               with:
                   reporter: "github-pr-check"
                   github_token: ${{ secrets.GITHUB_TOKEN }}
-                  clippy_flags: --lib --bins --examples --all-features
+                  clippy_flags: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --lib --bins --examples --features "full vex-sdk-jumptable"
     test:
         name: Test
         runs-on: ubuntu-latest
@@ -54,19 +54,14 @@ jobs:
               uses: actions-rs/toolchain@v1
               with:
                   profile: minimal
-                  toolchain: nightly-2025-06-19
+                  toolchain: nightly-2025-09-26
                   override: true
 
-            # Currently other crates do not compile in test mode as
-            # `cargo test` doesn't work with our target. `vexide-macro`
-            # is an exception because it is a proc-macro crate.
-            # This isn't actually a big issue at the time of writing because
-            # those crates don't have tests.
-            - name: Test vexide-macro
+            - name: Test
               uses: actions-rs/cargo@v1
               with:
                   command: test
-                  args: --lib --bins --examples --all-features -p vexide-macro
+                  args: --workspace --lib --bins --examples
     fmt:
         name: Rustfmt
         runs-on: ubuntu-latest
@@ -78,7 +73,7 @@ jobs:
               uses: actions-rs/toolchain@v1
               with:
                   profile: minimal
-                  toolchain: nightly-2025-06-19
+                  toolchain: nightly-2025-09-26
                   override: true
 
             - name: Setup | Install Rustfmt

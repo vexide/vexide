@@ -20,43 +20,44 @@ rust-version = "1.75.0"
 
 [dependencies]
 vexide-async = { workspace = true, optional = true }
-vexide-devices = { workspace = true, optional = true }
-vexide-panic = { workspace = true, optional = true }
+vexide-devices = { workspace = true, optional = true, features = ["std"] }
 vexide-core = { workspace = true, optional = true }
 vexide-startup = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
 vex-sdk = { workspace = true }
 
 [features]
-default = [
-    "async",
-    "devices",
-    "panic",
-    "display_panics",
-    "core",
-    "startup",
-    "macro",
-    "backtraces",
-    "allocator",
-]
+default = ["async", "sync", "devices", "core"]
+full = ["default", "startup", "backtrace", "allocator", "panic-hook", "macros"]
 
-macro = ["dep:vexide-macro", "startup", "async", "core", "devices"]
-
-core = ["dep:vexide-core"]
-backtraces = ["core", "vexide-core/backtraces"]
-force_rust_libm = ["core", "vexide-core/force_rust_libm"]
-allocator = ["core", "vexide-core/allocator", "vexide-startup/allocator"]
-
-startup = ["dep:vexide-startup"]
+macros = ["dep:vexide-macro"]
 
 async = ["dep:vexide-async"]
+sync = ["dep:vexide-async", "vexide-async/sync"]
+
+core = ["dep:vexide-core"]
+backtrace = [
+    "dep:vexide-core",
+    "vexide-core/backtrace",
+    "vexide-startup/backtrace",
+]
+
+startup = ["dep:vexide-startup"]
+panic-hook = ["vexide-startup/panic-hook"]
+
+allocator = ["dep:vexide-startup", "vexide-startup/allocator"]
+vex-sdk-jumptable = ["vexide-startup/vex-sdk-jumptable"]
+vex-sdk-vexcode = ["vexide-startup/vex-sdk-vexcode"]
+vex-sdk-pros = ["vexide-startup/vex-sdk-pros"]
+vex-sdk-mock = ["vexide-startup/vex-sdk-mock"]
 
 devices = ["dep:vexide-devices"]
-dangerous_motor_tuning = ["devices", "vexide-devices/dangerous_motor_tuning"]
-smart_leds_trait = ["devices", "vexide-devices/smart_leds_trait"]
-
-panic = ["dep:vexide-panic"]
-display_panics = ["panic", "vexide-panic/display_panics"]
+embedded-io = ["vexide-devices/embedded-io"]
+dangerous-motor-tuning = ["vexide-devices/dangerous-motor-tuning"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
+targets = ["armv7a-vex-v5"]
+cargo-args = [
+    "-Zbuild-std=std,panic_abort",
+    "-Zbuild-std-features=compiler-builtins-mem",
+]

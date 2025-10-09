@@ -155,13 +155,13 @@ impl DistanceSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let distance_sensor = DistanceSensor::new(peripherals.port_1);
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
     ///     loop {
-    ///         if let Ok(0) = distance_sensor.status() {
+    ///         if let Ok(0) = sensor.status() {
     ///             println!("Sensor is still initializing");
     ///         } else {
     ///             println!("Sensor is ready");

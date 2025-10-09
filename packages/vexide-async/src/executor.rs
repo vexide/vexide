@@ -1,9 +1,13 @@
-use alloc::{collections::VecDeque, sync::Arc};
-use core::{
+use std::{
     cell::RefCell,
+    collections::VecDeque,
     future::Future,
     pin::Pin,
-    sync::atomic::{AtomicBool, Ordering},
+    rc::Rc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
     task::{Context, Poll},
 };
 
@@ -11,34 +15,34 @@ use waker_fn::waker_fn;
 
 use super::reactor::Reactor;
 use crate::{
-    local::{is_tls_null, set_tls_ptr, TaskLocalStorage},
+    local::TaskLocalStorage,
     task::{Task, TaskMetadata},
 };
 
 type Runnable = async_task::Runnable<TaskMetadata>;
 
-pub(crate) static EXECUTOR: Executor = Executor::new();
+thread_local! {
+    pub(crate) static EXECUTOR: Executor = const { Executor::new() };
+}
 
 pub(crate) struct Executor {
     queue: RefCell<VecDeque<Runnable>>,
     reactor: RefCell<Reactor>,
+    pub(crate) tls: RefCell<Option<Rc<TaskLocalStorage>>>,
 }
-
-//SAFETY: user programs only run on a single thread cpu core and interrupts are disabled when modifying executor state.
-unsafe impl Send for Executor {}
-unsafe impl Sync for Executor {}
 
 impl Executor {
     pub const fn new() -> Self {
         Self {
             queue: RefCell::new(VecDeque::new()),
             reactor: RefCell::new(Reactor::new()),
+            tls: RefCell::new(None),
         }
     }
 
     pub fn spawn<T>(&self, future: impl Future<Output = T> + 'static) -> Task<T> {
         let metadata = TaskMetadata {
-            tls: TaskLocalStorage::new(),
+            tls: Rc::new(TaskLocalStorage::new()),
         };
 
         // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
@@ -76,10 +80,9 @@ impl Executor {
 
         #[allow(if_let_rescope)]
         if let Some(runnable) = runnable {
-            let old_ptr = unsafe { runnable.metadata().tls.set_current_tls() };
-            runnable.run();
-
-            unsafe { set_tls_ptr(old_ptr) };
+            TaskLocalStorage::scope(runnable.metadata().tls.clone(), || {
+                runnable.run();
+            });
 
             true
         } else {
@@ -88,13 +91,6 @@ impl Executor {
     }
 
     pub fn block_on<R>(&self, mut task: Task<R>) -> R {
-        // indicative of entry point task
-        if is_tls_null() {
-            unsafe {
-                _ = TaskLocalStorage::new().set_current_tls();
-            }
-        }
-
         let woken = Arc::new(AtomicBool::new(true));
 
         let waker = waker_fn({
@@ -116,5 +112,21 @@ impl Executor {
 
             self.tick();
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use vex_sdk_mock as _;
+
+    use super::*;
+
+    #[test]
+    fn spawns_task() {
+        let executor = Executor::new();
+
+        let result = executor.block_on(executor.spawn(async { 1 }));
+
+        assert_eq!(result, 1);
     }
 }

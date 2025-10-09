@@ -24,15 +24,15 @@
 //! Using something like a [74HCT125 buffer] inline with the output to convert the 3.3-5V logic addresses both
 //! these problems.
 //!
-//! # `smart_leds_trait` Integration
+//! # `smart-leds-trait` Integration
 //!
-//! When compiled with the `smart_leds_trait` feature, vexide will implement the [`SmartLedsWrite`] trait
-//! from the [`smart-leds-rs`](https://github.com/smart-leds-rs) ecosystem on [`AdiAddrLed`]. This is useful
-//! if you need more advanced features for controlling the strip, such as gradients or gamma correction.
+//! vexide implements the [`SmartLedsWrite`] trait from the [`smart-leds-rs`](https://github.com/smart-leds-rs)
+//! ecosystem on [`AdiAddrLed`]. This is useful if you need more advanced features for controlling the strip, such
+//! as gradients or gamma correction.
 //!
 //! [WS2812B]: https://cdn-shop.adafruit.com/datasheets/WS2812B.pdf
 //! [74HCT125 buffer]: https://www.diodes.com/assets/Datasheets/74HCT125.pdf
-//! [`smart_leds_trait`]: https://docs.rs/smart-leds-trait/0.3.0/smart_leds_trait/index.html
+//! [`smart-leds-trait`]: https://docs.rs/smart-leds-trait/0.3.0/smart_leds_trait/index.html
 //! [`SmartLedsWrite`]: https://docs.rs/smart-leds-trait/0.3.0/smart_leds_trait/trait.SmartLedsWrite.html
 
 use alloc::{vec, vec::Vec};
@@ -163,7 +163,6 @@ impl AdiDevice<1> for AdiAddrLed {
     }
 }
 
-#[cfg(feature = "smart_leds_trait")]
 impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
     type Error = AddrLedError;
     type Color = Rgb<u8>;

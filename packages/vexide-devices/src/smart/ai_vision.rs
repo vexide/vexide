@@ -1,4 +1,4 @@
-//! AI Vision sensor device.
+//! AI Vision Sensor
 //!
 //! This module provides an API for interacting with the AI Vision sensor.
 //! The AI Vision sensor is meant to be a direct upgrade from the [Vision Sensor](super::vision)
@@ -18,9 +18,9 @@
 //! It has a horizontal FOV of 74 degrees and a vertical FOV of 63 degrees.
 //! Both of these values are a slight upgrade from the Vision Sensor.
 //!
-//! Unlike the Vision Sensor, the AI Vision sensor uses more readable color signatures
-//! that may be created without the AI Vision utility.
-//! It still has a USB port that can be used to create these signatures with VEX's utility.
+//! Unlike the Vision Sensor, the AI Vision sensor uses more human-readable color signatures
+//! that may be created without the AI Vision utility, though uploading color signatures with
+//! VEX's AI Vision Utility over USB is still an option.
 
 use alloc::{
     ffi::{CString, IntoStringError},
@@ -68,7 +68,7 @@ impl From<u8> for ObjectType {
     }
 }
 
-/// The data associated with an AI Vision object.
+/// The data associated with a detected AI Vision object.
 /// The data is different depending on the type of object detected.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AiVisionObject {
@@ -202,8 +202,12 @@ pub struct AiVisionColor {
 
 /// A color code used by an AI Vision Sensor to detect groups of color blobs.
 ///
-/// The color code can have up to 7 color signatures.
-/// When the colors in a color code are detected next to each other, the sensor will detect the color code.
+/// Color codes are effectively "groups" of color signatures. A color code associated
+/// multiple color signatures on the sensor will be detected as a single object when
+/// all signatures are seen next to each other.
+///
+/// Color codes can associate up to 7 color signatures and detections will be returned
+/// as [`AiVisionObject::Code`] variants.
 pub struct AiVisionColorCode([Option<u8>; 7]);
 impl AiVisionColorCode {
     /// Creates a new color code with the given color signature ids.
@@ -355,7 +359,7 @@ impl AiVisionSensor {
 
     // const AWB_START_VALUE: u32 = 4;
 
-    /// Create a new AI Vision sensor from a smart port with the given brightness and contrast.
+    /// Creates a new AI Vision sensor from a smart port with the given brightness and contrast.
     ///
     /// # Examples
     ///
@@ -364,7 +368,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     // Do something with the AI Vision sensor
     /// }
     /// ```
@@ -379,7 +383,7 @@ impl AiVisionSensor {
         Self { port, device }
     }
 
-    /// Returns the current temperature of the AI Vision sensor.
+    /// Returns the current temperature of the sensor in degrees Celsius.
     ///
     /// # Errors
     ///
@@ -392,9 +396,9 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
-    ///         println!("{:?}", ai_vision.temperature());
+    ///         println!("{:?}", sensor.temperature());
     ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -404,7 +408,11 @@ impl AiVisionSensor {
         Ok(unsafe { vexDeviceAiVisionTemperatureGet(self.device) })
     }
 
-    /// Sets a color code used to detect groups of colors.
+    /// Registers a color code association on the sensor.
+    ///
+    /// Color codes are effectively "groups" of color signatures. A color code associated
+    /// multiple color signatures on the sensor will be detected as a single object when
+    /// all signatures are seen next to each other.
     ///
     /// # Panics
     ///
@@ -422,15 +430,15 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
     ///         saturation: 1.0,
     ///     };
-    ///     _ = ai_vision.set_color(1, color);
+    ///     _ = sensor.set_color(1, color);
     ///     let code = AiVisionColorCode::from([1]);
-    ///     _ = ai_vision.set_color_code(1, &code);
+    ///     _ = sensor.set_color_code(1, &code);
     /// }
     /// ```
     pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<()> {
@@ -495,10 +503,11 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let code = AiVisionColorCode::from([1]);
-    ///     _ = ai_vision.set_color_code(1, &code);
-    ///     if let Ok(Some(code)) = ai_vision.color_code(1) {
+    ///     _ = sensor.set_color_code(1, &code);
+    ///
+    ///     if let Ok(Some(code)) = sensor.color_code(1) {
     ///          println!("{:?}", code);
     ///     } else {
     ///         println!("Something went wrong!");
@@ -548,10 +557,11 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = ai_vision.set_color_code(1, &AiVisionColorCode::from([1]));
-    ///     _ = ai_vision.set_color_code(2, &AiVisionColorCode::from([1, 2]));
-    ///     println!("{:?}", ai_vision.color_codes());
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     _ = sensor.set_color_code(1, &AiVisionColorCode::from([1]));
+    ///     _ = sensor.set_color_code(2, &AiVisionColorCode::from([1, 2]));
+    ///
+    ///     println!("{:?}", sensor.color_codes());
     /// }
     /// ```
     pub fn color_codes(&self) -> Result<[Option<AiVisionColorCode>; 8]> {
@@ -584,14 +594,15 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
     ///         saturation: 1.0,
     ///     };
-    ///     _ = ai_vision.set_color(1, color);
-    ///     _ = ai_vision.set_color(2, color);
+    ///
+    ///     _ = sensor.set_color(1, color);
+    ///     _ = sensor.set_color(2, color);
     /// }
     /// ```
     pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
@@ -634,14 +645,14 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
     ///         saturation: 1.0,
     ///     };
-    ///     _ = ai_vision.set_color(1, color);
-    ///     if let Ok(Some(color)) = ai_vision.color(1) {
+    ///     _ = sensor.set_color(1, color);
+    ///     if let Ok(Some(color)) = sensor.color(1) {
     ///         println!("{:?}", color);
     ///     } else {
     ///         println!("Something went wrong!");
@@ -684,14 +695,15 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
     ///         saturation: 1.0,
     ///     };
-    ///     _ = ai_vision.set_color(1, color);
-    ///     let colors = ai_vision.colors().unwrap();
+    ///     _ = sensor.set_color(1, color);
+    ///
+    ///     let colors = sensor.colors().unwrap();
     ///     println!("{:?}", colors);
     /// }
     /// ```
@@ -720,8 +732,8 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = ai_vision.set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     _ = sensor.set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
     /// }
     /// ```
     pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
@@ -751,8 +763,8 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
-    ///     println!("{:?}", ai_vision.flags());
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     println!("{:?}", sensor.flags());
     /// }
     /// ```
     pub fn flags(&self) -> Result<AiVisionFlags> {
@@ -776,10 +788,10 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     // Enable all detection modes except for custom model and disable USB overlay
     ///     let flags = AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_MODEL;
-    ///     _ = ai_vision.set_flags(flags);
+    ///     _ = sensor.set_flags(flags);
     /// }
     /// ```
     pub fn set_flags(&mut self, mode: AiVisionFlags) -> Result<()> {
@@ -848,8 +860,8 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = ai_vision.set_apriltag_family(AprilTagFamily::Tag16h5);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     _ = sensor.set_apriltag_family(AprilTagFamily::Tag16h5);
     /// }
     /// ```
     pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<()> {
@@ -880,9 +892,9 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
-    ///         let objects = ai_vision.objects().unwrap();
+    ///         let objects = sensor.objects().unwrap();
     ///         for object in objects {
     ///             if let AiVisionObjectData::Color { position, .. } = object.data {
     ///                 println!("{:?}", position);
@@ -984,9 +996,9 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
-    ///         println!("AI Vision sensor currently detects {:?} objects", ai_vision.object_count());
+    ///         println!("AI Vision sensor currently detects {:?} objects", sensor.object_count());
     ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
     ///     }
     /// }

@@ -1,11 +1,11 @@
 //! Angular Position Type
 //!
 //! Used by devices such as [`Motor`], [`RotationSensor`], and [`AdiEncoder`]
-//! that are able to measure their own rotation.
+//! to store measurements of their rotation as an angle.
 //!
-//! [`Motor`]: crate::devices::smart::Motor
-//! [`RotationSensor`]: crate::devices::smart::RotationSensor
-//! [`AdiEncoder`]: crate::devices::adi::AdiEncoder
+//! [`AdiEncoder`]: crate::adi::encoder::AdiEncoder
+//! [`RotationSensor`]: crate::smart::rotation::RotationSensor
+//! [`Motor`]: crate::smart::motor::Motor
 
 use core::{
     f64::{
@@ -15,11 +15,17 @@ use core::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-/// Opaque type for storing unit-agnostic angular position (a signed displacement
-/// from some rotation representing `Position::ZERO`, or zero degrees).
+/// Stores an angular position/rotation.that are able
 ///
-/// Used by devices such as [`Motor`], [`RotationSensor`], and [`AdiEncoder`]
-/// that are able to measure their own rotation.
+/// This type stores a unit-agnostic angular position (a signed displacement
+/// from some rotation representing `Position::ZERO`).
+///
+/// This type is used by devices such as [`Motor`], [`RotationSensor`], and
+/// [`AdiEncoder`] to store measurements of their rotation as an angle.
+///
+/// [`RotationSensor`]: crate::smart::rotation::RotationSensor
+/// [`Motor`]: crate::smart::motor::Motor
+/// [`AdiEncoder`]: crate::adi::encoder::AdiEncoder
 ///
 /// # Non-modularity
 ///
@@ -185,5 +191,113 @@ impl Neg for Position {
     #[inline]
     fn neg(self) -> Self::Output {
         Self(-self.0)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use core::f64::consts::FRAC_PI_2;
+
+    use super::*;
+
+    fn approx_eq(a: f64, b: f64) -> bool {
+        (a - b).abs() < 1e-9
+    }
+
+    #[test]
+    fn zero_is_actually_zero() {
+        assert_eq!(Position::ZERO.as_radians(), 0.0);
+        assert_eq!(Position::ZERO.as_degrees(), 0.0);
+        assert_eq!(Position::ZERO.as_revolutions(), 0.0);
+        assert_eq!(Position::ZERO + Position::ZERO, Position::ZERO);
+    }
+
+    #[test]
+    fn from_units() {
+        // degrees
+        let pos = Position::from_degrees(180.0);
+        assert!(approx_eq(pos.as_radians(), PI));
+        assert!(approx_eq(pos.as_degrees(), 180.0));
+
+        // radians
+        let pos = Position::from_radians(PI);
+        assert!(approx_eq(pos.as_degrees(), 180.0));
+
+        // gradians
+        let pos = Position::from_gradians(200.0);
+        assert!(approx_eq(pos.as_radians(), PI));
+
+        // revolutions
+        let pos = Position::from_revolutions(0.5);
+        assert!(approx_eq(pos.as_radians(), PI));
+        assert!(approx_eq(pos.as_degrees(), 180.0));
+
+        // ticks
+        let pos = Position::from_ticks(18000.0, 36000);
+        assert!(approx_eq(pos.as_revolutions(), 0.5));
+        assert!(approx_eq(pos.as_degrees(), 180.0));
+    }
+
+    #[test]
+    fn as_ticks() {
+        let pos = Position::from_revolutions(1.0);
+        assert!(approx_eq(pos.as_ticks(36000), 36000.0));
+        assert!(approx_eq(pos.as_ticks(72000), 72000.0));
+    }
+
+    #[test]
+    fn as_units() {
+        let pos = Position::from_degrees(90.0);
+        assert!(approx_eq(pos.as_revolutions(), 0.25));
+        assert!(approx_eq(pos.as_gradians(), 100.0));
+        assert!(approx_eq(pos.as_degrees(), 90.0));
+        assert!(approx_eq(pos.as_radians(), FRAC_PI_2));
+        assert!(approx_eq(pos.as_ticks(360), 90.0));
+    }
+
+    #[test]
+    fn add_subtract() {
+        let a = Position::from_degrees(90.0);
+        let b = Position::from_degrees(45.0);
+        let sum = a + b;
+        let diff = a - b;
+        assert!(approx_eq(sum.as_degrees(), 135.0));
+        assert!(approx_eq(diff.as_degrees(), 45.0));
+
+        let mut p = Position::from_degrees(60.0);
+        p += Position::from_degrees(30.0);
+        assert!(approx_eq(p.as_degrees(), 90.0));
+        p -= Position::from_degrees(45.0);
+        assert!(approx_eq(p.as_degrees(), 45.0));
+    }
+
+    #[test]
+    fn multiply_div_scalar() {
+        let p = Position::from_degrees(90.0);
+        let doubled = p * 2.0;
+        let halved = p / 2.0;
+        assert!(approx_eq(doubled.as_degrees(), 180.0));
+        assert!(approx_eq(halved.as_degrees(), 45.0));
+
+        let mut p = Position::from_degrees(30.0);
+        p *= 3.0;
+        assert!(approx_eq(p.as_degrees(), 90.0));
+        p /= 3.0;
+        assert!(approx_eq(p.as_degrees(), 30.0));
+    }
+
+    #[test]
+    fn negate() {
+        let p = Position::from_degrees(90.0);
+        let neg = -p;
+        assert!(approx_eq(neg.as_degrees(), -90.0));
+    }
+
+    #[test]
+    fn non_modular() {
+        let a = Position::from_degrees(0.0);
+        let b = Position::from_degrees(360.0);
+        assert_ne!(a, b);
+        assert!(approx_eq(b.as_revolutions(), 1.0));
     }
 }

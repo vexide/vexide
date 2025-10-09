@@ -8,83 +8,20 @@
 //! Task-locals can be declared using the [`task_local`] macro, which creates a [`LocalKey`] with
 //! the same name that can be used to access the local.
 
-use core::{
-    alloc::Layout,
-    cell::{BorrowError, BorrowMutError, Cell, RefCell},
-    fmt::Debug,
-    ptr::{self, null_mut},
-    sync::atomic::{AtomicPtr, Ordering},
+use std::{
+    any::Any,
+    boxed::Box,
+    cell::{BorrowError, BorrowMutError, Cell, RefCell, UnsafeCell},
+    collections::btree_map::BTreeMap,
+    ptr,
+    rc::Rc,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        LazyLock,
+    },
 };
 
-unsafe extern "C" {
-    static mut __vexide_tdata_start: u8;
-    static mut __vexide_tdata_end: u8;
-}
-
-static TLS_PTR: AtomicPtr<()> = AtomicPtr::new(null_mut());
-
-pub(crate) fn is_tls_null() -> bool {
-    TLS_PTR.load(Ordering::Relaxed).is_null()
-}
-
-pub(crate) unsafe fn set_tls_ptr(ptr: *mut ()) {
-    TLS_PTR.store(ptr, Ordering::Relaxed);
-}
-
-const fn tls_layout() -> Layout {
-    const MAX_ALIGNMENT: usize = 16;
-
-    let Ok(layout) = Layout::from_size_align(
-        unsafe { (&raw const __vexide_tdata_end).offset_from(&raw const __vexide_tdata_start) }
-            as usize,
-        MAX_ALIGNMENT,
-    ) else {
-        // Creating the layout can only fail if the size of the TLS section is out of range of isize.
-        // Bins with a tls section this large cant be uploaded, so this branch should never be hit.
-        panic!("Failed to create TLS layout. The size of the TLS section is too large. This is an internal vexide bug.");
-    };
-    layout
-}
-
-pub(crate) struct TaskLocalStorage {
-    mem: *mut (),
-}
-
-impl TaskLocalStorage {
-    #[must_use]
-    pub fn new() -> Self {
-        let tls_layout = tls_layout();
-
-        if tls_layout.size() == 0 {
-            Self { mem: null_mut() }
-        } else {
-            let mem = unsafe { alloc::alloc::alloc(tls_layout) };
-
-            unsafe {
-                ptr::copy_nonoverlapping(&raw const __vexide_tdata_start, mem, tls_layout.size());
-            }
-
-            Self { mem: mem.cast() }
-        }
-    }
-
-    #[must_use]
-    pub unsafe fn set_current_tls(&self) -> *mut () {
-        TLS_PTR.swap(self.mem, Ordering::Relaxed)
-    }
-}
-
-impl Drop for TaskLocalStorage {
-    fn drop(&mut self) {
-        if self.mem.is_null() {
-            return;
-        }
-
-        unsafe {
-            alloc::alloc::dealloc(self.mem.cast(), tls_layout());
-        }
-    }
-}
+use crate::executor::EXECUTOR;
 
 /// A variable stored in task-local storage.
 ///
@@ -124,25 +61,10 @@ impl Drop for TaskLocalStorage {
 ///     NAME.with_borrow(|names| assert_eq!(names.len(), 0));
 /// }).await;
 /// ```
+#[derive(Debug)]
 pub struct LocalKey<T: 'static> {
-    inner_static: &'static T,
-}
-impl<T> Debug for LocalKey<T> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        // Workaround for `DebugStruct::field_with` being unstable.
-        struct PtrFmt<T>(*const T);
-        impl<T> Debug for PtrFmt<T> {
-            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                write!(f, "{:p}", self.0)
-            }
-        }
-
-        let ptr = self.inner_static as *const T;
-
-        f.debug_struct("LocalKey")
-            .field("inner_static", &PtrFmt(ptr))
-            .finish()
-    }
+    init: fn() -> T,
+    key: LazyLock<u32>,
 }
 
 unsafe impl<T> Sync for LocalKey<T> {}
@@ -159,8 +81,10 @@ unsafe impl<T> Send for LocalKey<T> {}
 ///     static NAMES: RefCell<Vec<String>> = RefCell::new(Vec::new());
 /// }
 /// ```
-// allows matching `const` expressions
-#[expect(edition_2024_expr_fragment_specifier)]
+#[expect(
+    edition_2024_expr_fragment_specifier,
+    reason = "allows matching `const` expressions"
+)]
 #[macro_export]
 macro_rules! task_local {
     {
@@ -170,17 +94,8 @@ macro_rules! task_local {
         $(#[$attr])*
         // publicly reexported in crate::task
         $vis static $name: $crate::task::LocalKey<$type> = {
-            #[repr(transparent)]
-            struct Opaque<T>(T);
-
-            unsafe impl<T> Sync for Opaque<T> {}
-
-            #[unsafe(link_section = ".vexide_tdata")]
-            static INNER: Opaque<$type> = Opaque($init);
-
-            unsafe {
-                $crate::task::LocalKey::new(&INNER.0)
-            }
+            fn init() -> $type { $init }
+            $crate::task::LocalKey::new(init)
         };
     };
 
@@ -193,17 +108,16 @@ macro_rules! task_local {
         $crate::task_local!($($rest)*);
     }
 }
+pub use task_local;
 
 impl<T: 'static> LocalKey<T> {
     #[doc(hidden)]
-    pub const unsafe fn new(inner_static: &'static T) -> Self {
-        Self { inner_static }
-    }
+    pub const fn new(init: fn() -> T) -> Self {
+        static LOCAL_KEY_COUNTER: AtomicU32 = AtomicU32::new(0);
 
-    fn offset(&'static self) -> usize {
-        unsafe {
-            ptr::from_ref(self.inner_static).byte_offset_from(&raw const __vexide_tdata_start)
-                as usize
+        Self {
+            init,
+            key: LazyLock::new(|| LOCAL_KEY_COUNTER.fetch_add(1, Ordering::Relaxed)),
         }
     }
 
@@ -224,15 +138,11 @@ impl<T: 'static> LocalKey<T> {
     where
         F: FnOnce(&T) -> R,
     {
-        let tls_ptr = TLS_PTR.load(Ordering::Relaxed);
-        assert!(
-            !tls_ptr.is_null(),
-            "cannot access task-locals outside of a task"
-        );
-
-        let ptr = unsafe { tls_ptr.byte_add(self.offset()).cast() };
-
-        f(unsafe { &*ptr })
+        TaskLocalStorage::with_current(|storage| {
+            // SAFETY: get_or_init is always called with the same return type, T
+            // Also, `key` is unique for this local key.
+            f(unsafe { storage.get_or_init(*self.key, self.init) })
+        })
     }
 }
 
@@ -349,5 +259,98 @@ impl<T: 'static> LocalKey<RefCell<T>> {
     /// Panics if the value is currently borrowed.
     pub fn replace(&'static self, value: T) -> T {
         self.with(|cell| cell.replace(value))
+    }
+}
+
+struct ErasedTaskLocal {
+    value: Box<dyn Any>,
+}
+
+impl ErasedTaskLocal {
+    #[doc(hidden)]
+    fn new<T: 'static>(value: T) -> Self {
+        Self {
+            value: Box::new(value),
+        }
+    }
+
+    /// # Safety
+    ///
+    /// Caller guarantees T is the right type
+    unsafe fn get<T: 'static>(&self) -> &T {
+        if cfg!(debug_assertions) {
+            self.value.downcast_ref().unwrap()
+        } else {
+            unsafe { &*ptr::from_ref(&*self.value).cast() }
+        }
+    }
+}
+
+// Fallback TLS block for when reading from outside of a task.
+thread_local! {
+    static FALLBACK_TLS: TaskLocalStorage = const { TaskLocalStorage::new() };
+}
+
+#[derive(Debug)]
+pub(crate) struct TaskLocalStorage {
+    locals: UnsafeCell<BTreeMap<u32, ErasedTaskLocal>>,
+}
+
+impl TaskLocalStorage {
+    pub(crate) const fn new() -> Self {
+        Self {
+            locals: UnsafeCell::new(BTreeMap::new()),
+        }
+    }
+
+    pub(crate) fn scope(value: Rc<TaskLocalStorage>, scope: impl FnOnce()) {
+        let outer_scope = EXECUTOR.with(|ex| (*ex.tls.borrow_mut()).replace(value));
+
+        scope();
+
+        EXECUTOR.with(|ex| {
+            *ex.tls.borrow_mut() = outer_scope;
+        });
+    }
+
+    /// Gets the Task Local Storage data for the current task.
+    pub(crate) fn with_current<F, R>(f: F) -> R
+    where
+        F: FnOnce(&Self) -> R,
+    {
+        EXECUTOR.with(|ex| {
+            if let Some(tls) = ex.tls.borrow().as_ref() {
+                f(tls)
+            } else {
+                FALLBACK_TLS.with(|fallback| f(fallback))
+            }
+        })
+    }
+
+    /// Gets a reference to the Task Local Storage item identified by the given key.
+    ///
+    /// It is invalid to call this function multiple times with the same key and a different `T`.
+    pub(crate) unsafe fn get_or_init<T: 'static>(&self, key: u32, init: fn() -> T) -> &T {
+        // We need to be careful to not make mutable references to values already inserted into the
+        // map because the current task might have existing shared references to that data.
+        // It's okay if the pointer (ErasedTaskLocal) gets moved around, we just can't
+        // assert invalid exclusive access over its contents.
+
+        let locals = self.locals.get();
+        unsafe {
+            // init() could initialize another task local recursively, so we need to be sure there's no mutable
+            // reference to `self.locals` when we call it. We can't use the entry API because of this.
+
+            #[expect(
+                clippy::map_entry,
+                reason = "cannot hold mutable reference over init() call"
+            )]
+            if !(*locals).contains_key(&key) {
+                let new_value = ErasedTaskLocal::new(init());
+                (*locals).insert(key, new_value);
+            }
+
+            (*locals).get(&key).unwrap().get()
+        }
     }
 }

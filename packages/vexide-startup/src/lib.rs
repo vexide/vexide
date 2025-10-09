@@ -1,14 +1,16 @@
-//! User program startup routines.
+//! User program startup and runtime support.
 //!
-//! This crate provides runtime infrastructure for booting VEX user programs from Rust code.
+//! This crate provides runtime infrastructure for booting vexide programs from Rust code.
+//! This infrastructure includes a more optimized heap allocator, differential uploading
+//! support, and a panic hook that draws panic messages to the screen and captures backtraces.
 //!
-//! - User code begins at an assembly routine called `_boot`, which sets up the stack
-//!   section before jumping to a user-provided `_start` symbol, which should be your
-//!   rust entrypoint.
+//! - User code begins at an assembly routine called `_vexide_boot`, which sets up the stack
+//!   section before jumping to the `_start` routine defined in libstd, which then calls the
+//!   `main` function.
 //!
-//! - From there, the Rust `_start` entrypoint may call the [`startup`] function to finish
-//!   the startup process by clearing the `.bss` section (which stores uninitialized data)
-//!   and initializing vexide's heap allocator.
+//! - From there, consumers must call the [`startup`] function to finish the startup process
+//!   by applying differential upload patches, claiming heap space, and setting up this crate's
+//!   custom panic hook.
 //!
 //! This crate does NOT provide a `libc` [crt0 implementation]. No `libc`-style global
 //! constructors are called. This means that the [`__libc_init_array`] function must be
@@ -23,23 +25,16 @@
 //! runtime or the `#[vexide::main]` macro.
 //!
 //! ```
-//! #![no_main]
-//! #![no_std]
-//!
-//! use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
+//! use vexide_core::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
 //!
 //! // SAFETY: This symbol is unique and is being used to start the runtime.
-//! #[unsafe(no_mangle)]
-//! unsafe extern "C" fn _start() -> ! {
+//! fn main() {
 //!     // Setup the heap, zero bss, apply patches, etc...
 //!     unsafe {
 //!         vexide_startup::startup();
 //!     }
 //!
 //!     // Rust code goes here!
-//!
-//!     // Exit the program once we're done.
-//!     vexide_core::program::exit();
 //! }
 //!
 //! // Program header (placed at the first 20 bytes on the binary).
@@ -48,38 +43,31 @@
 //! static CODE_SIG: CodeSignature = CodeSignature::new(
 //!     ProgramType::User,
 //!     ProgramOwner::Partner,
-//!     ProgramFlags::empty(),
+//!     ProgramOptions::empty(),
 //! );
-//!
-//! // Panic handler (this would normally be provided by `veixde_panic`).
-//! #[panic_handler]
-//! const fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
-//!     loop {}
-//! }
 //! ```
 
-#![no_std]
-
+#[cfg(feature = "allocator")]
+pub mod allocator;
 pub mod banner;
-mod code_signature;
+
+#[cfg(feature = "panic-hook")]
+mod panic_hook;
+#[cfg(target_os = "vexos")]
 mod patcher;
-
-use core::arch::naked_asm;
-
-pub use code_signature::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
-use patcher::PATCH_MAGIC;
-
-/// Load address of user programs in memory.
-const USER_MEMORY_START: u32 = 0x0380_0000;
+mod sdk;
 
 // Linkerscript Symbols
 //
-// All of these external symbols are defined in our linkerscript (link/v5.ld) and don't have
-// real types or values, but a pointer to them points to the address of their location defined
-// in the linkerscript.
+// All of these external symbols are defined by either Rust's armv7a-vex-v5 linkerscript, our ours
+// (see link/vexide.ld). These symbols don't have real types or values, but a pointer to them points
+// to the address of their location defined in the linkerscript.
+#[cfg(target_os = "vexos")]
 unsafe extern "C" {
     static mut __heap_start: u8;
     static mut __heap_end: u8;
+
+    static mut __user_ram_start: u8;
 
     static mut __linked_file_start: u8;
     static mut __linked_file_end: u8;
@@ -96,12 +84,13 @@ unsafe extern "C" {
 ///
 /// This routine loads the stack pointer to the stack region specified in our
 /// linkerscript, makes a copy of program memory for the patcher if needed, then
-/// branches to the Rust entrypoint (_start) created by the #[vexide::main] macro.
-#[unsafe(link_section = ".boot")]
+/// branches to the Rust entrypoint (_start) defined in libstd.
+#[unsafe(link_section = ".vexide_boot")]
 #[unsafe(no_mangle)]
 #[unsafe(naked)]
-unsafe extern "C" fn _boot() {
-    naked_asm!(
+#[cfg(target_os = "vexos")]
+unsafe extern "C" fn _vexide_boot() {
+    core::arch::naked_asm!(
         // Load the stack pointer to point to our stack section.
         //
         // This technically isn't required, as VEXos already sets up a stack for CPU1,
@@ -128,60 +117,75 @@ unsafe extern "C" fn _boot() {
         "ldr r1, ={patch_magic}",
         "cmp r0, r1", // r0 == 0xB1DF?
         // Prepare to memcpy binary to 0x07C00000
-        "ldr r0, =__patcher_base_start",     // memcpy dest -> r0
-        "ldr r1, =__user_ram_start",         // memcpy src -> r1
+        "ldr r0, =__patcher_base_start", // memcpy dest -> r0
+        "ldr r1, =__user_ram_start", // memcpy src -> r1
         "ldr r2, =__patcher_patch_start+12", // Base binary len is stored as metadata in the patch
-        "ldr r2, [r2]",                      // memcpy size -> r2
+        "ldr r2, [r2]", // memcpy size -> r2
         // Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
         "bleq __overwriter_aeabi_memcpy",
         // Jump to the Rust entrypoint.
         "b _start",
-        patch_magic = const PATCH_MAGIC,
+        patch_magic = const patcher::PATCH_MAGIC,
     )
 }
 
-/// Rust runtime initialization.
+/// vexide runtime initialization.
 ///
-/// This function performs some prerequestites to allow Rust code to properly run. It must
-/// be called once before any static data access or heap allocation is done. When using
-/// `vexide`, this function is already called for you by the `#[vexide::main]` macro, so
-/// there's no need to call it yourself.
+/// This function performs some prerequisites to allow vexide programs to properly run. It
+/// must be called once at startup before any heap allocation is done. When using `vexide`,
+/// this function is already called for you by the `#[vexide::main]` macro, so there's no
+/// need to call it yourself (doing so would cause **undefined behavior**).
 ///
 /// This function does the following initialization:
 ///
-/// - Fills the `.bss` (uninitialized statics) section with zeroes.
-/// - Sets up the global heap allocator if the `allocator` feature is specified.
-/// - Applies [differential upload patches] to the program if a patch file exists in memory.
+/// - Sets up the global heap allocator by [claiming](crate::allocator::claim) the default
+///   heap region if the `allocator` feature is specified.
+/// - Applies [differential upload patches] to the program if a patch file exists in memory
+///   and restarts the program if necessary.
+/// - Registers a custom [panic hook] to allow panic messages to be drawn to the screen and
+///   backtrace to be collected. This can be enabled/disabled using the `panic-hook` and
+///   `backtrace` features.
 ///
 /// [differential upload patches]: https://vexide.dev/docs/building-uploading/#uploading-strategies
+/// [panic hook]: https://doc.rust-lang.org/std/panic/fn.set_hook.html
+///
+/// # Examples
+///
+/// ```
+/// // Not using the `#[vexide::main]` macro here.
+/// fn main() {
+///     unsafe {
+///         vexide_startup::startup(); // Call this once at the start of main.
+///     }
+///
+///     println!("Hi.");
+/// }
+/// ```
 ///
 /// # Safety
 ///
 /// Must be called *once and only once* at the start of program execution.
 #[inline]
+#[allow(clippy::needless_doctest_main)]
 pub unsafe fn startup() {
-    #[cfg(target_vendor = "vex")]
+    #[cfg(target_os = "vexos")]
     unsafe {
-        // Clear the .bss (uninitialized statics) section by filling it with zeroes.
-        // This is required, since the compiler assumes it will be zeroed on first access.
-        core::ptr::write_bytes(
-            &raw mut __bss_start,
-            0,
-            (&raw mut __bss_end).offset_from(&raw mut __bss_start) as usize,
-        );
-
         // Initialize the heap allocator in our heap region defined in the linkerscript
         #[cfg(feature = "allocator")]
-        vexide_core::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
+        crate::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
 
         // If this link address is 0x03800000, this implies we were uploaded using
         // differential uploads by cargo-v5 and may have a patch to apply.
-        if vex_sdk::vexSystemLinkAddrGet() == USER_MEMORY_START {
+        if vexide_core::program::linked_file().addr() == (&raw const __user_ram_start).addr() {
             patcher::patch();
         }
 
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
-        vexide_core::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
+        crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
     }
+
+    // Register custom panic hook if needed.
+    #[cfg(feature = "panic-hook")]
+    std::panic::set_hook(Box::new(panic_hook::hook));
 }

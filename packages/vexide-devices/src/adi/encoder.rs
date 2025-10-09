@@ -71,7 +71,7 @@ use crate::{adi::adi_port_name, position::Position, PortError};
 ///     prelude::*,
 ///     devices::adi::AdiDevice,
 /// };
-/// use core::time::Duration;
+/// use std::time::Duration;
 ///
 /// #[vexide::main]
 /// async fn main(peripherals: Peripherals) {
@@ -108,7 +108,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///     prelude::*,
     ///     devices::adi::AdiDevice,
     /// };
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
@@ -140,9 +140,8 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
         );
 
         // Top and bottom must be some combination of (AB, CD, EF, GH) or (BA, CD, FE, HG)
-        let top_is_even = top_number % 2 == 0;
         assert!(
-            if top_is_even {
+            if top_number.is_multiple_of(2) {
                 bottom_number == top_number - 1
             } else {
                 bottom_number == top_number + 1
@@ -181,7 +180,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///     prelude::*,
     ///     devices::adi::AdiDevice,
     /// };
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
@@ -224,7 +223,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///     prelude::*,
     ///     devices::adi::AdiDevice,
     /// };
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
@@ -268,7 +267,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///     prelude::*,
     ///     devices::adi::AdiDevice,
     /// };
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///

@@ -48,9 +48,8 @@
     ],
     "rust-analyzer.cargo.allTargets": false,
     "rust-analyzer.check.targets": [
-        "${workspaceFolder}/armv7a-vex-v5.json",
+        "armv7a-vex-v5",
     ],
-    "rust-analyzer.cargo.features": "all",
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.showUnlinkedFileNotification": false,
     "files.trimTrailingWhitespace": true,
