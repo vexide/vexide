@@ -17,7 +17,7 @@ async fn main(peripherals: Peripherals) {
 
     println!("[MANAGER] Found worker - link established.");
 
-    _ = link.write(b"Hi from manager :3").unwrap();
+    link.write_all(b"Hi from manager :3").unwrap();
 
     loop {
         if link.unread_bytes().unwrap() > 0 {
