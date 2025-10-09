@@ -288,7 +288,7 @@ impl ErasedTaskLocal {
 
 // Fallback TLS block for when reading from outside of a task.
 thread_local! {
-    static FALLBACK_TLS: TaskLocalStorage = TaskLocalStorage::new();
+    static FALLBACK_TLS: TaskLocalStorage = const { TaskLocalStorage::new() };
 }
 
 #[derive(Debug)]
@@ -322,7 +322,7 @@ impl TaskLocalStorage {
             if let Some(tls) = ex.tls.borrow().as_ref() {
                 f(tls)
             } else {
-                return FALLBACK_TLS.with(|fallback| f(fallback));
+                FALLBACK_TLS.with(|fallback| f(fallback))
             }
         })
     }
