@@ -267,12 +267,8 @@ impl Font {
         Self { size, family }
     }
 
-    /// Apply this font to the VEX SDK.
-    ///
-    /// **This is a low-level function exposed for interoperability with the VEX SDK interface.**
-    ///
-    /// You are probably looking for [`Text::new`].
-    pub fn apply_to_sdk(self) {
+    /// Set the display's font to this font.
+    fn apply(self) {
         unsafe {
             vexDisplayFontNamedSet(self.family.raw().as_ptr());
             vexDisplayTextSize(self.size.numerator, self.size.denominator);
@@ -507,7 +503,7 @@ impl Text {
     #[must_use]
     pub fn height(&self) -> u16 {
         unsafe {
-            self.font.apply_to_sdk();
+            self.font.apply();
             vexDisplayStringHeightGet(self.text.as_ptr()) as _
         }
     }
@@ -516,7 +512,7 @@ impl Text {
     #[must_use]
     pub fn width(&self) -> u16 {
         unsafe {
-            self.font.apply_to_sdk();
+            self.font.apply();
             vexDisplayStringWidthGet(self.text.as_ptr()) as _
         }
     }
@@ -555,7 +551,7 @@ impl Text {
             if let Some(bg_color) = bg_color {
                 vexDisplayBackgroundColor(bg_color.into_raw());
             }
-            self.font.apply_to_sdk();
+            self.font.apply();
             vexDisplayPrintf(
                 i32::from(x),
                 i32::from(y + Display::HEADER_HEIGHT),

@@ -1,10 +1,6 @@
 use vexide::prelude::*;
 
-#[vexide::main(banner(enabled = false))]
+#[vexide::main]
 async fn main(_peripherals: Peripherals) {
-    println!("Hello");
-
-    unsafe {
-        core::ptr::write_volatile(0 as *mut u32, 0);
-    }
+    println!("Hello, world!");
 }

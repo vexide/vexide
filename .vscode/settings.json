@@ -46,13 +46,8 @@
         "markdown",
         "rust"
     ],
-    "rust-analyzer.cargo.allTargets": false,
     "rust-analyzer.cargo.target": "armv7a-vex-v5",
     "rust-analyzer.check.command": "clippy",
-    "rust-analyzer.cargo.features": [
-        "abort-handler",
-        "backtrace"
-    ],
     "rust-analyzer.showUnlinkedFileNotification": false,
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,

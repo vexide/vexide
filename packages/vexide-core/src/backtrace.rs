@@ -14,8 +14,6 @@
 //! Additionally, backtraces will be unsupported if vexide is compiled without
 //! the `backtrace` feature.
 
-extern crate alloc;
-
 use alloc::vec::Vec;
 use core::fmt::Display;
 
