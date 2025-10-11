@@ -21,7 +21,7 @@
             cargo-v5'
             pkgs.llvmPackages.bintools
             pkgs.cargo-binutils
-            (rustToolchain.default.override {
+            (rustToolchain.override {
               extensions = [ "rust-analyzer" "rust-src" "clippy" ];
             })
           ];
