@@ -34,8 +34,6 @@ OVERWRITE_SECTIONS {
         /* Patch overwriter routine. */
         *(.overwriter)
 
-        *(.vector_table)
-
         /* The rest of the program. */
         *(.text .text.*)
     } > USER_RAM

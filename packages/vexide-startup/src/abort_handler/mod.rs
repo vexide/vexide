@@ -10,10 +10,10 @@ use vex_sdk::{vexTasksRun, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus};
 // will configure the CPU to jump to these functions on an exception.
 global_asm!(
     r#"
-    .section .vector_table, "ax"
+    .text
+    .arm
     .align 5
     .global vector_table
-    .arm
 
     vector_table:
         b vexSystemBoot
