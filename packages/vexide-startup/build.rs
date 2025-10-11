@@ -16,7 +16,7 @@ fn main() {
         value => panic!(
             r#"Unknown value "{value}" for vexide_upload_strategy! Valid values are "differential" and "monolith""#
         ),
-    };
+    }
 
     println!("cargo:rustc-link-search=native={manifest_dir}/link");
 
