@@ -37,13 +37,13 @@ mod test {
     fn convert_from_raw() {
         assert_eq!(Rgb::from_raw(0), Rgb::new(0, 0, 0));
         assert_eq!(Rgb::from_raw(0xFFF_FFF), Rgb::new(255, 255, 255));
-        assert_eq!(Rgb::from_raw(0x00ACE6), Rgb::new(0, 172, 230));
+        assert_eq!(Rgb::from_raw(0x00A_CE6), Rgb::new(0, 172, 230));
     }
 
     #[test]
     fn convert_to_raw() {
         assert_eq!(Rgb::new(0, 0, 0).into_raw(), 0);
         assert_eq!(Rgb::new(255, 255, 255).into_raw(), 0xFFF_FFF);
-        assert_eq!(Rgb::new(0, 172, 230).into_raw(), 0x00ACE6);
+        assert_eq!(Rgb::new(0, 172, 230).into_raw(), 0x00A_CE6);
     }
 }

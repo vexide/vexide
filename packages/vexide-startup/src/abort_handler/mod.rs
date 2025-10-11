@@ -38,24 +38,6 @@ global_asm!(
 pub fn install_vector_table() {
     unsafe {
         asm!(
-            "mrs r0, cpsr",
-
-            // abort
-            "bic r0, r0, #0b11111",
-            "orr r0, r0, #0b10111",
-            "msr cpsr_c, r0",
-            "ldr sp, =__abort_stack_top",
-
-            // undefined
-            "bic r0, r0, #0b11111",
-            "orr r0, r0, #0b11011",
-            "msr cpsr_c, r0",
-            "ldr sp, =__undefined_stack_top",
-
-            // back to sys
-            "orr r0, r0, #0b11111",
-            "msr cpsr_c, r0",
-
             "ldr r0, =vector_table",
             // Set VBAR; see <https://developer.arm.com/documentation/ddi0601/2025-06/AArch32-Registers/VBAR--Vector-Base-Address-Register>
             "mcr p15, 0, r0, c12, c0, 0",
