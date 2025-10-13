@@ -506,6 +506,7 @@ impl Motor {
     ///     let target = motor.target();
     ///     assert_eq!(target, MotorControl::Brake(BrakeMode::Hold));
     /// }
+    /// ```
     #[must_use]
     pub const fn target(&self) -> MotorControl {
         self.target
@@ -552,6 +553,7 @@ impl Motor {
     /// # Examples
     ///
     /// Print the gearset of a motor:
+    ///
     /// ```
     /// use vexide::prelude::*;
     ///
@@ -566,7 +568,7 @@ impl Motor {
     ///         Gearset::Blue => println!("Motor is using the blue gearset"),
     ///    }
     /// }
-    ///
+    /// ```
     pub fn gearset(&self) -> Result<Gearset, MotorError> {
         if self.motor_type.is_exp() {
             return Ok(Gearset::Green);
