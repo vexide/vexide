@@ -42,7 +42,7 @@ jobs:
               with:
                   reporter: "github-pr-check"
                   github_token: ${{ secrets.GITHUB_TOKEN }}
-                  clippy_flags: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --lib --bins --examples --features "full vex-sdk-jumptable"
+                  clippy_flags: --all --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --lib --bins --examples --features "full vex-sdk-jumptable"
     test:
         name: Test
         runs-on: ubuntu-latest
@@ -61,7 +61,7 @@ jobs:
               uses: actions-rs/cargo@v1
               with:
                   command: test
-                  args: --workspace --lib --bins --examples
+                  args: --all --lib --bins --examples
     fmt:
         name: Rustfmt
         runs-on: ubuntu-latest
