@@ -569,10 +569,8 @@ pub struct TouchEvent {
     /// Touch state (pressed, released, held).
     pub state: TouchState,
 
-    /// X coordinate of the touch.
-    pub x: i16,
-    /// Y coordinate of the touch.
-    pub y: i16,
+    /// Point at which the display was touched.
+    pub point: Point2<i16>,
 
     /// Number of times the display has been pressed.
     pub press_count: i32,
@@ -834,8 +832,10 @@ impl Display {
 
         TouchEvent {
             state: touch_status.lastEvent.into(),
-            x: touch_status.lastXpos,
-            y: touch_status.lastYpos,
+            point: Point2 {
+                x: touch_status.lastXpos,
+                y: touch_status.lastYpos,
+            },
             press_count: touch_status.pressCount,
             release_count: touch_status.releaseCount,
         }
