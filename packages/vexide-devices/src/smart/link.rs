@@ -141,12 +141,12 @@ impl RadioLink {
     ///     let mut link = RadioLink::open(port_1, "643A", LinkType::Manager);
     ///
     ///     // Write a byte if there's free space in the buffer.
-    ///     if link.available_write_bytes().is_ok_and(|available| available > 0) {
+    ///     if link.write_capacity().is_ok_and(|available| available > 0) {
     ///         _ = link.write(0x80);
     ///     }
     /// }
     /// ```
-    pub fn available_write_bytes(&self) -> Result<usize, LinkError> {
+    pub fn write_capacity(&self) -> Result<usize, LinkError> {
         match unsafe { vexDeviceGenericRadioWriteFree(self.device) } {
             -1 => Err(LinkError::ReadFailed),
             available => Ok(available as usize),
