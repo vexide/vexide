@@ -62,6 +62,7 @@ Before releasing:
 - Moved the `_boot` routine to a naked function. (#337)
 - Programs must now opt-in to vexide's custom memory layout by specifying the linker flag `-Tvexide.ld`. (#355) (**Breaking Change**)
 - Renamed `vexide::time::uptime` to `vexide::time::system_uptime`. (#373) (**Breaking Change**)
+- Feature-gated the `MotorTuningConstants` type behind the `dangerous-motor-tuning` feature. (#374) (**Breaking Change**)
 
 ### Removed
 
