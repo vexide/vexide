@@ -64,12 +64,14 @@ Before releasing:
 - `TouchEvent` now stores the location of the press in a `point: Point2<i16>` field rather than separate `x` and `y` `i16` fields. (#375) (**Breaking Change**)
 - Feature-gated the `MotorTuningConstants` type behind the `dangerous-motor-tuning` feature. (#374) (**Breaking Change**)
 - Renamed `{SerialPort, RadioLink}::available_write_bytes` to `{SerialPort, RadioLink}::write_capacity`. (#376) (**Breaking Change**)
+- `Motor` methods now return `PortError` rather than `MotorError`, which has been removed. (#376) (**Breaking Change**)
 
 ### Removed
 
 - Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
 - `SmartPort` and `AdiPort` are no longer in `vexide::prelude`. (#376) (**Breaking Change**)
 - Removed `AiVisionCode::colors`. Prefer using `AiVisionCode::iter`/`AiVisionCode::into_iter` instead. (#376) (**Breaking Change**)
+- Removed `MotorError`. Motors now return `PortError` with the exception of `set_gearset`, which returns `SetGearsetError`. (#376) (**Breaking Change**)
 
 ### New Contributors
 
