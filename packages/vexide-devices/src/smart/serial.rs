@@ -266,12 +266,12 @@ impl SerialPort {
     ///     let mut serial = SerialPort::open(peripherals.port_1, 115200).await;
     ///
     ///     // Write a byte if there's free space in the buffer.
-    ///     if serial.available_write_bytes().is_ok_and(|available| available > 0) {
+    ///     if serial.write_capacity().is_ok_and(|available| available > 0) {
     ///         _ = serial.write_byte(0x80);
     ///     }
     /// }
     /// ```
-    pub fn available_write_bytes(&self) -> Result<usize, SerialError> {
+    pub fn write_capacity(&self) -> Result<usize, SerialError> {
         match unsafe { vexDeviceGenericSerialWriteFree(self.device) } {
             -1 => ReadFailedSnafu.fail(),
             available => Ok(available as usize),

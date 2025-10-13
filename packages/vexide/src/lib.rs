@@ -123,7 +123,7 @@ pub mod prelude {
             pwm::AdiPwmOut,
             range_finder::AdiRangeFinder,
             servo::AdiServo,
-            AdiDevice, AdiPort,
+            AdiDevice,
         },
         battery,
         controller::Controller,
@@ -145,7 +145,7 @@ pub mod prelude {
                 LedMode, VisionCode, VisionMode, VisionObject, VisionSensor, VisionSignature,
                 WhiteBalance,
             },
-            SmartDevice, SmartPort,
+            SmartDevice,
         },
     };
     #[cfg(feature = "async")]
