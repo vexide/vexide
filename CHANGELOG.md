@@ -40,6 +40,8 @@ Before releasing:
 - Added the ability to create/convert `Position` instances to/from gradians. (#328)
 - Added several missing derived trait implementations for many device error types. (#331)
 - Added support for task-local data storage using the new `task_local!` macro. This is closely modeled after `thread_local!`s in the standard library. (#333)
+- Added the `vexide::time::user_uptime` function for getting the time since user processor boot. (#371)
+- Renamed `vexide::time::uptime` to `vexide::time::system_uptime`. (#371) (**Breaking Change**)
 
 ### Fixed
 
