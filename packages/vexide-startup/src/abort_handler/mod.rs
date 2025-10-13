@@ -182,6 +182,13 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
         core::arch::asm!("cpsie i", options(nomem, nostack, preserves_flags));
     }
 
+    // Stop all motors
+    for index in 0..=20 {
+        unsafe {
+            vex_sdk::vexDeviceMotorVoltageSet(vex_sdk::vexDeviceGetByIndex(index), 0);
+        }
+    }
+
     let fault = unsafe { *fault };
 
     report::report_fault(&fault);
