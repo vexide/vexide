@@ -27,6 +27,10 @@ use alloc::{
     string::String,
     vec::Vec,
 };
+use core::{
+    iter::{Copied, Flatten},
+    slice,
+};
 
 use bitflags::bitflags;
 use mint::Point2;
@@ -216,10 +220,17 @@ impl AiVisionColorCode {
         Self(code)
     }
 
-    /// Returns the color signature ids in the color code.
-    #[must_use]
-    pub fn colors(&self) -> Vec<u8> {
-        self.0.iter().flatten().copied().collect()
+    /// Returns an iterator over the signature IDs in this code.
+    pub fn iter(&self) -> impl Iterator<Item = u8> + use<'_> {
+        self.into_iter()
+    }
+}
+impl<'a> IntoIterator for &'a AiVisionColorCode {
+    type Item = u8;
+    type IntoIter = Copied<Flatten<slice::Iter<'a, Option<u8>>>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter().flatten().copied()
     }
 }
 impl From<(u8,)> for AiVisionColorCode {
