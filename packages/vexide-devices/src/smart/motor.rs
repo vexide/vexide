@@ -1653,7 +1653,7 @@ impl From<Gearset> for V5MotorGearset {
 /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
 /// well-known or understood, as we have no reference for what these constants should look
 /// like.
-// #[cfg(feature = "dangerous-motor-tuning")]
+#[cfg(feature = "dangerous-motor-tuning")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MotorTuningConstants {
     /// The feedforward constant.
