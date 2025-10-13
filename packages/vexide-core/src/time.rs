@@ -9,7 +9,6 @@ use vex_sdk::{vexSystemHighResTimeGet, vexSystemPowerupTimeGet};
 /// # Precision
 ///
 /// The returned [`Duration`] has a precision of 1 microsecond.
-#[must_use]
 pub fn system_uptime() -> Duration {
     Duration::from_micros(unsafe { vexSystemPowerupTimeGet() })
 }
