@@ -60,6 +60,7 @@ Before releasing:
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 - Moved the `_boot` routine to a naked function. (#337)
 - Programs must now opt-in to vexide's custom memory layout by specifying the linker flag `-Tvexide.ld`. (#355) (**Breaking Change**)
+- Feature-gated the `MotorTuningConstants` type behind the `dangerous-motor-tuning` feature. (#374) (**Breaking Change**)
 
 ### Removed
 
