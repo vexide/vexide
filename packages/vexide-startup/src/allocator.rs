@@ -26,10 +26,6 @@ static ALLOCATOR: Talck<AssumeUnlockable, ErrOnOom> = Talc::new(ErrOnOom).lock()
 ///
 ///  - The region encompassed from [`start`, `end`] should not overlap with any
 ///    other active heap regions.
-///
-/// # Panics
-///
-/// Panics if the `__heap_start` or `__heap_end` symbols set in the linker script are null.
 #[allow(unused_variables)] // Silences warnings when not compiling for VEXos
 pub unsafe fn claim(start: *mut u8, end: *mut u8) {
     #[cfg(target_os = "vexos")]
