@@ -279,8 +279,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -342,8 +342,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -369,8 +369,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -398,8 +398,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -442,8 +442,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -472,8 +472,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -528,8 +528,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     /// - A [`PortError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
     ///
@@ -562,8 +562,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -685,8 +685,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -736,8 +736,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -764,8 +764,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -793,8 +793,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -830,8 +830,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -872,8 +872,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -904,8 +904,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -937,8 +937,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -969,8 +969,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1001,8 +1001,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1046,8 +1046,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1073,8 +1073,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1108,8 +1108,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1134,8 +1134,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1160,8 +1160,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1194,8 +1194,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1221,8 +1221,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1258,8 +1258,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1290,8 +1290,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1322,8 +1322,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1354,8 +1354,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1393,8 +1393,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1422,8 +1422,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1461,8 +1461,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
@@ -1513,8 +1513,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
     ///   something else was connected.
     ///
     /// # Examples
