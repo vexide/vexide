@@ -1,16 +1,17 @@
-//! Hardware abstractions and functionality for peripherals on the V5 Brain.
+//! VEX hardware abstractions and peripheral access.
 //!
 //! # Overview
 //!
-//! This crate provides APIs for interfacing with VEX hardware and peripherals.
+//! This crate provides APIs for interfacing with hardware and peripherals sold by VEX
+//! robotics.
 //!
-//! The V5 Brain features 21 RJ9 serial ports (known as "Smart Ports") for communicating
+//! The VEX V5 Brain features 21 RJ9 serial ports (known as "Smart Ports") for communicating
 //! with newer V5 devices, as well as six three-wire ports with analog-to-digital conversion
 //! capability for compatibility with legacy Cortex devices. The Brain also has a screen,
 //! battery, and usually a controller for reading user input.
 //!
 //! Hardware access begins at the [`Peripherals`](crate::peripherals::Peripherals) API, where
-//! singleton access to the brain's I/O and peripherals can be obtained:
+//! a singleton to the brain's available I/O and peripherals can be obtained:
 //!
 //! ```
 //! let peripherals = Peripherals::take().unwrap();
@@ -25,9 +26,6 @@
 //! argument to your `main` function:
 //!
 //! ```
-//! #![no_std]
-//! #![no_main]
-//!
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
@@ -38,7 +36,7 @@
 //!
 //! For more information on peripheral access, see the [`peripherals`] module.
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
 
@@ -54,19 +52,19 @@ pub mod smart;
 
 use smart::SmartDeviceType;
 use snafu::Snafu;
-use vexide_core::io;
 
-/// Generic errors that can take place when using ports on the V5 Brain.
+/// Errors that can occur when performing operations on [Smartport-connected devices](smart).
+/// Most smart devices will return this type when an error occurs.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum PortError {
-    /// No device is plugged into the port.
+    /// No device was plugged into the port, when one was expected.
     #[snafu(display("Expected a device to be connected to port {port}"))]
     Disconnected {
         /// The port that was expected to have a device
         port: u8,
     },
 
-    /// An incorrect type of device is plugged into the port.
+    /// The wrong type of device is plugged into the port.
     #[snafu(display(
         "Expected a {expected:?} device on port {port}, but found a {actual:?} device"
     ))]
@@ -80,16 +78,28 @@ pub enum PortError {
     },
 }
 
-impl From<PortError> for io::Error {
+#[cfg(feature = "std")]
+impl From<PortError> for std::io::Error {
     fn from(value: PortError) -> Self {
         match value {
-            PortError::Disconnected { .. } => {
-                io::Error::new(io::ErrorKind::AddrNotAvailable, "Port does not exist.")
-            }
-            PortError::IncorrectDevice { .. } => io::Error::new(
-                io::ErrorKind::AddrInUse,
+            PortError::Disconnected { .. } => std::io::Error::new(
+                std::io::ErrorKind::AddrNotAvailable,
+                "A device is not connected to the specified port.",
+            ),
+            PortError::IncorrectDevice { .. } => std::io::Error::new(
+                std::io::ErrorKind::AddrInUse,
                 "Port is in use as another device.",
             ),
+        }
+    }
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Error for PortError {
+    fn kind(&self) -> embedded_io::ErrorKind {
+        match self {
+            PortError::Disconnected { .. } => embedded_io::ErrorKind::AddrNotAvailable,
+            PortError::IncorrectDevice { .. } => embedded_io::ErrorKind::AddrInUse,
         }
     }
 }

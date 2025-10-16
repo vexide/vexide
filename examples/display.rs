@@ -1,7 +1,4 @@
-#![no_main]
-#![no_std]
-
-use core::{fmt::Write, time::Duration};
+use std::{fmt::Write, time::Duration};
 
 use vexide::{
     devices::display::{Font, FontFamily, FontSize, Rect, Text},

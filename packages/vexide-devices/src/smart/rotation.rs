@@ -222,7 +222,7 @@ impl RotationSensor {
         if new_direction != self.direction() {
             self.direction_offset = self.position()?;
             self.raw_direction_offset = Position::from_ticks(
-                i64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
+                f64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
                 Self::TICKS_PER_REVOLUTION,
             );
             self.direction = new_direction;
@@ -293,7 +293,7 @@ impl RotationSensor {
         self.direction
     }
 
-    /// Returns the total number of degrees rotated by the sensor based on direction.
+    /// Returns the total accumulated rotation of the sensor over time.
     ///
     /// # Errors
     ///
@@ -320,7 +320,7 @@ impl RotationSensor {
         self.validate_port()?;
 
         let mut delta_position = Position::from_ticks(
-            i64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
+            f64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
             Self::TICKS_PER_REVOLUTION,
         ) - self.raw_direction_offset;
 
@@ -331,7 +331,7 @@ impl RotationSensor {
         Ok(self.direction_offset + delta_position)
     }
 
-    /// Returns the angle of rotation measured by the sensor.
+    /// Returns the absolute angle of rotation measured by the sensor.
     ///
     /// This value is reported from 0-360 degrees.
     ///
@@ -365,7 +365,7 @@ impl RotationSensor {
         }
 
         Ok(Position::from_ticks(
-            i64::from(raw_angle),
+            f64::from(raw_angle),
             Self::TICKS_PER_REVOLUTION,
         ))
     }

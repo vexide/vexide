@@ -119,7 +119,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -141,7 +143,7 @@ impl VisionSensor {
     ///     _ = sensor.set_signature(1, example_signature);
     /// }
     /// ```
-    pub fn set_signature(&mut self, id: u8, signature: VisionSignature) -> Result<(), VisionError> {
+    pub fn set_signature(&mut self, id: u8, signature: VisionSignature) -> Result<(), PortError> {
         assert!(
             (1..=7).contains(&id),
             "The given signature ID `{id}` is not in the expected interval [1, 7]."
@@ -168,22 +170,26 @@ impl VisionSensor {
             ..Default::default()
         };
 
-        unsafe { vexDeviceVisionSignatureSet(self.device, &mut signature) }
+        unsafe { vexDeviceVisionSignatureSet(self.device, &raw mut signature) }
 
         Ok(())
     }
 
     /// Reads a signature off the sensor's onboard memory, returning `Some(sig)` if the slot is filled
     /// or `None` if no signature is stored with the given ID.
-    fn read_raw_signature(&self, id: u8) -> Result<Option<V5_DeviceVisionSignature>, VisionError> {
+    fn read_raw_signature(
+        &self,
+        id: u8,
+    ) -> Result<Option<V5_DeviceVisionSignature>, VisionSignatureError> {
         assert!(
             (1..=7).contains(&id),
             "The given signature ID `{id}` is not in the expected interval [1, 7]."
         );
 
         let mut raw_signature = V5_DeviceVisionSignature::default();
-        let read_operation =
-            unsafe { vexDeviceVisionSignatureGet(self.device, u32::from(id), &mut raw_signature) };
+        let read_operation = unsafe {
+            vexDeviceVisionSignatureGet(self.device, u32::from(id), &raw mut raw_signature)
+        };
 
         if !read_operation {
             return Ok(None);
@@ -203,10 +209,10 @@ impl VisionSensor {
     /// Adjusts the type of a signature stored on the sensor.
     ///
     /// This is used when assigning certain stored signatures as belonging to color codes.
-    fn write_signature_type(&mut self, id: u8, sig_type: u32) -> Result<(), VisionError> {
+    fn write_signature_type(&mut self, id: u8, sig_type: u32) -> Result<(), VisionSignatureError> {
         if let Some(mut sig) = self.read_raw_signature(id)? {
             sig.mType = sig_type;
-            unsafe { vexDeviceVisionSignatureSet(self.device, &mut sig) }
+            unsafe { vexDeviceVisionSignatureSet(self.device, &raw mut sig) }
         } else {
             return ReadingFailedSnafu.fail();
         }
@@ -222,8 +228,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionError::ReadingFailed`] error is returned if the read operation failed.
+    /// - A [`VisionSignatureError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionSignatureError::ReadingFailed`] error is returned if a read operation failed or there was
+    ///   no signature previously set in the slot(s) specified in the [`VisionCode`].
     ///
     /// # Examples
     ///
@@ -248,7 +255,7 @@ impl VisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn signature(&self, id: u8) -> Result<Option<VisionSignature>, VisionError> {
+    pub fn signature(&self, id: u8) -> Result<Option<VisionSignature>, VisionSignatureError> {
         self.validate_port()?;
 
         Ok(self.read_raw_signature(id)?.map(Into::into))
@@ -258,8 +265,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionError::ReadingFailed`] error is returned if the read operation failed.
+    /// - A [`VisionSignatureError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionSignatureError::ReadingFailed`] error is returned if a read operation failed or there was
+    ///   no signature previously set in the slot(s) specified in the [`VisionCode`].
     ///
     /// # Examples
     ///
@@ -291,7 +299,7 @@ impl VisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn signatures(&self) -> Result<[Option<VisionSignature>; 7], VisionError> {
+    pub fn signatures(&self) -> Result<[Option<VisionSignature>; 7], VisionSignatureError> {
         Ok([
             self.signature(1)?,
             self.signature(2)?,
@@ -321,8 +329,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionError::ReadingFailed`] error is returned if a read operation failed or there was
+    /// - A [`VisionSignatureError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionSignatureError::ReadingFailed`] error is returned if a read operation failed or there was
     ///   no signature previously set in the slot(s) specified in the [`VisionCode`].
     ///
     /// # Examples
@@ -358,7 +366,7 @@ impl VisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn add_code(&mut self, code: impl Into<VisionCode>) -> Result<(), VisionError> {
+    pub fn add_code(&mut self, code: impl Into<VisionCode>) -> Result<(), VisionSignatureError> {
         self.validate_port()?;
 
         let code = code.into();
@@ -386,7 +394,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -409,7 +419,7 @@ impl VisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn brightness(&self) -> Result<f64, VisionError> {
+    pub fn brightness(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
         // SDK function gives us brightness percentage 0-100.
@@ -420,7 +430,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -454,7 +466,7 @@ impl VisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn white_balance(&self) -> Result<WhiteBalance, VisionError> {
+    pub fn white_balance(&self) -> Result<WhiteBalance, PortError> {
         self.validate_port()?;
 
         Ok(
@@ -479,7 +491,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -494,7 +508,7 @@ impl VisionSensor {
     ///     _ = sensor.set_brightness(0.5);
     /// }
     /// ```
-    pub fn set_brightness(&mut self, brightness: f64) -> Result<(), VisionError> {
+    pub fn set_brightness(&mut self, brightness: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe { vexDeviceVisionBrightnessSet(self.device, (brightness * 100.0) as u8) }
@@ -508,7 +522,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -527,7 +543,7 @@ impl VisionSensor {
     ///     }));
     /// }
     /// ```
-    pub fn set_white_balance(&mut self, white_balance: WhiteBalance) -> Result<(), VisionError> {
+    pub fn set_white_balance(&mut self, white_balance: WhiteBalance) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe { vexDeviceVisionWhiteBalanceModeSet(self.device, white_balance.into()) }
@@ -562,7 +578,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -577,7 +595,7 @@ impl VisionSensor {
     ///     _ = sensor.set_led_mode(LedMode::Manual(Rgb { r: 255, g: 0, b: 0 }, 1.0));
     /// }
     /// ```
-    pub fn set_led_mode(&mut self, mode: LedMode) -> Result<(), VisionError> {
+    pub fn set_led_mode(&mut self, mode: LedMode) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe { vexDeviceVisionLedModeSet(self.device, mode.into()) }
@@ -603,7 +621,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -626,7 +646,7 @@ impl VisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn led_mode(&self) -> Result<LedMode, VisionError> {
+    pub fn led_mode(&self) -> Result<LedMode, PortError> {
         self.validate_port()?;
 
         Ok(match unsafe { vexDeviceVisionLedModeGet(self.device) } {
@@ -647,8 +667,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
+    /// - A [`VisionObjectError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionObjectError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
     /// - A [`VisionError::ReadingFailed`] error if the objects could not be read from the sensor.
     ///
     /// # Examples
@@ -709,7 +729,7 @@ impl VisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn objects(&self) -> Result<Vec<VisionObject>, VisionError> {
+    pub fn objects(&self) -> Result<Vec<VisionObject>, VisionObjectError> {
         ensure!(self.mode()? != VisionMode::Wifi, WifiModeSnafu);
 
         let object_count = unsafe { vexDeviceVisionObjectCountGet(self.device) } as usize;
@@ -718,8 +738,8 @@ impl VisionSensor {
         for i in 0..object_count {
             let mut object = V5_DeviceVisionObject::default();
 
-            if unsafe { vexDeviceVisionObjectGet(self.device, i as u32, &mut object) } == 0 {
-                return ReadingFailedSnafu.fail();
+            if unsafe { vexDeviceVisionObjectGet(self.device, i as u32, &raw mut object) } == 0 {
+                return InvalidObjectSnafu.fail();
             }
 
             let object: VisionObject = object.into();
@@ -743,8 +763,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
+    /// - A [`VisionObjectError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionObjectError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
     /// - A [`VisionError::ReadingFailed`] error if the objects could not be read from the sensor.
     ///
     /// # Examples
@@ -772,7 +792,7 @@ impl VisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn object_count(&self) -> Result<usize, VisionError> {
+    pub fn object_count(&self) -> Result<usize, VisionObjectError> {
         // NOTE: We actually can't rely on [`vexDeviceVisionObjectCountGet`], due to the way that
         // vision codes are registered.
         //
@@ -789,7 +809,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -805,7 +827,7 @@ impl VisionSensor {
     ///     _ = sensor.set_mode(VisionMode::WiFi);
     /// }
     /// ```
-    pub fn set_mode(&mut self, mode: VisionMode) -> Result<(), VisionError> {
+    pub fn set_mode(&mut self, mode: VisionMode) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe {
@@ -838,7 +860,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -862,7 +886,7 @@ impl VisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn mode(&self) -> Result<VisionMode, VisionError> {
+    pub fn mode(&self) -> Result<VisionMode, PortError> {
         self.validate_port()?;
 
         if unsafe { vexDeviceVisionWifiModeGet(self.device) } == V5VisionWifiMode::kVisionWifiModeOn
@@ -1381,12 +1405,26 @@ impl From<LedMode> for V5VisionLedMode {
     }
 }
 
-/// Errors that can occur when using a vision sensor.
+/// Error returned by [`Vision::objects`] and [`Vision::object_count`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
-pub enum VisionError {
+pub enum VisionObjectError {
     /// Objects cannot be detected while Wi-Fi mode is enabled.
     WifiMode,
 
+    /// Failed to read vision object.
+    InvalidObject,
+
+    /// Generic port related error.
+    #[snafu(transparent)]
+    Port {
+        /// The source of the error.
+        source: PortError,
+    },
+}
+
+/// Error returned by [`VisionSensor`] methods that get/set color signatures.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
+pub enum VisionSignatureError {
     /// The camera could not be read.
     ReadingFailed,
 

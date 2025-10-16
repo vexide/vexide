@@ -3,6 +3,10 @@ name = "examples"
 edition = "2021"
 version = "0.0.1"
 
+[profile.release]
+opt-level = "z"
+lto = "fat"
+
 [package.metadata.v5]
 upload-strategy = "differential"
 slot = 1
@@ -10,7 +14,11 @@ icon = "cool-x"
 compress = true
 
 [dev-dependencies]
-vexide = { path = "packages/vexide" }
+vexide = { path = "packages/vexide", features = [
+    "full",
+    "vex-sdk-mock",
+    "vex-sdk-jumptable",
+] }
 
 [workspace]
 members = ["packages/*"]
@@ -24,11 +32,11 @@ snafu = { version = "0.8.0", default-features = false, features = [
 vexide-async = { version = "0.1.9", path = "packages/vexide-async", default-features = false }
 vexide-core = { version = "0.7.0", path = "packages/vexide-core", default-features = false }
 vexide-devices = { version = "0.7.0", path = "packages/vexide-devices", default-features = false }
-vexide-panic = { version = "0.1.9", path = "packages/vexide-panic", default-features = false }
 vexide-startup = { version = "0.4.2", path = "packages/vexide-startup", default-features = false }
 vexide-macro = { version = "0.3.2", path = "packages/vexide-macro", default-features = false }
-vex-sdk = "0.26.0"
-no_std_io = { version = "0.6.0", features = ["alloc"] }
+vex-sdk = "0.27.1"
+vex-sdk-mock = "0.0.1"
+vex-libunwind = { version = "0.3.0", git = "https://github.com/vexide/vex-libunwind.git" }
 
 [workspace.lints.rust]
 rust_2018_idioms = { level = "warn", priority = -1 }

@@ -6,13 +6,13 @@
 //!
 //! For a full list of premade themes and more theme documentation, see the [`themes`] module.
 
-use themes::BannerTheme;
-use vex_sdk::vexBatteryCapacityGet;
-use vexide_core::{competition, os, println, time};
-
 pub mod themes;
 
-/// Prints the startup banner to stdout.
+use themes::BannerTheme;
+use vex_sdk::vexBatteryCapacityGet;
+use vexide_core::{competition, os, time};
+
+/// Prints vexide's startup banner to stdout.
 ///
 /// This function is called by the `#[vexide::main]` macro if the startup banner is enabled.
 #[inline]
@@ -45,6 +45,6 @@ pub fn print(theme: BannerTheme) {
         battery = unsafe { vexBatteryCapacityGet() } as u8,
         rust_version = compile_time::rustc_version_str!(),
         competition_mode = competition::mode(),
-        uptime = time::uptime(),
+        uptime = time::system_uptime(),
     );
 }

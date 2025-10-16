@@ -18,7 +18,7 @@ use snafu::Snafu;
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::{position::Position, PortError};
+use crate::PortError;
 
 /// The magic number returned by the ADI device when the gyroscope is still calibrating.
 const CALIBRATING_MAGIC: i32 = -0x8000;
@@ -38,7 +38,7 @@ pub struct AdiGyroscopeCalibrationFuture<'a> {
     state: AdiGyroscopeCalibrationFutureState,
 }
 impl Future for AdiGyroscopeCalibrationFuture<'_> {
-    type Output = Result<(), AdiGyroscopeError>;
+    type Output = Result<(), PortError>;
 
     fn poll(
         self: core::pin::Pin<&mut Self>,
@@ -61,7 +61,7 @@ impl Future for AdiGyroscopeCalibrationFuture<'_> {
                     cx.waker().wake_by_ref();
                     Poll::Pending
                 }
-                Err(e) => Poll::Ready(Err(AdiGyroscopeError::Port { source: e })),
+                Err(error) => Poll::Ready(Err(error)),
             },
             AdiGyroscopeCalibrationFutureState::WaitingStart => match this.gyro.is_calibrating() {
                 Ok(false) => {
@@ -73,7 +73,7 @@ impl Future for AdiGyroscopeCalibrationFuture<'_> {
                     cx.waker().wake_by_ref();
                     Poll::Pending
                 }
-                Err(e) => Poll::Ready(Err(e)),
+                Err(error) => Poll::Ready(Err(error)),
             },
             AdiGyroscopeCalibrationFutureState::WaitingEnd => match this.gyro.is_calibrating() {
                 Ok(false) => Poll::Ready(Ok(())),
@@ -81,7 +81,7 @@ impl Future for AdiGyroscopeCalibrationFuture<'_> {
                     cx.waker().wake_by_ref();
                     Poll::Pending
                 }
-                Err(e) => Poll::Ready(Err(e)),
+                Err(error) => Poll::Ready(Err(error)),
             },
         }
     }
@@ -133,7 +133,7 @@ impl AdiGyroscope {
     ///     println!("Is calibrating: {:?}", gyro.is_calibrating());
     /// }
     /// ```
-    pub fn is_calibrating(&self) -> Result<bool, AdiGyroscopeError> {
+    pub fn is_calibrating(&self) -> Result<bool, PortError> {
         self.port.validate_expander()?;
 
         let value = unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) };
@@ -168,7 +168,7 @@ impl AdiGyroscope {
         }
     }
 
-    /// Returns the measured yaw rotation of the gyroscope.
+    /// Returns the measured yaw rotation of the gyroscope in degrees.
     ///
     /// # Errors
     ///
@@ -184,17 +184,17 @@ impl AdiGyroscope {
     /// async fn main(peripherals: Peripherals) {
     ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
     ///     _ = gyro.calibrate(Duration::from_secs(2)).await;
-    ///     println!("Yaw: {:?}", gyro.yaw());
+    ///     println!("Yaw: {}", gyro.yaw());
     /// }
     /// ```
-    pub fn yaw(&self) -> Result<Position, AdiGyroscopeError> {
+    pub fn yaw(&self) -> Result<f64, YawError> {
         if self.is_calibrating()? {
-            return Err(AdiGyroscopeError::StillCalibrating);
+            return Err(YawError::StillCalibrating);
         }
         let value = unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) };
         let value = f64::from(value) / 10.0;
 
-        Ok(Position::from_degrees(value))
+        Ok(value)
     }
 }
 
@@ -214,7 +214,7 @@ impl AdiDevice<1> for AdiGyroscope {
 
 /// Errors that can occur when interacting with an [`AdiGyroscope`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
-pub enum AdiGyroscopeError {
+pub enum YawError {
     /// Generic ADI related error.
     #[snafu(transparent)]
     Port {

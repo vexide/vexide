@@ -1,7 +1,7 @@
 //! # vexide
 //!
-//! Open-source Rust runtime for VEX V5 robots. vexide provides a `no_std` Rust runtime,
-//! async executor, device API, and more for the VEX V5 Brain!
+//! Open-source Rust runtime for VEX V5 robots. vexide provides a runtime, async executor,
+//! hardware APIs, and more for the VEX V5 Brain!
 //!
 //! ## Getting Started
 //!
@@ -12,11 +12,12 @@
 //! # Usage
 //!
 //! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
-//! ```rust
+//!
+//! ```
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
-//! async fn main() {
+//! async fn main(_peripherals: Peripherals) {
 //!     println!("Hello, world!");
 //! }
 //!```
@@ -24,7 +25,6 @@
 //! Check out our [examples](https://github.com/vexide/vexide/tree/main/examples/) for more examples
 //! of different features.
 
-#![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(html_logo_url = "https://vexide.dev/images/logo.svg")]
 
@@ -36,6 +36,9 @@ pub mod runtime {
 }
 
 #[doc(inline)]
+#[cfg(feature = "sync")]
+pub use vexide_async::sync;
+#[doc(inline)]
 #[cfg(feature = "async")]
 pub use vexide_async::task;
 
@@ -43,8 +46,6 @@ pub use vexide_async::task;
 ///
 /// This module provides types for measuring time and executing code after a set periods
 /// of time.
-///
-/// - [`Instant`] can measure execution time with high precision.
 ///
 /// - [`Sleep`] is a future that does no work and completes at a specific [`Instant`]
 ///   in time.
@@ -54,7 +55,7 @@ pub use vexide_async::task;
 ///
 /// [`sleep`]: vexide_async::time::sleep
 /// [`sleep_until`]: vexide_async::time::sleep_until
-/// [`Instant`]: vexide_core::time::Instant
+/// [`Instant`]: std::time::Instant
 #[cfg(any(feature = "core", feature = "async"))]
 pub mod time {
     #[doc(inline)]
@@ -66,28 +67,46 @@ pub mod time {
 }
 
 #[doc(inline)]
-#[cfg(feature = "allocator")]
-pub use vexide_core::allocator;
+#[cfg(feature = "backtrace")]
+pub use vexide_core::backtrace;
 #[doc(inline)]
 #[cfg(feature = "core")]
-pub use vexide_core::{backtrace, competition, float, fs, io, os, path, program, sync};
+pub use vexide_core::{competition, os, program};
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices as devices;
 #[doc(inline)]
-#[cfg(feature = "macro")]
-pub use vexide_macro::main;
-#[doc(inline)]
-#[cfg(feature = "panic")]
-pub use vexide_panic as panic;
+#[cfg(all(
+    feature = "macros",
+    feature = "core",
+    feature = "async",
+    feature = "startup",
+    feature = "devices"
+))]
+pub use vexide_macro::{main, test};
+#[cfg(all(
+    feature = "macros",
+    not(all(
+        feature = "core",
+        feature = "async",
+        feature = "startup",
+        feature = "devices"
+    ))
+))]
+pub use vexide_macro::{main_fail as main, test_fail as test};
 #[doc(inline)]
 #[cfg(feature = "startup")]
 pub use vexide_startup as startup;
+#[doc(inline)]
+#[cfg(feature = "allocator")]
+pub use vexide_startup::allocator;
 
 /// Commonly used features of vexide.
 ///
 /// This module is meant to be glob imported.
 pub mod prelude {
+    #[cfg(feature = "core")]
+    pub use crate::competition::{Compete, CompeteExt, CompetitionRuntime};
     #[cfg(feature = "devices")]
     pub use crate::devices::{
         adi::{
@@ -95,7 +114,7 @@ pub mod prelude {
             addrled::AdiAddrLed,
             analog::AdiAnalogIn,
             digital::{AdiDigitalIn, AdiDigitalOut},
-            encoder::AdiEncoder,
+            encoder::{AdiEncoder, AdiOpticalEncoder},
             gyroscope::AdiGyroscope,
             light_sensor::AdiLightSensor,
             line_tracker::AdiLineTracker,
@@ -104,7 +123,7 @@ pub mod prelude {
             pwm::AdiPwmOut,
             range_finder::AdiRangeFinder,
             servo::AdiServo,
-            AdiDevice, AdiPort,
+            AdiDevice,
         },
         battery,
         controller::Controller,
@@ -126,14 +145,8 @@ pub mod prelude {
                 LedMode, VisionCode, VisionMode, VisionObject, VisionSensor, VisionSignature,
                 WhiteBalance,
             },
-            SmartDevice, SmartPort,
+            SmartDevice,
         },
-    };
-    #[cfg(feature = "core")]
-    pub use crate::{
-        competition::{Compete, CompeteExt, CompetitionRuntime},
-        float::Float,
-        io::{dbg, print, println, BufRead, Read, Seek, Write},
     };
     #[cfg(feature = "async")]
     pub use crate::{

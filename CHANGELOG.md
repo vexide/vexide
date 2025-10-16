@@ -34,8 +34,15 @@ Before releasing:
 
 ### Added
 
+- Added support for custom encoders with different resolutions when using `AdiEncoder`. (#328) (**Breaking Change**)
+- Added the `AdiOpticalEncoder` for simplifying the creation of VEX optical encoders with the new `AdiEncoder` API. (#328) (**Breaking Change**)
+- Added `Position::ZERO` constant. (#328)
+- Added the ability to create/convert `Position` instances to/from gradians. (#328)
 - Added several missing derived trait implementations for many device error types. (#331)
 - Added support for task-local data storage using the new `task_local!` macro. This is closely modeled after `thread_local!`s in the standard library. (#333)
+- Added the `AiVisionCode::iter`/`into_iter` methods for iterating over the available signature IDs stored in a color code. (#376).
+- Added the `CalibrateError` type returned by `InertialSensor::calibrate` when it fails. (#376).
+- Added the `vexide::time::user_uptime` function for getting the time since user processor boot. (#373)
 
 ### Fixed
 
@@ -46,15 +53,37 @@ Before releasing:
 - Fixed a signature validation problem in the original `VisionSensor`. (#319)
 - Fixed `AdiDigital*::is_low` improperly returning `is_high` (#324)
 - Fixed an issue where writing to the controller screen would sometimes be unreliable in fast loops (#336)
+- `Display::erase` now functions as expected instead of using the program flags' background color. (#350)
 
 ### Changed
 
+- If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
 - Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
+- The `Position` type now stores encoder positions as a floating-point number rather than a fixed-point number. (#328) (**Breaking Change**)
+- The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
+- Moved the `_boot` routine to a naked function. (#337)
+- Programs must now opt-in to vexide's custom memory layout by specifying the linker flag `-Tvexide.ld`. (#355) (**Breaking Change**)
+- Renamed `vexide::time::uptime` to `vexide::time::system_uptime`. (#373) (**Breaking Change**)
+- `TouchEvent` now stores the location of the press in a `point: Point2<i16>` field rather than separate `x` and `y` `i16` fields. (#375) (**Breaking Change**)
+- Feature-gated the `MotorTuningConstants` type behind the `dangerous-motor-tuning` feature. (#374) (**Breaking Change**)
+- Renamed `{SerialPort, RadioLink}::available_write_bytes` to `{SerialPort, RadioLink}::write_capacity`. (#376) (**Breaking Change**)
+- `Motor` methods now return `PortError` rather than `MotorError`, which has been removed. (#376) (**Breaking Change**)
+- Renamed `AdiGyroscopeError` to `YawError`. (#376) (**Breaking Change**)
+- `AdiGyroscope::is_calibrating` now returns the `PortError` when it fails (#376) (**Breaking Change**).
+- Renamed `AiVisionError` to `AiVisionObjectError` (#376) (**Breaking Change**).
+- The `AiVisionSensor::{temperature, set_color_code, color_code, color_codes, set_color, color, colors, set_detection_mode, raw_status, flags, set_flags, start_awb, enable_test, set_apriltag_family}` methods now return `PortError` when failing (#376) (**Breaking Change**).
+- Renamed `DistanceError` to `DistanceObjectError`. (#376) (**Breaking Change**)
+- `DistanceSensor::status` now returns the `PortError` when it fails (#376) (**Breaking Change**).
+- The `InertialSensor::{status, is_calibrating, is_auto_calibrated, physical_orientation, gyro_rate, acceleration, set_data_interval}` methods now return `PortError` when failing. (#376) (**Breaking Change**).
+- `InertialSensor::calibrate` now returns the new `CalibrateError` type rather than `InertialError` when it fails. (#376) (**Breaking Change**).
 
 ### Removed
 
 - Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
+- `SmartPort` and `AdiPort` are no longer in `vexide::prelude`. (#376) (**Breaking Change**)
+- Removed `AiVisionCode::colors`. Prefer using `AiVisionCode::iter`/`AiVisionCode::into_iter` instead. (#376) (**Breaking Change**)
+- Removed `MotorError`. Motors now return `PortError` with the exception of `set_gearset`, which returns `SetGearsetError`. (#376) (**Breaking Change**)
 
 ### New Contributors
 

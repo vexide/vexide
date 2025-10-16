@@ -1,12 +1,15 @@
-//! ADI Optical Shaft Encoder
+//! ADI Shaft Encoder
 //!
-//! This module provides an interface to interact with the VEX Optical Shaft Encoder, which is used to
-//! measure both relative position of and rotational distance traveled by a shaft.
+//! This module provides an interface to interact with three-wire encoders, which is used to measure both
+//! relative position of and rotational distance traveled by a shaft.
 //!
-//! # Hardware Overview
+//! In addition to the [VEX Optical Shaft Encoder](https://www.vexrobotics.com/276-2156.html), this API also
+//! supports custom three wire encoders with custom resolutions (TPR).
 //!
-//! The Optical Shaft Encoder can be used to track distance traveled, direction of motion, or position of
-//! any rotary component, such as a gripper arm or tracking wheel.
+//! # Hardware Overview (for the Optical Shaft Encoder)
+//!
+//! The Optical Shaft Encoder can be used to track distance traveled, direction of motion, or position of any rotary
+//! component, such as a gripper arm or tracking wheel.
 //!
 //! The encoder works by shining light onto the edge of a disk outfitted with evenly
 //! spaced slits around the circumference. As the disk spins, light passes through the slits and
@@ -19,23 +22,23 @@
 //!
 //! ## Connecting to the V5 Brain
 //!
-//! The Optical Shaft Encoder is a two-wire device that must be connected to two adjacent ports on
-//! the same brain/ADI expander. One of the wires must be plugged into an odd-numbered port (A, C, E, G),
-//! while the other wire must be plugged into the port directly above that wire (that is, B, D, F, or
-//! H, respectively). If the top wire is plugged into the lower odd-numbered port (A, C, E, G), then
-//! *clockwise* rotation will represent a positive change in position. If the bottom wire is plugged into
-//! the lower port, then *counterclockwise* rotation will be positive instead.
+//! Encoders are two-wire devices that must be connected to two adjacent ports on the same brain/ADI expander.
+//! One of the wires must be plugged into an odd-numbered port (A, C, E, G), while the other wire must be
+//! plugged into the port directly above that wire (that is, B, D, F, or H, respectively). If the top wire is
+//! plugged into the lower odd-numbered port (A, C, E, G), then *clockwise* rotation will represent a positive
+//! change in position. If the bottom wire is plugged into the lower port, then *counterclockwise* rotation will
+//! be positive instead.
 //!
 //! # Comparison to [`RotationSensor`]
 //!
-//! Rotation sensors and Optical Shaft Encoders both measure the same thing (angular position), but
-//! with some important differences. The largest distinction is how position is measured. Rotation
-//! sensors use hall-effect magnets and know their absolute angle at any given time, including after
-//! a power cycle or loss of voltage. In contrast, encoders only track their *change* in position,
-//! meaning that any changes made to the encoder while unplugged will not be detected as a change in
-//! position. Rotation sensors have much higher resolution at 0.088° accuracy and can measure accurately
-//! at higher speeds. Rotation sensors are also capable of slotting VEX's new high-strength shafts, while
-//! these older encoders can only fit low-strength shafts.
+//! Rotation sensors and Shaft Encoders both measure the same thing (angular position), but with some important
+//! differences. The largest distinction is how position is measured. Rotation sensors use hall-effect magnets
+//! and know their absolute angle at any given time, including after a power cycle or loss of voltage. In contrast,
+//! encoders only track their *change* in position, meaning that any changes made to the encoder while unplugged
+//! will not be detected as a change in position. Rotation sensors have much higher resolution than the old
+//! encoders sold by VEX at 0.088° accuracy (compared to 1° of accuracy) and can measure accurately at higher
+//! speeds. Rotation sensors are also capable of slotting VEX's new high-strength shafts, while these older
+//! encoders can only fit low-strength shafts.
 //!
 //! |                     | [`AdiEncoder`]   | [`RotationSensor`]                 |
 //! | ------------------- | ---------------- | ---------------------------------- |
@@ -53,18 +56,44 @@ use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 use super::{AdiDevice, AdiDeviceType, AdiPort};
 use crate::{adi::adi_port_name, position::Position, PortError};
 
-/// Optical Shaft Encoder
+/// VEX Optical Shaft Encoder
+///
+/// This is a type alias to [`AdiEncoder<360>`](AdiEncoder) for simplifying the creation of
+/// the [legacy VEX Optical Shaft Encoders (276-2156)]. This represents an instance of
+/// [`AdiEncoder`] with a resolution of 360 TPR (ticks per revolution).
+///
+/// [legacy VEX Optical Shaft Encoders (276-2156)]: https://www.vexrobotics.com/276-2156.html.
+///
+/// # Examples
+///
+/// ```
+/// use vexide::{
+///     prelude::*,
+///     devices::adi::AdiDevice,
+/// };
+/// use std::time::Duration;
+///
+/// #[vexide::main]
+/// async fn main(peripherals: Peripherals) {
+///     let encoder = AdiOpticalEncoder::new(peripherals.adi_a, peripherals.adi_b);
+///
+///     loop {
+///         println!("encoder position: {:?}", encoder.position());
+///         sleep(AdiDevice::ADI_UPDATE_INTERVAL).await;
+///     }
+/// }
+/// ```
+pub type AdiOpticalEncoder = AdiEncoder<360>;
+
+/// ADI Shaft Encoder
 #[derive(Debug, Eq, PartialEq)]
-pub struct AdiEncoder {
+pub struct AdiEncoder<const TICKS_PER_REVOLUTION: u32> {
     top_port: AdiPort,
     bottom_port: AdiPort,
 }
 
-impl AdiEncoder {
-    /// Number of encoder ticks (unique sensor readings) per revolution for the encoder.
-    pub const TICKS_PER_REVOLUTION: u32 = 360;
-
-    /// Create a new encoder sensor from a top and bottom [`AdiPort`].
+impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
+    /// Create a new encoder with a given TPR from a top and bottom [`AdiPort`].
     ///
     /// # Panics
     ///
@@ -79,11 +108,13 @@ impl AdiEncoder {
     ///     prelude::*,
     ///     devices::adi::AdiDevice,
     /// };
-    /// use core::time::Duration;
+    /// use std::time::Duration;
+    ///
+    /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b);
+    ///     let encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     loop {
     ///         println!("encoder position: {:?}", encoder.position());
@@ -109,9 +140,8 @@ impl AdiEncoder {
         );
 
         // Top and bottom must be some combination of (AB, CD, EF, GH) or (BA, CD, FE, HG)
-        let top_is_even = top_number % 2 == 0;
         assert!(
-            if top_is_even {
+            if top_number.is_multiple_of(2) {
                 bottom_number == top_number - 1
             } else {
                 bottom_number == top_number + 1
@@ -150,11 +180,13 @@ impl AdiEncoder {
     ///     prelude::*,
     ///     devices::adi::AdiDevice,
     /// };
-    /// use core::time::Duration;
+    /// use std::time::Duration;
+    ///
+    /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b);
+    ///     let encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     loop {
     ///         println!("encoder position: {:?}", encoder.position());
@@ -166,13 +198,10 @@ impl AdiEncoder {
         self.top_port.validate_expander()?;
 
         Ok(Position::from_ticks(
-            unsafe {
-                i64::from(vexDeviceAdiValueGet(
-                    self.top_port.device_handle(),
-                    self.top_port.index(),
-                ))
-            },
-            360,
+            f64::from(unsafe {
+                vexDeviceAdiValueGet(self.top_port.device_handle(), self.top_port.index())
+            }),
+            TICKS_PER_REVOLUTION,
         ))
     }
 
@@ -194,11 +223,13 @@ impl AdiEncoder {
     ///     prelude::*,
     ///     devices::adi::AdiDevice,
     /// };
-    /// use core::time::Duration;
+    /// use std::time::Duration;
+    ///
+    /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b);
+    ///     let encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     // Treat the encoder as if it were at 180 degrees.
     ///     _ = encoder.set_position(Position::from_degrees(180));
@@ -211,7 +242,7 @@ impl AdiEncoder {
             vexDeviceAdiValueSet(
                 self.top_port.device_handle(),
                 self.top_port.index(),
-                position.as_ticks(360) as i32,
+                position.as_ticks(TICKS_PER_REVOLUTION) as i32,
             );
         }
 
@@ -236,11 +267,13 @@ impl AdiEncoder {
     ///     prelude::*,
     ///     devices::adi::AdiDevice,
     /// };
-    /// use core::time::Duration;
+    /// use std::time::Duration;
+    ///
+    /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::new(peripherals.adi_a, peripherals.adi_b);
+    ///     let encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     // Reset the encoder position to zero.
     ///     // This doesn't really do anything in this case, but it's a good example.
@@ -252,7 +285,7 @@ impl AdiEncoder {
     }
 }
 
-impl AdiDevice<2> for AdiEncoder {
+impl<const TICKS_PER_REVOLUTION: u32> AdiDevice<2> for AdiEncoder<TICKS_PER_REVOLUTION> {
     fn port_numbers(&self) -> [u8; 2] {
         [self.top_port.number(), self.bottom_port.number()]
     }

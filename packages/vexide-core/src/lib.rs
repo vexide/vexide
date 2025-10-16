@@ -1,28 +1,27 @@
-//! Low level core functionality for [`vexide`](https://crates.io/crates/vexide).
-//! The core crate is used in all other crates in the vexide ecosystem.
+//! Low-level common functionality in [`vexide`](https://crates.io/crates/vexide).
 //!
-//! Included in this crate:
-//! - Global allocator: [`allocator`]
-//! - Competition state handling: [`competition`]
-//! - Serial terminal printing: [`io`]
-//! - No-std [`Instant`](time::Instant)s: [`time`]
-//! - Synchronization primitives: [`sync`]
-//! - Program control: [`program`]
+//! This crate has historically served many purposes, but today provides a set
+//! of common safe wrappers around various system APIs used in some of `vexide`'s
+//! crates. Most of these modules are re-exported from the top-level [`vexide`]
+//! crate.
+//!
+//! [`vexide`]: https://docs.rs/vexide/
+//!
+//! This crate includes:
+//! - Competition control, including the [`Compete`](crate::competition::Compete)
+//!   trait ([`competition`]).
+//! - Backtrace collection ([`backtrace`]).
+//! - OS version information ([`os`]).
+//! - User program state ([`program`]).
+//! - Extended system time APIs ([`time`]).
 
 #![no_std]
 #![feature(never_type)]
 
 extern crate alloc;
 
-#[cfg(feature = "allocator")]
-pub mod allocator;
 pub mod backtrace;
 pub mod competition;
-pub mod float;
-pub mod fs;
-pub mod io;
 pub mod os;
-pub mod path;
 pub mod program;
-pub mod sync;
 pub mod time;

@@ -1,6 +1,3 @@
-#![no_main]
-#![no_std]
-
 use vexide::{
     devices::smart::ai_vision::{AiVisionColor, AiVisionSensor},
     prelude::*,

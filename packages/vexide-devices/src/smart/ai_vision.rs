@@ -1,4 +1,4 @@
-//! AI Vision sensor device.
+//! AI Vision Sensor
 //!
 //! This module provides an API for interacting with the AI Vision sensor.
 //! The AI Vision sensor is meant to be a direct upgrade from the [Vision Sensor](super::vision)
@@ -18,14 +18,18 @@
 //! It has a horizontal FOV of 74 degrees and a vertical FOV of 63 degrees.
 //! Both of these values are a slight upgrade from the Vision Sensor.
 //!
-//! Unlike the Vision Sensor, the AI Vision sensor uses more readable color signatures
-//! that may be created without the AI Vision utility.
-//! It still has a USB port that can be used to create these signatures with VEX's utility.
+//! Unlike the Vision Sensor, the AI Vision sensor uses more human-readable color signatures
+//! that may be created without the AI Vision utility, though uploading color signatures with
+//! VEX's AI Vision Utility over USB is still an option.
 
 use alloc::{
     ffi::{CString, IntoStringError},
     string::String,
     vec::Vec,
+};
+use core::{
+    iter::{Copied, Flatten},
+    slice,
 };
 
 use bitflags::bitflags;
@@ -42,8 +46,6 @@ use vex_sdk::{
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
-
-type Result<T, E = AiVisionError> = core::result::Result<T, E>;
 
 #[repr(u8)]
 enum ObjectType {
@@ -68,7 +70,7 @@ impl From<u8> for ObjectType {
     }
 }
 
-/// The data associated with an AI Vision object.
+/// The data associated with a detected AI Vision object.
 /// The data is different depending on the type of object detected.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AiVisionObject {
@@ -202,8 +204,12 @@ pub struct AiVisionColor {
 
 /// A color code used by an AI Vision Sensor to detect groups of color blobs.
 ///
-/// The color code can have up to 7 color signatures.
-/// When the colors in a color code are detected next to each other, the sensor will detect the color code.
+/// Color codes are effectively "groups" of color signatures. A color code associated
+/// multiple color signatures on the sensor will be detected as a single object when
+/// all signatures are seen next to each other.
+///
+/// Color codes can associate up to 7 color signatures and detections will be returned
+/// as [`AiVisionObject::Code`] variants.
 pub struct AiVisionColorCode([Option<u8>; 7]);
 impl AiVisionColorCode {
     /// Creates a new color code with the given color signature ids.
@@ -212,10 +218,17 @@ impl AiVisionColorCode {
         Self(code)
     }
 
-    /// Returns the color signature ids in the color code.
-    #[must_use]
-    pub fn colors(&self) -> Vec<u8> {
-        self.0.iter().flatten().copied().collect()
+    /// Returns an iterator over the signature IDs in this code.
+    pub fn iter(&self) -> impl Iterator<Item = u8> + use<'_> {
+        self.into_iter()
+    }
+}
+impl<'a> IntoIterator for &'a AiVisionColorCode {
+    type Item = u8;
+    type IntoIter = Copied<Flatten<slice::Iter<'a, Option<u8>>>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter().flatten().copied()
     }
 }
 impl From<(u8,)> for AiVisionColorCode {
@@ -355,7 +368,7 @@ impl AiVisionSensor {
 
     // const AWB_START_VALUE: u32 = 4;
 
-    /// Create a new AI Vision sensor from a smart port with the given brightness and contrast.
+    /// Creates a new AI Vision sensor from a smart port with the given brightness and contrast.
     ///
     /// # Examples
     ///
@@ -364,7 +377,7 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     // Do something with the AI Vision sensor
     /// }
     /// ```
@@ -379,7 +392,7 @@ impl AiVisionSensor {
         Self { port, device }
     }
 
-    /// Returns the current temperature of the AI Vision sensor.
+    /// Returns the current temperature of the sensor in degrees Celsius.
     ///
     /// # Errors
     ///
@@ -392,19 +405,23 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
-    ///         println!("{:?}", ai_vision.temperature());
+    ///         println!("{:?}", sensor.temperature());
     ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
-    pub fn temperature(&self) -> Result<f64> {
+    pub fn temperature(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionTemperatureGet(self.device) })
     }
 
-    /// Sets a color code used to detect groups of colors.
+    /// Registers a color code association on the sensor.
+    ///
+    /// Color codes are effectively "groups" of color signatures. A color code associated
+    /// multiple color signatures on the sensor will be detected as a single object when
+    /// all signatures are seen next to each other.
     ///
     /// # Panics
     ///
@@ -422,18 +439,18 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
     ///         saturation: 1.0,
     ///     };
-    ///     _ = ai_vision.set_color(1, color);
+    ///     _ = sensor.set_color(1, color);
     ///     let code = AiVisionColorCode::from([1]);
-    ///     _ = ai_vision.set_color_code(1, &code);
+    ///     _ = sensor.set_color_code(1, &code);
     /// }
     /// ```
-    pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<()> {
+    pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<(), PortError> {
         assert!(
             (1..=8).contains(&id),
             "The given ID ({id}) is out of the interval [1, 8]."
@@ -495,17 +512,18 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let code = AiVisionColorCode::from([1]);
-    ///     _ = ai_vision.set_color_code(1, &code);
-    ///     if let Ok(Some(code)) = ai_vision.color_code(1) {
+    ///     _ = sensor.set_color_code(1, &code);
+    ///
+    ///     if let Ok(Some(code)) = sensor.color_code(1) {
     ///          println!("{:?}", code);
     ///     } else {
     ///         println!("Something went wrong!");
     ///     }
     /// }
     /// ```
-    pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>> {
+    pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>, PortError> {
         assert!(
             (1..=8).contains(&id),
             "The given ID ({id}) is out of the interval [1, 8]."
@@ -548,13 +566,14 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = ai_vision.set_color_code(1, &AiVisionColorCode::from([1]));
-    ///     _ = ai_vision.set_color_code(2, &AiVisionColorCode::from([1, 2]));
-    ///     println!("{:?}", ai_vision.color_codes());
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     _ = sensor.set_color_code(1, &AiVisionColorCode::from([1]));
+    ///     _ = sensor.set_color_code(2, &AiVisionColorCode::from([1, 2]));
+    ///
+    ///     println!("{:?}", sensor.color_codes());
     /// }
     /// ```
-    pub fn color_codes(&self) -> Result<[Option<AiVisionColorCode>; 8]> {
+    pub fn color_codes(&self) -> Result<[Option<AiVisionColorCode>; 8], PortError> {
         Ok([
             self.color_code(1)?,
             self.color_code(2)?,
@@ -584,17 +603,18 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
     ///         saturation: 1.0,
     ///     };
-    ///     _ = ai_vision.set_color(1, color);
-    ///     _ = ai_vision.set_color(2, color);
+    ///
+    ///     _ = sensor.set_color(1, color);
+    ///     _ = sensor.set_color(2, color);
     /// }
     /// ```
-    pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
+    pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<(), PortError> {
         assert!(
             (1..=7).contains(&id),
             "The given ID ({id}) is out of the interval [1, 7]."
@@ -634,21 +654,21 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
     ///         saturation: 1.0,
     ///     };
-    ///     _ = ai_vision.set_color(1, color);
-    ///     if let Ok(Some(color)) = ai_vision.color(1) {
+    ///     _ = sensor.set_color(1, color);
+    ///     if let Ok(Some(color)) = sensor.color(1) {
     ///         println!("{:?}", color);
     ///     } else {
     ///         println!("Something went wrong!");
     ///     }
     /// }
     /// ```
-    pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>> {
+    pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>, PortError> {
         assert!(
             (1..=7).contains(&id),
             "The given ID ({id}) is out of the interval [1, 7]."
@@ -684,18 +704,19 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
     ///         hue: 10.0,
     ///         saturation: 1.0,
     ///     };
-    ///     _ = ai_vision.set_color(1, color);
-    ///     let colors = ai_vision.colors().unwrap();
+    ///     _ = sensor.set_color(1, color);
+    ///
+    ///     let colors = sensor.colors().unwrap();
     ///     println!("{:?}", colors);
     /// }
     /// ```
-    pub fn colors(&self) -> Result<[Option<AiVisionColor>; 7]> {
+    pub fn colors(&self) -> Result<[Option<AiVisionColor>; 7], PortError> {
         Ok([
             self.color(1)?,
             self.color(2)?,
@@ -720,18 +741,18 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = ai_vision.set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     _ = sensor.set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
     /// }
     /// ```
-    pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
+    pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<(), PortError> {
         let flags = (self.flags()?
             & (AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_STATUS_OVERLAY))
             | AiVisionFlags::from(mode);
         self.set_flags(flags)
     }
 
-    fn raw_status(&self) -> Result<u32> {
+    fn raw_status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
         let status = unsafe { vexDeviceAiVisionStatusGet(self.device) };
         Ok(status)
@@ -751,11 +772,11 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let ai_vision = AiVisionSensor::new(peripherals.port_1);
-    ///     println!("{:?}", ai_vision.flags());
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     println!("{:?}", sensor.flags());
     /// }
     /// ```
-    pub fn flags(&self) -> Result<AiVisionFlags> {
+    pub fn flags(&self) -> Result<AiVisionFlags, PortError> {
         // Only care about the first byte of status.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         Ok(AiVisionFlags::from_bits_retain(
@@ -776,13 +797,13 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     // Enable all detection modes except for custom model and disable USB overlay
     ///     let flags = AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_MODEL;
-    ///     _ = ai_vision.set_flags(flags);
+    ///     _ = sensor.set_flags(flags);
     /// }
     /// ```
-    pub fn set_flags(&mut self, mode: AiVisionFlags) -> Result<()> {
+    pub fn set_flags(&mut self, mode: AiVisionFlags) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
@@ -802,7 +823,7 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    pub fn start_awb(&mut self) -> Result<()> {
+    pub fn start_awb(&mut self) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
@@ -821,7 +842,7 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    pub fn enable_test(&mut self, test: u8) -> Result<()> {
+    pub fn enable_test(&mut self, test: u8) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
@@ -848,11 +869,11 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = ai_vision.set_apriltag_family(AprilTagFamily::Tag16h5);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     _ = sensor.set_apriltag_family(AprilTagFamily::Tag16h5);
     /// }
     /// ```
-    pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<()> {
+    pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
@@ -880,9 +901,9 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
-    ///         let objects = ai_vision.objects().unwrap();
+    ///         let objects = sensor.objects().unwrap();
     ///         for object in objects {
     ///             if let AiVisionObjectData::Color { position, .. } = object.data {
     ///                 println!("{:?}", position);
@@ -892,7 +913,7 @@ impl AiVisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn objects(&self) -> Result<Vec<AiVisionObject>> {
+    pub fn objects(&self) -> Result<Vec<AiVisionObject>, AiVisionObjectError> {
         let num_objects = self.object_count()?;
 
         let mut objects = Vec::new();
@@ -961,7 +982,7 @@ impl AiVisionSensor {
                             y: raw.object.tag.y3,
                         },
                     },
-                    _ => return Err(AiVisionError::InvalidObject),
+                    _ => return Err(AiVisionObjectError::InvalidObject),
                 };
 
                 objects.push(object);
@@ -984,14 +1005,14 @@ impl AiVisionSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut ai_vision = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
-    ///         println!("AI Vision sensor currently detects {:?} objects", ai_vision.object_count());
+    ///         println!("AI Vision sensor currently detects {:?} objects", sensor.object_count());
     ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
-    pub fn object_count(&self) -> Result<u32> {
+    pub fn object_count(&self) -> Result<u32, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionObjectCountGet(self.device) as _ })
     }
@@ -1012,11 +1033,12 @@ impl From<AiVisionSensor> for SmartPort {
     }
 }
 
-/// Errors that can occur when using a vision sensor.
+/// Errors that can occur when using a [`AiVisionSensor::objects`].
 #[derive(Debug, Clone, Eq, PartialEq, Snafu)]
-pub enum AiVisionError {
+pub enum AiVisionObjectError {
     /// An object created by VEXos failed to be converted.
     InvalidObject,
+
     /// Failed to fetch the class name of a model-detected object due it having a invalid
     /// string representation.
     #[snafu(transparent)]
@@ -1024,6 +1046,7 @@ pub enum AiVisionError {
         /// The source of the error.
         source: IntoStringError,
     },
+
     /// Generic port related error.
     #[snafu(transparent)]
     Port {

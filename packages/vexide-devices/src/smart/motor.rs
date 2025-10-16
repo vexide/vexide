@@ -1,23 +1,26 @@
 //! Smart Motors
 //!
-//! This module provides abstractions for interacting with VEX V5 Smart Motors, supporting both
+//! This module provides abstractions for interacting with VEX Smart Motors, supporting both
 //! the 11W and 5.5W variants.
 //!
 //! # Overview
 //!
-//! The V5 Smart Motors come in two variants: [an 11W model](https://www.vexrobotics.com/276-4840.html) with interchangeable gear cartridges
-//! and [a 5.5W model](https://www.vexrobotics.com/276-4842.html) with a fixed gearing. The 11W motor supports three cartridge options: a red
-//! cartridge providing 100 RPM, a green cartridge for 200 RPM, and a blue cartridge delivering
-//! 600 RPM. The 5.5W motor comes with a non-interchangeable 200 RPM gear cartridge.
+//! The V5 Smart Motors come in two variants: [an 11W model](https://www.vexrobotics.com/276-4840.html),
+//! with interchangeable gear cartridges and [a 5.5W model](https://www.vexrobotics.com/276-4842.html),
+//! with a fixed gearing. The 11W motor supports three cartridge options, which will gear the motor down
+//! from its base RPM of 3600: a red cartridge providing 100 RPM output, a green cartridge for 200 RPM, and
+//! a blue cartridge for 600 RPM. The 5.5W motor comes with a non-interchangeable 200 RPM gear cartridge.
 //!
-//! Motor position and velocity is measured by an onboard integrated encoder.
-//!
-//! More in depth specs for the 11W motor can be found [here](https://kb.vex.com/hc/en-us/articles/360060929971-Understanding-V5-Smart-Motors).
+//! Smart Motors feature several integrated sensors, including an encoder for measuring the velocity
+//! and position of the motor, a temperature sensor for detecting overheats, and sensors for measuring
+//! output voltage, current, and efficiency.
 //!
 //! Communication between a Smart motor and the V5 Brain occur at two different intervals. While
 //! the motor communicates with the Brain every 5 milliseconds (and commands can be written to
 //! the motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively
 //! places the date *write* interval at 5mS and the data *read* interval at 10mS.
+//!
+//! More in-depth specs for the 11W motor can be found [here](https://kb.vex.com/hc/en-us/articles/360060929971-Understanding-V5-Smart-Motors).
 //!
 //! # Current Limitations
 //!
@@ -39,7 +42,7 @@
 //!
 //! # Motor Control
 //!
-//! Each motor contains a sophisticated control system built around a Cortex M0 microcontroller.
+//! Each motor contains a sophisticated control system built around a Cortex M0+ microcontroller.
 //! The microcontroller continuously monitors position, speed, direction, voltage, current, and
 //! temperature through integrated sensors.
 //!
@@ -66,7 +69,7 @@ use vex_sdk::{
     vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet,
     V5MotorBrakeMode, V5MotorGearset, V5_DeviceT,
 };
-#[cfg(feature = "dangerous_motor_tuning")]
+#[cfg(feature = "dangerous-motor-tuning")]
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
@@ -79,6 +82,7 @@ pub struct Motor {
     target: MotorControl,
     device: V5_DeviceT,
 
+    #[allow(clippy::struct_field_names)]
     motor_type: MotorType,
 }
 
@@ -248,6 +252,7 @@ impl Motor {
     pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
         Self::new_with_type(port, gearset, direction, MotorType::V5)
     }
+
     /// Creates a new 5.5W (EXP) Smart Motor.
     ///
     /// See [`Motor::new`] to create a 11W (V5) Smart Motor.
@@ -274,7 +279,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -289,7 +296,7 @@ impl Motor {
     ///     let _ = motor.set_target(MotorControl::Brake(BrakeMode::Hold));
     /// }
     /// ```
-    pub fn set_target(&mut self, target: MotorControl) -> Result<(), MotorError> {
+    pub fn set_target(&mut self, target: MotorControl) -> Result<(), PortError> {
         let gearset = self.gearset()?;
         self.target = target;
 
@@ -322,7 +329,7 @@ impl Motor {
                 #[allow(clippy::cast_precision_loss)]
                 vexDeviceMotorAbsoluteTargetSet(
                     self.device,
-                    position.as_ticks(gearset.ticks_per_revolution()) as f64,
+                    position.as_ticks(gearset.ticks_per_revolution()),
                     velocity,
                 );
             },
@@ -335,7 +342,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -348,7 +357,7 @@ impl Motor {
     ///     let _ = motor.brake(BrakeMode::Hold);
     /// }
     /// ```
-    pub fn brake(&mut self, mode: BrakeMode) -> Result<(), MotorError> {
+    pub fn brake(&mut self, mode: BrakeMode) -> Result<(), PortError> {
         self.set_target(MotorControl::Brake(mode))
     }
 
@@ -360,7 +369,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -376,7 +387,7 @@ impl Motor {
     ///     sleep(Duration::from_secs(1)).await;
     /// }
     /// ```
-    pub fn set_velocity(&mut self, rpm: i32) -> Result<(), MotorError> {
+    pub fn set_velocity(&mut self, rpm: i32) -> Result<(), PortError> {
         self.set_target(MotorControl::Velocity(rpm))
     }
 
@@ -387,7 +398,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -421,7 +434,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn set_voltage(&mut self, volts: f64) -> Result<(), MotorError> {
+    pub fn set_voltage(&mut self, volts: f64) -> Result<(), PortError> {
         self.set_target(MotorControl::Voltage(volts))
     }
 
@@ -429,7 +442,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -447,7 +462,7 @@ impl Motor {
         &mut self,
         position: Position,
         velocity: i32,
-    ) -> Result<(), MotorError> {
+    ) -> Result<(), PortError> {
         self.set_target(MotorControl::Position(position, velocity))
     }
 
@@ -457,7 +472,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -472,7 +489,7 @@ impl Motor {
     ///     let _ = motor.set_profiled_velocity(100).unwrap();
     /// }
     /// ```
-    pub fn set_profiled_velocity(&mut self, velocity: i32) -> Result<(), MotorError> {
+    pub fn set_profiled_velocity(&mut self, velocity: i32) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe {
@@ -501,6 +518,7 @@ impl Motor {
     ///     let target = motor.target();
     ///     assert_eq!(target, MotorControl::Brake(BrakeMode::Hold));
     /// }
+    /// ```
     #[must_use]
     pub const fn target(&self) -> MotorControl {
         self.target
@@ -510,8 +528,10 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
-    /// - A [`MotorError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
+    /// - A [`PortError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
     ///
     /// # Examples
     ///
@@ -527,7 +547,7 @@ impl Motor {
     ///     motor.set_gearset(Gearset::Red).unwrap();
     /// }
     /// ```
-    pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), MotorError> {
+    pub fn set_gearset(&mut self, gearset: Gearset) -> Result<(), SetGearsetError> {
         ensure!(self.motor_type.is_v5(), SetGearsetExpSnafu);
         self.validate_port()?;
         unsafe {
@@ -542,11 +562,14 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
     /// Print the gearset of a motor:
+    ///
     /// ```
     /// use vexide::prelude::*;
     ///
@@ -561,8 +584,8 @@ impl Motor {
     ///         Gearset::Blue => println!("Motor is using the blue gearset"),
     ///    }
     /// }
-    ///
-    pub fn gearset(&self) -> Result<Gearset, MotorError> {
+    /// ```
+    pub fn gearset(&self) -> Result<Gearset, PortError> {
         if self.motor_type.is_exp() {
             return Ok(Gearset::Green);
         }
@@ -662,7 +685,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -702,7 +727,7 @@ impl Motor {
     ///    }
     /// }
     /// ```
-    pub fn velocity(&self) -> Result<f64, MotorError> {
+    pub fn velocity(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorActualVelocityGet(self.device) })
     }
@@ -711,7 +736,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -728,7 +755,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn power(&self) -> Result<f64, MotorError> {
+    pub fn power(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorPowerGet(self.device) })
     }
@@ -737,7 +764,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -755,7 +784,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn torque(&self) -> Result<f64, MotorError> {
+    pub fn torque(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorTorqueGet(self.device) })
     }
@@ -764,7 +793,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -781,16 +812,27 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn voltage(&self) -> Result<f64, MotorError> {
+    pub fn voltage(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(f64::from(unsafe { vexDeviceMotorVoltageGet(self.device) }) / 1000.0)
     }
 
-    /// Returns the current position of the motor.
+    /// Returns the angular position of the motor as measured by the IME (integrated motor encoder).
+    ///
+    /// This is returned as an instance of the [`Position`] struct, which may be converted to degrees,
+    /// radians, revolutions, etc...
+    ///
+    /// # Gearing affects position!
+    ///
+    /// Position measurements are dependent on the Motor's [`Gearset`], and may be reported incorrectly if the
+    /// motor is configured with the incorrect gearset variant. Make sure that the motor is configured with the
+    /// same gearset as its physical cartridge color.
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -808,10 +850,10 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn position(&self) -> Result<Position, MotorError> {
+    pub fn position(&self) -> Result<Position, PortError> {
         let gearset = self.gearset()?;
         Ok(Position::from_ticks(
-            unsafe { vexDeviceMotorPositionGet(self.device) } as i64,
+            unsafe { vexDeviceMotorPositionGet(self.device) },
             gearset.ticks_per_revolution(),
         ))
     }
@@ -820,9 +862,19 @@ impl Motor {
     /// along with a timestamp of the internal clock of the motor indicating when the
     /// data was recorded.
     ///
+    /// The motor's integrated encoder has a TPR of 4096. Gearset is not taken into
+    /// consideration when dealing with the raw value, meaning this measurement will be
+    /// taken relative to the motor's internal position *before* being geared down from
+    /// 3600RPM.
+    ///
+    /// Methods such as [`Motor::reset_position`] and [`Motor::set_position`] do not
+    /// change the value of this raw measurement.
+    ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -839,11 +891,11 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn raw_position(&self) -> Result<(i32, SmartDeviceTimestamp), MotorError> {
+    pub fn raw_position(&self) -> Result<(i32, SmartDeviceTimestamp), PortError> {
         self.validate_port()?;
 
         let mut timestamp: u32 = 0;
-        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device, &mut timestamp) };
+        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device, &raw mut timestamp) };
 
         Ok((ticks, SmartDeviceTimestamp(timestamp)))
     }
@@ -852,7 +904,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -870,7 +924,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn current(&self) -> Result<f64, MotorError> {
+    pub fn current(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(f64::from(unsafe { vexDeviceMotorCurrentGet(self.device) }) / 1000.0)
     }
@@ -883,7 +937,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -901,7 +957,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn efficiency(&self) -> Result<f64, MotorError> {
+    pub fn efficiency(&self) -> Result<f64, PortError> {
         self.validate_port()?;
 
         Ok(unsafe { vexDeviceMotorEfficiencyGet(self.device) } / 100.0)
@@ -913,7 +969,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -931,7 +989,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn reset_position(&mut self) -> Result<(), MotorError> {
+    pub fn reset_position(&mut self) -> Result<(), PortError> {
         self.validate_port()?;
         unsafe { vexDeviceMotorPositionReset(self.device) }
         Ok(())
@@ -943,7 +1001,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -968,15 +1028,14 @@ impl Motor {
     ///     motor.set_position(Position::from_degrees(0.0)).unwrap();
     /// }
     /// ```
-    #[allow(clippy::cast_precision_loss)]
-    pub fn set_position(&mut self, position: Position) -> Result<(), MotorError> {
+    pub fn set_position(&mut self, position: Position) -> Result<(), PortError> {
         let gearset = self.gearset()?;
 
         unsafe {
             vexDeviceMotorPositionSet(
                 self.device,
                 // NOTE: No precision loss since ticks are not fractional.
-                position.as_ticks(gearset.ticks_per_revolution()) as f64,
+                position.as_ticks(gearset.ticks_per_revolution()),
             );
         }
 
@@ -987,7 +1046,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1002,7 +1063,7 @@ impl Motor {
     ///     let _ = motor.set_current_limit(2.5);
     /// }
     /// ```
-    pub fn set_current_limit(&mut self, limit: f64) -> Result<(), MotorError> {
+    pub fn set_current_limit(&mut self, limit: f64) -> Result<(), PortError> {
         self.validate_port()?;
         unsafe { vexDeviceMotorCurrentLimitSet(self.device, (limit * 1000.0) as i32) }
         Ok(())
@@ -1012,7 +1073,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1029,7 +1092,7 @@ impl Motor {
     ///     let _ = motor.set_voltage(12.0);
     /// }
     /// ```
-    pub fn set_voltage_limit(&mut self, limit: f64) -> Result<(), MotorError> {
+    pub fn set_voltage_limit(&mut self, limit: f64) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe {
@@ -1041,9 +1104,13 @@ impl Motor {
 
     /// Returns the current limit for the motor in amps.
     ///
+    /// This limit can be configured with the [`Motor::set_current_limit`] method.
+    ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1058,7 +1125,7 @@ impl Motor {
     ///     println!("Current Limit: {:.2}A", motor.current_limit().unwrap());
     /// }
     /// ```
-    pub fn current_limit(&self) -> Result<f64, MotorError> {
+    pub fn current_limit(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(f64::from(unsafe { vexDeviceMotorCurrentLimitGet(self.device) }) / 1000.0)
     }
@@ -1067,7 +1134,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1082,7 +1151,7 @@ impl Motor {
     ///     println!("Voltage Limit: {:.2}V", motor.voltage_limit().unwrap());
     /// }
     /// ```
-    pub fn voltage_limit(&self) -> Result<f64, MotorError> {
+    pub fn voltage_limit(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(f64::from(unsafe { vexDeviceMotorVoltageLimitGet(self.device) }) / 1000.0)
     }
@@ -1091,7 +1160,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1114,7 +1185,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn temperature(&self) -> Result<f64, MotorError> {
+    pub fn temperature(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceMotorTemperatureGet(self.device) })
     }
@@ -1123,7 +1194,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1136,7 +1209,7 @@ impl Motor {
     ///     motor.status().unwrap().contains(MotorStatus::BUSY)
     /// }
     /// ```
-    pub fn status(&self) -> Result<MotorStatus, MotorError> {
+    pub fn status(&self) -> Result<MotorStatus, PortError> {
         self.validate_port()?;
 
         Ok(MotorStatus::from_bits_retain(unsafe {
@@ -1148,7 +1221,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1171,7 +1246,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn faults(&self) -> Result<MotorFaults, MotorError> {
+    pub fn faults(&self) -> Result<MotorFaults, PortError> {
         self.validate_port()?;
 
         Ok(MotorFaults::from_bits_retain(unsafe {
@@ -1183,7 +1258,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1205,7 +1282,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn is_over_temperature(&self) -> Result<bool, MotorError> {
+    pub fn is_over_temperature(&self) -> Result<bool, PortError> {
         Ok(self.faults()?.contains(MotorFaults::OVER_TEMPERATURE))
     }
 
@@ -1213,7 +1290,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1235,7 +1314,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn is_over_current(&self) -> Result<bool, MotorError> {
+    pub fn is_over_current(&self) -> Result<bool, PortError> {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
 
@@ -1243,7 +1322,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1265,7 +1346,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn is_driver_fault(&self) -> Result<bool, MotorError> {
+    pub fn is_driver_fault(&self) -> Result<bool, PortError> {
         Ok(self.faults()?.contains(MotorFaults::DRIVER_FAULT))
     }
 
@@ -1273,7 +1354,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1294,7 +1377,7 @@ impl Motor {
     ///    }
     /// }
     /// ```
-    pub fn is_driver_over_current(&self) -> Result<bool, MotorError> {
+    pub fn is_driver_over_current(&self) -> Result<bool, PortError> {
         Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
     }
 
@@ -1310,7 +1393,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1323,7 +1408,7 @@ impl Motor {
     ///     motor.set_direction(Direction::Reverse).unwrap();
     /// }
     /// ```
-    pub fn set_direction(&mut self, direction: Direction) -> Result<(), MotorError> {
+    pub fn set_direction(&mut self, direction: Direction) -> Result<(), PortError> {
         self.validate_port()?;
 
         unsafe {
@@ -1337,7 +1422,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1351,7 +1438,7 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn direction(&self) -> Result<Direction, MotorError> {
+    pub fn direction(&self) -> Result<Direction, PortError> {
         self.validate_port()?;
 
         Ok(match unsafe { vexDeviceMotorReverseFlagGet(self.device) } {
@@ -1374,7 +1461,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1397,15 +1486,15 @@ impl Motor {
     ///     motor.set_velocity_tuning_constants(constants).unwrap();
     /// }
     /// ```
-    #[cfg(feature = "dangerous_motor_tuning")]
+    #[cfg(feature = "dangerous-motor-tuning")]
     pub fn set_velocity_tuning_constants(
         &mut self,
         constants: MotorTuningConstants,
-    ) -> Result<(), MotorError> {
+    ) -> Result<(), PortError> {
         self.validate_port()?;
 
         let mut constants = V5_DeviceMotorPid::from(constants);
-        unsafe { vexDeviceMotorVelocityPidSet(self.device, &mut constants) }
+        unsafe { vexDeviceMotorVelocityPidSet(self.device, &raw mut constants) }
 
         Ok(())
     }
@@ -1424,7 +1513,9 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`MotorError::Port`] error is returned if a motor device is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
+    ///   something else was connected.
     ///
     /// # Examples
     ///
@@ -1447,15 +1538,15 @@ impl Motor {
     ///     motor.set_position_tuning_constants(constants).unwrap();
     /// }
     /// ```
-    #[cfg(feature = "dangerous_motor_tuning")]
+    #[cfg(feature = "dangerous-motor-tuning")]
     pub fn set_position_tuning_constants(
         &mut self,
         constants: MotorTuningConstants,
-    ) -> Result<(), MotorError> {
+    ) -> Result<(), PortError> {
         self.validate_port()?;
 
         let mut constants = V5_DeviceMotorPid::from(constants);
-        unsafe { vexDeviceMotorPositionPidSet(self.device, &mut constants) }
+        unsafe { vexDeviceMotorPositionPidSet(self.device, &raw mut constants) }
 
         Ok(())
     }
@@ -1630,7 +1721,7 @@ impl From<Gearset> for V5MotorGearset {
 /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
 /// well-known or understood, as we have no reference for what these constants should look
 /// like.
-// #[cfg(feature = "dangerous_motor_tuning")]
+#[cfg(feature = "dangerous-motor-tuning")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MotorTuningConstants {
     /// The feedforward constant.
@@ -1662,7 +1753,7 @@ pub struct MotorTuningConstants {
     pub sample_rate: Duration,
 }
 
-#[cfg(feature = "dangerous_motor_tuning")]
+#[cfg(feature = "dangerous-motor-tuning")]
 impl From<MotorTuningConstants> for V5_DeviceMotorPid {
     fn from(value: MotorTuningConstants) -> Self {
         Self {
@@ -1679,12 +1770,9 @@ impl From<MotorTuningConstants> for V5_DeviceMotorPid {
     }
 }
 
-/// Errors that can occur when using a motor.
+/// Error returned by [`Motor::set_gearset`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
-pub enum MotorError {
-    /// Failed to communicate with the motor while attempting to read flags.
-    Busy,
-
+pub enum SetGearsetError {
     /// Generic port related error.
     #[snafu(transparent)]
     Port {

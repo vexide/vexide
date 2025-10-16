@@ -1,47 +1,49 @@
-//! Minimal example of setting up program booting without the `#[vexide::main]` attribute macro.
+//! Minimal example  of setting up a vexide program without
+//! the `#[vexide::main]` attribute macro or async runtime.
+//!
+//! There are a few reasons why you might want this over using
+//! a normal Rust binary - notably, going through `vexide_startup`
+//! provides support for differential uploading, implementations
+//! for `vex_sdk`, graphical panics with backtraces, and a more
+//! efficient/smaller allocator.
 
-#![no_main]
-#![no_std]
+use std::time::Duration;
 
-extern crate alloc;
+use vexide_core::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
+use vexide_devices::{
+    peripherals::Peripherals,
+    smart::motor::{Direction, Gearset, Motor},
+};
 
-use alloc::boxed::Box;
-
-use vexide_core::println;
-use vexide_startup::{CodeSignature, ProgramFlags, ProgramOwner, ProgramType};
-
-// SAFETY: This function is unique and is being used to start the vexide runtime.
-// It will be called by the _boot assembly routine after the stack has been setup.
+/// The code signature encodes some metadata about this program at startup to VEXos.
+///
+/// `vexide-startup` allows you to customize your program's code
+/// signature by placing data into the `.code_signature` section of
+/// your binary.
+// SAFETY: The code signature needs to be in this section so it may be found by VEXos.
+#[cfg_attr(target_os = "vexos", unsafe(link_section = ".code_signature"))]
+#[used] // This is needed to prevent the linker from removing this object in release builds
 #[unsafe(no_mangle)]
-unsafe extern "C" fn _start() -> ! {
+static __VEXIDE_CODE_SIGNATURE: CodeSignature = CodeSignature::new(
+    ProgramType::User,
+    ProgramOwner::Partner,
+    ProgramOptions::empty(),
+);
+
+fn main() {
     // Setup the heap, zero bss, apply patches, etc...
+    // SAFETY: Called once at program startup.
     unsafe {
         vexide_startup::startup();
     }
 
-    let test_box = Box::new(100); // On the heap to demonstrate allocation.
-    unsafe {
-        // Draw something to the screen to test if the program is running.
-        vex_sdk::vexDisplayRectFill(0, 0, *test_box, 200);
-    }
+    println!("Hey");
 
-    // Print some data to the terminal.
-    println!("Hello, world!");
+    // Try to spin a motor.
+    let peripherals = Peripherals::take().unwrap();
+    let mut m = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    _ = m.set_voltage(12.0);
 
-    // Exit the program once we're done.
-    vexide_core::program::exit();
-}
-
-// SAFETY: The code signature needs to be in this section so it may be found by VEXos.
-#[unsafe(link_section = ".code_signature")]
-#[used] // This is needed to prevent the linker from removing this object in release builds
-static CODE_SIG: CodeSignature = CodeSignature::new(
-    ProgramType::User,
-    ProgramOwner::Partner,
-    ProgramFlags::empty(),
-);
-
-#[panic_handler]
-const fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {
-    loop {}
+    // Wait 5 seconds then exit.
+    std::thread::sleep(Duration::from_secs(5));
 }

@@ -1,9 +1,7 @@
-[build]
-target = "./armv7a-vex-v5.json"
-
-[target."cfg(target_vendor = \"vex\")"]
+[target.'cfg(target_os = "vexos")']
 runner = "cargo v5 run --file"
+rustflags = ["-Clink-arg=-Tvexide.ld"]
 
 [unstable]
-build-std = ["core", "compiler_builtins", "alloc"]
+build-std = ["std", "panic_abort"]
 build-std-features = ["compiler-builtins-mem"]

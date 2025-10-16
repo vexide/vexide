@@ -1,4 +1,6 @@
 [toolchain]
-channel = "nightly-2025-02-18"
+channel = "nightly-2025-09-26"
 components = ["rust-src"]
-targets = ["armv7a-none-eabi"]
+# Rust doesn't have a prebuilt libstd for our target,
+# so we can't specify the target key here to download one.
+# Instead we use build-std.

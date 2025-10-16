@@ -44,7 +44,7 @@ impl Electromagnet {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use core::time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
