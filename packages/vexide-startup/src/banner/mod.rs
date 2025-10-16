@@ -45,6 +45,6 @@ pub fn print(theme: BannerTheme) {
         battery = unsafe { vexBatteryCapacityGet() } as u8,
         rust_version = compile_time::rustc_version_str!(),
         competition_mode = competition::mode(),
-        uptime = time::uptime(),
+        uptime = time::system_uptime(),
     );
 }
