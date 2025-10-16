@@ -69,7 +69,7 @@ impl DistanceSensor {
     /// performs this check in their API, so we will too.
     ///
     /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_distance.c#L20>
-    fn validate(&self) -> Result<(), DistanceError> {
+    fn validate(&self) -> Result<(), DistanceObjectError> {
         match self.status()? {
             0x00 => StillInitializingSnafu.fail(),
             0x82 | 0x86 => Ok(()),
@@ -122,7 +122,7 @@ impl DistanceSensor {
     ///         });
     /// }
     /// ```
-    pub fn object(&self) -> Result<Option<DistanceObject>, DistanceError> {
+    pub fn object(&self) -> Result<Option<DistanceObject>, DistanceObjectError> {
         self.validate()?;
 
         let distance_raw = unsafe { vexDeviceDistanceDistanceGet(self.device) };
@@ -185,7 +185,7 @@ impl DistanceSensor {
     ///     }
     /// }
     /// ```
-    pub fn status(&self) -> Result<u32, DistanceError> {
+    pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 
         Ok(unsafe { vexDeviceDistanceStatusGet(self.device) })
@@ -236,7 +236,7 @@ pub struct DistanceObject {
 
 /// Errors that can occur when using a distance sensor.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
-pub enum DistanceError {
+pub enum DistanceObjectError {
     /// The sensor's status code is 0x00
     /// Need to wait for the sensor to finish initializing
     StillInitializing,

@@ -27,6 +27,10 @@ use alloc::{
     string::String,
     vec::Vec,
 };
+use core::{
+    iter::{Copied, Flatten},
+    slice,
+};
 
 use bitflags::bitflags;
 use mint::Point2;
@@ -42,8 +46,6 @@ use vex_sdk::{
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
 use crate::PortError;
-
-type Result<T, E = AiVisionError> = core::result::Result<T, E>;
 
 #[repr(u8)]
 enum ObjectType {
@@ -216,10 +218,17 @@ impl AiVisionColorCode {
         Self(code)
     }
 
-    /// Returns the color signature ids in the color code.
-    #[must_use]
-    pub fn colors(&self) -> Vec<u8> {
-        self.0.iter().flatten().copied().collect()
+    /// Returns an iterator over the signature IDs in this code.
+    pub fn iter(&self) -> impl Iterator<Item = u8> + use<'_> {
+        self.into_iter()
+    }
+}
+impl<'a> IntoIterator for &'a AiVisionColorCode {
+    type Item = u8;
+    type IntoIter = Copied<Flatten<slice::Iter<'a, Option<u8>>>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter().flatten().copied()
     }
 }
 impl From<(u8,)> for AiVisionColorCode {
@@ -403,7 +412,7 @@ impl AiVisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn temperature(&self) -> Result<f64> {
+    pub fn temperature(&self) -> Result<f64, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionTemperatureGet(self.device) })
     }
@@ -441,7 +450,7 @@ impl AiVisionSensor {
     ///     _ = sensor.set_color_code(1, &code);
     /// }
     /// ```
-    pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<()> {
+    pub fn set_color_code(&mut self, id: u8, code: &AiVisionColorCode) -> Result<(), PortError> {
         assert!(
             (1..=8).contains(&id),
             "The given ID ({id}) is out of the interval [1, 8]."
@@ -514,7 +523,7 @@ impl AiVisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>> {
+    pub fn color_code(&self, id: u8) -> Result<Option<AiVisionColorCode>, PortError> {
         assert!(
             (1..=8).contains(&id),
             "The given ID ({id}) is out of the interval [1, 8]."
@@ -564,7 +573,7 @@ impl AiVisionSensor {
     ///     println!("{:?}", sensor.color_codes());
     /// }
     /// ```
-    pub fn color_codes(&self) -> Result<[Option<AiVisionColorCode>; 8]> {
+    pub fn color_codes(&self) -> Result<[Option<AiVisionColorCode>; 8], PortError> {
         Ok([
             self.color_code(1)?,
             self.color_code(2)?,
@@ -605,7 +614,7 @@ impl AiVisionSensor {
     ///     _ = sensor.set_color(2, color);
     /// }
     /// ```
-    pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<()> {
+    pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<(), PortError> {
         assert!(
             (1..=7).contains(&id),
             "The given ID ({id}) is out of the interval [1, 7]."
@@ -659,7 +668,7 @@ impl AiVisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>> {
+    pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>, PortError> {
         assert!(
             (1..=7).contains(&id),
             "The given ID ({id}) is out of the interval [1, 7]."
@@ -707,7 +716,7 @@ impl AiVisionSensor {
     ///     println!("{:?}", colors);
     /// }
     /// ```
-    pub fn colors(&self) -> Result<[Option<AiVisionColor>; 7]> {
+    pub fn colors(&self) -> Result<[Option<AiVisionColor>; 7], PortError> {
         Ok([
             self.color(1)?,
             self.color(2)?,
@@ -736,14 +745,14 @@ impl AiVisionSensor {
     ///     _ = sensor.set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
     /// }
     /// ```
-    pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<()> {
+    pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<(), PortError> {
         let flags = (self.flags()?
             & (AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_STATUS_OVERLAY))
             | AiVisionFlags::from(mode);
         self.set_flags(flags)
     }
 
-    fn raw_status(&self) -> Result<u32> {
+    fn raw_status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
         let status = unsafe { vexDeviceAiVisionStatusGet(self.device) };
         Ok(status)
@@ -767,7 +776,7 @@ impl AiVisionSensor {
     ///     println!("{:?}", sensor.flags());
     /// }
     /// ```
-    pub fn flags(&self) -> Result<AiVisionFlags> {
+    pub fn flags(&self) -> Result<AiVisionFlags, PortError> {
         // Only care about the first byte of status.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         Ok(AiVisionFlags::from_bits_retain(
@@ -794,7 +803,7 @@ impl AiVisionSensor {
     ///     _ = sensor.set_flags(flags);
     /// }
     /// ```
-    pub fn set_flags(&mut self, mode: AiVisionFlags) -> Result<()> {
+    pub fn set_flags(&mut self, mode: AiVisionFlags) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
@@ -814,7 +823,7 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    pub fn start_awb(&mut self) -> Result<()> {
+    pub fn start_awb(&mut self) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
@@ -833,7 +842,7 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
-    pub fn enable_test(&mut self, test: u8) -> Result<()> {
+    pub fn enable_test(&mut self, test: u8) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
@@ -864,7 +873,7 @@ impl AiVisionSensor {
     ///     _ = sensor.set_apriltag_family(AprilTagFamily::Tag16h5);
     /// }
     /// ```
-    pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<()> {
+    pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
         let mut new_mode = self.raw_status()? << 8;
@@ -904,7 +913,7 @@ impl AiVisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn objects(&self) -> Result<Vec<AiVisionObject>> {
+    pub fn objects(&self) -> Result<Vec<AiVisionObject>, AiVisionObjectError> {
         let num_objects = self.object_count()?;
 
         let mut objects = Vec::new();
@@ -973,7 +982,7 @@ impl AiVisionSensor {
                             y: raw.object.tag.y3,
                         },
                     },
-                    _ => return Err(AiVisionError::InvalidObject),
+                    _ => return Err(AiVisionObjectError::InvalidObject),
                 };
 
                 objects.push(object);
@@ -1003,7 +1012,7 @@ impl AiVisionSensor {
     ///     }
     /// }
     /// ```
-    pub fn object_count(&self) -> Result<u32> {
+    pub fn object_count(&self) -> Result<u32, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionObjectCountGet(self.device) as _ })
     }
@@ -1024,11 +1033,12 @@ impl From<AiVisionSensor> for SmartPort {
     }
 }
 
-/// Errors that can occur when using a vision sensor.
+/// Errors that can occur when using a [`AiVisionSensor::objects`].
 #[derive(Debug, Clone, Eq, PartialEq, Snafu)]
-pub enum AiVisionError {
+pub enum AiVisionObjectError {
     /// An object created by VEXos failed to be converted.
     InvalidObject,
+
     /// Failed to fetch the class name of a model-detected object due it having a invalid
     /// string representation.
     #[snafu(transparent)]
@@ -1036,6 +1046,7 @@ pub enum AiVisionError {
         /// The source of the error.
         source: IntoStringError,
     },
+
     /// Generic port related error.
     #[snafu(transparent)]
     Port {

@@ -40,6 +40,8 @@ Before releasing:
 - Added the ability to create/convert `Position` instances to/from gradians. (#328)
 - Added several missing derived trait implementations for many device error types. (#331)
 - Added support for task-local data storage using the new `task_local!` macro. This is closely modeled after `thread_local!`s in the standard library. (#333)
+- Added the `AiVisionCode::iter`/`into_iter` methods for iterating over the available signature IDs stored in a color code. (#376).
+- Added the `CalibrateError` type returned by `InertialSensor::calibrate` when it fails. (#376).
 - Added the `vexide::time::user_uptime` function for getting the time since user processor boot. (#373)
 
 ### Fixed
@@ -64,10 +66,23 @@ Before releasing:
 - Renamed `vexide::time::uptime` to `vexide::time::system_uptime`. (#373) (**Breaking Change**)
 - `TouchEvent` now stores the location of the press in a `point: Point2<i16>` field rather than separate `x` and `y` `i16` fields. (#375) (**Breaking Change**)
 - Feature-gated the `MotorTuningConstants` type behind the `dangerous-motor-tuning` feature. (#374) (**Breaking Change**)
+- Renamed `{SerialPort, RadioLink}::available_write_bytes` to `{SerialPort, RadioLink}::write_capacity`. (#376) (**Breaking Change**)
+- `Motor` methods now return `PortError` rather than `MotorError`, which has been removed. (#376) (**Breaking Change**)
+- Renamed `AdiGyroscopeError` to `YawError`. (#376) (**Breaking Change**)
+- `AdiGyroscope::is_calibrating` now returns the `PortError` when it fails (#376) (**Breaking Change**).
+- Renamed `AiVisionError` to `AiVisionObjectError` (#376) (**Breaking Change**).
+- The `AiVisionSensor::{temperature, set_color_code, color_code, color_codes, set_color, color, colors, set_detection_mode, raw_status, flags, set_flags, start_awb, enable_test, set_apriltag_family}` methods now return `PortError` when failing (#376) (**Breaking Change**).
+- Renamed `DistanceError` to `DistanceObjectError`. (#376) (**Breaking Change**)
+- `DistanceSensor::status` now returns the `PortError` when it fails (#376) (**Breaking Change**).
+- The `InertialSensor::{status, is_calibrating, is_auto_calibrated, physical_orientation, gyro_rate, acceleration, set_data_interval}` methods now return `PortError` when failing. (#376) (**Breaking Change**).
+- `InertialSensor::calibrate` now returns the new `CalibrateError` type rather than `InertialError` when it fails. (#376) (**Breaking Change**).
 
 ### Removed
 
 - Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
+- `SmartPort` and `AdiPort` are no longer in `vexide::prelude`. (#376) (**Breaking Change**)
+- Removed `AiVisionCode::colors`. Prefer using `AiVisionCode::iter`/`AiVisionCode::into_iter` instead. (#376) (**Breaking Change**)
+- Removed `MotorError`. Motors now return `PortError` with the exception of `set_gearset`, which returns `SetGearsetError`. (#376) (**Breaking Change**)
 
 ### New Contributors
 

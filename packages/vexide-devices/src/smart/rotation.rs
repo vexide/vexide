@@ -293,7 +293,7 @@ impl RotationSensor {
         self.direction
     }
 
-    /// Returns the total number of degrees rotated by the sensor based on direction.
+    /// Returns the total accumulated rotation of the sensor over time.
     ///
     /// # Errors
     ///
@@ -331,7 +331,7 @@ impl RotationSensor {
         Ok(self.direction_offset + delta_position)
     }
 
-    /// Returns the angle of rotation measured by the sensor.
+    /// Returns the absolute angle of rotation measured by the sensor.
     ///
     /// This value is reported from 0-360 degrees.
     ///
