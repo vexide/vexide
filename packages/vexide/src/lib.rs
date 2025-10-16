@@ -11,7 +11,7 @@
 //!
 //! # Usage
 //!
-//! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
+//! To to get a program running, use the `#[vexide::main]` attribute on your main function.
 //!
 //! ```
 //! use vexide::prelude::*;
@@ -20,7 +20,7 @@
 //! async fn main(_peripherals: Peripherals) {
 //!     println!("Hello, world!");
 //! }
-//!```
+//! ```
 //!
 //! Check out our [examples](https://github.com/vexide/vexide/tree/main/examples/) for more examples
 //! of different features.
