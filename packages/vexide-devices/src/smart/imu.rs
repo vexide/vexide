@@ -950,8 +950,6 @@ impl core::future::Future for CalibrateFuture<'_> {
         } else {
             // Get status flags from VEXos.
             let flags = unsafe { vexDeviceImuStatusGet(device) };
-
-            // 0xFF is returned when the sensor fails to report flags.
             if flags == 0x0 {
                 this.state = CalibrateFutureState::Waiting(
                     unsafe { vex_sdk::vexSystemHighResTimeGet() },
@@ -1043,6 +1041,7 @@ impl core::future::Future for CalibrateFuture<'_> {
     }
 }
 
+/// Errors that can occur when using [`InertialSensor::calibrate`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 #[snafu(module)]
 pub enum CalibrateError {
@@ -1057,7 +1056,8 @@ pub enum CalibrateError {
     },
 }
 
-/// Errors that can occur when interacting with an Inertial Sensor.
+/// Errors that can occur when interacting with an Inertial Sensor methods that
+/// require [calibration](InertialSensor::calibrate).
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 #[snafu(module)]
 pub enum InertialError {
