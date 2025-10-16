@@ -1040,7 +1040,7 @@ impl core::future::Future for CalibrateFuture<'_> {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 #[snafu(module)]
 pub enum CalibrateError {
-    /// The sensor took longer than three seconds to calibrate.
+    /// The sensor took too long to calibrate.
     Timeout,
 
     /// Generic port related error.
