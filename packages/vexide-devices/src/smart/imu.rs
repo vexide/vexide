@@ -146,8 +146,9 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
+    ///   else was connected.
     ///
     /// # Examples
     ///
@@ -175,8 +176,9 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
+    ///   else was connected.
     ///
     /// # Examples
     ///
@@ -193,7 +195,7 @@ impl InertialSensor {
     ///     }
     /// }
     /// ```
-    pub fn is_calibrating(&self) -> Result<bool, InertialError> {
+    pub fn is_calibrating(&self) -> Result<bool, PortError> {
         Ok(self.status()?.contains(InertialStatus::CALIBRATING))
     }
 
@@ -203,8 +205,9 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
+    ///   else was connected.
     ///
     /// # Examples
     ///
@@ -220,7 +223,7 @@ impl InertialSensor {
     ///     }
     /// }
     /// ```
-    pub fn is_auto_calibrated(&self) -> Result<bool, InertialError> {
+    pub fn is_auto_calibrated(&self) -> Result<bool, PortError> {
         Ok(self.status()?.contains(InertialStatus::AUTO_CALIBRATED))
     }
 
@@ -230,8 +233,9 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
+    ///   else was connected.
     ///
     /// # Examples
     ///
@@ -249,7 +253,7 @@ impl InertialSensor {
     ///     }
     /// }
     /// ```
-    pub fn physical_orientation(&self) -> Result<InertialOrientation, InertialError> {
+    pub fn physical_orientation(&self) -> Result<InertialOrientation, PortError> {
         Ok(self.status()?.physical_orientation())
     }
 
@@ -266,9 +270,8 @@ impl InertialSensor {
     /// - Calibration has a 1-second start timeout (when waiting for calibration to actually start on the sensor) and
     ///   a 3-second end timeout (when waiting for calibration to complete after it has started) as a failsafe in the
     ///   event that something goes wrong and the sensor gets stuck in a calibrating state. If either timeout
-    ///   is exceeded in its respective phase of calibration, [`InertialError::CalibrationTimedOut`] will be returned.
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
+    ///   is exceeded in its respective phase of calibration, [`CalibrateError::Timeout`] will be returned.
+    /// - A [`CalibrateError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
     ///
     /// # Examples
     ///
@@ -343,9 +346,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -380,9 +382,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -419,9 +420,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -472,9 +472,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -522,9 +521,9 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
+    ///   else was connected.
     ///
     /// # Examples
     ///
@@ -575,9 +574,9 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
+    ///   else was connected.
     ///
     /// # Examples
     ///
@@ -631,9 +630,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -669,9 +667,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -707,9 +704,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -739,9 +735,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -777,9 +772,9 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an inertial sensor connected to the port.
-    /// - An [`InertialError::BadStatus`] error is returned if the inertial sensor failed to report its status.
-    /// - An [`InertialError::StillCalibrating`] error is returned if the sensor is currently calibrating and cannot yet be used.
+    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
+    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
+    ///   else was connected.
     ///
     /// # Examples
     ///
@@ -903,7 +898,7 @@ impl InertialStatus {
 
 /// Defines a waiting phase in [`InertialCalibrateFuture`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum CalibrationPhase {
+enum CalibrationPhase {
     /// Waiting for IMU to report its status as something other than 0x0.
     ///
     /// This can happen at the start of the program where VEXos takes a bit to
