@@ -436,7 +436,11 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     color::Rgb,
+    ///     smart::ai_vision::{AiVisionColorCode, AiVisionColor},
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -510,7 +514,11 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     color::Rgb,
+    ///     smart::ai_vision::{AiVisionColorCode},
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
