@@ -35,8 +35,7 @@
 
 use vex_sdk::vexDeviceAdiValueGet;
 
-use super::{analog, AdiDevice, AdiDeviceType, AdiPort};
-use crate::PortError;
+use super::{analog, AdiDevice, AdiDeviceType, AdiPort, PortError};
 
 /// A single axis connection to the 3-axis analog accelerometer.
 #[derive(Debug, Eq, PartialEq)]
@@ -70,9 +69,10 @@ impl AdiAccelerometer {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     pub fn acceleration(&self) -> Result<f64, PortError> {
         Ok(
             // Convert 0-4095 to 0-1, then scale to max accel.
@@ -90,9 +90,10 @@ impl AdiAccelerometer {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     pub fn raw_acceleration(&self) -> Result<u16, PortError> {
         self.port.validate_expander()?;
 

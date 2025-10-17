@@ -37,8 +37,8 @@ use vex_sdk::{
     V5_DeviceVisionSignature,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::{math::Point2, rgb::Rgb, PortError};
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
+use crate::{math::Point2, rgb::Rgb};
 
 /// VEX Vision Sensor
 ///
@@ -119,9 +119,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -394,9 +393,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -430,9 +428,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -491,9 +488,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -522,9 +518,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -578,9 +573,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -621,9 +615,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -809,9 +802,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -860,9 +852,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///

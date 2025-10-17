@@ -26,8 +26,7 @@ use vex_sdk::{
     vexDeviceDistanceObjectVelocityGet, vexDeviceDistanceStatusGet, V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::PortError;
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 
 /// A distance sensor plugged into a Smart Port.
 #[derive(Debug, Eq, PartialEq)]
@@ -147,7 +146,8 @@ impl DistanceSensor {
     ///
     /// # Errors
     ///
-    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///

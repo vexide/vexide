@@ -29,8 +29,8 @@ use vex_sdk::{
     vexDeviceAbsEncPositionSet, vexDeviceAbsEncStatusGet, vexDeviceAbsEncVelocityGet, V5_DeviceT,
 };
 
-use super::{motor::Direction, SmartDevice, SmartDeviceType, SmartPort};
-use crate::{position::Position, PortError};
+use super::{motor::Direction, PortError, SmartDevice, SmartDeviceType, SmartPort};
+use crate::{position::Position};
 
 /// A rotation sensor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -88,6 +88,117 @@ impl RotationSensor {
             direction_offset: Position::default(),
             raw_direction_offset: Position::default(),
         }
+    }
+
+    /// Returns the total accumulated rotation of the sensor over time.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     if let Ok(position) = sensor.position() {
+    ///         println!("Position in degrees: {}°", position.as_degrees());
+    ///         println!("Position in radians: {}°", position.as_radians());
+    ///         println!("Position in raw ticks (centidegrees): {}°", position.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
+    ///         println!("Number of revolutions spun: {}°", position.as_revolutions());
+    ///     }
+    /// }
+    /// ```
+    pub fn position(&self) -> Result<Position, PortError> {
+        self.validate_port()?;
+
+        let mut delta_position = Position::from_ticks(
+            f64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
+            Self::TICKS_PER_REVOLUTION,
+        ) - self.raw_direction_offset;
+
+        if self.direction == Direction::Reverse {
+            delta_position = -delta_position;
+        }
+
+        Ok(self.direction_offset + delta_position)
+    }
+
+    /// Returns the absolute angle of rotation measured by the sensor.
+    ///
+    /// This value is reported from 0-360 degrees.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     if let Ok(angle) = sensor.angle() {
+    ///         println!("Angle in degrees: {}°", angle.as_degrees());
+    ///         println!("Angle in radians: {}°", angle.as_radians());
+    ///         println!("Angle in raw ticks (centidegrees): {}°", angle.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
+    ///     }
+    /// }
+    /// ```
+    pub fn angle(&self) -> Result<Position, PortError> {
+        self.validate_port()?;
+
+        let mut raw_angle = unsafe { vexDeviceAbsEncAngleGet(self.device) };
+
+        if self.direction == Direction::Reverse {
+            raw_angle = (Self::TICKS_PER_REVOLUTION as i32) - raw_angle;
+        }
+
+        Ok(Position::from_ticks(
+            f64::from(raw_angle),
+            Self::TICKS_PER_REVOLUTION,
+        ))
+    }
+
+    /// Returns the sensor's current velocity in degrees per second.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
+    ///
+    ///     if let Some(velocity) = sensor.velocity() {
+    ///         println!(
+    ///             "Velocity in RPM {}",
+    ///             velocity / 6.0, // 1rpm = 6dps
+    ///         );
+    ///     }
+    /// }
+    /// ```
+    pub fn velocity(&self) -> Result<f64, PortError> {
+        self.validate_port()?;
+
+        let mut raw_velocity = unsafe { vexDeviceAbsEncVelocityGet(self.device) };
+
+        if self.direction == Direction::Reverse {
+            raw_velocity *= -1;
+        }
+
+        Ok(f64::from(raw_velocity) / 100.0)
     }
 
     /// Reset's the sensor's position reading to zero.
@@ -291,116 +402,6 @@ impl RotationSensor {
     #[must_use]
     pub const fn direction(&self) -> Direction {
         self.direction
-    }
-
-    /// Returns the total accumulated rotation of the sensor over time.
-    ///
-    /// # Errors
-    ///
-    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
-    ///
-    ///     if let Ok(position) = sensor.position() {
-    ///         println!("Position in degrees: {}°", position.as_degrees());
-    ///         println!("Position in radians: {}°", position.as_radians());
-    ///         println!("Position in raw ticks (centidegrees): {}°", position.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
-    ///         println!("Number of revolutions spun: {}°", position.as_revolutions());
-    ///     }
-    /// }
-    /// ```
-    pub fn position(&self) -> Result<Position, PortError> {
-        self.validate_port()?;
-
-        let mut delta_position = Position::from_ticks(
-            f64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
-            Self::TICKS_PER_REVOLUTION,
-        ) - self.raw_direction_offset;
-
-        if self.direction == Direction::Reverse {
-            delta_position = -delta_position;
-        }
-
-        Ok(self.direction_offset + delta_position)
-    }
-
-    /// Returns the absolute angle of rotation measured by the sensor.
-    ///
-    /// This value is reported from 0-360 degrees.
-    ///
-    /// # Errors
-    ///
-    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
-    ///
-    ///     if let Ok(angle) = sensor.angle() {
-    ///         println!("Angle in degrees: {}°", angle.as_degrees());
-    ///         println!("Angle in radians: {}°", angle.as_radians());
-    ///         println!("Angle in raw ticks (centidegrees): {}°", angle.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
-    ///     }
-    /// }
-    /// ```
-    pub fn angle(&self) -> Result<Position, PortError> {
-        self.validate_port()?;
-
-        let mut raw_angle = unsafe { vexDeviceAbsEncAngleGet(self.device) };
-
-        if self.direction == Direction::Reverse {
-            raw_angle = (Self::TICKS_PER_REVOLUTION as i32) - raw_angle;
-        }
-
-        Ok(Position::from_ticks(
-            f64::from(raw_angle),
-            Self::TICKS_PER_REVOLUTION,
-        ))
-    }
-
-    /// Returns the sensor's current velocity in degrees per second.
-    ///
-    /// # Errors
-    ///
-    /// An error is returned if an rotation sensor is not currently connected to the Smart Port.
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
-    ///
-    ///     if let Some(velocity) = sensor.velocity() {
-    ///         println!(
-    ///             "Velocity in RPM {}",
-    ///             velocity / 6.0, // 1rpm = 6dps
-    ///         );
-    ///     }
-    /// }
-    /// ```
-    pub fn velocity(&self) -> Result<f64, PortError> {
-        self.validate_port()?;
-
-        let mut raw_velocity = unsafe { vexDeviceAbsEncVelocityGet(self.device) };
-
-        if self.direction == Direction::Reverse {
-            raw_velocity *= -1;
-        }
-
-        Ok(f64::from(raw_velocity) / 100.0)
     }
 
     /// Returns the sensor's internal status code.

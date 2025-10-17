@@ -44,8 +44,7 @@ use vex_sdk::{
     V5_DeviceAiVisionObject, V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::PortError;
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 
 #[repr(u8)]
 enum ObjectType {
@@ -396,7 +395,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -430,7 +430,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -503,7 +504,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -557,7 +559,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -594,7 +597,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -645,7 +649,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -695,7 +700,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -732,7 +738,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -763,7 +770,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -788,7 +796,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -822,7 +831,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     pub fn start_awb(&mut self) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
@@ -841,7 +851,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     pub fn enable_test(&mut self, test: u8) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
@@ -860,7 +871,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -891,7 +903,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -996,7 +1009,8 @@ impl AiVisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError`] is returned if an AI Vision is not connected toMODE_MAGIC_BIT the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///

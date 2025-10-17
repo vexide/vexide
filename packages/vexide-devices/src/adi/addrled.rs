@@ -40,10 +40,9 @@ use alloc::{vec, vec::Vec};
 use snafu::{ensure, Snafu};
 use vex_sdk::vexDeviceAdiAddrLedSet;
 
-use super::{AdiDevice, AdiDeviceType, AdiPort};
+use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
 use crate::{
     rgb::{Rgb, RgbExt},
-    PortError,
 };
 
 /// WS2812B Addressable LED Strip
