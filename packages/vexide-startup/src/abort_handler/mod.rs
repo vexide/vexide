@@ -6,7 +6,7 @@ mod report;
 use fault::{Fault, FaultException};
 use vex_sdk::{vexTasksRun, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus};
 
-// Custom ARM vector table. Pointing the VBAR coprocessor. register at this
+// Custom ARM vector table. Pointing the VBAR coprocessor register at this
 // will configure the CPU to jump to these functions on an exception.
 global_asm!(
     r#"
