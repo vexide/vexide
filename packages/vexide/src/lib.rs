@@ -74,7 +74,7 @@ pub use vexide_core::backtrace;
 pub use vexide_core::{competition, os, program};
 #[doc(inline)]
 #[cfg(feature = "devices")]
-pub use vexide_devices::{adi, battery, color, controller, display, math, peripherals, smart, smart::*};
+pub use vexide_devices::{adi, battery, color, controller, display, math, peripherals, smart};
 #[doc(inline)]
 #[cfg(all(
     feature = "macros",
