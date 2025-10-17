@@ -79,13 +79,16 @@ pub extern "aapcs" fn svc() -> ! {
         "
         stmdb sp!,{{r0-r3,r12,lr}}
 
-        @ Extract the SVC immediate number from the instruction and place it into R0.
+        @ Extract the SVC immediate number from the instruction and place it into r0.
         @
         @ The way we do this depends on whether or not user code was running in ARM
         @ or Thumb mode at the time of this exception, so we check the T-bit in SPSR
         @ to determine this.
+
+        @ T-bit check
         mrs r0, spsr
-        tst	r0, #0x20             @ T-bit check
+        tst	r0, #0x20
+
         ldreq r0, [lr,#-4]        @ ARM Mode
         biceq r0, r0, #0xff000000 @ Thumb Mode
 
