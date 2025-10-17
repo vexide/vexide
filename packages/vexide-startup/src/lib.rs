@@ -51,6 +51,9 @@
 pub mod allocator;
 pub mod banner;
 
+#[cfg(all(target_os = "vexos", feature = "abort-handler"))]
+mod abort_handler;
+mod error_report;
 #[cfg(feature = "panic-hook")]
 mod panic_hook;
 #[cfg(target_os = "vexos")]
@@ -183,6 +186,9 @@ pub unsafe fn startup() {
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
         crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
+
+        #[cfg(feature = "abort-handler")]
+        abort_handler::install_vector_table();
     }
 
     // Register custom panic hook if needed.

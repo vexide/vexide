@@ -28,7 +28,15 @@ vex-sdk = { workspace = true }
 
 [features]
 default = ["async", "sync", "devices", "core"]
-full = ["default", "startup", "backtrace", "allocator", "panic-hook", "macros"]
+full = [
+    "default",
+    "macros",
+    "startup",
+    "backtrace",
+    "allocator",
+    "panic-hook",
+    "abort-handler",
+]
 
 macros = ["dep:vexide-macro"]
 
@@ -44,6 +52,7 @@ backtrace = [
 
 startup = ["dep:vexide-startup"]
 panic-hook = ["vexide-startup/panic-hook"]
+abort-handler = ["vexide-startup/abort-handler"]
 
 allocator = ["dep:vexide-startup", "vexide-startup/allocator"]
 vex-sdk-jumptable = ["vexide-startup/vex-sdk-jumptable"]

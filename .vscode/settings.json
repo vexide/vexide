@@ -46,10 +46,7 @@
         "markdown",
         "rust"
     ],
-    "rust-analyzer.cargo.allTargets": false,
-    "rust-analyzer.check.targets": [
-        "armv7a-vex-v5",
-    ],
+    "rust-analyzer.cargo.target": "armv7a-vex-v5",
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.showUnlinkedFileNotification": false,
     "files.trimTrailingWhitespace": true,

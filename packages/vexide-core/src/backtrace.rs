@@ -15,7 +15,7 @@
 //! the `backtrace` feature.
 
 use alloc::vec::Vec;
-use core::{ffi::c_void, fmt::Display};
+use core::fmt::Display;
 
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
@@ -57,7 +57,7 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Backtrace {
     /// The instruction pointers of each frame in the backtrace.
-    pub frames: Vec<*const c_void>,
+    frames: Vec<*const ()>,
 }
 
 impl Backtrace {
@@ -79,6 +79,12 @@ impl Backtrace {
 
         #[cfg(not(all(target_os = "vexos", feature = "backtrace")))]
         return Self { frames: Vec::new() };
+    }
+
+    /// Returns a slice of instruction pointers at every captured frame of the backtrace.
+    #[must_use]
+    pub const fn frames(&self) -> &[*const ()] {
+        self.frames.as_slice()
     }
 
     /// Captures a backtrace at the current point of execution,
@@ -107,7 +113,7 @@ impl Backtrace {
                     instruction_pointer -= 1;
                 }
 
-                frames.push(instruction_pointer as *const c_void);
+                frames.push(instruction_pointer as *const ());
 
                 // Step to the next frame, break if there is none.
                 if !cursor.step()? {
@@ -124,7 +130,7 @@ impl Display for Backtrace {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "stack backtrace:")?;
         for (i, frame) in self.frames.iter().enumerate() {
-            writeln!(f, "{i:>3}: {frame:?}")?;
+            writeln!(f, "{i:>3}: 0x{:x}", *frame as usize)?;
         }
         write!(
             f,

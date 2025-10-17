@@ -50,8 +50,6 @@
 //! mode, match control hardware, and whether the robot is enabled or disabled. This is provided
 //! by the [`is_connected`], [`system`], [`mode`], and [`status`] functions.
 
-extern crate alloc;
-
 use alloc::boxed::Box;
 use core::{
     cell::UnsafeCell,

@@ -17,7 +17,6 @@ authors = [
 [dependencies]
 bitflags = "2.4.2"
 vexide-core = { workspace = true }
-vexide-devices = { workspace = true, optional = true }
 talc = { version = "4.3.1", optional = true }
 compile-time = "0.2.0"
 
@@ -29,6 +28,8 @@ vex-sdk-mock = { workspace = true, optional = true }
 [target.'cfg(target_os = "vexos")'.dependencies]
 vex-sdk-jumptable = { version = "0.0.2", optional = true }
 vex-sdk-pros = { version = "0.0.1", optional = true }
+vex-libunwind = { workspace = true, optional = true }
+vex-libunwind-sys = { workspace = true, optional = true }
 
 [build-dependencies]
 vex-sdk-vexcode = { version = "0.0.1", optional = true }
@@ -41,8 +42,9 @@ workspace = true
 
 [features]
 allocator = ["dep:talc"]
-panic-hook = ["dep:vexide-devices"]
-backtrace = ["vexide-core/backtrace"]
+panic-hook = []
+abort-handler = []
+backtrace = ["dep:vex-libunwind", "dep:vex-libunwind-sys"]
 
 vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
 vex-sdk-vexcode = ["dep:vex-sdk-vexcode"]

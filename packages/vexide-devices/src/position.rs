@@ -205,6 +205,7 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::float_cmp)]
     fn zero_is_actually_zero() {
         assert_eq!(Position::ZERO.as_radians(), 0.0);
         assert_eq!(Position::ZERO.as_degrees(), 0.0);
