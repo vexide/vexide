@@ -23,6 +23,6 @@ async fn main(peripherals: Peripherals) {
 
         // All ADI devices only update at 10ms, so we'll yield back to the async executor to
         // not hog all of the CPU while looping.
-        sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+        sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
     }
 }

@@ -42,7 +42,7 @@ use vex_sdk::vexDeviceAdiAddrLedSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
 use crate::{
-    rgb::{Rgb, RgbExt},
+    color::{Rgb, RgbExt},
 };
 
 /// WS2812B Addressable LED Strip

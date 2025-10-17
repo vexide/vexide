@@ -74,7 +74,7 @@ pub use vexide_core::backtrace;
 pub use vexide_core::{competition, os, program};
 #[doc(inline)]
 #[cfg(feature = "devices")]
-pub use vexide_devices as devices;
+pub use vexide_devices::{adi, battery, color, controller, display, math, peripherals, smart, smart::*};
 #[doc(inline)]
 #[cfg(all(
     feature = "macros",
@@ -108,7 +108,7 @@ pub mod prelude {
     #[cfg(feature = "core")]
     pub use crate::competition::{Compete, CompeteExt, CompetitionRuntime};
     #[cfg(feature = "devices")]
-    pub use crate::devices::{
+    pub use crate::{
         adi::{
             accelerometer::{AdiAccelerometer, Sensitivity},
             addrled::AdiAddrLed,
@@ -125,26 +125,21 @@ pub mod prelude {
             servo::AdiServo,
             AdiDevice,
         },
-        battery,
         controller::Controller,
         display::Display,
-        peripherals::{DynamicPeripherals, Peripherals},
-        position::Position,
-        rgb::Rgb,
+        math::Direction,
+        peripherals::Peripherals,
         smart::{
-            ai_vision::{AiVisionColor, AiVisionColorCode, AiVisionObject, AiVisionSensor},
+            ai_vision::AiVisionSensor,
             distance::DistanceSensor,
             expander::AdiExpander,
             imu::InertialSensor,
             link::{LinkType, RadioLink},
-            motor::{BrakeMode, Direction, Gearset, Motor, MotorControl},
+            motor::{Gearset, Motor, MotorControl},
             optical::OpticalSensor,
             rotation::RotationSensor,
             serial::SerialPort,
-            vision::{
-                LedMode, VisionCode, VisionMode, VisionObject, VisionSensor, VisionSignature,
-                WhiteBalance,
-            },
+            vision::VisionSensor,
             SmartDevice,
         },
     };

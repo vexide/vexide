@@ -54,7 +54,7 @@
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
-use crate::{adi::adi_port_name, position::Position};
+use crate::{adi::adi_port_name, math::Position};
 
 /// VEX Optical Shaft Encoder
 ///

@@ -19,7 +19,7 @@ async fn main(peripherals: Peripherals) {
     let mut link = RadioLink::open(
         peripherals.port_15,
         "example",
-        vexide::devices::smart::link::LinkType::Manager,
+        LinkType::Manager,
     );
     // Send a message over vexlink.
     // We dont have to flush because VEXOs does that immediately.

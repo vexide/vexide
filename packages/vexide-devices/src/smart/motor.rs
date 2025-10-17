@@ -73,7 +73,7 @@ use vex_sdk::{
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{PortError, SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
-use crate::{position::Position};
+use crate::math::{Position, Direction};
 
 /// A motor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -118,47 +118,6 @@ pub enum MotorControl {
     /// - `0`: The desired position of the motor after the movement operation
     /// - `1`: The desired speed of the motor during the movement operation
     Position(Position, i32),
-}
-
-/// A possible direction that a motor can be configured as.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum Direction {
-    /// Motor rotates in the forward direction.
-    Forward,
-
-    /// Motor rotates in the reverse direction.
-    Reverse,
-}
-
-impl Direction {
-    /// Returns `true` if the level is [`Forward`](Direction::Forward).
-    #[must_use]
-    pub const fn is_forward(&self) -> bool {
-        match self {
-            Self::Forward => true,
-            Self::Reverse => false,
-        }
-    }
-
-    /// Returns `true` if the level is [`Reverse`](Direction::Reverse).
-    #[must_use]
-    pub const fn is_reverse(&self) -> bool {
-        match self {
-            Self::Forward => false,
-            Self::Reverse => true,
-        }
-    }
-}
-
-impl core::ops::Not for Direction {
-    type Output = Self;
-
-    fn not(self) -> Self::Output {
-        match self {
-            Self::Forward => Self::Reverse,
-            Self::Reverse => Self::Forward,
-        }
-    }
 }
 
 /// Represents the type of a Smart motor.

@@ -18,7 +18,7 @@ use vex_sdk::{
 
 use crate::{
     math::Point2,
-    rgb::{Rgb, RgbExt},
+    color::{Rgb, RgbExt},
 };
 
 /// The physical display and touchscreen on a VEX Brain.
@@ -548,14 +548,15 @@ impl Text {
 
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
-            if let Some(bg_color) = bg_color {
-                vexDisplayBackgroundColor(bg_color.into_raw());
+            let bg_is_some = bg_color.is_some();
+            if bg_is_some {
+                vexDisplayBackgroundColor(bg_color.unwrap().into_raw());
             }
             self.font.apply();
             vexDisplayPrintf(
                 i32::from(x),
                 i32::from(y + Display::HEADER_HEIGHT),
-                i32::from(bg_color.is_some()),
+                i32::from(bg_is_some),
                 c"%s".as_ptr(),
                 self.text.as_ptr(),
             );

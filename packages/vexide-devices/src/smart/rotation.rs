@@ -29,8 +29,8 @@ use vex_sdk::{
     vexDeviceAbsEncPositionSet, vexDeviceAbsEncStatusGet, vexDeviceAbsEncVelocityGet, V5_DeviceT,
 };
 
-use super::{motor::Direction, PortError, SmartDevice, SmartDeviceType, SmartPort};
-use crate::{position::Position};
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
+use crate::math::{Position, Direction};
 
 /// A rotation sensor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]

@@ -97,7 +97,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
             #inner
 
             ::vexide::runtime::block_on(
-                #inner_ident(::vexide::devices::peripherals::Peripherals::take().unwrap())
+                #inner_ident(::vexide::peripherals::Peripherals::take().unwrap())
             )
         }
     }
@@ -230,7 +230,7 @@ pub fn test(_attr: TokenStream, item: TokenStream) -> TokenStream {
             async fn #ident(#inputs) #block
 
             ::vexide::runtime::block_on(
-                #ident(unsafe { ::vexide::devices::peripherals::Peripherals::steal() })
+                #ident(unsafe { ::vexide::peripherals::Peripherals::steal() })
             )
         }
     }
@@ -280,7 +280,7 @@ mod test {
                     #source
 
                     ::vexide::runtime::block_on(
-                        main(::vexide::devices::peripherals::Peripherals::take().unwrap())
+                        main(::vexide::peripherals::Peripherals::take().unwrap())
                     )
                 }
             }

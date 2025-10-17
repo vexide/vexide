@@ -55,20 +55,7 @@ pub mod serial;
 pub mod vision;
 
 use core::time::Duration;
-
-pub use ai_vision::AiVisionSensor;
-pub use distance::DistanceSensor;
-pub use electromagnet::Electromagnet;
-pub use expander::AdiExpander;
-pub use gps::GpsSensor;
-pub use imu::InertialSensor;
-pub use link::RadioLink;
-pub use motor::Motor;
-pub use optical::OpticalSensor;
-pub use rotation::RotationSensor;
-pub use serial::SerialPort;
 use snafu::{Snafu, ensure};
-pub use vision::VisionSensor;
 
 /// Defines common functionality shared by all Smart Port devices.
 pub trait SmartDevice {

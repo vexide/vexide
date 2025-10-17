@@ -28,7 +28,7 @@
 use vex_sdk::vexDeviceAdiValueSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
-use crate::{position::Position};
+use crate::math::Position;
 
 /// Legacy Servo
 #[derive(Debug, Eq, PartialEq)]

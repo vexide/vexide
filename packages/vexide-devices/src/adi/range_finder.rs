@@ -70,7 +70,7 @@ impl AdiRangeFinder {
     ///     loop {
     ///         let distance = range_finder.distance().expect("Failed to get distance");
     ///         println!("Distance: {} cm", distance);
-    ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -137,7 +137,7 @@ impl AdiRangeFinder {
     ///             None => println!("Can't find anything in range :("),
     ///         }
     ///
-    ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```

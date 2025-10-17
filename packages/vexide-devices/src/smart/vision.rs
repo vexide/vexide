@@ -38,7 +38,7 @@ use vex_sdk::{
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
-use crate::{math::Point2, rgb::Rgb};
+use crate::{math::Point2, color::Rgb};
 
 /// VEX Vision Sensor
 ///
@@ -336,7 +336,7 @@ impl VisionSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use vexide::devices::smart::vision::DetectionSource;
+    /// use vexide::smart::vision::DetectionSource;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -695,7 +695,7 @@ impl VisionSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use vexide::devices::smart::vision::DetectionSource;
+    /// use vexide::smart::vision::DetectionSource;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -962,7 +962,7 @@ impl VisionSignature {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionSignature;
+    /// use vexide::smart::vision::VisionSignature;
     ///
     /// let my_signature = VisionSignature::new(
     ///     (10049, 11513, 10781),
@@ -989,7 +989,7 @@ impl VisionSignature {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionSignature;
+    /// use vexide::smart::vision::VisionSignature;
     ///
     /// // Register a signature for detecting red objects.
     /// // This numbers in this signature was generated using VEX's vision utility app.
@@ -1054,7 +1054,7 @@ impl VisionCode {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionCode;
+    /// use vexide::smart::vision::VisionCode;
     ///
     /// // Create a vision code associated with signatures 1, 2, and 3.
     /// let code = VisionCode::new(1, 2, Some(3), None, None);
@@ -1075,7 +1075,7 @@ impl VisionCode {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionCode;
+    /// use vexide::smart::vision::VisionCode;
     ///
     /// let sig_1_id = 1;
     /// let sig_2_id = 2;
@@ -1116,7 +1116,7 @@ impl VisionCode {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionCode;
+    /// use vexide::smart::vision::VisionCode;
     ///
     /// // Create a vision code associated with signatures 1, 2, and 3.
     /// let code = VisionCode::new(1, 2, Some(3), None, None);
@@ -1154,7 +1154,7 @@ impl VisionCode {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionCode;
+    /// use vexide::smart::vision::VisionCode;
     ///
     /// let sig_1_id = 1;
     /// let sig_2_id = 2;

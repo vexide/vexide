@@ -26,7 +26,7 @@
 
 use core::time::Duration;
 
-use crate::smart::PortError;
+use crate::{adi::{encoder::AdiEncoder, range_finder::AdiRangeFinder}, smart::PortError};
 
 pub mod accelerometer;
 pub mod addrled;
@@ -42,18 +42,6 @@ pub mod pwm;
 pub mod range_finder;
 pub mod servo;
 
-pub use accelerometer::{AdiAccelerometer, Sensitivity};
-pub use analog::AdiAnalogIn;
-pub use digital::{AdiDigitalIn, AdiDigitalOut};
-pub use encoder::{AdiEncoder, AdiOpticalEncoder};
-pub use gyroscope::AdiGyroscope;
-pub use light_sensor::AdiLightSensor;
-pub use line_tracker::AdiLineTracker;
-pub use motor::AdiMotor;
-pub use potentiometer::{AdiPotentiometer, PotentiometerType};
-pub use pwm::AdiPwmOut;
-pub use range_finder::AdiRangeFinder;
-pub use servo::AdiServo;
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
