@@ -38,7 +38,7 @@
 
 use vex_sdk::vexDeviceAdiValueGet;
 
-use super::{AdiDevice, AdiDeviceType, AdiPort, PortError, adi_port_name};
+use super::{adi_port_name, AdiDevice, AdiDeviceType, AdiPort, PortError};
 
 /// Range Finder
 ///

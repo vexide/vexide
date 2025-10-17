@@ -30,7 +30,7 @@ use vex_sdk::{
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
-use crate::math::{Position, Direction};
+use crate::math::{Direction, Position};
 
 /// A rotation sensor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]

@@ -17,8 +17,8 @@ use vex_sdk::{
 };
 
 use crate::{
-    math::Point2,
     color::{Rgb, RgbExt},
+    math::Point2,
 };
 
 /// The physical display and touchscreen on a VEX Brain.

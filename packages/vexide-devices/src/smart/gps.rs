@@ -31,7 +31,7 @@ use vex_sdk::{
     V5_DeviceGpsRaw, V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort, PortError};
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 use crate::math::Point2;
 
 /// A GPS sensor plugged into a Smart Port.

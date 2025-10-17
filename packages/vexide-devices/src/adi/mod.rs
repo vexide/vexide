@@ -26,7 +26,10 @@
 
 use core::time::Duration;
 
-use crate::{adi::{encoder::AdiEncoder, range_finder::AdiRangeFinder}, smart::PortError};
+use crate::{
+    adi::{encoder::AdiEncoder, range_finder::AdiRangeFinder},
+    smart::PortError,
+};
 
 pub mod accelerometer;
 pub mod addrled;
@@ -98,7 +101,7 @@ impl AdiPort {
         self.number
     }
 
-    /// Returns the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) Smart Port, or `None` if this port is not
+    /// Returns the index of this port's associated [`AdiExpander`](super::smart::expander::AdiExpander) Smart Port, or `None` if this port is not
     /// associated with an expander.
     #[must_use]
     pub const fn expander_number(&self) -> Option<u8> {
@@ -222,22 +225,22 @@ pub enum AdiDeviceType {
 
     /// Generic digital input
     ///
-    /// This corresponds to the [`AdiDigitalIn`] device.
+    /// This corresponds to the [`AdiDigitalIn`](digital::AdiDigitalIn) device.
     DigitalIn,
 
     /// Generic digital output
     ///
-    /// This corresponds to the [`AdiDigitalOut`] device.
+    /// This corresponds to the [`AdiDigitalOut`](digital::AdiDigitalOut) device.
     DigitalOut,
 
     /// 12-bit Generic analog input
     ///
-    /// This corresponds to the [`AdiAnalogIn`] device.
+    /// This corresponds to the [`AdiAnalogIn`](analog::AdiAnalogIn) device.
     AnalogIn,
 
     /// 8-git generic PWM output
     ///
-    /// This corresponds to the [`AdiPwmOut`] device.
+    /// This corresponds to the [`AdiPwmOut`](pwm::AdiPwmOut) device.
     PwmOut,
 
     /// Limit Switch / Bumper Switch
@@ -248,24 +251,24 @@ pub enum AdiDeviceType {
 
     /// Cortex-era potentiometer
     ///
-    /// This corresponds to the [`AdiPotentiometer`] device
-    /// when configured with [`PotentiometerType::Legacy`].
+    /// This corresponds to the [`AdiPotentiometer`](potentiometer::AdiPotentiometer) device
+    /// when configured with [`PotentiometerType::Legacy`](potentiometer::PotentiometerType::Legacy).
     Potentiometer,
 
     /// V2 Potentiometer
     ///
-    /// This corresponds to the [`AdiPotentiometer`] device
-    /// when configured with [`PotentiometerType::V2`].
+    /// This corresponds to the [`AdiPotentiometer`](potentiometer::AdiPotentiometer) device
+    /// when configured with [`PotentiometerType::V2`](potentiometer::PotentiometerType::V2).
     PotentiometerV2,
 
     /// Cortex-era yaw-rate gyroscope
     ///
-    /// This corresponds to the [`AdiGyroscope`] device.
+    /// This corresponds to the [`AdiGyroscope`](gyroscope::AdiGyroscope) device.
     Gyro,
 
     /// Cortex-era servo motor
     ///
-    /// This corresponds to the [`AdiServo`] device.
+    /// This corresponds to the [`AdiServo`](servo::AdiServo) device.
     Servo,
 
     /// Quadrature Encoder
@@ -280,22 +283,22 @@ pub enum AdiDeviceType {
 
     /// Cortex-era Line Tracker
     ///
-    /// This corresponds to the [`AdiLineTracker`] device.
+    /// This corresponds to the [`AdiLineTracker`](line_tracker::AdiLineTracker) device.
     LineTracker,
 
     /// Cortex-era Light Sensor
     ///
-    /// This corresponds to the [`AdiLightSensor`] device.
+    /// This corresponds to the [`AdiLightSensor`](light_sensor::AdiLightSensor) device.
     LightSensor,
 
     /// Cortex-era 3-Axis Accelerometer
     ///
-    /// This corresponds to the [`AdiAccelerometer`] device.
+    /// This corresponds to the [`AdiAccelerometer`](accelerometer::AdiAccelerometer) device.
     Accelerometer,
 
     /// MC29 Controller Output
     ///
-    /// This corresponds to the [`AdiMotor`] device.
+    /// This corresponds to the [`AdiMotor`](motor::AdiMotor) device.
     ///
     /// This differs from [`Self::PwmOut`] in that it is specifically designed for controlling
     /// legacy ADI motors. Rather than taking a u8 for output, it takes a i8 allowing negative
@@ -304,7 +307,7 @@ pub enum AdiDeviceType {
 
     /// Slew-rate limited motor PWM output
     ///
-    /// This corresponds to the [`AdiMotor`] device when configured with `slew: true`.
+    /// This corresponds to the [`AdiMotor`](motor::AdiMotor) device when configured with `slew: true`.
     MotorSlew,
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,

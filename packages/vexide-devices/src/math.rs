@@ -53,7 +53,6 @@ pub(crate) fn truncf(x: f32) -> f32 {
     x.trunc()
 }
 
-
 use core::{
     f64::{
         self,
@@ -348,8 +347,6 @@ mod test {
         assert!(approx_eq(b.as_revolutions(), 1.0));
     }
 }
-
-
 
 /// A rotational direction.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

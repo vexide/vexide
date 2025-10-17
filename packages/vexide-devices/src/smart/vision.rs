@@ -38,7 +38,7 @@ use vex_sdk::{
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
-use crate::{math::Point2, color::Rgb};
+use crate::{color::Rgb, math::Point2};
 
 /// VEX Vision Sensor
 ///
@@ -227,7 +227,7 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionSignatureError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionSignatureError::Port`] error is returned if there was not a sensor connected to the port.
     /// - A [`VisionSignatureError::ReadingFailed`] error is returned if a read operation failed or there was
     ///   no signature previously set in the slot(s) specified in the [`VisionCode`].
     ///
@@ -264,7 +264,7 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionSignatureError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionSignatureError::Port`] error is returned if there was not a sensor connected to the port.
     /// - A [`VisionSignatureError::ReadingFailed`] error is returned if a read operation failed or there was
     ///   no signature previously set in the slot(s) specified in the [`VisionCode`].
     ///
@@ -660,9 +660,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionObjectError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionObjectError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
-    /// - A [`VisionError::ReadingFailed`] error if the objects could not be read from the sensor.
+    /// - A [`VisionObjectError::Port`] error is returned if there was not a sensor connected to the port.
+    /// - A [`VisionObjectError::WifiMode`] error is returned if the sensor is in Wi-Fi mode.
+    /// - A [`VisionObjectError::InvalidObject`] error if the sensor failed to read an object.
     ///
     /// # Examples
     ///
@@ -756,9 +756,9 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionObjectError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionObjectError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
-    /// - A [`VisionError::ReadingFailed`] error if the objects could not be read from the sensor.
+    /// - A [`VisionObjectError::Port`] error is returned if there is not a sensor connected to the port.
+    /// - A [`VisionObjectError::WifiMode`] error is returned if the sensor is in Wi-Fi mode.
+    /// - A [`VisionObjectError::InvalidObject`] error if the sensor failed to read an object.
     ///
     /// # Examples
     ///
@@ -1396,7 +1396,7 @@ impl From<LedMode> for V5VisionLedMode {
     }
 }
 
-/// Error returned by [`Vision::objects`] and [`Vision::object_count`].
+/// Error returned by [`VisionSensor::objects`] and [`VisionSensor::object_count`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum VisionObjectError {
     /// Objects cannot be detected while Wi-Fi mode is enabled.

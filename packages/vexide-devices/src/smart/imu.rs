@@ -69,10 +69,8 @@ use vex_sdk::{
     V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort, PortError};
-use crate::{
-    math::{EulerAngles, Quaternion, Vector3},
-};
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
+use crate::math::{EulerAngles, Quaternion, Vector3};
 
 /// An inertial sensor (IMU) plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -254,7 +252,7 @@ impl InertialSensor {
 
     /// Calibrates the IMU.
     ///
-    /// Returns an [`InertialCalibrateFuture`] that resolves once the calibration operation has finished or timed out.
+    /// Returns an [`CalibrateFuture`] that resolves once the calibration operation has finished or timed out.
     ///
     /// This method MUST be called for any meaningful gyroscope readings to be obtained. Calibration requires
     /// the sensor to be sitting completely still. If the sensor is moving during the calibration process,

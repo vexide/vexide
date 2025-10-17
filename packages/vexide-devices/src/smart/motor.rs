@@ -73,7 +73,7 @@ use vex_sdk::{
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{PortError, SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
-use crate::math::{Position, Direction};
+use crate::math::{Direction, Position};
 
 /// A motor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -481,9 +481,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
-    /// - A [`PortError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
+    /// - A [`SetGearsetError::Port`] error is returned if there was not a motor connected to the port.
+    /// - A [`SetGearsetError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
     ///
     /// # Examples
     ///

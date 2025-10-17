@@ -16,11 +16,7 @@ async fn main(peripherals: Peripherals) {
     imu.calibrate().await.unwrap();
 
     // Create a new radio link on Smart Port 15 with the id "example".
-    let mut link = RadioLink::open(
-        peripherals.port_15,
-        "example",
-        LinkType::Manager,
-    );
+    let mut link = RadioLink::open(peripherals.port_15, "example", LinkType::Manager);
     // Send a message over vexlink.
     // We dont have to flush because VEXOs does that immediately.
     link.write_all(b"Hello, world!").unwrap();

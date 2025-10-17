@@ -80,9 +80,9 @@ impl DistanceSensor {
     ///
     /// # Errors
     ///
-    /// - A [`DistanceError::Port`] error is returned if there is not a distance sensor connected to the port.
-    /// - A [`DistanceError::StillInitializing`] error is returned if the distance sensor is still initializing.
-    /// - A [`DistanceError::BadStatusCode`] error is returned if the distance sensor has an unknown status code.
+    /// - A [`DistanceObjectError::Port`] error is returned if there was not a sensor connected to the port.
+    /// - A [`DistanceObjectError::StillInitializing`] error is returned if the distance sensor is still initializing.
+    /// - A [`DistanceObjectError::BadStatusCode`] error is returned if the distance sensor has an unknown status code.
     ///
     /// # Examples
     ///

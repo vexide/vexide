@@ -55,7 +55,8 @@ pub mod serial;
 pub mod vision;
 
 use core::time::Duration;
-use snafu::{Snafu, ensure};
+
+use snafu::{ensure, Snafu};
 
 /// Defines common functionality shared by all Smart Port devices.
 pub trait SmartDevice {
@@ -278,37 +279,37 @@ impl SmartPort {
 pub enum SmartDeviceType {
     /// Smart Motor
     ///
-    /// This corresponds to the [`Motor`] device.
+    /// This corresponds to the [`Motor`](motor::Motor) device.
     Motor,
 
     /// Rotation Sensor
     ///
-    /// This corresponds to the [`RotationSensor`] device.
+    /// This corresponds to the [`RotationSensor`](rotation::RotationSensor) device.
     Rotation,
 
     /// Inertial Sensor
     ///
-    /// This corresponds to the [`InertialSensor`] device.
+    /// This corresponds to the [`InertialSensor`](imu::InertialSensor) device.
     Imu,
 
     /// Distance Sensor
     ///
-    /// This corresponds to the [`DistanceSensor`] device.
+    /// This corresponds to the [`DistanceSensor`](distance::DistanceSensor) device.
     Distance,
 
     /// Vision Sensor
     ///
-    /// This corresponds to the [`VisionSensor`] device.
+    /// This corresponds to the [`VisionSensor`](vision::VisionSensor) device.
     Vision,
 
     /// AI Vision Sensor
     ///
-    /// This corresponds to the [`AiVisionSensor`] device.
+    /// This corresponds to the [`AiVisionSensor`](ai_vision::AiVisionSensor) device.
     AiVision,
 
     /// Workcell Electromagnet
     ///
-    /// This corresponds to the [`Electromagnet`] device.
+    /// This corresponds to the [`Electromagnet`](electromagnet::Electromagnet) device.
     Electromagnet,
 
     /// CTE Workcell Light Tower
@@ -319,12 +320,12 @@ pub enum SmartDeviceType {
 
     /// Optical Sensor
     ///
-    /// This corresponds to the [`OpticalSensor`] device.
+    /// This corresponds to the [`OpticalSensor`](optical::OpticalSensor) device.
     Optical,
 
     /// GPS Sensor
     ///
-    /// This corresponds to the [`GpsSensor`] device.
+    /// This corresponds to the [`GpsSensor`](gps::GpsSensor) device.
     Gps,
 
     /// Smart Radio
@@ -332,12 +333,12 @@ pub enum SmartDeviceType {
 
     /// ADI Expander
     ///
-    /// This corresponds to the [`AdiExpander`] device.
+    /// This corresponds to the [`AdiExpander`](expander::AdiExpander) device.
     Adi,
 
     /// Generic Serial Port
     ///
-    /// This corresponds to the [`SerialPort`] device.
+    /// This corresponds to the [`SerialPort`](serial::SerialPort) device.
     GenericSerial,
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,
@@ -410,8 +411,10 @@ impl fmt::Debug for SmartDeviceTimestamp {
     }
 }
 
-/// Errors that can occur when performing operations on [Smartport-connected devices](smart).
-/// Most smart devices will return this type when an error occurs.
+/// Errors that can occur when performing operations on [`SmartPort`]-connected devices.
+///
+/// Most smart devices will return this type or something wrapping this type when an error
+/// occurs.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum PortError {
     /// No device was plugged into the port, when one was expected.
