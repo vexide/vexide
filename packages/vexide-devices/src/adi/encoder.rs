@@ -67,10 +67,7 @@ use crate::{adi::adi_port_name, math::Position};
 /// # Examples
 ///
 /// ```
-/// use vexide::{
-///     prelude::*,
-///     devices::adi::AdiDevice,
-/// };
+/// use vexide::prelude::*;
 /// use std::time::Duration;
 ///
 /// #[vexide::main]
@@ -104,10 +101,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     devices::adi::AdiDevice,
-    /// };
+    /// use vexide::prelude::*;
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
@@ -177,10 +171,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     devices::adi::AdiDevice,
-    /// };
+    /// use vexide::prelude::*;
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
@@ -221,10 +212,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     devices::adi::AdiDevice,
-    /// };
+    /// use vexide::prelude::*;
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
@@ -266,10 +254,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     devices::adi::AdiDevice,
-    /// };
+    /// use vexide::prelude::*;
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.

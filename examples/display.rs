@@ -2,7 +2,7 @@ use std::{fmt::Write, time::Duration};
 
 use vexide::{
     color::Rgb,
-    devices::display::{Font, FontFamily, FontSize, Rect, Text},
+    display::{Font, FontFamily, FontSize, Rect, Text},
     prelude::*,
 };
 
