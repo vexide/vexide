@@ -89,8 +89,13 @@ pub extern "aapcs" fn svc() -> ! {
         mrs r0, spsr
         tst	r0, #0x20
 
-        ldreq r0, [lr,#-4]        @ ARM Mode
-        biceq r0, r0, #0xff000000 @ Thumb Mode
+        @ Thumb mode
+        ldrneh r0, [lr,#-2]
+        bicne r0, r0, #0xff00
+
+        @ ARM mode
+        ldreq r0, [lr,#-4]
+        biceq r0, r0, #0xff000000
 
         @ Call VEXos interrupt handler
         bl vexSystemSWInterrupt
