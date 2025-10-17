@@ -1,6 +1,6 @@
 [package]
 name = "vexide-async"
-version = "0.1.9"
+version = "0.2.0-alpha.1"
 edition = "2021"
 license = "MIT"
 description = "The async executor at the core of vexide"
@@ -10,7 +10,7 @@ repository = "https://github.com/vexide/vexide"
 authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
-    "doinkythederp <doinkythederp@icloud.com>",
+    "Lewis McClelland <lewis@lewismcclelland.me>",
     "Tropical",
 ]
 

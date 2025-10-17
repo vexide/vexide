@@ -1,6 +1,6 @@
 [package]
 name = "vexide-startup"
-version = "0.4.2"
+version = "0.5.0-alpha.1"
 edition = "2021"
 license = "MIT"
 description = "Support code for V5 Brain user program booting"
@@ -10,7 +10,7 @@ repository = "https://github.com/vexide/vexide"
 authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
-    "doinkythederp <doinkythederp@icloud.com>",
+    "Lewis McClelland <lewis@lewismcclelland.me>",
     "Tropical",
 ]
 

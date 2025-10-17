@@ -1,6 +1,6 @@
 [package]
 name = "vexide-core"
-version = "0.7.0"
+version = "0.8.0-alpha.1"
 edition = "2021"
 license = "MIT"
 description = "Core functionality for vexide"
@@ -10,7 +10,7 @@ repository = "https://github.com/vexide/vexide"
 authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
-    "doinkythederp <doinkythederp@icloud.com>",
+    "Lewis McClelland <lewis@lewismcclelland.me>",
     "Tropical",
 ]
 

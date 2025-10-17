@@ -1,6 +1,6 @@
 [package]
 name = "vexide"
-version = "0.7.0"
+version = "0.8.0-alpha.1"
 edition = "2021"
 description = "async/await powered Rust library for VEX V5 Brains"
 keywords = ["Robotics", "bindings", "vex", "v5"]
@@ -11,10 +11,10 @@ readme = "../../README.md"
 authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
-    "doinkythederp <doinkythederp@icloud.com>",
+    "Lewis McClelland <lewis@lewismcclelland.me>",
     "Tropical",
 ]
-rust-version = "1.75.0"
+rust-version = "1.92.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

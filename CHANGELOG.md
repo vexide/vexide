@@ -30,12 +30,12 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
-## [Unreleased]
+## [0.8.0-alpha.1]
 
 ### Added
 
-- Added support for custom encoders with different resolutions when using `AdiEncoder`. (#328) (**Breaking Change**)
-- Added the `AdiOpticalEncoder` for simplifying the creation of VEX optical encoders with the new `AdiEncoder` API. (#328) (**Breaking Change**)
+- Added support for encoders with custom resolutions in the `AdiEncoder` API. (#328) (**Breaking Change**)
+- Added the `AdiOpticalEncoder` type alias for use with VEX optical encoders. (#328) (**Breaking Change**)
 - Added `Position::ZERO` constant. (#328)
 - Added the ability to create/convert `Position` instances to/from gradians. (#328)
 - Added several missing derived trait implementations for many device error types. (#331)
@@ -43,17 +43,28 @@ Before releasing:
 - Added the `AiVisionCode::iter`/`into_iter` methods for iterating over the available signature IDs stored in a color code. (#376).
 - Added the `CalibrateError` type returned by `InertialSensor::calibrate` when it fails. (#376).
 - Added the `vexide::time::user_uptime` function for getting the time since user processor boot. (#373)
+- Added support for desktop compilation targets. (#361)
+- Added support for the `embedded_io` crate. (#361)
+- When a CPU abort (i.e. segmentation fault) occurs, a backtrace and error details are now printed to serial and shown on the display. (#368)
+- Added `vexide::program::code_signature` for reading the current program's code signature. (#361)
+- Added `vexide::program::linked_file` for detecting the use of VEXos's [linked files] feature. (#361)
+- Added the `vexide::test` attribute macro, used to implement unit tests which run on your host machine and have access to vexide's async runtime and peripherals. (#361)
+- Added support for using VEXcode's SDK via the `vex-sdk-vexcode` feature. (#361)
+- Added support for using the VEX partner SDK via the `vex-sdk-pros` feature. (#361)
+- Added support for using a no-op SDK (for testing code on desktop) via the `vex-sdk-mock` feature. (#361)
+- On vexide's error details screen, long error messages are now wrapped onto subsequent lines. (#368)
+
+[linked files]: https://github.com/rust-lang/rust/pull/145578
 
 ### Fixed
 
 - Fixed an issue with `Metadata::len` using the wrong condition. (#314)
 - Fixed backwards assertion logic causing a panic in `AiVision::color` and `AiVision::set_color`. (#316)
-- `vexide::startup::startup` no longer handles banner printing and no longer takes arguments. If you wish to print a banner without using `#[vexide::main]`, consider using `vexide::startup::banner::print` instead. (#313) (**Breaking Change**)
 - Symbols within the internal implementation of the patcher's `memcpy` will no longer clash with some libc compiler intrinsics. This should only matter if are linking to C libraries. (#314)
 - Fixed a signature validation problem in the original `VisionSensor`. (#319)
 - Fixed `AdiDigital*::is_low` improperly returning `is_high` (#324)
 - Fixed an issue where writing to the controller screen would sometimes be unreliable in fast loops (#336)
-- `Display::erase` now functions as expected instead of using the program flags' background color. (#350)
+- Fixed `Display::erase` always using the display's default background color. (#350)
 
 ### Changed
 
@@ -62,8 +73,6 @@ Before releasing:
 - The `Position` type now stores encoder positions as a floating-point number rather than a fixed-point number. (#328) (**Breaking Change**)
 - The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
-- Moved the `_boot` routine to a naked function. (#337)
-- Programs must now opt-in to vexide's custom memory layout by specifying the linker flag `-Tvexide.ld`. (#355) (**Breaking Change**)
 - Renamed `vexide::time::uptime` to `vexide::time::system_uptime`. (#373) (**Breaking Change**)
 - `TouchEvent` now stores the location of the press in a `point: Point2<i16>` field rather than separate `x` and `y` `i16` fields. (#375) (**Breaking Change**)
 - Feature-gated the `MotorTuningConstants` type behind the `dangerous-motor-tuning` feature. (#374) (**Breaking Change**)
@@ -77,13 +86,37 @@ Before releasing:
 - `DistanceSensor::status` now returns the `PortError` when it fails (#376) (**Breaking Change**).
 - The `InertialSensor::{status, is_calibrating, is_auto_calibrated, physical_orientation, gyro_rate, acceleration, set_data_interval}` methods now return `PortError` when failing. (#376) (**Breaking Change**).
 - `InertialSensor::calibrate` now returns the new `CalibrateError` type rather than `InertialError` when it fails. (#376) (**Breaking Change**).
+- The `backtraces` Cargo feature is now named `backtrace`. (#361) (**Breaking change**)
+- The `dangerous_motor_tuning` Cargo feature is now named `dangerous-motor-tuning`. (#361) (**Breaking change**)
+- Frames of backtraces are now accessed through the `Backtrace::frames` function. (#368) (**Breaking change**)
+- The `ProgramFlags` struct has been renamed to `ProgramOptions`. (#361) (**Breaking change**)
+- The structs related to `CodeSignature`s have been moved into `vexide::program`. (#361) (**Breaking change**)
+- Programs must now opt-in to vexide's custom memory layout by specifying the linker flag `-Tvexide.ld`. (#355) (**Breaking Change**)
+- Programs must now opt-in to using vexide's open source SDK via the `vex-sdk-jumptable` feature. (#361) (**Breaking change**)
 
 ### Removed
 
+- `vexide::startup::startup` no longer handles banner printing and no longer takes arguments. If you wish to print a banner without using `#[vexide::main]`, consider using `vexide::startup::banner::print` instead. (#313) (**Breaking Change**)
 - Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
 - `SmartPort` and `AdiPort` are no longer in `vexide::prelude`. (#376) (**Breaking Change**)
 - Removed `AiVisionCode::colors`. Prefer using `AiVisionCode::iter`/`AiVisionCode::into_iter` instead. (#376) (**Breaking Change**)
 - Removed `MotorError`. Motors now return `PortError` with the exception of `set_gearset`, which returns `SetGearsetError`. (#376) (**Breaking Change**)
+- Removed vexide's custom Rust target. Developers should now use the identically-named one built into Rust. (#361) (**Breaking change**)
+- Removed `vexide_core::float` and the `force_rust_libm` Cargo feature. Developers should now use the functions built into `std`. (#361) (**Breaking change**)
+- Removed the `exit` and `abort` functions. Developers should now use the functions built into `std`. (#361) (**Breaking change**)
+- Removed the filesystem access APIs. Developers should now use `std::fs`. (#361) (**Breaking change**)
+- Removed the I/O API. Developers should now use `std::io`. (#361) (**Breaking change**)
+- Removed certain time measurement APIs, including `Instant`. Developers should now use `std::time`. (#361) (**Breaking change**)
+- Removed the `vexide_panic` crate. Its functionality has been moved to `vexide_startup`. (#361) (**Breaking change**)
+- Removed `vexide_startup`'s copy of libm it previously linked to. Its functionality is now available from `std`. (#361)
+
+### Miscellaneous
+
+- The project's officially supported channel of Rust has been updated to `nightly-2025-09-26`.
+- Unit tests are now used to help verify the correctness of vexide's APIs. (#361)
+- Extended and improved the documentation for various APIs. (#361)
+- Moved the `_boot` routine to a `#[naked]` function. (#337)
+- Several of vexide's internal linker script symbols, such as `__program_ram_start`, have been renamed or removed. (#361)
 
 ### New Contributors
 
@@ -454,7 +487,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.7.0...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.8.0-alpha.1...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
@@ -466,3 +499,4 @@ Before releasing:
 [0.6.0]: https://github.com/vexide/vexide/compare/v0.5.1...v0.6.0
 [0.6.1]: https://github.com/vexide/vexide/compare/v0.6.0...v0.6.1
 [0.7.0]: https://github.com/vexide/vexide/compare/v0.6.1...v0.7.0
+[0.8.0-alpha.1]: https://github.com/vexide/vexide/compare/v0.7.0...v0.8.0-alpha.1

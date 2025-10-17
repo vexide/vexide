@@ -1,6 +1,6 @@
 [package]
 name = "vexide-macro"
-version = "0.3.2"
+version = "0.4.0-alpha.1"
 edition = "2021"
 license = "MIT"
 description = "Proc macros for vexide"
@@ -8,7 +8,7 @@ keywords = ["Robotics", "bindings", "vex", "v5"]
 authors = [
     "vexide",
     "Gavin Niederman <gavinniederman@gmail.com>",
-    "doinkythederp <doinkythederp@icloud.com>",
+    "Lewis McClelland <lewis@lewismcclelland.me>",
     "Tropical",
 ]
 repository = "https://github.com/vexide/vexide"
