@@ -135,7 +135,7 @@ pub mod prelude {
             expander::AdiExpander,
             imu::InertialSensor,
             link::{LinkType, RadioLink},
-            motor::{Gearset, Motor, MotorControl},
+            motor::{Gearset, Motor},
             optical::OpticalSensor,
             rotation::RotationSensor,
             serial::SerialPort,

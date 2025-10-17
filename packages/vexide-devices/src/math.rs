@@ -252,9 +252,9 @@ mod test {
 
     #[test]
     fn zero_is_actually_zero() {
-        assert_eq!(Position::ZERO.as_radians(), 0.0);
-        assert_eq!(Position::ZERO.as_degrees(), 0.0);
-        assert_eq!(Position::ZERO.as_revolutions(), 0.0);
+        assert!(approx_eq(Position::ZERO.as_radians(), 0.0));
+        assert!(approx_eq(Position::ZERO.as_degrees(), 0.0));
+        assert!(approx_eq(Position::ZERO.as_revolutions(), 0.0));
         assert_eq!(Position::ZERO + Position::ZERO, Position::ZERO);
     }
 

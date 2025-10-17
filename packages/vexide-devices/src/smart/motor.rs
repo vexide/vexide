@@ -97,7 +97,7 @@ pub enum MotorControl {
     /// The motor brakes using a specified [`BrakeMode`].
     Brake(BrakeMode),
 
-    /// The motor outputs a raw voltage.
+    /// The motor outputs a raw voltage (specified in RPM).
     ///
     /// # Fields
     ///
@@ -116,7 +116,7 @@ pub enum MotorControl {
     /// # Fields
     ///
     /// - `0`: The desired position of the motor after the movement operation
-    /// - `1`: The desired speed of the motor during the movement operation
+    /// - `1`: The desired speed of the velocity in RPM during the movement operation
     Position(Position, i32),
 }
 
@@ -244,7 +244,7 @@ impl Motor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::{BrakeMode, MotorControl}};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -306,7 +306,7 @@ impl Motor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -462,7 +462,7 @@ impl Motor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::{BrakeMode, MotorControl}};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -1104,7 +1104,7 @@ impl Motor {
     /// Turn off the motor if it gets too hot:
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -1198,7 +1198,7 @@ impl Motor {
     ///
     /// Turn off the motor if it gets too hot:
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

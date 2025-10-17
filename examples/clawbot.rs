@@ -7,7 +7,7 @@
 
 use std::time::Duration;
 
-use vexide::prelude::*;
+use vexide::{math::Position, prelude::*, smart::motor::BrakeMode};
 
 struct Clawbot {
     left_motor: Motor,
