@@ -257,7 +257,7 @@ impl Future for ControllerScreenWriteFuture<'_> {
                         )
                     };
 
-                    if result != 1 {
+                    if result == 1 {
                         *state = ControllerScreenWriteFutureState::Complete { result: Ok(()) }
                     }
 
