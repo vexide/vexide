@@ -23,14 +23,39 @@ global_asm!(
         b {data_abort}
         nop @ Placeholder for address exception vector
         b {irq}
-        b {fiq}
+    @ Place the FIQ exception vector directly on the last entry of the vector table to
+    @ avoid an unnecessary branch.
+    @
+    @ See: https://developer.arm.com/documentation/dui0056/d/handling-processor-exceptions/interrupt-handlers?lang=en#:~:text=The%20FIQ%20vector,increasing%20execution%20speed.
+    fiq:
+        @ NOTE: In FIQ mode r12 is banked, so saving it to the stack here is unnecessary,
+        @       but we still do it anyways to maintain stack alignment.
+        stmdb sp!,{{r0-r3,r12,lr}}
+
+        vpush {{d0-d7}}
+        vpush {{d16-d31}}
+        vmrs r1, FPSCR
+        push {{r1}}
+        vmrs r1, FPEXC
+        push {{r1}}
+
+        bl vexSystemFIQInterrupt
+
+        pop {{r1}}
+        vmsr FPEXC, r1
+        pop {{r1}}
+        vmsr FPSCR, r1
+        vpop {{d16-d31}}
+        vpop {{d0-d7}}
+
+        ldmia sp!,{{r0-r3,r12,lr}}
+        subs pc, lr, #4
     "#,
     undefined_instruction = sym undefined_instruction,
     svc = sym svc,
     prefetch_abort = sym prefetch_abort,
     data_abort = sym data_abort,
     irq = sym irq,
-    fiq = sym fiq,
 );
 
 /// Enable vexide's CPU exception handling logic by installing
@@ -54,43 +79,21 @@ pub extern "aapcs" fn svc() -> ! {
         "
         stmdb sp!,{{r0-r3,r12,lr}}
 
-        tst	r0, #0x20
-        ldreq r0, [lr,#-4]
-        biceq r0, r0, #0xff000000
+        @ Extract the SVC immediate number from the instruction and place it into R0.
+        @
+        @ The way we do this depends on whether or not user code was running in ARM
+        @ or Thumb mode at the time of this exception, so we check the T-bit in SPSR
+        @ to determine this.
+        mrs r0, spsr
+        tst	r0, #0x20             @ T-bit check
+        ldreq r0, [lr,#-4]        @ ARM Mode
+        biceq r0, r0, #0xff000000 @ Thumb Mode
+
+        @ Call VEXos interrupt handler
         bl vexSystemSWInterrupt
 
         ldmia sp!,{{r0-r3,r12,lr}}
         movs pc, lr
-        ",
-    )
-}
-
-#[unsafe(naked)]
-#[unsafe(no_mangle)]
-#[instruction_set(arm::a32)]
-pub extern "aapcs" fn fiq() -> ! {
-    core::arch::naked_asm!(
-        "
-        stmdb sp!,{{r0-r3,r12,lr}}
-
-        vpush {{d0-d7}}
-        vpush {{d16-d31}}
-        vmrs r1, FPSCR
-        push {{r1}}
-        vmrs r1, FPEXC
-        push {{r1}}
-
-        bl vexSystemFIQInterrupt
-
-        pop {{r1}}
-        vmsr FPEXC, r1
-        pop {{r1}}
-        vmsr FPSCR, r1
-        vpop {{d16-d31}}
-        vpop {{d0-d7}}
-
-        ldmia sp!,{{r0-r3,r12,lr}}
-        subs pc, lr, #4
         ",
     )
 }
@@ -176,9 +179,11 @@ fault_exception_vector!(data_abort: lr_offset = 8, exception = FaultException::D
 
 pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
     unsafe {
-        // For some reason IRQ interrupts get disabled on abort. It's unclear why,
-        // there's not a ton of info online about this.
-        // These are required for serial flushing to work - turn them back on.
+        // Data abort and prefetch abort exceptions disable IRQs (source: ARMv7-A TRM page B1-1213).
+        //
+        // This has the side-effect of breaking vexTasksRun since it disables the private timer interrupt.
+        // Without VEXos background processing services, we cannot flush the serial buffer, so we re-enable
+        // IRQs here to make that working.
         core::arch::asm!("cpsie i", options(nomem, nostack, preserves_flags));
     }
 
