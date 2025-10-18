@@ -125,7 +125,7 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -234,7 +234,7 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -271,7 +271,7 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -336,7 +336,7 @@ impl VisionSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use vexide::smart::vision::DetectionSource;
+    /// use vexide::smart::vision::{VisionSignature, VisionCode, DetectionSource};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -434,7 +434,11 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::WhiteBalance,
+    ///     color::Rgb
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -524,7 +528,11 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::WhiteBalance,
+    ///     color::Rgb
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -579,7 +587,11 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::LedMode,
+    ///     color::Rgb
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -621,7 +633,11 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::LedMode,
+    ///     color::Rgb
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -669,7 +685,10 @@ impl VisionSensor {
     /// With one signature:
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::VisionSignature,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -763,7 +782,10 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::VisionSignature,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -808,7 +830,10 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::VisionMode,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -858,7 +883,10 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::VisionMode,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
