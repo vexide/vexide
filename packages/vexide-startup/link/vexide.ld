@@ -6,6 +6,7 @@
  * <https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/armv7a_vex_v5_linker_script.ld>
  */
 
+PROVIDE(__patcher_section_length = 2M);
 /* 6MiB total, 2MiB for each subsection. (start = 0x07a00000) */
 __patcher_section_length = 2M;
 __linked_file_length = __patcher_section_length * 3;
