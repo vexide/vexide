@@ -7,7 +7,7 @@
 
 use std::time::Duration;
 
-use vexide::{math::Position, prelude::*, smart::motor::BrakeMode};
+use vexide::{math::Angle, prelude::*, smart::motor::BrakeMode};
 
 struct Clawbot {
     left_motor: Motor,
@@ -25,10 +25,10 @@ impl Compete for Clawbot {
         // Basic example autonomous that moves the drivetrain 10 revolutions forwards.
         _ = self
             .left_motor
-            .set_position_target(Position::from_revolutions(10.0), 100);
+            .set_position_target(Angle::from_turns(10.0), 100);
         _ = self
             .right_motor
-            .set_position_target(Position::from_revolutions(10.0), 100);
+            .set_position_target(Angle::from_turns(10.0), 100);
 
         loop {
             sleep(Duration::from_millis(10)).await;
