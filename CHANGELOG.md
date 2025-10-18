@@ -36,8 +36,6 @@ Before releasing:
 
 - Added support for encoders with custom resolutions in the `AdiEncoder` API. (#328) (**Breaking Change**)
 - Added the `AdiOpticalEncoder` type alias for use with VEX optical encoders. (#328) (**Breaking Change**)
-- Added `Position::ZERO` constant. (#328)
-- Added the ability to create/convert `Position` instances to/from gradians. (#328)
 - Added several missing derived trait implementations for many device error types. (#331)
 - Added support for task-local data storage using the new `task_local!` macro. This is closely modeled after `thread_local!`s in the standard library. (#333)
 - Added the `AiVisionCode::iter`/`into_iter` methods for iterating over the available signature IDs stored in a color code. (#376).
@@ -69,10 +67,13 @@ Before releasing:
 ### Changed
 
 - Submodules of `vexide::devices` have been promoted to crate-root modules. For example, `vexide::devices::smart::motor::Motor` is now `vexide::smart::motor::Motor`. (#380) (**Breaking Change**)
+- Replaced the `Position` type with a new `Angle` type.
+  - `Angle` resides in `vexide::math`. (#380) (**Breaking Change**)
+  - `Angle`s are backed now backed by radians stored in an `f64` rather than a fixed-point representation.
+  - Renamed `Position::{from, as}_revolutions` to `Angle::{from, as}_turns`.
+- `{InertialSensor, GpsSensor}::{heading, rotation, angle, euler, set_angle, set_rotation}` now take and return instances of the `Angle` type rather than degrees. (#380) (**Breaking Change**)
 - Renamed the `vexide::devices::rgb` module to `vexide::color`. (#380) (**Breaking Change**)
-- Moved the `Position` type into `vexide::math`.(#380) (**Breaking Change**)
 - If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
-- The `Position` type now stores encoder positions as a floating-point number rather than a fixed-point number. (#328) (**Breaking Change**)
 - The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 - Renamed `vexide::time::uptime` to `vexide::time::system_uptime`. (#373) (**Breaking Change**)
@@ -98,7 +99,8 @@ Before releasing:
 
 ### Removed
 
-- Removed `AiVisionColor`, `AiVisionColorCode`, `AiVisionObject`, `BrakeMode`, `LedMode`, `VisionCode`, `VisionMode`, `VisionObject`, `VisionSensor`, `VisionSignature`, `WhiteBalance`, `DynamicPeripherals`, `battery`, and `Rgb` from `vexide::prelude`. (#380) (**Breaking Change**)
+- Removed `Angle`, `AiVisionColor`, `AiVisionColorCode`, `AiVisionObject`, `BrakeMode`, `LedMode`, `VisionCode`, `VisionMode`, `VisionObject`, `VisionSensor`, `VisionSignature`, `WhiteBalance`, `DynamicPeripherals`, `battery` and `Rgb` from `vexide::prelude`. (#380) (**Breaking Change**)
+- The `Position::{from, as}_ticks` methods (now `Angle::{from, as}_ticks`) methods are now private. This may change in the future. (#383) (**Breaking Change**).
 - `vexide::startup::startup` no longer handles banner printing and no longer takes arguments. If you wish to print a banner without using `#[vexide::main]`, consider using `vexide::startup::banner::print` instead. (#313) (**Breaking Change**)
 - Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
 - `SmartPort` and `AdiPort` are no longer in `vexide::prelude`. (#376) (**Breaking Change**)

@@ -102,7 +102,7 @@ impl Angle {
 
     // MARK: Angle Conversion
 
-    /// Creates a position from a specified number of degrees.
+    /// Creates an angle from a specified number of degrees.
     #[inline]
     #[must_use]
     pub const fn from_degrees(degrees: f64) -> Self {
@@ -111,14 +111,14 @@ impl Angle {
         }
     }
 
-    /// Creates a position from a specified number of radians.
+    /// Creates an angle from a specified number of radians.
     #[inline]
     #[must_use]
     pub const fn from_radians(radians: f64) -> Self {
         Self { radians }
     }
 
-    /// Creates a position from a specified number of gradians.
+    /// Creates an angle from a specified number of gradians.
     #[must_use]
     pub const fn from_gradians(gradians: f64) -> Self {
         Self {
@@ -126,7 +126,7 @@ impl Angle {
         }
     }
 
-    /// Creates a position from a specified number of revolutions (full turns).
+    /// Creates an angle from a specified number of turns (revolutions).
     #[inline]
     #[must_use]
     pub const fn from_turns(turns: f64) -> Self {
@@ -144,28 +144,28 @@ impl Angle {
 
     // MARK: Angle Conversion
 
-    /// Returns the number of degrees rotated in this position.
+    /// Returns the number of degrees rotated in this angle.
     #[inline]
     #[must_use]
     pub const fn as_degrees(&self) -> f64 {
         self.radians.to_degrees()
     }
 
-    /// Returns the number of radians rotated in this position.
+    /// Returns the number of radians rotated in this angle.
     #[inline]
     #[must_use]
     pub const fn as_radians(&self) -> f64 {
         self.radians
     }
 
-    /// Returns the number of gradians rotated in this position.
+    /// Returns the number of gradians rotated in this angle.
     #[inline]
     #[must_use]
     pub const fn as_gradians(&self) -> f64 {
         self.radians * (200.0 / PI)
     }
 
-    /// Returns the number of revolutions (full turns) rotated in this position.
+    /// Returns the number of turns (revolutions) rotated in this angle.
     #[inline]
     #[must_use]
     pub const fn as_turns(&self) -> f64 {
