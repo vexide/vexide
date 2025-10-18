@@ -72,6 +72,7 @@ Before releasing:
   - `Angle`s are backed now backed by radians stored in an `f64` rather than a fixed-point representation.
   - Renamed `Position::{from, as}_revolutions` to `Angle::{from, as}_turns`.
 - `{InertialSensor, GpsSensor}::{heading, rotation, angle, euler, set_angle, set_rotation}` now take and return instances of the `Angle` type rather than degrees. (#380) (**Breaking Change**)
+- `AdiGyroscope::yaw` now returns `Angle`. (#380) (**Breaking Change**)
 - Renamed the `vexide::devices::rgb` module to `vexide::color`. (#380) (**Breaking Change**)
 - If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
 - The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
