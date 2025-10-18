@@ -23,6 +23,7 @@
 
 use core::{marker::PhantomData, time::Duration};
 
+use mint::{EulerAngles, Quaternion, Vector3};
 use vex_sdk::{
     vexDeviceGpsAttitudeGet, vexDeviceGpsDataRateSet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet,
     vexDeviceGpsHeadingGet, vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet,
@@ -32,7 +33,7 @@ use vex_sdk::{
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
-use crate::math::Point2;
+use crate::math::{Angle, Point2};
 
 /// A GPS sensor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -49,9 +50,6 @@ unsafe impl Send for GpsSensor {}
 unsafe impl Sync for GpsSensor {}
 
 impl GpsSensor {
-    /// The maximum value that can be returned by [`Self::heading`].
-    pub const MAX_HEADING: f64 = 360.0;
-
     /// Creates a new GPS sensor from a [`SmartPort`].
     ///
     /// # Sensor Configuration
@@ -397,16 +395,15 @@ impl GpsSensor {
     ///     }
     /// }
     /// ```
-    pub fn heading(&self) -> Result<f64, PortError> {
+    pub fn heading(&self) -> Result<Angle, PortError> {
         self.validate_port()?;
-        Ok(
-            // The result needs to be [0, 360). Adding a significantly negative offset could take us
-            // below 0. Adding a significantly positive offset could take us above 360.
-            crate::math::rem_euclid(
-                unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset,
-                Self::MAX_HEADING,
-            ),
+
+        // The result needs to be [0, 360). Adding a significantly negative offset could take us
+        // below 0. Adding a significantly positive offset could take us above 360.
+        Ok(Angle::from_degrees(
+            unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset,
         )
+        .wrapped(Angle::ZERO..Angle::FULL_TURN))
     }
 
     /// Returns the total number of degrees the GPS has spun about the z-axis.
@@ -442,9 +439,11 @@ impl GpsSensor {
     ///     }
     /// }
     /// ```
-    pub fn rotation(&self) -> Result<f64, PortError> {
+    pub fn rotation(&self) -> Result<Angle, PortError> {
         self.validate_port()?;
-        Ok(unsafe { vexDeviceGpsHeadingGet(self.device) } + self.rotation_offset)
+        Ok(Angle::from_degrees(
+            unsafe { vexDeviceGpsHeadingGet(self.device) } + self.rotation_offset,
+        ))
     }
 
     /// Returns the Euler angles (pitch, yaw, roll) representing the GPS's orientation.
@@ -481,7 +480,7 @@ impl GpsSensor {
     ///     }
     /// }
     /// ```
-    pub fn euler(&self) -> Result<mint::EulerAngles<f64, f64>, PortError> {
+    pub fn euler(&self) -> Result<EulerAngles<Angle, Angle>, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceGpsAttitude::default();
@@ -489,10 +488,10 @@ impl GpsSensor {
             vexDeviceGpsAttitudeGet(self.device, &raw mut data, false);
         }
 
-        Ok(mint::EulerAngles {
-            a: data.pitch.to_radians(),
-            b: data.yaw.to_radians(),
-            c: data.roll.to_radians(),
+        Ok(EulerAngles {
+            a: Angle::from_degrees(data.pitch),
+            b: Angle::from_degrees(data.yaw),
+            c: Angle::from_degrees(data.roll),
             marker: PhantomData,
         })
     }
@@ -532,7 +531,7 @@ impl GpsSensor {
     ///     }
     /// }
     /// ```
-    pub fn quaternion(&self) -> Result<mint::Quaternion<f64>, PortError> {
+    pub fn quaternion(&self) -> Result<Quaternion<f64>, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceGpsQuaternion::default();
@@ -540,8 +539,8 @@ impl GpsSensor {
             vexDeviceGpsQuaternionGet(self.device, &raw mut data);
         }
 
-        Ok(mint::Quaternion {
-            v: mint::Vector3 {
+        Ok(Quaternion {
+            v: Vector3 {
                 x: data.x,
                 y: data.y,
                 z: data.z,
@@ -589,7 +588,7 @@ impl GpsSensor {
     ///     }
     /// }
     /// ```
-    pub fn acceleration(&self) -> Result<mint::Vector3<f64>, PortError> {
+    pub fn acceleration(&self) -> Result<Vector3<f64>, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceGpsRaw::default();
@@ -643,7 +642,7 @@ impl GpsSensor {
     ///     }
     /// }
     /// ```
-    pub fn gyro_rate(&self) -> Result<mint::Vector3<f64>, PortError> {
+    pub fn gyro_rate(&self) -> Result<Vector3<f64>, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceGpsRaw::default();
@@ -695,7 +694,7 @@ impl GpsSensor {
     /// }
     /// ```
     pub fn reset_heading(&mut self) -> Result<(), PortError> {
-        self.set_heading(Default::default())
+        self.set_heading(Angle::ZERO)
     }
 
     /// Offsets the reading of [`GpsSensor::rotation`] to zero.
@@ -735,7 +734,7 @@ impl GpsSensor {
     /// }
     /// ```
     pub fn reset_rotation(&mut self) -> Result<(), PortError> {
-        self.set_rotation(Default::default())
+        self.set_rotation(Angle::ZERO)
     }
 
     /// Offsets the reading of [`GpsSensor::rotation`] to a specified angle value.
@@ -769,10 +768,11 @@ impl GpsSensor {
     ///     println!("Rotation: {:?}", gps.rotation());
     /// }
     /// ```
-    pub fn set_rotation(&mut self, rotation: f64) -> Result<(), PortError> {
+    pub fn set_rotation(&mut self, rotation: Angle) -> Result<(), PortError> {
         self.validate_port()?;
 
-        self.rotation_offset = rotation - unsafe { vexDeviceGpsHeadingGet(self.device) };
+        self.rotation_offset =
+            rotation.as_degrees() - unsafe { vexDeviceGpsHeadingGet(self.device) };
 
         Ok(())
     }
@@ -808,10 +808,10 @@ impl GpsSensor {
     ///     println!("Heading: {:?}", gps.heading());
     /// }
     /// ```
-    pub fn set_heading(&mut self, heading: f64) -> Result<(), PortError> {
+    pub fn set_heading(&mut self, heading: Angle) -> Result<(), PortError> {
         self.validate_port()?;
 
-        self.heading_offset = heading - unsafe { vexDeviceGpsDegreesGet(self.device) };
+        self.heading_offset = heading.as_degrees() - unsafe { vexDeviceGpsDegreesGet(self.device) };
 
         Ok(())
     }

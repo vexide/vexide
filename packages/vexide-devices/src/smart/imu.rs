@@ -70,7 +70,7 @@ use vex_sdk::{
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
-use crate::math::{EulerAngles, Quaternion, Vector3};
+use crate::math::{Angle, EulerAngles, Quaternion, Vector3};
 
 /// An inertial sensor (IMU) plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -97,9 +97,6 @@ impl InertialSensor {
 
     /// The minimum data rate that you can set an IMU to run at.
     pub const MIN_DATA_INTERVAL: Duration = Duration::from_millis(5);
-
-    /// The maximum value that can be returned by [`Self::heading`].
-    pub const MAX_HEADING: f64 = 360.0;
 
     /// Create a new inertial sensor from a [`SmartPort`].
     ///
@@ -363,9 +360,11 @@ impl InertialSensor {
     ///     }
     /// }
     /// ```
-    pub fn rotation(&self) -> Result<f64, InertialError> {
+    pub fn rotation(&self) -> Result<Angle, InertialError> {
         self.validate_calibration()?;
-        Ok(unsafe { vexDeviceImuHeadingGet(self.device) } + self.rotation_offset)
+        Ok(Angle::from_degrees(
+            unsafe { vexDeviceImuHeadingGet(self.device) } + self.rotation_offset,
+        ))
     }
 
     /// Returns the Inertial Sensor’s yaw angle bounded from [0.0, 360.0) degrees.
@@ -399,14 +398,14 @@ impl InertialSensor {
     ///     }
     /// }
     /// ```
-    pub fn heading(&self) -> Result<f64, InertialError> {
+    pub fn heading(&self) -> Result<Angle, InertialError> {
         self.validate_calibration()?;
         // The result needs to be [0, 360). Adding a significantly negative offset could take us
         // below 0. Adding a significantly positive offset could take us above 360.
-        Ok(crate::math::rem_euclid(
+        Ok(Angle::from_degrees(
             unsafe { vexDeviceImuDegreesGet(self.device) } + self.heading_offset,
-            Self::MAX_HEADING,
-        ))
+        )
+        .wrapped(Angle::ZERO..Angle::FULL_TURN))
     }
 
     /// Returns a quaternion representing the Inertial Sensor’s current orientation.
@@ -486,7 +485,7 @@ impl InertialSensor {
     ///
     ///     if let Ok(angles) = sensor.euler() {
     ///         println!(
-    ///             "yaw: {}°, pitch: {}°, roll: {}°",
+    ///             "pitch: {}°, yaw: {}°, roll: {}°",
     ///             angles.a,
     ///             angles.b,
     ///             angles.c,
@@ -494,7 +493,7 @@ impl InertialSensor {
     ///     }
     /// }
     /// ```
-    pub fn euler(&self) -> Result<EulerAngles<f64, f64>, InertialError> {
+    pub fn euler(&self) -> Result<EulerAngles<Angle, Angle>, InertialError> {
         self.validate_calibration()?;
 
         let mut data = V5_DeviceImuAttitude::default();
@@ -503,9 +502,9 @@ impl InertialSensor {
         }
 
         Ok(EulerAngles {
-            a: data.pitch.to_radians(),
-            b: data.yaw.to_radians(),
-            c: data.roll.to_radians(),
+            a: Angle::from_degrees(data.pitch),
+            b: Angle::from_degrees(data.yaw),
+            c: Angle::from_degrees(data.roll),
             marker: PhantomData,
         })
     }

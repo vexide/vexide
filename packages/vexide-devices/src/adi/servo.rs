@@ -28,7 +28,7 @@
 use vex_sdk::vexDeviceAdiValueSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
-use crate::math::Position;
+use crate::math::Angle;
 
 /// Legacy Servo
 #[derive(Debug, Eq, PartialEq)]
@@ -38,22 +38,22 @@ pub struct AdiServo {
 
 impl AdiServo {
     /// Maximum controllable position of the servo.
-    pub const MAX_POSITION: Position = Position::from_degrees(50.0);
+    pub const MAX_POSITION: Angle = Angle::from_degrees(50.0);
 
     /// Minimum controllable position of the servo.
-    pub const MIN_POSITION: Position = Position::from_degrees(-50.0);
+    pub const MIN_POSITION: Angle = Angle::from_degrees(-50.0);
 
     /// Create a servo from an [`AdiPort`].
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use vexide::prelude::*;
+    /// ```
+    /// use vexide::{prelude::*, math::Angle};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut servo = AdiServo::new(peripherals.adi_a);
-    ///     _ = servo.set_target(Position::from_degrees(25.0));
+    ///     _ = servo.set_target(Angle::from_degrees(25.0));
     /// }
     /// ```
     #[must_use]
@@ -81,15 +81,15 @@ impl AdiServo {
     /// # Examples
     ///
     /// ```rust
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, math::Angle};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut servo = AdiServo::new(peripherals.adi_a);
-    ///     _ = servo.set_target(Position::from_degrees(25.0));
+    ///     _ = servo.set_target(Angle::from_degrees(25.0));
     /// }
     /// ```
-    pub fn set_target(&mut self, position: Position) -> Result<(), PortError> {
+    pub fn set_target(&mut self, position: Angle) -> Result<(), PortError> {
         self.set_raw_target(
             ((position.as_degrees() / Self::MAX_POSITION.as_degrees()).clamp(-1.0, 1.0) * 127.0)
                 as i8,
