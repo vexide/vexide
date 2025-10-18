@@ -1,6 +1,7 @@
 use vexide::{
-    devices::smart::ai_vision::{AiVisionColor, AiVisionSensor},
+    color::Rgb,
     prelude::*,
+    smart::ai_vision::{AiVisionColor, AiVisionSensor},
 };
 
 #[vexide::main]

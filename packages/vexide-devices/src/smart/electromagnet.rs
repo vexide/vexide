@@ -19,8 +19,7 @@ use vex_sdk::{
     vexDeviceMagnetStatusGet, vexDeviceMagnetTemperatureGet, V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::PortError;
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 
 /// An electromagnet plugged into a smart port.
 #[derive(Debug, Eq, PartialEq)]
@@ -69,9 +68,8 @@ impl Electromagnet {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -100,9 +98,8 @@ impl Electromagnet {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -129,9 +126,8 @@ impl Electromagnet {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -158,9 +154,8 @@ impl Electromagnet {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -186,9 +181,8 @@ impl Electromagnet {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an electromagnet device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an electromagnet device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///

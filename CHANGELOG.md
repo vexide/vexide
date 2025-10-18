@@ -68,8 +68,10 @@ Before releasing:
 
 ### Changed
 
+- Submodules of `vexide::devices` have been promoted to crate-root modules. For example, `vexide::devices::smart::motor::Motor` is now `vexide::smart::motor::Motor`. (#380) (**Breaking Change**)
+- Renamed the `vexide::devices::rgb` module to `vexide::color`. (#380) (**Breaking Change**)
+- Moved the `Position` type into `vexide::math`.(#380) (**Breaking Change**)
 - If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
-- Renamed `File::tell` to `File::stream_position`, made Public and Infaliable. (#314)
 - The `Position` type now stores encoder positions as a floating-point number rather than a fixed-point number. (#328) (**Breaking Change**)
 - The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
@@ -96,6 +98,7 @@ Before releasing:
 
 ### Removed
 
+- Removed `AiVisionColor`, `AiVisionColorCode`, `AiVisionObject`, `BrakeMode`, `LedMode`, `VisionCode`, `VisionMode`, `VisionObject`, `VisionSensor`, `VisionSignature`, `WhiteBalance`, `DynamicPeripherals`, `battery`, and `Rgb` from `vexide::prelude`. (#380) (**Breaking Change**)
 - `vexide::startup::startup` no longer handles banner printing and no longer takes arguments. If you wish to print a banner without using `#[vexide::main]`, consider using `vexide::startup::banner::print` instead. (#313) (**Breaking Change**)
 - Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
 - `SmartPort` and `AdiPort` are no longer in `vexide::prelude`. (#376) (**Breaking Change**)

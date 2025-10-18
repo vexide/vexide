@@ -69,11 +69,8 @@ use vex_sdk::{
     V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::{
-    math::{EulerAngles, Quaternion, Vector3},
-    PortError,
-};
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
+use crate::math::{EulerAngles, Quaternion, Vector3};
 
 /// An inertial sensor (IMU) plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -146,9 +143,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
-    ///   else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -176,9 +172,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
-    ///   else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -205,9 +200,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
-    ///   else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -233,9 +227,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
-    ///   else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -259,7 +252,7 @@ impl InertialSensor {
 
     /// Calibrates the IMU.
     ///
-    /// Returns an [`InertialCalibrateFuture`] that resolves once the calibration operation has finished or timed out.
+    /// Returns an [`CalibrateFuture`] that resolves once the calibration operation has finished or timed out.
     ///
     /// This method MUST be called for any meaningful gyroscope readings to be obtained. Calibration requires
     /// the sensor to be sitting completely still. If the sensor is moving during the calibration process,
@@ -494,9 +487,9 @@ impl InertialSensor {
     ///     if let Ok(angles) = sensor.euler() {
     ///         println!(
     ///             "yaw: {}°, pitch: {}°, roll: {}°",
-    ///             angles.a.to_degrees(),
-    ///             angles.b.to_degrees(),
-    ///             angles.c.to_degrees(),
+    ///             angles.a,
+    ///             angles.b,
+    ///             angles.c,
     ///         );
     ///     }
     /// }
@@ -521,9 +514,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
-    ///   else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -574,9 +566,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
-    ///   else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -772,9 +763,8 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an Inertial Sensor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an Inertial Sensor was required but something
-    ///   else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///

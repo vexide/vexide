@@ -37,8 +37,8 @@ use vex_sdk::{
     V5_DeviceVisionSignature,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::{math::Point2, rgb::Rgb, PortError};
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
+use crate::{color::Rgb, math::Point2};
 
 /// VEX Vision Sensor
 ///
@@ -119,14 +119,13 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -228,14 +227,14 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionSignatureError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionSignatureError::Port`] error is returned if there was not a sensor connected to the port.
     /// - A [`VisionSignatureError::ReadingFailed`] error is returned if a read operation failed or there was
     ///   no signature previously set in the slot(s) specified in the [`VisionCode`].
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -265,14 +264,14 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionSignatureError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
+    /// - A [`VisionSignatureError::Port`] error is returned if there was not a sensor connected to the port.
     /// - A [`VisionSignatureError::ReadingFailed`] error is returned if a read operation failed or there was
     ///   no signature previously set in the slot(s) specified in the [`VisionCode`].
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -337,7 +336,7 @@ impl VisionSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use vexide::devices::smart::vision::DetectionSource;
+    /// use vexide::smart::vision::{VisionSignature, VisionCode, DetectionSource};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -394,9 +393,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -430,14 +428,17 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::WhiteBalance,
+    ///     color::Rgb
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -491,9 +492,8 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -522,14 +522,17 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::WhiteBalance,
+    ///     color::Rgb
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -578,14 +581,17 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::LedMode,
+    ///     color::Rgb
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -621,14 +627,17 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::LedMode,
+    ///     color::Rgb
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -667,16 +676,19 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionObjectError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionObjectError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
-    /// - A [`VisionError::ReadingFailed`] error if the objects could not be read from the sensor.
+    /// - A [`VisionObjectError::Port`] error is returned if there was not a sensor connected to the port.
+    /// - A [`VisionObjectError::WifiMode`] error is returned if the sensor is in Wi-Fi mode.
+    /// - A [`VisionObjectError::InvalidObject`] error if the sensor failed to read an object.
     ///
     /// # Examples
     ///
     /// With one signature:
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::VisionSignature,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -702,7 +714,7 @@ impl VisionSensor {
     ///
     /// ```
     /// use vexide::prelude::*;
-    /// use vexide::devices::smart::vision::DetectionSource;
+    /// use vexide::smart::vision::DetectionSource;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -763,14 +775,17 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`VisionObjectError::Port`] error is returned if a vision sensor is not currently connected to the Smart Port.
-    /// - A [`VisionObjectError::WifiMode`] error is returned if the vision sensor is in Wi-Fi mode.
-    /// - A [`VisionError::ReadingFailed`] error if the objects could not be read from the sensor.
+    /// - A [`VisionObjectError::Port`] error is returned if there is not a sensor connected to the port.
+    /// - A [`VisionObjectError::WifiMode`] error is returned if the sensor is in Wi-Fi mode.
+    /// - A [`VisionObjectError::InvalidObject`] error if the sensor failed to read an object.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::VisionSignature,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -809,14 +824,16 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::VisionMode,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -860,14 +877,16 @@ impl VisionSensor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Vision Sensor device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Vision Sensor device was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::VisionMode,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -971,7 +990,7 @@ impl VisionSignature {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionSignature;
+    /// use vexide::smart::vision::VisionSignature;
     ///
     /// let my_signature = VisionSignature::new(
     ///     (10049, 11513, 10781),
@@ -998,7 +1017,7 @@ impl VisionSignature {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionSignature;
+    /// use vexide::smart::vision::VisionSignature;
     ///
     /// // Register a signature for detecting red objects.
     /// // This numbers in this signature was generated using VEX's vision utility app.
@@ -1063,7 +1082,7 @@ impl VisionCode {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionCode;
+    /// use vexide::smart::vision::VisionCode;
     ///
     /// // Create a vision code associated with signatures 1, 2, and 3.
     /// let code = VisionCode::new(1, 2, Some(3), None, None);
@@ -1084,7 +1103,7 @@ impl VisionCode {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionCode;
+    /// use vexide::smart::vision::VisionCode;
     ///
     /// let sig_1_id = 1;
     /// let sig_2_id = 2;
@@ -1125,7 +1144,7 @@ impl VisionCode {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionCode;
+    /// use vexide::smart::vision::VisionCode;
     ///
     /// // Create a vision code associated with signatures 1, 2, and 3.
     /// let code = VisionCode::new(1, 2, Some(3), None, None);
@@ -1163,7 +1182,7 @@ impl VisionCode {
     /// # Examples
     ///
     /// ```
-    /// use vexide::devices::smart::vision::VisionCode;
+    /// use vexide::smart::vision::VisionCode;
     ///
     /// let sig_1_id = 1;
     /// let sig_2_id = 2;
@@ -1405,7 +1424,7 @@ impl From<LedMode> for V5VisionLedMode {
     }
 }
 
-/// Error returned by [`Vision::objects`] and [`Vision::object_count`].
+/// Error returned by [`VisionSensor::objects`] and [`VisionSensor::object_count`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum VisionObjectError {
     /// Objects cannot be detected while Wi-Fi mode is enabled.

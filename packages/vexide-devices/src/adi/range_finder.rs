@@ -38,8 +38,7 @@
 
 use vex_sdk::vexDeviceAdiValueGet;
 
-use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::{adi::adi_port_name, PortError};
+use super::{adi_port_name, AdiDevice, AdiDeviceType, AdiPort, PortError};
 
 /// Range Finder
 ///
@@ -71,7 +70,7 @@ impl AdiRangeFinder {
     ///     loop {
     ///         let distance = range_finder.distance().expect("Failed to get distance");
     ///         println!("Distance: {} cm", distance);
-    ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -119,9 +118,10 @@ impl AdiRangeFinder {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     ///
     /// # Examples
     ///
@@ -137,7 +137,7 @@ impl AdiRangeFinder {
     ///             None => println!("Can't find anything in range :("),
     ///         }
     ///
-    ///         sleep(vexide::devices::adi::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```

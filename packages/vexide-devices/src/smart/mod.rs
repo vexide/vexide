@@ -41,8 +41,6 @@ use vex_sdk::{
     V5_MAX_DEVICE_PORTS,
 };
 
-use crate::PortError;
-
 pub mod ai_vision;
 pub mod distance;
 pub mod electromagnet;
@@ -58,21 +56,7 @@ pub mod vision;
 
 use core::time::Duration;
 
-pub use ai_vision::AiVisionSensor;
-pub use distance::DistanceSensor;
-pub use electromagnet::Electromagnet;
-pub use expander::AdiExpander;
-pub use gps::GpsSensor;
-pub use imu::InertialSensor;
-pub use link::RadioLink;
-pub use motor::Motor;
-pub use optical::OpticalSensor;
-pub use rotation::RotationSensor;
-pub use serial::SerialPort;
-use snafu::ensure;
-pub use vision::VisionSensor;
-
-use crate::{DisconnectedSnafu, IncorrectDeviceSnafu};
+use snafu::{ensure, Snafu};
 
 /// Defines common functionality shared by all Smart Port devices.
 pub trait SmartDevice {
@@ -295,37 +279,37 @@ impl SmartPort {
 pub enum SmartDeviceType {
     /// Smart Motor
     ///
-    /// This corresponds to the [`Motor`] device.
+    /// This corresponds to the [`Motor`](motor::Motor) device.
     Motor,
 
     /// Rotation Sensor
     ///
-    /// This corresponds to the [`RotationSensor`] device.
+    /// This corresponds to the [`RotationSensor`](rotation::RotationSensor) device.
     Rotation,
 
     /// Inertial Sensor
     ///
-    /// This corresponds to the [`InertialSensor`] device.
+    /// This corresponds to the [`InertialSensor`](imu::InertialSensor) device.
     Imu,
 
     /// Distance Sensor
     ///
-    /// This corresponds to the [`DistanceSensor`] device.
+    /// This corresponds to the [`DistanceSensor`](distance::DistanceSensor) device.
     Distance,
 
     /// Vision Sensor
     ///
-    /// This corresponds to the [`VisionSensor`] device.
+    /// This corresponds to the [`VisionSensor`](vision::VisionSensor) device.
     Vision,
 
     /// AI Vision Sensor
     ///
-    /// This corresponds to the [`AiVisionSensor`] device.
+    /// This corresponds to the [`AiVisionSensor`](ai_vision::AiVisionSensor) device.
     AiVision,
 
     /// Workcell Electromagnet
     ///
-    /// This corresponds to the [`Electromagnet`] device.
+    /// This corresponds to the [`Electromagnet`](electromagnet::Electromagnet) device.
     Electromagnet,
 
     /// CTE Workcell Light Tower
@@ -336,12 +320,12 @@ pub enum SmartDeviceType {
 
     /// Optical Sensor
     ///
-    /// This corresponds to the [`OpticalSensor`] device.
+    /// This corresponds to the [`OpticalSensor`](optical::OpticalSensor) device.
     Optical,
 
     /// GPS Sensor
     ///
-    /// This corresponds to the [`GpsSensor`] device.
+    /// This corresponds to the [`GpsSensor`](gps::GpsSensor) device.
     Gps,
 
     /// Smart Radio
@@ -349,12 +333,12 @@ pub enum SmartDeviceType {
 
     /// ADI Expander
     ///
-    /// This corresponds to the [`AdiExpander`] device.
+    /// This corresponds to the [`AdiExpander`](expander::AdiExpander) device.
     Adi,
 
     /// Generic Serial Port
     ///
-    /// This corresponds to the [`SerialPort`] device.
+    /// This corresponds to the [`SerialPort`](serial::SerialPort) device.
     GenericSerial,
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,
@@ -424,5 +408,58 @@ pub struct SmartDeviceTimestamp(pub u32);
 impl fmt::Debug for SmartDeviceTimestamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+/// Errors that can occur when performing operations on [`SmartPort`]-connected devices.
+///
+/// Most smart devices will return this type or something wrapping this type when an error
+/// occurs.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
+pub enum PortError {
+    /// No device was plugged into the port, when one was expected.
+    #[snafu(display("Expected a device to be connected to port {port}"))]
+    Disconnected {
+        /// The port that was expected to have a device
+        port: u8,
+    },
+
+    /// The wrong type of device is plugged into the port.
+    #[snafu(display(
+        "Expected a {expected:?} device on port {port}, but found a {actual:?} device"
+    ))]
+    IncorrectDevice {
+        /// The device type that was expected
+        expected: SmartDeviceType,
+        /// The device type that was found
+        actual: SmartDeviceType,
+        /// The port that was expected to have a device
+        port: u8,
+    },
+}
+
+#[cfg(feature = "std")]
+impl From<PortError> for std::io::Error {
+    fn from(value: PortError) -> Self {
+        match value {
+            PortError::Disconnected { .. } => std::io::Error::new(
+                std::io::ErrorKind::AddrNotAvailable,
+                "A device is not connected to the specified port.",
+            ),
+            PortError::IncorrectDevice { .. } => std::io::Error::new(
+                std::io::ErrorKind::AddrInUse,
+                "Port is in use as another device.",
+            ),
+        }
+    }
+}
+
+#[cfg(feature = "embedded-io")]
+impl embedded_io::Error for PortError {
+    fn kind(&self) -> embedded_io::ErrorKind {
+        match self {
+            PortError::Disconnected { .. } => embedded_io::ErrorKind::AddrNotAvailable,
+            PortError::IncorrectDevice { .. } => embedded_io::ErrorKind::AddrInUse,
+        }
     }
 }

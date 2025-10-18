@@ -31,8 +31,7 @@ use vex_sdk::{
     V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
-use crate::PortError;
+use super::{PortError, SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
 
 /// An optical sensor plugged into a Smart Port.
 #[derive(Debug, Eq, PartialEq)]
@@ -84,8 +83,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
-    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -113,7 +112,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -159,7 +159,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -202,7 +203,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -239,7 +241,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -280,7 +283,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -315,7 +319,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -353,7 +358,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -385,7 +391,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -421,7 +428,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     pub fn raw_color(&self) -> Result<OpticalRaw, PortError> {
         self.validate_port()?;
 
@@ -437,7 +445,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -496,7 +505,8 @@ impl OpticalSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if an optical sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///

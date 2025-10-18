@@ -17,8 +17,7 @@ use core::{future::Future, task::Poll, time::Duration};
 use snafu::Snafu;
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
-use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::PortError;
+use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
 
 /// The magic number returned by the ADI device when the gyroscope is still calibrating.
 const CALIBRATING_MAGIC: i32 = -0x8000;
@@ -120,7 +119,10 @@ impl AdiGyroscope {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     ///
     /// # Examples
     ///
@@ -145,7 +147,10 @@ impl AdiGyroscope {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     ///
     /// # Examples
     ///
@@ -172,8 +177,10 @@ impl AdiGyroscope {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`AdiGyroscopeError::StillCalibrating`] error is returned if the gyroscope is still calibrating.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     ///
     /// # Examples
     ///

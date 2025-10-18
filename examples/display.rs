@@ -1,7 +1,8 @@
 use std::{fmt::Write, time::Duration};
 
 use vexide::{
-    devices::display::{Font, FontFamily, FontSize, Rect, Text},
+    color::Rgb,
+    display::{Font, FontFamily, FontSize, Rect, Text},
     prelude::*,
 };
 

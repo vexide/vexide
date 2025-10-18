@@ -15,10 +15,7 @@ use vex_sdk::{
 /// # Examples
 ///
 /// ```
-/// use vexide::prelude::*;
-/// use vexide::devices::battery;
-///
-/// let capacity = battery::capacity();
+/// let capacity = vexide::battery::capacity();
 /// println!("Battery at {}% capacity", capacity * 100.0);
 ///
 /// if capacity < 0.2 {
@@ -35,10 +32,7 @@ pub fn capacity() -> f64 {
 /// # Examples
 ///
 /// ```
-/// use vexide::prelude::*;
-/// use vexide::devices::battery;
-///
-/// let temp = battery::temperature();
+/// let temp = vexide::battery::temperature();
 /// println!("Battery temperature: {}°C", temp);
 ///
 /// // Check if battery is too hot
@@ -58,10 +52,7 @@ pub fn temperature() -> u64 {
 /// # Examples
 ///
 /// ```
-/// use vexide::prelude::*;
-/// use vexide::devices::battery;
-///
-/// let current = battery::current();
+/// let current = vexide::battery::current();
 ///
 /// println!("Drawing {} amps", current);
 /// ```
@@ -77,10 +68,7 @@ pub fn current() -> f64 {
 /// # Examples
 ///
 /// ```
-/// use vexide::prelude::*;
-/// use vexide::devices::battery;
-///
-/// let voltage = battery::voltage();
+/// let voltage = vexide::battery::voltage();
 /// println!("Battery voltage: {} V", voltage);
 /// ```
 #[must_use]

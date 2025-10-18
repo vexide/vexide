@@ -42,64 +42,9 @@ extern crate alloc;
 
 pub mod adi;
 pub mod battery;
+pub mod color;
 pub mod controller;
 pub mod display;
 pub mod math;
 pub mod peripherals;
-pub mod position;
-pub mod rgb;
 pub mod smart;
-
-use smart::SmartDeviceType;
-use snafu::Snafu;
-
-/// Errors that can occur when performing operations on [Smartport-connected devices](smart).
-/// Most smart devices will return this type when an error occurs.
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
-pub enum PortError {
-    /// No device was plugged into the port, when one was expected.
-    #[snafu(display("Expected a device to be connected to port {port}"))]
-    Disconnected {
-        /// The port that was expected to have a device
-        port: u8,
-    },
-
-    /// The wrong type of device is plugged into the port.
-    #[snafu(display(
-        "Expected a {expected:?} device on port {port}, but found a {actual:?} device"
-    ))]
-    IncorrectDevice {
-        /// The device type that was expected
-        expected: SmartDeviceType,
-        /// The device type that was found
-        actual: SmartDeviceType,
-        /// The port that was expected to have a device
-        port: u8,
-    },
-}
-
-#[cfg(feature = "std")]
-impl From<PortError> for std::io::Error {
-    fn from(value: PortError) -> Self {
-        match value {
-            PortError::Disconnected { .. } => std::io::Error::new(
-                std::io::ErrorKind::AddrNotAvailable,
-                "A device is not connected to the specified port.",
-            ),
-            PortError::IncorrectDevice { .. } => std::io::Error::new(
-                std::io::ErrorKind::AddrInUse,
-                "Port is in use as another device.",
-            ),
-        }
-    }
-}
-
-#[cfg(feature = "embedded-io")]
-impl embedded_io::Error for PortError {
-    fn kind(&self) -> embedded_io::ErrorKind {
-        match self {
-            PortError::Disconnected { .. } => embedded_io::ErrorKind::AddrNotAvailable,
-            PortError::IncorrectDevice { .. } => embedded_io::ErrorKind::AddrInUse,
-        }
-    }
-}

@@ -31,8 +31,8 @@ use vex_sdk::{
     V5_DeviceGpsRaw, V5_DeviceT,
 };
 
-use super::{SmartDevice, SmartDeviceType, SmartPort};
-use crate::{math::Point2, PortError};
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
+use crate::math::Point2;
 
 /// A GPS sensor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -147,7 +147,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -203,7 +204,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -252,7 +254,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -300,7 +303,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -332,7 +336,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -367,7 +372,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -411,7 +417,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -444,7 +451,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -493,7 +501,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -545,7 +554,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -598,7 +608,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -653,7 +664,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -692,7 +704,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -731,7 +744,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -769,7 +783,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -810,7 +825,8 @@ impl GpsSensor {
     ///
     /// # Errors
     ///
-    /// An error is returned if a GPS sensor is not currently connected to the Smart Port.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///

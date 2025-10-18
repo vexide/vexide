@@ -53,8 +53,8 @@
 
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
-use super::{AdiDevice, AdiDeviceType, AdiPort};
-use crate::{adi::adi_port_name, position::Position, PortError};
+use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
+use crate::{adi::adi_port_name, math::Position};
 
 /// VEX Optical Shaft Encoder
 ///
@@ -67,10 +67,7 @@ use crate::{adi::adi_port_name, position::Position, PortError};
 /// # Examples
 ///
 /// ```
-/// use vexide::{
-///     prelude::*,
-///     devices::adi::AdiDevice,
-/// };
+/// use vexide::prelude::*;
 /// use std::time::Duration;
 ///
 /// #[vexide::main]
@@ -104,10 +101,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     devices::adi::AdiDevice,
-    /// };
+    /// use vexide::prelude::*;
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
@@ -169,17 +163,15 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     devices::adi::AdiDevice,
-    /// };
+    /// use vexide::prelude::*;
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
@@ -212,17 +204,15 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     devices::adi::AdiDevice,
-    /// };
+    /// use vexide::prelude::*;
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
@@ -256,17 +246,15 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     devices::adi::AdiDevice,
-    /// };
+    /// use vexide::prelude::*;
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.

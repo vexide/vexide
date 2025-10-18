@@ -72,8 +72,8 @@ use vex_sdk::{
 #[cfg(feature = "dangerous-motor-tuning")]
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
-use super::{SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
-use crate::{position::Position, PortError};
+use super::{PortError, SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
+use crate::math::{Direction, Position};
 
 /// A motor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -97,7 +97,7 @@ pub enum MotorControl {
     /// The motor brakes using a specified [`BrakeMode`].
     Brake(BrakeMode),
 
-    /// The motor outputs a raw voltage.
+    /// The motor outputs a raw voltage (specified in RPM).
     ///
     /// # Fields
     ///
@@ -116,49 +116,8 @@ pub enum MotorControl {
     /// # Fields
     ///
     /// - `0`: The desired position of the motor after the movement operation
-    /// - `1`: The desired speed of the motor during the movement operation
+    /// - `1`: The desired speed of the velocity in RPM during the movement operation
     Position(Position, i32),
-}
-
-/// A possible direction that a motor can be configured as.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum Direction {
-    /// Motor rotates in the forward direction.
-    Forward,
-
-    /// Motor rotates in the reverse direction.
-    Reverse,
-}
-
-impl Direction {
-    /// Returns `true` if the level is [`Forward`](Direction::Forward).
-    #[must_use]
-    pub const fn is_forward(&self) -> bool {
-        match self {
-            Self::Forward => true,
-            Self::Reverse => false,
-        }
-    }
-
-    /// Returns `true` if the level is [`Reverse`](Direction::Reverse).
-    #[must_use]
-    pub const fn is_reverse(&self) -> bool {
-        match self {
-            Self::Forward => false,
-            Self::Reverse => true,
-        }
-    }
-}
-
-impl core::ops::Not for Direction {
-    type Output = Self;
-
-    fn not(self) -> Self::Output {
-        match self {
-            Self::Forward => Self::Reverse,
-            Self::Reverse => Self::Forward,
-        }
-    }
 }
 
 /// Represents the type of a Smart motor.
@@ -279,14 +238,13 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::{BrakeMode, MotorControl}};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -342,14 +300,13 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -369,9 +326,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -398,9 +354,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -442,9 +397,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -472,9 +426,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -509,7 +462,7 @@ impl Motor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::{BrakeMode, MotorControl}};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -528,10 +481,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
-    /// - A [`PortError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
+    /// - A [`SetGearsetError::Port`] error is returned if there was not a motor connected to the port.
+    /// - A [`SetGearsetError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
     ///
     /// # Examples
     ///
@@ -562,9 +513,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -685,9 +635,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -736,9 +685,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -764,9 +712,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -793,9 +740,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -830,9 +776,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -872,9 +817,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -904,9 +848,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -937,9 +880,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -969,9 +911,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1001,9 +942,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1046,9 +986,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1073,9 +1012,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1108,9 +1046,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1134,9 +1071,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1160,16 +1096,15 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// Turn off the motor if it gets too hot:
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -1194,9 +1129,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1221,9 +1155,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1258,15 +1191,14 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
     /// Turn off the motor if it gets too hot:
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -1290,9 +1222,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1322,9 +1253,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1354,9 +1284,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1393,9 +1322,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1422,9 +1350,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1461,9 +1388,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///
@@ -1513,9 +1439,8 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if a Motor was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a Motor was required but
-    ///   something else was connected.
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
     /// # Examples
     ///

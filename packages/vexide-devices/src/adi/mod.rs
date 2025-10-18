@@ -26,7 +26,10 @@
 
 use core::time::Duration;
 
-use crate::PortError;
+use crate::{
+    adi::{encoder::AdiEncoder, range_finder::AdiRangeFinder},
+    smart::PortError,
+};
 
 pub mod accelerometer;
 pub mod addrled;
@@ -42,18 +45,6 @@ pub mod pwm;
 pub mod range_finder;
 pub mod servo;
 
-pub use accelerometer::{AdiAccelerometer, Sensitivity};
-pub use analog::AdiAnalogIn;
-pub use digital::{AdiDigitalIn, AdiDigitalOut};
-pub use encoder::{AdiEncoder, AdiOpticalEncoder};
-pub use gyroscope::AdiGyroscope;
-pub use light_sensor::AdiLightSensor;
-pub use line_tracker::AdiLineTracker;
-pub use motor::AdiMotor;
-pub use potentiometer::{AdiPotentiometer, PotentiometerType};
-pub use pwm::AdiPwmOut;
-pub use range_finder::AdiRangeFinder;
-pub use servo::AdiServo;
 use vex_sdk::{
     vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
     V5_AdiPortConfiguration, V5_DeviceT,
@@ -110,7 +101,7 @@ impl AdiPort {
         self.number
     }
 
-    /// Returns the index of this port's associated [`AdiExpander`](super::smart::AdiExpander) Smart Port, or `None` if this port is not
+    /// Returns the index of this port's associated [`AdiExpander`](super::smart::expander::AdiExpander) Smart Port, or `None` if this port is not
     /// associated with an expander.
     #[must_use]
     pub const fn expander_number(&self) -> Option<u8> {
@@ -153,9 +144,10 @@ impl AdiPort {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     pub fn configured_type(&self) -> Result<AdiDeviceType, PortError> {
         self.validate_expander()?;
 
@@ -233,22 +225,22 @@ pub enum AdiDeviceType {
 
     /// Generic digital input
     ///
-    /// This corresponds to the [`AdiDigitalIn`] device.
+    /// This corresponds to the [`AdiDigitalIn`](digital::AdiDigitalIn) device.
     DigitalIn,
 
     /// Generic digital output
     ///
-    /// This corresponds to the [`AdiDigitalOut`] device.
+    /// This corresponds to the [`AdiDigitalOut`](digital::AdiDigitalOut) device.
     DigitalOut,
 
     /// 12-bit Generic analog input
     ///
-    /// This corresponds to the [`AdiAnalogIn`] device.
+    /// This corresponds to the [`AdiAnalogIn`](analog::AdiAnalogIn) device.
     AnalogIn,
 
     /// 8-git generic PWM output
     ///
-    /// This corresponds to the [`AdiPwmOut`] device.
+    /// This corresponds to the [`AdiPwmOut`](pwm::AdiPwmOut) device.
     PwmOut,
 
     /// Limit Switch / Bumper Switch
@@ -259,24 +251,24 @@ pub enum AdiDeviceType {
 
     /// Cortex-era potentiometer
     ///
-    /// This corresponds to the [`AdiPotentiometer`] device
-    /// when configured with [`PotentiometerType::Legacy`].
+    /// This corresponds to the [`AdiPotentiometer`](potentiometer::AdiPotentiometer) device
+    /// when configured with [`PotentiometerType::Legacy`](potentiometer::PotentiometerType::Legacy).
     Potentiometer,
 
     /// V2 Potentiometer
     ///
-    /// This corresponds to the [`AdiPotentiometer`] device
-    /// when configured with [`PotentiometerType::V2`].
+    /// This corresponds to the [`AdiPotentiometer`](potentiometer::AdiPotentiometer) device
+    /// when configured with [`PotentiometerType::V2`](potentiometer::PotentiometerType::V2).
     PotentiometerV2,
 
     /// Cortex-era yaw-rate gyroscope
     ///
-    /// This corresponds to the [`AdiGyroscope`] device.
+    /// This corresponds to the [`AdiGyroscope`](gyroscope::AdiGyroscope) device.
     Gyro,
 
     /// Cortex-era servo motor
     ///
-    /// This corresponds to the [`AdiServo`] device.
+    /// This corresponds to the [`AdiServo`](servo::AdiServo) device.
     Servo,
 
     /// Quadrature Encoder
@@ -291,22 +283,22 @@ pub enum AdiDeviceType {
 
     /// Cortex-era Line Tracker
     ///
-    /// This corresponds to the [`AdiLineTracker`] device.
+    /// This corresponds to the [`AdiLineTracker`](line_tracker::AdiLineTracker) device.
     LineTracker,
 
     /// Cortex-era Light Sensor
     ///
-    /// This corresponds to the [`AdiLightSensor`] device.
+    /// This corresponds to the [`AdiLightSensor`](light_sensor::AdiLightSensor) device.
     LightSensor,
 
     /// Cortex-era 3-Axis Accelerometer
     ///
-    /// This corresponds to the [`AdiAccelerometer`] device.
+    /// This corresponds to the [`AdiAccelerometer`](accelerometer::AdiAccelerometer) device.
     Accelerometer,
 
     /// MC29 Controller Output
     ///
-    /// This corresponds to the [`AdiMotor`] device.
+    /// This corresponds to the [`AdiMotor`](motor::AdiMotor) device.
     ///
     /// This differs from [`Self::PwmOut`] in that it is specifically designed for controlling
     /// legacy ADI motors. Rather than taking a u8 for output, it takes a i8 allowing negative
@@ -315,7 +307,7 @@ pub enum AdiDeviceType {
 
     /// Slew-rate limited motor PWM output
     ///
-    /// This corresponds to the [`AdiMotor`] device when configured with `slew: true`.
+    /// This corresponds to the [`AdiMotor`](motor::AdiMotor) device when configured with `slew: true`.
     MotorSlew,
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,
