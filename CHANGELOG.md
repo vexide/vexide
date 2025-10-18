@@ -114,6 +114,7 @@ Before releasing:
 - Removed certain time measurement APIs, including `Instant`. Developers should now use `std::time`. (#361) (**Breaking change**)
 - Removed the `vexide_panic` crate. Its functionality has been moved to `vexide_startup`. (#361) (**Breaking change**)
 - Removed `vexide_startup`'s copy of libm it previously linked to. Its functionality is now available from `std`. (#361)
+- Removed `InertialSensor::MAX_HEADING` and `GpsSensor::MAX_HEADING`. Prefer `Angle::FULL_TURN` instead.
 
 ### Miscellaneous
 
