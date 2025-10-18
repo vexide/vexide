@@ -2,6 +2,7 @@
 name = "examples"
 edition = "2021"
 version = "0.0.1"
+publish = false
 
 [profile.release]
 opt-level = "z"
