@@ -73,7 +73,7 @@ use vex_sdk::{
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
 use super::{PortError, SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
-use crate::math::{Direction, Position};
+use crate::math::{Angle, Direction};
 
 /// A motor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -117,7 +117,7 @@ pub enum MotorControl {
     ///
     /// - `0`: The desired position of the motor after the movement operation
     /// - `1`: The desired speed of the velocity in RPM during the movement operation
-    Position(Position, i32),
+    Position(Angle, i32),
 }
 
 /// Represents the type of a Smart motor.
@@ -409,14 +409,10 @@ impl Motor {
     ///
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_position_target(Position::from_degrees(90.0), 200);
+    ///     let _ = motor.set_position_target(Angle::from_degrees(90.0), 200);
     /// }
     /// ```
-    pub fn set_position_target(
-        &mut self,
-        position: Position,
-        velocity: i32,
-    ) -> Result<(), PortError> {
+    pub fn set_position_target(&mut self, position: Angle, velocity: i32) -> Result<(), PortError> {
         self.set_target(MotorControl::Position(position, velocity))
     }
 
@@ -438,7 +434,7 @@ impl Motor {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     // Set the motor's target to a Position so that changing the velocity isn't a noop.
-    ///     let _ = motor.set_target(MotorControl::Position(Position::from_degrees(90.0), 200));
+    ///     let _ = motor.set_target(MotorControl::Position(Angle::from_degrees(90.0), 200));
     ///     let _ = motor.set_profiled_velocity(100).unwrap();
     /// }
     /// ```
@@ -795,9 +791,9 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn position(&self) -> Result<Position, PortError> {
+    pub fn position(&self) -> Result<Angle, PortError> {
         let gearset = self.gearset()?;
-        Ok(Position::from_ticks(
+        Ok(Angle::from_ticks(
             unsafe { vexDeviceMotorPositionGet(self.device) },
             gearset.ticks_per_revolution(),
         ))
@@ -924,7 +920,7 @@ impl Motor {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     loop {
-    ///         motor.set_position_target(Position::from_degrees(10.0), 200).unwrap();
+    ///         motor.set_position_target(Angle::from_degrees(10.0), 200).unwrap();
     ///         sleep(Duration::from_secs(1)).await;
     ///         motor.reset_position().unwrap();
     ///     }
@@ -948,13 +944,14 @@ impl Motor {
     /// # Examples
     ///
     /// Set the current position of the motor to 90 degrees:
+    ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, math::Angle};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     motor.set_position(Position::from_degrees(90.0)).unwrap();
+    ///     motor.set_position(Angle::from_degrees(90.0)).unwrap();
     /// }
     /// ```
     ///
@@ -965,10 +962,10 @@ impl Motor {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     motor.set_position(Position::from_degrees(0.0)).unwrap();
+    ///     motor.set_position(Angle::from_degrees(0.0)).unwrap();
     /// }
     /// ```
-    pub fn set_position(&mut self, position: Position) -> Result<(), PortError> {
+    pub fn set_position(&mut self, position: Angle) -> Result<(), PortError> {
         let gearset = self.gearset()?;
 
         unsafe {

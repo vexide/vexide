@@ -30,7 +30,7 @@ use vex_sdk::{
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
-use crate::math::{Direction, Position};
+use crate::math::{Angle, Direction};
 
 /// A rotation sensor plugged into a Smart Port.
 #[derive(Debug, PartialEq)]
@@ -45,10 +45,10 @@ pub struct RotationSensor {
     direction: Direction,
 
     /// The position data recorded by [`Self::position`] at the time the sensor is reversed.
-    direction_offset: Position,
+    direction_offset: Angle,
 
     /// The raw position data recorded by the SDK at the time the sensor is reversed.
-    raw_direction_offset: Position,
+    raw_direction_offset: Angle,
 }
 
 // SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
@@ -85,8 +85,8 @@ impl RotationSensor {
             device,
             port,
             direction,
-            direction_offset: Position::default(),
-            raw_direction_offset: Position::default(),
+            direction_offset: Angle::ZERO,
+            raw_direction_offset: Angle::ZERO,
         }
     }
 
@@ -113,10 +113,10 @@ impl RotationSensor {
     ///     }
     /// }
     /// ```
-    pub fn position(&self) -> Result<Position, PortError> {
+    pub fn position(&self) -> Result<Angle, PortError> {
         self.validate_port()?;
 
-        let mut delta_position = Position::from_ticks(
+        let mut delta_position = Angle::from_ticks(
             f64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
             Self::TICKS_PER_REVOLUTION,
         ) - self.raw_direction_offset;
@@ -152,7 +152,7 @@ impl RotationSensor {
     ///     }
     /// }
     /// ```
-    pub fn angle(&self) -> Result<Position, PortError> {
+    pub fn angle(&self) -> Result<Angle, PortError> {
         self.validate_port()?;
 
         let mut raw_angle = unsafe { vexDeviceAbsEncAngleGet(self.device) };
@@ -161,7 +161,7 @@ impl RotationSensor {
             raw_angle = (Self::TICKS_PER_REVOLUTION as i32) - raw_angle;
         }
 
-        Ok(Position::from_ticks(
+        Ok(Angle::from_ticks(
             f64::from(raw_angle),
             Self::TICKS_PER_REVOLUTION,
         ))
@@ -226,7 +226,7 @@ impl RotationSensor {
     pub fn reset_position(&mut self) -> Result<(), PortError> {
         // NOTE: We don't use vexDeviceAbsEncReset, since that doesn't actually
         // zero position. It sets position to whatever the angle value is.
-        self.set_position(Position::default())
+        self.set_position(Angle::ZERO)
     }
 
     /// Sets the sensor's position reading.
@@ -238,17 +238,17 @@ impl RotationSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, math::Angle};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
     ///
     ///     // Set position to 15 degrees.
-    ///     _ = sensor.set_position(Position::from_degrees(15.0));
+    ///     _ = sensor.set_position(Angle::from_degrees(15.0));
     /// }
     /// ```
-    pub fn set_position(&mut self, mut position: Position) -> Result<(), PortError> {
+    pub fn set_position(&mut self, mut position: Angle) -> Result<(), PortError> {
         self.validate_port()?;
 
         if self.direction == Direction::Reverse {
@@ -256,8 +256,8 @@ impl RotationSensor {
         }
 
         unsafe {
-            self.direction_offset = Position::default();
-            self.raw_direction_offset = Position::default();
+            self.direction_offset = Angle::ZERO;
+            self.raw_direction_offset = Angle::ZERO;
 
             vexDeviceAbsEncPositionSet(self.device, position.as_ticks(36000) as i32);
         }
@@ -332,7 +332,7 @@ impl RotationSensor {
         // For more information: <https://www.vexforum.com/t/rotation-sensor-bug-workaround-on-vexos-1-1-0/96577/2>
         if new_direction != self.direction() {
             self.direction_offset = self.position()?;
-            self.raw_direction_offset = Position::from_ticks(
+            self.raw_direction_offset = Angle::from_ticks(
                 f64::from(unsafe { vexDeviceAbsEncPositionGet(self.device) }),
                 Self::TICKS_PER_REVOLUTION,
             );

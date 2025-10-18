@@ -54,7 +54,7 @@
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
-use crate::{adi::adi_port_name, math::Position};
+use crate::{adi::adi_port_name, math::Angle};
 
 /// VEX Optical Shaft Encoder
 ///
@@ -171,7 +171,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, math::Angle};
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
@@ -182,14 +182,14 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     ///     loop {
     ///         println!("encoder position: {:?}", encoder.position());
-    ///         sleep(AdiDevice::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
-    pub fn position(&self) -> Result<Position, PortError> {
+    pub fn position(&self) -> Result<Angle, PortError> {
         self.top_port.validate_expander()?;
 
-        Ok(Position::from_ticks(
+        Ok(Angle::from_ticks(
             f64::from(unsafe {
                 vexDeviceAdiValueGet(self.top_port.device_handle(), self.top_port.index())
             }),
@@ -212,7 +212,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, math::Angle};
     /// use std::time::Duration;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
@@ -222,10 +222,10 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///     let encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     // Treat the encoder as if it were at 180 degrees.
-    ///     _ = encoder.set_position(Position::from_degrees(180));
+    ///     _ = encoder.set_position(Angle::from_degrees(180));
     /// }
     /// ```
-    pub fn set_position(&self, position: Position) -> Result<(), PortError> {
+    pub fn set_position(&self, position: Angle) -> Result<(), PortError> {
         self.top_port.validate_expander()?;
 
         unsafe {
@@ -269,7 +269,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     /// }
     /// ```
     pub fn reset_position(&mut self) -> Result<(), PortError> {
-        self.set_position(Position::default())
+        self.set_position(Angle::ZERO)
     }
 }
 
