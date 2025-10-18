@@ -77,7 +77,10 @@ pub fn install_vector_table() {
 pub extern "aapcs" fn svc() -> ! {
     core::arch::naked_asm!(
         "
-        stmdb sp!,{{r0-r3,r12,lr}}
+        @ Save state and SPSR so we can restore it later
+        push {{r0-r3,r12,lr}}
+        mrs r0, spsr
+        push {{r0,r3}} @ r3 is a random register to maintain alignment
 
         @ Extract the SVC immediate number from the instruction and place it into r0.
         @
@@ -85,22 +88,26 @@ pub extern "aapcs" fn svc() -> ! {
         @ or Thumb mode at the time of this exception, so we check the T-bit in SPSR
         @ to determine this.
 
-        @ T-bit check
-        mrs r0, spsr
+        @ T-bit check (spsr was placed into r0 a few lines above)
         tst	r0, #0x20
 
         @ Thumb mode
-        ldrneh r0, [lr,#-2]
+        ldrhne r0, [lr,#-2]
         bicne r0, r0, #0xff00
 
         @ ARM mode
         ldreq r0, [lr,#-4]
         biceq r0, r0, #0xff000000
 
-        @ Call VEXos interrupt handler
+        @ Call VEXos interrupt handler, fn() -> ()
         bl vexSystemSWInterrupt
 
-        ldmia sp!,{{r0-r3,r12,lr}}
+        @ Restore spsr, other registers
+        pop {{r0,r3}}
+            @ Only the cxsf groups are restored because writing to the entire thing could cause issues.
+            @ These bits restore things like interrupt state, condition flags, etc.
+        msr spsr_cxsf, r0
+        pop {{r0-r3,r12,lr}}
         movs pc, lr
         ",
     )
