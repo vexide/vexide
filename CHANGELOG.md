@@ -30,7 +30,7 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
-## [0.8.0-alpha.2]
+## [0.8.0]
 
 ### Added
 
@@ -494,7 +494,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.8.0-alpha.2...HEAD
+[unreleased]: https://github.com/vexide/vexide/compare/v0.8.0...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
@@ -506,4 +506,4 @@ Before releasing:
 [0.6.0]: https://github.com/vexide/vexide/compare/v0.5.1...v0.6.0
 [0.6.1]: https://github.com/vexide/vexide/compare/v0.6.0...v0.6.1
 [0.7.0]: https://github.com/vexide/vexide/compare/v0.6.1...v0.7.0
-[0.8.0-alpha.2]: https://github.com/vexide/vexide/compare/v0.7.0...v0.8.0-alpha.2
+[0.8.0]: https://github.com/vexide/vexide/compare/v0.7.0...v0.8.0
