@@ -44,6 +44,8 @@ use vex_sdk::{
     V5_DeviceAiVisionObject, V5_DeviceT,
 };
 
+use crate::math::Angle;
+
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 
 #[repr(u8)]
@@ -96,7 +98,7 @@ pub enum AiVisionObject {
         /// The height of the object.
         height: u16,
         /// The angle of the object's associated colors. Not always reliably available.
-        angle: f64,
+        angle: Angle,
     },
 
     /// An object detected by apriltag detection.
@@ -988,7 +990,7 @@ impl AiVisionSensor {
                         },
                         width: raw.object.color.width,
                         height: raw.object.color.height,
-                        angle: f64::from(raw.object.color.angle) / 10.0,
+                        angle: Angle::from_degrees(f64::from(raw.object.color.angle) / 10.0),
                     },
                     ObjectType::Model => AiVisionObject::Model {
                         id: raw.id,

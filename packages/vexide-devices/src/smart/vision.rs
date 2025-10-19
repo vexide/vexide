@@ -38,7 +38,7 @@ use vex_sdk::{
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
-use crate::{color::Rgb, math::Point2};
+use crate::{color::Rgb, math::{Angle, Point2}};
 
 /// VEX Vision Sensor
 ///
@@ -1311,7 +1311,7 @@ pub enum DetectionSource {
 /// This struct contains metadata about objects detected by the vision sensor. Objects are
 /// detected by calling [`VisionSensor::objects`] after adding signatures and color codes
 /// to the sensor.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct VisionObject {
     /// The ID of the signature or color code used to detect this object.
     pub source: DetectionSource,
@@ -1331,7 +1331,7 @@ pub struct VisionObject {
     pub center: Point2<u16>,
 
     /// The approximate degrees of rotation of the detected object's bounding box.
-    pub angle: u16,
+    pub angle: Angle,
 }
 
 impl From<V5_DeviceVisionObject> for VisionObject {
@@ -1357,7 +1357,7 @@ impl From<V5_DeviceVisionObject> for VisionObject {
                 x: value.xoffset + (value.width / 2),
                 y: value.yoffset + (value.height / 2),
             },
-            angle: value.angle * 10,
+            angle: Angle::from_degrees(f64::from(value.angle) / 10.0),
         }
     }
 }
