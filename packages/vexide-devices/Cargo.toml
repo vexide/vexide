@@ -1,6 +1,6 @@
 [package]
 name = "vexide-devices"
-version = "0.8.0"
+version = "0.8.0-alpha.2"
 edition = "2021"
 license = "MIT"
 description = "High level device bindings for vexide"
