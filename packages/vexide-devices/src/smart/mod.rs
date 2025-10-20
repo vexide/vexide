@@ -275,11 +275,9 @@ impl SmartPort {
     #[must_use]
     pub fn timestamp(&self) -> Option<LowResolutionTime> {
         if self.device_type().is_some() {
-            Some(
-                LowResolutionTime::from_millis_since_epoch(unsafe {
-                    vexDeviceGetTimestamp(vexDeviceGetByIndex(self.index()))
-                })
-            )
+            Some(LowResolutionTime::from_millis_since_epoch(unsafe {
+                vexDeviceGetTimestamp(vexDeviceGetByIndex(self.index()))
+            }))
         } else {
             None
         }

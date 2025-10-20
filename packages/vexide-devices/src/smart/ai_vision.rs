@@ -44,9 +44,8 @@ use vex_sdk::{
     V5_DeviceAiVisionObject, V5_DeviceT,
 };
 
-use crate::math::Angle;
-
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
+use crate::math::Angle;
 
 #[repr(u8)]
 enum ObjectType {
