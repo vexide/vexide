@@ -23,7 +23,7 @@
 
 use core::{marker::PhantomData, time::Duration};
 
-use mint::{EulerAngles, Quaternion, Vector3};
+use mint::{EulerAngles, IntraZYX, Quaternion, Vector3};
 use vex_sdk::{
     vexDeviceGpsAttitudeGet, vexDeviceGpsDataRateSet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet,
     vexDeviceGpsHeadingGet, vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet,
@@ -403,7 +403,7 @@ impl GpsSensor {
         Ok(Angle::from_degrees(
             unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset,
         )
-        .wrapped(Angle::ZERO..Angle::FULL_TURN))
+        .wrapped_full())
     }
 
     /// Returns the total number of degrees the GPS has spun about the z-axis.
@@ -480,7 +480,7 @@ impl GpsSensor {
     ///     }
     /// }
     /// ```
-    pub fn euler(&self) -> Result<EulerAngles<Angle, Angle>, PortError> {
+    pub fn euler(&self) -> Result<EulerAngles<Angle, IntraZYX>, PortError> {
         self.validate_port()?;
 
         let mut data = V5_DeviceGpsAttitude::default();
@@ -489,9 +489,9 @@ impl GpsSensor {
         }
 
         Ok(EulerAngles {
-            a: Angle::from_degrees(data.pitch),
-            b: Angle::from_degrees(data.yaw),
-            c: Angle::from_degrees(data.roll),
+            a: Angle::from_degrees(data.pitch).wrapped_half(),
+            b: Angle::from_degrees(data.yaw).wrapped_half(),
+            c: Angle::from_degrees(data.roll).wrapped_half(),
             marker: PhantomData,
         })
     }
