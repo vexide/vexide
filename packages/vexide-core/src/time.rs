@@ -181,7 +181,7 @@ impl LowResolutionTime {
     #[must_use]
     pub fn checked_add(self, rhs: Duration) -> Option<LowResolutionTime> {
         Some(Self {
-            millis: self.millis.checked_add(rhs.as_micros().try_into().ok()?)?,
+            millis: self.millis.checked_add(rhs.as_millis().try_into().ok()?)?,
         })
     }
 
@@ -191,7 +191,7 @@ impl LowResolutionTime {
     #[must_use]
     pub fn checked_sub(self, rhs: Duration) -> Option<LowResolutionTime> {
         Some(Self {
-            millis: self.millis.checked_sub(rhs.as_micros().try_into().ok()?)?,
+            millis: self.millis.checked_sub(rhs.as_millis().try_into().ok()?)?,
         })
     }
 }
@@ -205,7 +205,7 @@ impl Add<Duration> for LowResolutionTime {
     /// underlying data structure. See [`LowResolutionTime::checked_add`] for a version without panic.
     fn add(self, rhs: Duration) -> Self::Output {
         self.checked_add(rhs)
-            .expect("overflow when adding duration to low resolution time")
+            .expect("overflow when adding duration to timestamp")
     }
 }
 
@@ -220,7 +220,7 @@ impl Sub<Duration> for LowResolutionTime {
 
     fn sub(self, other: Duration) -> LowResolutionTime {
         self.checked_sub(other)
-            .expect("overflow when subtracting duration from instant")
+            .expect("overflow when subtracting duration from timestamp")
     }
 }
 
