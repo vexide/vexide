@@ -24,16 +24,19 @@ pub struct TaskMetadata {
 /// # Examples
 ///
 /// ```
-/// use vexide::async_runtime::spawn;
+/// use vexide::prelude::*;
 ///
-/// // Spawn a future onto the executor.
-/// let task = spawn(async {
-///     println!("Hello from a task!");
-///     1 + 2
-/// });
+/// #[vexide::main]
+/// async fn main(_peripherals: Peripherals) {
+///     // Spawn a future onto the executor.
+///     let task = vexide::task::spawn(async {
+///         println!("Hello from a task!");
+///         1 + 2
+///     });
 ///
-/// // Wait for the task's output.
-/// assert_eq!(task.await, 3);
+///     // Wait for the task's output.
+///     assert_eq!(task.await, 3);
+/// }
 /// ```
 pub type Task<T> = async_task::Task<T, TaskMetadata>;
 

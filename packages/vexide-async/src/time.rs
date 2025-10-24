@@ -54,10 +54,16 @@ impl Future for Sleep {
 ///
 /// # Examples
 ///
-/// ```
-/// println!("See you in 5 minutes.");
-/// sleep(Duration::from_secs(300)).await;
-/// println!("Hello again!");
+/// ```no_run
+/// use vexide::prelude::*;
+/// use std::time::Duration;
+///
+/// #[vexide::main]
+/// async fn main(_peripherals: Peripherals) {
+///     println!("See you in 5 minutes.");
+///     sleep(Duration::from_secs(300)).await;
+///     println!("Hello again!");
+/// }
 /// ```
 pub fn sleep(duration: Duration) -> Sleep {
     Sleep(Instant::now() + duration)
@@ -71,12 +77,18 @@ pub fn sleep(duration: Duration) -> Sleep {
 /// # Examples
 ///
 /// ```
-/// let now = Instant::now();
-/// let deadline = now + Duration::from_secs(2); // 5 minutes in the future
+/// use vexide::prelude::*;
+/// use std::time::{Duration, Instant};
 ///
-/// println!("See you in 5 minutes.");
-/// sleep_until(deadline).await;
-/// println!("Hello again!");
+/// #[vexide::main]
+/// async fn main(_peripherals: Peripherals) {
+///     let now = Instant::now();
+///     let deadline = now + Duration::from_secs(2); // 5 minutes in the future
+///
+///     println!("See you in 5 minutes.");
+///     sleep_until(deadline).await;
+///     println!("Hello again!");
+/// }
 /// ```
 pub const fn sleep_until(deadline: Instant) -> Sleep {
     Sleep(deadline)

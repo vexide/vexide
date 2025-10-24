@@ -37,6 +37,8 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 /// # Example
 ///
 /// ```
+/// use vexide::backtrace::Backtrace;
+///
 /// let backtrace = Backtrace::capture();
 /// println!("{backtrace}");
 /// ```

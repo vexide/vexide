@@ -34,6 +34,8 @@ use crate::executor::EXECUTOR;
 /// # Examples
 ///
 /// ```
+/// use std::cell::{Cell, RefCell};
+///
 /// use vexide::prelude::*;
 ///
 /// task_local! {
@@ -56,13 +58,11 @@ use crate::executor::EXECUTOR;
 ///     NAMES.with_borrow_mut(|names| names.push(String::from("Johnny")));
 ///     NAMES.with_borrow(|names| assert_eq!(names.len(), 1));
 ///
-///     use vexide::async_runtime::spawn;
-///
 ///     // Creating another task
 ///     spawn(async {
 ///         // The locals of the previous task are completely different.
 ///         assert_eq!(COUNTER.get(), 0);
-///         NAME.with_borrow(|names| assert_eq!(names.len(), 0));
+///         NAMES.with_borrow(|names| assert_eq!(names.len(), 0));
 ///     })
 ///     .await;
 /// }
@@ -81,6 +81,10 @@ unsafe impl<T> Send for LocalKey<T> {}
 /// # Examples
 ///
 /// ```
+/// use std::cell::{Cell, RefCell};
+///
+/// use vexide::prelude::*;
+///
 /// task_local! {
 ///     static PHI: f64 = 1.61803;
 ///     static COUNTER: Cell<u32> = Cell::new(0);

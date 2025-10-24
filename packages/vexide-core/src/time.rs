@@ -95,16 +95,20 @@ impl LowResolutionTime {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::time::LowResolutionTime;
+    /// use vexide::{prelude::*, time::LowResolutionTime};
     ///
-    /// let now = LowResolutionTime::now();
-    /// sleep(Duration::new(1, 0)).await;
-    /// let new_now = LowResolutionTime::now();
-    /// println!("{:?}", new_now.duration_since(now));
-    /// println!("{:?}", now.duration_since(new_now)); // 0ns
+    /// #[vexide::main]
+    /// async fn main(_peripherals: Peripherals) {
+    ///     let now = LowResolutionTime::now();
+    ///     sleep(Duration::new(1, 0)).await;
+    ///
+    ///     let new_now = LowResolutionTime::now();
+    ///     println!("{:?}", new_now.duration_since(now));
+    ///     println!("{:?}", now.duration_since(new_now)); // 0ns
+    /// }
     /// ```
     #[must_use]
     pub fn duration_since(&self, earlier: LowResolutionTime) -> Duration {
@@ -116,16 +120,20 @@ impl LowResolutionTime {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::time::LowResolutionTime;
+    /// use vexide::{prelude::*, time::LowResolutionTime};
     ///
-    /// let now = LowResolutionTime::now();
-    /// sleep(Duration::new(1, 0)).await;
-    /// let new_now = LowResolutionTime::now();
-    /// println!("{:?}", new_now.checked_duration_since(now));
-    /// println!("{:?}", now.checked_duration_since(new_now)); // None
+    /// #[vexide::main]
+    /// async fn main(_peripherals: Peripherals) {
+    ///     let now = LowResolutionTime::now();
+    ///     sleep(Duration::new(1, 0)).await;
+    ///
+    ///     let new_now = LowResolutionTime::now();
+    ///     println!("{:?}", new_now.checked_duration_since(now));
+    ///     println!("{:?}", now.checked_duration_since(new_now)); // None
+    /// }
     /// ```
     #[must_use]
     pub const fn checked_duration_since(&self, earlier: LowResolutionTime) -> Option<Duration> {
@@ -141,16 +149,19 @@ impl LowResolutionTime {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::time::LowResolutionTime;
+    /// use vexide::{prelude::*, time::LowResolutionTime};
     ///
-    /// let now = LowResolutionTime::now();
-    /// sleep(Duration::new(1, 0)).await;
-    /// let new_now = LowResolutionTime::now();
-    /// println!("{:?}", new_now.saturating_duration_since(now));
-    /// println!("{:?}", now.saturating_duration_since(new_now)); // 0ns
+    /// #[vexide::main]
+    /// async fn main(_peripherals: Peripherals) {
+    ///     let now = LowResolutionTime::now();
+    ///     sleep(Duration::new(1, 0)).await;
+    ///     let new_now = LowResolutionTime::now();
+    ///     println!("{:?}", new_now.saturating_duration_since(now));
+    ///     println!("{:?}", now.saturating_duration_since(new_now)); // 0ns
+    /// }
     /// ```
     #[must_use]
     pub fn saturating_duration_since(&self, earlier: LowResolutionTime) -> Duration {
@@ -161,15 +172,18 @@ impl LowResolutionTime {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::time::LowResolutionTime;
+    /// use vexide::{prelude::*, time::LowResolutionTime};
     ///
-    /// let start = LowResolutionTime::now();
-    /// let three_secs = Duration::from_secs(3);
-    /// sleep(three_secs).await;
-    /// assert!(start.elapsed() >= three_secs);
+    /// #[vexide::main]
+    /// async fn main(_peripherals: Peripherals) {
+    ///     let start = LowResolutionTime::now();
+    ///     let three_secs = Duration::from_secs(3);
+    ///     sleep(three_secs).await;
+    ///     assert!(start.elapsed() >= three_secs);
+    /// }
     /// ```
     #[must_use]
     pub fn elapsed(&self) -> Duration {

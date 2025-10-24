@@ -142,7 +142,7 @@ impl CompetitionStatus {
     /// # Example
     ///
     /// ```
-    /// let status = competition::status();
+    /// let status = vexide::competition::status();
     ///
     /// if status.is_connected() {
     ///     println!("Connected to competition control");
@@ -160,6 +160,8 @@ impl CompetitionStatus {
     /// # Example
     ///
     /// ```
+    /// use vexide::competition::{self, CompetitionMode};
+    ///
     /// let status = competition::status();
     ///
     /// match status.mode() {
@@ -187,6 +189,8 @@ impl CompetitionStatus {
     /// # Example
     ///
     /// ```
+    /// use vexide::competition::{self, CompetitionSystem};
+    ///
     /// let status = competition::status();
     ///
     /// match status.system() {
@@ -222,7 +226,7 @@ pub fn status() -> CompetitionStatus {
 /// # Example
 ///
 /// ```
-/// if competition::is_connected() {
+/// if vexide::competition::is_connected() {
 ///     println!("Connected to competition control");
 /// }
 /// ```
@@ -237,6 +241,8 @@ pub fn is_connected() -> bool {
 /// # Example
 ///
 /// ```
+/// use vexide::competition::{self, CompetitionSystem};
+///
 /// match competition::system() {
 ///     None => println!("Not connected to a match controller"),
 ///     Some(CompetitionSystem::FieldControl) => println!("Connected to field controller"),
@@ -251,9 +257,11 @@ pub fn system() -> Option<CompetitionSystem> {
 /// Returns the current competition mode, or phase.
 ///
 /// ```
+/// use vexide::competition::{self, CompetitionMode};
+///
 /// let status = competition::status();
 ///
-/// match competition::mode() {
+/// match vexide::competition::mode() {
 ///     CompetitionMode::Driver => println!("Driver control"),
 ///     CompetitionMode::Autonomous => println!("Auton"),
 ///     CompetitionMode::Disabled => println!("DIsabled"),

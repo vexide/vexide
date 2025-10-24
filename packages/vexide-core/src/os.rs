@@ -21,6 +21,8 @@ use vex_sdk::vexSystemVersion;
 /// # Example
 ///
 /// ```
+/// use vexide::os::{Version, system_version};
+///
 /// // VEXos 1.1.5b0
 /// const VEXOS_1_1_5_0: Version = Version {
 ///     major: 1,
@@ -33,7 +35,7 @@ use vex_sdk::vexSystemVersion;
 /// let version = system_version();
 ///
 /// if version < VEXOS_1_1_5_0 {
-///     panic!("Update your firmware!");
+///     println!("Update your firmware!");
 /// }
 /// ```
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -65,6 +67,8 @@ impl fmt::Display for Version {
 /// # Example
 ///
 /// ```
+/// use vexide::os::{Version, system_version};
+///
 /// // VEXos 1.1.5b0
 /// const VEXOS_1_1_5_0: Version = Version {
 ///     major: 1,
@@ -77,7 +81,7 @@ impl fmt::Display for Version {
 /// let version = system_version();
 ///
 /// if version < VEXOS_1_1_5_0 {
-///     panic!("Update your firmware!");
+///     println!("Update your firmware!");
 /// }
 /// ```
 #[must_use]
