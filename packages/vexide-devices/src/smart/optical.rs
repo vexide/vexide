@@ -30,8 +30,9 @@ use vex_sdk::{
     vexDeviceOpticalStatusGet, V5_DeviceOpticalGesture, V5_DeviceOpticalRaw, V5_DeviceOpticalRgb,
     V5_DeviceT,
 };
+use vexide_core::time::LowResolutionTime;
 
-use super::{PortError, SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 
 /// An optical sensor plugged into a Smart Port.
 #[derive(Debug, Eq, PartialEq)]
@@ -497,7 +498,7 @@ impl OpticalSensor {
             right: gesture.rdata,
             gesture_type: gesture.gesture_type,
             count: gesture.count,
-            time: SmartDeviceTimestamp(gesture.time),
+            time: LowResolutionTime::from_millis_since_epoch(gesture.time),
         }))
     }
 
@@ -577,7 +578,7 @@ pub struct Gesture {
     /// The count of the gesture.
     pub count: u16,
     /// The time of the gesture.
-    pub time: SmartDeviceTimestamp,
+    pub time: LowResolutionTime,
 }
 
 /// RGB data from a [`OpticalSensor`].

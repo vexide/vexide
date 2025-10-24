@@ -34,12 +34,11 @@
 //!
 //! [`peripherals`]: crate::peripherals
 
-use core::fmt;
-
 use vex_sdk::{
     vexDeviceGetByIndex, vexDeviceGetStatus, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType,
     V5_MAX_DEVICE_PORTS,
 };
+use vexide_core::time::LowResolutionTime;
 
 pub mod ai_vision;
 pub mod distance;
@@ -108,13 +107,18 @@ pub trait SmartDevice {
         SmartDeviceType::from(device_types[(self.port_number() - 1) as usize]) == self.device_type()
     }
 
-    /// Returns the timestamp recorded by this device's internal clock.
+    /// Returns a timestamp recorded when the last packet sent by this device was processed by VEXos.
+    ///
+    /// # Precision
+    ///
+    /// This is a timestamp is from the brain's low-resolution timer, meaning it has a precision
+    /// of 1 millisecond. See the [`LowResolutionTime`] API for more information.
     ///
     /// # Errors
     ///
     /// Currently, this function never returns an error. This behavior should be considered unstable.
-    fn timestamp(&self) -> Result<SmartDeviceTimestamp, PortError> {
-        Ok(SmartDeviceTimestamp(unsafe {
+    fn timestamp(&self) -> Result<LowResolutionTime, PortError> {
+        Ok(LowResolutionTime::from_millis_since_epoch(unsafe {
             vexDeviceGetTimestamp(vexDeviceGetByIndex(u32::from(self.port_number() - 1)))
         }))
     }
@@ -267,6 +271,28 @@ impl SmartPort {
         Ok(())
     }
 
+    /// Returns the timestamp of the last device packet processed by this port, or `None`
+    /// if no device is connected.
+    ///
+    /// # Precision
+    ///
+    /// This is a timestamp is from the brain's low-resolution timer, meaning it has a precision
+    /// of 1 millisecond. See the [`LowResolutionTime`] API for more information.
+    ///
+    /// # Errors
+    ///
+    /// Currently, this function never returns an error. This behavior should be considered unstable.
+    #[must_use]
+    pub fn timestamp(&self) -> Option<LowResolutionTime> {
+        if self.device_type().is_some() {
+            Some(LowResolutionTime::from_millis_since_epoch(unsafe {
+                vexDeviceGetTimestamp(vexDeviceGetByIndex(self.index()))
+            }))
+        } else {
+            None
+        }
+    }
+
     /// Returns the raw handle of the underlying Smart device connected to this port.
     pub(crate) unsafe fn device_handle(&self) -> V5_DeviceT {
         unsafe { vexDeviceGetByIndex(self.index()) }
@@ -387,27 +413,6 @@ impl From<SmartDeviceType> for V5_DeviceType {
             SmartDeviceType::GenericSerial => V5_DeviceType::kDeviceTypeGenericSerial,
             SmartDeviceType::Unknown(raw_type) => raw_type,
         }
-    }
-}
-
-/// Represents a timestamp on a Smart device's internal clock.
-///
-/// This type offers no guarantees that the device's clock is in sync with the internal
-/// clock of the Brain, and thus cannot be safely compared with `Instant`s.
-///
-/// There is additionally no guarantee that this is in sync with other Smart devices,
-/// or even the same device if a disconnect occurred causing the clock to reset. As such,
-/// this is effectively a wrapper of `u32`.
-///
-/// # Precision
-///
-/// This type has a precision of 1 millisecond.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct SmartDeviceTimestamp(pub u32);
-
-impl fmt::Debug for SmartDeviceTimestamp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
     }
 }
 

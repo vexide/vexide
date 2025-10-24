@@ -72,7 +72,7 @@ use vex_sdk::{
 #[cfg(feature = "dangerous-motor-tuning")]
 use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
 
-use super::{PortError, SmartDevice, SmartDeviceTimestamp, SmartDeviceType, SmartPort};
+use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 use crate::math::{Angle, Direction};
 
 /// A motor plugged into a Smart Port.
@@ -831,13 +831,10 @@ impl Motor {
     ///     }
     /// }
     /// ```
-    pub fn raw_position(&self) -> Result<(i32, SmartDeviceTimestamp), PortError> {
+    pub fn raw_position(&self) -> Result<i32, PortError> {
         self.validate_port()?;
 
-        let mut timestamp: u32 = 0;
-        let ticks = unsafe { vexDeviceMotorPositionRawGet(self.device, &raw mut timestamp) };
-
-        Ok((ticks, SmartDeviceTimestamp(timestamp)))
+        Ok(unsafe { vexDeviceMotorPositionRawGet(self.device, core::ptr::null_mut()) })
     }
 
     /// Returns the electrical current draw of the motor in amps.

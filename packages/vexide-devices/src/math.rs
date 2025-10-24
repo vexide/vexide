@@ -8,7 +8,7 @@ use core::{
         self,
         consts::{FRAC_PI_2, FRAC_PI_4, FRAC_PI_8, PI, TAU},
     },
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Range, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
 #[cfg(not(feature = "std"))]
@@ -182,21 +182,33 @@ impl Angle {
 
 // MARK: Angle Math
 impl Angle {
-    /// Normalizes the angle to the bounds [min, max).
+    /// Normalizes the angle to the bounds [0, 2pi).
     #[inline]
     #[must_use]
-    pub fn wrapped(&self, range: Range<Angle>) -> Self {
-        let start = range.start.radians;
-        let end = range.end.radians;
-
+    pub fn wrapped_full(&self) -> Self {
         #[cfg(not(feature = "std"))]
         return Self {
-            radians: rem_euclid(self.radians - start, end - start) + start,
+            radians: rem_euclid(self.radians, TAU),
         };
 
         #[cfg(feature = "std")]
         Self {
-            radians: (self.radians - start).rem_euclid(end - start) + start,
+            radians: self.radians.rem_euclid(TAU),
+        }
+    }
+
+    /// Normalizes the angle to the bounds [-pi, pi).
+    #[inline]
+    #[must_use]
+    pub fn wrapped_half(&self) -> Self {
+        #[cfg(not(feature = "std"))]
+        return Self {
+            radians: rem_euclid(-self.radians + PI, TAU) - PI,
+        };
+
+        #[cfg(feature = "std")]
+        Self {
+            radians: (-self.radians + PI).rem_euclid(TAU) - PI,
         }
     }
 

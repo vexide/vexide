@@ -60,6 +60,7 @@ use core::{
 };
 
 use bitflags::bitflags;
+use mint::IntraZYX;
 use snafu::{ensure, Snafu};
 use vex_sdk::{
     vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
@@ -405,7 +406,7 @@ impl InertialSensor {
         Ok(Angle::from_degrees(
             unsafe { vexDeviceImuDegreesGet(self.device) } + self.heading_offset,
         )
-        .wrapped(Angle::ZERO..Angle::FULL_TURN))
+        .wrapped_full())
     }
 
     /// Returns a quaternion representing the Inertial Sensor’s current orientation.
@@ -493,7 +494,7 @@ impl InertialSensor {
     ///     }
     /// }
     /// ```
-    pub fn euler(&self) -> Result<EulerAngles<Angle, Angle>, InertialError> {
+    pub fn euler(&self) -> Result<EulerAngles<Angle, IntraZYX>, InertialError> {
         self.validate_calibration()?;
 
         let mut data = V5_DeviceImuAttitude::default();
@@ -502,9 +503,9 @@ impl InertialSensor {
         }
 
         Ok(EulerAngles {
-            a: Angle::from_degrees(data.pitch),
-            b: Angle::from_degrees(data.yaw),
-            c: Angle::from_degrees(data.roll),
+            a: Angle::from_degrees(data.pitch).wrapped_half(),
+            b: Angle::from_degrees(data.yaw).wrapped_half(),
+            c: Angle::from_degrees(data.roll).wrapped_half(),
             marker: PhantomData,
         })
     }

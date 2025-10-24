@@ -25,7 +25,7 @@ async fn main(_peripherals: Peripherals) {
     sleep(Duration::from_secs(1)).await;
 
     // Tight loops must have sleeps for other tasks to be run.
-    // This includes vital tasks such as the task that flushes serial and device comunication.
+    // This includes vital tasks such as the task that flushes serial and device communication.
     // Remember, this is cooperative multitasking!
     spawn(async {
         loop {
