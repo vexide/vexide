@@ -51,6 +51,8 @@ Before releasing:
 - Added support for using the VEX partner SDK via the `vex-sdk-pros` feature. (#361)
 - Added support for using a no-op SDK (for testing code on desktop) via the `vex-sdk-mock` feature. (#361)
 - On vexide's error details screen, long error messages are now wrapped onto subsequent lines. (#368)
+- Added the new `LowResolutionTime` type to `vexide::time` for recording timestamps taken by the Brain's low resolution clock. (#386)
+- Added `SmartPort::timestamp` for accessing the time that the last packet on the port was processed by VEXos. (#386)
 
 [linked files]: https://github.com/rust-lang/rust/pull/145578
 
@@ -63,6 +65,7 @@ Before releasing:
 - Fixed `AdiDigital*::is_low` improperly returning `is_high` (#324)
 - Fixed an issue where writing to the controller screen would sometimes be unreliable in fast loops (#336)
 - Fixed `Display::erase` always using the display's default background color. (#350)
+- `AiVisionObject` and `VisionObject` now use the new `Angle` type for storing object angles. This fixes a bug with the legacy vision sensor using the wrong angle units. (#386) (**Breaking change**)
 
 ### Changed
 
@@ -97,6 +100,8 @@ Before releasing:
 - The structs related to `CodeSignature`s have been moved into `vexide::program`. (#361) (**Breaking change**)
 - Programs must now opt-in to vexide's custom memory layout by specifying the linker flag `-Tvexide.ld`. (#355) (**Breaking Change**)
 - Programs must now opt-in to using vexide's open source SDK via the `vex-sdk-jumptable` feature. (#361) (**Breaking change**)
+- All methods previously returning `DeviceTimestamp` now return `LowResolutionTime`. (#386) (**Breaking change**)
+- `Motor::raw_position` no longer returns a timestamp along with the raw position. Use `Motor::timestamp` to access this data instead. (#386) (**Breaking change**)
 
 ### Removed
 
@@ -116,6 +121,7 @@ Before releasing:
 - Removed the `vexide_panic` crate. Its functionality has been moved to `vexide_startup`. (#361) (**Breaking change**)
 - Removed `vexide_startup`'s copy of libm it previously linked to. Its functionality is now available from `std`. (#361)
 - Removed `InertialSensor::MAX_HEADING` and `GpsSensor::MAX_HEADING`. Prefer `Angle::FULL_TURN` instead.
+- Removed `DeviceTimestamp` in favor of `LowResolutionTime`. (#386) (**Breaking change**)
 
 ### Miscellaneous
 
