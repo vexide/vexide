@@ -146,7 +146,7 @@ pub mod prelude {
     #[cfg(feature = "async")]
     pub use crate::{
         runtime::block_on,
-        task::{spawn, Task},
+        task::{spawn, task_local, Task},
         time::{sleep, sleep_until},
     };
 }

@@ -53,6 +53,7 @@ Before releasing:
 - On vexide's error details screen, long error messages are now wrapped onto subsequent lines. (#368)
 - Added the new `LowResolutionTime` type to `vexide::time` for recording timestamps taken by the Brain's low resolution clock. (#386)
 - Added `SmartPort::timestamp` for accessing the time that the last packet on the port was processed by VEXos. (#386)
+- Added the `task_local` macro to `vexide::prelude`. (#378)
 
 [linked files]: https://github.com/rust-lang/rust/pull/145578
 
