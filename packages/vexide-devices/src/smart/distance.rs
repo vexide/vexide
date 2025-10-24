@@ -96,7 +96,10 @@ impl DistanceSensor {
     ///     let sensor = DistanceSensor::new(peripherals.port_1);
     ///
     ///     if let Some(object) = sensor.object().unwrap_or_default() {
-    ///         println!("Object of size {}mm is moving at {}m/s", object.distance, object.velocity);
+    ///         println!(
+    ///             "Object of size {}mm is moving at {}m/s",
+    ///             object.distance, object.velocity
+    ///         );
     ///     }
     /// }
     /// ```
@@ -110,15 +113,13 @@ impl DistanceSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     let sensor = DistanceSensor::new(peripherals.port_1);
     ///
-    ///     let distance = sensor.object()
-    ///         .unwrap_or_default()
-    ///         .and_then(|object| {
-    ///             if object.confidence > 0.8 {
-    ///                 Some(object.distance)
-    ///             } else {
-    ///                 None
-    ///             }
-    ///         });
+    ///     let distance = sensor.object().unwrap_or_default().and_then(|object| {
+    ///         if object.confidence > 0.8 {
+    ///             Some(object.distance)
+    ///         } else {
+    ///             None
+    ///         }
+    ///     });
     /// }
     /// ```
     pub fn object(&self) -> Result<Option<DistanceObject>, DistanceObjectError> {
@@ -154,8 +155,9 @@ impl DistanceSensor {
     /// A simple initialization state check:
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

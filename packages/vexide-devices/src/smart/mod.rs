@@ -23,7 +23,7 @@
 //! #[vexide::main]
 //! async fn main(peripherals: Peripherals) {
 //!     // Create a new device on port 1.
-//!     let mut device = Device::new(peripherals.port_1, /* other parameters */);
+//!     let mut device = Device::new(peripherals.port_1 /* other parameters */);
 //!     // Use the device.
 //!     // Device errors are usually only returned by methods, and not the constructor.
 //!     let _ = device.do_something();

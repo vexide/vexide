@@ -135,11 +135,7 @@ impl VisionSensor {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // These signatures can be generated using VEX's vision utility.
-    ///     let example_signature = VisionSignature::new(
-    ///         (10049, 11513, 10781),
-    ///         (-425, 1, -212),
-    ///         4.1,
-    ///     );
+    ///     let example_signature = VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1);
     ///
     ///     // Set signature 1 one the sensor.
     ///     _ = sensor.set_signature(1, example_signature);
@@ -244,11 +240,10 @@ impl VisionSensor {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Set an example signature in the sensor's first slot.
-    ///     _ = sensor.set_signature(1, VisionSignature::new(
-    ///         (10049, 11513, 10781),
-    ///         (-425, 1, -212),
-    ///         4.1,
-    ///     ));
+    ///     _ = sensor.set_signature(
+    ///         1,
+    ///         VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1),
+    ///     );
     ///
     ///     // Read signature 1 off the sensor.
     ///     // This should be the same as the one we just set.
@@ -437,11 +432,7 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::vision::WhiteBalance,
-    ///     color::Rgb
-    /// };
+    /// use vexide::{color::Rgb, prelude::*, smart::vision::WhiteBalance};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -531,11 +522,7 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::vision::WhiteBalance,
-    ///     color::Rgb
-    /// };
+    /// use vexide::{color::Rgb, prelude::*, smart::vision::WhiteBalance};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -590,11 +577,7 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::vision::LedMode,
-    ///     color::Rgb
-    /// };
+    /// use vexide::{color::Rgb, prelude::*, smart::vision::LedMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -636,11 +619,7 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::vision::LedMode,
-    ///     color::Rgb
-    /// };
+    /// use vexide::{color::Rgb, prelude::*, smart::vision::LedMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -688,21 +667,17 @@ impl VisionSensor {
     /// With one signature:
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::vision::VisionSignature,
-    /// };
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Set a color signature on the sensor's first slot.
-    ///     _ = sensor.set_signature(1, VisionSignature::new(
-    ///         (10049, 11513, 10781),
-    ///         (-425, 1, -212),
-    ///         4.1,
-    ///     ));
+    ///     _ = sensor.set_signature(
+    ///         1,
+    ///         VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1),
+    ///     );
     ///
     ///     // Scan for detected objects.
     ///     if let Ok(objects) = sensor.objects() {
@@ -716,8 +691,7 @@ impl VisionSensor {
     /// With multiple signatures:
     ///
     /// ```
-    /// use vexide::prelude::*;
-    /// use vexide::smart::vision::DetectionSource;
+    /// use vexide::{prelude::*, smart::vision::DetectionSource};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -736,9 +710,13 @@ impl VisionSensor {
     ///         for object in objects {
     ///             // Identify which signature the detected object matches.
     ///             match object.source {
-    ///                 DetectionSource::Signature(1) => println!("Detected object matching sig_1: {:?}", object),
-    ///                 DetectionSource::Signature(2) => println!("Detected object matching sig_2: {:?}", object),
-    ///                 _ => {},
+    ///                 DetectionSource::Signature(1) => {
+    ///                     println!("Detected object matching sig_1: {:?}", object)
+    ///                 }
+    ///                 DetectionSource::Signature(2) => {
+    ///                     println!("Detected object matching sig_2: {:?}", object)
+    ///                 }
+    ///                 _ => {}
     ///             }
     ///         }
     ///     }
@@ -785,21 +763,17 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::vision::VisionSignature,
-    /// };
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Set a color signature on the sensor's first slot.
-    ///     _ = sensor.set_signature(1, VisionSignature::new(
-    ///         (10049, 11513, 10781),
-    ///         (-425, 1, -212),
-    ///         4.1,
-    ///     ));
+    ///     _ = sensor.set_signature(
+    ///         1,
+    ///         VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1),
+    ///     );
     ///
     ///     loop {
     ///         if let Ok(n) = sensor.object_count() {
@@ -833,10 +807,7 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::vision::VisionMode,
-    /// };
+    /// use vexide::{prelude::*, smart::vision::VisionMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -886,10 +857,7 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::vision::VisionMode,
-    /// };
+    /// use vexide::{prelude::*, smart::vision::VisionMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -995,11 +963,7 @@ impl VisionSignature {
     /// ```
     /// use vexide::smart::vision::VisionSignature;
     ///
-    /// let my_signature = VisionSignature::new(
-    ///     (10049, 11513, 10781),
-    ///     (-425, 1, -212),
-    ///     4.1,
-    /// );
+    /// let my_signature = VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1);
     /// ```
     #[must_use]
     pub const fn new(
@@ -1024,8 +988,7 @@ impl VisionSignature {
     ///
     /// // Register a signature for detecting red objects.
     /// // This numbers in this signature was generated using VEX's vision utility app.
-    /// let my_signature =
-    ///     VisionSignature::from_utility(1, 10049, 11513, 10781, -425, 1, -212, 4.1, 0);
+    /// let my_signature = VisionSignature::from_utility(1, 10049, 11513, 10781, -425, 1, -212, 4.1, 0);
     /// ```
     #[allow(clippy::too_many_arguments)]
     #[must_use]

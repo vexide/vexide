@@ -108,7 +108,10 @@ impl RotationSensor {
     ///     if let Ok(position) = sensor.position() {
     ///         println!("Position in degrees: {}°", position.as_degrees());
     ///         println!("Position in radians: {}°", position.as_radians());
-    ///         println!("Position in raw ticks (centidegrees): {}°", position.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
+    ///         println!(
+    ///             "Position in raw ticks (centidegrees): {}°",
+    ///             position.as_ticks(RotationSensor::TICKS_PER_REVOLUTION)
+    ///         );
     ///         println!("Number of revolutions spun: {}°", position.as_revolutions());
     ///     }
     /// }
@@ -148,7 +151,10 @@ impl RotationSensor {
     ///     if let Ok(angle) = sensor.angle() {
     ///         println!("Angle in degrees: {}°", angle.as_degrees());
     ///         println!("Angle in radians: {}°", angle.as_radians());
-    ///         println!("Angle in raw ticks (centidegrees): {}°", angle.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
+    ///         println!(
+    ///             "Angle in raw ticks (centidegrees): {}°",
+    ///             angle.as_ticks(RotationSensor::TICKS_PER_REVOLUTION)
+    ///         );
     ///     }
     /// }
     /// ```
@@ -238,7 +244,7 @@ impl RotationSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{prelude::*, math::Angle};
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

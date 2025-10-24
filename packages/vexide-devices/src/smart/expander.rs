@@ -19,7 +19,7 @@
 //! # Examples
 //!
 //! ```
-//! use vexide_devices::{smart::AdiExpander, adi::AdiAnalogIn, peripherals::Peripherals};
+//! use vexide_devices::{adi::AdiAnalogIn, peripherals::Peripherals, smart::AdiExpander};
 //!
 //! let peripherals = Peripherals::take().unwrap();
 //!

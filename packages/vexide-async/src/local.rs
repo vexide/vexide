@@ -34,32 +34,38 @@ use crate::executor::EXECUTOR;
 /// # Examples
 ///
 /// ```
+/// use vexide::prelude::*;
+///
 /// task_local! {
 ///     static PHI: f64 = 1.61803;
 ///     static COUNTER: Cell<u32> = Cell::new(0);
 ///     static NAMES: RefCell<Vec<String>> = RefCell::new(Vec::new());
 /// }
 ///
-/// // LocalKey::with accepts a function and applies it to a reference, returning whatever value
-/// // the function returned
-/// let double_phi = PHI.with(|&phi| phi * 2.0);
-/// assert_eq!(double_phi, 1.61803 * 2.0);
+/// #[vexide::main]
+/// async fn main(_peripherals: Peripherals) {
+///     // LocalKey::with accepts a function and applies it to a reference, returning whatever value
+///     // the function returned
+///     let double_phi = PHI.with(|&phi| phi * 2.0);
+///     assert_eq!(double_phi, 1.61803 * 2.0);
 ///
-/// // We can use interior mutability
-/// COUNTER.set(1);
-/// assert_eq!(COUNTER.get(), 1);
+///     // We can use interior mutability
+///     COUNTER.set(1);
+///     assert_eq!(COUNTER.get(), 1);
 ///
-/// NAMES.with_borrow_mut(|names| names.push(String::from("Johnny")));
-/// NAMES.with_borrow(|names| assert_eq!(names.len(), 1));
+///     NAMES.with_borrow_mut(|names| names.push(String::from("Johnny")));
+///     NAMES.with_borrow(|names| assert_eq!(names.len(), 1));
 ///
-/// use vexide::async_runtime::spawn;
+///     use vexide::async_runtime::spawn;
 ///
-/// // Creating another task
-/// spawn(async {
-///     // The locals of the previous task are completely different.
-///     assert_eq!(COUNTER.get(), 0);
-///     NAME.with_borrow(|names| assert_eq!(names.len(), 0));
-/// }).await;
+///     // Creating another task
+///     spawn(async {
+///         // The locals of the previous task are completely different.
+///         assert_eq!(COUNTER.get(), 0);
+///         NAME.with_borrow(|names| assert_eq!(names.len(), 0));
+///     })
+///     .await;
+/// }
 /// ```
 #[derive(Debug)]
 pub struct LocalKey<T: 'static> {
@@ -127,6 +133,8 @@ impl<T: 'static> LocalKey<T> {
     /// # Examples
     ///
     /// ```
+    /// use vexide::task::task_local;
+    ///
     /// task_local! {
     ///     static PHI: f64 = 1.61803;
     /// }

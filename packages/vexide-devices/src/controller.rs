@@ -863,7 +863,10 @@ impl Controller {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let controller = peripherals.primary_controller;
-    ///     println!("Controller battery capacity: {}", controller.battery_capacity().unwrap_or(0.0));
+    ///     println!(
+    ///         "Controller battery capacity: {}",
+    ///         controller.battery_capacity().unwrap_or(0.0)
+    ///     );
     /// }
     /// ```
     pub fn battery_capacity(&self) -> Result<f64, ControllerError> {

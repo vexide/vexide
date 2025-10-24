@@ -155,8 +155,9 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -188,7 +189,10 @@ impl AdiDigitalOut {
     ///     let digital_out = AdiDigitalOut::with_initial_level(peripherals.adi_a, LogicLevel::High);
     ///
     ///     // The digital output is now set to high
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::High
+    ///     );
     /// }
     /// ```
     #[must_use]
@@ -228,7 +232,10 @@ impl AdiDigitalOut {
     ///     _ = digital_out.set_level(LogicLevel::High);
     ///
     ///     // Let's check if the universe isn't broken
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::High
+    ///     );
     /// }
     /// ```
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), PortError> {
@@ -263,7 +270,10 @@ impl AdiDigitalOut {
     /// async fn main(peripherals: Peripherals) {
     ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::Low);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::Low
+    ///     );
     /// }
     /// ```
     pub fn level(&self) -> Result<LogicLevel, PortError> {
@@ -325,7 +335,10 @@ impl AdiDigitalOut {
     ///     _ = digital_out.set_high();
     ///
     ///     // Let's check if the universe isn't broken
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::High
+    ///     );
     /// }
     /// ```
     pub fn set_high(&mut self) -> Result<(), PortError> {
@@ -354,7 +367,10 @@ impl AdiDigitalOut {
     ///     _ = digital_out.set_low();
     ///
     ///     // Let's check if the universe isn't broken
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::High
+    ///     );
     /// }
     /// ```
     pub fn set_low(&mut self) -> Result<(), PortError> {
@@ -376,8 +392,9 @@ impl AdiDigitalOut {
     /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

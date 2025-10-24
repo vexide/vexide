@@ -83,9 +83,7 @@ impl LowResolutionTime {
     /// use vexide::time::LowResolutionTime;
     ///
     /// // Equivalent to `LowResolutionTime::now()`.
-    /// let now = LowResolutionTime::from_millis_since_epoch(unsafe {
-    ///     vex_sdk::vexSystemTimeGet()
-    /// });
+    /// let now = LowResolutionTime::from_millis_since_epoch(unsafe { vex_sdk::vexSystemTimeGet() });
     /// ```
     #[must_use]
     pub const fn from_millis_since_epoch(millis: u32) -> Self {
@@ -99,6 +97,7 @@ impl LowResolutionTime {
     ///
     /// ```
     /// use std::time::Duration;
+    ///
     /// use vexide::time::LowResolutionTime;
     ///
     /// let now = LowResolutionTime::now();
@@ -119,6 +118,7 @@ impl LowResolutionTime {
     ///
     /// ```
     /// use std::time::Duration;
+    ///
     /// use vexide::time::LowResolutionTime;
     ///
     /// let now = LowResolutionTime::now();
@@ -143,6 +143,7 @@ impl LowResolutionTime {
     ///
     /// ```
     /// use std::time::Duration;
+    ///
     /// use vexide::time::LowResolutionTime;
     ///
     /// let now = LowResolutionTime::now();
@@ -162,6 +163,7 @@ impl LowResolutionTime {
     ///
     /// ```
     /// use std::time::Duration;
+    ///
     /// use vexide::time::LowResolutionTime;
     ///
     /// let start = LowResolutionTime::now();

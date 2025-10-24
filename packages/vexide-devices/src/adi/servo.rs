@@ -48,7 +48,7 @@ impl AdiServo {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{prelude::*, math::Angle};
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -80,8 +80,8 @@ impl AdiServo {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use vexide::{prelude::*, math::Angle};
+    /// ```
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -113,7 +113,7 @@ impl AdiServo {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

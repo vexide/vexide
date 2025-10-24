@@ -291,8 +291,9 @@ impl InertialSensor {
     /// Calibrating in a competition environment:
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// struct Robot {
     ///     imu: InertialSensor,
@@ -343,8 +344,9 @@ impl InertialSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -381,8 +383,9 @@ impl InertialSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -419,8 +422,9 @@ impl InertialSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -435,10 +439,7 @@ impl InertialSensor {
     ///     if let Ok(quaternion) = sensor.quaternion() {
     ///         println!(
     ///             "x: {}, y: {}, z: {}, scalar: {}",
-    ///             quaternion.v.x,
-    ///             quaternion.v.y,
-    ///             quaternion.v.z,
-    ///             quaternion.s,
+    ///             quaternion.v.x, quaternion.v.y, quaternion.v.z, quaternion.s,
     ///         );
     ///     }
     /// }
@@ -471,8 +472,9 @@ impl InertialSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -487,9 +489,7 @@ impl InertialSensor {
     ///     if let Ok(angles) = sensor.euler() {
     ///         println!(
     ///             "pitch: {}°, yaw: {}°, roll: {}°",
-    ///             angles.a,
-    ///             angles.b,
-    ///             angles.c,
+    ///             angles.a, angles.b, angles.c,
     ///         );
     ///     }
     /// }
@@ -520,8 +520,9 @@ impl InertialSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -533,12 +534,7 @@ impl InertialSensor {
     ///     // Read out angular velocity values every 10mS
     ///     loop {
     ///         if let Ok(rates) = sensor.gyro_rate() {
-    ///             println!(
-    ///                 "x: {}°/s, y: {}°/s, z: {}°/s",
-    ///                 rates.x,
-    ///                 rates.y,
-    ///                 rates.z,
-    ///             );
+    ///             println!("x: {}°/s, y: {}°/s, z: {}°/s", rates.x, rates.y, rates.z,);
     ///         }
     ///
     ///         sleep(Duration::from_millis(10)).await;
@@ -572,8 +568,9 @@ impl InertialSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -587,9 +584,7 @@ impl InertialSensor {
     ///         if let Ok(acceleration) = sensor.acceleration() {
     ///             println!(
     ///                 "x: {}G, y: {}G, z: {}G",
-    ///                 acceleration.x,
-    ///                 acceleration.y,
-    ///                 acceleration.z,
+    ///                 acceleration.x, acceleration.y, acceleration.z,
     ///             );
     ///         }
     ///
@@ -627,8 +622,9 @@ impl InertialSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -664,8 +660,9 @@ impl InertialSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -867,7 +864,10 @@ impl InertialStatus {
     ///
     ///     if sensor.calibrate().await.is_ok() {
     ///         if let Ok(status) = sensor.status() {
-    ///             println!("Sensor was calibrated while facing: {:?}", status.physical_orientation());
+    ///             println!(
+    ///                 "Sensor was calibrated while facing: {:?}",
+    ///                 status.physical_orientation()
+    ///             );
     ///         }
     ///     }
     /// }

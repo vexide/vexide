@@ -244,7 +244,10 @@ impl Motor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{prelude::*, smart::motor::{BrakeMode, MotorControl}};
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::motor::{BrakeMode, MotorControl},
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -458,7 +461,10 @@ impl Motor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{prelude::*, smart::motor::{BrakeMode, MotorControl}};
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::motor::{BrakeMode, MotorControl},
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -528,7 +534,7 @@ impl Motor {
     ///         Gearset::Green => println!("Motor is using the green gearset"),
     ///         Gearset::Red => println!("Motor is using the red gearset"),
     ///         Gearset::Blue => println!("Motor is using the blue gearset"),
-    ///    }
+    ///     }
     /// }
     /// ```
     pub fn gearset(&self) -> Result<Gearset, PortError> {
@@ -587,7 +593,7 @@ impl Motor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let motor = Motor:: new(peripherals.port_1, Gearset::Red, Direction::Forward);
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Red, Direction::Forward);
     ///     if motor.is_v5() {
     ///         println!("Motor is an 11W V5 Smart Motor");
     ///     }
@@ -665,11 +671,14 @@ impl Motor {
     ///
     ///         // Calculate acceleration
     ///         let acceleration = (velocity - last_velocity) / elapsed;
-    ///         println!("Velocity: {:.2} RPM, Acceleration: {:.2} RPM/s", velocity, acceleration);
+    ///         println!(
+    ///             "Velocity: {:.2} RPM, Acceleration: {:.2} RPM/s",
+    ///             velocity, acceleration
+    ///         );
     ///
     ///         last_velocity = velocity;
     ///         start_time = Instant::now();
-    ///    }
+    ///     }
     /// }
     /// ```
     pub fn velocity(&self) -> Result<f64, PortError> {
@@ -917,7 +926,9 @@ impl Motor {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     loop {
-    ///         motor.set_position_target(Angle::from_degrees(10.0), 200).unwrap();
+    ///         motor
+    ///             .set_position_target(Angle::from_degrees(10.0), 200)
+    ///             .unwrap();
     ///         sleep(Duration::from_secs(1)).await;
     ///         motor.reset_position().unwrap();
     ///     }
@@ -943,7 +954,7 @@ impl Motor {
     /// Set the current position of the motor to 90 degrees:
     ///
     /// ```
-    /// use vexide::{prelude::*, math::Angle};
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -1297,7 +1308,7 @@ impl Motor {
     ///         }
     ///         println!("Current: {:.2}A", motor.current().unwrap_or(0.0));
     ///         sleep(Motor::UPDATE_INTERVAL).await;
-    ///    }
+    ///     }
     /// }
     /// ```
     pub fn is_driver_over_current(&self) -> Result<bool, PortError> {

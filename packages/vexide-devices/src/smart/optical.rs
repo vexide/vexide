@@ -119,8 +119,9 @@ impl OpticalSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -166,8 +167,9 @@ impl OpticalSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -210,8 +212,9 @@ impl OpticalSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -406,7 +409,10 @@ impl OpticalSensor {
     ///
     ///     // Color detection with RGB values
     ///     if let Ok(rgb) = sensor.color() {
-    ///         println!("Color reading: R={}, G={}, B={}", rgb.red, rgb.green, rgb.blue);
+    ///         println!(
+    ///             "Color reading: R={}, G={}, B={}",
+    ///             rgb.red, rgb.green, rgb.blue
+    ///         );
     ///
     ///         // Example: Check if object is primarily red
     ///         // Note that you should probably use `OpticalSensor::hue` instead for this.
@@ -452,8 +458,9 @@ impl OpticalSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

@@ -162,7 +162,10 @@ impl AdiGyroscope {
     /// async fn main(peripherals: Peripherals) {
     ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
     ///     println!("Calibrating...");
-    ///     println!("Calibration completed successfully? {:?}", gyro.calibrate(Duration::from_secs(2)).await.is_ok());
+    ///     println!(
+    ///         "Calibration completed successfully? {:?}",
+    ///         gyro.calibrate(Duration::from_secs(2)).await.is_ok()
+    ///     );
     /// }
     /// ```
     pub const fn calibrate(&mut self, duration: Duration) -> AdiGyroscopeCalibrationFuture<'_> {

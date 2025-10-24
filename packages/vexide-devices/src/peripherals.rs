@@ -52,11 +52,7 @@
 //! #[vexide::main]
 //! async fn main(peripherals: Peripherals) {
 //!     let mut screen = peripherals.screen;
-//!     let my_motor = Motor::new(
-//!         peripherals.port_1,
-//!         Gearset::Green,
-//!         Direction::Forward,
-//!     );
+//!     let my_motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
 //! }
 //! ```
 //!

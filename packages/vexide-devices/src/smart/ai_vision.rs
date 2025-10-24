@@ -438,9 +438,9 @@ impl AiVisionSensor {
     ///
     /// ```
     /// use vexide::{
-    ///     prelude::*,
     ///     color::Rgb,
-    ///     smart::ai_vision::{AiVisionColorCode, AiVisionColor},
+    ///     prelude::*,
+    ///     smart::ai_vision::{AiVisionColor, AiVisionColorCode},
     /// };
     ///
     /// #[vexide::main]
@@ -515,10 +515,7 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionColorCode,
-    /// };
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionColorCode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -527,7 +524,7 @@ impl AiVisionSensor {
     ///     _ = sensor.set_color_code(1, &code);
     ///
     ///     if let Ok(Some(code)) = sensor.color_code(1) {
-    ///          println!("{:?}", code);
+    ///         println!("{:?}", code);
     ///     } else {
     ///         println!("Something went wrong!");
     ///     }
@@ -573,10 +570,7 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionColorCode,
-    /// };
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionColorCode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -614,11 +608,7 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     color::Rgb,
-    ///     smart::ai_vision::AiVisionColor,
-    /// };
+    /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -670,11 +660,7 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     color::Rgb,
-    ///     smart::ai_vision::AiVisionColor,
-    /// };
+    /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -725,11 +711,7 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     color::Rgb,
-    ///     smart::ai_vision::AiVisionColor,
-    /// };
+    /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -767,15 +749,13 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionDetectionMode,
-    /// };
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionDetectionMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = sensor.set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
+    ///     _ = sensor
+    ///         .set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
     /// }
     /// ```
     pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<(), PortError> {
@@ -828,10 +808,7 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionFlags,
-    /// };
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionFlags};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -906,10 +883,7 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AprilTagFamily,
-    /// };
+    /// use vexide::{prelude::*, smart::ai_vision::AprilTagFamily};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -943,10 +917,7 @@ impl AiVisionSensor {
     /// Loop through all objects of a specific type:
     ///
     /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionObject,
-    /// };
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionObject};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -1057,7 +1028,10 @@ impl AiVisionSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
-    ///         println!("AI Vision sensor currently detects {:?} objects", sensor.object_count());
+    ///         println!(
+    ///             "AI Vision sensor currently detects {:?} objects",
+    ///             sensor.object_count()
+    ///         );
     ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
     ///     }
     /// }

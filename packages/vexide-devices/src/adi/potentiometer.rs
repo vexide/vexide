@@ -60,7 +60,9 @@ impl AdiPotentiometer {
     /// async fn main(peripherals: Peripherals) {
     ///     let potentiometer = AdiPotentiometer::new(peripherals.adi_a, PotentiometerType::V2);
     ///     loop {
-    ///         let angle = potentiometer.angle().expect("Failed to read potentiometer angle");
+    ///         let angle = potentiometer
+    ///             .angle()
+    ///             .expect("Failed to read potentiometer angle");
     ///         println!("Potentiometer Angle: {}", angle);
     ///         sleep(Duration::from_millis(10)).await;
     ///     }
@@ -114,7 +116,9 @@ impl AdiPotentiometer {
     /// async fn main(peripherals: Peripherals) {
     ///     let potentiometer = AdiPotentiometer::new(peripherals.adi_a, PotentiometerType::V2);
     ///     loop {
-    ///         let angle = potentiometer.angle().expect("Failed to read potentiometer angle");
+    ///         let angle = potentiometer
+    ///             .angle()
+    ///             .expect("Failed to read potentiometer angle");
     ///         println!("Potentiometer Angle: {}", angle);
     ///         sleep(Duration::from_millis(10)).await;
     ///     }

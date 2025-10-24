@@ -273,11 +273,7 @@ impl GpsSensor {
     ///
     ///     // Get current position and heading
     ///     if let Ok(position) = gps.position() {
-    ///         println!(
-    ///             "Robot is at x={}, y={}",
-    ///             position.x,
-    ///             position.y,
-    ///         );
+    ///         println!("Robot is at x={}, y={}", position.x, position.y,);
     ///     }
     /// }
     /// ```
@@ -376,8 +372,9 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -420,8 +417,9 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -456,8 +454,9 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -506,8 +505,9 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -523,10 +523,7 @@ impl GpsSensor {
     ///     if let Ok(quaternion) = gps.quaternion() {
     ///         println!(
     ///             "x: {}, y: {}, z: {}, scalar: {}",
-    ///             quaternion.v.x,
-    ///             quaternion.v.y,
-    ///             quaternion.v.z,
-    ///             quaternion.s,
+    ///             quaternion.v.x, quaternion.v.y, quaternion.v.z, quaternion.s,
     ///         );
     ///     }
     /// }
@@ -559,8 +556,9 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -578,9 +576,7 @@ impl GpsSensor {
     ///         if let Ok(acceleration) = gps.acceleration() {
     ///             println!(
     ///                 "x: {}G, y: {}G, z: {}G",
-    ///                 acceleration.x,
-    ///                 acceleration.y,
-    ///                 acceleration.z,
+    ///                 acceleration.x, acceleration.y, acceleration.z,
     ///             );
     ///         }
     ///
@@ -613,8 +609,9 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -630,12 +627,7 @@ impl GpsSensor {
     ///     // Read out angular velocity values every 10mS
     ///     loop {
     ///         if let Ok(rates) = gps.gyro_rate() {
-    ///             println!(
-    ///                 "x: {}°/s, y: {}°/s, z: {}°/s",
-    ///                 rates.x,
-    ///                 rates.y,
-    ///                 rates.z,
-    ///             );
+    ///             println!("x: {}°/s, y: {}°/s, z: {}°/s", rates.x, rates.y, rates.z,);
     ///         }
     ///
     ///         sleep(Duration::from_millis(10)).await;
@@ -669,8 +661,9 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -709,8 +702,9 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -831,8 +825,9 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```
-    /// use vexide::prelude::*;
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

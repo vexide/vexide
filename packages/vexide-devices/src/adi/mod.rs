@@ -84,7 +84,6 @@ impl AdiPort {
     /// [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
     ///
     /// For more information on safely creating peripherals, see [this page](https://vexide.dev/docs/peripherals/).
-    ///
     #[must_use]
     pub const unsafe fn new(number: u8, expander_number: Option<u8>) -> Self {
         Self {
