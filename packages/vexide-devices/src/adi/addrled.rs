@@ -81,6 +81,7 @@ impl<const N: usize> AdiAddrLed<N> {
     ///
     /// # Errors
     ///
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
     /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
     /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
     ///   something else was connected.
@@ -97,9 +98,10 @@ impl<const N: usize> AdiAddrLed<N> {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     pub fn set_pixel(&mut self, index: usize, color: impl Into<Rgb<u8>>) -> Result<(), PortError> {
         assert!(index < N, "pixel index was out of range for LED strip size");
 
@@ -114,9 +116,10 @@ impl<const N: usize> AdiAddrLed<N> {
     ///
     /// # Errors
     ///
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, PortError>
     where
         T: IntoIterator<Item = I>,
