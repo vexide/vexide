@@ -55,8 +55,9 @@ impl Future for Sleep {
 /// # Examples
 ///
 /// ```no_run
-/// use vexide::prelude::*;
 /// use std::time::Duration;
+///
+/// use vexide::prelude::*;
 ///
 /// #[vexide::main]
 /// async fn main(_peripherals: Peripherals) {
@@ -77,8 +78,9 @@ pub fn sleep(duration: Duration) -> Sleep {
 /// # Examples
 ///
 /// ```
-/// use vexide::prelude::*;
 /// use std::time::{Duration, Instant};
+///
+/// use vexide::prelude::*;
 ///
 /// #[vexide::main]
 /// async fn main(_peripherals: Peripherals) {

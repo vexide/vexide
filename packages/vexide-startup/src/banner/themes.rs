@@ -20,8 +20,8 @@
 //! # Examples
 //!
 //! ```
-//! # use vexide::prelude;
-//! # use vexide::startup::banner::themes::BannerTheme;
+//! use vexide::{prelude::*, startup::banner::themes::BannerTheme};
+//!
 //! const CUSTOM_THEME: BannerTheme = BannerTheme {
 //!     emoji: "🦀",
 //!     logo_primary: [
@@ -39,7 +39,7 @@
 //! };
 //!
 //! #[vexide::main(banner(enabled = true, theme = CUSTOM_THEME))]
-//! async fn main(peripherals: vexide::Peripherals) {}
+//! async fn main(peripherals: Peripherals) {}
 //! ```
 #[expect(
     edition_2024_expr_fragment_specifier,

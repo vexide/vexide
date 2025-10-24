@@ -36,6 +36,11 @@ vex-sdk-vexcode = { version = "0.0.1", optional = true }
 
 [dev-dependencies]
 vexide-devices = {  workspace = true }
+vexide = { workspace = true, features = [
+    "full",
+    "vex-sdk-mock",
+    "vex-sdk-jumptable",
+] }
 
 [lints]
 workspace = true
