@@ -107,7 +107,12 @@ pub trait SmartDevice {
         SmartDeviceType::from(device_types[(self.port_number() - 1) as usize]) == self.device_type()
     }
 
-    /// Returns the timestamp recorded by this device's internal clock.
+    /// Returns a timestamp recorded when the last packet sent by this device was processed by VEXos.
+    ///
+    /// # Precision
+    ///
+    /// This is a timestamp is from the brain's low-resolution timer, meaning it has a precision
+    /// of 1 millisecond. See the [`LowResolutionTime`] API for more information.
     ///
     /// # Errors
     ///
@@ -268,6 +273,11 @@ impl SmartPort {
 
     /// Returns the timestamp of the last device packet processed by this port, or `None`
     /// if no device is connected.
+    ///
+    /// # Precision
+    ///
+    /// This is a timestamp is from the brain's low-resolution timer, meaning it has a precision
+    /// of 1 millisecond. See the [`LowResolutionTime`] API for more information.
     ///
     /// # Errors
     ///

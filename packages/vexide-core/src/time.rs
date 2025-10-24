@@ -1,7 +1,6 @@
 //! Extended VEXos system time APIs.
 
 use core::{
-    fmt,
     ops::{Add, AddAssign, Sub, SubAssign},
     time::Duration,
 };
@@ -40,7 +39,7 @@ pub fn user_uptime() -> Duration {
 /// # Precision
 ///
 /// This type has a precision of 1 millisecond.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct LowResolutionTime {
     millis: u32,
 }
@@ -237,11 +236,5 @@ impl Sub<LowResolutionTime> for LowResolutionTime {
     /// or zero duration if that time is later than this one.
     fn sub(self, other: LowResolutionTime) -> Duration {
         self.duration_since(other)
-    }
-}
-
-impl fmt::Debug for LowResolutionTime {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.millis.fmt(f)
     }
 }
