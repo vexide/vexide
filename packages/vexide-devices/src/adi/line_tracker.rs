@@ -53,7 +53,7 @@ impl AdiLineTracker {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -67,7 +67,7 @@ impl AdiLineTracker {
     ///                 .expect("couldn't get reflectivity")
     ///                 * 100.0
     ///         );
-    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(AdiLineTracker::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -92,7 +92,7 @@ impl AdiLineTracker {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -106,7 +106,7 @@ impl AdiLineTracker {
     ///                 .expect("couldn't get reflectivity")
     ///                 * 100.0
     ///         );
-    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(AdiLineTracker::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -131,7 +131,7 @@ impl AdiLineTracker {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -144,7 +144,7 @@ impl AdiLineTracker {
     ///                 .raw_reflectivity()
     ///                 .expect("couldn't get reflectivity")
     ///         );
-    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(AdiLineTracker::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```

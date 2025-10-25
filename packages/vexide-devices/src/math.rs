@@ -175,6 +175,7 @@ impl Angle {
     /// Returns this angle's value scaled to a raw tick value with the provided TPR.
     #[inline]
     #[must_use]
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub(crate) const fn as_ticks(&self, ticks_per_revolution: u32) -> f64 {
         self.radians / TAU * (ticks_per_revolution as f64)
     }

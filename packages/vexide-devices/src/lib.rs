@@ -14,6 +14,8 @@
 //! a singleton to the brain's available I/O and peripherals can be obtained:
 //!
 //! ```
+//! use vexide::peripherals::Peripherals;
+//!
 //! let peripherals = Peripherals::take().unwrap();
 //!
 //! // Pull out port 1 of peripherals. This is a `SmartPort` and can be used to construct any

@@ -41,7 +41,7 @@ impl AdiPwmOut {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -71,7 +71,7 @@ impl AdiPwmOut {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

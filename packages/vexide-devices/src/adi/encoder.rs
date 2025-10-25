@@ -66,7 +66,7 @@ use crate::{adi::adi_port_name, math::Angle};
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use std::time::Duration;
 ///
 /// use vexide::prelude::*;
@@ -77,7 +77,7 @@ use crate::{adi::adi_port_name, math::Angle};
 ///
 ///     loop {
 ///         println!("encoder position: {:?}", encoder.position());
-///         sleep(AdiDevice::ADI_UPDATE_INTERVAL).await;
+///         sleep(AdiOpticalEncoder::UPDATE_INTERVAL).await;
 ///     }
 /// }
 /// ```
@@ -101,7 +101,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -114,7 +114,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     ///     loop {
     ///         println!("encoder position: {:?}", encoder.position());
-    ///         sleep(AdiDevice::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -172,7 +172,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::{math::Angle, prelude::*};
@@ -214,7 +214,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::{math::Angle, prelude::*};
@@ -226,7 +226,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///     let encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     // Treat the encoder as if it were at 180 degrees.
-    ///     _ = encoder.set_position(Angle::from_degrees(180));
+    ///     _ = encoder.set_position(Angle::from_degrees(180.0));
     /// }
     /// ```
     pub fn set_position(&self, position: Angle) -> Result<(), PortError> {
@@ -257,7 +257,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -266,7 +266,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
+    ///     let mut encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     // Reset the encoder position to zero.
     ///     // This doesn't really do anything in this case, but it's a good example.

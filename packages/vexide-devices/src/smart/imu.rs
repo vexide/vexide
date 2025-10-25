@@ -112,7 +112,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -146,7 +146,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -175,7 +175,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -203,7 +203,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -230,7 +230,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -268,7 +268,7 @@ impl InertialSensor {
     ///
     /// Calibration process with error handling and a retry:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -290,7 +290,7 @@ impl InertialSensor {
     ///
     /// Calibrating in a competition environment:
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -303,7 +303,7 @@ impl InertialSensor {
     ///     async fn autonomous(&mut self) {
     ///         loop {
     ///             if let Ok(heading) = self.imu.heading() {
-    ///                 println!("IMU Heading: {heading}°");
+    ///                 println!("IMU Heading: {}°", heading.as_degrees());
     ///             }
     ///
     ///             sleep(Duration::from_millis(10)).await;
@@ -343,7 +343,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -359,7 +359,10 @@ impl InertialSensor {
     ///     sleep(Duration::from_secs(2)).await;
     ///
     ///     if let Ok(rotation) = sensor.rotation() {
-    ///         println!("Robot has rotated {} degrees since calibration.", rotation);
+    ///         println!(
+    ///             "Robot has rotated {} degrees since calibration.",
+    ///             rotation.as_degrees()
+    ///         );
     ///     }
     /// }
     /// ```
@@ -382,7 +385,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -398,7 +401,7 @@ impl InertialSensor {
     ///     sleep(Duration::from_secs(2)).await;
     ///
     ///     if let Ok(heading) = sensor.heading() {
-    ///         println!("Heading is {} degrees.", rotation);
+    ///         println!("Heading is {} degrees.", heading.as_degrees());
     ///     }
     /// }
     /// ```
@@ -421,7 +424,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -471,7 +474,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -489,7 +492,9 @@ impl InertialSensor {
     ///     if let Ok(angles) = sensor.euler() {
     ///         println!(
     ///             "pitch: {}°, yaw: {}°, roll: {}°",
-    ///             angles.a, angles.b, angles.c,
+    ///             angles.a.as_degrees(),
+    ///             angles.b.as_degrees(),
+    ///             angles.c.as_degrees(),
     ///         );
     ///     }
     /// }
@@ -519,7 +524,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -567,7 +572,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -621,7 +626,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -644,7 +649,7 @@ impl InertialSensor {
     /// }
     /// ```
     pub fn reset_heading(&mut self) -> Result<(), InertialError> {
-        self.set_heading(Default::default())
+        self.set_heading(Angle::ZERO)
     }
 
     /// Resets the current reading of the sensor's rotation to zero.
@@ -659,7 +664,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -682,7 +687,7 @@ impl InertialSensor {
     /// }
     /// ```
     pub fn reset_rotation(&mut self) -> Result<(), InertialError> {
-        self.set_rotation(Default::default())
+        self.set_rotation(Angle::ZERO)
     }
 
     /// Sets the current reading of the sensor's rotation to a given value.
@@ -697,21 +702,22 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Set rotation to 90 degrees clockwise.
-    ///     _ = sensor.set_rotation(90.0);
+    ///     _ = sensor.set_rotation(Angle::from_degrees(90.0));
     /// }
     /// ```
-    pub fn set_rotation(&mut self, rotation: f64) -> Result<(), InertialError> {
+    pub fn set_rotation(&mut self, rotation: Angle) -> Result<(), InertialError> {
         self.validate_calibration()?;
 
-        self.rotation_offset = rotation - unsafe { vexDeviceImuHeadingGet(self.device) };
+        self.rotation_offset =
+            rotation.as_degrees() - unsafe { vexDeviceImuHeadingGet(self.device) };
 
         Ok(())
     }
@@ -728,21 +734,21 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     // Set heading to 90 degrees clockwise.
-    ///     _ = sensor.set_heading(90.0);
+    ///     _ = sensor.set_heading(Angle::from_degrees(90.0));
     /// }
     /// ```
-    pub fn set_heading(&mut self, heading: f64) -> Result<(), InertialError> {
+    pub fn set_heading(&mut self, heading: Angle) -> Result<(), InertialError> {
         self.validate_calibration()?;
 
-        self.heading_offset = heading - unsafe { vexDeviceImuDegreesGet(self.device) };
+        self.heading_offset = heading.as_degrees() - unsafe { vexDeviceImuDegreesGet(self.device) };
 
         Ok(())
     }
@@ -765,7 +771,7 @@ impl InertialSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -855,12 +861,12 @@ impl InertialStatus {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
     ///
     ///     if sensor.calibrate().await.is_ok() {
     ///         if let Ok(status) = sensor.status() {

@@ -17,7 +17,7 @@
 //! sensors can only be safely constructed using the [`peripherals`] API. The general device
 //! construction pattern looks like this:
 //!
-//! ```
+//! ```ignore
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
@@ -69,8 +69,13 @@ pub trait SmartDevice {
     /// # Examples
     ///
     /// ```
-    /// let sensor = InertialSensor::new(peripherals.port_1)?;
-    /// assert_eq!(sensor.port_number(), 1);
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     assert_eq!(sensor.port_number(), 1);
+    /// }
     /// ```
     fn port_number(&self) -> u8;
 
@@ -78,24 +83,34 @@ pub trait SmartDevice {
     ///
     /// # Examples
     ///
-    /// ```
-    /// let sensor = InertialSensor::new(peripherals.port_1)?;
-    /// assert_eq!(sensor.device_type(), SmartDeviceType::Imu);
+    /// ```no_run
+    /// use vexide::prelude::*;
+    /// use vexide::smart::SmartDeviceType;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     assert_eq!(sensor.device_type(), SmartDeviceType::Imu);
+    /// }
     /// ```
     fn device_type(&self) -> SmartDeviceType;
 
-    /// Determine if this device type is currently connected to the [`SmartPort`]
-    /// that it's registered to.
+    /// Determines if this device type is currently plugged into its [`SmartPort`].
     ///
     /// # Examples
     ///
     /// ```
-    /// let sensor = InertialSensor::new(peripherals.port_1)?;
+    /// use vexide::prelude::*;
     ///
-    /// if sensor.port_connected() {
-    ///     println!("IMU is connected!");
-    /// } else {
-    ///     println!("No IMU connection found.");
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     if sensor.is_connected() {
+    ///         println!("IMU is connected!");
+    ///     } else {
+    ///         println!("No IMU connection found.");
+    ///     }
     /// }
     /// ```
     fn is_connected(&self) -> bool {
@@ -191,6 +206,8 @@ impl SmartPort {
     /// # Examples
     ///
     /// ```
+    /// use vexide::smart::SmartPort;
+    ///
     /// // Create a new Smart Port at index 1.
     /// // This is unsafe! You are responsible for ensuring that only one device registered on a
     /// // single port index.
@@ -208,6 +225,8 @@ impl SmartPort {
     /// # Examples
     ///
     /// ```
+    /// use vexide::smart::SmartPort;
+    ///
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
     /// assert_eq!(my_port.number(), 1);
@@ -227,6 +246,8 @@ impl SmartPort {
     /// # Examples
     ///
     /// ```
+    /// use vexide::smart::SmartPort;
+    ///
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
     /// if let Some(device_type) = my_port.device_type() {

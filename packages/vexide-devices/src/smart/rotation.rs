@@ -11,7 +11,7 @@
 //! chip inside the rotation sensor (a Cortex M0+) then keeps track of the total rotations of the sensor
 //! to determine total position traveled.
 //!
-//! Position is reported by VEXos in centidegrees before being converted to an instance of [`Position`].
+//! Position is reported by VEXos in centidegrees before being converted to an instance of the [`Angle`] type.
 //!
 //! The absolute angle reading is preserved across power cycles (similar to a potentiometer), while the
 //! position count stores the cumulative forward and reverse revolutions relative to program start, however
@@ -98,7 +98,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -108,11 +108,7 @@ impl RotationSensor {
     ///     if let Ok(position) = sensor.position() {
     ///         println!("Position in degrees: {}°", position.as_degrees());
     ///         println!("Position in radians: {}°", position.as_radians());
-    ///         println!(
-    ///             "Position in raw ticks (centidegrees): {}°",
-    ///             position.as_ticks(RotationSensor::TICKS_PER_REVOLUTION)
-    ///         );
-    ///         println!("Number of revolutions spun: {}°", position.as_revolutions());
+    ///         println!("Number of turns (revolutions) spun: {}°", position.as_turns());
     ///     }
     /// }
     /// ```
@@ -141,7 +137,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -151,10 +147,6 @@ impl RotationSensor {
     ///     if let Ok(angle) = sensor.angle() {
     ///         println!("Angle in degrees: {}°", angle.as_degrees());
     ///         println!("Angle in radians: {}°", angle.as_radians());
-    ///         println!(
-    ///             "Angle in raw ticks (centidegrees): {}°",
-    ///             angle.as_ticks(RotationSensor::TICKS_PER_REVOLUTION)
-    ///         );
     ///     }
     /// }
     /// ```
@@ -180,14 +172,14 @@ impl RotationSensor {
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
     /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
     ///
-    ///     if let Some(velocity) = sensor.velocity() {
+    ///     if let Ok(velocity) = sensor.velocity() {
     ///         println!(
     ///             "Velocity in RPM {}",
     ///             velocity / 6.0, // 1rpm = 6dps
@@ -215,7 +207,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -243,7 +235,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
@@ -289,7 +281,7 @@ impl RotationSensor {
     ///
     /// Set the sensor's direction to [`Direction::Reverse`].
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -303,7 +295,7 @@ impl RotationSensor {
     ///
     /// Reverse the sensor's direction (set to opposite of the previous direction):
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -361,7 +353,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -418,7 +410,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

@@ -140,6 +140,8 @@ pub mod prelude {
             rotation::RotationSensor,
             serial::SerialPort,
             vision::VisionSensor,
+            electromagnet::Electromagnet,
+            gps::GpsSensor,
             SmartDevice,
         },
     };

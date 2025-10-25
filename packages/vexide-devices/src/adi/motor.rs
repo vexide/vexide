@@ -45,7 +45,7 @@ impl AdiMotor {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -85,7 +85,7 @@ impl AdiMotor {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -112,7 +112,7 @@ impl AdiMotor {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -146,7 +146,7 @@ impl AdiMotor {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -174,7 +174,7 @@ impl AdiMotor {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -214,7 +214,7 @@ impl AdiMotor {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

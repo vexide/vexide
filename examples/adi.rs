@@ -16,7 +16,7 @@ async fn main(peripherals: Peripherals) {
         // Print out the sensor values to stdout every 10ms (the update rate of ADI devices).
         println!(
             "Potentiometer Angle: {}\nLine Tracker Reflectivity: {}%\nUltrasonic Distance: {:?}\n",
-            potentiometer.angle().unwrap(),
+            potentiometer.angle().unwrap().as_degrees(),
             line_tracker.reflectivity().unwrap() * 100.0,
             range_finder.distance().unwrap()
         );

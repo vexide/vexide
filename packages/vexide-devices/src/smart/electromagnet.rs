@@ -41,7 +41,7 @@ impl Electromagnet {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -74,7 +74,7 @@ impl Electromagnet {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -104,7 +104,7 @@ impl Electromagnet {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -132,7 +132,7 @@ impl Electromagnet {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -160,7 +160,7 @@ impl Electromagnet {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -187,7 +187,7 @@ impl Electromagnet {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

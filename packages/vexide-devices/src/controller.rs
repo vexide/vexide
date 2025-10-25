@@ -308,7 +308,8 @@ impl ControllerScreen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -349,7 +350,8 @@ impl ControllerScreen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -391,7 +393,7 @@ impl ControllerScreen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -427,7 +429,7 @@ impl ControllerScreen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -474,7 +476,7 @@ impl ControllerScreen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -520,14 +522,14 @@ impl ControllerScreen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
     ///
-    ///     _ = controller.try_set_text("Hello, world!", 1, 1);
+    ///     _ = controller.screen.try_set_text("Hello, world!", 1, 1);
     /// }
     /// ```
     pub fn try_set_text(
@@ -675,8 +677,10 @@ impl Controller {
     /// # Examples
     ///
     /// Perform a different action based on the controller ID.
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::controller::ControllerId;
     ///
     /// fn print_a_pressed(controller: &Controller) {
     ///     let state = controller.state().unwrap_or_default();
@@ -708,7 +712,7 @@ impl Controller {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -717,7 +721,8 @@ impl Controller {
     ///
     ///     loop {
     ///         let state = controller.state().unwrap_or_default();
-    ///         println("Left Stick X: {}", state.left_stick.x());
+    ///
+    ///         println!("Left Stick X: {}", state.left_stick.x());
     ///         if state.button_a.is_now_pressed() {
     ///             println!("Button A was just pressed!");
     ///         }
@@ -727,6 +732,7 @@ impl Controller {
     ///         if state.button_b.is_released() {
     ///             println!("Button B is released!");
     ///         }
+    ///
     ///         sleep(Controller::UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -829,8 +835,9 @@ impl Controller {
     ///
     /// Print less information over a slow and unreliable VEXnet connection:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::controller::ControllerConnection;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -857,7 +864,7 @@ impl Controller {
     ///
     /// Print the controller's battery capacity:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -888,7 +895,7 @@ impl Controller {
     ///
     /// Print a warning if the controller battery is low:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -939,7 +946,7 @@ impl Controller {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -976,7 +983,7 @@ impl Controller {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

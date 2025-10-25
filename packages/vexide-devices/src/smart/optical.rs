@@ -89,7 +89,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -118,7 +118,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -166,7 +166,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -211,7 +211,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -250,7 +250,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -292,7 +292,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -328,7 +328,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -367,7 +367,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -400,7 +400,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -457,7 +457,7 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -518,12 +518,12 @@ impl OpticalSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = OpticalSensor::new(peripherals.port_1, Direction::Forward);
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
     ///
     ///     if let Ok(status) = sensor.status() {
     ///         println!("Status: {:b}", status);

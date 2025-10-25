@@ -205,7 +205,7 @@ impl Motor {
     /// async fn main(peripherals: Peripherals) {
     ///     let motor = Motor::new(peripherals.port_1, Gearset::Red, Direction::Forward);
     ///     assert!(motor.is_v5());
-    ///     assert_eq!(motor.max_voltage().unwrap(), Motor::V5_MAX_VOLTAGE);
+    ///     assert_eq!(motor.max_voltage(), Motor::V5_MAX_VOLTAGE);
     /// }
     #[must_use]
     pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
@@ -225,7 +225,7 @@ impl Motor {
     /// async fn main(peripherals: Peripherals) {
     ///     let motor = Motor::new_exp(peripherals.port_1, Direction::Forward);
     ///     assert!(motor.is_exp());
-    ///     assert_eq!(motor.max_voltage().unwrap(), Motor::EXP_MAX_VOLTAGE);
+    ///     assert_eq!(motor.max_voltage(), Motor::EXP_MAX_VOLTAGE);
     /// }
     #[must_use]
     pub fn new_exp(port: SmartPort, direction: Direction) -> Self {
@@ -243,7 +243,9 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
     /// use vexide::{
     ///     prelude::*,
     ///     smart::motor::{BrakeMode, MotorControl},
@@ -308,13 +310,13 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.brake(BrakeMode::Hold);
+    ///     _ = motor.brake(BrakeMode::Hold);
     /// }
     /// ```
     pub fn brake(&mut self, mode: BrakeMode) -> Result<(), PortError> {
@@ -336,7 +338,9 @@ impl Motor {
     ///
     /// Spin a motor at 100 RPM:
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -364,21 +368,22 @@ impl Motor {
     ///
     /// Give the motor full power:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut v5_motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     let mut exp_motor = Motor::new_exp(peripherals.port_2, Direction::Forward);
-    ///     let _ = v5_motor.set_voltage(v5_motor.max_voltage());
-    ///     let _ = exp_motor.set_voltage(exp_motor.max_voltage());
+    ///
+    ///     _ = v5_motor.set_voltage(v5_motor.max_voltage());
+    ///     _ = exp_motor.set_voltage(exp_motor.max_voltage());
     /// }
     /// ```
     ///
     /// Drive the motor based on a controller joystick:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -388,7 +393,10 @@ impl Motor {
     ///     loop {
     ///         let controller_state = controller.state().unwrap_or_default();
     ///         let voltage = controller_state.left_stick.x() * motor.max_voltage();
-    ///         motor.set_voltage(voltage).unwrap();
+    ///
+    ///         _ = motor.set_voltage(voltage);
+    ///
+    ///         sleep(Motor::WRITE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -405,14 +413,16 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     ///
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_position_target(Angle::from_degrees(90.0), 200);
+    ///
+    ///     // Turn the motor to a position of 90 degrees at 200rpm.
+    ///     _ = motor.set_position_target(Angle::from_degrees(90.0), 200);
     /// }
     /// ```
     pub fn set_position_target(&mut self, position: Angle, velocity: i32) -> Result<(), PortError> {
@@ -430,15 +440,16 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///
     ///     // Set the motor's target to a Position so that changing the velocity isn't a noop.
-    ///     let _ = motor.set_target(MotorControl::Position(Angle::from_degrees(90.0), 200));
-    ///     let _ = motor.set_profiled_velocity(100).unwrap();
+    ///     _ = motor.set_position_target(Angle::from_degrees(90.0), 200);
+    ///     _ = motor.set_profiled_velocity(100).unwrap();
     /// }
     /// ```
     pub fn set_profiled_velocity(&mut self, velocity: i32) -> Result<(), PortError> {
@@ -460,7 +471,7 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{
     ///     prelude::*,
     ///     smart::motor::{BrakeMode, MotorControl},
@@ -470,6 +481,7 @@ impl Motor {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     motor.set_target(MotorControl::Brake(BrakeMode::Hold));
+    ///
     ///     let target = motor.target();
     ///     assert_eq!(target, MotorControl::Brake(BrakeMode::Hold));
     /// }
@@ -488,7 +500,7 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -522,15 +534,16 @@ impl Motor {
     ///
     /// Print the gearset of a motor:
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::motor::Gearset};
     ///
     /// fn print_gearset(motor: &Motor) {
     ///     let Ok(gearset) = motor.gearset() else {
     ///         println!("Failed to get gearset. Is this an EXP motor?");
     ///         return;
     ///     };
-    ///     match motor.gearset() {
+    ///
+    ///     match gearset {
     ///         Gearset::Green => println!("Motor is using the green gearset"),
     ///         Gearset::Red => println!("Motor is using the red gearset"),
     ///         Gearset::Blue => println!("Motor is using the blue gearset"),
@@ -551,8 +564,9 @@ impl Motor {
     /// # Examples
     ///
     /// Match based on motor type:
+    ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::MotorType};
     ///
     /// fn print_motor_type(motor: &Motor) {
     ///     match motor.motor_type() {
@@ -565,6 +579,7 @@ impl Motor {
     pub const fn motor_type(&self) -> MotorType {
         self.motor_type
     }
+
     /// Returns `true` if the motor is a 5.5W (EXP) Smart Motor.
     ///
     /// # Examples
@@ -584,6 +599,7 @@ impl Motor {
     pub const fn is_exp(&self) -> bool {
         self.motor_type.is_exp()
     }
+
     /// Returns `true` if the motor is an 11W (V5) Smart Motor.
     ///
     /// # Examples
@@ -609,11 +625,13 @@ impl Motor {
     /// # Examples
     ///
     /// Run a motor at max speed, agnostic of its type:
-    /// ```
-    /// use vexide::prelude::*;
     ///
-    /// fn run_motor_at_max_speed(motor: &mut Motor) {
-    ///     motor.set_voltage(motor.max_voltage()).unwrap();
+    /// ```no_run
+    /// use vexide::prelude::*;
+    /// use vexide::smart::PortError;
+    ///
+    /// fn run_motor_at_max_speed(motor: &mut Motor) -> Result<(), PortError> {
+    ///     motor.set_voltage(motor.max_voltage())
     /// }
     #[must_use]
     pub const fn max_voltage(&self) -> f64 {
@@ -643,7 +661,8 @@ impl Motor {
     /// # Examples
     ///
     /// Get the current velocity of a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -655,7 +674,10 @@ impl Motor {
     /// ```
     ///
     /// Calculate acceleration of a motor:
-    /// ```
+    ///
+    /// ```no_run
+    /// use std::time::Instant;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -664,8 +686,10 @@ impl Motor {
     ///
     ///     let mut last_velocity = motor.velocity().unwrap();
     ///     let mut start_time = Instant::now();
+    ///
     ///     loop {
     ///         let velocity = motor.velocity().unwrap();
+    ///
     ///         // Make sure we don't divide by zero
     ///         let elapsed = start_time.elapsed().as_secs_f64() + 0.001;
     ///
@@ -678,6 +702,8 @@ impl Motor {
     ///
     ///         last_velocity = velocity;
     ///         start_time = Instant::now();
+    ///
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -696,7 +722,8 @@ impl Motor {
     /// # Examples
     ///
     /// Print the power drawn by a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -724,7 +751,7 @@ impl Motor {
     ///
     /// Print the torque output of a motor:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -751,7 +778,8 @@ impl Motor {
     /// # Examples
     ///
     /// Print the voltage drawn by a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -770,7 +798,7 @@ impl Motor {
 
     /// Returns the angular position of the motor as measured by the IME (integrated motor encoder).
     ///
-    /// This is returned as an instance of the [`Position`] struct, which may be converted to degrees,
+    /// This is returned as an instance of the [`Angle`] struct, which may be converted to degrees,
     /// radians, revolutions, etc...
     ///
     /// # Gearing affects position!
@@ -788,14 +816,15 @@ impl Motor {
     ///
     /// Print the current position of a motor:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///
     ///     loop {
-    ///         println!("Position: {:?}", motor.position().unwrap());
+    ///         println!("Position: {:?}", motor.position().unwrap().as_degrees());
     ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -808,9 +837,7 @@ impl Motor {
         ))
     }
 
-    /// Returns the most recently recorded raw encoder tick data from the motor's IME
-    /// along with a timestamp of the internal clock of the motor indicating when the
-    /// data was recorded.
+    /// Returns the most recently recorded raw encoder tick data from the motor's IME.
     ///
     /// The motor's integrated encoder has a TPR of 4096. Gearset is not taken into
     /// consideration when dealing with the raw value, meaning this measurement will be
@@ -827,15 +854,16 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     loop {
-    ///         let (raw_pos, _) = motor.raw_position().unwrap();
+    ///         let raw_pos = motor.raw_position().unwrap();
     ///         println!("Raw Position: {}", raw_pos);
+    ///
     ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -856,13 +884,15 @@ impl Motor {
     /// # Examples
     ///
     /// Print the current draw of a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     motor.set_voltage(motor.max_voltage()).unwrap();
+    ///
     ///     loop {
     ///         println!("Current: {:.2}A", motor.current().unwrap());
     ///         sleep(Motor::UPDATE_INTERVAL).await;
@@ -888,13 +918,15 @@ impl Motor {
     /// # Examples
     ///
     /// Print the efficiency of a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(motor.max_voltage())
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     _ = motor.set_voltage(motor.max_voltage());
+    ///
     ///     loop {
     ///         println!("Efficiency: {:.2}", motor.efficiency().unwrap());
     ///         sleep(Motor::UPDATE_INTERVAL).await;
@@ -919,12 +951,16 @@ impl Motor {
     /// # Examples
     ///
     /// Move the motor in increments of 10 degrees:
-    /// ```
-    /// use vexide::prelude::*;
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///
     ///     loop {
     ///         motor
     ///             .set_position_target(Angle::from_degrees(10.0), 200)
@@ -953,7 +989,7 @@ impl Motor {
     ///
     /// Set the current position of the motor to 90 degrees:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
@@ -964,8 +1000,9 @@ impl Motor {
     /// ```
     ///
     /// Reset the position of the motor to 0 degrees (analogous to [`reset_position`](Motor::reset_position)):
-    /// ```
-    /// use vexide::prelude::*;
+    ///
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -998,13 +1035,13 @@ impl Motor {
     ///
     /// Limit the current draw of a motor to 2.5A:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_current_limit(2.5);
+    ///     _ = motor.set_current_limit(2.5);
     /// }
     /// ```
     pub fn set_current_limit(&mut self, limit: f64) -> Result<(), PortError> {
@@ -1024,15 +1061,15 @@ impl Motor {
     ///
     /// Limit the voltage of a motor to 4V:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage_limit(4.0);
+    ///     _ = motor.set_voltage_limit(4.0);
     ///     // Will appear as if the voltage was set to only 4V
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
     /// }
     /// ```
     pub fn set_voltage_limit(&mut self, limit: f64) -> Result<(), PortError> {
@@ -1058,7 +1095,7 @@ impl Motor {
     ///
     /// Print the current limit of a motor:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -1083,7 +1120,7 @@ impl Motor {
     ///
     /// Print the voltage limit of a motor:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -1108,7 +1145,7 @@ impl Motor {
     ///
     /// Turn off the motor if it gets too hot:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
@@ -1141,8 +1178,9 @@ impl Motor {
     ///
     /// Check if a motor is "busy" (busy only occurs if communicating with the motor fails)
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::smart::motor::MotorStatus;
     ///
     /// fn is_motor_busy(motor: &Motor) -> bool {
     ///     motor.status().unwrap().contains(MotorStatus::BUSY)
@@ -1167,8 +1205,9 @@ impl Motor {
     ///
     /// Check if a motor is over temperature:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::smart::motor::MotorFaults;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -1202,19 +1241,22 @@ impl Motor {
     /// # Examples
     ///
     /// Turn off the motor if it gets too hot:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
+    ///
     ///     loop {
-    ///         if let Ok(true) = motor.is_over_temperature() {
-    ///             let _ = motor.brake(BrakeMode::Coast);
+    ///         if motor.is_over_temperature() == Ok(true) {
+    ///             _ = motor.brake(BrakeMode::Coast);
     ///         } else {
-    ///             let _ = motor.set_voltage(12.0);
+    ///             _ = motor.set_voltage(12.0);
     ///         }
+    ///
     ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -1234,15 +1276,16 @@ impl Motor {
     ///
     /// Print a warning if the motor draws too much current:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
+    ///
     ///     loop {
-    ///         if let Ok(true) = motor.is_over_current() {
+    ///         if motor.is_over_current() == Ok(true) {
     ///             println!("Warning: Motor is drawing too much current");
     ///         }
     ///         println!("Current: {:.2}A", motor.current().unwrap_or(0.0));
@@ -1265,15 +1308,16 @@ impl Motor {
     ///
     /// Print a warning if the motor's H-bridge has a fault:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
+    ///
     ///     loop {
-    ///         if let Ok(true) = motor.is_driver_fault() {
+    ///         if motor.is_driver_fault() == Ok(true) {
     ///             println!("Warning: Motor has a H-bridge fault");
     ///         }
     ///         println!("Current: {:.2}A", motor.current().unwrap_or(0.0));
@@ -1295,15 +1339,17 @@ impl Motor {
     /// # Examples
     ///
     /// Print a warning if it draws too much current:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
+    ///
     ///     loop {
-    ///         if let Ok(true) = motor.is_driver_over_current() {
+    ///         if motor.is_driver_over_current() == Ok(true) {
     ///             println!("Warning: Motor is drawing too much current");
     ///         }
     ///         println!("Current: {:.2}A", motor.current().unwrap_or(0.0));
@@ -1332,7 +1378,7 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -1360,7 +1406,7 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// fn print_motor_direction(motor: &Motor) {
@@ -1398,7 +1444,7 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -1449,7 +1495,7 @@ impl Motor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

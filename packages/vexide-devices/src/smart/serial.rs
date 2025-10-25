@@ -66,7 +66,7 @@ impl SerialPort {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -91,7 +91,7 @@ impl SerialPort {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -123,7 +123,9 @@ impl SerialPort {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::io::Write;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -144,12 +146,12 @@ impl SerialPort {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let serial = SerialPort::open(peripherals.port_1, 115200).await;
+    ///     let mut serial = SerialPort::open(peripherals.port_1, 115200).await;
     ///
     ///     loop {
     ///         if let Some(byte) = serial.read_byte() {
@@ -174,7 +176,7 @@ impl SerialPort {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -202,7 +204,7 @@ impl SerialPort {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -228,7 +230,7 @@ impl SerialPort {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -236,10 +238,8 @@ impl SerialPort {
     ///     let mut serial = SerialPort::open(peripherals.port_1, 115200).await;
     ///
     ///     if serial.unread_bytes().is_ok_and(|bytes| bytes > 0) {
-    ///         if let Ok(byte) = serial.read_byte() {
-    ///             // Okay to unwrap here, since we've established that there was at least one byte to read.
-    ///             println!("{}", byte.unwrap());
-    ///         }
+    ///         // Okay to unwrap here, since we've established that there was at least one byte to read.
+    ///         println!("{}", serial.read_byte().unwrap());
     ///     }
     /// }
     /// ```
@@ -258,7 +258,7 @@ impl SerialPort {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

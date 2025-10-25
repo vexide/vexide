@@ -81,7 +81,7 @@ impl VisionSensor {
     /// The update rate of the vision sensor.
     pub const UPDATE_INTERVAL: Duration = Duration::from_millis(50);
 
-    /// Creates a new vision sensor from a Smart Port.
+    /// Creates a new vision sensor from a [`SmartPort`].
     ///
     /// # Examples
     ///
@@ -127,7 +127,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
@@ -232,7 +232,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
@@ -268,7 +268,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
@@ -332,7 +332,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     /// use vexide::smart::vision::{VisionSignature, VisionCode, DetectionSource};
     ///
@@ -396,7 +396,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -431,7 +431,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{color::Rgb, prelude::*, smart::vision::WhiteBalance};
     ///
     /// #[vexide::main]
@@ -491,7 +491,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -521,7 +521,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{color::Rgb, prelude::*, smart::vision::WhiteBalance};
     ///
     /// #[vexide::main]
@@ -576,7 +576,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{color::Rgb, prelude::*, smart::vision::LedMode};
     ///
     /// #[vexide::main]
@@ -618,7 +618,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{color::Rgb, prelude::*, smart::vision::LedMode};
     ///
     /// #[vexide::main]
@@ -666,7 +666,7 @@ impl VisionSensor {
     ///
     /// With one signature:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
@@ -690,8 +690,8 @@ impl VisionSensor {
     ///
     /// With multiple signatures:
     ///
-    /// ```
-    /// use vexide::{prelude::*, smart::vision::DetectionSource};
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::vision::{DetectionSource, VisionSignature}};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -762,7 +762,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::vision::VisionSignature};
     ///
     /// #[vexide::main]
@@ -806,7 +806,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::vision::VisionMode};
     ///
     /// #[vexide::main]
@@ -815,7 +815,7 @@ impl VisionSensor {
     ///
     ///     // Place the sensor into "Wi-Fi mode", allowing you to connect to it via a hotspot
     ///     // and receive a video stream of its camera from another device.
-    ///     _ = sensor.set_mode(VisionMode::WiFi);
+    ///     _ = sensor.set_mode(VisionMode::Wifi);
     /// }
     /// ```
     pub fn set_mode(&mut self, mode: VisionMode) -> Result<(), PortError> {
@@ -856,7 +856,7 @@ impl VisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::vision::VisionMode};
     ///
     /// #[vexide::main]
@@ -865,14 +865,14 @@ impl VisionSensor {
     ///
     ///     // Place the sensor into "Wi-Fi mode", allowing you to connect to it via a hotspot
     ///     // and receive a video stream of its camera from another device.
-    ///     _ = sensor.set_mode(VisionMode::WiFi);
+    ///     _ = sensor.set_mode(VisionMode::Wifi);
     ///
     ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
     ///
     ///     // Since we just set the mode, we can get the mode off the sensor to verify that it's
     ///     // now in Wi-Fi mode.
     ///     if let Ok(mode) = sensor.mode() {
-    ///         assert_eq!(mode, VisionMode::WiFi);
+    ///         assert_eq!(mode, VisionMode::Wifi);
     ///     }
     /// }
     /// ```
@@ -1071,8 +1071,8 @@ impl VisionCode {
     /// ```
     /// use vexide::smart::vision::VisionCode;
     ///
-    /// let sig_1_id = 1;
-    /// let sig_2_id = 2;
+    /// let sig_1_id: u8 = 1;
+    /// let sig_2_id: u8 = 2;
     ///
     /// let mut code_id: u16 = 0;
     ///
@@ -1150,8 +1150,8 @@ impl VisionCode {
     /// ```
     /// use vexide::smart::vision::VisionCode;
     ///
-    /// let sig_1_id = 1;
-    /// let sig_2_id = 2;
+    /// let sig_1_id: u8 = 1;
+    /// let sig_2_id: u8 = 2;
     ///
     /// let mut code_id: u16 = 0;
     ///

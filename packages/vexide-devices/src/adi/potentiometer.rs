@@ -40,6 +40,7 @@
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{analog, AdiDevice, AdiDeviceType, AdiPort, PortError};
+use crate::math::Angle;
 
 /// Potentiometer
 #[derive(Debug, Eq, PartialEq)]
@@ -53,7 +54,7 @@ impl AdiPotentiometer {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -63,8 +64,9 @@ impl AdiPotentiometer {
     ///         let angle = potentiometer
     ///             .angle()
     ///             .expect("Failed to read potentiometer angle");
-    ///         println!("Potentiometer Angle: {}", angle);
-    ///         sleep(Duration::from_millis(10)).await;
+    ///
+    ///         println!("Potentiometer Angle: {}", angle.as_degrees());
+    ///         sleep(AdiPotentiometer::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -91,7 +93,7 @@ impl AdiPotentiometer {
 
     /// Returns the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
     #[must_use]
-    pub const fn max_angle(&self) -> f64 {
+    pub const fn max_angle(&self) -> Angle {
         self.potentiometer_type().max_angle()
     }
 
@@ -109,7 +111,7 @@ impl AdiPotentiometer {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -119,20 +121,20 @@ impl AdiPotentiometer {
     ///         let angle = potentiometer
     ///             .angle()
     ///             .expect("Failed to read potentiometer angle");
-    ///         println!("Potentiometer Angle: {}", angle);
-    ///         sleep(Duration::from_millis(10)).await;
+    ///         println!("Potentiometer Angle: {}", angle.as_degrees());
+    ///         sleep(AdiPotentiometer::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
-    pub fn angle(&self) -> Result<f64, PortError> {
+    pub fn angle(&self) -> Result<Angle, PortError> {
         self.port.validate_expander()?;
 
-        Ok(
+        Ok(Angle::from_degrees(
             f64::from(unsafe {
                 vexDeviceAdiValueGet(self.port.device_handle(), self.port.index())
-            }) * self.potentiometer_type.max_angle()
+            }) * self.potentiometer_type.max_angle().as_degrees()
                 / f64::from(analog::ADC_MAX_VALUE),
-        )
+        ))
     }
 }
 
@@ -149,14 +151,14 @@ pub enum PotentiometerType {
 
 impl PotentiometerType {
     /// Maximum angle for the older cortex-era EDR potentiometer.
-    pub const LEGACY_MAX_ANGLE: f64 = 250.0;
+    pub const LEGACY_MAX_ANGLE: Angle = Angle::from_degrees(250.0);
 
     /// Maximum angle for the V5-era potentiometer V2.
-    pub const V2_MAX_ANGLE: f64 = 333.0;
+    pub const V2_MAX_ANGLE: Angle = Angle::from_degrees(333.0);
 
     /// Returns the maximum angle measurement (in degrees) for this potentiometer type.
     #[must_use]
-    pub const fn max_angle(&self) -> f64 {
+    pub const fn max_angle(&self) -> Angle {
         match self {
             Self::Legacy => Self::LEGACY_MAX_ANGLE,
             Self::V2 => Self::V2_MAX_ANGLE,

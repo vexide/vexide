@@ -88,7 +88,7 @@ impl DistanceSensor {
     ///
     /// Measure object distance and velocity:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -106,7 +106,7 @@ impl DistanceSensor {
     ///
     /// Get object distance, but only with high confidence:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -154,7 +154,7 @@ impl DistanceSensor {
     ///
     /// A simple initialization state check:
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
@@ -175,7 +175,7 @@ impl DistanceSensor {
     ///
     /// Printing the status code in binary format:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

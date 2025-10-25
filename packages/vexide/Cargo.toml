@@ -26,6 +26,13 @@ vexide-startup = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
 vex-sdk = { workspace = true }
 
+[dev-dependencies]
+vexide = { workspace = true, features = [
+    "full",
+    "vex-sdk-mock",
+    "vex-sdk-jumptable",
+] }
+
 [features]
 default = ["async", "sync", "devices", "core"]
 full = [

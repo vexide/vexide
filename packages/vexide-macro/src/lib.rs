@@ -124,7 +124,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// The most basic usage of the `main` attribute is to mark an async function as the entrypoint
 /// for a vexide program. The function must take a single argument of type `Peripherals`.
 ///
-/// ```ignore
+/// ```
 /// use vexide::prelude::*;
 /// use std::fmt::Write;
 ///
@@ -138,7 +138,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 ///
 /// This includes disabling the banner or using a custom banner theme:
 ///
-/// ```ignore
+/// ```
 /// use vexide::prelude::*;
 ///
 /// #[vexide::main(banner(enabled = false))]
@@ -147,7 +147,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// }
 /// ```
 ///
-/// ```ignore
+/// ```
 /// use vexide::prelude::*;
 /// use vexide::startup::banner::themes::THEME_SYNTHWAVE;
 ///
@@ -159,7 +159,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 ///
 /// A custom code signature may be used to further configure the behavior of the program.
 ///
-/// ```ignore
+/// ```
 /// use vexide::prelude::*;
 /// use vexide::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
 ///

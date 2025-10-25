@@ -210,6 +210,7 @@ pub struct AiVisionColor {
 ///
 /// Color codes can associate up to 7 color signatures and detections will be returned
 /// as [`AiVisionObject::Code`] variants.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct AiVisionColorCode([Option<u8>; 7]);
 impl AiVisionColorCode {
     /// Creates a new color code with the given color signature ids.
@@ -401,7 +402,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -436,7 +437,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{
     ///     color::Rgb,
     ///     prelude::*,
@@ -448,8 +449,8 @@ impl AiVisionSensor {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
-    ///         hue: 10.0,
-    ///         saturation: 1.0,
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
     ///     };
     ///     _ = sensor.set_color(1, color);
     ///     let code = AiVisionColorCode::from([1]);
@@ -514,7 +515,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::ai_vision::AiVisionColorCode};
     ///
     /// #[vexide::main]
@@ -569,7 +570,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::ai_vision::AiVisionColorCode};
     ///
     /// #[vexide::main]
@@ -607,7 +608,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
@@ -615,8 +616,8 @@ impl AiVisionSensor {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
-    ///         hue: 10.0,
-    ///         saturation: 1.0,
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
     ///     };
     ///
     ///     _ = sensor.set_color(1, color);
@@ -659,16 +660,16 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
-    ///         hue: 10.0,
-    ///         saturation: 1.0,
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
     ///     };
     ///     _ = sensor.set_color(1, color);
     ///     if let Ok(Some(color)) = sensor.color(1) {
@@ -710,16 +711,16 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
-    ///         hue: 10.0,
-    ///         saturation: 1.0,
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
     ///     };
     ///     _ = sensor.set_color(1, color);
     ///
@@ -748,7 +749,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::ai_vision::AiVisionDetectionMode};
     ///
     /// #[vexide::main]
@@ -781,7 +782,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -807,7 +808,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::ai_vision::AiVisionFlags};
     ///
     /// #[vexide::main]
@@ -882,7 +883,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::ai_vision::AprilTagFamily};
     ///
     /// #[vexide::main]
@@ -916,7 +917,7 @@ impl AiVisionSensor {
     ///
     /// Loop through all objects of a specific type:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::ai_vision::AiVisionObject};
     ///
     /// #[vexide::main]
@@ -925,7 +926,7 @@ impl AiVisionSensor {
     ///     loop {
     ///         let objects = sensor.objects().unwrap();
     ///         for object in objects {
-    ///             if let AiVisionObject::Color { position, .. } = object.data {
+    ///             if let AiVisionObject::Color { position, .. } = object {
     ///                 println!("{:?}", position);
     ///             }
     ///         }
@@ -1021,7 +1022,7 @@ impl AiVisionSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

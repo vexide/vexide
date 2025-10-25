@@ -154,14 +154,14 @@ impl AdiDigitalOut {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Toggle the digital output every second
     ///     loop {
@@ -181,8 +181,9 @@ impl AdiDigitalOut {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::adi::digital::LogicLevel;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -221,12 +222,13 @@ impl AdiDigitalOut {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::adi::digital::LogicLevel;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Set the digital output to high
     ///     _ = digital_out.set_level(LogicLevel::High);
@@ -263,8 +265,9 @@ impl AdiDigitalOut {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::adi::digital::LogicLevel;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -324,12 +327,13 @@ impl AdiDigitalOut {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::adi::digital::LogicLevel;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Set the digital output to high
     ///     _ = digital_out.set_high();
@@ -356,12 +360,13 @@ impl AdiDigitalOut {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::adi::digital::LogicLevel;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Set the digital output to low
     ///     _ = digital_out.set_low();
@@ -391,14 +396,14 @@ impl AdiDigitalOut {
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
     /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Toggle the digital output every second
     ///     loop {

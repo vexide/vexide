@@ -47,7 +47,7 @@ impl AdiServo {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
@@ -80,7 +80,7 @@ impl AdiServo {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
@@ -97,7 +97,7 @@ impl AdiServo {
     }
 
     /// Sets the servo's raw position using a raw 8-bit PWM input from [-127, 127]. This is functionally equivalent
-    /// to [`Self::set_target`] with the exception that it accepts an unscaled integer rather than a [`Position`].
+    /// to [`Self::set_target`] with the exception that it accepts an unscaled integer rather than an [`Angle`].
     ///
     /// # Range
     ///
@@ -113,7 +113,7 @@ impl AdiServo {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

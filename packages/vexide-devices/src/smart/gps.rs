@@ -88,8 +88,9 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::math::Point2;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -150,8 +151,9 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::math::Point2;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -207,8 +209,9 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::math::Point2;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -257,8 +260,8 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -302,8 +305,8 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -315,8 +318,10 @@ impl GpsSensor {
     ///     );
     ///
     ///     // Check position accuracy
-    ///     if gps.error().is_ok_and(|err| err > 0.3) {
-    ///         println!("Warning: GPS position accuracy is low ({}m error)", error);
+    ///     if let Ok(error) = gps.error() {
+    ///         if error > 0.3 {
+    ///             println!("Warning: GPS position accuracy is low ({}m)", error);
+    ///         }
     ///     }
     /// }
     /// ```
@@ -335,8 +340,8 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -371,10 +376,10 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::prelude::*;
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -388,7 +393,7 @@ impl GpsSensor {
     ///     );
     ///
     ///     if let Ok(heading) = gps.heading() {
-    ///         println!("Heading is {} degrees.", rotation);
+    ///         println!("Heading is {} degrees.", heading.as_degrees());
     ///     }
     /// }
     /// ```
@@ -416,10 +421,10 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::prelude::*;
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -433,7 +438,10 @@ impl GpsSensor {
     ///     );
     ///
     ///     if let Ok(rotation) = gps.rotation() {
-    ///         println!("Robot has rotated {} degrees since calibration.", rotation);
+    ///         println!(
+    ///             "Robot has rotated {} degrees since calibration.",
+    ///             rotation.as_degrees()
+    ///         );
     ///     }
     /// }
     /// ```
@@ -453,10 +461,10 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::prelude::*;
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -472,9 +480,9 @@ impl GpsSensor {
     ///     if let Ok(angles) = gps.euler() {
     ///         println!(
     ///             "yaw: {}°, pitch: {}°, roll: {}°",
-    ///             angles.a.to_degrees(),
-    ///             angles.b.to_degrees(),
-    ///             angles.c.to_degrees(),
+    ///             angles.a.as_degrees(),
+    ///             angles.b.as_degrees(),
+    ///             angles.c.as_degrees(),
     ///         );
     ///     }
     /// }
@@ -504,10 +512,10 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::prelude::*;
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -555,10 +563,10 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::prelude::*;
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -608,10 +616,10 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::prelude::*;
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -660,10 +668,10 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::prelude::*;
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -701,10 +709,10 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::prelude::*;
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -742,8 +750,11 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{
+    ///     math::{Angle, Point2},
+    ///     prelude::*,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -757,7 +768,7 @@ impl GpsSensor {
     ///     );
     ///
     ///     // Set rotation to 90 degrees clockwise.
-    ///     _ = gps.set_rotation(90.0);
+    ///     _ = gps.set_rotation(Angle::from_degrees(90.0));
     ///
     ///     println!("Rotation: {:?}", gps.rotation());
     /// }
@@ -782,8 +793,11 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{
+    ///     math::{Angle, Point2},
+    ///     prelude::*,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -797,7 +811,7 @@ impl GpsSensor {
     ///     );
     ///
     ///     // Set heading to 90 degrees clockwise.
-    ///     _ = gps.set_heading(90.0);
+    ///     _ = gps.set_heading(Angle::from_degrees(90.0));
     ///
     ///     println!("Heading: {:?}", gps.heading());
     /// }
@@ -824,10 +838,10 @@ impl GpsSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use vexide::prelude::*;
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

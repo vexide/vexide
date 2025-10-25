@@ -33,11 +33,11 @@ enum AdiGyroscopeCalibrationFutureState {
 }
 
 /// A future that calibrates an [`AdiGyroscope`] for a given duration.
-pub struct AdiGyroscopeCalibrationFuture<'a> {
+pub struct CalibrateFuture<'a> {
     gyro: &'a mut AdiGyroscope,
     state: AdiGyroscopeCalibrationFutureState,
 }
-impl Future for AdiGyroscopeCalibrationFuture<'_> {
+impl Future for CalibrateFuture<'_> {
     type Output = Result<(), PortError>;
 
     fn poll(
@@ -98,12 +98,14 @@ impl AdiGyroscope {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
+    ///     let mut gyro = AdiGyroscope::new(peripherals.adi_a);
     ///     // Do something with the gyroscope
     ///     _ = gyro.calibrate(Duration::from_secs(2)).await;
     ///     println!("{:?}", gyro.yaw());
@@ -127,12 +129,12 @@ impl AdiGyroscope {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
+    ///     let gyro = AdiGyroscope::new(peripherals.adi_a);
     ///     println!("Is calibrating: {:?}", gyro.is_calibrating());
     /// }
     /// ```
@@ -155,12 +157,14 @@ impl AdiGyroscope {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
+    ///     let mut gyro = AdiGyroscope::new(peripherals.adi_a);
     ///     println!("Calibrating...");
     ///     println!(
     ///         "Calibration completed successfully? {:?}",
@@ -168,8 +172,8 @@ impl AdiGyroscope {
     ///     );
     /// }
     /// ```
-    pub const fn calibrate(&mut self, duration: Duration) -> AdiGyroscopeCalibrationFuture<'_> {
-        AdiGyroscopeCalibrationFuture {
+    pub const fn calibrate(&mut self, duration: Duration) -> CalibrateFuture<'_> {
+        CalibrateFuture {
             gyro: self,
             state: AdiGyroscopeCalibrationFutureState::Calibrate {
                 calibration_duration: duration,
@@ -188,14 +192,20 @@ impl AdiGyroscope {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
+    ///     let mut gyro = AdiGyroscope::new(peripherals.adi_a);
     ///     _ = gyro.calibrate(Duration::from_secs(2)).await;
-    ///     println!("Yaw: {}", gyro.yaw());
+    ///
+    ///     println!(
+    ///         "Yaw: {}",
+    ///         gyro.yaw().expect("failed to get yaw").as_degrees()
+    ///     );
     /// }
     /// ```
     pub fn yaw(&self) -> Result<Angle, YawError> {

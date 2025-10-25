@@ -36,13 +36,13 @@ impl AdiLightSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     // Create a new light sensor on port 1
-    ///     let sensor = AdiLightSensor::new(peripherals.port_1);
+    ///     // Create a new light sensor on port A
+    ///     let sensor = AdiLightSensor::new(peripherals.adi_a);
     ///
     ///     // Get the brightness value
     ///     println!("Brightness value: {:?}", sensor.brightness());
@@ -69,13 +69,13 @@ impl AdiLightSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     // Create a new light sensor on port 1
-    ///     let sensor = AdiLightSensor::new(peripherals.port_1);
+    ///     // Create a new light sensor on port A
+    ///     let sensor = AdiLightSensor::new(peripherals.adi_a);
     ///
     ///     // Get the brightness value
     ///     println!("Brightness value: {:?}", sensor.brightness());
@@ -102,13 +102,13 @@ impl AdiLightSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     // Create a new light sensor on port 1
-    ///     let sensor = AdiLightSensor::new(peripherals.port_1);
+    ///     // Create a new light sensor on port A
+    ///     let sensor = AdiLightSensor::new(peripherals.adi_a);
     ///
     ///     // Get the brightness value
     ///     println!("Raw 12-bit brightness value: {:?}", sensor.raw_brightness());

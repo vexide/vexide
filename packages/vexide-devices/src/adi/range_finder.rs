@@ -61,16 +61,18 @@ impl AdiRangeFinder {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let range_finder = AdiRangeFinder::new(peripherals.adi_a, peripherals.adi_b);
     ///     loop {
-    ///         let distance = range_finder.distance().expect("Failed to get distance");
-    ///         println!("Distance: {} cm", distance);
-    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
+    ///         if let Some(distance) = range_finder.distance().expect("Failed to get distance") {
+    ///             println!("Distance: {} cm", distance);
+    ///         }
+    ///
+    ///         sleep(AdiRangeFinder::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -125,7 +127,7 @@ impl AdiRangeFinder {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -137,7 +139,7 @@ impl AdiRangeFinder {
     ///             None => println!("Can't find anything in range :("),
     ///         }
     ///
-    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(AdiRangeFinder::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```

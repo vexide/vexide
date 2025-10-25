@@ -748,16 +748,28 @@ impl Display {
 
     /// Draws a line of text with the specified color and background color to the display.
     ///
-    /// # Example
+    /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{
+    ///     color::Rgb,
+    ///     display::{Font, FontFamily, FontSize, Text},
+    ///     math::Point2,
+    ///     prelude::*,
+    /// };
     ///
-    /// let mut display = Display::new();
+    /// let mut peripherals = Peripherals::take().unwrap();
+    /// let mut display = peripherals.display;
+    ///
     /// // Create a new text widget.
-    /// let text = Text::new("Hello, World!", TextSize::Medium, Point2::new(10, 10));
+    /// let text = Text::new(
+    ///     "Hello, World!",
+    ///     Font::new(FontSize::MEDIUM, FontFamily::Monospace),
+    ///     Point2 { x: 10, y: 10 },
+    /// );
+    ///
     /// // Write red text with a blue background to the display.
-    /// display.fill_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
+    /// display.draw_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
     /// ```
     pub fn draw_text(&mut self, text: &Text, color: impl Into<Rgb<u8>>, bg_color: Option<Rgb<u8>>) {
         text.draw(self, color, bg_color);

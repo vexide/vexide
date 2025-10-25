@@ -18,15 +18,18 @@
 //!
 //! # Examples
 //!
-//! ```
-//! use vexide_devices::{adi::AdiAnalogIn, peripherals::Peripherals, smart::AdiExpander};
+//! ```no_run
+//! use vexide::prelude::*;
 //!
-//! let peripherals = Peripherals::take().unwrap();
+//! #[vexide::main]
+//! async fn main(peripherals: Peripherals) {
+//!     let peripherals = Peripherals::take().unwrap();
 //!
-//! let expander = AdiExpander::new(peripherals.port_1);
-//! let analog_in = AdiAnalogIn::new(expander.adi_a);
+//!     let expander = AdiExpander::new(peripherals.port_1);
+//!     let analog_in = AdiAnalogIn::new(expander.adi_a);
 //!
-//! println!("Analog in voltage: {:?}", analog_in.voltage());
+//!     println!("Analog in voltage: {:?}", analog_in.voltage());
+//! }
 //! ```
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -71,7 +74,7 @@ impl AdiExpander {
     ///
     /// Creating an analog input from a port on the expander:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
