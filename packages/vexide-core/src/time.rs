@@ -70,6 +70,8 @@ impl LowResolutionTime {
     /// Creates a new timestamp at the provided number of milliseconds since
     /// [`LowResolutionTime::EPOCH`].
     ///
+    /// [`EPOCH`]: Self::EPOCH
+    ///
     /// # Use this sparingly.
     ///
     /// This method generally only exists for compatibility with FFI and system APIs. The only clock

@@ -52,7 +52,7 @@ pub use vexide_async::task;
 /// - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future for or until a
 ///   specific instant in time.
 ///
-/// [`Instant`]: https://doc.rust-lang.org/stable/std/time/struct.Instant.html
+/// [`Instant`]: std::time::Instant
 /// [`sleep`]: vexide_async::time::sleep
 /// [`sleep_until`]: vexide_async::time::sleep_until
 #[cfg(any(feature = "core", feature = "async"))]

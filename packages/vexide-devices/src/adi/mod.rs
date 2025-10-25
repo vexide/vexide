@@ -112,7 +112,7 @@ use crate::smart::{SmartDeviceType, validate_port};
 /// Update rate for all ADI devices and ports.
 pub const ADI_UPDATE_INTERVAL: Duration = Duration::from_millis(10);
 
-/// An ADI (three wire) port on a Brain or Three Wire Expander.
+/// An ADI (three wire) port on a V5 Brain or V5 Three Wire Expander.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiPort {
     /// The number of the port.
