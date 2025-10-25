@@ -16,8 +16,8 @@ use std::{
     ptr,
     rc::Rc,
     sync::{
-        atomic::{AtomicU32, Ordering},
         LazyLock,
+        atomic::{AtomicU32, Ordering},
     },
 };
 
@@ -91,10 +91,6 @@ unsafe impl<T> Send for LocalKey<T> {}
 ///     static NAMES: RefCell<Vec<String>> = RefCell::new(Vec::new());
 /// }
 /// ```
-#[expect(
-    edition_2024_expr_fragment_specifier,
-    reason = "allows matching `const` expressions"
-)]
 #[macro_export]
 macro_rules! task_local {
     {

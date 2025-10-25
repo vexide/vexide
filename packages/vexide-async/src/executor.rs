@@ -5,8 +5,8 @@ use std::{
     pin::Pin,
     rc::Rc,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
     task::{Context, Poll},
 };
@@ -80,7 +80,6 @@ impl Executor {
             queue.pop_front()
         };
 
-        #[allow(if_let_rescope)]
         if let Some(runnable) = runnable {
             TaskLocalStorage::scope(runnable.metadata().tls.clone(), || {
                 runnable.run();
@@ -102,10 +101,10 @@ impl Executor {
         let mut cx = Context::from_waker(&waker);
 
         loop {
-            if woken.swap(false, Ordering::Relaxed) {
-                if let Poll::Ready(output) = Pin::new(&mut task).poll(&mut cx) {
-                    return output;
-                }
+            if woken.swap(false, Ordering::Relaxed)
+                && let Poll::Ready(output) = Pin::new(&mut task).poll(&mut cx)
+            {
+                return output;
             }
 
             unsafe {

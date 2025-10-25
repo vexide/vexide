@@ -1,6 +1,6 @@
 [package]
 name = "examples"
-edition = "2021"
+edition =  "2024"
 version = "0.0.1"
 publish = false
 
@@ -43,7 +43,6 @@ vex-libunwind-sys = { version = "0.1.1" }
 
 [workspace.lints.rust]
 rust_2018_idioms = { level = "warn", priority = -1 }
-rust_2024_compatibility = { level = "warn", priority = -1 }
 future_incompatible = { level = "warn", priority = -1 }
 let_underscore = { level = "warn", priority = -1 }
 missing_docs = "warn"

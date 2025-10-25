@@ -59,21 +59,21 @@
 use core::time::Duration;
 
 use bitflags::bitflags;
-use snafu::{ensure, Snafu};
-use vex_sdk::{
-    vexDeviceMotorAbsoluteTargetSet, vexDeviceMotorActualVelocityGet, vexDeviceMotorBrakeModeSet,
-    vexDeviceMotorCurrentGet, vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet,
-    vexDeviceMotorEfficiencyGet, vexDeviceMotorEncoderUnitsSet, vexDeviceMotorFaultsGet,
-    vexDeviceMotorFlagsGet, vexDeviceMotorGearingGet, vexDeviceMotorGearingSet,
-    vexDeviceMotorPositionGet, vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset,
-    vexDeviceMotorPositionSet, vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet,
-    vexDeviceMotorReverseFlagSet, vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet,
-    vexDeviceMotorVelocitySet, vexDeviceMotorVelocityUpdate, vexDeviceMotorVoltageGet,
-    vexDeviceMotorVoltageLimitGet, vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet,
-    V5MotorBrakeMode, V5MotorGearset, V5_DeviceT,
-};
+use snafu::{Snafu, ensure};
 #[cfg(feature = "dangerous-motor-tuning")]
-use vex_sdk::{vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet, V5_DeviceMotorPid};
+use vex_sdk::{V5_DeviceMotorPid, vexDeviceMotorPositionPidSet, vexDeviceMotorVelocityPidSet};
+use vex_sdk::{
+    V5_DeviceT, V5MotorBrakeMode, V5MotorGearset, vexDeviceMotorAbsoluteTargetSet,
+    vexDeviceMotorActualVelocityGet, vexDeviceMotorBrakeModeSet, vexDeviceMotorCurrentGet,
+    vexDeviceMotorCurrentLimitGet, vexDeviceMotorCurrentLimitSet, vexDeviceMotorEfficiencyGet,
+    vexDeviceMotorEncoderUnitsSet, vexDeviceMotorFaultsGet, vexDeviceMotorFlagsGet,
+    vexDeviceMotorGearingGet, vexDeviceMotorGearingSet, vexDeviceMotorPositionGet,
+    vexDeviceMotorPositionRawGet, vexDeviceMotorPositionReset, vexDeviceMotorPositionSet,
+    vexDeviceMotorPowerGet, vexDeviceMotorReverseFlagGet, vexDeviceMotorReverseFlagSet,
+    vexDeviceMotorTemperatureGet, vexDeviceMotorTorqueGet, vexDeviceMotorVelocitySet,
+    vexDeviceMotorVelocityUpdate, vexDeviceMotorVoltageGet, vexDeviceMotorVoltageLimitGet,
+    vexDeviceMotorVoltageLimitSet, vexDeviceMotorVoltageSet,
+};
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 use crate::math::{Angle, Direction};

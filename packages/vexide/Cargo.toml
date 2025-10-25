@@ -1,7 +1,7 @@
 [package]
 name = "vexide"
 version = "0.8.0"
-edition = "2021"
+edition =  "2024"
 description = "Open-source Rust runtime for VEX robots."
 keywords = ["Robotics", "bindings", "vex", "v5"]
 categories = ["os", "api-bindings", "no-std", "science::robotics"]

@@ -39,11 +39,11 @@ use mint::Point2;
 use rgb::Rgb;
 use snafu::Snafu;
 use vex_sdk::{
+    V5_DeviceAiVisionCode, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT,
     vexDeviceAiVisionClassNameGet, vexDeviceAiVisionCodeGet, vexDeviceAiVisionCodeSet,
     vexDeviceAiVisionColorGet, vexDeviceAiVisionColorSet, vexDeviceAiVisionModeSet,
     vexDeviceAiVisionObjectCountGet, vexDeviceAiVisionObjectGet, vexDeviceAiVisionStatusGet,
-    vexDeviceAiVisionTemperatureGet, V5_DeviceAiVisionCode, V5_DeviceAiVisionColor,
-    V5_DeviceAiVisionObject, V5_DeviceT,
+    vexDeviceAiVisionTemperatureGet,
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
@@ -837,7 +837,7 @@ impl AiVisionSensor {
         let mut new_mode = self.raw_status()? << 8;
 
         new_mode &= !(0xff << 8); // Clear the mode bits.
-                                  // Set the mode bits and set the update flag in byte 4.
+        // Set the mode bits and set the update flag in byte 4.
         new_mode |= (u32::from(mode.bits()) << 8) | Self::MODE_SET_FLAG;
 
         // Update mode

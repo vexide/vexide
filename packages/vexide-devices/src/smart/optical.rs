@@ -22,12 +22,12 @@
 use core::time::Duration;
 
 use vex_sdk::{
+    V5_DeviceOpticalGesture, V5_DeviceOpticalRaw, V5_DeviceOpticalRgb, V5_DeviceT,
     vexDeviceOpticalBrightnessGet, vexDeviceOpticalGestureEnable, vexDeviceOpticalGestureGet,
     vexDeviceOpticalHueGet, vexDeviceOpticalIntegrationTimeGet, vexDeviceOpticalIntegrationTimeSet,
     vexDeviceOpticalLedPwmGet, vexDeviceOpticalLedPwmSet, vexDeviceOpticalProximityGet,
     vexDeviceOpticalRawGet, vexDeviceOpticalRgbGet, vexDeviceOpticalSatGet,
-    vexDeviceOpticalStatusGet, V5_DeviceOpticalGesture, V5_DeviceOpticalRaw, V5_DeviceOpticalRgb,
-    V5_DeviceT,
+    vexDeviceOpticalStatusGet,
 };
 use vexide_core::time::LowResolutionTime;
 

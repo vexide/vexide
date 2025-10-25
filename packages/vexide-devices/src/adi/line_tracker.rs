@@ -39,7 +39,7 @@
 
 use vex_sdk::vexDeviceAdiValueGet;
 
-use super::{analog, AdiDevice, AdiDeviceType, AdiPort, PortError};
+use super::{AdiDevice, AdiDeviceType, AdiPort, PortError, analog};
 
 /// Line Tracker
 #[derive(Debug, Eq, PartialEq)]

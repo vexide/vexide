@@ -8,9 +8,9 @@ use std::{fmt::Write, panic::PanicHookInfo};
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind::{UnwindContext, UnwindCursor};
 
+use crate::error_report::ErrorReport;
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use crate::error_report::backtrace::BacktraceIter;
-use crate::error_report::ErrorReport;
 
 /// Panic hook for vexide programs.
 ///

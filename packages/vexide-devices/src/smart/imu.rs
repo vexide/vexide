@@ -61,13 +61,12 @@ use core::{
 
 use bitflags::bitflags;
 use mint::IntraZYX;
-use snafu::{ensure, Snafu};
+use snafu::{Snafu, ensure};
 use vex_sdk::{
-    vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
+    V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw, V5_DeviceT,
+    V5ImuOrientationMode, vexDeviceImuAttitudeGet, vexDeviceImuDataRateSet, vexDeviceImuDegreesGet,
     vexDeviceImuHeadingGet, vexDeviceImuQuaternionGet, vexDeviceImuRawAccelGet,
     vexDeviceImuRawGyroGet, vexDeviceImuReset, vexDeviceImuStatusGet, vexSystemHighResTimeGet,
-    V5ImuOrientationMode, V5_DeviceImuAttitude, V5_DeviceImuQuaternion, V5_DeviceImuRaw,
-    V5_DeviceT,
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};

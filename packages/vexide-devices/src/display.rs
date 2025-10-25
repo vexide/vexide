@@ -8,13 +8,13 @@
 use alloc::{ffi::CString, string::String, vec::Vec};
 use core::{ffi::CStr, mem, ptr::addr_of_mut, time::Duration};
 
-use snafu::{ensure, Snafu};
+use snafu::{Snafu, ensure};
 use vex_sdk::{
-    vexDisplayBackgroundColor, vexDisplayCircleDraw, vexDisplayCircleFill, vexDisplayCopyRect,
-    vexDisplayFontNamedSet, vexDisplayForegroundColor, vexDisplayLineDraw, vexDisplayPixelSet,
-    vexDisplayPrintf, vexDisplayRectDraw, vexDisplayRectFill, vexDisplayScroll,
-    vexDisplayScrollRect, vexDisplayString, vexDisplayStringHeightGet, vexDisplayStringWidthGet,
-    vexDisplayTextSize, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus,
+    V5_TouchEvent, V5_TouchStatus, vexDisplayBackgroundColor, vexDisplayCircleDraw,
+    vexDisplayCircleFill, vexDisplayCopyRect, vexDisplayFontNamedSet, vexDisplayForegroundColor,
+    vexDisplayLineDraw, vexDisplayPixelSet, vexDisplayPrintf, vexDisplayRectDraw,
+    vexDisplayRectFill, vexDisplayScroll, vexDisplayScrollRect, vexDisplayString,
+    vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexDisplayTextSize, vexTouchDataGet,
 };
 
 use crate::{

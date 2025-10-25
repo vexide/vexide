@@ -16,8 +16,8 @@
 use core::time::Duration;
 
 use vex_sdk::{
-    vexDeviceMagnetCurrentGet, vexDeviceMagnetPowerGet, vexDeviceMagnetPowerSet,
-    vexDeviceMagnetStatusGet, vexDeviceMagnetTemperatureGet, V5_DeviceT,
+    V5_DeviceT, vexDeviceMagnetCurrentGet, vexDeviceMagnetPowerGet, vexDeviceMagnetPowerSet,
+    vexDeviceMagnetStatusGet, vexDeviceMagnetTemperatureGet,
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};

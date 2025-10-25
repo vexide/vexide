@@ -28,8 +28,8 @@ use core::time::Duration;
 
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus,
-    vexDeviceGenericRadioReceiveAvail, vexDeviceGenericRadioWriteFree, V5_DeviceT,
+    V5_DeviceT, vexDeviceGenericRadioConnection, vexDeviceGenericRadioLinkStatus,
+    vexDeviceGenericRadioReceiveAvail, vexDeviceGenericRadioWriteFree,
 };
 #[cfg(any(feature = "std", feature = "embedded-io"))]
 use vex_sdk::{vexDeviceGenericRadioReceive, vexDeviceGenericRadioTransmit};

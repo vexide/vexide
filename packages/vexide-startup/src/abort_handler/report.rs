@@ -4,9 +4,9 @@ use std::fmt::{self, Write};
 use vex_libunwind::UnwindCursor;
 
 use super::fault::Fault;
+use crate::error_report::ErrorReport;
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use crate::error_report::backtrace::BacktraceIter;
-use crate::error_report::ErrorReport;
 
 pub struct SerialWriter(());
 

@@ -21,10 +21,10 @@ use core::{
 
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceGenericSerialBaudrate, vexDeviceGenericSerialEnable, vexDeviceGenericSerialFlush,
-    vexDeviceGenericSerialPeekChar, vexDeviceGenericSerialReadChar,
+    V5_DeviceT, vexDeviceGenericSerialBaudrate, vexDeviceGenericSerialEnable,
+    vexDeviceGenericSerialFlush, vexDeviceGenericSerialPeekChar, vexDeviceGenericSerialReadChar,
     vexDeviceGenericSerialReceiveAvail, vexDeviceGenericSerialWriteChar,
-    vexDeviceGenericSerialWriteFree, V5_DeviceT,
+    vexDeviceGenericSerialWriteFree,
 };
 #[cfg(any(feature = "std", feature = "embedded-io"))]
 use vex_sdk::{vexDeviceGenericSerialReceive, vexDeviceGenericSerialTransmit};
