@@ -125,8 +125,9 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// for a vexide program. The function must take a single argument of type `Peripherals`.
 ///
 /// ```
-/// use vexide::prelude::*;
 /// use std::fmt::Write;
+///
+/// use vexide::prelude::*;
 ///
 /// #[vexide::main]
 /// async fn main(mut peripherals: Peripherals) {
@@ -143,25 +144,26 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 ///
 /// #[vexide::main(banner(enabled = false))]
 /// async fn main(_p: Peripherals) {
-///    println!("This is the only serial output from this program!")
+///     println!("This is the only serial output from this program!")
 /// }
 /// ```
 ///
 /// ```
-/// use vexide::prelude::*;
-/// use vexide::startup::banner::themes::THEME_SYNTHWAVE;
+/// use vexide::{prelude::*, startup::banner::themes::THEME_SYNTHWAVE};
 ///
 /// #[vexide::main(banner(theme = THEME_SYNTHWAVE))]
 /// async fn main(_p: Peripherals) {
-///    println!("This program has a synthwave themed banner!")
+///     println!("This program has a synthwave themed banner!")
 /// }
 /// ```
 ///
 /// A custom code signature may be used to further configure the behavior of the program.
 ///
 /// ```
-/// use vexide::prelude::*;
-/// use vexide::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
+/// use vexide::{
+///     prelude::*,
+///     program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType},
+/// };
 ///
 /// static CODE_SIG: CodeSignature = CodeSignature::new(
 ///     ProgramType::User,
@@ -171,7 +173,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 ///
 /// #[vexide::main(code_sig = CODE_SIG)]
 /// async fn main(_p: Peripherals) {
-///    println!("Hello world!")
+///     println!("Hello world!")
 /// }
 /// ```
 #[proc_macro_attribute]

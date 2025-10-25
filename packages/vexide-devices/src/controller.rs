@@ -310,6 +310,7 @@ impl ControllerScreen {
     ///
     /// ```no_run
     /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -352,6 +353,7 @@ impl ControllerScreen {
     ///
     /// ```no_run
     /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -679,8 +681,7 @@ impl Controller {
     /// Perform a different action based on the controller ID.
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::controller::ControllerId;
+    /// use vexide::{controller::ControllerId, prelude::*};
     ///
     /// fn print_a_pressed(controller: &Controller) {
     ///     let state = controller.state().unwrap_or_default();
@@ -836,8 +837,7 @@ impl Controller {
     /// Print less information over a slow and unreliable VEXnet connection:
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::controller::ControllerConnection;
+    /// use vexide::{controller::ControllerConnection, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

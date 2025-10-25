@@ -105,6 +105,7 @@ impl RadioLink {
     ///
     /// ```no_run
     /// use std::io::Read;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -136,6 +137,7 @@ impl RadioLink {
     ///
     /// ```no_run
     /// use std::io::Write;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -161,6 +163,7 @@ impl RadioLink {
     ///
     /// ```no_run
     /// use std::io::Write;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

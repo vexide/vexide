@@ -84,8 +84,7 @@ pub trait SmartDevice {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::smart::SmartDeviceType;
+    /// use vexide::{prelude::*, smart::SmartDeviceType};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

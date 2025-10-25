@@ -1179,8 +1179,7 @@ impl Motor {
     /// Check if a motor is "busy" (busy only occurs if communicating with the motor fails)
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::smart::motor::MotorStatus;
+    /// use vexide::{prelude::*, smart::motor::MotorStatus};
     ///
     /// fn is_motor_busy(motor: &Motor) -> bool {
     ///     motor.status().unwrap().contains(MotorStatus::BUSY)
@@ -1206,8 +1205,7 @@ impl Motor {
     /// Check if a motor is over temperature:
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::smart::motor::MotorFaults;
+    /// use vexide::{prelude::*, smart::motor::MotorFaults};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

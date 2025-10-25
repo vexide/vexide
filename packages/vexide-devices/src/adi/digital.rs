@@ -182,8 +182,7 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::adi::digital::LogicLevel;
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -223,8 +222,7 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::adi::digital::LogicLevel;
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -266,8 +264,7 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::adi::digital::LogicLevel;
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -328,8 +325,7 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::adi::digital::LogicLevel;
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -361,8 +357,7 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::adi::digital::LogicLevel;
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

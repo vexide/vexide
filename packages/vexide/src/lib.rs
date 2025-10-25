@@ -132,7 +132,9 @@ pub mod prelude {
         smart::{
             ai_vision::AiVisionSensor,
             distance::DistanceSensor,
+            electromagnet::Electromagnet,
             expander::AdiExpander,
+            gps::GpsSensor,
             imu::InertialSensor,
             link::{LinkType, RadioLink},
             motor::{Gearset, Motor},
@@ -140,8 +142,6 @@ pub mod prelude {
             rotation::RotationSensor,
             serial::SerialPort,
             vision::VisionSensor,
-            electromagnet::Electromagnet,
-            gps::GpsSensor,
             SmartDevice,
         },
     };

@@ -691,7 +691,10 @@ impl VisionSensor {
     /// With multiple signatures:
     ///
     /// ```no_run
-    /// use vexide::{prelude::*, smart::vision::{DetectionSource, VisionSignature}};
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::{DetectionSource, VisionSignature},
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

@@ -106,6 +106,7 @@ Before releasing:
 - All methods previously returning `DeviceTimestamp` now return `LowResolutionTime`. (#386) (**Breaking change**)
 - `Motor::raw_position` no longer returns a timestamp along with the raw position. Use `Motor::timestamp` to access this data instead. (#386) (**Breaking change**)
 - `AdiPotentiomter::angle` now returns the `Angle` type. (#378) (**Breaking Change**)
+- Renamed `AdiGyroscopeCalibrationFuture` to `CalibrateFuture`. (#378) (**Breaking Change**)
 
 ### Removed
 

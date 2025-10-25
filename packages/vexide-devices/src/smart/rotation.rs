@@ -108,7 +108,10 @@ impl RotationSensor {
     ///     if let Ok(position) = sensor.position() {
     ///         println!("Position in degrees: {}°", position.as_degrees());
     ///         println!("Position in radians: {}°", position.as_radians());
-    ///         println!("Number of turns (revolutions) spun: {}°", position.as_turns());
+    ///         println!(
+    ///             "Number of turns (revolutions) spun: {}°",
+    ///             position.as_turns()
+    ///         );
     ///     }
     /// }
     /// ```
