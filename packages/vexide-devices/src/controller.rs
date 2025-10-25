@@ -380,7 +380,7 @@ impl ControllerScreen {
     /// }
     /// ```
     pub fn try_clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
-        //TODO: Older versions of VexOS clear the controller by setting the line to "".
+        //TODO: Older versions of VexOS clear the controller by setting the line to " ".
         //TODO: We should check the version and change behavior based on it.
         self.try_set_text("", line, 1)?;
 
