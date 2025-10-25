@@ -77,20 +77,22 @@ impl<const N: usize> AdiAddrLed<N> {
         }
     }
 
-    /// Set the entire led strip to one color.
+    /// Set the entire LED strip to one color.
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
-    /// - A [`PortError::Disconnected`] error is returned if an ADI expander device was required but not connected.
-    /// - A [`PortError::IncorrectDevice`] error is returned if an ADI expander device was required but
-    ///   something else was connected.
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     pub fn set_all(&mut self, color: impl Into<Color>) -> Result<(), PortError> {
         _ = self.set_buffer([color.into(); N])?;
         Ok(())
     }
 
-    /// Sets an individual diode color on the strip.
+    /// Sets the color of an individual diode on the strip.
     ///
     /// # Panics
     ///
@@ -98,10 +100,12 @@ impl<const N: usize> AdiAddrLed<N> {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     pub fn set_pixel(&mut self, index: usize, color: impl Into<Rgb<u8>>) -> Result<(), PortError> {
         assert!(index < N, "pixel index was out of range for LED strip size");
 
@@ -116,10 +120,12 @@ impl<const N: usize> AdiAddrLed<N> {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, PortError>
     where
         T: IntoIterator<Item = I>,
