@@ -233,7 +233,7 @@ pub struct DistanceObject {
     /// unknown what the sensor is *actually* measuring here either, so use this data with a grain
     /// of salt.
     ///
-    /// [`vex::sizeType`]: https://api.vexcode.cloud/v5/search/sizeType/sizeType/enum
+    /// [`vex::sizeType`]: https://api.vex.com/v5/home/python/Enums.html#object-size-types
     pub relative_size: u32,
 
     /// Observed velocity of the object in m/s.
