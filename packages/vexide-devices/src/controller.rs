@@ -9,10 +9,10 @@ use alloc::{
 };
 use core::{cell::RefCell, future::Future, task::Poll, time::Duration};
 
-use snafu::{ensure, Snafu};
+use snafu::{Snafu, ensure};
 use vex_sdk::{
-    vexControllerConnectionStatusGet, vexControllerGet, vexControllerTextSet, V5_ControllerId,
-    V5_ControllerIndex, V5_ControllerStatus,
+    V5_ControllerId, V5_ControllerIndex, V5_ControllerStatus, vexControllerConnectionStatusGet,
+    vexControllerGet, vexControllerTextSet,
 };
 use vexide_core::competition::{self, CompetitionMode};
 

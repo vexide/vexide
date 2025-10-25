@@ -196,7 +196,7 @@ impl Write for ErrorReport {
 
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 pub mod backtrace {
-    use vex_libunwind::{registers, UnwindCursor};
+    use vex_libunwind::{UnwindCursor, registers};
 
     /// An iterator that lazily walks up the stack, yielding frames in a backtrace.
     pub struct BacktraceIter<'a> {

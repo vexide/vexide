@@ -36,7 +36,7 @@
 
 use vex_sdk::vexDeviceAdiValueGet;
 
-use super::{analog, AdiDevice, AdiDeviceType, AdiPort, PortError};
+use super::{AdiDevice, AdiDeviceType, AdiPort, PortError, analog};
 
 /// A single axis connection to the 3-axis analog accelerometer.
 #[derive(Debug, Eq, PartialEq)]

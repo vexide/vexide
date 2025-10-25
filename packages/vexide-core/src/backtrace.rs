@@ -15,7 +15,7 @@ use alloc::vec::Vec;
 use core::fmt::Display;
 
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
+use vex_libunwind::{UnwindContext, UnwindCursor, UnwindError, registers};
 
 /// A captured stack backtrace.
 ///

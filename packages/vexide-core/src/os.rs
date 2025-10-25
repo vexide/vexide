@@ -19,7 +19,7 @@ use vex_sdk::vexSystemVersion;
 /// # Example
 ///
 /// ```
-/// use vexide::os::{system_version, Version};
+/// use vexide::os::{Version, system_version};
 ///
 /// // VEXos 1.1.5b0
 /// const VEXOS_1_1_5_0: Version = Version {
@@ -65,7 +65,7 @@ impl fmt::Display for Version {
 /// # Example
 ///
 /// ```
-/// use vexide::os::{system_version, Version};
+/// use vexide::os::{Version, system_version};
 ///
 /// // VEXos 1.1.5b0
 /// const VEXOS_1_1_5_0: Version = Version {

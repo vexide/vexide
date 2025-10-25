@@ -38,7 +38,7 @@
 
 use alloc::{vec, vec::Vec};
 
-use snafu::{ensure, Snafu};
+use snafu::{Snafu, ensure};
 use vex_sdk::vexDeviceAdiAddrLedSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};

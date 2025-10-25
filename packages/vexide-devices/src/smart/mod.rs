@@ -35,8 +35,8 @@
 //! [`peripherals`]: crate::peripherals
 
 use vex_sdk::{
-    vexDeviceGetByIndex, vexDeviceGetStatus, vexDeviceGetTimestamp, V5_DeviceT, V5_DeviceType,
-    V5_MAX_DEVICE_PORTS,
+    V5_DeviceT, V5_DeviceType, V5_MAX_DEVICE_PORTS, vexDeviceGetByIndex, vexDeviceGetStatus,
+    vexDeviceGetTimestamp,
 };
 use vexide_core::time::LowResolutionTime;
 
@@ -55,7 +55,7 @@ pub mod vision;
 
 use core::time::Duration;
 
-use snafu::{ensure, Snafu};
+use snafu::{Snafu, ensure};
 
 /// Defines common functionality shared by all Smart Port devices.
 pub trait SmartDevice {

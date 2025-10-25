@@ -47,11 +47,11 @@ pub mod range_finder;
 pub mod servo;
 
 use vex_sdk::{
-    vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet, vexDeviceGetByIndex,
-    V5_AdiPortConfiguration, V5_DeviceT,
+    V5_AdiPortConfiguration, V5_DeviceT, vexDeviceAdiPortConfigGet, vexDeviceAdiPortConfigSet,
+    vexDeviceGetByIndex,
 };
 
-use crate::smart::{validate_port, SmartDeviceType};
+use crate::smart::{SmartDeviceType, validate_port};
 
 /// Update rate for all ADI devices and ports.
 pub const ADI_UPDATE_INTERVAL: Duration = Duration::from_millis(10);

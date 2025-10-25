@@ -105,6 +105,7 @@ pub mod prelude {
     #[cfg(feature = "devices")]
     pub use crate::{
         adi::{
+            AdiDevice,
             accelerometer::{AdiAccelerometer, Sensitivity},
             addrled::AdiAddrLed,
             analog::AdiAnalogIn,
@@ -118,13 +119,13 @@ pub mod prelude {
             pwm::AdiPwmOut,
             range_finder::AdiRangeFinder,
             servo::AdiServo,
-            AdiDevice,
         },
         controller::Controller,
         display::Display,
         math::Direction,
         peripherals::Peripherals,
         smart::{
+            SmartDevice,
             ai_vision::AiVisionSensor,
             distance::DistanceSensor,
             electromagnet::Electromagnet,
@@ -137,13 +138,12 @@ pub mod prelude {
             rotation::RotationSensor,
             serial::SerialPort,
             vision::VisionSensor,
-            SmartDevice,
         },
     };
     #[cfg(feature = "async")]
     pub use crate::{
         runtime::block_on,
-        task::{spawn, task_local, Task},
+        task::{Task, spawn, task_local},
         time::{sleep, sleep_until},
     };
 }

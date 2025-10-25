@@ -9,7 +9,7 @@
 //! writing your own startup routine implementation or need to claim a new heap region.
 
 #[cfg(target_os = "vexos")]
-use talc::{locking::AssumeUnlockable, ErrOnOom, Span, Talc, Talck};
+use talc::{ErrOnOom, Span, Talc, Talck, locking::AssumeUnlockable};
 
 #[cfg(target_os = "vexos")]
 #[global_allocator]

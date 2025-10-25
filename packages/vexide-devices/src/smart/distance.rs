@@ -20,8 +20,8 @@
 
 use snafu::Snafu;
 use vex_sdk::{
-    vexDeviceDistanceConfidenceGet, vexDeviceDistanceDistanceGet, vexDeviceDistanceObjectSizeGet,
-    vexDeviceDistanceObjectVelocityGet, vexDeviceDistanceStatusGet, V5_DeviceT,
+    V5_DeviceT, vexDeviceDistanceConfidenceGet, vexDeviceDistanceDistanceGet,
+    vexDeviceDistanceObjectSizeGet, vexDeviceDistanceObjectVelocityGet, vexDeviceDistanceStatusGet,
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};

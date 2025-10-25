@@ -31,7 +31,9 @@ const _: () = {
     not(target_os = "vexos"),
     not(feature = "vex-sdk-mock")
 ))]
-compile_error!("The specified `vex-sdk` backend is unsupported on this target. Consider enabling the `vex-sdk-mock` feature for a stubbed SDK backend.");
+compile_error!(
+    "The specified `vex-sdk` backend is unsupported on this target. Consider enabling the `vex-sdk-mock` feature for a stubbed SDK backend."
+);
 
 // vex-sdk-jumptable and vex-sdk-pros may only be used on vexos targets or if vex-sdk-mock isn't
 // specified already.

@@ -24,11 +24,11 @@ use core::{marker::PhantomData, time::Duration};
 
 use mint::{EulerAngles, IntraZYX, Quaternion, Vector3};
 use vex_sdk::{
+    V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion, V5_DeviceGpsRaw, V5_DeviceT,
     vexDeviceGpsAttitudeGet, vexDeviceGpsDataRateSet, vexDeviceGpsDegreesGet, vexDeviceGpsErrorGet,
     vexDeviceGpsHeadingGet, vexDeviceGpsInitialPositionSet, vexDeviceGpsOriginGet,
     vexDeviceGpsOriginSet, vexDeviceGpsQuaternionGet, vexDeviceGpsRawAccelGet,
-    vexDeviceGpsRawGyroGet, vexDeviceGpsStatusGet, V5_DeviceGpsAttitude, V5_DeviceGpsQuaternion,
-    V5_DeviceGpsRaw, V5_DeviceT,
+    vexDeviceGpsRawGyroGet, vexDeviceGpsStatusGet,
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};

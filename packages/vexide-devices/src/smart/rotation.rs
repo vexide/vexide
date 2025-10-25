@@ -25,8 +25,8 @@
 use core::time::Duration;
 
 use vex_sdk::{
-    vexDeviceAbsEncAngleGet, vexDeviceAbsEncDataRateSet, vexDeviceAbsEncPositionGet,
-    vexDeviceAbsEncPositionSet, vexDeviceAbsEncStatusGet, vexDeviceAbsEncVelocityGet, V5_DeviceT,
+    V5_DeviceT, vexDeviceAbsEncAngleGet, vexDeviceAbsEncDataRateSet, vexDeviceAbsEncPositionGet,
+    vexDeviceAbsEncPositionSet, vexDeviceAbsEncStatusGet, vexDeviceAbsEncVelocityGet,
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
