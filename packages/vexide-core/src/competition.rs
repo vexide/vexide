@@ -15,7 +15,7 @@
 //! changes in the various phases of a competition, such as autonomous operation, driver
 //! control, or downtime between modes.
 //!
-//! ```
+//! ```no_run
 //! use vexide::prelude::*;
 //!
 //! struct MyRobot {}
@@ -820,7 +820,7 @@ impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
 ///
 /// # Example
 ///
-/// ```
+/// ```no_run
 /// use vexide::prelude::*;
 ///
 /// struct MyRobot {}
