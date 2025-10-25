@@ -126,8 +126,8 @@ pub trait SmartDevice {
     ///
     /// # Precision
     ///
-    /// This is a timestamp is from the brain's low-resolution timer, meaning it has a precision of
-    /// 1 millisecond. See the [`LowResolutionTime`] API for more information.
+    /// This is a timestamp from the brain's low-resolution timer, meaning it has a precision of 1
+    /// millisecond. See the [`LowResolutionTime`] API for more information.
     ///
     /// # Errors
     ///
@@ -299,8 +299,8 @@ impl SmartPort {
     ///
     /// # Precision
     ///
-    /// This is a timestamp is from the brain's low-resolution timer, meaning it has a precision of
-    /// 1 millisecond. See the [`LowResolutionTime`] API for more information.
+    /// This is a timestamp from the brain's low-resolution timer, meaning it has a precision of 1
+    /// millisecond. See the [`LowResolutionTime`] API for more information.
     ///
     /// # Errors
     ///
