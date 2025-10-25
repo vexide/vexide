@@ -1,8 +1,8 @@
 //! Inertial Sensor (IMU)
 //!
-//! This module provides an interface to interact with the V5 Inertial Sensor,
-//! which combines a 3-axis accelerometer and 3-axis gyroscope for precise motion tracking
-//! and navigation capabilities.
+//! This module provides an interface to interact with the V5 Inertial Sensor, which combines a
+//! 3-axis accelerometer and 3-axis gyroscope for precise motion tracking and navigation
+//! capabilities.
 //!
 //! # Hardware Overview
 //!
@@ -11,8 +11,8 @@
 //! - Y-axis: Side-to-side motion
 //! - Z-axis: Vertical motion
 //!
-//! These accelerometer readings include the effect of gravity, which can be useful for
-//! determining the sensor's orientation relative to the ground.
+//! These accelerometer readings include the effect of gravity, which can be useful for determining
+//! the sensor's orientation relative to the ground.
 //!
 //! The IMU also has a gyroscope that measures rotational velocity and position on three axes:
 //! - Roll: Rotation around X-axis
@@ -36,21 +36,21 @@
 //!
 //! # Calibration & Mounting Considerations
 //!
-//! The IMU requires a calibration period to establish its reference frame in one of six
-//! possible orientations (described by [`InertialOrientation`]). The sensor must be mounted
-//! flat in one of these orientations. Readings will be unpredictable if the IMU is mounted at
-//! an angle or was moving/disturbed during calibration.
+//! The IMU requires a calibration period to establish its reference frame in one of six possible
+//! orientations (described by [`InertialOrientation`]). The sensor must be mounted flat in one of
+//! these orientations. Readings will be unpredictable if the IMU is mounted at an angle or was
+//! moving/disturbed during calibration.
 //!
 //! In addition, physical pressure on the sensor's housing or static electricity can cause issues
-//! with the onboard gyroscope, so pressure-mounting the IMU or placing the IMU low to the ground
-//! is undesirable.
+//! with the onboard gyroscope, so pressure-mounting the IMU or placing the IMU low to the ground is
+//! undesirable.
 //!
 //! # Disconnect Behavior
 //!
 //! If the IMU loses power due to a disconnect — even momentarily, all calibration data will be lost
-//! and VEXos will re-initiate calibration automatically. The robot cannot be moving when this occurs
-//! due to the aforementioned unpredictable behavior. As such, it is vital that the IMU maintain a stable
-//! connection to the Brain and voltage supply during operation.
+//! and VEXos will re-initiate calibration automatically. The robot cannot be moving when this
+//! occurs due to the aforementioned unpredictable behavior. As such, it is vital that the IMU
+//! maintain a stable connection to the Brain and voltage supply during operation.
 
 use core::{
     marker::PhantomData,
@@ -88,8 +88,8 @@ unsafe impl Send for InertialSensor {}
 unsafe impl Sync for InertialSensor {}
 
 impl InertialSensor {
-    /// The maximum time that the Inertial Sensor should take to *begin* its calibration process following
-    /// a call to [`InertialSensor::calibrate`].
+    /// The maximum time that the Inertial Sensor should take to *begin* its calibration process
+    /// following a call to [`InertialSensor::calibrate`].
     pub const CALIBRATION_START_TIMEOUT: Duration = Duration::from_secs(1);
 
     /// The maximum time that the Inertial Sensor should take to *end* its calibration process after
@@ -105,8 +105,8 @@ impl InertialSensor {
     ///
     /// <section class="warning">
     ///
-    /// This sensor must be calibrated using [`InertialSensor::calibrate`] before any meaningful data
-    /// can be read from it.
+    /// This sensor must be calibrated using [`InertialSensor::calibrate`] before any meaningful
+    /// data can be read from it.
     ///
     /// </section>
     ///
@@ -142,7 +142,8 @@ impl InertialSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -171,7 +172,8 @@ impl InertialSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -194,12 +196,14 @@ impl InertialSensor {
 
     /// Returns `true` if the sensor was calibrated using auto-calibration.
     ///
-    /// In some cases (such as a loss of power), VEXos will automatically decide to recalibrate the inertial sensor.
+    /// In some cases (such as a loss of power), VEXos will automatically decide to recalibrate the
+    /// inertial sensor.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -226,7 +230,8 @@ impl InertialSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -250,19 +255,22 @@ impl InertialSensor {
 
     /// Calibrates the IMU.
     ///
-    /// Returns an [`CalibrateFuture`] that resolves once the calibration operation has finished or timed out.
+    /// Returns an [`CalibrateFuture`] that resolves once the calibration operation has finished or
+    /// timed out.
     ///
-    /// This method MUST be called for any meaningful gyroscope readings to be obtained. Calibration requires
-    /// the sensor to be sitting completely still. If the sensor is moving during the calibration process,
-    /// readings will drift from reality over time.
+    /// This method MUST be called for any meaningful gyroscope readings to be obtained. Calibration
+    /// requires the sensor to be sitting completely still. If the sensor is moving during the
+    /// calibration process, readings will drift from reality over time.
     ///
     /// # Errors
     ///
-    /// - Calibration has a 1-second start timeout (when waiting for calibration to actually start on the sensor) and
-    ///   a 3-second end timeout (when waiting for calibration to complete after it has started) as a failsafe in the
-    ///   event that something goes wrong and the sensor gets stuck in a calibrating state. If either timeout
-    ///   is exceeded in its respective phase of calibration, [`CalibrateError::Timeout`] will be returned.
-    /// - A [`CalibrateError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
+    /// - Calibration has a 1-second start timeout (when waiting for calibration to actually start
+    ///   on the sensor) and a 3-second end timeout (when waiting for calibration to complete after
+    ///   it has started) as a failsafe in the event that something goes wrong and the sensor gets
+    ///   stuck in a calibrating state. If either timeout is exceeded in its respective phase of
+    ///   calibration, [`CalibrateError::Timeout`] will be returned.
+    /// - A [`CalibrateError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
     ///
     /// # Examples
     ///
@@ -333,13 +341,15 @@ impl InertialSensor {
 
     /// Returns the total number of degrees the Inertial Sensor has spun about the z-axis.
     ///
-    /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
-    /// while counterclockwise rotations are represented with negative ones.
+    /// This value is theoretically unbounded. Clockwise rotations are represented with positive
+    /// degree values, while counterclockwise rotations are represented with negative ones.
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -375,13 +385,15 @@ impl InertialSensor {
 
     /// Returns the Inertial Sensor’s yaw angle bounded from [0.0, 360.0) degrees.
     ///
-    /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
-    /// represented with negative ones.
+    /// Clockwise rotations are represented with positive degree values, while counterclockwise
+    /// rotations are represented with negative ones.
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -419,8 +431,10 @@ impl InertialSensor {
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -465,12 +479,15 @@ impl InertialSensor {
         })
     }
 
-    /// Returns the Euler angles (pitch, yaw, roll) in radians representing the Inertial Sensor’s orientation.
+    /// Returns the Euler angles (pitch, yaw, roll) in radians representing the Inertial Sensor’s
+    /// orientation.
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -520,7 +537,8 @@ impl InertialSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -568,7 +586,8 @@ impl InertialSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -616,13 +635,16 @@ impl InertialSensor {
 
     /// Resets the current reading of the sensor's heading to zero.
     ///
-    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect [`InertialSensor::rotation`]
-    /// or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
+    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect
+    /// [`InertialSensor::rotation`] or [`InertialSensor::euler`]/
+    /// [`InertialSensor::quaternion`].
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -654,13 +676,15 @@ impl InertialSensor {
 
     /// Resets the current reading of the sensor's rotation to zero.
     ///
-    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect [`InertialSensor::heading`]
-    /// or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
+    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect
+    /// [`InertialSensor::heading`] or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -692,13 +716,15 @@ impl InertialSensor {
 
     /// Sets the current reading of the sensor's rotation to a given value.
     ///
-    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect [`InertialSensor::heading`]
-    /// or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
+    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect
+    /// [`InertialSensor::heading`] or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -724,13 +750,16 @@ impl InertialSensor {
 
     /// Sets the current reading of the sensor's heading to a given value.
     ///
-    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect [`InertialSensor::rotation`]
-    /// or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
+    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect
+    /// [`InertialSensor::rotation`] or [`InertialSensor::euler`]/
+    /// [`InertialSensor::quaternion`].
     ///
     /// # Errors
     ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently calibrating and cannot yet be used.
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
     ///
     /// # Examples
     ///
@@ -755,8 +784,9 @@ impl InertialSensor {
 
     /// Sets the internal computation speed of the IMU.
     ///
-    /// This method does NOT change the rate at which user code can read data off the IMU, as the brain will only talk to the
-    /// device every 10mS regardless of how fast data is being sent or computed. See [`InertialSensor::UPDATE_INTERVAL`].
+    /// This method does NOT change the rate at which user code can read data off the IMU, as the
+    /// brain will only talk to the device every 10mS regardless of how fast data is being sent
+    /// or computed. See [`InertialSensor::UPDATE_INTERVAL`].
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     ///
@@ -767,7 +797,8 @@ impl InertialSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -897,12 +928,12 @@ impl InertialStatus {
 enum CalibrationPhase {
     /// Waiting for IMU to report its status as something other than 0x0.
     ///
-    /// This can happen at the start of the program where VEXos takes a bit to
-    /// give us the first sensor packet.
+    /// This can happen at the start of the program where VEXos takes a bit to give us the first
+    /// sensor packet.
     Status,
 
-    /// Future is currently waiting for the IMU to report [`InertialStatus::CALIBRATING`], indicating
-    /// that it has started calibration.
+    /// Future is currently waiting for the IMU to report [`InertialStatus::CALIBRATING`],
+    /// indicating that it has started calibration.
     Start,
 
     /// Waiting for calibration to end ([`InertialStatus::CALIBRATING`] to be cleared from status).
@@ -959,10 +990,12 @@ impl core::future::Future for CalibrateFuture<'_> {
             CalibrateFutureState::Calibrate => {
                 // Check if the sensor was already calibrating before we recalibrate it ourselves.
                 //
-                // This can happen at the start of program execution or if the sensor loses then regains power.
-                // In those instances, VEXos will automatically start the calibration process without us asking.
-                // Calling [`vexDeviceImuReset`] while calibration is already happening has caused bugs in our
-                // testing, so we instead just want to wait until the calibration attempt has finished.
+                // This can happen at the start of program execution or if the sensor loses then
+                // regains power. In those instances, VEXos will automatically start
+                // the calibration process without us asking.
+                // Calling [`vexDeviceImuReset`] while calibration is already happening has caused
+                // bugs in our testing, so we instead just want to wait until the
+                // calibration attempt has finished.
                 //
                 // See <https://github.com/vexide/vexide/issues/253> for more details.
                 if status.contains(InertialStatus::CALIBRATING) {
@@ -986,9 +1019,10 @@ impl core::future::Future for CalibrateFuture<'_> {
                 Poll::Pending
             }
 
-            // In this stage, we are either waiting for the calibration status flag to be set (CalibrationPhase::Start),
-            // indicating that calibration has begun, or we are waiting for the calibration status flag to be cleared,
-            // indicating that calibration has finished (CalibrationFlag::End).
+            // In this stage, we are either waiting for the calibration status flag to be set
+            // (CalibrationPhase::Start), indicating that calibration has begun, or we
+            // are waiting for the calibration status flag to be cleared, indicating
+            // that calibration has finished (CalibrationFlag::End).
             CalibrateFutureState::Waiting(timestamp, phase) => {
                 let elapsed =
                     Duration::from_micros(unsafe { vexSystemHighResTimeGet() } - timestamp);
@@ -1007,11 +1041,12 @@ impl core::future::Future for CalibrateFuture<'_> {
 
                 if status.contains(InertialStatus::CALIBRATING) && phase == CalibrationPhase::Start
                 {
-                    // We are in the "start" phase (waiting for the flag to be set) and the flag is now set,
-                    // meaning that calibration has begun.
+                    // We are in the "start" phase (waiting for the flag to be set) and the flag is
+                    // now set, meaning that calibration has begun.
                     //
                     // We now know that the sensor is actually calibrating, so we transition to
-                    // [`CalibrationPhase::End`] and reset the timeout timestamp to wait for calibration to finish.
+                    // [`CalibrationPhase::End`] and reset the timeout timestamp to wait for
+                    // calibration to finish.
                     this.state = CalibrateFutureState::Waiting(
                         unsafe { vexSystemHighResTimeGet() },
                         CalibrationPhase::End,
@@ -1021,7 +1056,8 @@ impl core::future::Future for CalibrateFuture<'_> {
                 } else if !status.contains(InertialStatus::CALIBRATING)
                     && phase == CalibrationPhase::End
                 {
-                    // The [`InertialStatus::CALIBRATING`] has been cleared, indicating that calibration is complete.
+                    // The [`InertialStatus::CALIBRATING`] has been cleared, indicating that
+                    // calibration is complete.
                     return Poll::Ready(Ok(()));
                 }
 
@@ -1047,8 +1083,8 @@ pub enum CalibrateError {
     },
 }
 
-/// Errors that can occur when interacting with an Inertial Sensor methods that
-/// require [calibration](InertialSensor::calibrate).
+/// Errors that can occur when interacting with an Inertial Sensor methods that require
+/// [calibration](InertialSensor::calibrate).
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 #[snafu(module)]
 pub enum InertialError {

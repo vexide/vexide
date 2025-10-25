@@ -6,8 +6,8 @@ mod report;
 use fault::{Fault, FaultException};
 use vex_sdk::{vexTasksRun, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus};
 
-// Custom ARM vector table. Pointing the VBAR coprocessor register at this
-// will configure the CPU to jump to these functions on an exception.
+// Custom ARM vector table. Pointing the VBAR coprocessor register at this will configure the CPU to
+// jump to these functions on an exception.
 global_asm!(
     r#"
     .text
@@ -58,8 +58,8 @@ global_asm!(
     irq = sym irq,
 );
 
-/// Enable vexide's CPU exception handling logic by installing
-/// its custom vector table. (Temporary internal API)
+/// Enable vexide's CPU exception handling logic by installing its custom vector table. (Temporary
+/// internal API)
 pub fn install_vector_table() {
     unsafe {
         asm!(
@@ -202,9 +202,9 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
     unsafe {
         // Data abort and prefetch abort exceptions disable IRQs (source: ARMv7-A TRM page B1-1213).
         //
-        // This has the side-effect of breaking vexTasksRun since it disables the private timer interrupt.
-        // Without VEXos background processing services, we cannot flush the serial buffer, so we re-enable
-        // IRQs here to make that working.
+        // This has the side-effect of breaking vexTasksRun since it disables the private timer
+        // interrupt. Without VEXos background processing services, we cannot flush the
+        // serial buffer, so we re-enable IRQs here to make that working.
         core::arch::asm!("cpsie i", options(nomem, nostack, preserves_flags));
     }
 

@@ -4,22 +4,22 @@
 //!
 //! # Hardware Overview
 //!
-//! Using a Cadmium Sulfoselenide photoconductive photocell (CdS), the light sensor
-//! is able to adjust its resistance based on the amount of visible light shining on it.
+//! Using a Cadmium Sulfoselenide photoconductive photocell (CdS), the light sensor is able to
+//! adjust its resistance based on the amount of visible light shining on it.
 //!
-//! The light sensor only measures light in the visible spectrum. It cannot detect
-//! infrared or ultraviolet sources.
+//! The light sensor only measures light in the visible spectrum. It cannot detect infrared or
+//! ultraviolet sources.
 //!
 //! # Effective Range
 //!
 //! Effective range is dependent on both the intensity of the source and the surrounding
-//! environment. Darker ambient surroundings with a brighter source will result in a
-//! greater effective range.
+//! environment. Darker ambient surroundings with a brighter source will result in a greater
+//! effective range.
 //!
-//! That being said, the sensor generally has a usable range of up to 6 feet, meaning it
-//! can distinguish a light source from the surrounding ambient light at up to six feet
-//! away. Measurements farther than this might cause the sensor to return inconclusive
-//! results or blend into the ambient light.
+//! That being said, the sensor generally has a usable range of up to 6 feet, meaning it can
+//! distinguish a light source from the surrounding ambient light at up to six feet away.
+//! Measurements farther than this might cause the sensor to return inconclusive results or blend
+//! into the ambient light.
 
 use vex_sdk::vexDeviceAdiValueGet;
 
@@ -55,17 +55,19 @@ impl AdiLightSensor {
         Self { port }
     }
 
-    /// Returns the brightness factor measured by the sensor. Higher numbers mean
-    /// a brighter light source.
+    /// Returns the brightness factor measured by the sensor. Higher numbers mean a brighter light
+    /// source.
     ///
     /// This is returned as a value in the interval [0.0, 1.0].
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -95,10 +97,12 @@ impl AdiLightSensor {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///

@@ -17,11 +17,9 @@ pub fn system_uptime() -> Duration {
     Duration::from_micros(unsafe { vexSystemPowerupTimeGet() })
 }
 
-/// Returns the duration that the brain's user processor has been
-/// running.
+/// Returns the duration that the brain's user processor has been running.
 ///
-/// This is effectively the time since the current program was
-/// started.
+/// This is effectively the time since the current program was started.
 ///
 /// # Precision
 ///
@@ -33,8 +31,8 @@ pub fn user_uptime() -> Duration {
 
 /// A timestamp recorded by the Brain's low-resolution private timer.
 ///
-/// This type is not in sync with [`Instant`](std::time::Instant), which
-/// instead uses the brain's global high-resolution timer.
+/// This type is not in sync with [`Instant`](std::time::Instant), which instead uses the brain's
+/// global high-resolution timer.
 ///
 /// # Precision
 ///
@@ -47,8 +45,8 @@ pub struct LowResolutionTime {
 impl LowResolutionTime {
     /// An anchor in time which represents the start of the clock.
     ///
-    /// In practice, the epoch represents the start of the Brain's user processor,
-    /// meaning the start of the current user program.
+    /// In practice, the epoch represents the start of the Brain's user processor, meaning the start
+    /// of the current user program.
     pub const EPOCH: LowResolutionTime = LowResolutionTime { millis: 0 };
 
     /// Returns a low-resolution timestamp corresponding to "now".
@@ -90,8 +88,8 @@ impl LowResolutionTime {
         Self { millis }
     }
 
-    /// Returns the amount of time elapsed from another timestamp to this one,
-    /// or zero duration if that timestamp is later than this one.
+    /// Returns the amount of time elapsed from another timestamp to this one, or zero duration if
+    /// that timestamp is later than this one.
     ///
     /// # Examples
     ///
@@ -115,8 +113,8 @@ impl LowResolutionTime {
         self.checked_duration_since(earlier).unwrap_or_default()
     }
 
-    /// Returns the amount of time elapsed from another timestamp to this one,
-    /// or None if that timestamp is later than this one.
+    /// Returns the amount of time elapsed from another timestamp to this one, or None if that
+    /// timestamp is later than this one.
     ///
     /// # Examples
     ///
@@ -144,8 +142,8 @@ impl LowResolutionTime {
         }
     }
 
-    /// Returns the amount of time elapsed from another timestamp to this one,
-    /// or zero duration if that timestamp is later than this one.
+    /// Returns the amount of time elapsed from another timestamp to this one, or zero duration if
+    /// that timestamp is later than this one.
     ///
     /// # Examples
     ///
@@ -217,7 +215,8 @@ impl Add<Duration> for LowResolutionTime {
     /// # Panics
     ///
     /// This function may panic if the resulting point in time cannot be represented by the
-    /// underlying data structure. See [`LowResolutionTime::checked_add`] for a version without panic.
+    /// underlying data structure. See [`LowResolutionTime::checked_add`] for a version without
+    /// panic.
     fn add(self, rhs: Duration) -> Self::Output {
         self.checked_add(rhs)
             .expect("overflow when adding duration to timestamp")
@@ -248,8 +247,8 @@ impl SubAssign<Duration> for LowResolutionTime {
 impl Sub<LowResolutionTime> for LowResolutionTime {
     type Output = Duration;
 
-    /// Returns the amount of time elapsed from another time to this one,
-    /// or zero duration if that time is later than this one.
+    /// Returns the amount of time elapsed from another time to this one, or zero duration if that
+    /// time is later than this one.
     fn sub(self, other: LowResolutionTime) -> Duration {
         self.duration_since(other)
     }

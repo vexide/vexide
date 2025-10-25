@@ -1,22 +1,20 @@
 //! Distance Sensor
 //!
-//! This module provides an interface to interact with the VEX V5 Distance Sensor,
-//! which uses a Class 1 laser to measure the distance, object size classification, and
-//! relative velocity of a single object.
+//! This module provides an interface to interact with the VEX V5 Distance Sensor, which uses a
+//! Class 1 laser to measure the distance, object size classification, and relative velocity of a
+//! single object.
 //!
 //! # Hardware Overview
 //!
-//! The sensor uses a narrow-beam Class 1 laser (similar to phone proximity sensors)
-//! for precise detection. It measures distances from 20mm to 2000mm with
-//! varying accuracy (±15mm below 200mm, ±5% above 200mm).
+//! The sensor uses a narrow-beam Class 1 laser (similar to phone proximity sensors) for precise
+//! detection. It measures distances from 20mm to 2000mm with varying accuracy (±15mm below 200mm,
+//! ±5% above 200mm).
 //!
-//! The sensor can classify detected objects by relative size, helping
-//! distinguish between walls and field elements. It also measures the relative approach
-//! velocity between the sensor and target.
+//! The sensor can classify detected objects by relative size, helping distinguish between walls and
+//! field elements. It also measures the relative approach velocity between the sensor and target.
 //!
-//! Due to the use of a laser, measurements are single-point and highly directional,
-//! meaning that objects will only be detected when they are directly in front of the
-//! sensor's field of view.
+//! Due to the use of a laser, measurements are single-point and highly directional, meaning that
+//! objects will only be detected when they are directly in front of the sensor's field of view.
 //!
 //! Like all other Smart devices, VEXos will process sensor updates every 10mS.
 
@@ -61,8 +59,8 @@ impl DistanceSensor {
         }
     }
 
-    /// Validates that the sensor is currently connected to its port, and that its status code
-    /// is either 0x82 or 0x86.
+    /// Validates that the sensor is currently connected to its port, and that its status code is
+    /// either 0x82 or 0x86.
     ///
     /// It's unknown what these status codes indicate (likely related to port status), but PROS
     /// performs this check in their API, so we will too.
@@ -80,9 +78,12 @@ impl DistanceSensor {
     ///
     /// # Errors
     ///
-    /// - A [`DistanceObjectError::Port`] error is returned if there was not a sensor connected to the port.
-    /// - A [`DistanceObjectError::StillInitializing`] error is returned if the distance sensor is still initializing.
-    /// - A [`DistanceObjectError::BadStatusCode`] error is returned if the distance sensor has an unknown status code.
+    /// - A [`DistanceObjectError::Port`] error is returned if there was not a sensor connected to
+    ///   the port.
+    /// - A [`DistanceObjectError::StillInitializing`] error is returned if the distance sensor is
+    ///   still initializing.
+    /// - A [`DistanceObjectError::BadStatusCode`] error is returned if the distance sensor has an
+    ///   unknown status code.
     ///
     /// # Examples
     ///
@@ -133,7 +134,8 @@ impl DistanceSensor {
                 distance: distance_raw,
                 relative_size: unsafe { vexDeviceDistanceObjectSizeGet(self.device) as u32 },
                 velocity: unsafe { vexDeviceDistanceObjectVelocityGet(self.device) },
-                // TODO: determine if confidence reading is separate from whether or not an object is detected.
+                // TODO: determine if confidence reading is separate from whether or not an object
+                // is detected.
                 confidence: f64::from(unsafe { vexDeviceDistanceConfidenceGet(self.device) })
                     / 63.0,
             })),
@@ -141,14 +143,19 @@ impl DistanceSensor {
     }
 
     /// Returns the internal status code of the distance sensor.
-    /// The status code of the signature can tell you if the sensor is still initializing or if it is working correctly.
-    /// If the distance sensor is still initializing, the status code will be 0x00.
-    /// If it is done initializing and functioning correctly, the status code will be 0x82 or 0x86.
+    ///
+    /// The status code of the signature can tell you if the sensor is still initializing or if it
+    /// is working correctly.
+    ///
+    /// - If the distance sensor is still initializing, the status code will be 0x00.
+    /// - If it is done initializing and functioning correctly, the status code will be 0x82 or
+    ///   0x86.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -217,9 +224,9 @@ pub struct DistanceObject {
 
     /// A guess at the object's "relative size".
     ///
-    /// This is a value that has a range of 0 to 400. A 18" x 30" grey card will return
-    /// a value of approximately 75 in typical room lighting. If the sensor is not able to
-    /// detect an object, None is returned.
+    /// This is a value that has a range of 0 to 400. A 18" x 30" grey card will return a value of
+    /// approximately 75 in typical room lighting. If the sensor is not able to detect an object,
+    /// None is returned.
     ///
     /// This sensor reading is unusual, as it is entirely unitless with the seemingly arbitrary
     /// range of 0-400 existing due to VEXCode's [`vex::sizeType`] enum having four variants. It's
@@ -239,7 +246,8 @@ pub struct DistanceObject {
 /// Errors that can occur when using a distance sensor.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum DistanceObjectError {
-    /// The sensor's status code is 0x00
+    /// The sensor's status code is 0x00.
+    ///
     /// Need to wait for the sensor to finish initializing
     StillInitializing,
 

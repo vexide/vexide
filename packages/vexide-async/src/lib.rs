@@ -1,10 +1,9 @@
 //! Tiny async runtime for `vexide`.
 //!
-//! This crate contains an implementation of vexide's async executor,
-//! which is driven by `smol`'s [`async_task`] crate. The executor is
-//! optimized for use on VEXos-based systems and supports spawning tasks
-//! and blocking on futures. It has a reactor to improve the performance
-//! of some futures (such as [`Sleep`](crate::time::Sleep)).
+//! This crate contains an implementation of vexide's async executor, which is driven by `smol`'s
+//! [`async_task`] crate. The executor is optimized for use on VEXos-based systems and supports
+//! spawning tasks and blocking on futures. It has a reactor to improve the performance of some
+//! futures (such as [`Sleep`](crate::time::Sleep)).
 
 mod executor;
 mod reactor;
@@ -21,10 +20,9 @@ use crate::executor::EXECUTOR;
 
 /// Synchronization primitives for async code.
 ///
-/// vexide programs often use async [tasks](crate::task) to run multiple
-/// operations concurrently. These primitives provide methods for tasks to
-/// safely communicate with each other and share data. This is vexide's
-/// async equivalent to the [`std::sync` module].
+/// vexide programs often use async [tasks](crate::task) to run multiple operations concurrently.
+/// These primitives provide methods for tasks to safely communicate with each other and share data.
+/// This is vexide's async equivalent to the [`std::sync` module].
 ///
 /// [`std::sync` module]: https://doc.rust-lang.org/stable/std/sync/index.html
 #[cfg(feature = "sync")]

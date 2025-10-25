@@ -1,23 +1,25 @@
 //! VEXlink
 //!
-//! This module provides support for VEXlink, a point-to-point wireless communications protocol between
-//! two VEXnet radios.
+//! This module provides support for VEXlink, a point-to-point wireless communications protocol
+//! between two VEXnet radios.
 //!
 //! # Hardware Overview
 //!
-//! There are two types of radios in a VEXlink connection: "manager" and "worker". A "manager" radio can transmit data at up to 1040 bytes/s
-//! while a "worker" radio can transmit data at up to 520 bytes/s.
-//! A connection should only ever have both types of radios.
+//! There are two types of radios in a VEXlink connection: "manager" and "worker". A "manager" radio
+//! can transmit data at up to 1040 bytes/s while a "worker" radio can transmit data at up to 520
+//! bytes/s. A connection should only ever have both types of radios.
 //!
-//! In order to connect to a radio, VEXos hashes a given link name and uses it as an ID to verify the connection.
-//! For this reason, you should try to create a unique name for each radio link
-//! to avoid accidentally interfering, or being interfered with by, an unrelated VEXlink connection.
+//! In order to connect to a radio, VEXos hashes a given link name and uses it as an ID to verify
+//! the connection. For this reason, you should try to create a unique name for each radio link to
+//! avoid accidentally interfering, or being interfered with by, an unrelated VEXlink connection.
 //! Ideally, you want a name that will never be used by another team.
 //!
 //! The lights on the radio can be used as a status indicator:
 //! - Blinking red: The radio is waiting for a connection to be established.
-//! - Alternating red and green quickly: The radio is connected to another radio and is the "manager" radio.
-//! - Alternating red and green slowly: The radio is connected to another radio and is the "worker" radio.
+//! - Alternating red and green quickly: The radio is connected to another radio and is the
+//!   "manager" radio.
+//! - Alternating red and green slowly: The radio is connected to another radio and is the "worker"
+//!   radio.
 //!
 //! For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
 
@@ -36,8 +38,7 @@ use super::{SmartDevice, SmartDeviceType, SmartPort};
 
 /// VEXLink Wireless Radio Link
 ///
-/// VEXLink is a point-to-point wireless communications protocol between
-/// two VEXNet radios. For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
+/// VEXLink is a point-to-point wireless communications protocol between two VEXNet radios. For further information, see <https://www.vexforum.com/t/vexlink-documentaton/84538>
 #[derive(Debug, Eq, PartialEq)]
 pub struct RadioLink {
     port: SmartPort,
@@ -53,10 +54,9 @@ impl RadioLink {
     /// The length of the link's FIFO input and output buffers.
     pub const INTERNAL_BUFFER_SIZE: usize = 512;
 
-    /// Opens a radio link from a VEXNet radio plugged into a Smart Port. Once
-    /// opened, other VEXNet functionality such as controller tethering on this
-    /// specific radio will be disabled.
-    /// Other radios connected to the Brain can take over this functionality.
+    /// Opens a radio link from a VEXNet radio plugged into a Smart Port. Once opened, other VEXNet
+    /// functionality such as controller tethering on this specific radio will be disabled. Other
+    /// radios connected to the Brain can take over this functionality.
     ///
     /// # Panics
     ///
@@ -299,20 +299,17 @@ impl From<RadioLink> for SmartPort {
 
 /// The type of radio link being established.
 ///
-/// VEXLink is a point-to-point connection, with one "manager" robot and
-/// one "worker" robot.
+/// VEXLink is a point-to-point connection, with one "manager" robot and one "worker" robot.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum LinkType {
     /// Manager Radio
     ///
-    /// This end of the link has a 1040-bytes/sec data rate when
-    /// communicating with a worker radio.
+    /// This end of the link has a 1040-bytes/sec data rate when communicating with a worker radio.
     Manager,
 
     /// Worker Radio
     ///
-    /// This end of the link has a 520-bytes/sec data rate when
-    /// communicating with a manager radio.
+    /// This end of the link has a 520-bytes/sec data rate when communicating with a manager radio.
     Worker,
 }
 

@@ -1,24 +1,25 @@
 //! Smart Motors
 //!
-//! This module provides abstractions for interacting with VEX Smart Motors, supporting both
-//! the 11W and 5.5W variants.
+//! This module provides abstractions for interacting with VEX Smart Motors, supporting both the 11W
+//! and 5.5W variants.
 //!
 //! # Overview
 //!
 //! The V5 Smart Motors come in two variants: [an 11W model](https://www.vexrobotics.com/276-4840.html),
 //! with interchangeable gear cartridges and [a 5.5W model](https://www.vexrobotics.com/276-4842.html),
-//! with a fixed gearing. The 11W motor supports three cartridge options, which will gear the motor down
-//! from its base RPM of 3600: a red cartridge providing 100 RPM output, a green cartridge for 200 RPM, and
-//! a blue cartridge for 600 RPM. The 5.5W motor comes with a non-interchangeable 200 RPM gear cartridge.
+//! with a fixed gearing. The 11W motor supports three cartridge options, which will gear the motor
+//! down from its base RPM of 3600: a red cartridge providing 100 RPM output, a green cartridge for
+//! 200 RPM, and a blue cartridge for 600 RPM. The 5.5W motor comes with a non-interchangeable 200
+//! RPM gear cartridge.
 //!
 //! Smart Motors feature several integrated sensors, including an encoder for measuring the velocity
-//! and position of the motor, a temperature sensor for detecting overheats, and sensors for measuring
-//! output voltage, current, and efficiency.
+//! and position of the motor, a temperature sensor for detecting overheats, and sensors for
+//! measuring output voltage, current, and efficiency.
 //!
 //! Communication between a Smart motor and the V5 Brain occur at two different intervals. While
-//! the motor communicates with the Brain every 5 milliseconds (and commands can be written to
-//! the motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively
-//! places the date *write* interval at 5mS and the data *read* interval at 10mS.
+//! the motor communicates with the Brain every 5 milliseconds (and commands can be written to the
+//! motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively places
+//! the date *write* interval at 5mS and the data *read* interval at 10mS.
 //!
 //! More in-depth specs for the 11W motor can be found [here](https://kb.vex.com/hc/en-us/articles/360060929971-Understanding-V5-Smart-Motors).
 //!
@@ -26,10 +27,11 @@
 //!
 //! There are some cases where VEXos or the motor itself may decide to limit output current:
 //!
-//! - **Stall Prevention**: The stall current on 11W motors is limited to 2.5A. This
-//!   limitation eliminates the need for automatic resetting fuses (PTC devices) in the motor, which
-//!   can disrupt operation. By restricting the stall current to 2.5A, the motor effectively avoids
-//!   undesirable performance dips and ensures that users do not inadvertently cause stall situations.
+//! - **Stall Prevention**: The stall current on 11W motors is limited to 2.5A. This limitation
+//!   eliminates the need for automatic resetting fuses (PTC devices) in the motor, which can
+//!   disrupt operation. By restricting the stall current to 2.5A, the motor effectively avoids
+//!   undesirable performance dips and ensures that users do not inadvertently cause stall
+//!   situations.
 //!
 //! - **Motor Count**: Robots that use 8 or fewer 11W motors will have the aforementioned current limit
 //!   of 2.5A set for each motor. Robots using more than 8 motors, will have a lower default current limit
@@ -37,8 +39,9 @@
 //!   motors plugged in, and the user's manually set current limits using [`Motor::set_current_limit`]. For
 //!   more information regarding the current limiting behavior of VEXos, see [this forum post](https://www.vexforum.com/t/how-does-the-decreased-current-affect-the-robot-when-using-more-than-8-motors/72650/4).
 //!
-//! - **Temperature Management**: Motors have an onboard sensor for measuring internal temperature. If
-//!   the motor determines that it is overheating, it will throttle its output current and warn the user.
+//! - **Temperature Management**: Motors have an onboard sensor for measuring internal temperature.
+//!   If the motor determines that it is overheating, it will throttle its output current and warn
+//!   the user.
 //!
 //! # Motor Control
 //!
@@ -50,8 +53,8 @@
 //! controllers operating on a 10-millisecond cycle for position and velocity control. Motors also
 //! have braking functionality for holding a specific position under load.
 //!
-//! The [`Motor`] API can make use of these builtin control features through the [`MotorControl`] type,
-//! which describes an action that the motor should perform.
+//! The [`Motor`] API can make use of these builtin control features through the [`MotorControl`]
+//! type, which describes an action that the motor should perform.
 
 use core::time::Duration;
 
@@ -171,9 +174,9 @@ impl Motor {
     ) -> Self {
         let device = unsafe { port.device_handle() }; // SAFETY: This function is only called once on this port.
 
-        // NOTE: SDK properly stores device state when unplugged, meaning that we can safely
-        // set these without consequence even if the device is not available. This is an edge
-        // case for the SDK though, and seems to just be a thing for motors and rotation sensors.
+        // NOTE: SDK properly stores device state when unplugged, meaning that we can safely set
+        // these without consequence even if the device is not available. This is an edge case for
+        // the SDK though, and seems to just be a thing for motors and rotation sensors.
         unsafe {
             vexDeviceMotorEncoderUnitsSet(
                 device,
@@ -239,7 +242,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -266,7 +270,8 @@ impl Motor {
         match target {
             MotorControl::Brake(mode) => unsafe {
                 vexDeviceMotorBrakeModeSet(self.device, mode.into());
-                // Force motor into braking by putting it into velocity control with a 0rpm setpoint.
+                // Force motor into braking by putting it into velocity control with a 0rpm
+                // setpoint.
                 vexDeviceMotorVelocitySet(self.device, 0);
             },
             MotorControl::Velocity(rpm) => unsafe {
@@ -288,7 +293,8 @@ impl Motor {
                     self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                // position will not reach large enough values to cause loss of precision during normal operation
+                // position will not reach large enough values to cause loss of precision during
+                // normal operation
                 #[allow(clippy::cast_precision_loss)]
                 vexDeviceMotorAbsoluteTargetSet(
                     self.device,
@@ -306,7 +312,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -325,14 +332,15 @@ impl Motor {
 
     /// Spins the motor at a target velocity.
     ///
-    /// This velocity corresponds to different actual speeds in RPM depending on the gearset used for the motor.
-    /// Velocity is held with an internal PID controller to ensure consistent speed, as opposed to setting the
-    /// motor's voltage.
+    /// This velocity corresponds to different actual speeds in RPM depending on the gearset used
+    /// for the motor. Velocity is held with an internal PID controller to ensure consistent
+    /// speed, as opposed to setting the motor's voltage.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -356,13 +364,14 @@ impl Motor {
 
     /// Sets the motor's output voltage.
     ///
-    /// This voltage value spans from -12 (fully spinning reverse) to +12 (fully spinning forwards) volts, and
-    /// controls the raw output of the motor.
+    /// This voltage value spans from -12 (fully spinning reverse) to +12 (fully spinning forwards)
+    /// volts, and controls the raw output of the motor.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -409,7 +418,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -429,14 +439,16 @@ impl Motor {
         self.set_target(MotorControl::Position(position, velocity))
     }
 
-    /// Changes the output velocity for a profiled movement (motor_move_absolute or motor_move_relative).
+    /// Changes the output velocity for a profiled movement (motor_move_absolute or
+    /// motor_move_relative).
     ///
     /// This will have no effect if the motor is not following a profiled movement.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -467,6 +479,7 @@ impl Motor {
     }
 
     /// Returns the current [`MotorControl`] target that the motor is attempting to use.
+    ///
     /// This value is set with [`Motor::set_target`].
     ///
     /// # Examples
@@ -495,8 +508,10 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`SetGearsetError::Port`] error is returned if there was not a motor connected to the port.
-    /// - A [`SetGearsetError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
+    /// - A [`SetGearsetError::Port`] error is returned if there was not a motor connected to the
+    ///   port.
+    /// - A [`SetGearsetError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor,
+    ///   which has no swappable gearset.
     ///
     /// # Examples
     ///
@@ -528,7 +543,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -559,7 +575,9 @@ impl Motor {
     }
 
     /// Returns the type of the motor.
-    /// This does not check the hardware, it simply returns the type that the motor was created with.
+    ///
+    /// This does not check the hardware, it simply returns the type that the motor was created
+    /// with.
     ///
     /// # Examples
     ///
@@ -642,21 +660,24 @@ impl Motor {
     ///
     /// # Accuracy
     ///
-    /// In some cases, this reported value may be noisy or inaccurate, especially for systems where accurate
-    /// velocity control at high speeds is required (such as flywheels). If the accuracy of this value proves
-    /// inadequate, you may opt to perform your own velocity calculations by differentiating [`Motor::position`]
-    /// over the reported internal timestamp of the motor using [`Motor::timestamp`].
+    /// In some cases, this reported value may be noisy or inaccurate, especially for systems where
+    /// accurate velocity control at high speeds is required (such as flywheels). If the
+    /// accuracy of this value proves inadequate, you may opt to perform your own velocity
+    /// calculations by differentiating [`Motor::position`] over the reported internal timestamp
+    /// of the motor using [`Motor::timestamp`].
     ///
     /// > For more information about Smart motor velocity estimation, see [this article](https://sylvie.fyi/sylib/docs/db/d8e/md_module_writeups__velocity__estimation.html).
     ///
     /// # Note
     ///
-    /// To get the current **target** velocity instead of the estimated velocity, use [`Motor::target`].
+    /// To get the current **target** velocity instead of the estimated velocity, use
+    /// [`Motor::target`].
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -717,7 +738,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -745,7 +767,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -773,7 +796,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -803,14 +827,15 @@ impl Motor {
     ///
     /// # Gearing affects position!
     ///
-    /// Position measurements are dependent on the Motor's [`Gearset`], and may be reported incorrectly if the
-    /// motor is configured with the incorrect gearset variant. Make sure that the motor is configured with the
-    /// same gearset as its physical cartridge color.
+    /// Position measurements are dependent on the Motor's [`Gearset`], and may be reported
+    /// incorrectly if the motor is configured with the incorrect gearset variant. Make sure
+    /// that the motor is configured with the same gearset as its physical cartridge color.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -839,10 +864,9 @@ impl Motor {
 
     /// Returns the most recently recorded raw encoder tick data from the motor's IME.
     ///
-    /// The motor's integrated encoder has a TPR of 4096. Gearset is not taken into
-    /// consideration when dealing with the raw value, meaning this measurement will be
-    /// taken relative to the motor's internal position *before* being geared down from
-    /// 3600RPM.
+    /// The motor's integrated encoder has a TPR of 4096. Gearset is not taken into consideration
+    /// when dealing with the raw value, meaning this measurement will be taken relative to the
+    /// motor's internal position *before* being geared down from 3600RPM.
     ///
     /// Methods such as [`Motor::reset_position`] and [`Motor::set_position`] do not
     /// change the value of this raw measurement.
@@ -850,7 +874,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -879,7 +904,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -906,14 +932,14 @@ impl Motor {
 
     /// Returns the efficiency of the motor from a range of [0.0, 1.0].
     ///
-    /// An efficiency of 1.0 means that the motor is moving electrically while
-    /// drawing no electrical power, and an efficiency of 0.0 means that the motor
-    /// is drawing power but not moving.
+    /// An efficiency of 1.0 means that the motor is moving electrically while drawing no electrical
+    /// power, and an efficiency of 0.0 means that the motor is drawing power but not moving.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -946,7 +972,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -978,12 +1005,14 @@ impl Motor {
 
     /// Sets the current encoder position to the given position without moving the motor.
     ///
-    /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
+    /// Analogous to taring or resetting the encoder so that the new position is equal to the given
+    /// position.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -999,7 +1028,8 @@ impl Motor {
     /// }
     /// ```
     ///
-    /// Reset the position of the motor to 0 degrees (analogous to [`reset_position`](Motor::reset_position)):
+    /// Reset the position of the motor to 0 degrees (analogous to
+    /// [`reset_position`](Motor::reset_position)):
     ///
     /// ```no_run
     /// use vexide::{math::Angle, prelude::*};
@@ -1029,7 +1059,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1055,7 +1086,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1089,7 +1121,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1114,7 +1147,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1139,7 +1173,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1172,7 +1207,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1198,7 +1234,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1234,7 +1271,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1268,7 +1306,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1300,7 +1339,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1332,7 +1372,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1361,18 +1402,21 @@ impl Motor {
 
     /// Sets the motor to operate in a given [`Direction`].
     ///
-    /// This determines which way the motor considers to be “forwards”. You can use the marking on the back of the
-    /// motor as a reference:
+    /// This determines which way the motor considers to be “forwards”. You can use the marking on
+    /// the back of the motor as a reference:
     ///
-    /// - When [`Direction::Forward`] is specified, positive velocity/voltage values will cause the motor to rotate
-    ///   **with the arrow on the back**. Position will increase as the motor rotates **with the arrow**.
-    /// - When [`Direction::Reverse`] is specified, positive velocity/voltage values will cause the motor to rotate
-    ///   **against the arrow on the back**. Position will increase as the motor rotates **against the arrow**.
+    /// - When [`Direction::Forward`] is specified, positive velocity/voltage values will cause the
+    ///   motor to rotate **with the arrow on the back**. Position will increase as the motor
+    ///   rotates **with the arrow**.
+    /// - When [`Direction::Reverse`] is specified, positive velocity/voltage values will cause the
+    ///   motor to rotate **against the arrow on the back**. Position will increase as the motor
+    ///   rotates **against the arrow**.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1400,7 +1444,8 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1427,18 +1472,20 @@ impl Motor {
     ///
     /// # Hardware Safety
     ///
-    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
-    /// to Smart motors if done incorrectly. Use these functions entirely at your own risk.
+    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware
+    /// damage to Smart motors if done incorrectly. Use these functions entirely at your own
+    /// risk.
     ///
     /// VEX has chosen not to disclose the default constants used by Smart motors, and currently
-    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
-    /// well-known or understood, as we have no reference for what these constants should look
-    /// like.
+    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are
+    /// not well-known or understood, as we have no reference for what these constants should
+    /// look like.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1478,18 +1525,20 @@ impl Motor {
     ///
     /// # Hardware Safety
     ///
-    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
-    /// to Smart motors if done incorrectly. Use these functions entirely at your own risk.
+    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware
+    /// damage to Smart motors if done incorrectly. Use these functions entirely at your own
+    /// risk.
     ///
     /// VEX has chosen not to disclose the default constants used by Smart motors, and currently
-    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
-    /// well-known or understood, as we have no reference for what these constants should look
-    /// like.
+    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are
+    /// not well-known or understood, as we have no reference for what these constants should
+    /// look like.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1691,10 +1740,9 @@ impl From<Gearset> for V5MotorGearset {
 /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
 /// to Smart motors if done incorrectly. Use these functions entirely at your own risk.
 ///
-/// VEX has chosen not to disclose the default constants used by Smart motors, and currently
-/// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
-/// well-known or understood, as we have no reference for what these constants should look
-/// like.
+/// VEX has chosen not to disclose the default constants used by Smart motors, and currently has no
+/// plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
+/// well-known or understood, as we have no reference for what these constants should look like.
 #[cfg(feature = "dangerous-motor-tuning")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MotorTuningConstants {

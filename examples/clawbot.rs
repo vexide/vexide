@@ -1,7 +1,7 @@
 //! Clawbot Control Example
 //!
-//! Demonstrates a program written for the V5 clawbot kit robot. This example is
-//! partially based on jpearman's [`v5-drivecode`] repository.
+//! Demonstrates a program written for the V5 clawbot kit robot. This example is partially based on
+//! jpearman's [`v5-drivecode`] repository.
 //!
 //! [`v5-drivecode`]: https://github.com/jpearman/v5-drivecode
 

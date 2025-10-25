@@ -344,14 +344,15 @@ impl TaskLocalStorage {
     /// It is invalid to call this function multiple times with the same key and a different `T`.
     pub(crate) unsafe fn get_or_init<T: 'static>(&self, key: u32, init: fn() -> T) -> &T {
         // We need to be careful to not make mutable references to values already inserted into the
-        // map because the current task might have existing shared references to that data.
-        // It's okay if the pointer (ErasedTaskLocal) gets moved around, we just can't
-        // assert invalid exclusive access over its contents.
+        // map because the current task might have existing shared references to that data. It's
+        // okay if the pointer (ErasedTaskLocal) gets moved around, we just can't assert invalid
+        // exclusive access over its contents.
 
         let locals = self.locals.get();
         unsafe {
-            // init() could initialize another task local recursively, so we need to be sure there's no mutable
-            // reference to `self.locals` when we call it. We can't use the entry API because of this.
+            // init() could initialize another task local recursively, so we need to be sure there's
+            // no mutable reference to `self.locals` when we call it. We can't use the
+            // entry API because of this.
 
             #[expect(
                 clippy::map_entry,

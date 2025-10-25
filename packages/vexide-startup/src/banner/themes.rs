@@ -14,8 +14,8 @@
 //! - [Whitescreen theme](THEME_WHITESCREEN)
 //! - [America flavored theme](THEME_MURICA)
 //!
-//! Custom themes can be created by defining a constant of type [`BannerTheme`] with the desired ANSI escapes.
-//! This theme can then be passed to [`vexide::main`](https://docs.rs/vexide/latest/vexide/attr.main.html).
+//! Custom themes can be created by defining a constant of type [`BannerTheme`] with the desired
+//! ANSI escapes. This theme can then be passed to [`vexide::main`](https://docs.rs/vexide/latest/vexide/attr.main.html).
 //!
 //! # Examples
 //!

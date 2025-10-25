@@ -4,38 +4,36 @@
 //!
 //! # Hardware Overview
 //!
-//! Potentiometers are analog sensors that measure angular position. They function as
-//! variable resistors that change their resistance based on the angular position of
-//! their shaft.
+//! Potentiometers are analog sensors that measure angular position. They function as variable
+//! resistors that change their resistance based on the angular position of their shaft.
 //!
 //! VEX offers two variants:
 //!
 //! - Legacy (EDR) Potentiometer: Provides measurements across a 250-degree range.
 //! - V2 Potentiometer: Provides measurements across a 330-degree range.
 //!
-//! Both variants connect to the ADI ports and provide analog signals that are converted
-//! to measurements of a shaft's angle.
+//! Both variants connect to the ADI ports and provide analog signals that are converted to
+//! measurements of a shaft's angle.
 //!
 //! # Comparison to [`AdiEncoder`](super::encoder::AdiEncoder)
 //!
-//! Potentiometers are fundamentally *analog* sensors. They directly output a measurement
-//! of their electrical resistance to the ADI port. The more a shaft rotates along a
-//! conductive material inside of them, the higher the reported angle.
+//! Potentiometers are fundamentally *analog* sensors. They directly output a measurement of their
+//! electrical resistance to the ADI port. The more a shaft rotates along a conductive material
+//! inside of them, the higher the reported angle.
 //!
-//! With this in mind, this means that potentiometers are capable of measuring absolute
-//! position at *all times*, even after they have lost power. Encoders on the other hand
-//! can only track *changes in position* as a digital signal, meaning that any changes in
-//! rotation under an encoder can only be recorded while the encoder is plugged in and
-//! being read.
+//! With this in mind, this means that potentiometers are capable of measuring absolute position at
+//! *all times*, even after they have lost power. Encoders on the other hand can only track *changes
+//! in position* as a digital signal, meaning that any changes in rotation under an encoder can only
+//! be recorded while the encoder is plugged in and being read.
 //!
 //! # Comparison to [`RotationSensor`](crate::smart::rotation::RotationSensor)
 //!
-//! Rotation sensors operate similarly to a potentiometer, in that they know their absolute
-//! angle at all times (even when being powered off). This is achieved through a hall-effect
-//! sensor rather than a conductive material, however. Rotation sensors can also measure their
-//! position along with their angle, similar to how an encoder can. They also have a full range
-//! of motion and can track angle/position in a full 360-degree range. Potentiometers use ADI
-//! ports while Rotation Sensors use Smart ports.
+//! Rotation sensors operate similarly to a potentiometer, in that they know their absolute angle at
+//! all times (even when being powered off). This is achieved through a hall-effect sensor rather
+//! than a conductive material, however. Rotation sensors can also measure their position along with
+//! their angle, similar to how an encoder can. They also have a full range of motion and can track
+//! angle/position in a full 360-degree range. Potentiometers use ADI ports while Rotation Sensors
+//! use Smart ports.
 
 use vex_sdk::vexDeviceAdiValueGet;
 
@@ -99,15 +97,17 @@ impl AdiPotentiometer {
 
     /// Returns the current potentiometer angle in degrees.
     ///
-    /// The original potentiometer rotates 250 degrees thus returning an angle between 0-250 degrees.
-    /// Potentiometer V2 rotates 330 degrees thus returning an angle between 0-330 degrees.
+    /// The original potentiometer rotates 250 degrees thus returning an angle between 0-250
+    /// degrees. Potentiometer V2 rotates 330 degrees thus returning an angle between 0-330 degrees.
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Example
     ///

@@ -7,30 +7,30 @@
 //!
 //! # Hardware Overview
 //!
-//! The Ultrasonic Rangefinder uses sound pulses to measure distance, in a similar way to
-//! how bats or submarines find their way around. By emitting an 40KHz ultrasonic pulse for 250mS
-//! and timing how long it takes to hear an echo, the Ultrasonic Rangefinder can accurately
-//! estimate how far away an object in front of it is.
+//! The Ultrasonic Rangefinder uses sound pulses to measure distance, in a similar way to how bats
+//! or submarines find their way around. By emitting an 40KHz ultrasonic pulse for 250mS and timing
+//! how long it takes to hear an echo, the Ultrasonic Rangefinder can accurately estimate how far
+//! away an object in front of it is.
 //!
-//! The equation used by the Ultrasonic Range Finder's to calculate its distance reading is
-//! `d = t * 171.5` where "d" represents the distance between the sensor and the object found, "t"
-//! represents the time it took for the sound wave to return to the sensor, and 171.5 is half the
+//! The equation used by the Ultrasonic Range Finder's to calculate its distance reading is `d = t *
+//! 171.5` where "d" represents the distance between the sensor and the object found, "t" represents
+//! the time it took for the sound wave to return to the sensor, and 171.5 is half the
 //! speed of sound in `m/s`.
 //!
 //! # Effective Range
 //!
 //! The usable range of the Range Finder is between 1.5" (3.0cm) and 115" (300cm). When the sensor
-//! attempts to measure an object at less than 1.5", the sound echos back too quickly for the
-//! sensor to detect and much beyond 115" the intensity of the sound is too weak to detect.
+//! attempts to measure an object at less than 1.5", the sound echos back too quickly for the sensor
+//! to detect and much beyond 115" the intensity of the sound is too weak to detect.
 //!
 //! Since the Ultrasonic Rangefinder relies on sound waves, surfaces that absorb or deflect sound
 //! (such as cushioned surfaces or sharp angles) will limit the operating range of the sensor.
 //!
 //! # Wiring
 //!
-//! The sensor has two 3-Wire Cables. There is a black, red, and orange "Output" cable which
-//! pulses power to a 40KHz speaker; and a black, red, and yellow "Input" cable which sends a
-//! signal back from its high frequency microphone receiver.
+//! The sensor has two 3-Wire Cables. There is a black, red, and orange "Output" cable which pulses
+//! power to a 40KHz speaker; and a black, red, and yellow "Input" cable which sends a signal back
+//! from its high frequency microphone receiver.
 //!
 //! When wiring the Ultrasonic Rangefinder to the, both wires must be plugged into adjacent ADI
 //! ports. For the sensor to work properly, the "OUTPUT" wire must be in an odd-numbered slot
@@ -43,6 +43,7 @@ use super::{adi_port_name, AdiDevice, AdiDeviceType, AdiPort, PortError};
 /// Range Finder
 ///
 /// Requires two ports - one for pinging (output), and one for listening for the response (input).
+///
 /// This output port ("ping") must be indexed directly below the input ("echo") port.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiRangeFinder {
@@ -55,7 +56,8 @@ impl AdiRangeFinder {
     ///
     /// # Panics
     ///
-    /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s.
+    /// - If the top and bottom ports originate from different
+    ///   [`AdiExpander`](crate::smart::expander::AdiExpander)s.
     /// - If the output port is not odd (A, C, E, G).
     /// - If the input port is not the next after the output port.
     ///
@@ -113,17 +115,19 @@ impl AdiRangeFinder {
         }
     }
 
-    /// Returns the distance reading of the rangefinder sensor in centimeters, or `None` if the sensor was unable
-    /// to find an object in range.
+    /// Returns the distance reading of the rangefinder sensor in centimeters, or `None` if the
+    /// sensor was unable to find an object in range.
     ///
     /// Round and/or fluffy objects can cause inaccurate values to be returned.
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///

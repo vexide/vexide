@@ -175,7 +175,8 @@ impl Write for ErrorReport {
                 }
                 self.y_offset += Self::LINE_HEIGHT;
 
-                // Since we just wrapped, we need to move the remaining characters in the string (if there are any) to the front of the next line.
+                // Since we just wrapped, we need to move the remaining characters in the string (if
+                // there are any) to the front of the next line.
                 if self.pos == Self::LINE_MAX_WIDTH - 1 {
                     self.buf.copy_within(wrap_point + 1.., 0);
                     self.pos -= wrap_point;

@@ -89,15 +89,14 @@ impl<R: Read> VarIntReader for R {
 ///
 /// Uses zigzag encoding (also described there) for signed integer representation.
 pub trait VarInt: Sized + Copy {
-    /// Decode a value from the slice. Returns the value and the number of bytes read from the
-    /// slice (can be used to read several consecutive values from a big slice)
-    /// return None if all bytes has MSB set.
+    /// Decode a value from the slice. Returns the value and the number of bytes read from the slice
+    /// (can be used to read several consecutive values from a big slice) return None if all bytes
+    /// has MSB set.
     fn decode_var(src: &[u8]) -> Option<(Self, usize)>;
 }
 
 // see: http://stackoverflow.com/a/2211086/56332
-// casting required because operations like unary negation
-// cannot be performed on unsigned integers
+// casting required because operations like unary negation cannot be performed on unsigned integers
 #[inline]
 const fn zigzag_decode(from: u64) -> i64 {
     ((from >> 1) ^ (-((from & 1) as i64)) as u64) as i64

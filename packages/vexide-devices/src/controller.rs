@@ -1,6 +1,7 @@
 //! V5 Controller
 //!
-//! This module allows you to read from the buttons and joysticks on the controller and write to the controller's display.
+//! This module allows you to read from the buttons and joysticks on the controller and write to the
+//! controller's display.
 
 use alloc::{
     ffi::{CString, NulError},
@@ -35,13 +36,15 @@ impl ButtonState {
         !self.is_pressed
     }
 
-    /// Returns `true` if the button state was released in the previous call to [`Controller::state`], but is now pressed.
+    /// Returns `true` if the button state was released in the previous call to
+    /// [`Controller::state`], but is now pressed.
     #[must_use]
     pub const fn is_now_pressed(&self) -> bool {
         !self.prev_is_pressed && self.is_pressed
     }
 
-    /// Returns `true` if the button state was pressed in the previous call to [`Controller::state`], but is now released.
+    /// Returns `true` if the button state was pressed in the previous call to
+    /// [`Controller::state`], but is now released.
     #[must_use]
     pub const fn is_now_released(&self) -> bool {
         self.prev_is_pressed && !self.is_pressed
@@ -49,8 +52,8 @@ impl ButtonState {
 }
 
 /// Stores how far the joystick is away from the center (at *(0, 0)*) from -1 to 1.
-/// On the x axis left is negative, and right is positive.
-/// On the y axis down is negative, and up is positive.
+/// - On the x axis, left is negative and right is positive.
+/// - On the y axis, down is negative and up is positive.
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct JoystickState {
     x_raw: i8,
@@ -123,9 +126,9 @@ pub struct ControllerState {
 
 /// This type stores the "pressed" states of every controller button.
 ///
-/// This exists to efficiently cache previous button states with `Controller::update`, since
-/// each `ButtonState` needs to know about its previous state from the last `Controller::update`
-/// call in order to allow for `ButtonState::is_now_pressed` and `ButtonState::is_now_released`.
+/// This exists to efficiently cache previous button states with `Controller::update`, since each
+/// `ButtonState` needs to know about its previous state from the last `Controller::update` call in
+/// order to allow for `ButtonState::is_now_pressed` and `ButtonState::is_now_released`.
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
 #[allow(
     clippy::struct_excessive_bools,
@@ -161,18 +164,25 @@ enum ControllerScreenWriteFutureState<'a> {
     /// Waiting for the controller to be ready to accept a new write.
     WaitingForIdle {
         /// The line to write to.
+        ///
         /// This is indexed like the SDK, with the first onscreen line being 1.
         line: u8,
+
         /// The column to write to.
+        ///
         /// This **NOT** is indexed like the SDK. The first onscreen column is 1.
         column: u8,
+
         /// The text to write.
         text: Result<CString, NulError>,
+
         /// The controller to write to.
         controller: &'a mut ControllerScreen,
+
         /// Whether or not to enforce that this line is on screen.
         enforce_visible: bool,
     },
+
     /// The write has been completed.
     Complete {
         /// The result of the write.
@@ -182,8 +192,8 @@ enum ControllerScreenWriteFutureState<'a> {
 
 /// A future that completes once a write to the controller screen has been performed.
 ///
-/// This future waits until the controller is able to accept a new write
-/// and fails if the controller is disconnected or if the requested write is bad.
+/// This future waits until the controller is able to accept a new write and fails if the controller
+/// is disconnected or if the requested write is bad.
 pub struct ControllerScreenWriteFuture<'a> {
     state: ControllerScreenWriteFutureState<'a>,
 }
@@ -290,21 +300,21 @@ impl ControllerScreen {
     /// Number of available text lines on the controller before clearing the screen.
     pub const MAX_LINES: usize = 3;
 
-    /// Clears the contents of a specific text line, waiting until the controller
-    /// successfully clears the line.
+    /// Clears the contents of a specific text line, waiting until the controller successfully
+    /// clears the line.
+    ///
     /// Lines are 1-indexed.
     ///
     /// <section class="warning">
     ///
-    /// Controller text setting is a slow process, so calls to this function at intervals
-    /// faster than 10ms on wired connection or 50ms over VEXnet will take longer to complete.
+    /// Controller text setting is a slow process, so calls to this function at intervals faster
+    /// than 10ms on wired connection or 50ms over VEXnet will take longer to complete.
     ///
     /// </section>
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
     ///
     /// # Examples
     ///
@@ -333,21 +343,21 @@ impl ControllerScreen {
 
     /// Attempts to clear the contents of a specific text line.
     /// Lines are 1-indexed.
-    /// Unlike [`clear_line`](ControllerScreen::clear_line) this function will fail if the controller screen is busy.
+    /// Unlike [`clear_line`](ControllerScreen::clear_line) this function will fail if the
+    /// controller screen is busy.
     ///
     /// <section class="warning">
     ///
-    /// Controller text setting is a slow process, so updates faster than 10ms when on a
-    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a wired
+    /// connection or 50ms over VEXnet will not be applied to the controller.
     ///
     /// </section>
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
-    /// - A [`ControllerError::WriteBusy`] error is returned if a screen write
-    ///   occurred too quickly after the previous write attempt.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
+    /// - A [`ControllerError::WriteBusy`] error is returned if a screen write occurred too quickly
+    ///   after the previous write attempt.
     ///
     /// # Examples
     ///
@@ -370,8 +380,8 @@ impl ControllerScreen {
     /// }
     /// ```
     pub fn try_clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
-        //TODO: Older versions of VexOS clear the controller by setting the line to "                   ".
-        //TODO: We should check the version and change behavior based on it.
+        //TODO: Older versions of VexOS clear the controller by setting the line to "
+        // ". TODO: We should check the version and change behavior based on it.
         self.try_set_text("", line, 1)?;
 
         Ok(())
@@ -379,19 +389,19 @@ impl ControllerScreen {
 
     /// Clears the whole screen, waiting until the controller successfully clears the screen.
     ///
-    /// This includes the default widget displayed by the controller if it hasn't already been cleared.
+    /// This includes the default widget displayed by the controller if it hasn't already been
+    /// cleared.
     ///
     /// <section class="warning">
     ///
-    /// Controller text setting is a slow process, so calls to this function at intervals
-    /// faster than 10ms on wired connection or 50ms over VEXnet will take longer to complete.
+    /// Controller text setting is a slow process, so calls to this function at intervals faster
+    /// than 10ms on wired connection or 50ms over VEXnet will take longer to complete.
     ///
     /// </section>
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
     ///
     /// # Examples
     ///
@@ -413,21 +423,21 @@ impl ControllerScreen {
 
     /// Clears the whole screen, including the default widget displayed by the controller if
     /// it hasn't already been cleared.
-    /// Unlike [`clear_screen`](ControllerScreen::clear_screen) this function will fail if the controller screen is busy.
+    /// Unlike [`clear_screen`](ControllerScreen::clear_screen) this function will fail if the
+    /// controller screen is busy.
     ///
     /// <section class="warning">
     ///
-    /// Controller text setting is a slow process, so updates faster than 10ms when on a
-    /// wired connection or 50ms over VEXnet will not be applied to the controller.
+    /// Controller text setting is a slow process, so updates faster than 10ms when on a wired
+    /// connection or 50ms over VEXnet will not be applied to the controller.
     ///
     /// </section>
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
-    /// - A [`ControllerError::WriteBusy`] error is returned if a screen write
-    ///   occurred too quickly after the previous write attempt.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
+    /// - A [`ControllerError::WriteBusy`] error is returned if a screen write occurred too quickly
+    ///   after the previous write attempt.
     ///
     /// # Examples
     ///
@@ -456,12 +466,13 @@ impl ControllerScreen {
 
     /// Set the text contents at a specific row/column offset, waiting until the controller
     /// successfully writes the text.
+    ///
     /// Both lines and columns are 1-indexed.
     ///
     /// <section class="warning">
     ///
-    /// Controller text setting is a slow process, so calls to this function at intervals
-    /// faster than 10ms on wired connection or 50ms over VEXnet will take longer to complete.
+    /// Controller text setting is a slow process, so calls to this function at intervals faster
+    /// than 10ms on wired connection or 50ms over VEXnet will take longer to complete.
     ///
     /// </section>
     ///
@@ -473,8 +484,7 @@ impl ControllerScreen {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
     ///
     /// # Examples
     ///
@@ -499,8 +509,11 @@ impl ControllerScreen {
     }
 
     /// Set the text contents at a specific row/column offset.
+    ///
     /// Both lines and columns are 1-indexed.
-    /// Unlike [`set_text`](ControllerScreen::set_text) this function will fail if the controller screen is busy.
+    ///
+    /// Unlike [`set_text`](ControllerScreen::set_text) this function will fail if the controller
+    /// screen is busy.
     ///
     /// <section class="warning">
     ///
@@ -517,10 +530,9 @@ impl ControllerScreen {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
-    /// - A [`ControllerError::WriteBusy`] error is returned if a screen write
-    ///   occurred too quickly after the previous write attempt.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
+    /// - A [`ControllerError::WriteBusy`] error is returned if a screen write occurred too quickly
+    ///   after the previous write attempt.
     ///
     /// # Examples
     ///
@@ -578,11 +590,14 @@ impl ControllerScreen {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControllerId {
     /// Primary ("Master") Controller
+    ///
     /// This is the controller that is connected to the Brain.
     Primary,
 
     /// Partner Controller
-    /// This is the controller that is connected to the [primary](ControllerId::Primary) controller.
+    ///
+    /// This is the controller that is connected to the [primary](ControllerId::Primary)
+    /// controller.
     Partner,
 }
 
@@ -629,8 +644,7 @@ impl From<ControllerConnection> for V5_ControllerStatus {
     }
 }
 
-/// The basic type for a controller.
-/// Used to get the state of its joysticks and controllers.
+/// V5 Controller
 #[derive(Debug, Eq, PartialEq)]
 pub struct Controller {
     id: ControllerId,
@@ -650,7 +664,8 @@ impl Controller {
     ///
     /// Creating new `Controller`s is inherently unsafe due to the possibility of constructing
     /// more than one screen at once allowing multiple mutable references to the same
-    /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register
+    /// devices if possible.
     #[must_use]
     pub const unsafe fn new(id: ControllerId) -> Self {
         Self {
@@ -706,10 +721,9 @@ impl Controller {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::CompetitionControl`] error is returned if access to
-    ///   the controller data is being restricted by competition control.
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// - A [`ControllerError::CompetitionControl`] error is returned if access to the controller
+    ///   data is being restricted by competition control.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
     ///
     /// # Examples
     ///
@@ -763,7 +777,8 @@ impl Controller {
             power: unsafe { vexControllerGet(raw_id, V5_ControllerIndex::ButtonSEL) } != 0,
         };
 
-        // Swap the current button states with the previous states, getting the previous states in the process.
+        // Swap the current button states with the previous states, getting the previous states in
+        // the process.
         let prev_button_states = self.prev_button_states.replace(button_states.clone());
 
         Ok(ControllerState {
@@ -852,13 +867,11 @@ impl Controller {
         unsafe { vexControllerConnectionStatusGet(self.id.into()) }.into()
     }
 
-    /// Returns the controller's battery capacity as an f64 in the interval
-    /// [0.0, 1.0].
+    /// Returns the controller's battery capacity as an f64 in the interval [0.0, 1.0].
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
     ///
     /// # Examples
     ///
@@ -888,8 +901,7 @@ impl Controller {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
     ///
     /// # Examples
     ///
@@ -921,8 +933,7 @@ impl Controller {
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
     pub fn flags(&self) -> Result<i32, ControllerError> {
         validate_connection(self.id)?;
 
@@ -931,14 +942,13 @@ impl Controller {
 
     /// Send a rumble pattern to the controller's vibration motor.
     ///
-    /// This function takes a string consisting of the characters '.', '-', and ' ', where
-    /// dots are short rumbles, dashes are long rumbles, and spaces are pauses. Maximum
-    /// supported length is 8 characters.
+    /// This function takes a string consisting of the characters '.', '-', and ' ', where dots are
+    /// short rumbles, dashes are long rumbles, and spaces are pauses. Maximum supported length is 8
+    /// characters.
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
     ///
     /// # Panics
     ///
@@ -965,17 +975,18 @@ impl Controller {
         )
     }
 
-    /// Send a rumble pattern to the controller's vibration motor.
-    /// Unlike [`rumble`](Controller::rumble) this function will fail if the controller screen is busy.
+    /// Send a rumble pattern to the controller's vibration motor
     ///
-    /// This function takes a string consisting of the characters '.', '-', and ' ', where
-    /// dots are short rumbles, dashes are long rumbles, and spaces are pauses. Maximum
-    /// supported length is 8 characters.
+    /// Unlike [`rumble`](Controller::rumble) this function will fail if the controller screen is
+    /// busy.
+    ///
+    /// This function takes a string consisting of the characters '.', '-', and ' ', where dots are
+    /// short rumbles, dashes are long rumbles, and spaces are pauses. Maximum supported length is 8
+    /// characters.
     ///
     /// # Errors
     ///
-    /// - A [`ControllerError::Offline`] error is returned if the controller is
-    ///   not connected.
+    /// - A [`ControllerError::Offline`] error is returned if the controller is not connected.
     ///
     /// # Panics
     ///
@@ -1005,8 +1016,7 @@ pub enum ControllerError {
 
     /// Access to controller data is restricted by competition control.
     ///
-    /// When this error occurs, the requested data is not available outside of
-    /// driver control mode.
+    /// When this error occurs, the requested data is not available outside of driver control mode.
     CompetitionControl,
 
     /// Attempted to write a buffer to the controller's screen before the previous buffer was sent.

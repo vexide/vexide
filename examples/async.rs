@@ -30,7 +30,8 @@ async fn main(_peripherals: Peripherals) {
     spawn(async {
         loop {
             println!("Hello from a spawned task!");
-            // Without this sleep, the main task will be run at most once and serial will stop being output.
+            // Without this sleep, the main task will be run at most once and serial will stop being
+            // output.
             sleep(Duration::from_millis(1)).await;
         }
     })
@@ -38,7 +39,8 @@ async fn main(_peripherals: Peripherals) {
 
     // If you are forced to make a tight loop in a sync context, you can use the block_on function.
     // This function will block until the future passed to it is completed.
-    // This is less convenient and slower than using async/await, but it is still necessary in some occasions.
+    // This is less convenient and slower than using async/await, but it is still necessary in some
+    // occasions.
     loop {
         println!("Hello from the main task!");
         // Roughly equivalent to `sleep(Duration::from_millis(1)).await;`

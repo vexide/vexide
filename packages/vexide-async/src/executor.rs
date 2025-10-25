@@ -45,9 +45,10 @@ impl Executor {
             tls: Rc::new(TaskLocalStorage::new()),
         };
 
-        // SAFETY: `runnable` will never be moved off this thread or shared with another thread because of the `!Send + !Sync` bounds on `Self`.
-        //         Both `future` and `schedule` are `'static` so they cannot be used after being freed.
-        //   TODO: Make sure that the waker can never be sent off the thread.
+        // SAFETY: `runnable` will never be moved off this thread or shared with another thread
+        // because of the `!Send + !Sync` bounds on `Self`.         Both `future` and
+        // `schedule` are `'static` so they cannot be used after being freed.   TODO: Make
+        // sure that the waker can never be sent off the thread.
         let (runnable, task) = unsafe {
             async_task::Builder::new()
                 .metadata(metadata)

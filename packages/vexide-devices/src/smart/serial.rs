@@ -1,17 +1,17 @@
 //! Generic Serial Communication
 //!
-//! This module provides an interface for using V5 Smart Ports as serial communication
-//! ports over RS-485. It allows bidirectional communication with any device that speaks
-//! serial over the V5's RS-485 interface.
+//! This module provides an interface for using V5 Smart Ports as serial communication ports over
+//! RS-485. It allows bidirectional communication with any device that speaks serial over the V5's
+//! RS-485 interface.
 //!
 //! # Hardware Description
 //!
-//! V5 Smart Ports provide half-duplex RS-485 serial communication at up to an allowed
-//! 921600 baud for user programs.
+//! V5 Smart Ports provide half-duplex RS-485 serial communication at up to an allowed 921600 baud
+//! for user programs.
 //!
-//! The ports supply 12.8V VCC nominally (VCC is wired directly to the V5's battery lines,
-//! providing voltage somewhere in the range of 12-14V). Writes to the serial port are buffered,
-//! but are automatically flushed by VEXos as fast as possible (down to ~10µs or so).
+//! The ports supply 12.8V VCC nominally (VCC is wired directly to the V5's battery lines, providing
+//! voltage somewhere in the range of 12-14V). Writes to the serial port are buffered, but are
+//! automatically flushed by VEXos as fast as possible (down to ~10µs or so).
 
 use core::{
     mem::ManuallyDrop,
@@ -33,10 +33,10 @@ use super::{SmartDevice, SmartDeviceType, SmartPort};
 
 /// A Smart Port configured as a generic RS-485 serial port.
 ///
-/// This struct implements the [`std::io::Read`] and [`std::io::Write`] traits if the `std`
-/// feature is enabled. Alternatively, the `embedded_io` enabled implementations of the
-/// [`embedded_io::Read`] and [`embedded_io::Write`] for this struct if `vexide_devices`
-/// is being used in a `no_std` environment.
+/// This struct implements the [`std::io::Read`] and [`std::io::Write`] traits if the `std` feature
+/// is enabled. Alternatively, the `embedded_io` enabled implementations of the
+/// [`embedded_io::Read`] and [`embedded_io::Write`] for this struct if `vexide_devices` is being
+/// used in a `no_std` environment.
 ///
 /// [`embedded_io::Read`]: https://docs.rs/embedded-io/0.6.1/embedded_io/trait.Read.html
 /// [`embedded_io::Write`]: https://docs.rs/embedded-io/0.6.1/embedded_io/trait.Write.html
@@ -60,9 +60,9 @@ impl SerialPort {
 
     /// Open and configure a generic serial port on a [`SmartPort`].
     ///
-    /// This configures a [`SmartPort`] to act as a generic serial controller capable of sending/receiving
-    /// data. Providing a baud rate, or the transmission rate of bits is required. The maximum allowed
-    /// baud rate is 921600.
+    /// This configures a [`SmartPort`] to act as a generic serial controller capable of
+    /// sending/receiving data. Providing a baud rate, or the transmission rate of bits is required.
+    /// The maximum allowed baud rate is 921600.
     ///
     /// # Examples
     ///
@@ -86,8 +86,8 @@ impl SerialPort {
 
     /// Configures the baud rate of the serial port.
     ///
-    /// Baud rate determines the speed of communication over the data channel. Under normal conditions, user code is limited
-    /// to a maximum baudrate of 921600.
+    /// Baud rate determines the speed of communication over the data channel. Under normal
+    /// conditions, user code is limited to a maximum baudrate of 921600.
     ///
     /// # Examples
     ///
@@ -110,16 +110,14 @@ impl SerialPort {
 
     /// Clears the internal input and output FIFO buffers.
     ///
-    /// This can be useful to reset state and remove old, potentially unneeded data
-    /// from the input FIFO buffer or to cancel sending any data in the output FIFO
-    /// buffer.
+    /// This can be useful to reset state and remove old, potentially unneeded data from the input
+    /// FIFO buffer or to cancel sending any data in the output FIFO buffer.
     ///
     /// # This is not the same thing as "flushing".
     ///
-    /// This function does not cause the data in the output buffer to be
-    /// written. It simply clears the internal buffers. Unlike stdout, generic
-    /// serial does not use buffered IO (the FIFO buffers are written as soon
-    /// as possible).
+    /// This function does not cause the data in the output buffer to be written. It simply clears
+    /// the internal buffers. Unlike stdout, generic serial does not use buffered IO (the FIFO
+    /// buffers are written as soon as possible).
     ///
     /// # Examples
     ///
@@ -142,7 +140,8 @@ impl SerialPort {
         }
     }
 
-    /// Read the next byte available in the serial port's input buffer, or `None` if the input buffer is empty.
+    /// Read the next byte available in the serial port's input buffer, or `None` if the input
+    /// buffer is empty.
     ///
     /// # Examples
     ///
@@ -171,8 +170,8 @@ impl SerialPort {
         }
     }
 
-    /// Read the next byte available in the port's input buffer without removing it. Returns
-    /// `None` if the input buffer is empty.
+    /// Read the next byte available in the port's input buffer without removing it. Returns `None`
+    /// if the input buffer is empty.
     ///
     /// # Examples
     ///
@@ -226,7 +225,8 @@ impl SerialPort {
     ///
     /// # Errors
     ///
-    /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be read.
+    /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be
+    ///   read.
     ///
     /// # Examples
     ///
@@ -254,7 +254,8 @@ impl SerialPort {
     ///
     /// # Errors
     ///
-    /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be read.
+    /// - A [`SerialError::ReadFailed`] error is returned if the serial device's status could not be
+    ///   read.
     ///
     /// # Examples
     ///
@@ -378,8 +379,8 @@ enum SerialPortOpenState {
 
 /// Future that opens and configures a [`SerialPort`].
 ///
-/// If the port was not previous configured as a generic serial port, this may
-/// take a few milliseconds to complete.
+/// If the port was not previous configured as a generic serial port, this may take a few
+/// milliseconds to complete.
 #[must_use = "futures do nothing unless you `.await` or poll them"]
 #[derive(Debug)]
 pub struct SerialPortOpenFuture {

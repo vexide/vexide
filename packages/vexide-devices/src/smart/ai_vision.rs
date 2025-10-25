@@ -1,26 +1,28 @@
 //! AI Vision Sensor
 //!
-//! This module provides an API for interacting with the AI Vision sensor.
-//! The AI Vision sensor is meant to be a direct upgrade from the [Vision Sensor](super::vision)
-//! with a wider camera range and AI model capabilities.
+//! This module provides an API for interacting with the AI Vision sensor. The AI Vision sensor is
+//! meant to be a direct upgrade from the [Vision Sensor](super::vision) with a wider camera range
+//! and AI model capabilities.
 //!
 //! # Hardware overview
 //!
 //! The AI Vision sensor has three detection modes that can all be enabled at the same time:
-//!     - [Color detection](AiVisionDetectionMode::COLOR)
-//!     - [Custom model detection](AiVisionDetectionMode::MODEL)
-//!     - [AprilTag detection](AiVisionDetectionMode::APRILTAG) (requires color detection to be enabled)
-//! Currently there is no known way to upload custom models to the sensor and fields do not have AprilTags.
-//! However, there are built-in models that can be used for detection.
+//! - [Color detection](AiVisionDetectionMode::COLOR)
+//! - [Custom model detection](AiVisionDetectionMode::MODEL)
+//! - [AprilTag detection](AiVisionDetectionMode::APRILTAG) (requires color detection to be enabled)
+//!
+//! Currently there is no known way to upload custom models to the sensor and fields do not have
+//! AprilTags. However, there are built-in models that can be used for detection.
+//!
 //! See [VEX's documentation](https://kb.vex.com/hc/en-us/articles/30326315023892-Using-AI-Classifications-with-the-AI-Vision-Sensor) for more information.
 //!
-//! The resolution of the AI Vision sensor is 320x240 pixels.
-//! It has a horizontal FOV of 74 degrees and a vertical FOV of 63 degrees.
-//! Both of these values are a slight upgrade from the Vision Sensor.
+//! The resolution of the AI Vision sensor is 320x240 pixels. It has a horizontal FOV of 74 degrees
+//! and a vertical FOV of 63 degrees. Both of these values are a slight upgrade from the Vision
+//! Sensor.
 //!
-//! Unlike the Vision Sensor, the AI Vision sensor uses more human-readable color signatures
-//! that may be created without the AI Vision utility, though uploading color signatures with
-//! VEX's AI Vision Utility over USB is still an option.
+//! Unlike the Vision Sensor, the AI Vision sensor uses more human-readable color signatures that
+//! may be created without the AI Vision utility, though uploading color signatures with VEX's AI
+//! Vision Utility over USB is still an option.
 
 use alloc::{
     ffi::{CString, IntoStringError},
@@ -204,12 +206,12 @@ pub struct AiVisionColor {
 
 /// A color code used by an AI Vision Sensor to detect groups of color blobs.
 ///
-/// Color codes are effectively "groups" of color signatures. A color code associated
-/// multiple color signatures on the sensor will be detected as a single object when
-/// all signatures are seen next to each other.
+/// Color codes are effectively "groups" of color signatures. A color code associated multiple color
+/// signatures on the sensor will be detected as a single object when all signatures are seen next
+/// to each other.
 ///
-/// Color codes can associate up to 7 color signatures and detections will be returned
-/// as [`AiVisionObject::Code`] variants.
+/// Color codes can associate up to 7 color signatures and detections will be returned as
+/// [`AiVisionObject::Code`] variants.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct AiVisionColorCode([Option<u8>; 7]);
 impl AiVisionColorCode {
@@ -398,7 +400,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -421,9 +424,9 @@ impl AiVisionSensor {
 
     /// Registers a color code association on the sensor.
     ///
-    /// Color codes are effectively "groups" of color signatures. A color code associated
-    /// multiple color signatures on the sensor will be detected as a single object when
-    /// all signatures are seen next to each other.
+    /// Color codes are effectively "groups" of color signatures. A color code associated multiple
+    /// color signatures on the sensor will be detected as a single object when all signatures are
+    /// seen next to each other.
     ///
     /// # Panics
     ///
@@ -433,7 +436,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -511,7 +515,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -566,7 +571,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -604,7 +610,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -656,7 +663,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -707,7 +715,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -745,7 +754,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -772,13 +782,14 @@ impl AiVisionSensor {
         Ok(status)
     }
 
-    /// Returns the current flags of the AI Vision sensor including the detection mode
-    /// flags set by [`Self::set_detection_mode`].
+    /// Returns the current flags of the AI Vision sensor including the detection mode flags set by
+    /// [`Self::set_detection_mode`].
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -804,7 +815,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -839,7 +851,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     pub fn start_awb(&mut self) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
@@ -854,12 +867,13 @@ impl AiVisionSensor {
         Ok(())
     }
 
-    /// Unknown Use
+    /// Unknown use.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     pub fn enable_test(&mut self, test: u8) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
@@ -874,12 +888,13 @@ impl AiVisionSensor {
         Ok(())
     }
 
-    /// Sets the family of apriltag that will be detected
+    /// Sets the AprilTag family that the sensor will try to detect.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -911,7 +926,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1018,7 +1034,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -1064,8 +1081,8 @@ pub enum AiVisionObjectError {
     /// An object created by VEXos failed to be converted.
     InvalidObject,
 
-    /// Failed to fetch the class name of a model-detected object due it having a invalid
-    /// string representation.
+    /// Failed to fetch the class name of a model-detected object due it having a invalid string
+    /// representation.
     #[snafu(transparent)]
     InvalidClassName {
         /// The source of the error.

@@ -2,10 +2,9 @@
 //!
 //! This module provides a types for executing code after a set period of time.
 //!
-//! - [`Sleep`] is a future that does no work and completes at a specific [`Instant`]
-//!   in time.
-//! - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future
-//!   for or until a specific instant in time.
+//! - [`Sleep`] is a future that does no work and completes at a specific [`Instant`] in time.
+//! - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future for or until a
+//!   specific instant in time.
 
 use core::{
     future::Future,
@@ -47,8 +46,8 @@ impl Future for Sleep {
 
 /// Waits until `duration` has elapsed.
 ///
-/// This function returns a future that will complete after the given
-/// duration, effectively yielding the current task for a period of time.
+/// This function returns a future that will complete after the given duration, effectively yielding
+/// the current task for a period of time.
 ///
 /// Equivalent to `sleep_until(Instant::now() + duration)`.
 ///
@@ -72,8 +71,8 @@ pub fn sleep(duration: Duration) -> Sleep {
 
 /// Waits until `deadline` is reached.
 ///
-/// This function returns a future that will complete once a given
-/// `Instant` in time has been reached.
+/// This function returns a future that will complete once a given `Instant` in time has been
+/// reached.
 ///
 /// # Examples
 ///

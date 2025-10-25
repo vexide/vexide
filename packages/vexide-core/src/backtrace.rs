@@ -1,18 +1,16 @@
 //! Support for capturing stack backtraces.
 //!
-//! This module contains the support for capturing a stack backtrace through
-//! the [`Backtrace`] type. Backtraces are helpful to attach to errors,
-//! containing information that can be used to get a chain of where an error
-//! was created.
+//! This module contains the support for capturing a stack backtrace through the [`Backtrace`] type.
+//! Backtraces are helpful to attach to errors, containing information that can be used to get a
+//! chain of where an error was created.
 //!
 //! # Platform Support
 //!
-//! The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform
-//! target. At the moment, this target only platform that vexide supports,
-//! however this may change in the future.
+//! The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform target. At the moment,
+//! this target only platform that vexide supports, however this may change in the future.
 //!
-//! Additionally, backtraces will be unsupported if vexide is compiled without
-//! the `backtrace` feature.
+//! Additionally, backtraces will be unsupported if vexide is compiled without the `backtrace`
+//! feature.
 
 use alloc::vec::Vec;
 use core::fmt::Display;
@@ -22,17 +20,16 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 
 /// A captured stack backtrace.
 ///
-/// This type stores the backtrace of a captured stack at a certain point in
-/// time. The backtrace is represented as a list of instruction pointers.
+/// This type stores the backtrace of a captured stack at a certain point in time. The backtrace is
+/// represented as a list of instruction pointers.
 ///
 /// # Platform Support
 ///
-/// The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform
-/// target. At the moment, this target only platform that vexide supports,
-/// however this may change in the future.
+/// The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform target. At the moment,
+/// this target only platform that vexide supports, however this may change in the future.
 ///
-/// Additionally, backtraces will be unsupported if vexide is compiled without
-/// the `backtrace` feature.
+/// Additionally, backtraces will be unsupported if vexide is compiled without the `backtrace`
+/// feature.
 ///
 /// # Example
 ///
@@ -45,10 +42,9 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 ///
 /// # Symbolication
 ///
-/// The number stored in each frame is not particularly meaningful to humans on its own.
-/// Using a tool such as `llvm-symbolizer` or `addr2line`, it can be turned into
-/// a function name and line number to show what functions were being run at
-/// the time of the backtrace's capture.
+/// The number stored in each frame is not particularly meaningful to humans on its own. Using a
+/// tool such as `llvm-symbolizer` or `addr2line`, it can be turned into a function name and line
+/// number to show what functions were being run at the time of the backtrace's capture.
 ///
 /// ```terminal
 /// $ llvm-symbolizer -p -e ./target/armv7a-vex-v5/debug/program_name 0x380217b 0x380209b
@@ -69,8 +65,8 @@ impl Backtrace {
     ///
     /// # Platform Support
     ///
-    /// Backtraces will be empty on non-vex targets (e.g. WebAssembly) or when
-    /// the `backtrace` feature is disabled.
+    /// Backtraces will be empty on non-vex targets (e.g. WebAssembly) or when the `backtrace`
+    /// feature is disabled.
     #[allow(clippy::inline_always)]
     #[inline(always)] // Inlining keeps this function from appearing in backtraces
     #[allow(clippy::missing_const_for_fn)]
@@ -89,8 +85,8 @@ impl Backtrace {
         self.frames.as_slice()
     }
 
-    /// Captures a backtrace at the current point of execution,
-    /// returning an error if the backtrace fails to capture.
+    /// Captures a backtrace at the current point of execution, returning an error if the backtrace
+    /// fails to capture.
     ///
     /// # Platform Support
     ///

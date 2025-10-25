@@ -1,7 +1,7 @@
 //! Math-related Container Types
 //!
-//! This module re-exports several math-related types from the [`mint`] crate
-//! for usage in vexide's device APIs.
+//! This module re-exports several math-related types from the [`mint`] crate for usage in vexide's
+//! device APIs.
 
 use core::{
     f64::{
@@ -58,11 +58,11 @@ pub(crate) fn truncf(x: f32) -> f32 {
 
 /// An unbounded angular position.
 ///
-/// This type stores a unit-agnostic angle (a signed displacement from some
-/// rotation representing `Angle::ZERO`).
+/// This type stores a unit-agnostic angle (a signed displacement from some rotation representing
+/// `Angle::ZERO`).
 ///
-/// This type is used by devices such as [`Motor`], [`RotationSensor`], and
-/// [`AdiEncoder`] to store measurements of their rotation as an angle.
+/// This type is used by devices such as [`Motor`], [`RotationSensor`], and [`AdiEncoder`] to store
+/// measurements of their rotation as an angle.
 ///
 /// [`RotationSensor`]: crate::smart::rotation::RotationSensor
 /// [`Motor`]: crate::smart::motor::Motor
@@ -70,8 +70,8 @@ pub(crate) fn truncf(x: f32) -> f32 {
 ///
 /// # Non-modularity
 ///
-/// This type is unbounded and is NOT modular 2π. This means that
-/// `Angle::from_degrees(0) != Angle::from_degrees(360)`, for instance.
+/// This type is unbounded and is NOT modular 2π. This means that `Angle::from_degrees(0) !=
+/// Angle::from_degrees(360)`, for instance.
 ///
 /// # Precision
 ///
@@ -213,8 +213,8 @@ impl Angle {
         }
     }
 
-    /// Computes the arcsine of a number. Return value is in the range
-    /// [-pi/2, pi/2] or NaN if the angle is outside the range [-1, 1].
+    /// Computes the arcsine of a number. Return value is in the range [-pi/2, pi/2] or NaN if the
+    /// angle is outside the range [-1, 1].
     #[inline]
     #[must_use]
     pub fn asin(y: f64) -> Self {
@@ -227,8 +227,8 @@ impl Angle {
         Self { radians: y.asin() }
     }
 
-    /// Computes the arccosine of a number. Return value is in the range
-    /// [0, pi] or NaN if the angle is outside the range [-1, 1].
+    /// Computes the arccosine of a number. Return value is in the range [0, pi] or NaN if the angle
+    /// is outside the range [-1, 1].
     #[inline]
     #[must_use]
     pub fn acos(x: f64) -> Self {
@@ -241,8 +241,7 @@ impl Angle {
         Self { radians: x.acos() }
     }
 
-    /// Computes the arctangent of an angle. Return value is in radians in the
-    /// range [-pi/2, pi/2];
+    /// Computes the arctangent of an angle. Return value is in radians in the range [-pi/2, pi/2];
     #[inline]
     #[must_use]
     pub fn atan(tan: f64) -> Self {
@@ -336,13 +335,12 @@ impl Angle {
         }
     }
 
-    /// Fused multiply-add. Computes `(self * a) + b` with only one rounding
-    /// error, yielding a more accurate result than an unfused multiply-add.
+    /// Fused multiply-add. Computes `(self * a) + b` with only one rounding error, yielding a more
+    /// accurate result than an unfused multiply-add.
     ///
-    /// Using `mul_add` *may* be more performant than an unfused multiply-add if
-    /// the target architecture has a dedicated `fma` CPU instruction. However,
-    /// this is not always true, and will be heavily dependant on designing
-    /// algorithms with specific target hardware in mind.
+    /// Using `mul_add` *may* be more performant than an unfused multiply-add if the target
+    /// architecture has a dedicated `fma` CPU instruction. However, this is not always true, and
+    /// will be heavily dependant on designing algorithms with specific target hardware in mind.
     #[inline]
     #[must_use = "this returns the result of the operation, without modifying the original"]
     pub fn mul_add(self, a: f64, b: Self) -> Self {
@@ -409,8 +407,7 @@ impl Angle {
         self.radians.tan()
     }
 
-    /// Simultaneously computes the sine and cosine of the number, `x`. Returns
-    /// `(sin(x), cos(x))`.
+    /// Simultaneously computes the sine and cosine of the number, `x`. Returns `(sin(x), cos(x))`.
     #[inline]
     #[must_use = "this returns the result of the operation, without modifying the original"]
     pub fn sin_cos(self) -> (f64, f64) {

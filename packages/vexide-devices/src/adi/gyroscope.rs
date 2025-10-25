@@ -1,7 +1,7 @@
 //! ADI gyroscope device.
 //!
-//! This module provides an interface for interacting with an ADI gyroscope device.
-//! The gyroscope can be used to measure the yaw rotation of your robot.
+//! This module provides an interface for interacting with an ADI gyroscope device. The gyroscope
+//! can be used to measure the yaw rotation of your robot.
 //!
 //! # Hardware overview
 //!
@@ -9,8 +9,9 @@
 //! This means that it can measure the rate of rotation up to ±1000 degrees per second.
 //! VEXos only provides the calculated yaw rotation of the robot.
 //!
-//! The gyroscope is rated for a noise density of 0.016 dps/√Hz (degrees per second per square root of Hertz).
-//! This means that we cannot determine the exact amount of noise in the sensor's readings because it is unknown how often VEXos polls the gyroscope.
+//! The gyroscope is rated for a noise density of 0.016 dps/√Hz (degrees per second per square root
+//! of Hertz). This means that we cannot determine the exact amount of noise in the sensor's
+//! readings because it is unknown how often VEXos polls the gyroscope.
 
 use core::{future::Future, task::Poll, time::Duration};
 
@@ -122,10 +123,12 @@ impl AdiGyroscope {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -150,10 +153,12 @@ impl AdiGyroscope {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
@@ -185,10 +190,12 @@ impl AdiGyroscope {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///

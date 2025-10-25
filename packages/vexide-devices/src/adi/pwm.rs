@@ -4,10 +4,9 @@
 //!
 //! # Hardware Overview
 //!
-//! Pulse-width modulation (PWM) is a digital signaling technique that creates a variable
-//! width high pulse over a fixed period, allowing you to communicate analog data over
-//! digital signals by measuring the length of the pulse (how long it was high compared to
-//! how long it was low).
+//! Pulse-width modulation (PWM) is a digital signaling technique that creates a variable width high
+//! pulse over a fixed period, allowing you to communicate analog data over digital signals by
+//! measuring the length of the pulse (how long it was high compared to how long it was low).
 //!
 //! PWM signals consist of two components:
 //! - ON time (pulse width): When the signal is high ([`LogicLevel::High`]/3.3V)
@@ -59,15 +58,17 @@ impl AdiPwmOut {
 
     /// Sets the PWM output width.
     ///
-    /// This value is sent over 16ms periods with pulse widths ranging from roughly
-    /// 0.94mS to 2.03mS.
+    /// This value is sent over 16ms periods with pulse widths ranging from roughly 0.94mS to
+    /// 2.03mS.
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
