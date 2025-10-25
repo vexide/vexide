@@ -1,23 +1,22 @@
 //! GPS Sensor
 //!
-//! This module provides an interface to interact with the VEX V5 Game Position System (GPS)
-//! Sensor, which uses computer vision and an inertial measurement unit (IMU) to provide
-//! absolute position tracking within a VEX Robotics Competition field.
+//! This module provides an interface to interact with the VEX V5 Game Position System (GPS) Sensor,
+//! which uses computer vision and an inertial measurement unit (IMU) to provide absolute position
+//! tracking within a VEX Robotics Competition field.
 //!
 //! # Hardware Description
 //!
-//! The GPS sensor combines a monochrome camera and an IMU for robust position tracking
-//! through visual odometry. It works by detecting QR-like patterns on the field perimeter,
-//! using both the pattern sequence's and apparent size for position determination. The
-//! integrated IMU provides motion tracking for position estimation when visual tracking
-//! is unavailable or unreliable.
+//! The GPS sensor combines a monochrome camera and an IMU for robust position tracking through
+//! visual odometry. It works by detecting QR-like patterns on the field perimeter, using both the
+//! pattern sequence's and apparent size for position determination. The integrated IMU provides
+//! motion tracking for position estimation when visual tracking is unavailable or unreliable.
 //!
-//! The sensor has specific operating ranges: it requires a minimum
-//! distance of 20 inches from the field perimeter for reliable readings, has a deadzone
-//! between 0-13.5 inches, and maintains accuracy up to 12 feet from the perimeter.
+//! The sensor has specific operating ranges: it requires a minimum distance of 20 inches from the
+//! field perimeter for reliable readings, has a deadzone between 0-13.5 inches, and maintains
+//! accuracy up to 12 feet from the perimeter.
 //!
-//! Sensor fusion between the camera and IMU helps maintain position tracking through
-//! dead zones and areas of inconsistent visual detection.
+//! Sensor fusion between the camera and IMU helps maintain position tracking through dead zones and
+//! areas of inconsistent visual detection.
 //!
 //! Further information about the sensor's method of operation can be found in [IFI's patent](https://docs.google.com/viewerng/viewer?url=https://patentimages.storage.googleapis.com/4f/74/30/eccf334da0ae38/WO2020219788A1.pdf).
 
@@ -54,42 +53,49 @@ impl GpsSensor {
     ///
     /// # Sensor Configuration
     ///
-    /// The sensor requires three measurements to be made at the start of a match, passed as arguments to this function:
+    /// The sensor requires three measurements to be made at the start of a match, passed as
+    /// arguments to this function:
     ///
     /// ## Sensor Offset
     ///
-    /// `offset` is the physical offset of the sensor's mounting location from a reference point on the robot.
+    /// `offset` is the physical offset of the sensor's mounting location from a reference point on
+    /// the robot.
     ///
-    /// Offset defines the exact point on the robot that is considered a "source of truth" for the robot's position.
-    /// For example, if you considered the center of your robot to be the reference point for coordinates, then this
-    /// value would be the signed 4-quadrant x and y offset from that point on your robot in meters. Similarly, if you
-    /// considered the sensor itself to be the robot's origin of tracking, then this value would simply be
-    /// `Point2 { x: 0.0, y: 0.0 }`.
+    /// Offset defines the exact point on the robot that is considered a "source of truth" for the
+    /// robot's position. For example, if you considered the center of your robot to be the
+    /// reference point for coordinates, then this value would be the signed 4-quadrant x and y
+    /// offset from that point on your robot in meters. Similarly, if you considered the sensor
+    /// itself to be the robot's origin of tracking, then this value would simply be `Point2 { x:
+    /// 0.0, y: 0.0 }`.
     ///
     /// ## Initial Robot Position
     ///
-    /// `initial_position` is an estimate of the robot's initial cartesian coordinates on the field in meters. This
-    /// value helpful for cases when the robot's starting point is near a field wall.
+    /// `initial_position` is an estimate of the robot's initial cartesian coordinates on the field
+    /// in meters. This value helpful for cases when the robot's starting point is near a field
+    /// wall.
     ///
-    /// When the GPS Sensor is too close to a field wall to properly read the GPS strips, the sensor will be unable
-    /// to localize the robot's position due the wall's proximity limiting the view of the camera. This can cause the
-    /// sensor inaccurate results at the start of a match, where robots often start directly near a wall.
+    /// When the GPS Sensor is too close to a field wall to properly read the GPS strips, the sensor
+    /// will be unable to localize the robot's position due the wall's proximity limiting the view
+    /// of the camera. This can cause the sensor inaccurate results at the start of a match, where
+    /// robots often start directly near a wall.
     ///
-    /// By providing an estimate of the robot's initial position on the field, this problem is partially mitigated by
-    /// giving the sensor an initial frame of reference to use.
+    /// By providing an estimate of the robot's initial position on the field, this problem is
+    /// partially mitigated by giving the sensor an initial frame of reference to use.
     ///
     /// # Initial Robot Heading
     ///
-    /// `initial_heading` is a value between 0 and 360 degrees that informs the GPS of its heading at the start of the
-    /// match. Similar to `initial_position`, this is useful for improving accuracy when the sensor is in close proximity
-    /// to a field wall, as the sensor's rotation values are continuously checked against the GPS field strips to prevent
-    /// drift over time. If the sensor starts too close to a field wall, providing an `initial_heading` can help prevent
+    /// `initial_heading` is a value between 0 and 360 degrees that informs the GPS of its heading
+    /// at the start of the match. Similar to `initial_position`, this is useful for improving
+    /// accuracy when the sensor is in close proximity to a field wall, as the sensor's rotation
+    /// values are continuously checked against the GPS field strips to prevent drift over time. If
+    /// the sensor starts too close to a field wall, providing an `initial_heading` can help prevent
     /// this drift at the start of the match.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::math::Point2;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -141,17 +147,20 @@ impl GpsSensor {
 
     /// Returns the user-configured offset from a reference point on the robot.
     ///
-    /// This offset value is passed to [`GpsSensor::new`] and can be changed using [`GpsSensor::set_offset`].
+    /// This offset value is passed to [`GpsSensor::new`] and can be changed using
+    /// [`GpsSensor::set_offset`].
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::math::Point2;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -194,21 +203,24 @@ impl GpsSensor {
     ///
     /// This value is also configured initially through [`GpsSensor::new`].
     ///
-    /// Offset defines the exact point on the robot that is considered a "source of truth" for the robot's position.
-    /// For example, if you considered the center of your robot to be the reference point for coordinates, then this
-    /// value would be the signed 4-quadrant x and y offset from that point on your robot in meters. Similarly, if you
-    /// considered the sensor itself to be the robot's origin of tracking, then this value would simply be
-    /// `Point2 { x: 0.0, y: 0.0 }`.
+    /// Offset defines the exact point on the robot that is considered a "source of truth" for the
+    /// robot's position. For example, if you considered the center of your robot to be the
+    /// reference point for coordinates, then this value would be the signed 4-quadrant x and y
+    /// offset from that point on your robot in meters. Similarly, if you considered the sensor
+    /// itself to be the robot's origin of tracking, then this value would simply be `Point2 { x:
+    /// 0.0, y: 0.0 }`.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
+    /// use vexide::math::Point2;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -246,19 +258,22 @@ impl GpsSensor {
         Ok(())
     }
 
-    /// Returns an estimate of the robot's location on the field as cartesian coordinates measured in meters.
+    /// Returns an estimate of the robot's location on the field as cartesian coordinates measured
+    /// in meters.
     ///
-    /// The reference point for a robot's position is determined by the sensor's configured [`offset`](`GpsSensor::offset`) value.
+    /// The reference point for a robot's position is determined by the sensor's configured
+    /// [`offset`](`GpsSensor::offset`) value.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -273,11 +288,7 @@ impl GpsSensor {
     ///
     ///     // Get current position and heading
     ///     if let Ok(position) = gps.position() {
-    ///         println!(
-    ///             "Robot is at x={}, y={}",
-    ///             position.x,
-    ///             position.y,
-    ///         );
+    ///         println!("Robot is at x={}, y={}", position.x, position.y,);
     ///     }
     /// }
     /// ```
@@ -302,12 +313,13 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -319,8 +331,10 @@ impl GpsSensor {
     ///     );
     ///
     ///     // Check position accuracy
-    ///     if gps.error().is_ok_and(|err| err > 0.3) {
-    ///         println!("Warning: GPS position accuracy is low ({}m error)", error);
+    ///     if let Ok(error) = gps.error() {
+    ///         if error > 0.3 {
+    ///             println!("Warning: GPS position accuracy is low ({}m)", error);
+    ///         }
     ///     }
     /// }
     /// ```
@@ -335,12 +349,13 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -364,20 +379,22 @@ impl GpsSensor {
 
     /// Returns the sensor's yaw angle bounded by [0.0, 360.0) degrees.
     ///
-    /// Clockwise rotations are represented with positive degree values, while counterclockwise rotations are
-    /// represented with negative ones. If a heading offset has not been set using [`GpsSensor::set_heading`],
-    /// then 90 degrees will located to the right of the field.
+    /// Clockwise rotations are represented with positive degree values, while counterclockwise
+    /// rotations are represented with negative ones. If a heading offset has not been set using
+    /// [`GpsSensor::set_heading`], then 90 degrees will located to the right of the field.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -391,7 +408,7 @@ impl GpsSensor {
     ///     );
     ///
     ///     if let Ok(heading) = gps.heading() {
-    ///         println!("Heading is {} degrees.", rotation);
+    ///         println!("Heading is {} degrees.", heading.as_degrees());
     ///     }
     /// }
     /// ```
@@ -408,20 +425,23 @@ impl GpsSensor {
 
     /// Returns the total number of degrees the GPS has spun about the z-axis.
     ///
-    /// This value is theoretically unbounded. Clockwise rotations are represented with positive degree values,
-    /// while counterclockwise rotations are represented with negative ones. If a heading offset has not been set
-    /// using [`GpsSensor::set_rotation`], then 90 degrees will located to the right of the field.
+    /// This value is theoretically unbounded. Clockwise rotations are represented with positive
+    /// degree values, while counterclockwise rotations are represented with negative ones. If a
+    /// heading offset has not been set using [`GpsSensor::set_rotation`], then 90 degrees will
+    /// located to the right of the field.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -435,7 +455,10 @@ impl GpsSensor {
     ///     );
     ///
     ///     if let Ok(rotation) = gps.rotation() {
-    ///         println!("Robot has rotated {} degrees since calibration.", rotation);
+    ///         println!(
+    ///             "Robot has rotated {} degrees since calibration.",
+    ///             rotation.as_degrees()
+    ///         );
     ///     }
     /// }
     /// ```
@@ -451,13 +474,15 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -473,9 +498,9 @@ impl GpsSensor {
     ///     if let Ok(angles) = gps.euler() {
     ///         println!(
     ///             "yaw: {}°, pitch: {}°, roll: {}°",
-    ///             angles.a.to_degrees(),
-    ///             angles.b.to_degrees(),
-    ///             angles.c.to_degrees(),
+    ///             angles.a.as_degrees(),
+    ///             angles.b.as_degrees(),
+    ///             angles.c.as_degrees(),
     ///         );
     ///     }
     /// }
@@ -501,13 +526,15 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -523,10 +550,7 @@ impl GpsSensor {
     ///     if let Ok(quaternion) = gps.quaternion() {
     ///         println!(
     ///             "x: {}, y: {}, z: {}, scalar: {}",
-    ///             quaternion.v.x,
-    ///             quaternion.v.y,
-    ///             quaternion.v.z,
-    ///             quaternion.s,
+    ///             quaternion.v.x, quaternion.v.y, quaternion.v.z, quaternion.s,
     ///         );
     ///     }
     /// }
@@ -554,13 +578,15 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -578,9 +604,7 @@ impl GpsSensor {
     ///         if let Ok(acceleration) = gps.acceleration() {
     ///             println!(
     ///                 "x: {}G, y: {}G, z: {}G",
-    ///                 acceleration.x,
-    ///                 acceleration.y,
-    ///                 acceleration.z,
+    ///                 acceleration.x, acceleration.y, acceleration.z,
     ///             );
     ///         }
     ///
@@ -608,13 +632,15 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -630,12 +656,7 @@ impl GpsSensor {
     ///     // Read out angular velocity values every 10mS
     ///     loop {
     ///         if let Ok(rates) = gps.gyro_rate() {
-    ///             println!(
-    ///                 "x: {}°/s, y: {}°/s, z: {}°/s",
-    ///                 rates.x,
-    ///                 rates.y,
-    ///                 rates.z,
-    ///             );
+    ///             println!("x: {}°/s, y: {}°/s, z: {}°/s", rates.x, rates.y, rates.z,);
     ///         }
     ///
     ///         sleep(Duration::from_millis(10)).await;
@@ -664,13 +685,15 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -704,13 +727,15 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -744,12 +769,16 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{
+    ///     math::{Angle, Point2},
+    ///     prelude::*,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -763,7 +792,7 @@ impl GpsSensor {
     ///     );
     ///
     ///     // Set rotation to 90 degrees clockwise.
-    ///     _ = gps.set_rotation(90.0);
+    ///     _ = gps.set_rotation(Angle::from_degrees(90.0));
     ///
     ///     println!("Rotation: {:?}", gps.rotation());
     /// }
@@ -784,12 +813,16 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{
+    ///     math::{Angle, Point2},
+    ///     prelude::*,
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -803,7 +836,7 @@ impl GpsSensor {
     ///     );
     ///
     ///     // Set heading to 90 degrees clockwise.
-    ///     _ = gps.set_heading(90.0);
+    ///     _ = gps.set_heading(Angle::from_degrees(90.0));
     ///
     ///     println!("Heading: {:?}", gps.heading());
     /// }
@@ -826,13 +859,15 @@ impl GpsSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {

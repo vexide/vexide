@@ -1,44 +1,45 @@
 //! ADI Shaft Encoder
 //!
-//! This module provides an interface to interact with three-wire encoders, which is used to measure both
-//! relative position of and rotational distance traveled by a shaft.
+//! This module provides an interface to interact with three-wire encoders, which is used to measure
+//! both relative position of and rotational distance traveled by a shaft.
 //!
-//! In addition to the [VEX Optical Shaft Encoder](https://www.vexrobotics.com/276-2156.html), this API also
-//! supports custom three wire encoders with custom resolutions (TPR).
+//! In addition to the [VEX Optical Shaft Encoder](https://www.vexrobotics.com/276-2156.html), this
+//! API also supports custom three wire encoders with custom resolutions (TPR).
 //!
 //! # Hardware Overview (for the Optical Shaft Encoder)
 //!
-//! The Optical Shaft Encoder can be used to track distance traveled, direction of motion, or position of any rotary
-//! component, such as a gripper arm or tracking wheel.
+//! The Optical Shaft Encoder can be used to track distance traveled, direction of motion, or
+//! position of any rotary component, such as a gripper arm or tracking wheel.
 //!
-//! The encoder works by shining light onto the edge of a disk outfitted with evenly
-//! spaced slits around the circumference. As the disk spins, light passes through the slits and
-//! is blocked by the opaque spaces between the slits. The encoder then detects how many slits have
+//! The encoder works by shining light onto the edge of a disk outfitted with evenly spaced slits
+//! around the circumference. As the disk spins, light passes through the slits and is blocked by
+//! the opaque spaces between the slits. The encoder then detects how many slits have
 //! had light shine through, and in which direction the disk is spinning.
 //!
 //! The encoder can detect up to 1,700 pulses per second, which corresponds to 18.9 revolutions per
-//! second and 1,133 rpm (revolutions per minute). Faster revolutions will therefore not be interpreted
-//! exactly, potentially resulting in erroneous positional data being returned.
+//! second and 1,133 rpm (revolutions per minute). Faster revolutions will therefore not be
+//! interpreted exactly, potentially resulting in erroneous positional data being returned.
 //!
 //! ## Connecting to the V5 Brain
 //!
-//! Encoders are two-wire devices that must be connected to two adjacent ports on the same brain/ADI expander.
-//! One of the wires must be plugged into an odd-numbered port (A, C, E, G), while the other wire must be
-//! plugged into the port directly above that wire (that is, B, D, F, or H, respectively). If the top wire is
-//! plugged into the lower odd-numbered port (A, C, E, G), then *clockwise* rotation will represent a positive
-//! change in position. If the bottom wire is plugged into the lower port, then *counterclockwise* rotation will
-//! be positive instead.
+//! Encoders are two-wire devices that must be connected to two adjacent ports on the same brain/ADI
+//! expander. One of the wires must be plugged into an odd-numbered port (A, C, E, G), while the
+//! other wire must be plugged into the port directly above that wire (that is, B, D, F, or H,
+//! respectively). If the top wire is plugged into the lower odd-numbered port (A, C, E, G), then
+//! *clockwise* rotation will represent a positive change in position. If the bottom wire is plugged
+//! into the lower port, then *counterclockwise* rotation will be positive instead.
 //!
 //! # Comparison to [`RotationSensor`]
 //!
-//! Rotation sensors and Shaft Encoders both measure the same thing (angular position), but with some important
-//! differences. The largest distinction is how position is measured. Rotation sensors use hall-effect magnets
-//! and know their absolute angle at any given time, including after a power cycle or loss of voltage. In contrast,
-//! encoders only track their *change* in position, meaning that any changes made to the encoder while unplugged
-//! will not be detected as a change in position. Rotation sensors have much higher resolution than the old
-//! encoders sold by VEX at 0.088° accuracy (compared to 1° of accuracy) and can measure accurately at higher
-//! speeds. Rotation sensors are also capable of slotting VEX's new high-strength shafts, while these older
-//! encoders can only fit low-strength shafts.
+//! Rotation sensors and Shaft Encoders both measure the same thing (angular position), but with
+//! some important differences. The largest distinction is how position is measured. Rotation
+//! sensors use hall-effect magnets and know their absolute angle at any given time, including after
+//! a power cycle or loss of voltage. In contrast, encoders only track their *change* in position,
+//! meaning that any changes made to the encoder while unplugged will not be detected as a change in
+//! position. Rotation sensors have much higher resolution than the old encoders sold by VEX at
+//! 0.088° accuracy (compared to 1° of accuracy) and can measure accurately at higher
+//! speeds. Rotation sensors are also capable of slotting VEX's new high-strength shafts, while
+//! these older encoders can only fit low-strength shafts.
 //!
 //! |                     | [`AdiEncoder`]   | [`RotationSensor`]                 |
 //! | ------------------- | ---------------- | ---------------------------------- |
@@ -58,17 +59,18 @@ use crate::{adi::adi_port_name, math::Angle};
 
 /// VEX Optical Shaft Encoder
 ///
-/// This is a type alias to [`AdiEncoder<360>`](AdiEncoder) for simplifying the creation of
-/// the [legacy VEX Optical Shaft Encoders (276-2156)]. This represents an instance of
-/// [`AdiEncoder`] with a resolution of 360 TPR (ticks per revolution).
+/// This is a type alias to [`AdiEncoder<360>`](AdiEncoder) for simplifying the creation of the
+/// [legacy VEX Optical Shaft Encoders (276-2156)]. This represents an instance of [`AdiEncoder`]
+/// with a resolution of 360 TPR (ticks per revolution).
 ///
 /// [legacy VEX Optical Shaft Encoders (276-2156)]: https://www.vexrobotics.com/276-2156.html.
 ///
 /// # Examples
 ///
-/// ```
-/// use vexide::prelude::*;
+/// ```no_run
 /// use std::time::Duration;
+///
+/// use vexide::prelude::*;
 ///
 /// #[vexide::main]
 /// async fn main(peripherals: Peripherals) {
@@ -76,7 +78,7 @@ use crate::{adi::adi_port_name, math::Angle};
 ///
 ///     loop {
 ///         println!("encoder position: {:?}", encoder.position());
-///         sleep(AdiDevice::ADI_UPDATE_INTERVAL).await;
+///         sleep(AdiOpticalEncoder::UPDATE_INTERVAL).await;
 ///     }
 /// }
 /// ```
@@ -94,15 +96,17 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// # Panics
     ///
-    /// - If the top and bottom ports originate from different [`AdiExpander`](crate::smart::expander::AdiExpander)s.
-    /// - If the ports are not directly next to each other or in an invalid position (one port is not in A, C, E, G and
-    ///   the other is not in in B, D, F).
+    /// - If the top and bottom ports originate from different
+    ///   [`AdiExpander`](crate::smart::expander::AdiExpander)s.
+    /// - If the ports are not directly next to each other or in an invalid position (one port is
+    ///   not in A, C, E, G and the other is not in in B, D, F).
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
@@ -112,7 +116,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     ///     loop {
     ///         println!("encoder position: {:?}", encoder.position());
-    ///         sleep(AdiDevice::ADI_UPDATE_INTERVAL).await;
+    ///         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -163,16 +167,19 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{prelude::*, math::Angle};
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
@@ -199,21 +206,25 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
 
     /// Sets the current encoder position to the given position without any actual movement.
     ///
-    /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
-    /// This can be useful if you want to reset the encoder position to a known value at a certain point.
+    /// Analogous to taring or resetting the encoder so that the new position is equal to the given
+    /// position. This can be useful if you want to reset the encoder position to a known value
+    /// at a certain point.
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{prelude::*, math::Angle};
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
@@ -222,7 +233,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
     ///     let encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     // Treat the encoder as if it were at 180 degrees.
-    ///     _ = encoder.set_position(Angle::from_degrees(180));
+    ///     _ = encoder.set_position(Angle::from_degrees(180.0));
     /// }
     /// ```
     pub fn set_position(&self, position: Angle) -> Result<(), PortError> {
@@ -241,27 +252,30 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
 
     /// Sets the current encoder position to zero.
     ///
-    /// Analogous to taring or resetting the encoder so that the new position is equal
-    /// to the given position.
+    /// Analogous to taring or resetting the encoder so that the new position is equal to the given
+    /// position.
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// const ENCODER_TPR: u32 = 8192; // Change to 360 if you're using the encoders sold by VEX.
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
+    ///     let mut encoder = AdiEncoder::<ENCODER_TPR>::new(peripherals.adi_a, peripherals.adi_b);
     ///
     ///     // Reset the encoder position to zero.
     ///     // This doesn't really do anything in this case, but it's a good example.

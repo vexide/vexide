@@ -1,21 +1,19 @@
 //! Competition control and state.
 //!
-//! This module provides functionality for interacting with competition control in VEXos,
-//! allowing you to read competition state and respond to changes in competition modes.
-//! This is useful for situations where the robot's behavior must adapt based on the
-//! state of the competition, such as transitioning between autonomous and driver-controlled
-//! modes.
+//! This module provides functionality for interacting with competition control in VEXos, allowing
+//! you to read competition state and respond to changes in competition modes. This is useful for
+//! situations where the robot's behavior must adapt based on the state of the competition, such as
+//! transitioning between autonomous and driver-controlled modes.
 //!
 //! # The [`Compete`] Trait
 //!
-//! The most important item in this module is the [`Compete`] trait, which serves as the
-//! foundation for defining competition-specific behavior in vexide programs. This trait
-//! allows you to declare different functions on a robot struct to be executed when
-//! competition state changes. By implementing [`Compete`], your robot can respond to
-//! changes in the various phases of a competition, such as autonomous operation, driver
-//! control, or downtime between modes.
+//! The most important item in this module is the [`Compete`] trait, which serves as the foundation
+//! for defining competition-specific behavior in vexide programs. This trait allows you to declare
+//! different functions on a robot struct to be executed when competition state changes. By
+//! implementing [`Compete`], your robot can respond to changes in the various phases of a
+//! competition, such as autonomous operation, driver control, or downtime between modes.
 //!
-//! ```
+//! ```no_run
 //! use vexide::prelude::*;
 //!
 //! struct MyRobot {}
@@ -37,9 +35,9 @@
 //! }
 //! ```
 //!
-//! By awaiting the [`compete()`] function on our robot, we are handing over execution to
-//! vexide's [`CompetitionRuntime`], which will run a different function on the [`Compete`]
-//! trait depending on what is happening in the match.
+//! By awaiting the [`compete()`] function on our robot, we are handing over execution to vexide's
+//! [`CompetitionRuntime`], which will run a different function on the [`Compete`] trait depending
+//! on what is happening in the match.
 //!
 //! [`compete()`]: CompeteExt::compete
 //!
@@ -47,8 +45,8 @@
 //!
 //! In addition to providing hooks into different competition modes, this module also provides
 //! functions for reading information about the competition environment, such as the current match
-//! mode, match control hardware, and whether the robot is enabled or disabled. This is provided
-//! by the [`is_connected`], [`system`], [`mode`], and [`status`] functions.
+//! mode, match control hardware, and whether the robot is enabled or disabled. This is provided by
+//! the [`is_connected`], [`system`], [`mode`], and [`status`] functions.
 
 use alloc::boxed::Box;
 use core::{
@@ -68,8 +66,7 @@ use vex_sdk::vexCompetitionStatus;
 bitflags! {
     /// The raw status bits returned by [`vex_sdk::vexCompetitionStatus`].
     ///
-    /// These flags contain all the data made available to user code by VEXos
-    /// about the state of the match.
+    /// These flags contain all the data made available to user code by VEXos about the state of the match.
     #[derive(Debug, Clone, Copy, Eq, PartialEq)]
     pub struct CompetitionStatus: u32 {
         /// Robot is disabled by field control.
@@ -91,38 +88,38 @@ bitflags! {
 pub enum CompetitionMode {
     /// The Disabled competition mode.
     ///
-    /// When in disabled mode, voltage commands to motors are disabled. Motors are forcibly
-    /// locked to the "coast" brake mode and cannot be moved.
+    /// When in disabled mode, voltage commands to motors are disabled. Motors are forcibly locked
+    /// to the "coast" brake mode and cannot be moved.
     ///
-    /// Robots may be placed into disabled mode at any point in the competition after
-    /// connecting, but are typically disabled before the autonomous period, between
-    /// autonomous and opcontrol periods, and following the opcontrol period of a match.
+    /// Robots may be placed into disabled mode at any point in the competition after connecting,
+    /// but are typically disabled before the autonomous period, between autonomous and opcontrol
+    /// periods, and following the opcontrol period of a match.
     Disabled,
 
     /// The Autonomous competition mode.
     ///
-    /// When in autonomous mode, all motors and sensors may be accessed, however user
-    /// input from controller buttons and joysticks is not available to be read.
+    /// When in autonomous mode, all motors and sensors may be accessed, however user input from
+    /// controller buttons and joysticks is not available to be read.
     ///
-    /// Robots may be placed into autonomous mode at any point in the competition after
-    /// connecting, but are typically placed into this mode at the start of a match.
+    /// Robots may be placed into autonomous mode at any point in the competition after connecting,
+    /// but are typically placed into this mode at the start of a match.
     Autonomous,
 
     /// The Driver Control (i.e. opcontrol) competition mode.
     ///
-    /// When in opcontrol mode, all device access is available including access to
-    /// controller joystick values for reading user-input from drive team members.
+    /// When in opcontrol mode, all device access is available including access to controller
+    /// joystick values for reading user-input from drive team members.
     ///
-    /// Robots may be placed into opcontrol mode at any point in the competition after
-    /// connecting, but are typically placed into this mode following the autonomous
-    /// period.
+    /// Robots may be placed into opcontrol mode at any point in the competition after connecting,
+    /// but are typically placed into this mode following the autonomous period.
     Driver,
 }
 
 /// A type of system used to control match state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompetitionSystem {
-    /// Competition state is controlled by a VEX Field Controller (either [legacy] or [smart] field control).
+    /// Competition state is controlled by a VEX Field Controller (either [legacy] or [smart] field
+    /// control).
     ///
     /// [legacy]: https://www.vexrobotics.com/275-1401.html
     /// [smart]: https://kb.vex.com/hc/en-us/articles/9121731684756-VEX-Field-Control-User-Manual
@@ -142,7 +139,7 @@ impl CompetitionStatus {
     /// # Example
     ///
     /// ```
-    /// let status = competition::status();
+    /// let status = vexide::competition::status();
     ///
     /// if status.is_connected() {
     ///     println!("Connected to competition control");
@@ -160,6 +157,8 @@ impl CompetitionStatus {
     /// # Example
     ///
     /// ```
+    /// use vexide::competition::{self, CompetitionMode};
+    ///
     /// let status = competition::status();
     ///
     /// match status.mode() {
@@ -179,14 +178,16 @@ impl CompetitionStatus {
         }
     }
 
-    /// Returns the type of system currently controlling the robot's competition state, or [`None`] if the robot
-    /// is not tethered to a competition controller.
+    /// Returns the type of system currently controlling the robot's competition state, or [`None`]
+    /// if the robot is not tethered to a competition controller.
     ///
     /// This is equivalent to the standalone [`system`] function in this module.
     ///
     /// # Example
     ///
     /// ```
+    /// use vexide::competition::{self, CompetitionSystem};
+    ///
     /// let status = competition::status();
     ///
     /// match status.system() {
@@ -222,7 +223,7 @@ pub fn status() -> CompetitionStatus {
 /// # Example
 ///
 /// ```
-/// if competition::is_connected() {
+/// if vexide::competition::is_connected() {
 ///     println!("Connected to competition control");
 /// }
 /// ```
@@ -231,12 +232,14 @@ pub fn is_connected() -> bool {
     status().is_connected()
 }
 
-/// Returns the type of system currently controlling the robot's competition state, or [`None`] if the robot
-/// is not tethered to a competition controller.
+/// Returns the type of system currently controlling the robot's competition state, or [`None`] if
+/// the robot is not tethered to a competition controller.
 ///
 /// # Example
 ///
 /// ```
+/// use vexide::competition::{self, CompetitionSystem};
+///
 /// match competition::system() {
 ///     None => println!("Not connected to a match controller"),
 ///     Some(CompetitionSystem::FieldControl) => println!("Connected to field controller"),
@@ -251,9 +254,11 @@ pub fn system() -> Option<CompetitionSystem> {
 /// Returns the current competition mode, or phase.
 ///
 /// ```
+/// use vexide::competition::{self, CompetitionMode};
+///
 /// let status = competition::status();
 ///
-/// match competition::mode() {
+/// match vexide::competition::mode() {
 ///     CompetitionMode::Driver => println!("Driver control"),
 ///     CompetitionMode::Autonomous => println!("Auton"),
 ///     CompetitionMode::Disabled => println!("DIsabled"),
@@ -307,8 +312,8 @@ pub const fn updates() -> CompetitionUpdates {
     CompetitionUpdates { last_status: None }
 }
 
-/// A future which delegates to different futures depending on the current competition mode.
-/// I.e., a tiny async runtime specifically for writing competition programs.
+/// A future which delegates to different futures depending on the current competition mode. i.e., a
+/// tiny async runtime specifically for writing competition programs.
 ///
 /// This runtime provides the internal implementation behind the [`Compete`] trait and the
 /// [`CompetitionBuilder`] struct.
@@ -354,9 +359,9 @@ pub struct CompetitionRuntime<
     ///
     /// SAFETY:
     /// - The `'static` lifetime is a lie to the compiler, it actually borrows `self.shared`.
-    ///   Therefore, tasks MUST NOT move their `&'static mut` references, or else they will
-    ///   still be around when we call a `mk_*` function with a new mutable reference to it.
-    ///   We rely on lifetime parametricity of the `mk_*` functions for this (see the HRTBs above).
+    ///   Therefore, tasks MUST NOT move their `&'static mut` references, or else they will still
+    ///   be around when we call a `mk_*` function with a new mutable reference to it. We rely on
+    ///   lifetime parametricity of the `mk_*` functions for this (see the HRTBs above).
     /// - This field MUST come before `shared`, as struct fields are dropped in declaration order.
     #[allow(clippy::type_complexity)]
     task: Option<Pin<Box<dyn Future<Output = ControlFlow<Return>> + 'static>>>,
@@ -364,10 +369,9 @@ pub struct CompetitionRuntime<
     /// A cell containing the data shared between all tasks.
     ///
     /// SAFETY: This field MUST NOT be mutated while a task is running, as tasks may still hold
-    ///         references to it. This is enforced to owners of this struct by the `Pin`,
-    ///         but we have no such guardrails, as we cannot project the pin to it without
-    ///         creating an invalid `Pin<&mut Shared>` before possibly (legally) moving it
-    ///         during task creation.
+    /// references to it. This is enforced to owners of this struct by the `Pin`, but we have no
+    /// such guardrails, as we cannot project the pin to it without creating an invalid `Pin<&mut
+    /// Shared>` before possibly (legally) moving it during task creation.
     shared: UnsafeCell<Shared>,
 
     /// Keep `self.shared` in place while `self.task` references it.
@@ -437,7 +441,8 @@ where
         }
 
         if let Some(Poll::Ready(res)) = this.task.as_mut().map(|task| task.as_mut().poll(cx)) {
-            // If a task says to break out of the competition lifecycle, then we pass the return value up.
+            // If a task says to break out of the competition lifecycle, then we pass the return
+            // value up.
             if let ControlFlow::Break(val) = res {
                 return Poll::Ready(val);
             }
@@ -446,7 +451,8 @@ where
             *this.task = None;
 
             match *this.phase {
-                // Transition into the current mode if we previously ran the connected/disconnected task and it completed.
+                // Transition into the current mode if we previously ran the connected/disconnected
+                // task and it completed.
                 CompetitionRuntimePhase::Connected | CompetitionRuntimePhase::Disconnected => {
                     *this.phase = CompetitionRuntimePhase::Mode(this.updates.last().mode());
                 }
@@ -456,12 +462,12 @@ where
 
         // We're now in a different competition phase, so we need to start a new task.
         if old_phase != *this.phase {
-            // SAFETY: Before we make a new `&mut Shared`, we ensure that the existing task is dropped.
-            //         Note that although this would not normally ensure that the reference is dropped,
-            //         because the task could move it elsewhere, this is not the case here, because
-            //         the task generator functions (and therefore their returned futures) are valid for
-            //         any _arbitrarily small_ lifetime `'t`. Therefore, they are unable to move it elsewhere
-            //         without proving that the reference will be destroyed before the task returns.
+            // SAFETY: Before we make a new `&mut Shared`, we ensure that the existing task is
+            // dropped. Note that although this would not normally ensure that the reference is
+            // dropped, because the task could move it elsewhere, this is not the case here, because
+            // the task generator functions (and therefore their returned futures) are valid for any
+            // _arbitrarily small_ lifetime `'t`. Therefore, they are unable to move it elsewhere
+            // without proving that the reference will be destroyed before the task returns.
             drop(this.task.take());
             let shared = unsafe { &mut *this.shared.get() };
 
@@ -498,6 +504,7 @@ impl<Shared, Return>
     >
 {
     /// Create a typed builder for a competition runtime with the given `shared` data.
+    ///
     /// The default tasks simply do nothing, so you do not need to supply them if you don't want to.
     pub const fn builder(shared: Shared) -> CompetitionBuilder<Shared, Return> {
         fn default_mk<Shared, Return>(
@@ -644,8 +651,9 @@ impl<Shared, Return, MkDisconnected, MkDisabled, MkAutonomous, MkDriver>
         MkDriver,
     >
 {
-    /// Use the given function to create a task that runs when the robot is connected to a competition system.
-    /// This task will run until termination before any other tasks (disconnected, disabled, autonomous, driver) are run.
+    /// Use the given function to create a task that runs when the robot is connected to a
+    /// competition system. This task will run until termination before any other tasks
+    /// (disconnected, disabled, autonomous, driver) are run.
     pub fn on_connect<Mk>(
         self,
         mk_connected: Mk,
@@ -678,8 +686,9 @@ impl<Shared, Return, MkConnected, MkDisabled, MkAutonomous, MkDriver>
         MkDriver,
     >
 {
-    /// Use the given function to create a task that runs when the robot is disconnected from a competition system.
-    /// This task will run until termination before any other tasks (connected, disabled, autonomous, driver) are run.
+    /// Use the given function to create a task that runs when the robot is disconnected from a
+    /// competition system. This task will run until termination before any other tasks
+    /// (connected, disabled, autonomous, driver) are run.
     pub fn on_disconnect<Mk>(
         self,
         mk_disconnected: Mk,
@@ -712,8 +721,8 @@ impl<Shared, Return, MkConnected, MkDisconnected, MkAutonomous, MkDriver>
         MkDriver,
     >
 {
-    /// Use the given function to create a task that runs while the robot is disabled.
-    /// If the task terminates before the end of the disabled period, it will NOT be restarted.
+    /// Use the given function to create a task that runs while the robot is disabled. If the task
+    /// terminates before the end of the disabled period, it will NOT be restarted.
     pub fn while_disabled<Mk>(
         self,
         mk_disabled: Mk,
@@ -746,8 +755,9 @@ impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkDriver>
         MkDriver,
     >
 {
-    /// Use the given function to create a task that runs while the robot is autonomously controlled.
-    /// If the task terminates before the end of the autonomous period, it will NOT be restarted.
+    /// Use the given function to create a task that runs while the robot is autonomously
+    /// controlled. If the task terminates before the end of the autonomous period, it will NOT
+    /// be restarted.
     pub fn while_autonomous<Mk>(
         self,
         mk_autonomous: Mk,
@@ -780,8 +790,8 @@ impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
         DefaultMk<Shared, Return>,
     >
 {
-    /// Use the given function to create a task that runs while the robot is driver controlled.
-    /// If the task terminates before the end of the driver control period, it will NOT be restarted.
+    /// Use the given function to create a task that runs while the robot is driver controlled. If
+    /// the task terminates before the end of the driver control period, it will NOT be restarted.
     pub fn while_driving<Mk>(
         self,
         mk_driver: Mk,
@@ -805,14 +815,14 @@ impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
 
 /// A set of functions to run when the competition is in a particular mode.
 ///
-/// This trait allows you to declare different functions on a common robot struct to be
-/// executed when competition state changes. By implementing `Compete`, your robot can
-/// respond to changes in the various phases of a competition, such as autonomous operation,
-/// driver control, or downtime between modes.
+/// This trait allows you to declare different functions on a common robot struct to be executed
+/// when competition state changes. By implementing `Compete`, your robot can respond to changes in
+/// the various phases of a competition, such as autonomous operation, driver control, or downtime
+/// between modes.
 ///
 /// # Example
 ///
-/// ```
+/// ```no_run
 /// use vexide::prelude::*;
 ///
 /// struct MyRobot {}
@@ -834,9 +844,9 @@ impl<Shared, Return, MkConnected, MkDisconnected, MkDisabled, MkAutonomous>
 /// }
 /// ```
 ///
-/// By awaiting the [`compete()`] function on our robot, we are handing over execution to
-/// vexide's [`CompetitionRuntime`], which will run a different function on the [`Compete`]
-/// trait depending on what is happening in the match.
+/// By awaiting the [`compete()`] function on our robot, we are handing over execution to vexide's
+/// [`CompetitionRuntime`], which will run a different function on the [`Compete`] trait depending
+/// on what is happening in the match.
 ///
 /// [`compete()`]: CompeteExt::compete
 #[allow(async_fn_in_trait, clippy::unused_async)]
@@ -850,10 +860,9 @@ pub trait Compete: Sized {
     ///
     /// <section class="warning">
     ///
-    /// This function does NOT run if connection to the match is lost due to
-    /// a radio issue. It will only execute if the field control wire becomes
-    /// physically disconnected from the controller (i.e.) from unplugging after
-    /// a match ends.
+    /// This function does NOT run if connection to the match is lost due to a radio issue. It will
+    /// only execute if the field control wire becomes physically disconnected from the controller
+    /// (i.e.) from unplugging after a match ends.
     ///
     /// </section>
     ///
@@ -862,31 +871,30 @@ pub trait Compete: Sized {
 
     /// Runs when the robot is disabled.
     ///
-    /// When in disabled mode, voltage commands to motors are disabled. Motors are forcibly
-    /// locked to the "coast" brake mode and cannot be moved.
+    /// When in disabled mode, voltage commands to motors are disabled. Motors are forcibly locked
+    /// to the "coast" brake mode and cannot be moved.
     ///
-    /// Robots may be placed into disabled mode at any point in the competition after
-    /// connecting, but are typically disabled before the autonomous period, between
-    /// autonomous and opcontrol periods, and following the opcontrol period of a match.
+    /// Robots may be placed into disabled mode at any point in the competition after connecting,
+    /// but are typically disabled before the autonomous period, between autonomous and opcontrol
+    /// periods, and following the opcontrol period of a match.
     async fn disabled(&mut self) {}
 
     /// Runs when the robot is put into autonomous mode.
     ///
-    /// When in autonomous mode, all motors and sensors may be accessed, however user
-    /// input from controller buttons and joysticks is not available to be read.
+    /// When in autonomous mode, all motors and sensors may be accessed, however user input from
+    /// controller buttons and joysticks is not available to be read.
     ///
-    /// Robots may be placed into autonomous mode at any point in the competition after
-    /// connecting, but are typically placed into this mode at the start of a match.
+    /// Robots may be placed into autonomous mode at any point in the competition after connecting,
+    /// but are typically placed into this mode at the start of a match.
     async fn autonomous(&mut self) {}
 
     /// Runs when the robot is put into driver control mode.
     ///
-    /// When in opcontrol mode, all device access is available including access to
-    /// controller joystick values for reading user-input from drive team members.
+    /// When in opcontrol mode, all device access is available including access to controller
+    /// joystick values for reading user-input from drive team members.
     ///
-    /// Robots may be placed into opcontrol mode at any point in the competition after
-    /// connecting, but are typically placed into this mode following the autonomous
-    /// period.
+    /// Robots may be placed into opcontrol mode at any point in the competition after connecting,
+    /// but are typically placed into this mode following the autonomous period.
     async fn driver(&mut self) {}
 }
 

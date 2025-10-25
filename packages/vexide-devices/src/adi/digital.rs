@@ -1,19 +1,19 @@
 //! ADI Digital I/O
 //!
-//! ADI ports on the V5 brain are capable of sending and receiving digital signals
-//! with external devices. Digital signals represent binary information using voltage levels
-//! (called [logic levels](`LogicLevel`)) - they can only be in one of two states at any time.
-//! Unlike analog signals which can take on any voltage within a range, digital signals are
-//! either fully "on" (high) or fully "off" (low), making them ideal for simple sensors and
-//! actuators such as buttons, switches and solenoids.
+//! ADI ports on the V5 brain are capable of sending and receiving digital signals with external
+//! devices. Digital signals represent binary information using voltage levels (called [logic
+//! levels](`LogicLevel`)) - they can only be in one of two states at any time. Unlike analog
+//! signals which can take on any voltage within a range, digital signals are either fully "on"
+//! (high) or fully "off" (low), making them ideal for simple sensors and actuators such as buttons,
+//! switches and solenoids.
 //!
 //! # Hardware Description
 //!
-//! The ADI (Analog/Digital Interface) ports can be configured as either digital inputs or
-//! outputs. When configured as inputs, they detect voltage levels to determine a logical high
-//! (3.3V or above) or low (below 3.3V) state. When configured as outputs, they drive the pin
-//! to either 3.3V (high) or 0V (low). These ports can be used with both direct brain connections
-//! and through an ADI expander module.
+//! The ADI (Analog/Digital Interface) ports can be configured as either digital inputs or outputs.
+//! When configured as inputs, they detect voltage levels to determine a logical high (3.3V or
+//! above) or low (below 3.3V) state. When configured as outputs, they drive the pin to either 3.3V
+//! (high) or 0V (low). These ports can be used with both direct brain connections and through an
+//! ADI expander module.
 
 use vex_sdk::{vexDeviceAdiValueGet, vexDeviceAdiValueSet};
 
@@ -21,8 +21,8 @@ use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
 
 /// Logic level of a digital pin.
 ///
-/// On digital devices, logic levels represent the two possible voltage signals that define
-/// the state of a port. This value is either [`High`](LogicLevel::High) or [`Low`](LogicLevel::Low)
+/// On digital devices, logic levels represent the two possible voltage signals that define the
+/// state of a port. This value is either [`High`](LogicLevel::High) or [`Low`](LogicLevel::Low)
 /// depending on the intended state of the device.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogicLevel {
@@ -64,8 +64,8 @@ impl core::ops::Not for LogicLevel {
 
 /// Generic Digital Input over ADI
 ///
-/// Represents an ADI port configured to receive digital input. The pin can be read to
-/// determine its current [logic level](`LogicLevel`) (above or below 3.3V).
+/// Represents an ADI port configured to receive digital input. The pin can be read to determine its
+/// current [logic level](`LogicLevel`) (above or below 3.3V).
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiDigitalIn {
     port: AdiPort,
@@ -84,10 +84,12 @@ impl AdiDigitalIn {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     pub fn level(&self) -> Result<LogicLevel, PortError> {
         self.port.validate_expander()?;
 
@@ -104,10 +106,12 @@ impl AdiDigitalIn {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     pub fn is_high(&self) -> Result<bool, PortError> {
         Ok(self.level()?.is_high())
     }
@@ -116,10 +120,12 @@ impl AdiDigitalIn {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     pub fn is_low(&self) -> Result<bool, PortError> {
         Ok(self.level()?.is_low())
     }
@@ -141,9 +147,8 @@ impl AdiDevice<1> for AdiDigitalIn {
 
 /// Generic digital output over ADI.
 ///
-/// Represents an ADI port configured to send digital signals to a device. This can be
-/// used for toggling solenoids or other external devices that might need a digital signal
-/// from the brain.
+/// Represents an ADI port configured to send digital signals to a device. This can be used for
+/// toggling solenoids or other external devices that might need a digital signal from the brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiDigitalOut {
     port: AdiPort,
@@ -154,13 +159,14 @@ impl AdiDigitalOut {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Toggle the digital output every second
     ///     loop {
@@ -180,15 +186,18 @@ impl AdiDigitalOut {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let digital_out = AdiDigitalOut::with_initial_level(peripherals.adi_a, LogicLevel::High);
     ///
     ///     // The digital output is now set to high
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::High
+    ///     );
     /// }
     /// ```
     #[must_use]
@@ -210,25 +219,30 @@ impl AdiDigitalOut {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Set the digital output to high
     ///     _ = digital_out.set_level(LogicLevel::High);
     ///
     ///     // Let's check if the universe isn't broken
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::High
+    ///     );
     /// }
     /// ```
     pub fn set_level(&mut self, level: LogicLevel) -> Result<(), PortError> {
@@ -249,21 +263,26 @@ impl AdiDigitalOut {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::Low);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::Low
+    ///     );
     /// }
     /// ```
     pub fn level(&self) -> Result<LogicLevel, PortError> {
@@ -282,10 +301,12 @@ impl AdiDigitalOut {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     pub fn is_high(&self) -> Result<bool, PortError> {
         Ok(self.level()?.is_high())
     }
@@ -294,10 +315,12 @@ impl AdiDigitalOut {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     pub fn is_low(&self) -> Result<bool, PortError> {
         Ok(self.level()?.is_low())
     }
@@ -307,54 +330,65 @@ impl AdiDigitalOut {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Set the digital output to high
     ///     _ = digital_out.set_high();
     ///
     ///     // Let's check if the universe isn't broken
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::High
+    ///     );
     /// }
     /// ```
     pub fn set_high(&mut self) -> Result<(), PortError> {
         self.set_level(LogicLevel::High)
     }
 
-    /// Set the digital logic level to [`LogicLevel::Low`]. Analogous to [`Self::set_level(LogicLevel::Low)`](Self::set_level).
+    /// Set the digital logic level to [`LogicLevel::Low`]. Analogous to
+    /// [`Self::set_level(LogicLevel::Low)`](Self::set_level).
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{adi::digital::LogicLevel, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Set the digital output to low
     ///     _ = digital_out.set_low();
     ///
     ///     // Let's check if the universe isn't broken
-    ///     assert_eq!(digital_out.level().expect("couldn't get level"), LogicLevel::High);
+    ///     assert_eq!(
+    ///         digital_out.level().expect("couldn't get level"),
+    ///         LogicLevel::High
+    ///     );
     /// }
     /// ```
     pub fn set_low(&mut self) -> Result<(), PortError> {
@@ -363,25 +397,31 @@ impl AdiDigitalOut {
 
     /// Sets the digital logic level to the inverse of its previous state.
     ///
-    /// - If the port was previously set to [`LogicLevel::Low`], then the level will be set to [`LogicLevel::High`].
-    /// - If the port was previously set to [`LogicLevel::High`], then the level will be set to [`LogicLevel::Low`].
+    /// - If the port was previously set to [`LogicLevel::Low`], then the level will be set to
+    ///   [`LogicLevel::High`].
+    /// - If the port was previously set to [`LogicLevel::High`], then the level will be set to
+    ///   [`LogicLevel::Low`].
     ///
-    /// This is analogous to `self.set_level(!self.level()?)?` and is useful for toggling devices like solenoids.
+    /// This is analogous to `self.set_level(!self.level()?)?` and is useful for toggling devices
+    /// like solenoids.
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
     ///
     ///     // Toggle the digital output every second
     ///     loop {

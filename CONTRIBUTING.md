@@ -16,7 +16,6 @@ helpful and welcome.
     - [Suggesting features](#suggesting-features)
       - [Writing and submitting your suggestion](#writing-and-submitting-your-suggestion)
     - [Contributing code](#contributing-code)
-      - [Project structure](#project-structure)
       - [Code styleguide](#code-styleguide)
       - [Committing \& commit messages](#committing--commit-messages)
       - [Changelog](#changelog)

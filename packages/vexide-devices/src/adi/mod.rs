@@ -5,21 +5,22 @@
 //!
 //! # Overview
 //!
-//! The V5 Brain features 8 three-wire connector ports on its left side that allow connecting
-//! simple analog and digital devices to the brain. These commonly include VEX's legacy sensors
-//! and motors that plugged into the old [Cortex microcontroller].
+//! The V5 Brain features 8 three-wire connector ports on its left side that allow connecting simple
+//! analog and digital devices to the brain. These commonly include VEX's legacy sensors and motors
+//! that plugged into the old [Cortex microcontroller].
 //!
 //! ADI ports can also be found on the [`AdiExpander`] device, which grants you eight additional
 //! ports at the cost of a Smart port.
 //!
-//! ADI ports are capable of digital input (3.3V logic), 12-bit analog input, digital output,
-//! and 8-bit PWM output. Each port has a dedicated 12-bit Analog-to-Digital Converter (ADC)
-//! to allow for analog sensors to send a range of values to the port. There is no DAC, making
-//! equivalent analog output impossible. ADI has a max voltage of 5V.
+//! ADI ports are capable of digital input (3.3V logic), 12-bit analog input, digital output, and
+//! 8-bit PWM output. Each port has a dedicated 12-bit Analog-to-Digital Converter (ADC) to allow
+//! for analog sensors to send a range of values to the port. There is no DAC, making equivalent
+//! analog output impossible. ADI has a max voltage of 5V.
 //!
 //! # Update Times
 //!
-//! All ADI devices are updated at a fixed interval of 10ms (100Hz), defined by [`ADI_UPDATE_INTERVAL`].
+//! All ADI devices are updated at a fixed interval of 10ms (100Hz), defined by
+//! [`ADI_UPDATE_INTERVAL`].
 //!
 //! [`AdiExpander`]: crate::smart::expander::AdiExpander
 //! [Cortex microcontroller]: <https://www.vexrobotics.com/276-2194.html>
@@ -65,7 +66,8 @@ pub struct AdiPort {
 
     /// The index of this port's associated [`AdiExpander`](super::smart::AdiExpander).
     ///
-    /// If this port is not associated with an [`AdiExpander`](super::smart::AdiExpander) it should be set to `None`.
+    /// If this port is not associated with an [`AdiExpander`](super::smart::AdiExpander) it should
+    /// be set to `None`.
     expander_number: Option<u8>,
 }
 
@@ -78,13 +80,12 @@ impl AdiPort {
     ///
     /// # Safety
     ///
-    /// Creating new `AdiPort`s is inherently unsafe due to the possibility of constructing
-    /// more than one device on the same port index allowing multiple mutable references to
-    /// the same hardware device. This violates Rust's borrow checker guarantees. Prefer using
+    /// Creating new `AdiPort`s is inherently unsafe due to the possibility of constructing more
+    /// than one device on the same port index allowing multiple mutable references to the same
+    /// hardware device. This violates Rust's borrow checker guarantees. Prefer using
     /// [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
     ///
     /// For more information on safely creating peripherals, see [this page](https://vexide.dev/docs/peripherals/).
-    ///
     #[must_use]
     pub const unsafe fn new(number: u8, expander_number: Option<u8>) -> Self {
         Self {
@@ -101,8 +102,9 @@ impl AdiPort {
         self.number
     }
 
-    /// Returns the index of this port's associated [`AdiExpander`](super::smart::expander::AdiExpander) Smart Port, or `None` if this port is not
-    /// associated with an expander.
+    /// Returns the index of this port's associated
+    /// [`AdiExpander`](super::smart::expander::AdiExpander) Smart Port, or `None` if this port is
+    /// not associated with an expander.
     #[must_use]
     pub const fn expander_number(&self) -> Option<u8> {
         self.expander_number
@@ -144,10 +146,12 @@ impl AdiPort {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     pub fn configured_type(&self) -> Result<AdiDeviceType, PortError> {
         self.validate_expander()?;
 
@@ -203,8 +207,8 @@ pub trait AdiDevice<const N: usize> {
     /// Ports are numbered starting from 1.
     fn port_numbers(&self) -> [u8; N];
 
-    /// Returns the port number of the [`SmartPort`](crate::smart::SmartPort) this device's expander is connected to,
-    /// or [`None`] if the device is plugged into an onboard ADI port.
+    /// Returns the port number of the [`SmartPort`](crate::smart::SmartPort) this device's expander
+    /// is connected to, or [`None`] if the device is plugged into an onboard ADI port.
     ///
     /// Ports are numbered starting from 1.
     fn expander_port_number(&self) -> Option<u8>;
@@ -218,9 +222,8 @@ pub trait AdiDevice<const N: usize> {
 pub enum AdiDeviceType {
     /// Undefined device
     ///
-    /// Interestingly, this port type appears to NOT be used for devices that are
-    /// unconfigured (they are configured as [`Self::AnalogIn`] by default. The
-    /// use of this variant is unknown.
+    /// Interestingly, this port type appears to NOT be used for devices that are unconfigured
+    /// (they are configured as [`Self::AnalogIn`] by default. The use of this variant is unknown.
     Undefined,
 
     /// Generic digital input
@@ -251,14 +254,14 @@ pub enum AdiDeviceType {
 
     /// Cortex-era potentiometer
     ///
-    /// This corresponds to the [`AdiPotentiometer`](potentiometer::AdiPotentiometer) device
-    /// when configured with [`PotentiometerType::Legacy`](potentiometer::PotentiometerType::Legacy).
+    /// This corresponds to the [`AdiPotentiometer`](potentiometer::AdiPotentiometer) device when
+    /// configured with [`PotentiometerType::Legacy`](potentiometer::PotentiometerType::Legacy).
     Potentiometer,
 
     /// V2 Potentiometer
     ///
-    /// This corresponds to the [`AdiPotentiometer`](potentiometer::AdiPotentiometer) device
-    /// when configured with [`PotentiometerType::V2`](potentiometer::PotentiometerType::V2).
+    /// This corresponds to the [`AdiPotentiometer`](potentiometer::AdiPotentiometer) device when
+    /// configured with [`PotentiometerType::V2`](potentiometer::PotentiometerType::V2).
     PotentiometerV2,
 
     /// Cortex-era yaw-rate gyroscope
@@ -307,7 +310,8 @@ pub enum AdiDeviceType {
 
     /// Slew-rate limited motor PWM output
     ///
-    /// This corresponds to the [`AdiMotor`](motor::AdiMotor) device when configured with `slew: true`.
+    /// This corresponds to the [`AdiMotor`](motor::AdiMotor) device when configured with
+    /// `slew: true`.
     MotorSlew,
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,

@@ -40,7 +40,8 @@ pub async fn main(_p: Peripherals) {
 
     println!("state is {}", state.lock().await);
 
-    // Barriers are a tool for making a number of tasks reach the exact same point in execution before continuing.
+    // Barriers are a tool for making a number of tasks reach the exact same point in execution
+    // before continuing.
 
     // Create a barrier that will wait for 10 tasks to reach it.
     let barrier = Arc::new(Barrier::new(10));
@@ -49,7 +50,8 @@ pub async fn main(_p: Peripherals) {
     for _ in 0..10 {
         let barrier = barrier.clone();
         handles.push(spawn(async move {
-            // All of "before wait" printlns will be executed before any of the "after wait" printlns.
+            // All of "before wait" printlns will be executed before any of the "after wait"
+            // printlns.
             println!("before wait");
             barrier.wait().await;
             println!("after wait");
@@ -61,7 +63,8 @@ pub async fn main(_p: Peripherals) {
         handle.await;
     }
 
-    // RwLocks ensure that only one writer can access the data at a time, but multiple readers can access it concurrently.
+    // RwLocks ensure that only one writer can access the data at a time, but multiple readers can
+    // access it concurrently.
 
     // Create a new read write lock.
     let lock = RwLock::new(0u32);

@@ -1,24 +1,25 @@
 //! Smart Motors
 //!
-//! This module provides abstractions for interacting with VEX Smart Motors, supporting both
-//! the 11W and 5.5W variants.
+//! This module provides abstractions for interacting with VEX Smart Motors, supporting both the 11W
+//! and 5.5W variants.
 //!
 //! # Overview
 //!
 //! The V5 Smart Motors come in two variants: [an 11W model](https://www.vexrobotics.com/276-4840.html),
 //! with interchangeable gear cartridges and [a 5.5W model](https://www.vexrobotics.com/276-4842.html),
-//! with a fixed gearing. The 11W motor supports three cartridge options, which will gear the motor down
-//! from its base RPM of 3600: a red cartridge providing 100 RPM output, a green cartridge for 200 RPM, and
-//! a blue cartridge for 600 RPM. The 5.5W motor comes with a non-interchangeable 200 RPM gear cartridge.
+//! with a fixed gearing. The 11W motor supports three cartridge options, which will gear the motor
+//! down from its base RPM of 3600: a red cartridge providing 100 RPM output, a green cartridge for
+//! 200 RPM, and a blue cartridge for 600 RPM. The 5.5W motor comes with a non-interchangeable 200
+//! RPM gear cartridge.
 //!
 //! Smart Motors feature several integrated sensors, including an encoder for measuring the velocity
-//! and position of the motor, a temperature sensor for detecting overheats, and sensors for measuring
-//! output voltage, current, and efficiency.
+//! and position of the motor, a temperature sensor for detecting overheats, and sensors for
+//! measuring output voltage, current, and efficiency.
 //!
 //! Communication between a Smart motor and the V5 Brain occur at two different intervals. While
-//! the motor communicates with the Brain every 5 milliseconds (and commands can be written to
-//! the motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively
-//! places the date *write* interval at 5mS and the data *read* interval at 10mS.
+//! the motor communicates with the Brain every 5 milliseconds (and commands can be written to the
+//! motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively places
+//! the date *write* interval at 5mS and the data *read* interval at 10mS.
 //!
 //! More in-depth specs for the 11W motor can be found [here](https://kb.vex.com/hc/en-us/articles/360060929971-Understanding-V5-Smart-Motors).
 //!
@@ -26,10 +27,11 @@
 //!
 //! There are some cases where VEXos or the motor itself may decide to limit output current:
 //!
-//! - **Stall Prevention**: The stall current on 11W motors is limited to 2.5A. This
-//!   limitation eliminates the need for automatic resetting fuses (PTC devices) in the motor, which
-//!   can disrupt operation. By restricting the stall current to 2.5A, the motor effectively avoids
-//!   undesirable performance dips and ensures that users do not inadvertently cause stall situations.
+//! - **Stall Prevention**: The stall current on 11W motors is limited to 2.5A. This limitation
+//!   eliminates the need for automatic resetting fuses (PTC devices) in the motor, which can
+//!   disrupt operation. By restricting the stall current to 2.5A, the motor effectively avoids
+//!   undesirable performance dips and ensures that users do not inadvertently cause stall
+//!   situations.
 //!
 //! - **Motor Count**: Robots that use 8 or fewer 11W motors will have the aforementioned current limit
 //!   of 2.5A set for each motor. Robots using more than 8 motors, will have a lower default current limit
@@ -37,8 +39,9 @@
 //!   motors plugged in, and the user's manually set current limits using [`Motor::set_current_limit`]. For
 //!   more information regarding the current limiting behavior of VEXos, see [this forum post](https://www.vexforum.com/t/how-does-the-decreased-current-affect-the-robot-when-using-more-than-8-motors/72650/4).
 //!
-//! - **Temperature Management**: Motors have an onboard sensor for measuring internal temperature. If
-//!   the motor determines that it is overheating, it will throttle its output current and warn the user.
+//! - **Temperature Management**: Motors have an onboard sensor for measuring internal temperature.
+//!   If the motor determines that it is overheating, it will throttle its output current and warn
+//!   the user.
 //!
 //! # Motor Control
 //!
@@ -50,8 +53,8 @@
 //! controllers operating on a 10-millisecond cycle for position and velocity control. Motors also
 //! have braking functionality for holding a specific position under load.
 //!
-//! The [`Motor`] API can make use of these builtin control features through the [`MotorControl`] type,
-//! which describes an action that the motor should perform.
+//! The [`Motor`] API can make use of these builtin control features through the [`MotorControl`]
+//! type, which describes an action that the motor should perform.
 
 use core::time::Duration;
 
@@ -171,9 +174,9 @@ impl Motor {
     ) -> Self {
         let device = unsafe { port.device_handle() }; // SAFETY: This function is only called once on this port.
 
-        // NOTE: SDK properly stores device state when unplugged, meaning that we can safely
-        // set these without consequence even if the device is not available. This is an edge
-        // case for the SDK though, and seems to just be a thing for motors and rotation sensors.
+        // NOTE: SDK properly stores device state when unplugged, meaning that we can safely set
+        // these without consequence even if the device is not available. This is an edge case for
+        // the SDK though, and seems to just be a thing for motors and rotation sensors.
         unsafe {
             vexDeviceMotorEncoderUnitsSet(
                 device,
@@ -205,7 +208,7 @@ impl Motor {
     /// async fn main(peripherals: Peripherals) {
     ///     let motor = Motor::new(peripherals.port_1, Gearset::Red, Direction::Forward);
     ///     assert!(motor.is_v5());
-    ///     assert_eq!(motor.max_voltage().unwrap(), Motor::V5_MAX_VOLTAGE);
+    ///     assert_eq!(motor.max_voltage(), Motor::V5_MAX_VOLTAGE);
     /// }
     #[must_use]
     pub fn new(port: SmartPort, gearset: Gearset, direction: Direction) -> Self {
@@ -225,7 +228,7 @@ impl Motor {
     /// async fn main(peripherals: Peripherals) {
     ///     let motor = Motor::new_exp(peripherals.port_1, Direction::Forward);
     ///     assert!(motor.is_exp());
-    ///     assert_eq!(motor.max_voltage().unwrap(), Motor::EXP_MAX_VOLTAGE);
+    ///     assert_eq!(motor.max_voltage(), Motor::EXP_MAX_VOLTAGE);
     /// }
     #[must_use]
     pub fn new_exp(port: SmartPort, direction: Direction) -> Self {
@@ -239,19 +242,25 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{prelude::*, smart::motor::{BrakeMode, MotorControl}};
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::motor::{BrakeMode, MotorControl},
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_target(MotorControl::Voltage(5.0));
+    ///     _ = motor.set_target(MotorControl::Voltage(5.0));
     ///     sleep(Duration::from_secs(1)).await;
-    ///     let _ = motor.set_target(MotorControl::Brake(BrakeMode::Hold));
+    ///     _ = motor.set_target(MotorControl::Brake(BrakeMode::Hold));
     /// }
     /// ```
     pub fn set_target(&mut self, target: MotorControl) -> Result<(), PortError> {
@@ -261,7 +270,8 @@ impl Motor {
         match target {
             MotorControl::Brake(mode) => unsafe {
                 vexDeviceMotorBrakeModeSet(self.device, mode.into());
-                // Force motor into braking by putting it into velocity control with a 0rpm setpoint.
+                // Force motor into braking by putting it into velocity control with a 0rpm
+                // setpoint.
                 vexDeviceMotorVelocitySet(self.device, 0);
             },
             MotorControl::Velocity(rpm) => unsafe {
@@ -283,7 +293,8 @@ impl Motor {
                     self.device,
                     vex_sdk::V5MotorBrakeMode::kV5MotorBrakeModeCoast,
                 );
-                // position will not reach large enough values to cause loss of precision during normal operation
+                // position will not reach large enough values to cause loss of precision during
+                // normal operation
                 #[allow(clippy::cast_precision_loss)]
                 vexDeviceMotorAbsoluteTargetSet(
                     self.device,
@@ -301,17 +312,18 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.brake(BrakeMode::Hold);
+    ///     _ = motor.brake(BrakeMode::Hold);
     /// }
     /// ```
     pub fn brake(&mut self, mode: BrakeMode) -> Result<(), PortError> {
@@ -320,26 +332,29 @@ impl Motor {
 
     /// Spins the motor at a target velocity.
     ///
-    /// This velocity corresponds to different actual speeds in RPM depending on the gearset used for the motor.
-    /// Velocity is held with an internal PID controller to ensure consistent speed, as opposed to setting the
-    /// motor's voltage.
+    /// This velocity corresponds to different actual speeds in RPM depending on the gearset used
+    /// for the motor. Velocity is held with an internal PID controller to ensure consistent
+    /// speed, as opposed to setting the motor's voltage.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Spin a motor at 100 RPM:
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_velocity(100);
+    ///     _ = motor.set_velocity(100);
     ///     sleep(Duration::from_secs(1)).await;
     /// }
     /// ```
@@ -349,33 +364,35 @@ impl Motor {
 
     /// Sets the motor's output voltage.
     ///
-    /// This voltage value spans from -12 (fully spinning reverse) to +12 (fully spinning forwards) volts, and
-    /// controls the raw output of the motor.
+    /// This voltage value spans from -12 (fully spinning reverse) to +12 (fully spinning forwards)
+    /// volts, and controls the raw output of the motor.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Give the motor full power:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut v5_motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     let mut exp_motor = Motor::new_exp(peripherals.port_2, Direction::Forward);
-    ///     let _ = v5_motor.set_voltage(v5_motor.max_voltage());
-    ///     let _ = exp_motor.set_voltage(exp_motor.max_voltage());
+    ///
+    ///     _ = v5_motor.set_voltage(v5_motor.max_voltage());
+    ///     _ = exp_motor.set_voltage(exp_motor.max_voltage());
     /// }
     /// ```
     ///
     /// Drive the motor based on a controller joystick:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -385,7 +402,10 @@ impl Motor {
     ///     loop {
     ///         let controller_state = controller.state().unwrap_or_default();
     ///         let voltage = controller_state.left_stick.x() * motor.max_voltage();
-    ///         motor.set_voltage(voltage).unwrap();
+    ///
+    ///         _ = motor.set_voltage(voltage);
+    ///
+    ///         sleep(Motor::WRITE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -398,44 +418,50 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     ///
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_position_target(Angle::from_degrees(90.0), 200);
+    ///
+    ///     // Turn the motor to a position of 90 degrees at 200rpm.
+    ///     _ = motor.set_position_target(Angle::from_degrees(90.0), 200);
     /// }
     /// ```
     pub fn set_position_target(&mut self, position: Angle, velocity: i32) -> Result<(), PortError> {
         self.set_target(MotorControl::Position(position, velocity))
     }
 
-    /// Changes the output velocity for a profiled movement (motor_move_absolute or motor_move_relative).
+    /// Changes the output velocity for a profiled movement (motor_move_absolute or
+    /// motor_move_relative).
     ///
     /// This will have no effect if the motor is not following a profiled movement.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///
     ///     // Set the motor's target to a Position so that changing the velocity isn't a noop.
-    ///     let _ = motor.set_target(MotorControl::Position(Angle::from_degrees(90.0), 200));
-    ///     let _ = motor.set_profiled_velocity(100).unwrap();
+    ///     _ = motor.set_position_target(Angle::from_degrees(90.0), 200);
+    ///     _ = motor.set_profiled_velocity(100).unwrap();
     /// }
     /// ```
     pub fn set_profiled_velocity(&mut self, velocity: i32) -> Result<(), PortError> {
@@ -453,17 +479,22 @@ impl Motor {
     }
 
     /// Returns the current [`MotorControl`] target that the motor is attempting to use.
+    ///
     /// This value is set with [`Motor::set_target`].
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{prelude::*, smart::motor::{BrakeMode, MotorControl}};
+    /// ```no_run
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::motor::{BrakeMode, MotorControl},
+    /// };
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     motor.set_target(MotorControl::Brake(BrakeMode::Hold));
+    ///
     ///     let target = motor.target();
     ///     assert_eq!(target, MotorControl::Brake(BrakeMode::Hold));
     /// }
@@ -477,12 +508,14 @@ impl Motor {
     ///
     /// # Errors
     ///
-    /// - A [`SetGearsetError::Port`] error is returned if there was not a motor connected to the port.
-    /// - A [`SetGearsetError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor, which has no swappable gearset.
+    /// - A [`SetGearsetError::Port`] error is returned if there was not a motor connected to the
+    ///   port.
+    /// - A [`SetGearsetError::SetGearsetExp`] is returned if the motor is a 5.5W EXP Smart Motor,
+    ///   which has no swappable gearset.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -510,25 +543,27 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print the gearset of a motor:
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::motor::Gearset};
     ///
     /// fn print_gearset(motor: &Motor) {
     ///     let Ok(gearset) = motor.gearset() else {
     ///         println!("Failed to get gearset. Is this an EXP motor?");
     ///         return;
     ///     };
-    ///     match motor.gearset() {
+    ///
+    ///     match gearset {
     ///         Gearset::Green => println!("Motor is using the green gearset"),
     ///         Gearset::Red => println!("Motor is using the red gearset"),
     ///         Gearset::Blue => println!("Motor is using the blue gearset"),
-    ///    }
+    ///     }
     /// }
     /// ```
     pub fn gearset(&self) -> Result<Gearset, PortError> {
@@ -540,13 +575,16 @@ impl Motor {
     }
 
     /// Returns the type of the motor.
-    /// This does not check the hardware, it simply returns the type that the motor was created with.
+    ///
+    /// This does not check the hardware, it simply returns the type that the motor was created
+    /// with.
     ///
     /// # Examples
     ///
     /// Match based on motor type:
+    ///
     /// ```
-    /// use vexide::prelude::*;
+    /// use vexide::{prelude::*, smart::motor::MotorType};
     ///
     /// fn print_motor_type(motor: &Motor) {
     ///     match motor.motor_type() {
@@ -559,6 +597,7 @@ impl Motor {
     pub const fn motor_type(&self) -> MotorType {
         self.motor_type
     }
+
     /// Returns `true` if the motor is a 5.5W (EXP) Smart Motor.
     ///
     /// # Examples
@@ -578,6 +617,7 @@ impl Motor {
     pub const fn is_exp(&self) -> bool {
         self.motor_type.is_exp()
     }
+
     /// Returns `true` if the motor is an 11W (V5) Smart Motor.
     ///
     /// # Examples
@@ -587,7 +627,7 @@ impl Motor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let motor = Motor:: new(peripherals.port_1, Gearset::Red, Direction::Forward);
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Red, Direction::Forward);
     ///     if motor.is_v5() {
     ///         println!("Motor is an 11W V5 Smart Motor");
     ///     }
@@ -603,11 +643,13 @@ impl Motor {
     /// # Examples
     ///
     /// Run a motor at max speed, agnostic of its type:
-    /// ```
-    /// use vexide::prelude::*;
     ///
-    /// fn run_motor_at_max_speed(motor: &mut Motor) {
-    ///     motor.set_voltage(motor.max_voltage()).unwrap();
+    /// ```no_run
+    /// use vexide::prelude::*;
+    /// use vexide::smart::PortError;
+    ///
+    /// fn run_motor_at_max_speed(motor: &mut Motor) -> Result<(), PortError> {
+    ///     motor.set_voltage(motor.max_voltage())
     /// }
     #[must_use]
     pub const fn max_voltage(&self) -> f64 {
@@ -618,26 +660,30 @@ impl Motor {
     ///
     /// # Accuracy
     ///
-    /// In some cases, this reported value may be noisy or inaccurate, especially for systems where accurate
-    /// velocity control at high speeds is required (such as flywheels). If the accuracy of this value proves
-    /// inadequate, you may opt to perform your own velocity calculations by differentiating [`Motor::position`]
-    /// over the reported internal timestamp of the motor using [`Motor::timestamp`].
+    /// In some cases, this reported value may be noisy or inaccurate, especially for systems where
+    /// accurate velocity control at high speeds is required (such as flywheels). If the
+    /// accuracy of this value proves inadequate, you may opt to perform your own velocity
+    /// calculations by differentiating [`Motor::position`] over the reported internal timestamp
+    /// of the motor using [`Motor::timestamp`].
     ///
     /// > For more information about Smart motor velocity estimation, see [this article](https://sylvie.fyi/sylib/docs/db/d8e/md_module_writeups__velocity__estimation.html).
     ///
     /// # Note
     ///
-    /// To get the current **target** velocity instead of the estimated velocity, use [`Motor::target`].
+    /// To get the current **target** velocity instead of the estimated velocity, use
+    /// [`Motor::target`].
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Get the current velocity of a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -649,7 +695,10 @@ impl Motor {
     /// ```
     ///
     /// Calculate acceleration of a motor:
-    /// ```
+    ///
+    /// ```no_run
+    /// use std::time::Instant;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -658,18 +707,25 @@ impl Motor {
     ///
     ///     let mut last_velocity = motor.velocity().unwrap();
     ///     let mut start_time = Instant::now();
+    ///
     ///     loop {
     ///         let velocity = motor.velocity().unwrap();
+    ///
     ///         // Make sure we don't divide by zero
     ///         let elapsed = start_time.elapsed().as_secs_f64() + 0.001;
     ///
     ///         // Calculate acceleration
     ///         let acceleration = (velocity - last_velocity) / elapsed;
-    ///         println!("Velocity: {:.2} RPM, Acceleration: {:.2} RPM/s", velocity, acceleration);
+    ///         println!(
+    ///             "Velocity: {:.2} RPM, Acceleration: {:.2} RPM/s",
+    ///             velocity, acceleration
+    ///         );
     ///
     ///         last_velocity = velocity;
     ///         start_time = Instant::now();
-    ///    }
+    ///
+    ///         sleep(Motor::UPDATE_INTERVAL).await;
+    ///     }
     /// }
     /// ```
     pub fn velocity(&self) -> Result<f64, PortError> {
@@ -682,12 +738,14 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print the power drawn by a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -709,13 +767,14 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print the torque output of a motor:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -737,12 +796,14 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print the voltage drawn by a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -761,32 +822,34 @@ impl Motor {
 
     /// Returns the angular position of the motor as measured by the IME (integrated motor encoder).
     ///
-    /// This is returned as an instance of the [`Position`] struct, which may be converted to degrees,
+    /// This is returned as an instance of the [`Angle`] struct, which may be converted to degrees,
     /// radians, revolutions, etc...
     ///
     /// # Gearing affects position!
     ///
-    /// Position measurements are dependent on the Motor's [`Gearset`], and may be reported incorrectly if the
-    /// motor is configured with the incorrect gearset variant. Make sure that the motor is configured with the
-    /// same gearset as its physical cartridge color.
+    /// Position measurements are dependent on the Motor's [`Gearset`], and may be reported
+    /// incorrectly if the motor is configured with the incorrect gearset variant. Make sure
+    /// that the motor is configured with the same gearset as its physical cartridge color.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print the current position of a motor:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///
     ///     loop {
-    ///         println!("Position: {:?}", motor.position().unwrap());
+    ///         println!("Position: {:?}", motor.position().unwrap().as_degrees());
     ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -799,14 +862,11 @@ impl Motor {
         ))
     }
 
-    /// Returns the most recently recorded raw encoder tick data from the motor's IME
-    /// along with a timestamp of the internal clock of the motor indicating when the
-    /// data was recorded.
+    /// Returns the most recently recorded raw encoder tick data from the motor's IME.
     ///
-    /// The motor's integrated encoder has a TPR of 4096. Gearset is not taken into
-    /// consideration when dealing with the raw value, meaning this measurement will be
-    /// taken relative to the motor's internal position *before* being geared down from
-    /// 3600RPM.
+    /// The motor's integrated encoder has a TPR of 4096. Gearset is not taken into consideration
+    /// when dealing with the raw value, meaning this measurement will be taken relative to the
+    /// motor's internal position *before* being geared down from 3600RPM.
     ///
     /// Methods such as [`Motor::reset_position`] and [`Motor::set_position`] do not
     /// change the value of this raw measurement.
@@ -814,19 +874,21 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     loop {
-    ///         let (raw_pos, _) = motor.raw_position().unwrap();
+    ///         let raw_pos = motor.raw_position().unwrap();
     ///         println!("Raw Position: {}", raw_pos);
+    ///
     ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -842,18 +904,21 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print the current draw of a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     motor.set_voltage(motor.max_voltage()).unwrap();
+    ///
     ///     loop {
     ///         println!("Current: {:.2}A", motor.current().unwrap());
     ///         sleep(Motor::UPDATE_INTERVAL).await;
@@ -867,25 +932,27 @@ impl Motor {
 
     /// Returns the efficiency of the motor from a range of [0.0, 1.0].
     ///
-    /// An efficiency of 1.0 means that the motor is moving electrically while
-    /// drawing no electrical power, and an efficiency of 0.0 means that the motor
-    /// is drawing power but not moving.
+    /// An efficiency of 1.0 means that the motor is moving electrically while drawing no electrical
+    /// power, and an efficiency of 0.0 means that the motor is drawing power but not moving.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print the efficiency of a motor:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(motor.max_voltage())
+    ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///     _ = motor.set_voltage(motor.max_voltage());
+    ///
     ///     loop {
     ///         println!("Efficiency: {:.2}", motor.efficiency().unwrap());
     ///         sleep(Motor::UPDATE_INTERVAL).await;
@@ -905,19 +972,26 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Move the motor in increments of 10 degrees:
-    /// ```
-    /// use vexide::prelude::*;
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+    ///
     ///     loop {
-    ///         motor.set_position_target(Angle::from_degrees(10.0), 200).unwrap();
+    ///         motor
+    ///             .set_position_target(Angle::from_degrees(10.0), 200)
+    ///             .unwrap();
     ///         sleep(Duration::from_secs(1)).await;
     ///         motor.reset_position().unwrap();
     ///     }
@@ -931,19 +1005,21 @@ impl Motor {
 
     /// Sets the current encoder position to the given position without moving the motor.
     ///
-    /// Analogous to taring or resetting the encoder so that the new position is equal to the given position.
+    /// Analogous to taring or resetting the encoder so that the new position is equal to the given
+    /// position.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Set the current position of the motor to 90 degrees:
     ///
-    /// ```
-    /// use vexide::{prelude::*, math::Angle};
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -952,9 +1028,11 @@ impl Motor {
     /// }
     /// ```
     ///
-    /// Reset the position of the motor to 0 degrees (analogous to [`reset_position`](Motor::reset_position)):
-    /// ```
-    /// use vexide::prelude::*;
+    /// Reset the position of the motor to 0 degrees (analogous to
+    /// [`reset_position`](Motor::reset_position)):
+    ///
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -981,19 +1059,20 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Limit the current draw of a motor to 2.5A:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_current_limit(2.5);
+    ///     _ = motor.set_current_limit(2.5);
     /// }
     /// ```
     pub fn set_current_limit(&mut self, limit: f64) -> Result<(), PortError> {
@@ -1007,21 +1086,22 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Limit the voltage of a motor to 4V:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage_limit(4.0);
+    ///     _ = motor.set_voltage_limit(4.0);
     ///     // Will appear as if the voltage was set to only 4V
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
     /// }
     /// ```
     pub fn set_voltage_limit(&mut self, limit: f64) -> Result<(), PortError> {
@@ -1041,13 +1121,14 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print the current limit of a motor:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -1066,13 +1147,14 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print the voltage limit of a motor:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -1091,24 +1173,25 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Turn off the motor if it gets too hot:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
     ///     loop {
     ///         if motor.temperature().unwrap() > 30.0 {
-    ///             let _ = motor.brake(BrakeMode::Coast);
+    ///             _ = motor.brake(BrakeMode::Coast);
     ///         } else {
-    ///             let _ = motor.set_voltage(12.0);
+    ///             _ = motor.set_voltage(12.0);
     ///         }
     ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }
@@ -1124,14 +1207,15 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Check if a motor is "busy" (busy only occurs if communicating with the motor fails)
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::motor::MotorStatus};
     ///
     /// fn is_motor_busy(motor: &Motor) -> bool {
     ///     motor.status().unwrap().contains(MotorStatus::BUSY)
@@ -1150,14 +1234,15 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Check if a motor is over temperature:
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::motor::MotorFaults};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -1186,24 +1271,28 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Turn off the motor if it gets too hot:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::{prelude::*, smart::motor::BrakeMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
+    ///
     ///     loop {
-    ///         if let Ok(true) = motor.is_over_temperature() {
-    ///             let _ = motor.brake(BrakeMode::Coast);
+    ///         if motor.is_over_temperature() == Ok(true) {
+    ///             _ = motor.brake(BrakeMode::Coast);
     ///         } else {
-    ///             let _ = motor.set_voltage(12.0);
+    ///             _ = motor.set_voltage(12.0);
     ///         }
+    ///
     ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -1217,21 +1306,23 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print a warning if the motor draws too much current:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
+    ///
     ///     loop {
-    ///         if let Ok(true) = motor.is_over_current() {
+    ///         if motor.is_over_current() == Ok(true) {
     ///             println!("Warning: Motor is drawing too much current");
     ///         }
     ///         println!("Current: {:.2}A", motor.current().unwrap_or(0.0));
@@ -1248,21 +1339,23 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print a warning if the motor's H-bridge has a fault:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
+    ///
     ///     loop {
-    ///         if let Ok(true) = motor.is_driver_fault() {
+    ///         if motor.is_driver_fault() == Ok(true) {
     ///             println!("Warning: Motor has a H-bridge fault");
     ///         }
     ///         println!("Current: {:.2}A", motor.current().unwrap_or(0.0));
@@ -1279,25 +1372,28 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Print a warning if it draws too much current:
-    /// ```
+    ///
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
+    ///
     ///     loop {
-    ///         if let Ok(true) = motor.is_driver_over_current() {
+    ///         if motor.is_driver_over_current() == Ok(true) {
     ///             println!("Warning: Motor is drawing too much current");
     ///         }
     ///         println!("Current: {:.2}A", motor.current().unwrap_or(0.0));
     ///         sleep(Motor::UPDATE_INTERVAL).await;
-    ///    }
+    ///     }
     /// }
     /// ```
     pub fn is_driver_over_current(&self) -> Result<bool, PortError> {
@@ -1306,22 +1402,25 @@ impl Motor {
 
     /// Sets the motor to operate in a given [`Direction`].
     ///
-    /// This determines which way the motor considers to be “forwards”. You can use the marking on the back of the
-    /// motor as a reference:
+    /// This determines which way the motor considers to be “forwards”. You can use the marking on
+    /// the back of the motor as a reference:
     ///
-    /// - When [`Direction::Forward`] is specified, positive velocity/voltage values will cause the motor to rotate
-    ///   **with the arrow on the back**. Position will increase as the motor rotates **with the arrow**.
-    /// - When [`Direction::Reverse`] is specified, positive velocity/voltage values will cause the motor to rotate
-    ///   **against the arrow on the back**. Position will increase as the motor rotates **against the arrow**.
+    /// - When [`Direction::Forward`] is specified, positive velocity/voltage values will cause the
+    ///   motor to rotate **with the arrow on the back**. Position will increase as the motor
+    ///   rotates **with the arrow**.
+    /// - When [`Direction::Reverse`] is specified, positive velocity/voltage values will cause the
+    ///   motor to rotate **against the arrow on the back**. Position will increase as the motor
+    ///   rotates **against the arrow**.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -1345,11 +1444,12 @@ impl Motor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// fn print_motor_direction(motor: &Motor) {
@@ -1372,22 +1472,24 @@ impl Motor {
     ///
     /// # Hardware Safety
     ///
-    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
-    /// to Smart motors if done incorrectly. Use these functions entirely at your own risk.
+    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware
+    /// damage to Smart motors if done incorrectly. Use these functions entirely at your own
+    /// risk.
     ///
     /// VEX has chosen not to disclose the default constants used by Smart motors, and currently
-    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
-    /// well-known or understood, as we have no reference for what these constants should look
-    /// like.
+    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are
+    /// not well-known or understood, as we have no reference for what these constants should
+    /// look like.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -1423,22 +1525,24 @@ impl Motor {
     ///
     /// # Hardware Safety
     ///
-    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
-    /// to Smart motors if done incorrectly. Use these functions entirely at your own risk.
+    /// Modifying internal motor control is **dangerous**, and can result in permanent hardware
+    /// damage to Smart motors if done incorrectly. Use these functions entirely at your own
+    /// risk.
     ///
     /// VEX has chosen not to disclose the default constants used by Smart motors, and currently
-    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
-    /// well-known or understood, as we have no reference for what these constants should look
-    /// like.
+    /// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are
+    /// not well-known or understood, as we have no reference for what these constants should
+    /// look like.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -1636,10 +1740,9 @@ impl From<Gearset> for V5MotorGearset {
 /// Modifying internal motor control is **dangerous**, and can result in permanent hardware damage
 /// to Smart motors if done incorrectly. Use these functions entirely at your own risk.
 ///
-/// VEX has chosen not to disclose the default constants used by Smart motors, and currently
-/// has no plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
-/// well-known or understood, as we have no reference for what these constants should look
-/// like.
+/// VEX has chosen not to disclose the default constants used by Smart motors, and currently has no
+/// plans to do so. As such, the units and finer details of [`MotorTuningConstants`] are not
+/// well-known or understood, as we have no reference for what these constants should look like.
 #[cfg(feature = "dangerous-motor-tuning")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MotorTuningConstants {

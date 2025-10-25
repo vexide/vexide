@@ -29,9 +29,9 @@ pub enum ProgramOwner {
 bitflags! {
     /// Program Startup Options
     ///
-    /// These bitflags are part of the [`CodeSignature`] and determine some small
-    /// aspects of program behavior when running under VEXos. This struct contains
-    /// the flags with publicly documented behavior.
+    /// These bitflags are part of the [`CodeSignature`] and determine some small aspects of program
+    /// behavior when running under VEXos. This struct contains the flags with publicly documented
+    /// behavior.
     #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
     pub struct ProgramOptions: u32 {
         /// Inverts the background color to pure white.
@@ -47,14 +47,13 @@ bitflags! {
 
 /// Program Code Signature
 ///
-/// The first 16 bytes of a VEX user program contains a code signature header,
-/// which has some basic metadata and startup flags for the program. This
-/// signature must be at the start of the binary for VExos to recognize our
-/// binary as a program.
+/// The first 16 bytes of a VEX user program contains a code signature header, which has some basic
+/// metadata and startup flags for the program. This signature must be at the start of the binary
+/// for VExos to recognize our binary as a program.
 ///
-/// A static instance of this type can be passed to the `code_sig` argument of the
-/// `#[vexide::main]` macro to override the default code signature, or may be placed
-/// into the `.code_signature` linker section if not using the macro.
+/// A static instance of this type can be passed to the `code_sig` argument of the `#[vexide::main]`
+/// macro to override the default code signature, or may be placed into the `.code_signature` linker
+/// section if not using the macro.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(C)]
 pub struct CodeSignature(vex_sdk::vcodesig, [u32; 4]);
@@ -125,8 +124,8 @@ pub fn code_signature() -> CodeSignature {
         unsafe { core::ptr::read(&raw const __user_ram_start) }
     }
 
-    // TODO: Return real data on non-vexos targets, either through some special
-    // symbol name or a linker section.
+    // TODO: Return real data on non-vexos targets, either through some special symbol name or a
+    // linker section.
     #[cfg(not(target_os = "vexos"))]
     {
         unsafe extern "C" {
@@ -139,8 +138,7 @@ pub fn code_signature() -> CodeSignature {
 
 /// Returns a raw pointer to the currently linked file.
 ///
-/// If no file is linked to the current program, this function will
-/// return a null pointer.
+/// If no file is linked to the current program, this function will return a null pointer.
 #[inline]
 #[must_use]
 pub fn linked_file() -> *mut () {

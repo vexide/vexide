@@ -1,7 +1,6 @@
 //! Robot Battery
 //!
-//! This module provides APIs for reading information about the robot's
-//! battery and state of charge.
+//! This module provides APIs for reading information about the robot's battery and state of charge.
 
 use vex_sdk::{
     vexBatteryCapacityGet, vexBatteryCurrentGet, vexBatteryTemperatureGet, vexBatteryVoltageGet,
@@ -9,12 +8,12 @@ use vex_sdk::{
 
 /// Returns the robot's current battery capacity from [0.0, 1.0].
 ///
-/// A value of `0.0` indicates a completely empty battery, while a value of`1.0`
-/// indicates a fully-charged battery.
+/// A value of `0.0` indicates a completely empty battery, while a value of `1.0` indicates a
+/// fully-charged battery.
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// let capacity = vexide::battery::capacity();
 /// println!("Battery at {}% capacity", capacity * 100.0);
 ///
@@ -31,7 +30,7 @@ pub fn capacity() -> f64 {
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// let temp = vexide::battery::temperature();
 /// println!("Battery temperature: {}°C", temp);
 ///
@@ -51,7 +50,7 @@ pub fn temperature() -> u64 {
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// let current = vexide::battery::current();
 ///
 /// println!("Drawing {} amps", current);
@@ -67,7 +66,7 @@ pub fn current() -> f64 {
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// let voltage = vexide::battery::voltage();
 /// println!("Battery voltage: {} V", voltage);
 /// ```

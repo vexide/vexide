@@ -1,32 +1,35 @@
 //! ADI Expander
 //!
-//! The ADI expander (3-Wire Expander) API is very similar to that of [`Peripherals`](crate::peripherals::Peripherals);
-//! however, it can only give access to ADI ports.
-//! Unlike devices created from the ADI ports on the Brain,
-//! devices created through an ADI expander can error if their associated expander is not connected to the Brain.
+//! The ADI expander (3-Wire Expander) API is very similar to that of
+//! [`Peripherals`](crate::peripherals::Peripherals); however, it can only give access to ADI ports.
+//! Unlike devices created from the ADI ports on the Brain, devices created through an ADI expander
+//! can error if their associated expander is not connected to the Brain.
 //!
 //! # Hardware Overview
 //!
-//! The ADI expander plugs into the Brain over a Smart Port and provides an additional eight ADI ports.
-//! Just like the builtin ADI ports, these ports update every 10ms.
+//! The ADI expander plugs into the Brain over a Smart Port and provides an additional eight ADI
+//! ports. Just like the builtin ADI ports, these ports update every 10ms.
 //!
-//! The ADI expander is 3 inches long and 1 inch wide, with a height of 0.8 inches.
-//! The 8 additional ports are located long side across from the Smart Port on the opposite side.
+//! The ADI expander is 3 inches long and 1 inch wide, with a height of 0.8 inches. The 8 additional
+//! ports are located long side across from the Smart Port on the opposite side.
 //!
 //! According to the [BLRS wiki](https://wiki.purduesigbots.com/vex-electronics/vex-sensors/smart-port-sensors/3-wire-expander#behavior),
 //! the ADI expander is more prone to damage from electrostatic discharge than other devices.
 //!
 //! # Examples
 //!
-//! ```
-//! use vexide_devices::{smart::AdiExpander, adi::AdiAnalogIn, peripherals::Peripherals};
+//! ```no_run
+//! use vexide::prelude::*;
 //!
-//! let peripherals = Peripherals::take().unwrap();
+//! #[vexide::main]
+//! async fn main(peripherals: Peripherals) {
+//!     let peripherals = Peripherals::take().unwrap();
 //!
-//! let expander = AdiExpander::new(peripherals.port_1);
-//! let analog_in = AdiAnalogIn::new(expander.adi_a);
+//!     let expander = AdiExpander::new(peripherals.port_1);
+//!     let analog_in = AdiAnalogIn::new(expander.adi_a);
 //!
-//! println!("Analog in voltage: {:?}", analog_in.voltage());
+//!     println!("Analog in voltage: {:?}", analog_in.voltage());
+//! }
 //! ```
 
 use super::{SmartDevice, SmartDeviceType, SmartPort};
@@ -34,11 +37,12 @@ use crate::adi::AdiPort;
 
 /// An ADI expander module plugged into a Smart Port.
 ///
-/// ADI Expanders allow a Smart Port to be used as an "adapter" for eight additional ADI slots
-/// if all onboard [`AdiPort`]s are used.
+/// ADI Expanders allow a Smart Port to be used as an "adapter" for eight additional ADI slots if
+/// all onboard [`AdiPort`]s are used.
 ///
-/// This struct gives access to [`AdiPort`]s similarly to how [`Peripherals`](crate::peripherals::Peripherals) works. Ports may
-/// be partially moved out of this struct to create devices.
+/// This struct gives access to [`AdiPort`]s similarly to how
+/// [`Peripherals`](crate::peripherals::Peripherals) works. Ports may be partially moved out of this
+/// struct to create devices.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiExpander {
     /// ADI port A on the expander.
@@ -71,7 +75,7 @@ impl AdiExpander {
     ///
     /// Creating an analog input from a port on the expander:
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

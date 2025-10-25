@@ -4,42 +4,41 @@
 //!
 //! # Hardware Overview
 //!
-//! Potentiometers are analog sensors that measure angular position. They function as
-//! variable resistors that change their resistance based on the angular position of
-//! their shaft.
+//! Potentiometers are analog sensors that measure angular position. They function as variable
+//! resistors that change their resistance based on the angular position of their shaft.
 //!
 //! VEX offers two variants:
 //!
 //! - Legacy (EDR) Potentiometer: Provides measurements across a 250-degree range.
 //! - V2 Potentiometer: Provides measurements across a 330-degree range.
 //!
-//! Both variants connect to the ADI ports and provide analog signals that are converted
-//! to measurements of a shaft's angle.
+//! Both variants connect to the ADI ports and provide analog signals that are converted to
+//! measurements of a shaft's angle.
 //!
 //! # Comparison to [`AdiEncoder`](super::encoder::AdiEncoder)
 //!
-//! Potentiometers are fundamentally *analog* sensors. They directly output a measurement
-//! of their electrical resistance to the ADI port. The more a shaft rotates along a
-//! conductive material inside of them, the higher the reported angle.
+//! Potentiometers are fundamentally *analog* sensors. They directly output a measurement of their
+//! electrical resistance to the ADI port. The more a shaft rotates along a conductive material
+//! inside of them, the higher the reported angle.
 //!
-//! With this in mind, this means that potentiometers are capable of measuring absolute
-//! position at *all times*, even after they have lost power. Encoders on the other hand
-//! can only track *changes in position* as a digital signal, meaning that any changes in
-//! rotation under an encoder can only be recorded while the encoder is plugged in and
-//! being read.
+//! With this in mind, this means that potentiometers are capable of measuring absolute position at
+//! *all times*, even after they have lost power. Encoders on the other hand can only track *changes
+//! in position* as a digital signal, meaning that any changes in rotation under an encoder can only
+//! be recorded while the encoder is plugged in and being read.
 //!
 //! # Comparison to [`RotationSensor`](crate::smart::rotation::RotationSensor)
 //!
-//! Rotation sensors operate similarly to a potentiometer, in that they know their absolute
-//! angle at all times (even when being powered off). This is achieved through a hall-effect
-//! sensor rather than a conductive material, however. Rotation sensors can also measure their
-//! position along with their angle, similar to how an encoder can. They also have a full range
-//! of motion and can track angle/position in a full 360-degree range. Potentiometers use ADI
-//! ports while Rotation Sensors use Smart ports.
+//! Rotation sensors operate similarly to a potentiometer, in that they know their absolute angle at
+//! all times (even when being powered off). This is achieved through a hall-effect sensor rather
+//! than a conductive material, however. Rotation sensors can also measure their position along with
+//! their angle, similar to how an encoder can. They also have a full range of motion and can track
+//! angle/position in a full 360-degree range. Potentiometers use ADI ports while Rotation Sensors
+//! use Smart ports.
 
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{analog, AdiDevice, AdiDeviceType, AdiPort, PortError};
+use crate::math::Angle;
 
 /// Potentiometer
 #[derive(Debug, Eq, PartialEq)]
@@ -53,16 +52,19 @@ impl AdiPotentiometer {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let potentiometer = AdiPotentiometer::new(peripherals.adi_a, PotentiometerType::V2);
     ///     loop {
-    ///         let angle = potentiometer.angle().expect("Failed to read potentiometer angle");
-    ///         println!("Potentiometer Angle: {}", angle);
-    ///         sleep(Duration::from_millis(10)).await;
+    ///         let angle = potentiometer
+    ///             .angle()
+    ///             .expect("Failed to read potentiometer angle");
+    ///
+    ///         println!("Potentiometer Angle: {}", angle.as_degrees());
+    ///         sleep(AdiPotentiometer::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
@@ -89,46 +91,50 @@ impl AdiPotentiometer {
 
     /// Returns the maximum angle measurement (in degrees) for the given [`PotentiometerType`].
     #[must_use]
-    pub const fn max_angle(&self) -> f64 {
+    pub const fn max_angle(&self) -> Angle {
         self.potentiometer_type().max_angle()
     }
 
     /// Returns the current potentiometer angle in degrees.
     ///
-    /// The original potentiometer rotates 250 degrees thus returning an angle between 0-250 degrees.
-    /// Potentiometer V2 rotates 330 degrees thus returning an angle between 0-330 degrees.
+    /// The original potentiometer rotates 250 degrees thus returning an angle between 0-250
+    /// degrees. Potentiometer V2 rotates 330 degrees thus returning an angle between 0-330 degrees.
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let potentiometer = AdiPotentiometer::new(peripherals.adi_a, PotentiometerType::V2);
     ///     loop {
-    ///         let angle = potentiometer.angle().expect("Failed to read potentiometer angle");
-    ///         println!("Potentiometer Angle: {}", angle);
-    ///         sleep(Duration::from_millis(10)).await;
+    ///         let angle = potentiometer
+    ///             .angle()
+    ///             .expect("Failed to read potentiometer angle");
+    ///         println!("Potentiometer Angle: {}", angle.as_degrees());
+    ///         sleep(AdiPotentiometer::UPDATE_INTERVAL).await;
     ///     }
     /// }
     /// ```
-    pub fn angle(&self) -> Result<f64, PortError> {
+    pub fn angle(&self) -> Result<Angle, PortError> {
         self.port.validate_expander()?;
 
-        Ok(
+        Ok(Angle::from_degrees(
             f64::from(unsafe {
                 vexDeviceAdiValueGet(self.port.device_handle(), self.port.index())
-            }) * self.potentiometer_type.max_angle()
+            }) * self.potentiometer_type.max_angle().as_degrees()
                 / f64::from(analog::ADC_MAX_VALUE),
-        )
+        ))
     }
 }
 
@@ -145,14 +151,14 @@ pub enum PotentiometerType {
 
 impl PotentiometerType {
     /// Maximum angle for the older cortex-era EDR potentiometer.
-    pub const LEGACY_MAX_ANGLE: f64 = 250.0;
+    pub const LEGACY_MAX_ANGLE: Angle = Angle::from_degrees(250.0);
 
     /// Maximum angle for the V5-era potentiometer V2.
-    pub const V2_MAX_ANGLE: f64 = 333.0;
+    pub const V2_MAX_ANGLE: Angle = Angle::from_degrees(333.0);
 
     /// Returns the maximum angle measurement (in degrees) for this potentiometer type.
     #[must_use]
-    pub const fn max_angle(&self) -> f64 {
+    pub const fn max_angle(&self) -> Angle {
         match self {
             Self::Legacy => Self::LEGACY_MAX_ANGLE,
             Self::V2 => Self::V2_MAX_ANGLE,

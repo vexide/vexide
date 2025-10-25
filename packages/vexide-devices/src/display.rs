@@ -1,8 +1,9 @@
 //! Brain Display & Touch Input
 //!
 //! Contains user calls to the V5 Brain display for touching and displaying graphics.
-//! The [`Fill`] trait can be used to draw filled in shapes to the display
-//! and the [`Stroke`] trait can be used to draw the outlines of shapes.
+//!
+//! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
+//! can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String, vec::Vec};
 use core::{ffi::CStr, mem, ptr::addr_of_mut, time::Duration};
@@ -88,6 +89,7 @@ pub struct Circle {
 
 impl Circle {
     /// Create a circle with the given coordinates and radius.
+    ///
     /// The coordinates are the center of the circle.
     pub fn new(center: impl Into<Point2<i16>>, radius: u16) -> Self {
         Self {
@@ -124,6 +126,7 @@ impl Stroke for Circle {
 }
 
 /// A line that can be drawn on the display.
+///
 /// The width is the same as the pen width.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Line {
@@ -171,9 +174,9 @@ impl<T: Into<Point2<i16>> + Copy> Fill for T {
 
 /// A rectangular region of the display.
 ///
-/// When drawn to the display, both the start and the end points are included inside
-/// the drawn region. Thus, the area of the drawn rectangle is
-/// `(1 + end.x - start.x) * (1 + end.y - start.y)` pixels.
+/// When drawn to the display, both the start and the end points are included inside the drawn
+/// region. Thus, the area of the drawn rectangle is `(1 + end.x - start.x) * (1 + end.y - start.y)`
+/// pixels.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
     /// First point (coordinate) of the rectangle
@@ -328,7 +331,8 @@ fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
 impl FontSize {
     /// Creates a custom fractional font size.
     ///
-    /// If you wish to create a font size from a floating-point size, use [`FontSize::from_float`] instead.
+    /// If you wish to create a font size from a floating-point size, use [`FontSize::from_float`]
+    /// instead.
     #[must_use]
     pub const fn new(numerator: u32, denominator: u32) -> Self {
         Self {
@@ -525,7 +529,8 @@ impl Text {
     ///
     /// - `display` - The display to write the text to.
     /// - `color` - The color of the text.
-    /// - `bg_color` - The background color of the text. If `None`, the background will be transparent.
+    /// - `bg_color` - The background color of the text. If `None`, the background will be
+    ///   transparent.
     pub fn draw(
         &self,
         _display: &mut Display,
@@ -604,18 +609,24 @@ impl From<V5_TouchEvent> for TouchState {
 
 /// The rendering mode for the VEX V5's display
 ///
-/// When using the display in the [`Immediate`](RenderMode::Immediate) mode, all draw operations will immediately show up on the display.
-/// The [`DoubleBuffered`](RenderMode::DoubleBuffered) mode instead applies draw operations onto an intermediate buffer
-/// that can be swapped onto the display by calling [`Display::render`], thereby preventing screen tearing.
-/// By default, the display uses the [`Immediate`](RenderMode::Immediate) mode.
+/// When using the display in the [`Immediate`](RenderMode::Immediate) mode, all draw operations
+/// will immediately show up on the display. The [`DoubleBuffered`](RenderMode::DoubleBuffered) mode
+/// instead applies draw operations onto an intermediate buffer that can be swapped onto the display
+/// by calling [`Display::render`], thereby preventing screen tearing. By default, the display uses
+/// the [`Immediate`](RenderMode::Immediate) mode.
+///
 /// # Note
-/// [`Display::render`] **MUST** be called for anything to appear on the display when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
+///
+/// [`Display::render`] **MUST** be called for anything to appear on the display when using the
+/// [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RenderMode {
-    /// Draw operations are immediately applied to the display without the need to call [`Display::render`].
+    /// Draw operations are immediately applied to the display without the need to call
+    /// [`Display::render`].
     Immediate,
-    /// Draw calls are affected on an intermediary display buffer, rather than directly drawn to the display.
-    /// The intermediate buffer can later be applied to the display using [`Display::render`]
+    /// Draw calls are affected on an intermediary display buffer, rather than directly drawn to
+    /// the display. The intermediate buffer can later be applied to the display using
+    /// [`Display::render`]
     ///
     /// This mode is necessary for preventing screen tearing when drawing at high speeds.
     DoubleBuffered,
@@ -645,9 +656,10 @@ impl Display {
     ///
     /// # Safety
     ///
-    /// Creating new `display`s is inherently unsafe due to the possibility of constructing
-    /// more than one display at once allowing multiple mutable references to the same
-    /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
+    /// Creating new `display`s is inherently unsafe due to the possibility of constructing more
+    /// than one display at once allowing multiple mutable references to the same
+    /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register
+    /// devices if possible.
     #[must_use]
     pub unsafe fn new() -> Self {
         Self {
@@ -696,7 +708,8 @@ impl Display {
     /// Flushes the displays double buffer if it is enabled.
     ///
     /// This is a no-op with the [`Immediate`](RenderMode::Immediate) rendering mode,
-    /// but is necessary for anything to be displayed on the displayed when using the [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
+    /// but is necessary for anything to be displayed on the displayed when using the
+    /// [`DoubleBuffered`](RenderMode::DoubleBuffered) mode.
     pub fn render(&mut self) {
         if let RenderMode::DoubleBuffered = self.render_mode {
             unsafe {
@@ -708,18 +721,20 @@ impl Display {
 
     /// Scroll the pixels at or below the specified y-coordinate.
     ///
-    /// This function y-offsets the pixels in the display buffer which are at or below the given start point (`start`) by
-    /// a number (`offset`) of pixels. Positive values move the pixels upwards, and pixels that are moved out of the scroll
-    /// region are discarded. Empty spaces are then filled with the display's background color.
+    /// This function y-offsets the pixels in the display buffer which are at or below the given
+    /// start point (`start`) by a number (`offset`) of pixels. Positive values move the pixels
+    /// upwards, and pixels that are moved out of the scroll region are discarded. Empty spaces
+    /// are then filled with the display's background color.
     pub fn scroll(&mut self, start: i16, offset: i16) {
         unsafe { vexDisplayScroll(start.into(), offset.into()) }
     }
 
     /// Scroll a region of the display.
     ///
-    /// This function y-offsets the pixels in the display buffer which are contained in the specified scroll region (`region`) by
-    /// a number (`offset`) of pixels. Positive values move the pixels upwards, and pixels that are moved out of the scroll
-    /// region are discarded. Empty spaces are then filled with the display's background color.
+    /// This function y-offsets the pixels in the display buffer which are contained in the
+    /// specified scroll region (`region`) by a number (`offset`) of pixels. Positive values
+    /// move the pixels upwards, and pixels that are moved out of the scroll region are
+    /// discarded. Empty spaces are then filled with the display's background color.
     pub fn scroll_region(&mut self, region: Rect, offset: i16) {
         unsafe {
             vexDisplayScrollRect(
@@ -734,30 +749,44 @@ impl Display {
 
     /// Draws a filled shape to the display with the specified color.
     ///
-    /// Any type implementing the [`Fill`] trait (such as [`Rect`] or [`Circle`]) may be drawn using this method.
+    /// Any type implementing the [`Fill`] trait (such as [`Rect`] or [`Circle`]) may be drawn using
+    /// this method.
     pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
         shape.fill(self, color);
     }
 
     /// Draws an outlined shape to the display with the specified color.
     ///
-    /// Any type implementing the [`Stroke`] trait (such as [`Rect`] or [`Circle`]) may be drawn using this method.
+    /// Any type implementing the [`Stroke`] trait (such as [`Rect`] or [`Circle`]) may be drawn
+    /// using this method.
     pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Rgb<u8>>) {
         shape.stroke(self, color);
     }
 
     /// Draws a line of text with the specified color and background color to the display.
     ///
-    /// # Example
+    /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
+    /// use vexide::{
+    ///     color::Rgb,
+    ///     display::{Font, FontFamily, FontSize, Text},
+    ///     math::Point2,
+    ///     prelude::*,
+    /// };
     ///
-    /// let mut display = Display::new();
+    /// let mut peripherals = Peripherals::take().unwrap();
+    /// let mut display = peripherals.display;
+    ///
     /// // Create a new text widget.
-    /// let text = Text::new("Hello, World!", TextSize::Medium, Point2::new(10, 10));
+    /// let text = Text::new(
+    ///     "Hello, World!",
+    ///     Font::new(FontSize::MEDIUM, FontFamily::Monospace),
+    ///     Point2 { x: 10, y: 10 },
+    /// );
+    ///
     /// // Write red text with a blue background to the display.
-    /// display.fill_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
+    /// display.draw_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
     /// ```
     pub fn draw_text(&mut self, text: &Text, color: impl Into<Rgb<u8>>, bg_color: Option<Rgb<u8>>) {
         text.draw(self, color, bg_color);
@@ -781,12 +810,13 @@ impl Display {
 
     /// Draws a buffer of pixels to a specified region of the display.
     ///
-    /// This function copies the pixels in the specified buffer to the specified region of the display.
+    /// This function copies the pixels in the specified buffer to the specified region of the
+    /// display.
     ///
     /// # Panics
     ///
-    /// This function panics if `buf` does not have the correct number of bytes to fill the specified
-    /// region.
+    /// This function panics if `buf` does not have the correct number of bytes to fill the
+    /// specified region.
     pub fn draw_buffer<T, I>(&mut self, region: Rect, buf: T)
     where
         T: IntoIterator<Item = I>,

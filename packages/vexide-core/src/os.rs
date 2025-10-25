@@ -1,7 +1,6 @@
 //! VEXos-related functionality.
 //!
-//! This module provides utilities for for interacting and retrieving
-//! information from VEXos.
+//! This module provides utilities for for interacting and retrieving information from VEXos.
 
 use core::fmt;
 
@@ -9,18 +8,19 @@ use vex_sdk::vexSystemVersion;
 
 /// A VEXos firmware version.
 ///
-/// This type represents a version identifier for VEXos firmware. VEXos is
-/// versioned using a slightly modified [semantic versioning] scheme. To
-/// check the version currently running on a brain, use [`system_version`].
+/// This type represents a version identifier for VEXos firmware. VEXos is versioned using a
+/// slightly modified [semantic versioning] scheme. To check the version currently running on a
+/// brain, use [`system_version`].
 ///
 /// [semantic versioning]: https://semver.org/
 ///
-/// This type implements `PartialOrd`, meaning it can be compared to other
-/// instances of itself.
+/// This type implements `PartialOrd`, meaning it can be compared to other instances of itself.
 ///
 /// # Example
 ///
 /// ```
+/// use vexide::os::{system_version, Version};
+///
 /// // VEXos 1.1.5b0
 /// const VEXOS_1_1_5_0: Version = Version {
 ///     major: 1,
@@ -33,7 +33,7 @@ use vex_sdk::vexSystemVersion;
 /// let version = system_version();
 ///
 /// if version < VEXOS_1_1_5_0 {
-///     panic!("Update your firmware!");
+///     println!("Update your firmware!");
 /// }
 /// ```
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -65,6 +65,8 @@ impl fmt::Display for Version {
 /// # Example
 ///
 /// ```
+/// use vexide::os::{system_version, Version};
+///
 /// // VEXos 1.1.5b0
 /// const VEXOS_1_1_5_0: Version = Version {
 ///     major: 1,
@@ -77,7 +79,7 @@ impl fmt::Display for Version {
 /// let version = system_version();
 ///
 /// if version < VEXOS_1_1_5_0 {
-///     panic!("Update your firmware!");
+///     println!("Update your firmware!");
 /// }
 /// ```
 #[must_use]

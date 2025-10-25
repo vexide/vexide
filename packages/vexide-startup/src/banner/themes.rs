@@ -14,31 +14,32 @@
 //! - [Whitescreen theme](THEME_WHITESCREEN)
 //! - [America flavored theme](THEME_MURICA)
 //!
-//! Custom themes can be created by defining a constant of type [`BannerTheme`] with the desired ANSI escapes.
-//! This theme can then be passed to [`vexide::main`](https://docs.rs/vexide/latest/vexide/attr.main.html).
+//! Custom themes can be created by defining a constant of type [`BannerTheme`] with the desired
+//! ANSI escapes. This theme can then be passed to [`vexide::main`](https://docs.rs/vexide/latest/vexide/attr.main.html).
 //!
 //! # Examples
-//! ```rust
-//! # use vexide::prelude;
-//! # use vexide::startup::banner::themes::BannerTheme;
+//!
+//! ```
+//! use vexide::{prelude::*, startup::banner::themes::BannerTheme};
+//!
 //! const CUSTOM_THEME: BannerTheme = BannerTheme {
-//!    emoji: "🦀",
-//!    logo_primary: [
-//!        "\u{1b}[1;38;2;136;192;208m",
-//!        "\u{1b}[1;38;2;136;192;208m",
-//!        "\u{1b}[1;38;2;136;192;208m",
-//!        "\u{1b}[1;38;2;136;192;208m",
-//!        "\u{1b}[1;38;2;136;192;208m",
-//!        "\u{1b}[1;38;2;136;192;208m",
-//!        "\u{1b}[1;38;2;136;192;208m",
-//!    ],
-//!    logo_secondary: "\x1B[38;5;254m",
-//!    crate_version: "[1;33m",
-//!    metadata_key: "[1;33m",
-//!};
+//!     emoji: "🦀",
+//!     logo_primary: [
+//!         "\u{1b}[1;38;2;136;192;208m",
+//!         "\u{1b}[1;38;2;136;192;208m",
+//!         "\u{1b}[1;38;2;136;192;208m",
+//!         "\u{1b}[1;38;2;136;192;208m",
+//!         "\u{1b}[1;38;2;136;192;208m",
+//!         "\u{1b}[1;38;2;136;192;208m",
+//!         "\u{1b}[1;38;2;136;192;208m",
+//!     ],
+//!     logo_secondary: "\x1B[38;5;254m",
+//!     crate_version: "[1;33m",
+//!     metadata_key: "[1;33m",
+//! };
 //!
 //! #[vexide::main(banner(enabled = true, theme = CUSTOM_THEME))]
-//! async fn main(peripherals: vexide::Peripherals) { }
+//! async fn main(peripherals: Peripherals) {}
 //! ```
 #[expect(
     edition_2024_expr_fragment_specifier,

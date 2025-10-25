@@ -13,15 +13,15 @@ pub struct Fault {
     pub exception: FaultException,
     /// The address at which the abort occurred.
     ///
-    /// This is calculated using the Link Register (`lr`), which is set to this address
-    /// plus an offset when an exception occurs.
+    /// This is calculated using the Link Register (`lr`), which is set to this address plus an
+    /// offset when an exception occurs.
     ///
     /// Offsets:
     ///
     /// * [plus 8 bytes][da-exception] for data aborts.
     /// * [plus 4 bytes][pf-exception] for prefetch aborts.
-    /// * [plus the size of an instruction][svc-exception] for SVCs and
-    ///   undefined instruction aborts (this is different in thumb mode).
+    /// * [plus the size of an instruction][svc-exception] for SVCs and undefined instruction
+    ///   aborts (this is different in thumb mode).
     ///
     /// [da-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Data-Abort-exception
     /// [pf-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Prefetch-Abort-exception
@@ -32,8 +32,8 @@ pub struct Fault {
 }
 
 impl Fault {
-    /// Create an unwind context using custom registers instead of ones captured
-    /// from the current processor state.
+    /// Create an unwind context using custom registers instead of ones captured from the current
+    /// processor state.
     ///
     /// This is based on the ARM implementation of __unw_getcontext:
     /// <https://github.com/llvm/llvm-project/blob/6fc3b40b2cfc33550dd489072c01ffab16535840/libunwind/src/UnwindRegistersSave.S#L834>
@@ -51,8 +51,8 @@ impl Fault {
             data: [u8; const { size_of::<unw_context_t>() - size_of::<u32>() * 16 }],
         }
 
-        // SAFETY: `context` is a valid `unw_context_t` because it has its
-        // general-purpose registers field set.
+        // SAFETY: `context` is a valid `unw_context_t` because it has its general-purpose registers
+        // field set.
         unsafe {
             UnwindContext::from_raw(core::mem::transmute::<RawUnwindContext, unw_context_t>(
                 RawUnwindContext {

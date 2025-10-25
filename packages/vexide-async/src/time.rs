@@ -2,10 +2,9 @@
 //!
 //! This module provides a types for executing code after a set period of time.
 //!
-//! - [`Sleep`] is a future that does no work and completes at a specific [`Instant`]
-//!   in time.
-//! - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future
-//!   for or until a specific instant in time.
+//! - [`Sleep`] is a future that does no work and completes at a specific [`Instant`] in time.
+//! - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future for or until a
+//!   specific instant in time.
 
 use core::{
     future::Future,
@@ -47,17 +46,24 @@ impl Future for Sleep {
 
 /// Waits until `duration` has elapsed.
 ///
-/// This function returns a future that will complete after the given
-/// duration, effectively yielding the current task for a period of time.
+/// This function returns a future that will complete after the given duration, effectively yielding
+/// the current task for a period of time.
 ///
 /// Equivalent to `sleep_until(Instant::now() + duration)`.
 ///
 /// # Examples
 ///
-/// ```
-/// println!("See you in 5 minutes.");
-/// sleep(Duration::from_secs(300)).await;
-/// println!("Hello again!");
+/// ```no_run
+/// use std::time::Duration;
+///
+/// use vexide::prelude::*;
+///
+/// #[vexide::main]
+/// async fn main(_peripherals: Peripherals) {
+///     println!("See you in 5 minutes.");
+///     sleep(Duration::from_secs(300)).await;
+///     println!("Hello again!");
+/// }
 /// ```
 pub fn sleep(duration: Duration) -> Sleep {
     Sleep(Instant::now() + duration)
@@ -65,18 +71,25 @@ pub fn sleep(duration: Duration) -> Sleep {
 
 /// Waits until `deadline` is reached.
 ///
-/// This function returns a future that will complete once a given
-/// `Instant` in time has been reached.
+/// This function returns a future that will complete once a given `Instant` in time has been
+/// reached.
 ///
 /// # Examples
 ///
 /// ```
-/// let now = Instant::now();
-/// let deadline = now + Duration::from_secs(2); // 5 minutes in the future
+/// use std::time::{Duration, Instant};
 ///
-/// println!("See you in 5 minutes.");
-/// sleep_until(deadline).await;
-/// println!("Hello again!");
+/// use vexide::prelude::*;
+///
+/// #[vexide::main]
+/// async fn main(_peripherals: Peripherals) {
+///     let now = Instant::now();
+///     let deadline = now + Duration::from_secs(2); // 5 minutes in the future
+///
+///     println!("See you in 5 minutes.");
+///     sleep_until(deadline).await;
+///     println!("Hello again!");
+/// }
 /// ```
 pub const fn sleep_until(deadline: Instant) -> Sleep {
     Sleep(deadline)

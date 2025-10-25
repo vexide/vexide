@@ -3,7 +3,7 @@ name = "vexide-macro"
 version = "0.4.0"
 edition = "2021"
 license = "MIT"
-description = "Proc macros for vexide"
+description = "Procedural macros for vexide."
 keywords = ["Robotics", "bindings", "vex", "v5"]
 authors = [
     "vexide",
@@ -17,6 +17,13 @@ repository = "https://github.com/vexide/vexide"
 proc-macro2 = "1.0.84"
 quote = "1.0.35"
 syn = { version = "^2.0.57", features = ["full"] }
+
+[dev-dependencies]
+vexide = { workspace = true, features = [
+    "full",
+    "vex-sdk-mock",
+    "vex-sdk-jumptable",
+] }
 
 [lib]
 proc-macro = true

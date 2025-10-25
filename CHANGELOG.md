@@ -53,6 +53,9 @@ Before releasing:
 - On vexide's error details screen, long error messages are now wrapped onto subsequent lines. (#368)
 - Added the new `LowResolutionTime` type to `vexide::time` for recording timestamps taken by the Brain's low resolution clock. (#386)
 - Added `SmartPort::timestamp` for accessing the time that the last packet on the port was processed by VEXos. (#386)
+- Added the `task_local` macro to `vexide::prelude`. (#378)
+- Added `Electromagnet` and `GpsSensor` to `vexide::prelude`. (#378)
+- Derived `Default, Debug, Clone, Copy, Eq, PartialEq` for `AiVisionColorCode`. (#378)
 
 [linked files]: https://github.com/rust-lang/rust/pull/145578
 
@@ -74,7 +77,7 @@ Before releasing:
   - `Angle` resides in `vexide::math`. (#380) (**Breaking Change**)
   - `Angle`s are backed now backed by radians stored in an `f64` rather than a fixed-point representation.
   - Renamed `Position::{from, as}_revolutions` to `Angle::{from, as}_turns`.
-- `{InertialSensor, GpsSensor}::{heading, rotation, angle, euler, set_angle, set_rotation}` now take and return instances of the `Angle` type rather than degrees. (#380) (**Breaking Change**)
+- `{InertialSensor, GpsSensor}::{heading, rotation, angle, euler, set_heading, set_rotation}` now take and return instances of the `Angle` type rather than degrees. (#380) (#378) (**Breaking Change**)
 - `AdiGyroscope::yaw` now returns `Angle`. (#380) (**Breaking Change**)
 - Renamed the `vexide::devices::rgb` module to `vexide::color`. (#380) (**Breaking Change**)
 - If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
@@ -102,6 +105,8 @@ Before releasing:
 - Programs must now opt-in to using vexide's open source SDK via the `vex-sdk-jumptable` feature. (#361) (**Breaking change**)
 - All methods previously returning `DeviceTimestamp` now return `LowResolutionTime`. (#386) (**Breaking change**)
 - `Motor::raw_position` no longer returns a timestamp along with the raw position. Use `Motor::timestamp` to access this data instead. (#386) (**Breaking change**)
+- `AdiPotentiomter::angle` now returns the `Angle` type. (#378) (**Breaking Change**)
+- Renamed `AdiGyroscopeCalibrationFuture` to `CalibrateFuture`. (#378) (**Breaking Change**)
 
 ### Removed
 

@@ -3,7 +3,7 @@ name = "vexide-async"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
-description = "The async executor at the core of vexide"
+description = "Tiny async executor for vexide."
 keywords = ["Robotics", "bindings", "async", "vex", "v5"]
 categories = ["no-std", "science::robotics", "asynchronous"]
 repository = "https://github.com/vexide/vexide"
@@ -27,6 +27,11 @@ vex-sdk = { workspace = true }
 
 [dev-dependencies]
 vex-sdk-mock = { workspace = true }
+vexide = { workspace = true, features = [
+    "full",
+    "vex-sdk-mock",
+    "vex-sdk-jumptable",
+] }
 
 [lints]
 workspace = true

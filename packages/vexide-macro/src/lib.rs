@@ -105,28 +105,30 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 
 /// vexide's entrypoint macro
 ///
-/// Marks a function as the entrypoint for a vexide program. When the program is started,
-/// the `main` function will be called with a single argument of type `Peripherals` which
-/// allows access to device peripherals like motors, sensors, and the display.
+/// Marks a function as the entrypoint for a vexide program. When the program is started, the `main`
+/// function will be called with a single argument of type `Peripherals` which allows access to
+/// device peripherals like motors, sensors, and the display.
 ///
-/// The `main` function must be marked `async` and must not be marked `unsafe`. It may
-/// return any type that implements `Termination`, which includes `()`, `!`, and `Result`.
+/// The `main` function must be marked `async` and must not be marked `unsafe`. It may return any
+/// type that implements `Termination`, which includes `()`, `!`, and `Result`.
 ///
 /// # Parameters
 ///
 /// The `main` attribute can be provided with parameters that alter the behavior of the program.
 ///
-/// - `banner`: Allows for disabling or using a custom banner theme. When `enabled = false` the banner will be disabled. `theme` can be set to a custom `BannerTheme` struct.
+/// - `banner`: Allows for disabling or using a custom banner theme. When `enabled = false` the
+///   banner will be disabled. `theme` can be set to a custom `BannerTheme` struct.
 /// - `code_sig`: Allows using a custom `CodeSignature` struct to configure program behavior.
 ///
 /// # Examples
 ///
-/// The most basic usage of the `main` attribute is to mark an async function as the entrypoint
-/// for a vexide program. The function must take a single argument of type `Peripherals`.
+/// The most basic usage of the `main` attribute is to mark an async function as the entrypoint for
+/// a vexide program. The function must take a single argument of type `Peripherals`.
 ///
-/// ```ignore
-/// use vexide::prelude::*;
+/// ```
 /// use std::fmt::Write;
+///
+/// use vexide::prelude::*;
 ///
 /// #[vexide::main]
 /// async fn main(mut peripherals: Peripherals) {
@@ -134,34 +136,36 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 /// }
 /// ```
 ///
-/// The `main` attribute can also be provided with parameters to customize the behavior of the program.
+/// The `main` attribute can also be provided with parameters to customize the behavior of the
+/// program.
 ///
 /// This includes disabling the banner or using a custom banner theme:
 ///
-/// ```ignore
+/// ```
 /// use vexide::prelude::*;
 ///
 /// #[vexide::main(banner(enabled = false))]
 /// async fn main(_p: Peripherals) {
-///    println!("This is the only serial output from this program!")
+///     println!("This is the only serial output from this program!")
 /// }
 /// ```
 ///
-/// ```ignore
-/// use vexide::prelude::*;
-/// use vexide::startup::banner::themes::THEME_SYNTHWAVE;
+/// ```
+/// use vexide::{prelude::*, startup::banner::themes::THEME_SYNTHWAVE};
 ///
 /// #[vexide::main(banner(theme = THEME_SYNTHWAVE))]
 /// async fn main(_p: Peripherals) {
-///    println!("This program has a synthwave themed banner!")
+///     println!("This program has a synthwave themed banner!")
 /// }
 /// ```
 ///
 /// A custom code signature may be used to further configure the behavior of the program.
 ///
-/// ```ignore
-/// use vexide::prelude::*;
-/// use vexide::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
+/// ```
+/// use vexide::{
+///     prelude::*,
+///     program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType},
+/// };
 ///
 /// static CODE_SIG: CodeSignature = CodeSignature::new(
 ///     ProgramType::User,
@@ -171,7 +175,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
 ///
 /// #[vexide::main(code_sig = CODE_SIG)]
 /// async fn main(_p: Peripherals) {
-///    println!("Hello world!")
+///     println!("Hello world!")
 /// }
 /// ```
 #[proc_macro_attribute]
@@ -192,7 +196,8 @@ pub fn main(attrs: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Prints a failure message indicating that the required features for the [`main`] macro are not enabled.
+/// Prints a failure message indicating that the required features for the [`main`] macro are not
+/// enabled.
 #[proc_macro_attribute]
 #[doc(hidden)]
 pub fn main_fail(_args: TokenStream, _item: TokenStream) -> TokenStream {
@@ -206,8 +211,8 @@ pub fn main_fail(_args: TokenStream, _item: TokenStream) -> TokenStream {
 
 /// Wraps a Rust unit test in vexide's async runtime.
 ///
-/// This macro should be accompanied with an SDK provider capable of running
-/// vexide programs on a host system for unit tests, such as `vex-sdk-mock`.
+/// This macro should be accompanied with an SDK provider capable of running vexide programs on a
+/// host system for unit tests, such as `vex-sdk-mock`.
 #[proc_macro_attribute]
 pub fn test(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
@@ -237,7 +242,8 @@ pub fn test(_attr: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Prints a failure message indicating that the required features for the [`test`] macro are not enabled.
+/// Prints a failure message indicating that the required features for the [`test`] macro are not
+/// enabled.
 #[proc_macro_attribute]
 #[doc(hidden)]
 pub fn test_fail(_args: TokenStream, _item: TokenStream) -> TokenStream {

@@ -1,32 +1,32 @@
 //! Smart Ports & Devices
 //!
-//! This module provides abstractions for devices connected through VEX Smart Ports. This
-//! includes motors, many common sensors, vexlink, and raw serial access.
+//! This module provides abstractions for devices connected through VEX Smart Ports. This includes
+//! motors, many common sensors, vexlink, and raw serial access.
 //!
 //! # Overview
 //!
-//! The V5 Brain features 21 RJ9 4p4c connector ports (known as "Smart Ports") for communicating with
-//! newer V5 peripherals. Smart Port devices have a variable sample rate (unlike ADI, which is limited
-//! to 10ms), and can support basic data transfer over serial.
+//! The V5 Brain features 21 RJ9 4p4c connector ports (known as "Smart Ports") for communicating
+//! with newer V5 peripherals. Smart Port devices have a variable sample rate (unlike ADI, which is
+//! limited to 10ms), and can support basic data transfer over serial.
 //!
 //! # Devices
 //!
-//! Most devices can be created with a `new` function that generally takes a [`SmartPort`]
-//! instance from [`Peripherals`](crate::peripherals::Peripherals) along with other
-//! device-specific parameters. All devices are thread safe due to being singletons, however
-//! sensors can only be safely constructed using the [`peripherals`] API. The general device
-//! construction pattern looks like this:
+//! Most devices can be created with a `new` function that generally takes a [`SmartPort`] instance
+//! from [`Peripherals`](crate::peripherals::Peripherals) along with other device-specific
+//! parameters. All devices are thread safe due to being singletons, however sensors can only be
+//! safely constructed using the [`peripherals`] API. The general device construction pattern looks
+//! like this:
 //!
-//! ```
+//! ```ignore
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
 //! async fn main(peripherals: Peripherals) {
 //!     // Create a new device on port 1.
-//!     let mut device = Device::new(peripherals.port_1, /* other parameters */);
+//!     let mut device = Device::new(peripherals.port_1 /* other parameters */);
 //!     // Use the device.
 //!     // Device errors are usually only returned by methods, and not the constructor.
-//!     let _ = device.do_something();
+//!     _ = device.do_something();
 //! }
 //! ```
 //!
@@ -69,8 +69,13 @@ pub trait SmartDevice {
     /// # Examples
     ///
     /// ```
-    /// let sensor = InertialSensor::new(peripherals.port_1)?;
-    /// assert_eq!(sensor.port_number(), 1);
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     assert_eq!(sensor.port_number(), 1);
+    /// }
     /// ```
     fn port_number(&self) -> u8;
 
@@ -78,24 +83,33 @@ pub trait SmartDevice {
     ///
     /// # Examples
     ///
-    /// ```
-    /// let sensor = InertialSensor::new(peripherals.port_1)?;
-    /// assert_eq!(sensor.device_type(), SmartDeviceType::Imu);
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::SmartDeviceType};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///     assert_eq!(sensor.device_type(), SmartDeviceType::Imu);
+    /// }
     /// ```
     fn device_type(&self) -> SmartDeviceType;
 
-    /// Determine if this device type is currently connected to the [`SmartPort`]
-    /// that it's registered to.
+    /// Determines if this device type is currently plugged into its [`SmartPort`].
     ///
     /// # Examples
     ///
     /// ```
-    /// let sensor = InertialSensor::new(peripherals.port_1)?;
+    /// use vexide::prelude::*;
     ///
-    /// if sensor.port_connected() {
-    ///     println!("IMU is connected!");
-    /// } else {
-    ///     println!("No IMU connection found.");
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     if sensor.is_connected() {
+    ///         println!("IMU is connected!");
+    ///     } else {
+    ///         println!("No IMU connection found.");
+    ///     }
     /// }
     /// ```
     fn is_connected(&self) -> bool {
@@ -107,16 +121,18 @@ pub trait SmartDevice {
         SmartDeviceType::from(device_types[(self.port_number() - 1) as usize]) == self.device_type()
     }
 
-    /// Returns a timestamp recorded when the last packet sent by this device was processed by VEXos.
+    /// Returns a timestamp recorded when the last packet sent by this device was processed by
+    /// VEXos.
     ///
     /// # Precision
     ///
-    /// This is a timestamp is from the brain's low-resolution timer, meaning it has a precision
-    /// of 1 millisecond. See the [`LowResolutionTime`] API for more information.
+    /// This is a timestamp from the brain's low-resolution timer, meaning it has a precision of 1
+    /// millisecond. See the [`LowResolutionTime`] API for more information.
     ///
     /// # Errors
     ///
-    /// Currently, this function never returns an error. This behavior should be considered unstable.
+    /// Currently, this function never returns an error. This behavior should be considered
+    /// unstable.
     fn timestamp(&self) -> Result<LowResolutionTime, PortError> {
         Ok(LowResolutionTime::from_millis_since_epoch(unsafe {
             vexDeviceGetTimestamp(vexDeviceGetByIndex(u32::from(self.port_number() - 1)))
@@ -128,7 +144,8 @@ pub trait SmartDevice {
     ///
     /// # Errors
     ///
-    /// Returns a [`PortError`] if there is not a physical device of type [`SmartDevice::device_type`] in this [`SmartDevice`]'s port.
+    /// Returns a [`PortError`] if there is not a physical device of type
+    /// [`SmartDevice::device_type`] in this [`SmartDevice`]'s port.
     fn validate_port(&self) -> Result<(), PortError> {
         validate_port(self.port_number(), self.device_type())
     }
@@ -136,8 +153,8 @@ pub trait SmartDevice {
 
 /// Verify that the device type is currently plugged into this port.
 ///
-/// This function provides the internal implementations of [`SmartDevice::validate_port`], [`SmartPort::validate_type`],
-/// and [`AdiPort::validate_expander`].
+/// This function provides the internal implementations of [`SmartDevice::validate_port`],
+/// [`SmartPort::validate_type`], and [`AdiPort::validate_expander`].
 pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<(), PortError> {
     let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
     unsafe {
@@ -181,9 +198,9 @@ impl SmartPort {
     ///
     /// # Safety
     ///
-    /// Creating new `SmartPort`s is inherently unsafe due to the possibility of constructing
-    /// more than one device on the same port index allowing multiple mutable references to
-    /// the same hardware device. This violates Rust's borrow checker guarantees. Prefer using
+    /// Creating new `SmartPort`s is inherently unsafe due to the possibility of constructing more
+    /// than one device on the same port index allowing multiple mutable references to the same
+    /// hardware device. This violates Rust's borrow checker guarantees. Prefer using
     /// [`Peripherals`](crate::peripherals::Peripherals) to register devices if possible.
     ///
     /// For more information on safely creating peripherals, see [this page](https://vexide.dev/docs/peripherals/).
@@ -191,6 +208,8 @@ impl SmartPort {
     /// # Examples
     ///
     /// ```
+    /// use vexide::smart::SmartPort;
+    ///
     /// // Create a new Smart Port at index 1.
     /// // This is unsafe! You are responsible for ensuring that only one device registered on a
     /// // single port index.
@@ -208,6 +227,8 @@ impl SmartPort {
     /// # Examples
     ///
     /// ```
+    /// use vexide::smart::SmartPort;
+    ///
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
     /// assert_eq!(my_port.number(), 1);
@@ -221,12 +242,14 @@ impl SmartPort {
         (self.number - 1) as u32
     }
 
-    /// Returns the type of device currently connected to this port, or `None`
-    /// if no device is connected.
+    /// Returns the type of device currently connected to this port, or `None` if no device is
+    /// connected.
     ///
     /// # Examples
     ///
     /// ```
+    /// use vexide::smart::SmartPort;
+    ///
     /// let my_port = unsafe { SmartPort::new(1) };
     ///
     /// if let Some(device_type) = my_port.device_type() {
@@ -271,17 +294,13 @@ impl SmartPort {
         Ok(())
     }
 
-    /// Returns the timestamp of the last device packet processed by this port, or `None`
-    /// if no device is connected.
+    /// Returns the timestamp of the last device packet processed by this port, or `None` if no
+    /// device is connected.
     ///
     /// # Precision
     ///
-    /// This is a timestamp is from the brain's low-resolution timer, meaning it has a precision
-    /// of 1 millisecond. See the [`LowResolutionTime`] API for more information.
-    ///
-    /// # Errors
-    ///
-    /// Currently, this function never returns an error. This behavior should be considered unstable.
+    /// This is a timestamp from the brain's low-resolution timer, meaning it has a precision of 1
+    /// millisecond. See the [`LowResolutionTime`] API for more information.
     #[must_use]
     pub fn timestamp(&self) -> Option<LowResolutionTime> {
         if self.device_type().is_some() {
@@ -367,8 +386,8 @@ pub enum SmartDeviceType {
     /// This corresponds to the [`SerialPort`](serial::SerialPort) device.
     GenericSerial,
 
-    /// Other device type code returned by the SDK that is currently unsupported, undocumented,
-    /// or unknown.
+    /// Other device type code returned by the SDK that is currently unsupported, undocumented, or
+    /// unknown.
     Unknown(V5_DeviceType),
 }
 
@@ -418,8 +437,7 @@ impl From<SmartDeviceType> for V5_DeviceType {
 
 /// Errors that can occur when performing operations on [`SmartPort`]-connected devices.
 ///
-/// Most smart devices will return this type or something wrapping this type when an error
-/// occurs.
+/// Most smart devices will return this type or something wrapping this type when an error occurs.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
 pub enum PortError {
     /// No device was plugged into the port, when one was expected.

@@ -1,12 +1,12 @@
 //! Color types.
 //!
-//! This module re-exports some types in the [`rgb`] crate for use
-//! as a general container type for devices working with RGB colors.
+//! This module re-exports some types in the [`rgb`] crate for use as a general container type for
+//! devices working with RGB colors.
 
 pub use rgb::Rgb;
 
-/// Conversion trait between [`Rgb<u8>`] and the raw `u32` bit representation
-/// of it used in VEXos APIs.
+/// Conversion trait between [`Rgb<u8>`] and the raw `u32` bit representation of it used in VEXos
+/// APIs.
 pub(crate) trait RgbExt {
     #[allow(unused)]
     fn from_raw(raw: u32) -> Self;

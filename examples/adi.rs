@@ -2,8 +2,8 @@ use vexide::prelude::*;
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
-    // Create a potentiometer on triport A. We'll assume the potentiometer is the newer V2 potentiometer
-    // rather than the legacy cortex-era one.
+    // Create a potentiometer on triport A. We'll assume the potentiometer is the newer V2
+    // potentiometer rather than the legacy cortex-era one.
     let potentiometer = AdiPotentiometer::new(peripherals.adi_a, PotentiometerType::V2);
 
     // Create a line tracker on triport B.
@@ -16,13 +16,13 @@ async fn main(peripherals: Peripherals) {
         // Print out the sensor values to stdout every 10ms (the update rate of ADI devices).
         println!(
             "Potentiometer Angle: {}\nLine Tracker Reflectivity: {}%\nUltrasonic Distance: {:?}\n",
-            potentiometer.angle().unwrap(),
+            potentiometer.angle().unwrap().as_degrees(),
             line_tracker.reflectivity().unwrap() * 100.0,
             range_finder.distance().unwrap()
         );
 
-        // All ADI devices only update at 10ms, so we'll yield back to the async executor to
-        // not hog all of the CPU while looping.
+        // All ADI devices only update at 10ms, so we'll yield back to the async executor to not hog
+        // all of the CPU while looping.
         sleep(vexide::adi::ADI_UPDATE_INTERVAL).await;
     }
 }

@@ -1,17 +1,15 @@
 //! # vexide
 //!
-//! Open-source Rust runtime for VEX V5 robots. vexide provides a runtime, async executor,
-//! hardware APIs, and more for the VEX V5 Brain!
+//! Open-source Rust runtime for VEX V5 robots. vexide provides a runtime, async executor, hardware
+//! APIs, and more for the VEX V5 Brain!
 //!
 //! ## Getting Started
 //!
-//! If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/),
-//! which provide step-by-step instructions for setting up a development environment
-//! and using vexide's common features.
+//! If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment and using vexide's common features.
 //!
 //! # Usage
 //!
-//! In order to get a program running, use the `#[vexide::main]` attribute on your main function.
+//! To to get a program running, use the `#[vexide::main]` attribute on your main function.
 //!
 //! ```
 //! use vexide::prelude::*;
@@ -20,7 +18,7 @@
 //! async fn main(_peripherals: Peripherals) {
 //!     println!("Hello, world!");
 //! }
-//!```
+//! ```
 //!
 //! Check out our [examples](https://github.com/vexide/vexide/tree/main/examples/) for more examples
 //! of different features.
@@ -44,18 +42,15 @@ pub use vexide_async::task;
 
 /// Utilities for tracking time.
 ///
-/// This module provides types for measuring time and executing code after a set periods
-/// of time.
+/// This module provides types for measuring time and executing code after a set periods of time.
 ///
-/// - [`Sleep`] is a future that does no work and completes at a specific [`Instant`]
-///   in time.
+/// - [`Sleep`] is a future that does no work and completes at a specific [`Instant`] in time.
 ///
-/// - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future
-///   for or until a specific instant in time.
+/// - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future for or until a
+///   specific instant in time.
 ///
 /// [`sleep`]: vexide_async::time::sleep
 /// [`sleep_until`]: vexide_async::time::sleep_until
-/// [`Instant`]: std::time::Instant
 #[cfg(any(feature = "core", feature = "async"))]
 pub mod time {
     #[doc(inline)]
@@ -132,7 +127,9 @@ pub mod prelude {
         smart::{
             ai_vision::AiVisionSensor,
             distance::DistanceSensor,
+            electromagnet::Electromagnet,
             expander::AdiExpander,
+            gps::GpsSensor,
             imu::InertialSensor,
             link::{LinkType, RadioLink},
             motor::{Gearset, Motor},
@@ -146,7 +143,7 @@ pub mod prelude {
     #[cfg(feature = "async")]
     pub use crate::{
         runtime::block_on,
-        task::{spawn, Task},
+        task::{spawn, task_local, Task},
         time::{sleep, sleep_until},
     };
 }

@@ -1,7 +1,7 @@
 //! ADI gyroscope device.
 //!
-//! This module provides an interface for interacting with an ADI gyroscope device.
-//! The gyroscope can be used to measure the yaw rotation of your robot.
+//! This module provides an interface for interacting with an ADI gyroscope device. The gyroscope
+//! can be used to measure the yaw rotation of your robot.
 //!
 //! # Hardware overview
 //!
@@ -9,8 +9,9 @@
 //! This means that it can measure the rate of rotation up to ±1000 degrees per second.
 //! VEXos only provides the calculated yaw rotation of the robot.
 //!
-//! The gyroscope is rated for a noise density of 0.016 dps/√Hz (degrees per second per square root of Hertz).
-//! This means that we cannot determine the exact amount of noise in the sensor's readings because it is unknown how often VEXos polls the gyroscope.
+//! The gyroscope is rated for a noise density of 0.016 dps/√Hz (degrees per second per square root
+//! of Hertz). This means that we cannot determine the exact amount of noise in the sensor's
+//! readings because it is unknown how often VEXos polls the gyroscope.
 
 use core::{future::Future, task::Poll, time::Duration};
 
@@ -33,11 +34,11 @@ enum AdiGyroscopeCalibrationFutureState {
 }
 
 /// A future that calibrates an [`AdiGyroscope`] for a given duration.
-pub struct AdiGyroscopeCalibrationFuture<'a> {
+pub struct CalibrateFuture<'a> {
     gyro: &'a mut AdiGyroscope,
     state: AdiGyroscopeCalibrationFutureState,
 }
-impl Future for AdiGyroscopeCalibrationFuture<'_> {
+impl Future for CalibrateFuture<'_> {
     type Output = Result<(), PortError>;
 
     fn poll(
@@ -98,12 +99,14 @@ impl AdiGyroscope {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
+    ///     let mut gyro = AdiGyroscope::new(peripherals.adi_a);
     ///     // Do something with the gyroscope
     ///     _ = gyro.calibrate(Duration::from_secs(2)).await;
     ///     println!("{:?}", gyro.yaw());
@@ -120,19 +123,21 @@ impl AdiGyroscope {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
+    ///     let gyro = AdiGyroscope::new(peripherals.adi_a);
     ///     println!("Is calibrating: {:?}", gyro.is_calibrating());
     /// }
     /// ```
@@ -148,25 +153,32 @@ impl AdiGyroscope {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
+    ///     let mut gyro = AdiGyroscope::new(peripherals.adi_a);
     ///     println!("Calibrating...");
-    ///     println!("Calibration completed successfully? {:?}", gyro.calibrate(Duration::from_secs(2)).await.is_ok());
+    ///     println!(
+    ///         "Calibration completed successfully? {:?}",
+    ///         gyro.calibrate(Duration::from_secs(2)).await.is_ok()
+    ///     );
     /// }
     /// ```
-    pub const fn calibrate(&mut self, duration: Duration) -> AdiGyroscopeCalibrationFuture<'_> {
-        AdiGyroscopeCalibrationFuture {
+    pub const fn calibrate(&mut self, duration: Duration) -> CalibrateFuture<'_> {
+        CalibrateFuture {
             gyro: self,
             state: AdiGyroscopeCalibrationFutureState::Calibrate {
                 calibration_duration: duration,
@@ -178,21 +190,29 @@ impl AdiGyroscope {
     ///
     /// # Errors
     ///
-    /// These errors are only returned if the device is plugged into an [`AdiExpander`](crate::smart::expander::AdiExpander).
+    /// These errors are only returned if the device is plugged into an
+    /// [`AdiExpander`](crate::smart::expander::AdiExpander).
     ///
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gyro = AdiGyroscope::new(peripherals.adi_port_a());
+    ///     let mut gyro = AdiGyroscope::new(peripherals.adi_a);
     ///     _ = gyro.calibrate(Duration::from_secs(2)).await;
-    ///     println!("Yaw: {}", gyro.yaw());
+    ///
+    ///     println!(
+    ///         "Yaw: {}",
+    ///         gyro.yaw().expect("failed to get yaw").as_degrees()
+    ///     );
     /// }
     /// ```
     pub fn yaw(&self) -> Result<Angle, YawError> {

@@ -1,26 +1,28 @@
 //! AI Vision Sensor
 //!
-//! This module provides an API for interacting with the AI Vision sensor.
-//! The AI Vision sensor is meant to be a direct upgrade from the [Vision Sensor](super::vision)
-//! with a wider camera range and AI model capabilities.
+//! This module provides an API for interacting with the AI Vision sensor. The AI Vision sensor is
+//! meant to be a direct upgrade from the [Vision Sensor](super::vision) with a wider camera range
+//! and AI model capabilities.
 //!
 //! # Hardware overview
 //!
 //! The AI Vision sensor has three detection modes that can all be enabled at the same time:
-//!     - [Color detection](AiVisionDetectionMode::COLOR)
-//!     - [Custom model detection](AiVisionDetectionMode::MODEL)
-//!     - [AprilTag detection](AiVisionDetectionMode::APRILTAG) (requires color detection to be enabled)
-//! Currently there is no known way to upload custom models to the sensor and fields do not have AprilTags.
-//! However, there are built-in models that can be used for detection.
+//! - [Color detection](AiVisionDetectionMode::COLOR)
+//! - [Custom model detection](AiVisionDetectionMode::MODEL)
+//! - [AprilTag detection](AiVisionDetectionMode::APRILTAG) (requires color detection to be enabled)
+//!
+//! Currently there is no known way to upload custom models to the sensor and fields do not have
+//! AprilTags. However, there are built-in models that can be used for detection.
+//!
 //! See [VEX's documentation](https://kb.vex.com/hc/en-us/articles/30326315023892-Using-AI-Classifications-with-the-AI-Vision-Sensor) for more information.
 //!
-//! The resolution of the AI Vision sensor is 320x240 pixels.
-//! It has a horizontal FOV of 74 degrees and a vertical FOV of 63 degrees.
-//! Both of these values are a slight upgrade from the Vision Sensor.
+//! The resolution of the AI Vision sensor is 320x240 pixels. It has a horizontal FOV of 74 degrees
+//! and a vertical FOV of 63 degrees. Both of these values are a slight upgrade from the Vision
+//! Sensor.
 //!
-//! Unlike the Vision Sensor, the AI Vision sensor uses more human-readable color signatures
-//! that may be created without the AI Vision utility, though uploading color signatures with
-//! VEX's AI Vision Utility over USB is still an option.
+//! Unlike the Vision Sensor, the AI Vision sensor uses more human-readable color signatures that
+//! may be created without the AI Vision utility, though uploading color signatures with VEX's AI
+//! Vision Utility over USB is still an option.
 
 use alloc::{
     ffi::{CString, IntoStringError},
@@ -204,12 +206,13 @@ pub struct AiVisionColor {
 
 /// A color code used by an AI Vision Sensor to detect groups of color blobs.
 ///
-/// Color codes are effectively "groups" of color signatures. A color code associated
-/// multiple color signatures on the sensor will be detected as a single object when
-/// all signatures are seen next to each other.
+/// Color codes are effectively "groups" of color signatures. A color code associated multiple color
+/// signatures on the sensor will be detected as a single object when all signatures are seen next
+/// to each other.
 ///
-/// Color codes can associate up to 7 color signatures and detections will be returned
-/// as [`AiVisionObject::Code`] variants.
+/// Color codes can associate up to 7 color signatures and detections will be returned as
+/// [`AiVisionObject::Code`] variants.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct AiVisionColorCode([Option<u8>; 7]);
 impl AiVisionColorCode {
     /// Creates a new color code with the given color signature ids.
@@ -397,11 +400,12 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -420,9 +424,9 @@ impl AiVisionSensor {
 
     /// Registers a color code association on the sensor.
     ///
-    /// Color codes are effectively "groups" of color signatures. A color code associated
-    /// multiple color signatures on the sensor will be detected as a single object when
-    /// all signatures are seen next to each other.
+    /// Color codes are effectively "groups" of color signatures. A color code associated multiple
+    /// color signatures on the sensor will be detected as a single object when all signatures are
+    /// seen next to each other.
     ///
     /// # Panics
     ///
@@ -432,15 +436,16 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::{
-    ///     prelude::*,
     ///     color::Rgb,
-    ///     smart::ai_vision::{AiVisionColorCode, AiVisionColor},
+    ///     prelude::*,
+    ///     smart::ai_vision::{AiVisionColor, AiVisionColorCode},
     /// };
     ///
     /// #[vexide::main]
@@ -448,8 +453,8 @@ impl AiVisionSensor {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
-    ///         hue: 10.0,
-    ///         saturation: 1.0,
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
     ///     };
     ///     _ = sensor.set_color(1, color);
     ///     let code = AiVisionColorCode::from([1]);
@@ -510,15 +515,13 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionColorCode,
-    /// };
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionColorCode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -527,7 +530,7 @@ impl AiVisionSensor {
     ///     _ = sensor.set_color_code(1, &code);
     ///
     ///     if let Ok(Some(code)) = sensor.color_code(1) {
-    ///          println!("{:?}", code);
+    ///         println!("{:?}", code);
     ///     } else {
     ///         println!("Something went wrong!");
     ///     }
@@ -568,15 +571,13 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionColorCode,
-    /// };
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionColorCode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -609,24 +610,21 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     color::Rgb,
-    ///     smart::ai_vision::AiVisionColor,
-    /// };
+    /// ```no_run
+    /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
-    ///         hue: 10.0,
-    ///         saturation: 1.0,
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
     ///     };
     ///
     ///     _ = sensor.set_color(1, color);
@@ -665,24 +663,21 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     color::Rgb,
-    ///     smart::ai_vision::AiVisionColor,
-    /// };
+    /// ```no_run
+    /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
-    ///         hue: 10.0,
-    ///         saturation: 1.0,
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
     ///     };
     ///     _ = sensor.set_color(1, color);
     ///     if let Ok(Some(color)) = sensor.color(1) {
@@ -720,24 +715,21 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     color::Rgb,
-    ///     smart::ai_vision::AiVisionColor,
-    /// };
+    /// ```no_run
+    /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
     ///         rgb: Rgb::new(255, 0, 0),
-    ///         hue: 10.0,
-    ///         saturation: 1.0,
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
     ///     };
     ///     _ = sensor.set_color(1, color);
     ///
@@ -762,20 +754,19 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionDetectionMode,
-    /// };
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionDetectionMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = sensor.set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
+    ///     _ = sensor
+    ///         .set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
     /// }
     /// ```
     pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<(), PortError> {
@@ -791,17 +782,18 @@ impl AiVisionSensor {
         Ok(status)
     }
 
-    /// Returns the current flags of the AI Vision sensor including the detection mode
-    /// flags set by [`Self::set_detection_mode`].
+    /// Returns the current flags of the AI Vision sensor including the detection mode flags set by
+    /// [`Self::set_detection_mode`].
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -823,15 +815,13 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionFlags,
-    /// };
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionFlags};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -861,7 +851,8 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     pub fn start_awb(&mut self) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
@@ -876,12 +867,13 @@ impl AiVisionSensor {
         Ok(())
     }
 
-    /// Unknown Use
+    /// Unknown use.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     pub fn enable_test(&mut self, test: u8) -> Result<(), PortError> {
         // Status is shifted to the right from mode. Least-significant byte is missing.
         // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
@@ -896,20 +888,18 @@ impl AiVisionSensor {
         Ok(())
     }
 
-    /// Sets the family of apriltag that will be detected
+    /// Sets the AprilTag family that the sensor will try to detect.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AprilTagFamily,
-    /// };
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::ai_vision::AprilTagFamily};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -936,17 +926,15 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
     /// Loop through all objects of a specific type:
     ///
-    /// ```
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::ai_vision::AiVisionObject,
-    /// };
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionObject};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -954,7 +942,7 @@ impl AiVisionSensor {
     ///     loop {
     ///         let objects = sensor.objects().unwrap();
     ///         for object in objects {
-    ///             if let AiVisionObject::Color { position, .. } = object.data {
+    ///             if let AiVisionObject::Color { position, .. } = object {
     ///                 println!("{:?}", position);
     ///             }
     ///         }
@@ -1046,18 +1034,22 @@ impl AiVisionSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     loop {
-    ///         println!("AI Vision sensor currently detects {:?} objects", sensor.object_count());
+    ///         println!(
+    ///             "AI Vision sensor currently detects {:?} objects",
+    ///             sensor.object_count()
+    ///         );
     ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
     ///     }
     /// }
@@ -1089,8 +1081,8 @@ pub enum AiVisionObjectError {
     /// An object created by VEXos failed to be converted.
     InvalidObject,
 
-    /// Failed to fetch the class name of a model-detected object due it having a invalid
-    /// string representation.
+    /// Failed to fetch the class name of a model-detected object due it having a invalid string
+    /// representation.
     #[snafu(transparent)]
     InvalidClassName {
         /// The source of the error.

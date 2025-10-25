@@ -1,22 +1,22 @@
 //! Rotation Sensor
 //!
-//! This module provides an interface to interact with the VEX V5 Rotation Sensor,
-//! which measures the absolute position, rotation count, and angular velocity of a
-//! rotating shaft.
+//! This module provides an interface to interact with the VEX V5 Rotation Sensor, which measures
+//! the absolute position, rotation count, and angular velocity of a rotating shaft.
 //!
 //! # Hardware Overview
 //!
-//! The sensor provides absolute rotational position tracking from 0° to 360° with 0.088° accuracy. The
-//! sensor is compromised of two magnets which utilize the [Hall Effect] to indicate angular position. A
-//! chip inside the rotation sensor (a Cortex M0+) then keeps track of the total rotations of the sensor
-//! to determine total position traveled.
+//! The sensor provides absolute rotational position tracking from 0° to 360° with 0.088° accuracy.
+//! The sensor is compromised of two magnets which utilize the [Hall Effect] to indicate angular
+//! position. A chip inside the rotation sensor (a Cortex M0+) then keeps track of the total
+//! rotations of the sensor to determine total position traveled.
 //!
-//! Position is reported by VEXos in centidegrees before being converted to an instance of [`Position`].
+//! Position is reported by VEXos in centidegrees before being converted to an instance of the
+//! [`Angle`] type.
 //!
-//! The absolute angle reading is preserved across power cycles (similar to a potentiometer), while the
-//! position count stores the cumulative forward and reverse revolutions relative to program start, however
-//! the *position* reading will be reset if the sensor loses power. Angular velocity is measured in degrees
-//! per second.
+//! The absolute angle reading is preserved across power cycles (similar to a potentiometer), while
+//! the position count stores the cumulative forward and reverse revolutions relative to program
+//! start, however the *position* reading will be reset if the sensor loses power. Angular velocity
+//! is measured in degrees per second.
 //!
 //! Like all other Smart devices, VEXos will process sensor updates every 10mS.
 //!
@@ -98,7 +98,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -108,8 +108,10 @@ impl RotationSensor {
     ///     if let Ok(position) = sensor.position() {
     ///         println!("Position in degrees: {}°", position.as_degrees());
     ///         println!("Position in radians: {}°", position.as_radians());
-    ///         println!("Position in raw ticks (centidegrees): {}°", position.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
-    ///         println!("Number of revolutions spun: {}°", position.as_revolutions());
+    ///         println!(
+    ///             "Number of turns (revolutions) spun: {}°",
+    ///             position.as_turns()
+    ///         );
     ///     }
     /// }
     /// ```
@@ -138,7 +140,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -148,7 +150,6 @@ impl RotationSensor {
     ///     if let Ok(angle) = sensor.angle() {
     ///         println!("Angle in degrees: {}°", angle.as_degrees());
     ///         println!("Angle in radians: {}°", angle.as_radians());
-    ///         println!("Angle in raw ticks (centidegrees): {}°", angle.as_ticks(RotationSensor::TICKS_PER_REVOLUTION));
     ///     }
     /// }
     /// ```
@@ -172,16 +173,17 @@ impl RotationSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let sensor = RotationSensor::new(peripherals.port_1, Direction::Forward);
     ///
-    ///     if let Some(velocity) = sensor.velocity() {
+    ///     if let Ok(velocity) = sensor.velocity() {
     ///         println!(
     ///             "Velocity in RPM {}",
     ///             velocity / 6.0, // 1rpm = 6dps
@@ -209,7 +211,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -237,8 +239,8 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::{prelude::*, math::Angle};
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -267,13 +269,15 @@ impl RotationSensor {
 
     /// Sets the sensor to operate in a given [`Direction`].
     ///
-    /// This determines which way the sensor considers to be “forwards”. You can use the marking on the top of the
-    /// motor as a reference:
+    /// This determines which way the sensor considers to be “forwards”. You can use the marking on
+    /// the top of the motor as a reference:
     ///
-    /// - When [`Direction::Forward`] is specified, positive velocity/voltage values will cause the motor to rotate
-    ///   **with the arrow on the top**. Position will increase as the motor rotates **with the arrow**.
-    /// - When [`Direction::Reverse`] is specified, positive velocity/voltage values will cause the motor to rotate
-    ///   **against the arrow on the top**. Position will increase as the motor rotates **against the arrow**.
+    /// - When [`Direction::Forward`] is specified, positive velocity/voltage values will cause the
+    ///   motor to rotate **with the arrow on the top**. Position will increase as the motor rotates
+    ///   **with the arrow**.
+    /// - When [`Direction::Reverse`] is specified, positive velocity/voltage values will cause the
+    ///   motor to rotate **against the arrow on the top**. Position will increase as the motor
+    ///   rotates **against the arrow**.
     ///
     /// # Errors
     ///
@@ -283,7 +287,7 @@ impl RotationSensor {
     ///
     /// Set the sensor's direction to [`Direction::Reverse`].
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -297,7 +301,7 @@ impl RotationSensor {
     ///
     /// Reverse the sensor's direction (set to opposite of the previous direction):
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -309,25 +313,33 @@ impl RotationSensor {
     /// }
     /// ```
     pub fn set_direction(&mut self, new_direction: Direction) -> Result<(), PortError> {
-        // You're probably wondering why I don't use [`vexDeviceAbsEncReverseFlagSet`] here. So about that...
+        // You're probably wondering why I don't use [`vexDeviceAbsEncReverseFlagSet`] here. So
+        // about that...
         //
-        // This sensor is a little unique in that it stores two separate values - "position" and "angle". Angle is the literal
-        // angle of rotation of the sensor from 0-36000 centidegrees. Position is how *many* centidegrees the sensor was rotated
-        // by. Position is completely unbounded. Both of these values are treated separately in the SDK, and have different
-        // behaviors when dealing with the reverse flag. When the sensor is reversed, angle is transformed to become 36000 - angle
-        // (converted clockwise -> counterclockwise essentially), while position actually doesn't change at all.
+        // This sensor is a little unique in that it stores two separate values - "position" and
+        // "angle". Angle is the literal angle of rotation of the sensor from 0-36000
+        // centidegrees. Position is how *many* centidegrees the sensor was rotated
+        // by. Position is completely unbounded. Both of these values are treated separately in the
+        // SDK, and have different behaviors when dealing with the reverse flag. When the
+        // sensor is reversed, angle is transformed to become 36000 - angle (converted
+        // clockwise -> counterclockwise essentially), while position actually doesn't change at
+        // all.
         //
-        // Rather than simply negating position when reversed, the SDK keeps the current position before reversing and just
-        // reverses the direction of future measurements. So if I were to rotate the sensor by 90 degrees, reverse the
-        // direction, then rotate it another 90 degrees it would now be at a net 0 degree rotation value.
+        // Rather than simply negating position when reversed, the SDK keeps the current position
+        // before reversing and just reverses the direction of future measurements. So if I
+        // were to rotate the sensor by 90 degrees, reverse the direction, then rotate it
+        // another 90 degrees it would now be at a net 0 degree rotation value.
         //
-        // Now, here's where this all falls apart. There's a known race condition in [`vexDeviceAbsEncReverseFlagSet`], where
-        // if the reverse flag is set before the device reports its first *position* value, the starting position will be at
-        // 36000 rather than 0. This is because the SDK has code for ensuring that "angle" and "position" are set the same. If
-        // we set the reverse flag before position has been initially set, then rather than starting with a position of 0, we
-        // start with a position of 36000 (the default angle after being reversed). So rather than dealing with polling and
-        // status codes and potentially blocking the current thread until this device is initialized, I just recreated this
-        // behavior on our end without ever touching the status code.
+        // Now, here's where this all falls apart. There's a known race condition in
+        // [`vexDeviceAbsEncReverseFlagSet`], where if the reverse flag is set before the
+        // device reports its first *position* value, the starting position will be at 36000
+        // rather than 0. This is because the SDK has code for ensuring that "angle" and "position"
+        // are set the same. If we set the reverse flag before position has been initially
+        // set, then rather than starting with a position of 0, we start with a position of
+        // 36000 (the default angle after being reversed). So rather than dealing with polling and
+        // status codes and potentially blocking the current thread until this device is
+        // initialized, I just recreated this behavior on our end without ever touching the
+        // status code.
         //
         // For more information: <https://www.vexforum.com/t/rotation-sensor-bug-workaround-on-vexos-1-1-0/96577/2>
         if new_direction != self.direction() {
@@ -344,8 +356,9 @@ impl RotationSensor {
 
     /// Sets the internal computation speed of the rotation sensor.
     ///
-    /// This method does NOT change the rate at which user code can read data off the sensor, as the brain will only talk to
-    /// the device every 10mS regardless of how fast data is being sent or computed. See [`RotationSensor::UPDATE_INTERVAL`].
+    /// This method does NOT change the rate at which user code can read data off the sensor, as the
+    /// brain will only talk to the device every 10mS regardless of how fast data is being sent or
+    /// computed. See [`RotationSensor::UPDATE_INTERVAL`].
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
     ///
@@ -355,7 +368,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -412,7 +425,7 @@ impl RotationSensor {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

@@ -1,24 +1,23 @@
 //! Optical Sensor
 //!
-//! This module provides an interface to interact with the V5 Optical Sensor, which combines
-//! ambient light sensing, color detection, proximity measurement, and gesture recognition
-//! capabilities.
+//! This module provides an interface to interact with the V5 Optical Sensor, which combines ambient
+//! light sensing, color detection, proximity measurement, and gesture recognition capabilities.
 //!
 //! # Hardware Overview
 //!
-//! The optical sensor provides multi-modal optical sensing with an integrated white LED
-//! for low-light operation.
+//! The optical sensor provides multi-modal optical sensing with an integrated white LED for
+//! low-light operation.
 //!
 //! ## Color Detection
 //!
-//! Color data reported as RGB, HSV, and grayscale data, with optimal performance at
-//! distances under 100mm. The proximity sensing uses reflected light intensity, making
-//! readings dependent on both ambient lighting and target reflectivity.
+//! Color data reported as RGB, HSV, and grayscale data, with optimal performance at distances under
+//! 100mm. The proximity sensing uses reflected light intensity, making readings dependent on both
+//! ambient lighting and target reflectivity.
 //!
 //! ## Gesture Detection
 //!
-//! The optical sensor can detect four distinct motions (up, down, left, right) of objects
-//! passing over the sensor.
+//! The optical sensor can detect four distinct motions (up, down, left, right) of objects passing
+//! over the sensor.
 
 use core::time::Duration;
 
@@ -57,7 +56,8 @@ impl OpticalSensor {
     /// Source: <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9>
     pub const MAX_INTEGRATION_TIME: Duration = Duration::from_millis(712);
 
-    /// The interval that gesture detection through [`OpticalSensor::last_gesture`] provides new data at.
+    /// The interval that gesture detection through [`OpticalSensor::last_gesture`] provides new
+    /// data at.
     pub const GESTURE_UPDATE_INTERVAL: Duration = Duration::from_millis(50);
 
     /// Creates a new optical sensor from a [`SmartPort`].
@@ -85,11 +85,12 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -114,13 +115,15 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -152,8 +155,8 @@ impl OpticalSensor {
         Ok(())
     }
 
-    /// Returns integration time of the optical sensor in milliseconds, with
-    /// minimum time being 3ms and the maximum time being 712ms.
+    /// Returns integration time of the optical sensor in milliseconds, with minimum time being 3ms
+    /// and the maximum time being 712ms.
     ///
     /// The default integration time for the sensor is 103mS, unless otherwise set with
     /// [`OpticalSensor::set_integration_time`].
@@ -161,13 +164,15 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -192,26 +197,27 @@ impl OpticalSensor {
 
     /// Set the integration time of the optical sensor.
     ///
-    /// Lower integration time results in faster update rates with lower accuracy
-    /// due to less available light being read by the sensor.
+    /// Lower integration time results in faster update rates with lower accuracy due to less
+    /// available light being read by the sensor.
     ///
-    /// The `time` value must be a [`Duration`] between 3 and 712 milliseconds. If
-    /// the integration time is out of this range, it will be clamped to fit inside it. See
-    /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for
-    /// more information.
+    /// The `time` value must be a [`Duration`] between 3 and 712 milliseconds. If the integration
+    /// time is out of this range, it will be clamped to fit inside it. See
+    /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for more information.
     ///
     /// The default integration time for the sensor is 103mS, unless otherwise set.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -243,11 +249,12 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -285,11 +292,12 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -321,11 +329,12 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -354,17 +363,18 @@ impl OpticalSensor {
 
     /// Returns an analog proximity value from `0` to `1.0`.
     ///
-    /// A reading of 1.0 indicates that the object is close to the sensor, while 0.0
-    /// indicates that no object is detected in range of the sensor.
+    /// A reading of 1.0 indicates that the object is close to the sensor, while 0.0 indicates that
+    /// no object is detected in range of the sensor.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -393,11 +403,12 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -406,7 +417,10 @@ impl OpticalSensor {
     ///
     ///     // Color detection with RGB values
     ///     if let Ok(rgb) = sensor.color() {
-    ///         println!("Color reading: R={}, G={}, B={}", rgb.red, rgb.green, rgb.blue);
+    ///         println!(
+    ///             "Color reading: R={}, G={}, B={}",
+    ///             rgb.red, rgb.green, rgb.blue
+    ///         );
     ///
     ///         // Example: Check if object is primarily red
     ///         // Note that you should probably use `OpticalSensor::hue` instead for this.
@@ -430,7 +444,8 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     pub fn raw_color(&self) -> Result<OpticalRaw, PortError> {
         self.validate_port()?;
 
@@ -447,13 +462,15 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -507,16 +524,17 @@ impl OpticalSensor {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = OpticalSensor::new(peripherals.port_1, Direction::Forward);
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
     ///
     ///     if let Ok(status) = sensor.status() {
     ///         println!("Status: {:b}", status);

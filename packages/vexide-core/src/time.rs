@@ -17,11 +17,9 @@ pub fn system_uptime() -> Duration {
     Duration::from_micros(unsafe { vexSystemPowerupTimeGet() })
 }
 
-/// Returns the duration that the brain's user processor has been
-/// running.
+/// Returns the duration that the brain's user processor has been running.
 ///
-/// This is effectively the time since the current program was
-/// started.
+/// This is effectively the time since the current program was started.
 ///
 /// # Precision
 ///
@@ -33,8 +31,8 @@ pub fn user_uptime() -> Duration {
 
 /// A timestamp recorded by the Brain's low-resolution private timer.
 ///
-/// This type is not in sync with [`Instant`](std::time::Instant), which
-/// instead uses the brain's global high-resolution timer.
+/// This type is not in sync with [`Instant`](std::time::Instant), which instead uses the brain's
+/// global high-resolution timer.
 ///
 /// # Precision
 ///
@@ -47,8 +45,8 @@ pub struct LowResolutionTime {
 impl LowResolutionTime {
     /// An anchor in time which represents the start of the clock.
     ///
-    /// In practice, the epoch represents the start of the Brain's user processor,
-    /// meaning the start of the current user program.
+    /// In practice, the epoch represents the start of the Brain's user processor, meaning the start
+    /// of the current user program.
     pub const EPOCH: LowResolutionTime = LowResolutionTime { millis: 0 };
 
     /// Returns a low-resolution timestamp corresponding to "now".
@@ -83,49 +81,57 @@ impl LowResolutionTime {
     /// use vexide::time::LowResolutionTime;
     ///
     /// // Equivalent to `LowResolutionTime::now()`.
-    /// let now = LowResolutionTime::from_millis_since_epoch(unsafe {
-    ///     vex_sdk::vexSystemTimeGet()
-    /// });
+    /// let now = LowResolutionTime::from_millis_since_epoch(unsafe { vex_sdk::vexSystemTimeGet() });
     /// ```
     #[must_use]
     pub const fn from_millis_since_epoch(millis: u32) -> Self {
         Self { millis }
     }
 
-    /// Returns the amount of time elapsed from another timestamp to this one,
-    /// or zero duration if that timestamp is later than this one.
+    /// Returns the amount of time elapsed from another timestamp to this one, or zero duration if
+    /// that timestamp is later than this one.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
-    /// use vexide::time::LowResolutionTime;
     ///
-    /// let now = LowResolutionTime::now();
-    /// sleep(Duration::new(1, 0)).await;
-    /// let new_now = LowResolutionTime::now();
-    /// println!("{:?}", new_now.duration_since(now));
-    /// println!("{:?}", now.duration_since(new_now)); // 0ns
+    /// use vexide::{prelude::*, time::LowResolutionTime};
+    ///
+    /// #[vexide::main]
+    /// async fn main(_peripherals: Peripherals) {
+    ///     let now = LowResolutionTime::now();
+    ///     sleep(Duration::new(1, 0)).await;
+    ///
+    ///     let new_now = LowResolutionTime::now();
+    ///     println!("{:?}", new_now.duration_since(now));
+    ///     println!("{:?}", now.duration_since(new_now)); // 0ns
+    /// }
     /// ```
     #[must_use]
     pub fn duration_since(&self, earlier: LowResolutionTime) -> Duration {
         self.checked_duration_since(earlier).unwrap_or_default()
     }
 
-    /// Returns the amount of time elapsed from another timestamp to this one,
-    /// or None if that timestamp is later than this one.
+    /// Returns the amount of time elapsed from another timestamp to this one, or None if that
+    /// timestamp is later than this one.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
-    /// use vexide::time::LowResolutionTime;
     ///
-    /// let now = LowResolutionTime::now();
-    /// sleep(Duration::new(1, 0)).await;
-    /// let new_now = LowResolutionTime::now();
-    /// println!("{:?}", new_now.checked_duration_since(now));
-    /// println!("{:?}", now.checked_duration_since(new_now)); // None
+    /// use vexide::{prelude::*, time::LowResolutionTime};
+    ///
+    /// #[vexide::main]
+    /// async fn main(_peripherals: Peripherals) {
+    ///     let now = LowResolutionTime::now();
+    ///     sleep(Duration::new(1, 0)).await;
+    ///
+    ///     let new_now = LowResolutionTime::now();
+    ///     println!("{:?}", new_now.checked_duration_since(now));
+    ///     println!("{:?}", now.checked_duration_since(new_now)); // None
+    /// }
     /// ```
     #[must_use]
     pub const fn checked_duration_since(&self, earlier: LowResolutionTime) -> Option<Duration> {
@@ -136,20 +142,24 @@ impl LowResolutionTime {
         }
     }
 
-    /// Returns the amount of time elapsed from another timestamp to this one,
-    /// or zero duration if that timestamp is later than this one.
+    /// Returns the amount of time elapsed from another timestamp to this one, or zero duration if
+    /// that timestamp is later than this one.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
-    /// use vexide::time::LowResolutionTime;
     ///
-    /// let now = LowResolutionTime::now();
-    /// sleep(Duration::new(1, 0)).await;
-    /// let new_now = LowResolutionTime::now();
-    /// println!("{:?}", new_now.saturating_duration_since(now));
-    /// println!("{:?}", now.saturating_duration_since(new_now)); // 0ns
+    /// use vexide::{prelude::*, time::LowResolutionTime};
+    ///
+    /// #[vexide::main]
+    /// async fn main(_peripherals: Peripherals) {
+    ///     let now = LowResolutionTime::now();
+    ///     sleep(Duration::new(1, 0)).await;
+    ///     let new_now = LowResolutionTime::now();
+    ///     println!("{:?}", new_now.saturating_duration_since(now));
+    ///     println!("{:?}", now.saturating_duration_since(new_now)); // 0ns
+    /// }
     /// ```
     #[must_use]
     pub fn saturating_duration_since(&self, earlier: LowResolutionTime) -> Duration {
@@ -160,14 +170,18 @@ impl LowResolutionTime {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::time::Duration;
-    /// use vexide::time::LowResolutionTime;
     ///
-    /// let start = LowResolutionTime::now();
-    /// let three_secs = Duration::from_secs(3);
-    /// sleep(three_secs).await;
-    /// assert!(start.elapsed() >= three_secs);
+    /// use vexide::{prelude::*, time::LowResolutionTime};
+    ///
+    /// #[vexide::main]
+    /// async fn main(_peripherals: Peripherals) {
+    ///     let start = LowResolutionTime::now();
+    ///     let three_secs = Duration::from_secs(3);
+    ///     sleep(three_secs).await;
+    ///     assert!(start.elapsed() >= three_secs);
+    /// }
     /// ```
     #[must_use]
     pub fn elapsed(&self) -> Duration {
@@ -201,7 +215,8 @@ impl Add<Duration> for LowResolutionTime {
     /// # Panics
     ///
     /// This function may panic if the resulting point in time cannot be represented by the
-    /// underlying data structure. See [`LowResolutionTime::checked_add`] for a version without panic.
+    /// underlying data structure. See [`LowResolutionTime::checked_add`] for a version without
+    /// panic.
     fn add(self, rhs: Duration) -> Self::Output {
         self.checked_add(rhs)
             .expect("overflow when adding duration to timestamp")
@@ -232,8 +247,8 @@ impl SubAssign<Duration> for LowResolutionTime {
 impl Sub<LowResolutionTime> for LowResolutionTime {
     type Output = Duration;
 
-    /// Returns the amount of time elapsed from another time to this one,
-    /// or zero duration if that time is later than this one.
+    /// Returns the amount of time elapsed from another time to this one, or zero duration if that
+    /// time is later than this one.
     fn sub(self, other: LowResolutionTime) -> Duration {
         self.duration_since(other)
     }

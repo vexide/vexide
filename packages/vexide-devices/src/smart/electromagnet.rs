@@ -1,16 +1,17 @@
 //! V5 Electromagnet
 //!
-//! The V5 electromagnet is a device unique to the V5 workcell kit. It is a simple
-//! device that produces a magnetic field at a provided power level.
-//! The power level does not have specific units.
+//! The V5 electromagnet is a device unique to the V5 workcell kit. It is a simple device that
+//! produces a magnetic field at a provided power level. The power level does not have specific
+//! units.
 //!
 //! # Hardware Overview
 //!
-//! Not much information can be found on the V5 workcell electromagnet;
-//! however, the electromagnet is intended to be used to pick up V5 Workcell colored disks.
-//! We can assume that the lower bound on the electromagnet's strength is the weight of a V5 Workcell colored disk.
-//! Assuming that the plastic part of the disk is made of ABS plastic and the metal part is solid iron,
-//! the electromagnet can lift at least ≈0.24oz based off of the CAD model files for the V5 Workcell kit provided by VEX.
+//! Not much information can be found on the V5 workcell electromagnet; however, the electromagnet
+//! is intended to be used to pick up V5 Workcell colored disks. We can assume that the lower bound
+//! on the electromagnet's strength is the weight of a V5 Workcell colored disk. Assuming that the
+//! plastic part of the disk is made of ABS plastic and the metal part is solid iron, the
+//! electromagnet can lift at least ≈0.24oz based off of the CAD model files for the V5 Workcell kit
+//! provided by VEX.
 
 use core::time::Duration;
 
@@ -41,9 +42,10 @@ impl Electromagnet {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use vexide::prelude::*;
+    /// ```no_run
     /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -63,17 +65,18 @@ impl Electromagnet {
 
     /// Sets the power level of the magnet for a given duration.
     ///
-    /// Power is expressed as a number from [-1.0, 1.0]. Larger power values will result
-    /// in a stronger force of attraction from the magnet.
+    /// Power is expressed as a number from [-1.0, 1.0]. Larger power values will result in a
+    /// stronger force of attraction from the magnet.
     ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -99,11 +102,12 @@ impl Electromagnet {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -127,11 +131,12 @@ impl Electromagnet {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -155,11 +160,12 @@ impl Electromagnet {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
@@ -182,11 +188,12 @@ impl Electromagnet {
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use vexide::prelude::*;
     ///
     /// #[vexide::main]

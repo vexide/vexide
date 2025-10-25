@@ -1,8 +1,8 @@
 //! Peripheral Access
 //!
 //! This module is the gateway to all of your Brain’s available I/O — ports, hardware, and devices.
-//! If you want to create a device like a sensor or motor or read from a controller, you are going to
-//! need something off a struct in this module.
+//! If you want to create a device like a sensor or motor or read from a controller, you are going
+//! to need something off a struct in this module.
 //!
 //! This module provides safe access to underlying hardware by treating physical ports as unique
 //! resources. The [`Peripherals`] struct stores ownership tokens for each hardware interface:
@@ -23,14 +23,14 @@
 //! - Once claimed, a port cannot be used again until explicitly released.
 //! - Ports cannot be cloned or copied. New ports cannot be safely created.
 //!
-//! By extension of this, only one mutable reference to a piece of hardware may exist. This
-//! pattern of treating peripherals as a singleton is fairly common in the Rust embedded scene,
-//! and is extensively covered in [The Embedded Rust Book](https://docs.rust-embedded.org/book/peripherals/singletons.html).
+//! By extension of this, only one mutable reference to a piece of hardware may exist. This pattern
+//! of treating peripherals as a singleton is fairly common in the Rust embedded scene, and is
+//! extensively covered in [The Embedded Rust Book](https://docs.rust-embedded.org/book/peripherals/singletons.html).
 //!
 //! # Usage
 //!
-//! The [`Peripherals`] struct provides compile-time guarantees for exclusive port ownership.
-//! This is best for when you know your port assignments at compile time.
+//! The [`Peripherals`] struct provides compile-time guarantees for exclusive port ownership. This
+//! is best for when you know your port assignments at compile time.
 //!
 //! In vexide programs, a pre-initialized instance of this [`Peripherals`] struct is passed to your
 //! program's entrypoint function:
@@ -51,12 +51,8 @@
 //!
 //! #[vexide::main]
 //! async fn main(peripherals: Peripherals) {
-//!     let mut screen = peripherals.screen;
-//!     let my_motor = Motor::new(
-//!         peripherals.port_1,
-//!         Gearset::Green,
-//!         Direction::Forward,
-//!     );
+//!     let display = peripherals.display;
+//!     let my_motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
 //! }
 //! ```
 //!
@@ -66,15 +62,15 @@
 //! maintaining safety guarantees. Instead of statically assigning ports at compile time, you can
 //! request ports by number (e.g. port 1-21) during program execution. This is useful when:
 //!
-//! - You want to store unclaimed peripherals after claiming something, or pass your peripherals by value
-//!   after taking something from it ([`Peripherals`] prevents this due to partial-move rules).
+//! - You want to store unclaimed peripherals after claiming something, or pass your peripherals by
+//!   value after taking something from it ([`Peripherals`] prevents this due to partial-move
+//!   rules).
 //! - Port assignments need to be configurable without recompiling.
 //! - Port numbers need to be determined programmatically.
 //!
-//! The system still ensures only one device can use a port at a time, but handles the
-//! bookkeeping at runtime rather than compile time. This trades a small performance cost
-//! for increased flexibility, but is generally preferable to use the static [`Peripherals`]
-//! struct at runtime.
+//! The system still ensures only one device can use a port at a time, but handles the bookkeeping
+//! at runtime rather than compile time. This trades a small performance cost for increased
+//! flexibility, but is generally preferable to use the static [`Peripherals`] struct at runtime.
 
 use core::sync::atomic::AtomicBool;
 
@@ -91,16 +87,17 @@ static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 ///
 /// Contains an instance of a Brain’s available I/O, including ports, hardware, and devices.
 ///
-/// A Brain often has many external devices attached to it. We call these devices *peripherals*, and this
-/// struct is the "gateway" to all of these. [`Peripherals`] is intended to be used as a singleton, and you
-/// will typically only get one of these in your program's execution. This guarantees **at compile time** that
-/// each port is only used once.
+/// A Brain often has many external devices attached to it. We call these devices *peripherals*, and
+/// this struct is the "gateway" to all of these. [`Peripherals`] is intended to be used as a
+/// singleton, and you will typically only get one of these in your program's execution. This
+/// guarantees **at compile time** that each port is only used once.
 ///
 /// Because of the fact that this checks at compile time, it cannot be copied, cloned, or moved once
 /// it has been used to create a device.
 ///
-/// If you need to store a peripherals struct for use in multiple functions, use [`DynamicPeripherals`] instead.
-/// This struct is always preferable to [`DynamicPeripherals`] when possible.
+/// If you need to store a peripherals struct for use in multiple functions, use
+/// [`DynamicPeripherals`] instead. This struct is always preferable to [`DynamicPeripherals`] when
+/// possible.
 #[derive(Debug)]
 pub struct Peripherals {
     /// Brain display
@@ -218,7 +215,8 @@ impl Peripherals {
         }
     }
 
-    /// Attempts to create a new [`Peripherals`] struct, returning `None` if one has already been created.
+    /// Attempts to create a new [`Peripherals`] struct, returning `None` if one has already been
+    /// created.
     ///
     /// After calling this function, future calls to [`Peripherals::take`] will return `None`.
     pub fn take() -> Option<Self> {
@@ -235,11 +233,11 @@ impl Peripherals {
     ///
     /// # Safety
     ///
-    /// Creating new [`SmartPort`]s and [`Peripherals`] instances is unsafe due to the possibility of constructing
-    /// more than one device on the same port index.
+    /// Creating new [`SmartPort`]s and [`Peripherals`] instances is unsafe due to the possibility
+    /// of constructing more than one device on the same port index.
     ///
-    /// The caller must ensure that a given peripheral is not mutated concurrently as a result of more than one
-    /// instance existing.
+    /// The caller must ensure that a given peripheral is not mutated concurrently as a result of
+    /// more than one instance existing.
     pub unsafe fn steal() -> Self {
         PERIPHERALS_TAKEN.store(true, core::sync::atomic::Ordering::Release);
         // SAFETY: caller must ensure that this call is safe
@@ -249,21 +247,20 @@ impl Peripherals {
 
 /// Runtime-enforced Singleton Peripheral Access
 ///
-/// A flexible alternative to the statically checked [`Peripherals`], that instead verifies singleton
-/// access to ports and peripherals at *runtime*, allowing you to move this struct around after taking
-/// a port or device.
+/// A flexible alternative to the statically checked [`Peripherals`] that instead verifies
+/// singleton access to ports and peripherals at *runtime*, allowing you to move this struct around
+/// after taking a port or device.
 ///
 /// This is useful in cases where:
 ///
-/// - You want to store unclaimed peripherals after claiming something, or pass this struct by value after
-///   taking something from it ([`Peripherals`] prevents this due to partial-move rules).
+/// - You want to store unclaimed peripherals after claiming something, or pass this struct by value
+///   after taking something from it ([`Peripherals`] prevents this due to partial-move rules).
 /// - Port assignments need to be configurable without recompiling.
 /// - Port numbers need to be determined programmatically.
 ///
-/// The system still ensures only one device can use a port at a time, but handles the
-/// bookkeeping at runtime rather than compile time. This trades a small performance cost
-/// for increased flexibility, but is generally preferable to use the static [`Peripherals`]
-/// struct at runtime.
+/// The system still ensures only one device can use a port at a time, but handles the bookkeeping
+/// at runtime rather than compile time. This trades a small performance cost for increased
+/// flexibility, but is generally preferable to use the static [`Peripherals`] struct at runtime.
 #[derive(Debug)]
 pub struct DynamicPeripherals {
     display: Option<Display>,
@@ -275,11 +272,11 @@ pub struct DynamicPeripherals {
 impl DynamicPeripherals {
     /// Creates a new dynamic peripherals
     ///
-    /// In order to guarantee that no new ports are created by this struct,
-    /// this function requires a pre-existing [`Peripherals`] instance.
+    /// In order to guarantee that no new ports are created by this struct, this function requires a
+    /// pre-existing [`Peripherals`] instance.
     ///
-    /// This guarantees safety because [`Peripherals`] cannot be passed by value
-    /// after it has been used to create devices.
+    /// This guarantees safety because [`Peripherals`] cannot be passed by value after it has been
+    /// used to create devices.
     #[must_use]
     pub fn new(peripherals: Peripherals) -> Self {
         let smart_ports = [
@@ -328,8 +325,8 @@ impl DynamicPeripherals {
     ///
     /// # Panics
     ///
-    /// This function panics if the provided port is outside the range 1-21.
-    /// Ports outside of this range are invalid and cannot be created.
+    /// This function panics if the provided port is outside the range 1-21.  Ports outside of this
+    /// range are invalid and cannot be created.
     pub const fn take_smart_port(&mut self, port_number: u8) -> Option<SmartPort> {
         let port_index = port_number as usize - 1;
         self.smart_ports[port_index].take()
@@ -348,8 +345,8 @@ impl DynamicPeripherals {
     ///
     /// # Panics
     ///
-    /// This function panics if the provided port is outside the range 1-8.
-    /// Slots outside of this range are invalid and cannot be created.
+    /// This function panics if the provided port is outside the range 1-8. Slots outside of this
+    /// range are invalid and cannot be created.
     pub const fn take_adi_port(&mut self, port_number: u8) -> Option<AdiPort> {
         let port_number = port_number as usize - 1;
         self.adi_slots[port_number].take()
