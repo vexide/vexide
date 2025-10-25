@@ -258,9 +258,9 @@ impl Motor {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_target(MotorControl::Voltage(5.0));
+    ///     _ = motor.set_target(MotorControl::Voltage(5.0));
     ///     sleep(Duration::from_secs(1)).await;
-    ///     let _ = motor.set_target(MotorControl::Brake(BrakeMode::Hold));
+    ///     _ = motor.set_target(MotorControl::Brake(BrakeMode::Hold));
     /// }
     /// ```
     pub fn set_target(&mut self, target: MotorControl) -> Result<(), PortError> {
@@ -354,7 +354,7 @@ impl Motor {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_velocity(100);
+    ///     _ = motor.set_velocity(100);
     ///     sleep(Duration::from_secs(1)).await;
     /// }
     /// ```
@@ -1186,12 +1186,12 @@ impl Motor {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    ///     let _ = motor.set_voltage(12.0);
+    ///     _ = motor.set_voltage(12.0);
     ///     loop {
     ///         if motor.temperature().unwrap() > 30.0 {
-    ///             let _ = motor.brake(BrakeMode::Coast);
+    ///             _ = motor.brake(BrakeMode::Coast);
     ///         } else {
-    ///             let _ = motor.set_voltage(12.0);
+    ///             _ = motor.set_voltage(12.0);
     ///         }
     ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }

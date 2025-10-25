@@ -962,7 +962,7 @@ impl Controller {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
-    ///     let _ = controller.rumble(". -. -.").await;
+    ///     _ = controller.rumble(". -. -.").await;
     /// }
     /// ```
     pub fn rumble(&mut self, pattern: impl AsRef<str>) -> ControllerScreenWriteFuture<'_> {
@@ -1000,7 +1000,7 @@ impl Controller {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
-    ///     let _ = controller.try_rumble(". -. -.");
+    ///     _ = controller.try_rumble(". -. -.");
     /// }
     /// ```
     pub fn try_rumble(&mut self, pattern: impl AsRef<str>) -> Result<(), ControllerError> {
