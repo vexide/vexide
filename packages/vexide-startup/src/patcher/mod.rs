@@ -27,14 +27,6 @@ unsafe extern "C" {
     static mut __patcher_new_start: u32;
 }
 
-/// Internal patcher state representing what the patcher is attempting to do.
-#[derive(Debug)]
-enum PatcherState {
-    Initial,
-    Add(usize),
-    Copy(usize),
-}
-
 /// Differential Upload Patcher
 ///
 /// This function builds a modified version of the user program in memory with a binary patch (generated
@@ -170,6 +162,14 @@ pub(crate) unsafe fn patch() {
 /// This is essentially a port of <https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs>
 // NOTE: LLVM should always inline this function since it's only called once.
 fn bipatch<B: Read + Seek, P: Read>(mut old: B, mut patch: P, mut new: &mut [u8]) {
+    /// Internal patcher state representing what the patcher is attempting to do.
+    #[derive(Debug)]
+    enum PatcherState {
+        Initial,
+        Add(usize),
+        Copy(usize),
+    }
+
     let mut buf = [0u8; 4096];
     let mut state = PatcherState::Initial;
 
