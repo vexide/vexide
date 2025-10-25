@@ -38,8 +38,8 @@ pub struct AdiMotor {
 impl AdiMotor {
     /// Create a new motor from an [`AdiPort`].
     ///
-    /// Motors can be optionally configured to use slew rate control to prevent the internal
-    /// PTC from tripping on older cortex-era 393 motors.
+    /// Motors can be optionally configured to use slew rate control to prevent the internal PTC
+    /// from tripping on older cortex-era 393 motors.
     ///
     /// # Example
     ///
@@ -72,8 +72,8 @@ impl AdiMotor {
         Self { port, slew }
     }
 
-    /// Sets the PWM output of the given motor to a floating point number in the range \[-1.0,
-    /// 1.0\].
+    /// Sets the PWM output of the given motor to a floating point number in the range
+    /// \[-1.0, 1.0]\.
     ///
     /// # Errors
     ///
@@ -137,8 +137,8 @@ impl AdiMotor {
         Ok(())
     }
 
-    /// Returns the last set PWM output of the motor on the given port as a floating point
-    /// number in the range \[-1.0, 1.0\].
+    /// Returns the last set PWM output of the motor on the given port as a floating point number in
+    /// the range \[-1.0, 1.0\].
     ///
     /// # Errors
     ///
