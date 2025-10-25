@@ -24,17 +24,17 @@ extern crate alloc;
 use alloc::vec::Vec;
 use core::time::Duration;
 
-use snafu::{ensure, Snafu};
+use snafu::{Snafu, ensure};
 use vex_sdk::{
+    V5_DeviceT, V5_DeviceVisionObject, V5_DeviceVisionRgb, V5_DeviceVisionSignature,
+    V5VisionBlockType, V5VisionLedMode, V5VisionMode, V5VisionWBMode, V5VisionWifiMode,
     vexDeviceVisionBrightnessGet, vexDeviceVisionBrightnessSet, vexDeviceVisionLedColorGet,
     vexDeviceVisionLedColorSet, vexDeviceVisionLedModeGet, vexDeviceVisionLedModeSet,
     vexDeviceVisionModeGet, vexDeviceVisionModeSet, vexDeviceVisionObjectCountGet,
     vexDeviceVisionObjectGet, vexDeviceVisionSignatureGet, vexDeviceVisionSignatureSet,
     vexDeviceVisionWhiteBalanceGet, vexDeviceVisionWhiteBalanceModeGet,
     vexDeviceVisionWhiteBalanceModeSet, vexDeviceVisionWhiteBalanceSet, vexDeviceVisionWifiModeGet,
-    vexDeviceVisionWifiModeSet, V5VisionBlockType, V5VisionLedMode, V5VisionMode, V5VisionWBMode,
-    V5VisionWifiMode, V5_DeviceT, V5_DeviceVisionObject, V5_DeviceVisionRgb,
-    V5_DeviceVisionSignature,
+    vexDeviceVisionWifiModeSet,
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
@@ -1142,20 +1142,21 @@ impl VisionCode {
             return true;
         }
 
-        if let Some(sig_3) = self.2 {
-            if sig_3 == id {
-                return true;
-            }
+        //TODO: Update this to use [`Option::is_some_and`] once that's stabilized as const.
+        if let Some(sig_3) = self.2
+            && sig_3 == id
+        {
+            return true;
         }
-        if let Some(sig_4) = self.3 {
-            if sig_4 == id {
-                return true;
-            }
+        if let Some(sig_4) = self.3
+            && sig_4 == id
+        {
+            return true;
         }
-        if let Some(sig_5) = self.4 {
-            if sig_5 == id {
-                return true;
-            }
+        if let Some(sig_5) = self.4
+            && sig_5 == id
+        {
+            return true;
         }
 
         false

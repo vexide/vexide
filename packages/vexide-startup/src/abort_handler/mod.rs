@@ -4,7 +4,7 @@ mod fault;
 mod report;
 
 use fault::{Fault, FaultException};
-use vex_sdk::{vexTasksRun, vexTouchDataGet, V5_TouchEvent, V5_TouchStatus};
+use vex_sdk::{V5_TouchEvent, V5_TouchStatus, vexTasksRun, vexTouchDataGet};
 
 // Custom ARM vector table. Pointing the VBAR coprocessor register at this will configure the CPU to
 // jump to these functions on an exception.
@@ -148,7 +148,6 @@ pub extern "aapcs" fn irq() -> ! {
     )
 }
 
-#[expect(edition_2024_expr_fragment_specifier)]
 macro_rules! fault_exception_vector {
     (
         $name:ident:
