@@ -6,8 +6,7 @@
 //!
 //! # Platform Support
 //!
-//! The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform target. At the moment,
-//! this target only platform that vexide supports, however this may change in the future.
+//! The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform target.
 //!
 //! Additionally, backtraces will be unsupported if vexide is compiled without the `backtrace`
 //! feature.
@@ -25,8 +24,7 @@ use vex_libunwind::{registers, UnwindContext, UnwindCursor, UnwindError};
 ///
 /// # Platform Support
 ///
-/// The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform target. At the moment,
-/// this target only platform that vexide supports, however this may change in the future.
+/// The [`Backtrace`] API is only functional on the `armv7a-vex-v5` platform target.
 ///
 /// Additionally, backtraces will be unsupported if vexide is compiled without the `backtrace`
 /// feature.

@@ -247,7 +247,7 @@ impl Peripherals {
 
 /// Runtime-enforced Singleton Peripheral Access
 ///
-/// A flexible alternative to the statically checked [`Peripherals`], that instead verifies
+/// A flexible alternative to the statically checked [`Peripherals`] that instead verifies
 /// singleton access to ports and peripherals at *runtime*, allowing you to move this struct around
 /// after taking a port or device.
 ///

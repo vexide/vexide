@@ -301,11 +301,6 @@ impl SmartPort {
     ///
     /// This is a timestamp from the brain's low-resolution timer, meaning it has a precision of 1
     /// millisecond. See the [`LowResolutionTime`] API for more information.
-    ///
-    /// # Errors
-    ///
-    /// Currently, this function never returns an error. This behavior should be considered
-    /// unstable.
     #[must_use]
     pub fn timestamp(&self) -> Option<LowResolutionTime> {
         if self.device_type().is_some() {

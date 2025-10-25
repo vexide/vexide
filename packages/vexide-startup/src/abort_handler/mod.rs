@@ -58,8 +58,7 @@ global_asm!(
     irq = sym irq,
 );
 
-/// Enable vexide's CPU exception handling logic by installing its custom vector table. (Temporary
-/// internal API)
+/// Enable vexide's CPU exception handling logic by installing its custom vector table.
 pub fn install_vector_table() {
     unsafe {
         asm!(

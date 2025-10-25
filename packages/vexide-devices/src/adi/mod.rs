@@ -310,8 +310,8 @@ pub enum AdiDeviceType {
 
     /// Slew-rate limited motor PWM output
     ///
-    /// This corresponds to the [`AdiMotor`](motor::AdiMotor) device when configured with `slew:
-    /// true`.
+    /// This corresponds to the [`AdiMotor`](motor::AdiMotor) device when configured with
+    /// `slew: true`.
     MotorSlew,
 
     /// Other device type code returned by the SDK that is currently unsupported, undocumented,
