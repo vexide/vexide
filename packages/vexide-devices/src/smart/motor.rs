@@ -574,88 +574,6 @@ impl Motor {
         Ok(())
     }
 
-    /// Returns the type of the motor.
-    ///
-    /// This does not check the hardware, it simply returns the type that the motor was created
-    /// with.
-    ///
-    /// # Examples
-    ///
-    /// Match based on motor type:
-    ///
-    /// ```
-    /// use vexide::{prelude::*, smart::motor::MotorType};
-    ///
-    /// fn print_motor_type(motor: &Motor) {
-    ///     match motor.motor_type() {
-    ///         MotorType::Exp => println!("Motor is a 5.5W EXP Smart Motor"),
-    ///         MotorType::V5 => println!("Motor is an 11W V5 Smart Motor"),
-    ///     }
-    /// }
-    /// ```
-    #[must_use]
-    pub const fn motor_type(&self) -> MotorType {
-        self.motor_type
-    }
-
-    /// Returns `true` if the motor is a 5.5W (EXP) Smart Motor.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let motor = Motor::new_exp(peripherals.port_1, Direction::Forward);
-    ///     if motor.is_exp() {
-    ///         println!("Motor is a 5.5W EXP Smart Motor");
-    ///     }
-    /// }
-    /// ```
-    #[must_use]
-    pub const fn is_exp(&self) -> bool {
-        self.motor_type.is_exp()
-    }
-
-    /// Returns `true` if the motor is an 11W (V5) Smart Motor.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let motor = Motor::new(peripherals.port_1, Gearset::Red, Direction::Forward);
-    ///     if motor.is_v5() {
-    ///         println!("Motor is an 11W V5 Smart Motor");
-    ///     }
-    /// }
-    /// ```
-    #[must_use]
-    pub const fn is_v5(&self) -> bool {
-        self.motor_type.is_v5()
-    }
-
-    /// Returns the maximum voltage for the motor based off of its [motor type](Motor::motor_type).
-    ///
-    /// # Examples
-    ///
-    /// Run a motor at max speed, agnostic of its type:
-    ///
-    /// ```no_run
-    /// use vexide::prelude::*;
-    /// use vexide::smart::PortError;
-    ///
-    /// fn run_motor_at_max_speed(motor: &mut Motor) -> Result<(), PortError> {
-    ///     motor.set_voltage(motor.max_voltage())
-    /// }
-    #[must_use]
-    pub const fn max_voltage(&self) -> f64 {
-        self.motor_type.max_voltage()
-    }
-
     /// Returns the [`Direction`] of this motor.
     ///
     /// # Errors
@@ -1234,6 +1152,88 @@ impl Motor {
         }
 
         Ok(())
+    }
+
+    /// Returns the type of the motor.
+    ///
+    /// This does not check the hardware, it simply returns the type that the motor was created
+    /// with.
+    ///
+    /// # Examples
+    ///
+    /// Match based on motor type:
+    ///
+    /// ```
+    /// use vexide::{prelude::*, smart::motor::MotorType};
+    ///
+    /// fn print_motor_type(motor: &Motor) {
+    ///     match motor.motor_type() {
+    ///         MotorType::Exp => println!("Motor is a 5.5W EXP Smart Motor"),
+    ///         MotorType::V5 => println!("Motor is an 11W V5 Smart Motor"),
+    ///     }
+    /// }
+    /// ```
+    #[must_use]
+    pub const fn motor_type(&self) -> MotorType {
+        self.motor_type
+    }
+
+    /// Returns `true` if the motor is a 5.5W (EXP) Smart Motor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new_exp(peripherals.port_1, Direction::Forward);
+    ///     if motor.is_exp() {
+    ///         println!("Motor is a 5.5W EXP Smart Motor");
+    ///     }
+    /// }
+    /// ```
+    #[must_use]
+    pub const fn is_exp(&self) -> bool {
+        self.motor_type.is_exp()
+    }
+
+    /// Returns `true` if the motor is an 11W (V5) Smart Motor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let motor = Motor::new(peripherals.port_1, Gearset::Red, Direction::Forward);
+    ///     if motor.is_v5() {
+    ///         println!("Motor is an 11W V5 Smart Motor");
+    ///     }
+    /// }
+    /// ```
+    #[must_use]
+    pub const fn is_v5(&self) -> bool {
+        self.motor_type.is_v5()
+    }
+
+    /// Returns the maximum voltage for the motor based off of its [motor type](Motor::motor_type).
+    ///
+    /// # Examples
+    ///
+    /// Run a motor at max speed, agnostic of its type:
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    /// use vexide::smart::PortError;
+    ///
+    /// fn run_motor_at_max_speed(motor: &mut Motor) -> Result<(), PortError> {
+    ///     motor.set_voltage(motor.max_voltage())
+    /// }
+    #[must_use]
+    pub const fn max_voltage(&self) -> f64 {
+        self.motor_type.max_voltage()
     }
 
     /// Returns the internal temperature recorded by the motor in increments of 5 °C.
