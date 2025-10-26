@@ -76,7 +76,7 @@ pub fn sleep(duration: Duration) -> Sleep {
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use std::time::{Duration, Instant};
 ///
 /// use vexide::prelude::*;
@@ -84,9 +84,9 @@ pub fn sleep(duration: Duration) -> Sleep {
 /// #[vexide::main]
 /// async fn main(_peripherals: Peripherals) {
 ///     let now = Instant::now();
-///     let deadline = now + Duration::from_secs(2); // 5 minutes in the future
+///     let deadline = now + Duration::from_secs(2); // 2 seconds in the future
 ///
-///     println!("See you in 5 minutes.");
+///     println!("See you in 2 seconds.");
 ///     sleep_until(deadline).await;
 ///     println!("Hello again!");
 /// }
