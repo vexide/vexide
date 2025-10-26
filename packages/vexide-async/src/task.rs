@@ -158,9 +158,6 @@
 //!         sleep(Duration::from_secs(2)).await;
 //!     }
 //! });
-//!
-//! task_1.await;
-//! task_2.await;
 //! # }
 //! ```
 //!
