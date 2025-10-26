@@ -3,25 +3,6 @@
 Thanks for taking the time to help this project improve! Your contributions are
 helpful and welcome.
 
-## Table of Contents
-
-- [Contributing to vexide](#contributing-to-vexide)
-  - [Table of Contents](#table-of-contents)
-  - [I have a question!](#i-have-a-question)
-  - [Ways to contribute](#ways-to-contribute)
-    - [Reporting a problem](#reporting-a-problem)
-      - [If you find an issue that describes the same problem](#if-you-find-an-issue-that-describes-the-same-problem)
-      - [Reporting a small problem](#reporting-a-small-problem)
-      - [Writing and submitting your report](#writing-and-submitting-your-report)
-    - [Suggesting features](#suggesting-features)
-      - [Writing and submitting your suggestion](#writing-and-submitting-your-suggestion)
-    - [Contributing code](#contributing-code)
-      - [Code styleguide](#code-styleguide)
-      - [Committing \& commit messages](#committing--commit-messages)
-      - [Changelog](#changelog)
-      - [Pull requests](#pull-requests)
-  - [Acknowledgements](#acknowledgements)
-
 ## I have a question!
 
 If you simply have a question about vexide or need help using it, the best way you can
