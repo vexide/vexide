@@ -75,6 +75,7 @@
 //! # #[vexide::main]
 //! # async fn main(_peripherals: vexide::peripherals::Peripherals) {
 //! use std::time::Duration;
+//!
 //! use vexide::{task, time::sleep};
 //!
 //! {
@@ -90,8 +91,8 @@
 //! ```
 //!
 //! If a task is meant to run forever and must outlive the scope it was spawned in, you can
-//! [`detach`] it. This lets the task run in the background beyond its current scope. By doing this,
-//! we lose our [`Task`] handle and therefore the ability to `await` the task's output.
+//! [`detach`] it. This lets the task run in the background beyond its current scope. When we
+//! `detach` a task, we lose its [`Task`] handle and therefore have no way to `await` its output.
 //!
 //! [`detach`]: Task::detach
 //!
@@ -99,15 +100,20 @@
 //! # #[vexide::main]
 //! # async fn main(_peripherals: vexide::peripherals::Peripherals) {
 //! use std::time::Duration;
+//!
 //! use vexide::{task, time::sleep};
 //!
-//! task::spawn(async {
-//!     loop {
-//!         println!("Hiiiii :3");
-//!         sleep(Duration::from_secs(1)).await;
-//!     }
-//! })
-//! .detach();
+//! {
+//!     let task = task::spawn(async {
+//!         loop {
+//!             println!("Hiiiii :3");
+//!             sleep(Duration::from_secs(1)).await;
+//!         }
+//!     });
+//!
+//!     // Run it forever, even after it leaves scope.
+//!     task.detach();
+//! }
 //! # }
 //! ```
 //!
@@ -120,6 +126,7 @@
 //! which gives us both interior mutability and multiple owners. By wrapping our shared state in
 //! `Rc<RefCell<T>>`, we can clone a smart pointer to it across as many tasks as we want.
 //!
+//! [`Rc`]: std::rc::Rc
 //! [`RefCell`]: std::cell::RefCell
 //!
 //! ```no_run
