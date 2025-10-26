@@ -10,7 +10,6 @@ async fn main(peripherals: Peripherals) {
     let mut right_motor = Motor::new(peripherals.port_10, Gearset::Green, Direction::Forward);
 
     // Create a new inertial sensor (IMU) on Smart Port 6.
-    // We don't have to handle a result because this constructor is infallible.
     let mut imu = InertialSensor::new(peripherals.port_6);
     // Calibrate the IMU.
     imu.calibrate().await.unwrap();
