@@ -1,4 +1,4 @@
-//! Global heap allocator.
+//! Global heap memory allocator.
 //!
 //! This module provide's vexide's `#[global_allocator]`, which is implemented using the `talc`
 //! crate. This allocator is preferred over the default `dlmalloc` allocator provided by libstd

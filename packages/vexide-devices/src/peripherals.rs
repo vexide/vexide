@@ -1,4 +1,4 @@
-//! Peripheral Access
+//! Access to a Brain's peripherals.
 //!
 //! This module is the gateway to all of your Brain’s available I/O — ports, hardware, and devices.
 //! If you want to create a device like a sensor or motor or read from a controller, you are going
