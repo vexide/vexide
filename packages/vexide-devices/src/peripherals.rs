@@ -70,7 +70,7 @@
 //!
 //! The system still ensures only one device can use a port at a time, but handles the bookkeeping
 //! at runtime rather than compile time. This trades a small performance cost for increased
-//! flexibility, but is generally preferable to use the static [`Peripherals`] struct at runtime.
+//! flexibility. It preferable to use the static [`Peripherals`] struct where possible.
 
 use core::sync::atomic::AtomicBool;
 
@@ -83,7 +83,7 @@ use crate::{
 
 static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 
-/// Singleton Peripheral Access
+/// The peripherals on a V5 Brain.
 ///
 /// Contains an instance of a Brain’s available I/O, including ports, hardware, and devices.
 ///
@@ -100,73 +100,73 @@ static PERIPHERALS_TAKEN: AtomicBool = AtomicBool::new(false);
 /// possible.
 #[derive(Debug)]
 pub struct Peripherals {
-    /// Brain display
+    /// Brain display and touchscreen.
     pub display: Display,
 
-    /// Primary ("Master") Controller
+    /// Primary ("Master") controller.
     pub primary_controller: Controller,
 
-    /// Partner Controller
+    /// Partner controller.
     pub partner_controller: Controller,
 
-    /// Smart Port 1 on the Brain
+    /// Smart Port 1 on the Brain.
     pub port_1: SmartPort,
-    /// Smart Port 2 on the Brain
+    /// Smart Port 2 on the Brain.
     pub port_2: SmartPort,
-    /// Smart Port 3 on the Brain
+    /// Smart Port 3 on the Brain.
     pub port_3: SmartPort,
-    /// Smart Port 4 on the Brain
+    /// Smart Port 4 on the Brain.
     pub port_4: SmartPort,
-    /// Smart Port 5 on the Brain
+    /// Smart Port 5 on the Brain.
     pub port_5: SmartPort,
-    /// Smart Port 6 on the Brain
+    /// Smart Port 6 on the Brain.
     pub port_6: SmartPort,
-    /// Smart Port 7 on the Brain
+    /// Smart Port 7 on the Brain.
     pub port_7: SmartPort,
-    /// Smart Port 8 on the Brain
+    /// Smart Port 8 on the Brain.
     pub port_8: SmartPort,
-    /// Smart Port 9 on the Brain
+    /// Smart Port 9 on the Brain.
     pub port_9: SmartPort,
-    /// Smart Port 10 on the Brain
+    /// Smart Port 10 on the Brain.
     pub port_10: SmartPort,
-    /// Smart Port 11 on the Brain
+    /// Smart Port 11 on the Brain.
     pub port_11: SmartPort,
-    /// Smart Port 12 on the Brain
+    /// Smart Port 12 on the Brain.
     pub port_12: SmartPort,
-    /// Smart Port 13 on the Brain
+    /// Smart Port 13 on the Brain.
     pub port_13: SmartPort,
-    /// Smart Port 14 on the Brain
+    /// Smart Port 14 on the Brain.
     pub port_14: SmartPort,
-    /// Smart Port 15 on the Brain
+    /// Smart Port 15 on the Brain.
     pub port_15: SmartPort,
-    /// Smart Port 16 on the Brain
+    /// Smart Port 16 on the Brain.
     pub port_16: SmartPort,
-    /// Smart Port 17 on the Brain
+    /// Smart Port 17 on the Brain.
     pub port_17: SmartPort,
-    /// Smart Port 18 on the Brain
+    /// Smart Port 18 on the Brain.
     pub port_18: SmartPort,
-    /// Smart Port 19 on the Brain
+    /// Smart Port 19 on the Brain.
     pub port_19: SmartPort,
-    /// Smart Port 20 on the Brain
+    /// Smart Port 20 on the Brain.
     pub port_20: SmartPort,
-    /// Smart Port 21 on the Brain
+    /// Smart Port 21 on the Brain.
     pub port_21: SmartPort,
 
-    /// Adi port A on the Brain.
+    /// ADI port A on the Brain.
     pub adi_a: AdiPort,
-    /// Adi port B on the Brain.
+    /// ADI port B on the Brain.
     pub adi_b: AdiPort,
-    /// Adi port C on the Brain.
+    /// ADI port C on the Brain.
     pub adi_c: AdiPort,
-    /// Adi port D on the Brain.
+    /// ADI port D on the Brain.
     pub adi_d: AdiPort,
-    /// Adi port E on the Brain.
+    /// ADI port E on the Brain.
     pub adi_e: AdiPort,
-    /// Adi port F on the Brain.
+    /// ADI port F on the Brain.
     pub adi_f: AdiPort,
-    /// Adi port G on the Brain.
+    /// ADI port G on the Brain.
     pub adi_g: AdiPort,
-    /// Adi port H on the Brain.
+    /// ADI port H on the Brain.
     pub adi_h: AdiPort,
 }
 
@@ -245,7 +245,7 @@ impl Peripherals {
     }
 }
 
-/// Runtime-enforced Singleton Peripheral Access
+/// Manages access to a V5 Brain's peripherals at runtime.
 ///
 /// A flexible alternative to the statically checked [`Peripherals`] that instead verifies
 /// singleton access to ports and peripherals at *runtime*, allowing you to move this struct around
@@ -260,7 +260,7 @@ impl Peripherals {
 ///
 /// The system still ensures only one device can use a port at a time, but handles the bookkeeping
 /// at runtime rather than compile time. This trades a small performance cost for increased
-/// flexibility, but is generally preferable to use the static [`Peripherals`] struct at runtime.
+/// flexibility. It preferable to use the static [`Peripherals`] struct where possible.
 #[derive(Debug)]
 pub struct DynamicPeripherals {
     display: Option<Display>,
