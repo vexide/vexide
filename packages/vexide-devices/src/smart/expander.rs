@@ -49,17 +49,17 @@ pub struct AdiExpander {
     pub adi_a: AdiPort,
     /// ADI port B on the expander.
     pub adi_b: AdiPort,
-    /// ADI Port C on the expander.
+    /// ADI port C on the expander.
     pub adi_c: AdiPort,
-    /// ADI Port D on the expander.
+    /// ADI port D on the expander.
     pub adi_d: AdiPort,
-    /// ADI Port E on the expander.
+    /// ADI port E on the expander.
     pub adi_e: AdiPort,
-    /// ADI Port F on the expander.
+    /// ADI port F on the expander.
     pub adi_f: AdiPort,
-    /// ADI Port G on the expander.
+    /// ADI port G on the expander.
     pub adi_g: AdiPort,
-    /// ADI Port H on the expander.
+    /// ADI port H on the expander.
     pub adi_h: AdiPort,
 
     port: SmartPort,
