@@ -1,4 +1,4 @@
-//! Asynchronous tasks.
+//! Asynchronous multitasking.
 
 use std::{future::Future, rc::Rc};
 

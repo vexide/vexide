@@ -31,8 +31,10 @@ pub fn user_uptime() -> Duration {
 
 /// A timestamp recorded by the Brain's low-resolution private timer.
 ///
-/// This type is not in sync with [`Instant`](std::time::Instant), which instead uses the brain's
-/// global high-resolution timer.
+/// This type is not in sync with [`Instant`], which instead uses the brain's global high-resolution
+/// timer.
+///
+/// [`Instant`]: https://doc.rust-lang.org/stable/std/time/struct.Instant.html
 ///
 /// # Precision
 ///
@@ -65,7 +67,8 @@ impl LowResolutionTime {
         }
     }
 
-    /// Creates a new timestamp at the provided number of milliseconds since [`EPOCH`].
+    /// Creates a new timestamp at the provided number of milliseconds since
+    /// [`LowResolutionTime::EPOCH`].
     ///
     /// # Use this sparingly.
     ///

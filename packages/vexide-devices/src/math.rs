@@ -1,4 +1,4 @@
-//! Math-related Container Types
+//! Math-related container types.
 //!
 //! This module re-exports several math-related types from the [`mint`] crate for usage in vexide's
 //! device APIs.
