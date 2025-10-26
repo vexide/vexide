@@ -80,168 +80,6 @@ impl OpticalSensor {
         }
     }
 
-    /// Returns the intensity/brightness of the sensor's LED indicator as a number from [0.0-1.0].
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = OpticalSensor::new(peripherals.port_1);
-    ///
-    ///     if let Ok(brightness) = sensor.led_brightness() {
-    ///         println!("LED brightness: {:.1}%", brightness * 100.0);
-    ///     }
-    /// }
-    /// ```
-    pub fn led_brightness(&self) -> Result<f64, PortError> {
-        self.validate_port()?;
-
-        Ok(f64::from(unsafe { vexDeviceOpticalLedPwmGet(self.device) }) / 100.0)
-    }
-
-    /// Set the intensity of (intensity/brightness) of the sensor's LED indicator.
-    ///
-    /// Intensity is expressed as a number from [0.0, 1.0].
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = OpticalSensor::new(peripherals.port_1);
-    ///
-    ///     // Blink LED 3 times
-    ///     for _ in 0..3 {
-    ///         // Turn LED on
-    ///         if let Err(e) = sensor.set_led_brightness(1.0) {
-    ///             println!("Failed to turn LED on: {:?}", e);
-    ///         }
-    ///
-    ///         sleep(Duration::from_millis(250)).await;
-    ///
-    ///         // Turn LED off
-    ///         if let Err(e) = sensor.set_led_brightness(0.0) {
-    ///             println!("Failed to turn LED off: {:?}", e);
-    ///         }
-    ///
-    ///         sleep(Duration::from_millis(250)).await;
-    ///     }
-    /// }
-    /// ```
-    pub fn set_led_brightness(&mut self, brightness: f64) -> Result<(), PortError> {
-        self.validate_port()?;
-
-        unsafe { vexDeviceOpticalLedPwmSet(self.device, (brightness * 100.0) as i32) }
-
-        Ok(())
-    }
-
-    /// Returns integration time of the optical sensor in milliseconds, with minimum time being 3ms
-    /// and the maximum time being 712ms.
-    ///
-    /// The default integration time for the sensor is 103mS, unless otherwise set with
-    /// [`OpticalSensor::set_integration_time`].
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = OpticalSensor::new(peripherals.port_1);
-    ///
-    ///     // Set integration time to 50 milliseconds.
-    ///     _ = sensor.set_integration_time(Duration::from_millis(50));
-    ///
-    ///     // Log out the new integration time.
-    ///     if let Ok(time) = sensor.integration_time() {
-    ///         println!("Integration time: {:?}", time);
-    ///     }
-    /// }
-    /// ```
-    pub fn integration_time(&self) -> Result<Duration, PortError> {
-        self.validate_port()?;
-
-        Ok(Duration::from_millis(
-            unsafe { vexDeviceOpticalIntegrationTimeGet(self.device) } as u64,
-        ))
-    }
-
-    /// Set the integration time of the optical sensor.
-    ///
-    /// Lower integration time results in faster update rates with lower accuracy due to less
-    /// available light being read by the sensor.
-    ///
-    /// The `time` value must be a [`Duration`] between 3 and 712 milliseconds. If the integration
-    /// time is out of this range, it will be clamped to fit inside it. See
-    /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for more information.
-    ///
-    /// The default integration time for the sensor is 103mS, unless otherwise set.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = OpticalSensor::new(peripherals.port_1);
-    ///
-    ///     // Set integration time to 50 milliseconds.
-    ///     _ = sensor.set_integration_time(Duration::from_millis(50));
-    /// }
-    /// ```
-    pub fn set_integration_time(&mut self, time: Duration) -> Result<(), PortError> {
-        self.validate_port()?;
-
-        // `time_ms` is clamped to a range that will not cause precision loss.
-        #[allow(clippy::cast_precision_loss)]
-        let time_ms = time.as_millis().clamp(
-            Self::MIN_INTEGRATION_TIME.as_millis(),
-            Self::MAX_INTEGRATION_TIME.as_millis(),
-        ) as f64;
-
-        unsafe { vexDeviceOpticalIntegrationTimeSet(self.device, time_ms) }
-
-        Ok(())
-    }
-
     /// Returns the detected color's hue.
     ///
     /// Hue has a range of `0` to `359.999`.
@@ -517,6 +355,168 @@ impl OpticalSensor {
             count: gesture.count,
             time: LowResolutionTime::from_millis_since_epoch(gesture.time),
         }))
+    }
+
+    /// Returns the intensity/brightness of the sensor's LED indicator as a number from [0.0-1.0].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     if let Ok(brightness) = sensor.led_brightness() {
+    ///         println!("LED brightness: {:.1}%", brightness * 100.0);
+    ///     }
+    /// }
+    /// ```
+    pub fn led_brightness(&self) -> Result<f64, PortError> {
+        self.validate_port()?;
+
+        Ok(f64::from(unsafe { vexDeviceOpticalLedPwmGet(self.device) }) / 100.0)
+    }
+
+    /// Set the intensity of (intensity/brightness) of the sensor's LED indicator.
+    ///
+    /// Intensity is expressed as a number from [0.0, 1.0].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     // Blink LED 3 times
+    ///     for _ in 0..3 {
+    ///         // Turn LED on
+    ///         if let Err(e) = sensor.set_led_brightness(1.0) {
+    ///             println!("Failed to turn LED on: {:?}", e);
+    ///         }
+    ///
+    ///         sleep(Duration::from_millis(250)).await;
+    ///
+    ///         // Turn LED off
+    ///         if let Err(e) = sensor.set_led_brightness(0.0) {
+    ///             println!("Failed to turn LED off: {:?}", e);
+    ///         }
+    ///
+    ///         sleep(Duration::from_millis(250)).await;
+    ///     }
+    /// }
+    /// ```
+    pub fn set_led_brightness(&mut self, brightness: f64) -> Result<(), PortError> {
+        self.validate_port()?;
+
+        unsafe { vexDeviceOpticalLedPwmSet(self.device, (brightness * 100.0) as i32) }
+
+        Ok(())
+    }
+
+    /// Returns integration time of the optical sensor in milliseconds, with minimum time being 3ms
+    /// and the maximum time being 712ms.
+    ///
+    /// The default integration time for the sensor is 103mS, unless otherwise set with
+    /// [`OpticalSensor::set_integration_time`].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     // Set integration time to 50 milliseconds.
+    ///     _ = sensor.set_integration_time(Duration::from_millis(50));
+    ///
+    ///     // Log out the new integration time.
+    ///     if let Ok(time) = sensor.integration_time() {
+    ///         println!("Integration time: {:?}", time);
+    ///     }
+    /// }
+    /// ```
+    pub fn integration_time(&self) -> Result<Duration, PortError> {
+        self.validate_port()?;
+
+        Ok(Duration::from_millis(
+            unsafe { vexDeviceOpticalIntegrationTimeGet(self.device) } as u64,
+        ))
+    }
+
+    /// Set the integration time of the optical sensor.
+    ///
+    /// Lower integration time results in faster update rates with lower accuracy due to less
+    /// available light being read by the sensor.
+    ///
+    /// The `time` value must be a [`Duration`] between 3 and 712 milliseconds. If the integration
+    /// time is out of this range, it will be clamped to fit inside it. See
+    /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for more information.
+    ///
+    /// The default integration time for the sensor is 103mS, unless otherwise set.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = OpticalSensor::new(peripherals.port_1);
+    ///
+    ///     // Set integration time to 50 milliseconds.
+    ///     _ = sensor.set_integration_time(Duration::from_millis(50));
+    /// }
+    /// ```
+    pub fn set_integration_time(&mut self, time: Duration) -> Result<(), PortError> {
+        self.validate_port()?;
+
+        // `time_ms` is clamped to a range that will not cause precision loss.
+        #[allow(clippy::cast_precision_loss)]
+        let time_ms = time.as_millis().clamp(
+            Self::MIN_INTEGRATION_TIME.as_millis(),
+            Self::MAX_INTEGRATION_TIME.as_millis(),
+        ) as f64;
+
+        unsafe { vexDeviceOpticalIntegrationTimeSet(self.device, time_ms) }
+
+        Ok(())
     }
 
     /// Returns the internal status code of the optical sensor.
