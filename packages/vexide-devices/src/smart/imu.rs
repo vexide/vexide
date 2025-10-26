@@ -462,6 +462,8 @@ impl InertialSensor {
     /// Returns the Euler angles (pitch, yaw, roll) in radians representing the Inertial Sensor’s
     /// orientation.
     ///
+    /// Euler angles are normalized to [`Angle::HALF_TURN`], meaning they range from (-180°, 180°].
+    ///
     /// # Errors
     ///
     /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected

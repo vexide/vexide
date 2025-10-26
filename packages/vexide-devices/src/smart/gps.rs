@@ -571,6 +571,8 @@ impl GpsSensor {
 
     /// Returns the Euler angles (pitch, yaw, roll) representing the GPS's orientation.
     ///
+    /// Euler angles are normalized to [`Angle::HALF_TURN`], meaning they range from (-180°, 180°].
+    ///
     /// # Errors
     ///
     /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
