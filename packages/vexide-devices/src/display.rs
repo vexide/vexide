@@ -63,6 +63,15 @@ impl core::fmt::Write for Display {
     }
 }
 
+#[repr(C, align(4))]
+#[derive(Clone, Copy, Default)]
+pub struct Argb {
+    pub a: u8,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+    
 /// A type implementing this trait can draw a filled shape to the display.
 pub trait Fill {
     /// Draw a filled shape to the display.
@@ -817,15 +826,13 @@ impl Display {
     ///
     /// This function panics if `buf` does not have the correct number of bytes to fill the
     /// specified region.
-    pub fn draw_buffer<T, I>(&mut self, region: Rect, buf: T)
-    where
-        T: IntoIterator<Item = I>,
-        I: Into<Rgb<u8>>,
-    {
-        let mut raw_buf = buf
-            .into_iter()
-            .map(|i| i.into().into_raw())
-            .collect::<Vec<_>>();
+    pub fn draw_buffer(&mut self, region: Rect, buf: &[Argb]) {
+        const _: () = assert!(core::mem::size_of::<Argb>() == core::mem::size_of::<u32>());
+        const _: () = assert!(core::mem::align_of::<Argb>() == core::mem::align_of::<u32>());
+        // SAFETY: the Argb type has the same size/alignment as u32
+        let mut raw_buf = unsafe {
+            core::slice::from_raw_parts(buf.as_ptr().cast::<u32>(), buf.len())
+        };
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.y - region.start.y) as u32
             * (region.end.x - region.start.x) as u32) as usize;
@@ -858,7 +865,7 @@ impl Display {
         let mut touch_status: V5_TouchStatus = unsafe { mem::zeroed() };
 
         unsafe {
-            vexTouchDataGet(addr_of_mut!(touch_status));
+            vexTouchDataGet(&raw mut touch_status);
         }
 
         TouchEvent {
