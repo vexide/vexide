@@ -672,12 +672,12 @@ impl Controller {
     ///     let mut controller = peripherals.primary_controller;
     ///
     ///     // Write to line 1
-    ///     _ = controller.screen.set_text("Hello, world!", 1, 1).await;
+    ///     _ = controller.set_text("Hello, world!", 1, 1).await;
     ///
     ///     sleep(Duration::from_millis(500)).await;
     ///
     ///     // Clear line 1
-    ///     _ = controller.screen.clear_line(1).await;
+    ///     _ = controller.clear_line(1).await;
     /// }
     /// ```
     #[must_use]
@@ -715,12 +715,12 @@ impl Controller {
     ///     let mut controller = peripherals.primary_controller;
     ///
     ///     // Write to line 1
-    ///     _ = controller.screen.set_text("Hello, world!", 1, 1).await;
+    ///     _ = controller.set_text("Hello, world!", 1, 1).await;
     ///
     ///     sleep(Duration::from_millis(500)).await;
     ///
     ///     // Clear line 1
-    ///     _ = controller.screen.try_clear_line(1);
+    ///     _ = controller.try_clear_line(1);
     /// }
     /// ```
     pub fn try_clear_line(&mut self, line: u8) -> Result<(), ControllerError> {
@@ -757,7 +757,7 @@ impl Controller {
     ///     let mut controller = peripherals.primary_controller;
     ///
     ///     // Remove the default widget on the controller screen that displays match time.
-    ///     _ = controller.screen.clear_screen().await;
+    ///     _ = controller.clear_screen().await;
     /// }
     /// ```
     #[must_use]
@@ -793,7 +793,7 @@ impl Controller {
     ///     let mut controller = peripherals.primary_controller;
     ///
     ///     // Remove the default widget on the controller screen that displays match time.
-    ///     _ = controller.screen.try_clear_screen();
+    ///     _ = controller.try_clear_screen();
     /// }
     /// ```
     pub fn try_clear_screen(&mut self) -> Result<(), ControllerError> {
@@ -838,8 +838,8 @@ impl Controller {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
-    ///     _ = controller.screen.set_text("Hello, world!", 1, 1).await;
-    ///     _ = controller.screen.set_text("Hello, world!", 2, 1).await;
+    ///     _ = controller.set_text("Hello, world!", 1, 1).await;
+    ///     _ = controller.set_text("Hello, world!", 2, 1).await;
     /// }
     /// ```
     #[must_use]
@@ -887,7 +887,7 @@ impl Controller {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut controller = peripherals.primary_controller;
     ///
-    ///     _ = controller.screen.try_set_text("Hello, world!", 1, 1);
+    ///     _ = controller.try_set_text("Hello, world!", 1, 1);
     /// }
     /// ```
     pub fn try_set_text(
