@@ -53,13 +53,15 @@ impl<const N: usize> AdiAddrLed<N> {
 
     /// Initialize an LED strip with a given length on an ADI port.
     #[must_use]
-    pub const fn new(port: AdiPort) -> Self {
+    pub fn new(port: AdiPort) -> Self {
         const {
             assert!(
                 N <= Self::MAX_LENGTH,
                 "AdiAddrLed strip size exceeded MAX_LENGTH (64)"
             );
         }
+
+        port.configure(AdiDeviceType::DigitalOut);
 
         Self { port }
     }
