@@ -365,6 +365,7 @@ Before releasing:
 - Removed `LinkError::Nul`. (#240) (**Breaking Change**)
 - Removed `LinkError::Port`, because it was broken. VEXlink will no longer perform port validation. (#243) (**Breaking Change**)
 - Removed the `TextSize` enum. Use the associated constants on the new `FontSize` struct instead. (#248) (**Breaking Change**)
+- Removed `ControllerScreen` and moved screen-related methods directly to `Controller`. (#394) (**Breaking Change**)
 
 ### New Contributors
 
