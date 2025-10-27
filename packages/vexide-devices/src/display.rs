@@ -71,7 +71,7 @@ pub struct Argb {
     pub g: u8,
     pub b: u8,
 }
-    
+
 /// A type implementing this trait can draw a filled shape to the display.
 pub trait Fill {
     /// Draw a filled shape to the display.
@@ -829,15 +829,14 @@ impl Display {
     pub fn draw_buffer(&mut self, region: Rect, buf: &[Argb]) {
         const _: () = assert!(core::mem::size_of::<Argb>() == core::mem::size_of::<u32>());
         const _: () = assert!(core::mem::align_of::<Argb>() == core::mem::align_of::<u32>());
-        // SAFETY: the Argb type has the same size/alignment as u32
-        let mut raw_buf = unsafe {
-            core::slice::from_raw_parts(buf.as_ptr().cast::<u32>(), buf.len())
-        };
+        // SAFETY: the Argb type has the same size/alignment as u32, and the buffer will
+        // not be mutated through raw_buf
+        let raw_buf = buf.as_ptr() as *mut u32;
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.y - region.start.y) as u32
             * (region.end.x - region.start.x) as u32) as usize;
 
-        let buffer_size = raw_buf.len();
+        let buffer_size = buf.len();
         assert_eq!(
             buffer_size, expected_size,
             "The given buffer of colors was wrong size to fill the specified area: expected {expected_size} bytes, got {buffer_size}."
@@ -850,8 +849,8 @@ impl Display {
                 i32::from(region.start.y + Self::HEADER_HEIGHT),
                 i32::from(region.end.x),
                 i32::from(region.end.y + Self::HEADER_HEIGHT),
-                raw_buf.as_mut_ptr(),
-                i32::from(region.end.x - region.start.x),
+                raw_buf,
+                i32::from(region.end.x - region.start.x + 1),
             );
         }
     }
