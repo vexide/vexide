@@ -6,7 +6,7 @@
 //! can be used to draw the outlines of shapes.
 
 use alloc::{ffi::CString, string::String};
-use core::{ffi::CStr, mem, time::Duration};
+use core::{ffi::CStr, mem, ops::FnOnce, time::Duration};
 
 use snafu::{Snafu, ensure};
 use vex_sdk::{
@@ -291,6 +291,14 @@ impl Font {
             vexDisplayTextSize(self.size.numerator, self.size.denominator);
         }
     }
+
+    /// Returns the value of a closure with the given font applied to the display.
+    fn with_font<T>(self, func: impl FnOnce() -> T) -> T {
+        self.apply();
+        let result = func();
+        Font::default().apply();
+        result
+    }
 }
 
 /// A fractional font scaling factor.
@@ -521,8 +529,7 @@ impl Text {
     #[must_use]
     pub fn height(&self) -> u16 {
         unsafe {
-            self.font.apply();
-            vexDisplayStringHeightGet(self.text.as_ptr()) as _
+            self.font.with_font(|| vexDisplayStringHeightGet(self.text.as_ptr()) as _)
         }
     }
 
@@ -530,8 +537,7 @@ impl Text {
     #[must_use]
     pub fn width(&self) -> u16 {
         unsafe {
-            self.font.apply();
-            vexDisplayStringWidthGet(self.text.as_ptr()) as _
+            self.font.with_font(|| vexDisplayStringWidthGet(self.text.as_ptr()) as _)
         }
     }
 }
@@ -571,14 +577,15 @@ impl Text {
             if bg_is_some {
                 vexDisplayBackgroundColor(bg_color.unwrap().into_raw());
             }
-            self.font.apply();
-            vexDisplayPrintf(
-                i32::from(x),
-                i32::from(y + Display::HEADER_HEIGHT),
-                i32::from(bg_is_some),
-                c"%s".as_ptr(),
-                self.text.as_ptr(),
-            );
+            self.font.with_font(|| {
+                vexDisplayPrintf(
+                    i32::from(x),
+                    i32::from(y + Display::HEADER_HEIGHT),
+                    i32::from(bg_is_some),
+                    c"%s".as_ptr(),
+                    self.text.as_ptr(),
+                );
+            });
         }
     }
 }
