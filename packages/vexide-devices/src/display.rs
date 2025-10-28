@@ -510,11 +510,11 @@ impl From<String> for CowCStr {
     }
 }
 
-impl Borrow<CStr> for CowCStr {
+impl alloc::borrow::Borrow<CStr> for CowCStr {
     fn borrow(&self) -> &CStr {
         match self {
-            Borrowed(c_str) => c_str,
-            Owned(c_str) => &c_str,
+            CowCStr::Borrowed(c_str) => c_str,
+            CowCStr::Owned(c_str) => &c_str,
         }
     }
 }
