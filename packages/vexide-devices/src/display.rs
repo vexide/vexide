@@ -480,6 +480,45 @@ pub enum VAlign {
     Bottom,
 }
 
+#[derive(Clone)]
+pub enum CowCStr {
+    Borrowed(&'static CStr),
+    Owned(CString)
+}
+
+impl From<&str> for CowCStr {
+    fn from(s: &str) -> Self {
+        CowCStr::Owned(CString::new(s).unwrap())
+    }
+}
+
+impl From<&'static CStr> for CowCStr {
+    fn from(s: &'static CStr) -> Self {
+        CowCStr::Borrowed(s)
+    }
+}
+
+impl From<CString> for CowCStr {
+    fn from(s: CString) -> Self {
+        CowCStr::Owned(s)
+    }
+}
+
+impl From<String> for CowCStr {
+    fn from(s: String) -> Self {
+        CowCStr::Owned(CString::new(s).unwrap())
+    }
+}
+
+impl Borrow<CStr> for CowCStr {
+    fn borrow(&self) -> &CStr {
+        match self {
+            Borrowed(c_str) => c_str,
+            Owned(c_str) => &c_str,
+        }
+    }
+}
+
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text {
