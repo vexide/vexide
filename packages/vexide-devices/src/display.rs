@@ -480,46 +480,13 @@ pub enum VAlign {
     Bottom,
 }
 
-#[derive(Clone)]
-pub enum CowCStr {
-    Borrowed(&'static CStr),
-    Owned(CString)
-}
-
-impl From<&'static CStr> for CowCStr {
-    fn from(s: &'static CStr) -> Self {
-        CowCStr::Borrowed(s)
-    }
-}
-
-impl From<CString> for CowCStr {
-    fn from(s: CString) -> Self {
-        CowCStr::Owned(s)
-    }
-}
-
-impl From<String> for CowCStr {
-    fn from(s: String) -> Self {
-        CowCStr::Owned(CString::new(s).unwrap())
-    }
-}
-
-impl alloc::borrow::Borrow<CStr> for CowCStr {
-    fn borrow(&self) -> &CStr {
-        match self {
-            CowCStr::Borrowed(c_str) => c_str,
-            CowCStr::Owned(c_str) => &c_str,
-        }
-    }
-}
-
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text {
     /// Top left corner coordinates of text on the display
     pub position: Point2<i16>,
     /// C-String of the desired text to be displayed on the display
-    pub text: CowCStr,
+    pub text: CString,
     /// The font that will be used when this text is displayed
     pub font: Font,
     /// Horizontal alignment of text displayed on the display
@@ -530,20 +497,21 @@ pub struct Text {
 
 impl Text {
     /// Create a new text with a given position (defaults to top left corner alignment) and font
-    pub fn new(text: impl Into<CowCStr>, font: Font, position: impl Into<Point2<i16>>) -> Self {
+    pub fn new(text: &str, font: Font, position: impl Into<Point2<i16>>) -> Self {
         Self::new_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
 
     /// Create a new text with a given position (based on alignment) and font
     pub fn new_aligned(
-        text: impl Into<CowCStr>,
+        text: &str,
         font: Font,
         position: impl Into<Point2<i16>>,
         horizontal_align: HAlign,
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text: text.into(),
+            text: CString::new(text)
+                .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
             position: position.into(),
             font,
             horizontal_align,
