@@ -5,8 +5,8 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
-use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{ffi::CStr, mem, ptr::addr_of_mut, time::Duration};
+use alloc::{ffi::CString, string::String};
+use core::{ffi::CStr, mem, time::Duration};
 
 use snafu::{Snafu, ensure};
 use vex_sdk::{
@@ -63,12 +63,17 @@ impl core::fmt::Write for Display {
     }
 }
 
+/// A color stored in ARGB format.
 #[repr(C, align(4))]
 #[derive(Clone, Copy, Default)]
 pub struct Argb {
+    /// Alpha channel
     pub a: u8,
+    /// Red channel
     pub r: u8,
+    /// Green channel
     pub g: u8,
+    /// Blue channel
     pub b: u8,
 }
 
@@ -827,8 +832,10 @@ impl Display {
     /// This function panics if `buf` does not have the correct number of bytes to fill the
     /// specified region.
     pub fn draw_buffer(&mut self, region: Rect, buf: &[Argb]) {
-        const _: () = assert!(core::mem::size_of::<Argb>() == core::mem::size_of::<u32>());
-        const _: () = assert!(core::mem::align_of::<Argb>() == core::mem::align_of::<u32>());
+        const {
+            assert!(mem::size_of::<Argb>() == mem::size_of::<u32>());
+            assert!(mem::align_of::<Argb>() == mem::align_of::<u32>());
+        }
         // SAFETY: the Argb type has the same size/alignment as u32, and the buffer will
         // not be mutated through raw_buf
         let raw_buf = buf.as_ptr() as *mut u32;
