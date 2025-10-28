@@ -529,7 +529,8 @@ impl Text {
     #[must_use]
     pub fn height(&self) -> u16 {
         unsafe {
-            self.font.with_font(|| vexDisplayStringHeightGet(self.text.as_ptr()) as _)
+            self.font
+                .with_font(|| vexDisplayStringHeightGet(self.text.as_ptr()) as _)
         }
     }
 
@@ -537,7 +538,8 @@ impl Text {
     #[must_use]
     pub fn width(&self) -> u16 {
         unsafe {
-            self.font.with_font(|| vexDisplayStringWidthGet(self.text.as_ptr()) as _)
+            self.font
+                .with_font(|| vexDisplayStringWidthGet(self.text.as_ptr()) as _)
         }
     }
 }
