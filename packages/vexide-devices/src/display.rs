@@ -26,7 +26,7 @@ use crate::{
 ///
 /// The parameter N is the maximum length of one line + one extra charcter to
 /// hold the null terminator.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct LineBuffer<const N: usize> {
     idx: usize,
     buf: [u8; N],
@@ -75,7 +75,8 @@ pub struct Display {
 
 impl core::fmt::Write for Display {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
-        self.writer_buffer.buffered(text, |line| {
+        let writer_buffer = *self.writer_buffer;
+        writer_buffer.buffered(text, |line| {
             if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
                 self.scroll(0, Self::LINE_HEIGHT);
             } else {
@@ -91,7 +92,7 @@ impl core::fmt::Write for Display {
                 );
             }
         });
-
+        self.writer_buffer = writer_buffer;
         Ok(())
     }
 }
