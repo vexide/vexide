@@ -5,7 +5,6 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
-use alloc::{ffi::CString, string::String};
 use core::{ffi::CStr, mem, ops::FnOnce, time::Duration};
 
 use snafu::{Snafu, ensure};
@@ -516,11 +515,11 @@ pub enum VAlign {
 
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Text {
+pub struct Text<'a> {
     /// Top left corner coordinates of text on the display
     pub position: Point2<i16>,
     /// C-String of the desired text to be displayed on the display
-    pub text: CString,
+    pub text: &'a CStr,
     /// The font that will be used when this text is displayed
     pub font: Font,
     /// Horizontal alignment of text displayed on the display
@@ -529,23 +528,22 @@ pub struct Text {
     pub vertical_align: VAlign,
 }
 
-impl Text {
+impl<'a> Text<'a> {
     /// Create a new text with a given position (defaults to top left corner alignment) and font
-    pub fn new(text: &str, font: Font, position: impl Into<Point2<i16>>) -> Self {
+    pub fn new(text: &'a CStr, font: Font, position: impl Into<Point2<i16>>) -> Self {
         Self::new_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
 
     /// Create a new text with a given position (based on alignment) and font
     pub fn new_aligned(
-        text: &str,
+        text: &'a CStr,
         font: Font,
         position: impl Into<Point2<i16>>,
         horizontal_align: HAlign,
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text: CString::new(text)
-                .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
+            text,
             position: position.into(),
             font,
             horizontal_align,
