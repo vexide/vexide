@@ -67,7 +67,7 @@ impl<const N: usize> LineBuffer<N> {
 /// The physical display and touchscreen on a VEX Brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Display {
-    writer_buffer: LineBuffer<{52 + 1}>,
+    writer_buffer: LineBuffer<{ 52 + 1 }>,
     render_mode: RenderMode,
     current_line: usize,
 }
@@ -84,11 +84,7 @@ impl core::fmt::Write for Display {
             let line = CStr::from_bytes_with_nul(line).unwrap();
             unsafe {
                 vexDisplayForegroundColor(0xff_ff_ff);
-                vexDisplayString(
-                    self.current_line as i32,
-                    c"%s".as_ptr(),
-                    line.as_ptr(),
-                );
+                vexDisplayString(self.current_line as i32, c"%s".as_ptr(), line.as_ptr());
             }
         });
         self.writer_buffer = writer_buffer;
