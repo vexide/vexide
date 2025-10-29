@@ -75,7 +75,7 @@ pub struct Display {
 
 impl core::fmt::Write for Display {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
-        let writer_buffer = *self.writer_buffer;
+        let writer_buffer = self.writer_buffer;
         writer_buffer.buffered(text, |line| {
             if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
                 self.scroll(0, Self::LINE_HEIGHT);
@@ -722,7 +722,7 @@ impl Display {
         Self {
             current_line: 0,
             render_mode: RenderMode::Immediate,
-            writer_buffer: String::default(),
+            writer_buffer: Default::default(),
         }
     }
 
