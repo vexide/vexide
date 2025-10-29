@@ -822,7 +822,7 @@ impl Display {
     ///
     /// // Create a new text widget.
     /// let text = Text::new(
-    ///     "Hello, World!",
+    ///     c"Hello, World!",
     ///     Font::new(FontSize::MEDIUM, FontFamily::Monospace),
     ///     Point2 { x: 10, y: 10 },
     /// );
@@ -830,7 +830,12 @@ impl Display {
     /// // Write red text with a blue background to the display.
     /// display.draw_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
     /// ```
-    pub fn draw_text(&mut self, text: &Text<'_>, color: impl Into<Rgb<u8>>, bg_color: Option<Rgb<u8>>) {
+    pub fn draw_text(
+        &mut self,
+        text: &Text<'_>,
+        color: impl Into<Rgb<u8>>,
+        bg_color: Option<Rgb<u8>>,
+    ) {
         text.draw(self, color, bg_color);
     }
 
