@@ -89,7 +89,7 @@ impl core::fmt::Write for Display {
 
 /// A color stored in ARGB format.
 #[repr(C, align(4))]
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, bytemuck::Pod)]
 pub struct Argb {
     /// Alpha channel
     pub a: u8,
@@ -852,20 +852,12 @@ impl Display {
     /// This function panics if `buf` does not have the correct number of bytes to fill the
     /// specified region.
     pub fn draw_buffer(&mut self, region: Rect, buf: &[Argb]) {
-        const {
-            assert!(mem::size_of::<Argb>() == mem::size_of::<u32>());
-            assert!(mem::align_of::<Argb>() == mem::align_of::<u32>());
-        }
-        // SAFETY: the Argb type has the same size/alignment as u32, and the buffer will
-        // not be mutated through raw_buf
-        let raw_buf = buf.as_ptr() as *mut u32;
+        let raw_buf: &[u32] = bytemuck::must_cast_slice(buf);
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.y - region.start.y) as u32
             * (region.end.x - region.start.x) as u32) as usize;
-
-        let buffer_size = buf.len();
         assert_eq!(
-            buffer_size, expected_size,
+            buf.len(), expected_size,
             "The given buffer of colors was wrong size to fill the specified area: expected {expected_size} bytes, got {buffer_size}."
         );
 
@@ -876,7 +868,7 @@ impl Display {
                 i32::from(region.start.y + Self::HEADER_HEIGHT),
                 i32::from(region.end.x),
                 i32::from(region.end.y + Self::HEADER_HEIGHT),
-                raw_buf,
+                raw_buf.as_ptr() as *mut _,
                 i32::from(region.end.x - region.start.x + 1),
             );
         }
