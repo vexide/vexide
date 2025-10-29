@@ -22,42 +22,75 @@ use crate::{
     math::Point2,
 };
 
+/// A generic struct that implements a fixed width line buffer.
+///
+/// The parameter N is the maximum length of one line + one extra charcter to
+/// hold the null terminator.
+#[derive(Clone, Copy)]
+struct LineBuffer<const N: usize> {
+    idx: usize,
+    buf: [u8; N],
+}
+
+impl<const N: usize> Default for LineBuffer<N> {
+    fn default() -> Self {
+        LineBuffer {
+            idx: 0,
+            buf: [0; N],
+        }
+    }
+}
+
+impl<const N: usize> LineBuffer<N> {
+    fn buffered(&mut self, s: &str, mut func: impl FnMut(&[u8])) {
+        for char in s.chars().map(u32::from).map(|c| match c {
+            1..=127 => c as _,
+            _ => b'?',
+        }) {
+            if self.idx >= N - 1 || char == b'\n' {
+                self.flush_buffer(&mut func);
+            }
+            if char != b'\n' {
+                self.buf[self.idx] = char;
+                self.idx += 1;
+            }
+        }
+    }
+    fn flush_buffer(&mut self, func: &mut impl FnMut(&[u8])) {
+        debug_assert!(self.idx < N, "idx should never go above {N}");
+        if self.idx != 0 && self.idx < N {
+            func(&self.buf[0..=self.idx]);
+        }
+        *self = Default::default();
+    }
+}
+
 /// The physical display and touchscreen on a VEX Brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Display {
-    writer_buffer: String,
+    writer_buffer: LineBuffer<{52 + 1}>,
     render_mode: RenderMode,
     current_line: usize,
 }
 
 impl core::fmt::Write for Display {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
-        for character in text.chars() {
-            if character == '\n' {
-                if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
-                    self.scroll(0, Self::LINE_HEIGHT);
-                    self.flush_writer();
-                } else {
-                    self.flush_writer();
-                    self.current_line += 1;
-                }
+        self.writer_buffer.buffered(text, |line| {
+            if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
+                self.scroll(0, Self::LINE_HEIGHT);
             } else {
-                self.writer_buffer.push(character);
+                self.current_line += 1;
             }
-        }
-
-        unsafe {
-            vexDisplayForegroundColor(0xff_ff_ff);
-            vexDisplayString(
-                self.current_line as i32,
-                c"%s".as_ptr(),
-                CString::new(self.writer_buffer.clone())
-                    .expect(
-                        "CString::new encountered NUL (U+0000) byte in non-terminating position.",
-                    )
-                    .into_raw(),
-            );
-        }
+            let line = CStr::from_bytes_with_nul(line).unwrap();
+            unsafe {
+                vexDisplayForegroundColor(0xff_ff_ff);
+                vexDisplayString(
+                    self.current_line as i32,
+                    c"%s".as_ptr(),
+                    line.as_ptr(),
+                );
+            }
+        });
 
         Ok(())
     }
@@ -693,20 +726,7 @@ impl Display {
     }
 
     fn flush_writer(&mut self) {
-        unsafe {
-            vexDisplayForegroundColor(0xff_ff_ff);
-            vexDisplayString(
-                self.current_line as i32,
-                c"%s".as_ptr(),
-                CString::new(self.writer_buffer.clone())
-                    .expect(
-                        "CString::new encountered NUL (U+0000) byte in non-terminating position.",
-                    )
-                    .into_raw(),
-            );
-        }
-
-        self.writer_buffer.clear();
+        todo!();
     }
 
     /// Set the render mode for the display.
