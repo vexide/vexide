@@ -22,14 +22,14 @@ async fn main(peripherals: Peripherals) {
     // This will appear on top of the gray fill because it is called later.
     display.stroke(&rect, Rgb::new(255, 0, 255));
 
-    let text = Text::new("Nice to see you!", Font::default(), [80, 40]);
+    let text = Text::new(c"Nice to see you!", Font::default(), [80, 40]);
 
     // Draw the text on the display in cyan with a yellow background color.
     display.draw_text(&text, Rgb::new(0, 255, 255), Some(Rgb::new(255, 255, 0)));
 
     // You can use varying text sizes and fonts.
     let text = Text::new(
-        "This is vexide.",
+        c"This is vexide.",
         Font::new(FontSize::new(2, 3), FontFamily::Proportional),
         [21, 84],
     );
