@@ -576,7 +576,7 @@ impl<'a> Text<'a> {
     }
 }
 
-impl Text {
+impl Text<'_> {
     /// Write the text to the display.
     ///
     /// # Arguments
@@ -830,7 +830,7 @@ impl Display {
     /// // Write red text with a blue background to the display.
     /// display.draw_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
     /// ```
-    pub fn draw_text(&mut self, text: &Text, color: impl Into<Rgb<u8>>, bg_color: Option<Rgb<u8>>) {
+    pub fn draw_text(&mut self, text: &Text<'_>, color: impl Into<Rgb<u8>>, bg_color: Option<Rgb<u8>>) {
         text.draw(self, color, bg_color);
     }
 
