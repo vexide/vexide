@@ -89,7 +89,7 @@ impl core::fmt::Write for Display {
 
 /// A color stored in ARGB format.
 #[repr(C, align(4))]
-#[derive(Clone, Copy, Default, bytemuck::Pod)]
+#[derive(Clone, Copy, Default, bytemuck::Zeroable, bytemuck::Pod)]
 pub struct Argb {
     /// Alpha channel
     pub a: u8,
@@ -856,8 +856,9 @@ impl Display {
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.y - region.start.y) as u32
             * (region.end.x - region.start.x) as u32) as usize;
+        let buffer_size = raw_buf.len();
         assert_eq!(
-            buf.len(), expected_size,
+            buffer_size, expected_size,
             "The given buffer of colors was wrong size to fill the specified area: expected {expected_size} bytes, got {buffer_size}."
         );
 
