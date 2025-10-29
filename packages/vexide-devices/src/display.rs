@@ -42,25 +42,20 @@ impl<const N: usize> Default for LineBuffer<N> {
 
 impl<const N: usize> LineBuffer<N> {
     fn buffered(&mut self, s: &str, mut func: impl FnMut(&[u8])) {
-        for char in s.chars().map(u32::from).map(|c| match c {
+        let ascii_chars = s.chars().map(|c| match u32::from(c) {
             1..=127 => c as _,
             _ => b'?',
-        }) {
-            if self.idx >= N - 1 || char == b'\n' {
-                self.flush_buffer(&mut func);
+        });
+        for char in ascii_chars {
+            if self.idx == N - 1 || char == b'\n' {
+                func(&self.buf[0..=self.idx]);
+                *self = Default::default();
             }
             if char != b'\n' {
                 self.buf[self.idx] = char;
                 self.idx += 1;
             }
         }
-    }
-    fn flush_buffer(&mut self, func: &mut impl FnMut(&[u8])) {
-        debug_assert!(self.idx < N, "idx should never go above {N}");
-        if self.idx != 0 && self.idx < N {
-            func(&self.buf[0..=self.idx]);
-        }
-        *self = Default::default();
     }
 }
 
@@ -718,10 +713,6 @@ impl Display {
             render_mode: RenderMode::Immediate,
             writer_buffer: Default::default(),
         }
-    }
-
-    fn flush_writer(&mut self) {
-        todo!();
     }
 
     /// Set the render mode for the display.
