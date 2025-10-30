@@ -107,7 +107,9 @@ impl Executor {
                 return output;
             }
 
-            unsafe { vex_sdk::vexTasksRun(); }
+            unsafe {
+                vex_sdk::vexTasksRun();
+            }
             self.tick();
         }
     }
