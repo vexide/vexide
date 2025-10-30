@@ -844,7 +844,7 @@ impl Display {
                 i32::from(region.end.x),
                 i32::from(region.end.y + Self::HEADER_HEIGHT),
                 raw_buf.as_mut_ptr(),
-                i32::from(region.end.x - region.start.x + 1),
+                i32::from(region.end.x - region.start.x),
             );
         }
     }
