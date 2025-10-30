@@ -127,6 +127,7 @@ Before releasing:
 - Removed `vexide_startup`'s copy of libm it previously linked to. Its functionality is now available from `std`. (#361)
 - Removed `InertialSensor::MAX_HEADING` and `GpsSensor::MAX_HEADING`. Prefer `Angle::FULL_TURN` instead.
 - Removed `DeviceTimestamp` in favor of `LowResolutionTime`. (#386) (**Breaking change**)
+- Removed `Task` and `CompetitionRuntime` from `vexide::prelude`. (#393) (**Breaking Change**)
 
 ### Miscellaneous
 

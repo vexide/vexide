@@ -101,7 +101,7 @@ pub use vexide_startup::allocator;
 /// This module is meant to be glob imported.
 pub mod prelude {
     #[cfg(feature = "core")]
-    pub use crate::competition::{Compete, CompeteExt, CompetitionRuntime};
+    pub use crate::competition::{Compete, CompeteExt};
     #[cfg(feature = "devices")]
     pub use crate::{
         adi::{
@@ -143,7 +143,7 @@ pub mod prelude {
     #[cfg(feature = "async")]
     pub use crate::{
         runtime::block_on,
-        task::{Task, spawn, task_local},
+        task::{spawn, task_local},
         time::{sleep, sleep_until},
     };
 }
