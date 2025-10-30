@@ -22,6 +22,7 @@ sync = ["dep:async-lock"]
 [dependencies]
 async-task = { version = "4.5.0", default-features = false }
 async-lock = { version = "3.4.1", optional = true }
+futures-util = { version = "0.3.31", default-features = false }
 waker-fn = "1.1.1"
 vex-sdk = { workspace = true }
 
