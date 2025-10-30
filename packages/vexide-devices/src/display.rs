@@ -551,6 +551,10 @@ impl<'a> Text<'a> {
 
     /// Create a new text from a String with a given position (defaults to top left corner
     /// alignment) and font
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `text` contains a null character.
     pub fn from_str(text: String, font: Font, position: impl Into<Point2<i16>>) -> Self {
         Self::from_str_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
@@ -573,6 +577,10 @@ impl<'a> Text<'a> {
     }
 
     /// Create a new text from a String with a given position (based on alignment) and font
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `text` contains a null character.
     pub fn from_str_aligned(
         text: String,
         font: Font,
@@ -581,7 +589,8 @@ impl<'a> Text<'a> {
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text: CowTextStr::Owned(CString::new(text).unwrap_or_else(|_| CString::from(c"?"))),
+            text: CowTextStr::Owned(CString::new(text)
+                                    .expect("Null character in non-terminating position"),
             position: position.into(),
             font,
             horizontal_align,
