@@ -5,6 +5,7 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
+use alloc::{ffi::CString, string::String};
 use core::{
     ffi::{CStr, c_char},
     mem,
@@ -501,13 +502,27 @@ pub enum VAlign {
     Bottom,
 }
 
+enum CowTextStr<'a> {
+    Borrowed(&'a CStr),
+    Owned(CString),
+}
+
+impl<'a> CowTextStr<'a> {
+    fn as_ptr(self) {
+        match self {
+            CowTextStr::Borrowed(c_str) => c_str.as_ptr(),
+            CowTextStr::Owned(c_string) => c_string.as_c_str().as_ptr(),
+        }
+    }
+}
+
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text<'a> {
     /// Top left corner coordinates of text on the display
     pub position: Point2<i16>,
     /// C-String of the desired text to be displayed on the display
-    pub text: &'a CStr,
+    pub text: CowTextStr<'a>,
     /// The font that will be used when this text is displayed
     pub font: Font,
     /// Horizontal alignment of text displayed on the display
@@ -517,12 +532,17 @@ pub struct Text<'a> {
 }
 
 impl<'a> Text<'a> {
-    /// Create a new text with a given position (defaults to top left corner alignment) and font
+    /// Create a new text from a &CStr with a given position (defaults to top left corner alignment) and font
     pub fn new(text: &'a CStr, font: Font, position: impl Into<Point2<i16>>) -> Self {
         Self::new_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
 
-    /// Create a new text with a given position (based on alignment) and font
+    /// Create a new text from a String with a given position (defaults to top left corner alignment) and font
+    pub fn from_str(text: String, font: Font, position: impl Into<Point2<i16>>) -> Self {
+        Self::from_str_aligned(text, font, position, HAlign::default(), VAlign::default())
+    }
+
+    /// Create a new text from a &CStr with a given position (based on alignment) and font
     pub fn new_aligned(
         text: &'a CStr,
         font: Font,
@@ -531,7 +551,24 @@ impl<'a> Text<'a> {
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text,
+            text: CowTextStr::Borrowed(text),
+            position: position.into(),
+            font,
+            horizontal_align,
+            vertical_align,
+        }
+    }
+
+    /// Create a new text from a String with a given position (based on alignment) and font
+    pub fn from_str_aligned(
+        text: String,
+        font: Font,
+        position: impl Into<Point2<i16>>,
+        horizontal_align: HAlign,
+        vertical_align: VAlign,
+    ) -> Self {
+        Self {
+            text: CowTextStr::Owned(CString::new(text).unwrap_or_else(|| CString::from(c""))),
             position: position.into(),
             font,
             horizontal_align,
