@@ -107,6 +107,7 @@ Before releasing:
 - `Motor::raw_position` no longer returns a timestamp along with the raw position. Use `Motor::timestamp` to access this data instead. (#386) (**Breaking change**)
 - `AdiPotentiomter::angle` now returns the `Angle` type. (#378) (**Breaking Change**)
 - Renamed `AdiGyroscopeCalibrationFuture` to `CalibrateFuture`. (#378) (**Breaking Change**)
+- Overhauled the `AdiAddrLed` API. This API no longer dynamically allocates, and should handle errors more sensibly. Strip length is now a const generic parameter (`AdiAddrled<N>` where `N` is the number of diodes on the LED strip). (#325) (**Breaking Change**)
 
 ### Removed
 
@@ -127,6 +128,7 @@ Before releasing:
 - Removed `vexide_startup`'s copy of libm it previously linked to. Its functionality is now available from `std`. (#361)
 - Removed `InertialSensor::MAX_HEADING` and `GpsSensor::MAX_HEADING`. Prefer `Angle::FULL_TURN` instead.
 - Removed `DeviceTimestamp` in favor of `LowResolutionTime`. (#386) (**Breaking change**)
+- Removed `AddrLedError` error. This device now will just return `PortError`, since the other error states are now either unreachable or will panic at runtime. (#325) (**Breaking Change**)
 
 ### Miscellaneous
 
