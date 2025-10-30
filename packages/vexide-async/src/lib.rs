@@ -36,9 +36,6 @@ pub mod sync {
 /// Blocks the current task until a return value can be extracted from the provided future.
 ///
 /// Does not poll all futures to completion.
-pub fn block_on<F: Future + 'static>(future: F) -> F::Output {
-    EXECUTOR.with(|ex| {
-        let task = ex.spawn(future);
-        ex.block_on(task)
-    })
+pub fn block_on<T>(future: impl Future<Output = T>) -> T {
+    EXECUTOR.with(|ex| ex.block_on(future))
 }
