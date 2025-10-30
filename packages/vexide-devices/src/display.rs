@@ -9,7 +9,6 @@ use alloc::{ffi::CString, string::String};
 use core::{
     ffi::{CStr, c_char},
     mem,
-    ops::FnOnce,
     time::Duration,
 };
 
@@ -33,7 +32,7 @@ use crate::{
 struct LineBuffer {
     idx: usize,
     // We add one to account for the null terminator.
-    buf: [u8; { Display::LINE_LENGTH + 1 }],
+    buf: [u8; Display::LINE_LENGTH + 1],
 }
 
 impl Default for LineBuffer {
@@ -580,7 +579,7 @@ impl<'a> Text<'a> {
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text: CowTextStr::Owned(CString::new(text).unwrap_or_else(|| CString::from(c""))),
+            text: CowTextStr::Owned(CString::new(text).unwrap_or_else(|_| CString::from(c"?"))),
             position: position.into(),
             font,
             horizontal_align,
