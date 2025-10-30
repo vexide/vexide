@@ -2,7 +2,6 @@ use std::{
     cell::RefCell,
     collections::VecDeque,
     future::Future,
-    pin::Pin,
     rc::Rc,
     sync::{
         Arc,
@@ -91,18 +90,19 @@ impl Executor {
         }
     }
 
-    pub fn block_on<R>(&self, mut task: Task<R>) -> R {
+    pub fn block_on<T>(&self, future: impl Future<Output = T>) -> T {
         let woken = Arc::new(AtomicBool::new(true));
-
         let waker = waker_fn({
             let woken = woken.clone();
             move || woken.store(true, Ordering::Relaxed)
         });
         let mut cx = Context::from_waker(&waker);
 
+        futures_util::pin_mut!(future);
+
         loop {
             if woken.swap(false, Ordering::Relaxed)
-                && let Poll::Ready(output) = Pin::new(&mut task).poll(&mut cx)
+                && let Poll::Ready(output) = future.as_mut().poll(&mut cx)
             {
                 return output;
             }
@@ -110,7 +110,6 @@ impl Executor {
             unsafe {
                 vex_sdk::vexTasksRun();
             }
-
             self.tick();
         }
     }
