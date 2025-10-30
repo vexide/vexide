@@ -5,7 +5,7 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
-use alloc::{ffi::CString, string::String};
+use alloc::{borrow::Cow, ffi::CString, string::String};
 use core::{
     ffi::{CStr, c_char},
     mem,
@@ -501,45 +501,19 @@ pub enum VAlign {
     Bottom,
 }
 
-#[derive(Debug, Clone)]
-enum CowTextStr<'a> {
-    Borrowed(&'a CStr),
-    Owned(CString),
-}
-
-impl<'a> CowTextStr<'a> {
-    fn as_c_str(&self) -> &CStr {
-        match self {
-            CowTextStr::Borrowed(c_str) => c_str,
-            CowTextStr::Owned(c_string) => c_string.as_c_str(),
-        }
-    }
-    fn as_ptr(&self) -> *const c_char {
-        self.as_c_str().as_ptr()
-    }
-}
-
-impl<'a> PartialEq for CowTextStr<'a> {
-    fn eq(&self, other: &Self) -> bool {
-        self.as_c_str() == other.as_c_str()
-    }
-}
-
-impl<'a> Eq for CowTextStr<'a> {}
-
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text<'a> {
     /// Top left corner coordinates of text on the display
-    pub position: Point2<i16>,
+    position: Point2<i16>,
     /// C-String of the desired text to be displayed on the display
-    pub text: CowTextStr<'a>,
+    text: Cow<'a, CStr>,
     /// The font that will be used when this text is displayed
-    pub font: Font,
+    font: Font,
     /// Horizontal alignment of text displayed on the display
-    pub horizontal_align: HAlign,
+    horizontal_align: HAlign,
     /// Vertical alignment of text displayed on the display
-    pub vertical_align: VAlign,
+    vertical_align: VAlign,
 }
 
 impl<'a> Text<'a> {
@@ -568,7 +542,7 @@ impl<'a> Text<'a> {
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text: CowTextStr::Borrowed(text),
+            text: text.into(),
             position: position.into(),
             font,
             horizontal_align,
@@ -589,9 +563,7 @@ impl<'a> Text<'a> {
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text: CowTextStr::Owned(
-                CString::new(text).expect("Null character in non-terminating position"),
-            ),
+            text: CString::new(text).expect("Null char in non-terminating position").into(),
             position: position.into(),
             font,
             horizontal_align,
