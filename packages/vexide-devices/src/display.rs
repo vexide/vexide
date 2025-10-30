@@ -563,7 +563,9 @@ impl<'a> Text<'a> {
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text: CString::new(text).expect("Null char in non-terminating position").into(),
+            text: CString::new(text)
+                .expect("Null character in non-terminating position")
+                .into(),
             position: position.into(),
             font,
             horizontal_align,
