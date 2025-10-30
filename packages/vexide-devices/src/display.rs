@@ -5,8 +5,12 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
-use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{ffi::CStr, mem, ptr::addr_of_mut, time::Duration};
+use alloc::{borrow::Cow, ffi::CString, string::String};
+use core::{
+    ffi::{CStr, c_char},
+    mem,
+    time::Duration,
+};
 
 use snafu::{Snafu, ensure};
 use vex_sdk::{
@@ -22,45 +26,84 @@ use crate::{
     math::Point2,
 };
 
+/// A struct that implements a fixed width line buffer with a length of
+/// 52 characters.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct LineBuffer {
+    idx: usize,
+    // We add one to account for the null terminator.
+    buf: [u8; Display::LINE_LENGTH + 1],
+}
+
+impl Default for LineBuffer {
+    fn default() -> Self {
+        LineBuffer {
+            idx: 0,
+            buf: [0; Display::LINE_LENGTH + 1],
+        }
+    }
+}
+
+impl LineBuffer {
+    fn buffered(&mut self, s: &str, mut func: impl FnMut(&[u8])) {
+        let ascii_chars = s.chars().map(|c| match u32::from(c) {
+            1..=127 => c as _,
+            _ => b'?',
+        });
+        for char in ascii_chars {
+            if self.idx == Display::LINE_LENGTH || char == b'\n' {
+                func(&self.buf[0..=self.idx]);
+                *self = Default::default();
+            }
+            if char != b'\n' {
+                self.buf[self.idx] = char;
+                self.idx += 1;
+            }
+        }
+    }
+}
+
 /// The physical display and touchscreen on a VEX Brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Display {
-    writer_buffer: String,
+    writer_buffer: LineBuffer,
     render_mode: RenderMode,
     current_line: usize,
 }
 
 impl core::fmt::Write for Display {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
-        for character in text.chars() {
-            if character == '\n' {
-                if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
-                    self.scroll(0, Self::LINE_HEIGHT);
-                    self.flush_writer();
-                } else {
-                    self.flush_writer();
-                    self.current_line += 1;
-                }
+        let mut writer_buffer = self.writer_buffer;
+        writer_buffer.buffered(text, |line| {
+            let line = line.as_ptr() as *const c_char;
+            if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
+                self.scroll(0, Self::LINE_HEIGHT);
             } else {
-                self.writer_buffer.push(character);
+                self.current_line += 1;
             }
-        }
-
-        unsafe {
-            vexDisplayForegroundColor(0xff_ff_ff);
-            vexDisplayString(
-                self.current_line as i32,
-                c"%s".as_ptr(),
-                CString::new(self.writer_buffer.clone())
-                    .expect(
-                        "CString::new encountered NUL (U+0000) byte in non-terminating position.",
-                    )
-                    .into_raw(),
-            );
-        }
-
+            Font::default().apply();
+            unsafe {
+                vexDisplayForegroundColor(0xff_ff_ff);
+                vexDisplayString(self.current_line as i32, c"%s".as_ptr(), line);
+            }
+        });
+        self.writer_buffer = writer_buffer;
         Ok(())
     }
+}
+
+/// A color stored in ARGB format.
+#[repr(C, align(4))]
+#[derive(Clone, Copy, Default, bytemuck::Zeroable, bytemuck::Pod)]
+pub struct Argb {
+    /// Alpha channel
+    pub a: u8,
+    /// Red channel
+    pub r: u8,
+    /// Green channel
+    pub g: u8,
+    /// Blue channel
+    pub b: u8,
 }
 
 /// A type implementing this trait can draw a filled shape to the display.
@@ -460,28 +503,60 @@ pub enum VAlign {
 
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Text {
+pub struct Text<'a> {
     /// Top left corner coordinates of text on the display
-    pub position: Point2<i16>,
+    position: Point2<i16>,
     /// C-String of the desired text to be displayed on the display
-    pub text: CString,
+    text: Cow<'a, CStr>,
     /// The font that will be used when this text is displayed
-    pub font: Font,
+    font: Font,
     /// Horizontal alignment of text displayed on the display
-    pub horizontal_align: HAlign,
+    horizontal_align: HAlign,
     /// Vertical alignment of text displayed on the display
-    pub vertical_align: VAlign,
+    vertical_align: VAlign,
 }
 
-impl Text {
-    /// Create a new text with a given position (defaults to top left corner alignment) and font
-    pub fn new(text: &str, font: Font, position: impl Into<Point2<i16>>) -> Self {
+impl<'a> Text<'a> {
+    /// Create a new text from a &CStr with a given position (defaults to top left corner alignment)
+    /// and font
+    pub fn new(text: &'a CStr, font: Font, position: impl Into<Point2<i16>>) -> Self {
         Self::new_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
 
-    /// Create a new text with a given position (based on alignment) and font
+    /// Create a new text from a String with a given position (defaults to top left corner
+    /// alignment) and font
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `text` contains a null character.
+    pub fn from_str(text: String, font: Font, position: impl Into<Point2<i16>>) -> Self {
+        Self::from_str_aligned(text, font, position, HAlign::default(), VAlign::default())
+    }
+
+    /// Create a new text from a &CStr with a given position (based on alignment) and font
     pub fn new_aligned(
-        text: &str,
+        text: &'a CStr,
+        font: Font,
+        position: impl Into<Point2<i16>>,
+        horizontal_align: HAlign,
+        vertical_align: VAlign,
+    ) -> Self {
+        Self {
+            text: text.into(),
+            position: position.into(),
+            font,
+            horizontal_align,
+            vertical_align,
+        }
+    }
+
+    /// Create a new text from a String with a given position (based on alignment) and font
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `text` contains a null character.
+    pub fn from_str_aligned(
+        text: String,
         font: Font,
         position: impl Into<Point2<i16>>,
         horizontal_align: HAlign,
@@ -489,7 +564,8 @@ impl Text {
     ) -> Self {
         Self {
             text: CString::new(text)
-                .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
+                .expect("Null character in non-terminating position")
+                .into(),
             position: position.into(),
             font,
             horizontal_align,
@@ -506,23 +582,19 @@ impl Text {
     /// Returns the height of the text widget in pixels
     #[must_use]
     pub fn height(&self) -> u16 {
-        unsafe {
-            self.font.apply();
-            vexDisplayStringHeightGet(self.text.as_ptr()) as _
-        }
+        self.font.apply();
+        unsafe { vexDisplayStringHeightGet(self.text.as_ptr()) as _ }
     }
 
     /// Returns the width of the text widget in pixels
     #[must_use]
     pub fn width(&self) -> u16 {
-        unsafe {
-            self.font.apply();
-            vexDisplayStringWidthGet(self.text.as_ptr()) as _
-        }
+        self.font.apply();
+        unsafe { vexDisplayStringWidthGet(self.text.as_ptr()) as _ }
     }
 }
 
-impl Text {
+impl Text<'_> {
     /// Write the text to the display.
     ///
     /// # Arguments
@@ -639,6 +711,9 @@ impl Display {
     /// The height of a single line of text on the display.
     pub(crate) const LINE_HEIGHT: i16 = 20;
 
+    /// The number of characters that fit in one line with the default font.
+    pub(crate) const LINE_LENGTH: usize = 20;
+
     /// Vertical height taken by the user program header when visible.
     pub const HEADER_HEIGHT: i16 = 32;
 
@@ -665,25 +740,8 @@ impl Display {
         Self {
             current_line: 0,
             render_mode: RenderMode::Immediate,
-            writer_buffer: String::default(),
+            writer_buffer: Default::default(),
         }
-    }
-
-    fn flush_writer(&mut self) {
-        unsafe {
-            vexDisplayForegroundColor(0xff_ff_ff);
-            vexDisplayString(
-                self.current_line as i32,
-                c"%s".as_ptr(),
-                CString::new(self.writer_buffer.clone())
-                    .expect(
-                        "CString::new encountered NUL (U+0000) byte in non-terminating position.",
-                    )
-                    .into_raw(),
-            );
-        }
-
-        self.writer_buffer.clear();
     }
 
     /// Set the render mode for the display.
@@ -780,7 +838,7 @@ impl Display {
     ///
     /// // Create a new text widget.
     /// let text = Text::new(
-    ///     "Hello, World!",
+    ///     c"Hello, World!",
     ///     Font::new(FontSize::MEDIUM, FontFamily::Monospace),
     ///     Point2 { x: 10, y: 10 },
     /// );
@@ -788,7 +846,12 @@ impl Display {
     /// // Write red text with a blue background to the display.
     /// display.draw_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
     /// ```
-    pub fn draw_text(&mut self, text: &Text, color: impl Into<Rgb<u8>>, bg_color: Option<Rgb<u8>>) {
+    pub fn draw_text(
+        &mut self,
+        text: &Text<'_>,
+        color: impl Into<Rgb<u8>>,
+        bg_color: Option<Rgb<u8>>,
+    ) {
         text.draw(self, color, bg_color);
     }
 
@@ -817,19 +880,11 @@ impl Display {
     ///
     /// This function panics if `buf` does not have the correct number of bytes to fill the
     /// specified region.
-    pub fn draw_buffer<T, I>(&mut self, region: Rect, buf: T)
-    where
-        T: IntoIterator<Item = I>,
-        I: Into<Rgb<u8>>,
-    {
-        let mut raw_buf = buf
-            .into_iter()
-            .map(|i| i.into().into_raw())
-            .collect::<Vec<_>>();
+    pub fn draw_buffer(&mut self, region: Rect, buf: &[Argb]) {
+        let raw_buf: &[u32] = bytemuck::must_cast_slice(buf);
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.y - region.start.y) as u32
             * (region.end.x - region.start.x) as u32) as usize;
-
         let buffer_size = raw_buf.len();
         assert_eq!(
             buffer_size, expected_size,
@@ -843,7 +898,7 @@ impl Display {
                 i32::from(region.start.y + Self::HEADER_HEIGHT),
                 i32::from(region.end.x),
                 i32::from(region.end.y + Self::HEADER_HEIGHT),
-                raw_buf.as_mut_ptr(),
+                raw_buf.as_ptr() as *mut _,
                 i32::from(region.end.x - region.start.x),
             );
         }
@@ -858,7 +913,7 @@ impl Display {
         let mut touch_status: V5_TouchStatus = unsafe { mem::zeroed() };
 
         unsafe {
-            vexTouchDataGet(addr_of_mut!(touch_status));
+            vexTouchDataGet(&raw mut touch_status);
         }
 
         TouchEvent {
