@@ -589,8 +589,8 @@ impl<'a> Text<'a> {
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text: CowTextStr::Owned(CString::new(text)
-                                    .expect("Null character in non-terminating position")),
+            text: CowTextStr::Owned(
+                CString::new(text).expect("Null character in non-terminating position")),
             position: position.into(),
             font,
             horizontal_align,
