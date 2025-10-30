@@ -502,19 +502,31 @@ pub enum VAlign {
     Bottom,
 }
 
+#[derive(Debug, Clone)]
 enum CowTextStr<'a> {
     Borrowed(&'a CStr),
     Owned(CString),
 }
 
 impl<'a> CowTextStr<'a> {
-    fn as_ptr(self) {
+    fn as_c_str(&self) -> &CStr {
         match self {
-            CowTextStr::Borrowed(c_str) => c_str.as_ptr(),
-            CowTextStr::Owned(c_string) => c_string.as_c_str().as_ptr(),
+            CowTextStr::Borrowed(c_str) => c_str,
+            CowTextStr::Owned(c_string) => c_string.as_c_str(),
         }
     }
+    fn as_ptr(&self) -> *const c_char {
+        self.as_c_str().as_ptr()
+    }
 }
+
+impl<'a> PartialEq for CowTextStr<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_c_str() == other.as_c_str()
+    }
+}
+
+impl<'a> Eq for CowTextStr<'a> {}
 
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
