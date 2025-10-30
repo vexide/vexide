@@ -543,12 +543,14 @@ pub struct Text<'a> {
 }
 
 impl<'a> Text<'a> {
-    /// Create a new text from a &CStr with a given position (defaults to top left corner alignment) and font
+    /// Create a new text from a &CStr with a given position (defaults to top left corner alignment)
+    /// and font
     pub fn new(text: &'a CStr, font: Font, position: impl Into<Point2<i16>>) -> Self {
         Self::new_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
 
-    /// Create a new text from a String with a given position (defaults to top left corner alignment) and font
+    /// Create a new text from a String with a given position (defaults to top left corner
+    /// alignment) and font
     pub fn from_str(text: String, font: Font, position: impl Into<Point2<i16>>) -> Self {
         Self::from_str_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
