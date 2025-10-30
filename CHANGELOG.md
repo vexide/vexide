@@ -69,6 +69,7 @@ Before releasing:
 - Fixed an issue where writing to the controller screen would sometimes be unreliable in fast loops (#336)
 - Fixed `Display::erase` always using the display's default background color. (#350)
 - `AiVisionObject` and `VisionObject` now use the new `Angle` type for storing object angles. This fixes a bug with the legacy vision sensor using the wrong angle units. (#386) (**Breaking change**)
+- Fixed an off-by-one error in `Display::draw_buffer`'s buffer stride calculation causing slanted image rendering. (#397)
 
 ### Changed
 
@@ -127,6 +128,7 @@ Before releasing:
 - Removed `vexide_startup`'s copy of libm it previously linked to. Its functionality is now available from `std`. (#361)
 - Removed `InertialSensor::MAX_HEADING` and `GpsSensor::MAX_HEADING`. Prefer `Angle::FULL_TURN` instead.
 - Removed `DeviceTimestamp` in favor of `LowResolutionTime`. (#386) (**Breaking change**)
+- Removed `Task` and `CompetitionRuntime` from `vexide::prelude`. (#393) (**Breaking Change**)
 
 ### Miscellaneous
 
