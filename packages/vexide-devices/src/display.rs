@@ -34,7 +34,7 @@ impl Default for LineBuffer {
     fn default() -> Self {
         LineBuffer {
             idx: 0,
-            buf: [0; {Display::LINE_LENGTH + 1}],
+            buf: [0; Display::LINE_LENGTH + 1],
         }
     }
 }
@@ -673,7 +673,7 @@ impl Display {
     pub(crate) const LINE_HEIGHT: i16 = 20;
 
     /// The number of characters that fit in one line with the default font.
-    pub(crate) const LINE_LENGTH: i16 = 20;
+    pub(crate) const LINE_LENGTH: usize = 20;
 
     /// Vertical height taken by the user program header when visible.
     pub const HEADER_HEIGHT: i16 = 32;
