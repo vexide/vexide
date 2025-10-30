@@ -6,7 +6,7 @@
 //! can be used to draw the outlines of shapes.
 
 use core::{
-    ffi::{c_char, CStr},
+    ffi::{CStr, c_char},
     mem,
     ops::FnOnce,
     time::Duration,
