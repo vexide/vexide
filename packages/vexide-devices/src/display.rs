@@ -5,7 +5,12 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
-use core::{ffi::{c_char, CStr}, mem, ops::FnOnce, time::Duration};
+use core::{
+    ffi::{c_char, CStr},
+    mem,
+    ops::FnOnce,
+    time::Duration,
+};
 
 use snafu::{Snafu, ensure};
 use vex_sdk::{
@@ -27,7 +32,7 @@ use crate::{
 struct LineBuffer {
     idx: usize,
     // We add one to account for the null terminator.
-    buf: [u8; {Display::LINE_LENGTH + 1}],
+    buf: [u8; { Display::LINE_LENGTH + 1 }],
 }
 
 impl Default for LineBuffer {
