@@ -5,7 +5,7 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
-use core::{ffi::CStr, mem, ops::FnOnce, time::Duration};
+use core::{ffi::{c_char, CStr}, mem, ops::FnOnce, time::Duration};
 
 use snafu::{Snafu, ensure};
 use vex_sdk::{
@@ -21,33 +21,32 @@ use crate::{
     math::Point2,
 };
 
-/// A generic struct that implements a fixed width line buffer.
-///
-/// The parameter N is the maximum length of one line + one extra charcter to
-/// hold the null terminator.
+/// A struct that implements a fixed width line buffer with a length of
+/// 52 characters.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct LineBuffer<const N: usize> {
+struct LineBuffer {
     idx: usize,
-    buf: [u8; N],
+    // We add one to account for the null terminator.
+    buf: [u8; {Display::LINE_LENGTH + 1}],
 }
 
-impl<const N: usize> Default for LineBuffer<N> {
+impl Default for LineBuffer {
     fn default() -> Self {
         LineBuffer {
             idx: 0,
-            buf: [0; N],
+            buf: [0; {Display::LINE_LENGTH + 1}],
         }
     }
 }
 
-impl<const N: usize> LineBuffer<N> {
+impl LineBuffer {
     fn buffered(&mut self, s: &str, mut func: impl FnMut(&[u8])) {
         let ascii_chars = s.chars().map(|c| match u32::from(c) {
             1..=127 => c as _,
             _ => b'?',
         });
         for char in ascii_chars {
-            if self.idx == N - 1 || char == b'\n' {
+            if self.idx == Display::LINE_LENGTH || char == b'\n' {
                 func(&self.buf[0..=self.idx]);
                 *self = Default::default();
             }
@@ -62,7 +61,7 @@ impl<const N: usize> LineBuffer<N> {
 /// The physical display and touchscreen on a VEX Brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Display {
-    writer_buffer: LineBuffer<{ 52 + 1 }>,
+    writer_buffer: LineBuffer,
     render_mode: RenderMode,
     current_line: usize,
 }
@@ -71,16 +70,16 @@ impl core::fmt::Write for Display {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
         let mut writer_buffer = self.writer_buffer;
         writer_buffer.buffered(text, |line| {
+            let line = line.as_ptr() as *const c_char;
             if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
                 self.scroll(0, Self::LINE_HEIGHT);
             } else {
                 self.current_line += 1;
             }
-            let line = CStr::from_bytes_with_nul(line).unwrap();
             Font::default().apply();
             unsafe {
                 vexDisplayForegroundColor(0xff_ff_ff);
-                vexDisplayString(self.current_line as i32, c"%s".as_ptr(), line.as_ptr());
+                vexDisplayString(self.current_line as i32, c"%s".as_ptr(), line);
             }
         });
         self.writer_buffer = writer_buffer;
@@ -545,18 +544,14 @@ impl<'a> Text<'a> {
     #[must_use]
     pub fn height(&self) -> u16 {
         self.font.apply();
-        unsafe {
-            vexDisplayStringHeightGet(self.text.as_ptr()) as _
-        }
+        unsafe { vexDisplayStringHeightGet(self.text.as_ptr()) as _ }
     }
 
     /// Returns the width of the text widget in pixels
     #[must_use]
     pub fn width(&self) -> u16 {
         self.font.apply();
-        unsafe {
-            vexDisplayStringWidthGet(self.text.as_ptr()) as _
-        }
+        unsafe { vexDisplayStringWidthGet(self.text.as_ptr()) as _ }
     }
 }
 
@@ -676,6 +671,9 @@ impl Display {
 
     /// The height of a single line of text on the display.
     pub(crate) const LINE_HEIGHT: i16 = 20;
+
+    /// The number of characters that fit in one line with the default font.
+    pub(crate) const LINE_LENGTH: i16 = 20;
 
     /// Vertical height taken by the user program header when visible.
     pub const HEADER_HEIGHT: i16 = 32;
