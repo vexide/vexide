@@ -590,7 +590,7 @@ impl<'a> Text<'a> {
     ) -> Self {
         Self {
             text: CowTextStr::Owned(CString::new(text)
-                                    .expect("Null character in non-terminating position"),
+                                    .expect("Null character in non-terminating position")),
             position: position.into(),
             font,
             horizontal_align,
