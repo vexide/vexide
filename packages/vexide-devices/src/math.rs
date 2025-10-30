@@ -122,8 +122,9 @@ impl Angle {
     /// # Examples
     ///
     /// ```
-    /// use vexide::math::Angle;
     /// use core::f64::consts::PI;
+    ///
+    /// use vexide::math::Angle;
     ///
     /// let angle = Angle::from_radians(PI);
     ///
@@ -204,8 +205,9 @@ impl Angle {
     /// # Examples
     ///
     /// ```
-    /// use vexide::math::Angle;
     /// use core::f64::consts::PI;
+    ///
+    /// use vexide::math::Angle;
     ///
     /// let angle = Angle::HALF_TURN;
     ///
