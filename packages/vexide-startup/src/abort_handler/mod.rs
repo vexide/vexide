@@ -62,7 +62,10 @@ global_asm!(
 pub fn install_vector_table() {
     unsafe {
         asm!(
-            "ldr r0, =vector_table",
+            // If vector_table is placed too far away, we'll need 2 instructions to load it.
+            "movw r0, #:lower16:vector_table",
+            "movt r0, #:upper16:vector_table",
+
             // Set VBAR; see <https://developer.arm.com/documentation/ddi0601/2025-06/AArch32-Registers/VBAR--Vector-Base-Address-Register>
             "mcr p15, 0, r0, c12, c0, 0",
             out("r0") _,
