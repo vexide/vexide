@@ -77,6 +77,7 @@ impl core::fmt::Write for Display {
                 self.current_line += 1;
             }
             let line = CStr::from_bytes_with_nul(line).unwrap();
+            Font::default().apply();
             unsafe {
                 vexDisplayForegroundColor(0xff_ff_ff);
                 vexDisplayString(self.current_line as i32, c"%s".as_ptr(), line.as_ptr());
@@ -315,14 +316,6 @@ impl Font {
             vexDisplayTextSize(self.size.numerator, self.size.denominator);
         }
     }
-
-    /// Returns the value of a closure with the given font applied to the display.
-    fn with_font<T>(self, func: impl FnOnce() -> T) -> T {
-        self.apply();
-        let result = func();
-        Font::default().apply();
-        result
-    }
 }
 
 /// A fractional font scaling factor.
@@ -551,18 +544,18 @@ impl<'a> Text<'a> {
     /// Returns the height of the text widget in pixels
     #[must_use]
     pub fn height(&self) -> u16 {
+        self.font.apply();
         unsafe {
-            self.font
-                .with_font(|| vexDisplayStringHeightGet(self.text.as_ptr()) as _)
+            vexDisplayStringHeightGet(self.text.as_ptr()) as _
         }
     }
 
     /// Returns the width of the text widget in pixels
     #[must_use]
     pub fn width(&self) -> u16 {
+        self.font.apply();
         unsafe {
-            self.font
-                .with_font(|| vexDisplayStringWidthGet(self.text.as_ptr()) as _)
+            vexDisplayStringWidthGet(self.text.as_ptr()) as _
         }
     }
 }
@@ -602,15 +595,14 @@ impl Text<'_> {
             if bg_is_some {
                 vexDisplayBackgroundColor(bg_color.unwrap().into_raw());
             }
-            self.font.with_font(|| {
-                vexDisplayPrintf(
-                    i32::from(x),
-                    i32::from(y + Display::HEADER_HEIGHT),
-                    i32::from(bg_is_some),
-                    c"%s".as_ptr(),
-                    self.text.as_ptr(),
-                );
-            });
+            self.font.apply();
+            vexDisplayPrintf(
+                i32::from(x),
+                i32::from(y + Display::HEADER_HEIGHT),
+                i32::from(bg_is_some),
+                c"%s".as_ptr(),
+                self.text.as_ptr(),
+            );
         }
     }
 }
