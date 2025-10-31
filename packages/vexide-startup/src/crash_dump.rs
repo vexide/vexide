@@ -60,7 +60,7 @@ pub unsafe fn read_persistent_crash_dump() -> Option<CrashDump> {
     Some(dump)
 }
 
-#[derive(Pod, Zeroable, Clone, Copy)]
+#[derive(Debug, Pod, Zeroable, Clone, Copy)]
 #[repr(C)]
 pub struct CrashDump {
     pub magic: u32,
@@ -87,7 +87,7 @@ impl CrashDump {
     }
 }
 
-#[derive(Pod, Zeroable, Clone, Copy)]
+#[derive(Debug, Pod, Zeroable, Clone, Copy)]
 #[repr(C)]
 pub struct CrashPayload {
     pub message: StringBuf<256>,
@@ -103,7 +103,7 @@ impl Default for CrashPayload {
     }
 }
 
-#[derive(Zeroable, Clone, Copy)]
+#[derive(Debug, Zeroable, Clone, Copy)]
 #[repr(C)]
 pub struct StringBuf<const N: usize> {
     pub length: u32,

@@ -47,6 +47,8 @@ pub(crate) fn hook(info: &PanicHookInfo<'_>) {
     // Save the crash to persistent memory.
     #[cfg(target_os = "vexos")]
     if let Some(dump) = crate::crash_dump::annex_auxiliary_file() {
+        use std::sync::atomic::{Ordering, fence};
+
         use crate::crash_dump::CrashDump;
         use bytemuck::Zeroable;
 
@@ -56,7 +58,13 @@ pub(crate) fn hook(info: &PanicHookInfo<'_>) {
         };
 
         dump.payload = dialog.payload;
+        dump.seal();
+
+        fence(Ordering::SeqCst);
     }
+
+    // #[cfg(target_os = "vexos")]
+    // println!("{:?}", unsafe { crate::crash_dump::read_persistent_crash_dump() });
 
     // Don't exit the program, since we want to be able to see the panic message on the screen.
     loop {
