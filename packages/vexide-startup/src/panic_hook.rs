@@ -8,9 +8,9 @@ use std::{fmt::Write, panic::PanicHookInfo};
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind::{UnwindContext, UnwindCursor};
 
-use crate::error_report::ErrorReport;
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use crate::error_report::backtrace::BacktraceIter;
+use crate::{error_report::ErrorReport};
 
 /// Panic hook for vexide programs.
 ///
@@ -42,6 +42,20 @@ pub(crate) fn hook(info: &PanicHookInfo<'_>) {
 
             Ok(())
         });
+    }
+
+    // Save the crash to persistent memory.
+    #[cfg(target_os = "vexos")]
+    if let Some(dump) = crate::crash_dump::annex_auxiliary_file() {
+        use crate::crash_dump::CrashDump;
+        use bytemuck::Zeroable;
+
+        let dump = unsafe {
+            *dump = CrashDump::zeroed();
+            &mut *dump
+        };
+
+        dump.payload = dialog.payload;
     }
 
     // Don't exit the program, since we want to be able to see the panic message on the screen.

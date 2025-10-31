@@ -59,6 +59,7 @@ mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
 mod sdk;
+pub mod crash_dump;
 
 // Linkerscript Symbols
 //

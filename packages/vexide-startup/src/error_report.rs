@@ -1,7 +1,10 @@
 use std::fmt::Write;
 
+use crate::crash_dump::CrashPayload;
+
 pub struct ErrorReport {
     pub y_offset: i32,
+    pub payload: CrashPayload,
 
     // One extra leading byte for a null terminator when word-breaking.
     buf: [u8; Self::LINE_MAX_WIDTH + 1],
@@ -44,6 +47,7 @@ impl ErrorReport {
             buf: [0; 53],
             pos: 0,
             y_offset: Self::HEADER_HEIGHT + Self::BOX_MARGIN + Self::BOX_PADDING,
+            payload: CrashPayload::default(),
         }
     }
 
@@ -102,7 +106,7 @@ impl ErrorReport {
         unsafe {
             vex_sdk::vexDisplayTextSize(1, 5);
         }
-        let mut i = 0;
+        let mut i: i32 = 0;
         for frame in trace {
             let format = c"  %d: 0x%08x";
 
@@ -123,6 +127,11 @@ impl ErrorReport {
 
             if i % 4 == 3 {
                 self.y_offset += 10;
+            }
+
+            let idx = i as usize;
+            if idx < self.payload.backtrace.len() {
+                self.payload.backtrace[idx] = frame;
             }
 
             i += 1;
@@ -189,6 +198,8 @@ impl Write for ErrorReport {
 
             self.pos += 1;
         }
+
+        self.payload.message.write_str(s)?;
 
         Ok(())
     }
