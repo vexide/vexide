@@ -134,7 +134,7 @@ impl DistanceSensor {
                 distance: distance_raw,
                 relative_size: match unsafe { vexDeviceDistanceObjectSizeGet(self.device) } {
                     -1 => None,
-                    size => Some(size as u32)
+                    size => Some(size as u32),
                 },
                 velocity: unsafe { vexDeviceDistanceObjectVelocityGet(self.device) },
                 // TODO: determine if confidence reading is separate from whether or not an object
