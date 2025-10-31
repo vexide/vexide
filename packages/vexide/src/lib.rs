@@ -5,7 +5,10 @@
 //!
 //! ## Getting Started
 //!
-//! If you're just getting started, we recommend going through our [docs](https://vexide.dev/docs/), which provide step-by-step instructions for setting up a development environment and using vexide's common features.
+//! To start using vexide, we recommend going through our [docs](https://vexide.dev/docs/), which
+//! contain step-by-step instructions for setting up a development environment using
+//! [vexide-template](https://github.com/vexide/vexide-template) and tutorials for many of vexide's
+//! common features.
 //!
 //! # Usage
 //!
@@ -26,7 +29,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(html_logo_url = "https://vexide.dev/images/logo.svg")]
 
-/// Async runtime & executor.
+/// Async runtime and executor.
 #[cfg(feature = "async")]
 pub mod runtime {
     #[doc(inline)]
@@ -49,6 +52,7 @@ pub use vexide_async::task;
 /// - [`sleep`] and [`sleep_until`] provide ways to yield control away from a future for or until a
 ///   specific instant in time.
 ///
+/// [`Instant`]: https://doc.rust-lang.org/stable/std/time/struct.Instant.html
 /// [`sleep`]: vexide_async::time::sleep
 /// [`sleep_until`]: vexide_async::time::sleep_until
 #[cfg(any(feature = "core", feature = "async"))]

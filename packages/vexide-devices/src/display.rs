@@ -1,4 +1,4 @@
-//! Brain Display & Touch Input
+//! Display and touchscreen input.
 //!
 //! Contains user calls to the V5 Brain display for touching and displaying graphics.
 //!

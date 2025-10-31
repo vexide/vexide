@@ -1,4 +1,4 @@
-//! VEX user program startup and runtime support.
+//! User program startup and runtime support.
 //!
 //! This crate provides runtime infrastructure for booting vexide programs from Rust code. This
 //! infrastructure includes a more optimized heap allocator, differential uploading support, and a

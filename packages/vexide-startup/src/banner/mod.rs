@@ -1,7 +1,7 @@
 //! vexide startup banner.
 //!
 //! The banner is automatically printed by the code generated from the `vexide::main` macro, but it
-//! can be printed manually with a given theme using the [`print`] function. In vexide, you can
+//! can be printed manually with a given theme using the [`print()`] function. In vexide, you can
 //! change the theme of the banner by using the banner attribute in the `vexide::main` macro.
 //!
 //! For a full list of premade themes and more theme documentation, see the [`themes`] module.

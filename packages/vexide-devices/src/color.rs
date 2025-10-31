@@ -1,4 +1,4 @@
-//! Color types.
+//! Types for working with colors.
 //!
 //! This module re-exports some types in the [`rgb`] crate for use as a general container type for
 //! devices working with RGB colors.
