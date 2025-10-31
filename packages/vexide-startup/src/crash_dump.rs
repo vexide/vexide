@@ -52,6 +52,8 @@ pub unsafe fn read_persistent_crash_dump() -> Option<CrashDump> {
     // executions. CrashDump has no type invariants, so it's okay if it's scrambled.
     let dump = unsafe { ptr::read_volatile(annex_auxiliary_file()?) };
 
+    println!("Raw dump: {dump:?}");
+
     let is_valid = dump.verify_seal();
     if !is_valid {
         return None;

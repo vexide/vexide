@@ -63,8 +63,8 @@ pub(crate) fn hook(info: &PanicHookInfo<'_>) {
         fence(Ordering::SeqCst);
     }
 
-    // #[cfg(target_os = "vexos")]
-    // println!("{:?}", unsafe { crate::crash_dump::read_persistent_crash_dump() });
+    #[cfg(target_os = "vexos")]
+    let _ = unsafe { crate::crash_dump::read_persistent_crash_dump() };
 
     // Don't exit the program, since we want to be able to see the panic message on the screen.
     loop {
