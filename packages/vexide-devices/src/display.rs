@@ -75,7 +75,7 @@ impl core::fmt::Write for Display {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
         let mut writer_buffer = self.writer_buffer;
         writer_buffer.buffered(text, |line| {
-            let line = line.as_ptr() as *const c_char;
+            let line = line.as_ptr().cast::<c_char>();
             if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
                 self.scroll(0, Self::LINE_HEIGHT);
             } else {
@@ -884,8 +884,8 @@ impl Display {
                 i32::from(region.start.y + Self::HEADER_HEIGHT),
                 i32::from(region.end.x),
                 i32::from(region.end.y + Self::HEADER_HEIGHT),
-                raw_buf.as_ptr() as *mut _,
-                i32::from(region.end.x - region.start.x + 1),
+                raw_buf.as_ptr().cast_mut(),
+                i32::from(region.end.x - region.start.x),
             );
         }
     }
