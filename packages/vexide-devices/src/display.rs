@@ -8,7 +8,6 @@
 use alloc::{borrow::Cow, ffi::CString, string::String};
 use core::{
     ffi::{CStr, c_char},
-    mem,
     time::Duration,
 };
 
@@ -53,7 +52,7 @@ impl LineBuffer {
         for char in ascii_chars {
             if self.idx == Display::LINE_LENGTH || char == b'\n' {
                 func(&self.buf[0..=self.idx]);
-                *self = Default::default();
+                *self = LineBuffer::default();
             }
             if char != b'\n' {
                 self.buf[self.idx] = char;
@@ -726,7 +725,7 @@ impl Display {
         Self {
             current_line: 0,
             render_mode: RenderMode::Immediate,
-            writer_buffer: Default::default(),
+            writer_buffer: LineBuffer::default(),
         }
     }
 
@@ -895,8 +894,7 @@ impl Display {
     /// See [`TouchEvent`] for more information.
     #[must_use]
     pub fn touch_status(&self) -> TouchEvent {
-        // `vexTouchDataGet` (probably) doesn't read from the given status pointer, so this is fine.
-        let mut touch_status: V5_TouchStatus = unsafe { mem::zeroed() };
+        let mut touch_status = V5_TouchStatus::default();
 
         unsafe {
             vexTouchDataGet(&raw mut touch_status);
