@@ -29,6 +29,20 @@ impl RgbExt for rgb::Rgb<u8> {
     }
 }
 
+/// A color stored in ARGB format.
+#[repr(C, align(4))]
+#[derive(Clone, Copy, Default, bytemuck::Zeroable, bytemuck::Pod)]
+pub struct Argb {
+    /// Alpha channel
+    pub a: u8,
+    /// Red channel
+    pub r: u8,
+    /// Green channel
+    pub g: u8,
+    /// Blue channel
+    pub b: u8,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

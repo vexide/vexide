@@ -22,7 +22,7 @@ use vex_sdk::{
 };
 
 use crate::{
-    color::{Rgb, RgbExt},
+    color::{Argb, Rgb, RgbExt},
     math::Point2,
 };
 
@@ -90,20 +90,6 @@ impl core::fmt::Write for Display {
         self.writer_buffer = writer_buffer;
         Ok(())
     }
-}
-
-/// A color stored in ARGB format.
-#[repr(C, align(4))]
-#[derive(Clone, Copy, Default, bytemuck::Zeroable, bytemuck::Pod)]
-pub struct Argb {
-    /// Alpha channel
-    pub a: u8,
-    /// Red channel
-    pub r: u8,
-    /// Green channel
-    pub g: u8,
-    /// Blue channel
-    pub b: u8,
 }
 
 /// A type implementing this trait can draw a filled shape to the display.
