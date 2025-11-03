@@ -132,7 +132,10 @@ impl DistanceSensor {
             9999 => Ok(None), // returns 9999 if no object was found
             _ => Ok(Some(DistanceObject {
                 distance: distance_raw,
-                relative_size: unsafe { vexDeviceDistanceObjectSizeGet(self.device) as u32 },
+                relative_size: match unsafe { vexDeviceDistanceObjectSizeGet(self.device) } {
+                    -1 => None,
+                    size => Some(size as u32),
+                },
                 velocity: unsafe { vexDeviceDistanceObjectVelocityGet(self.device) },
                 // TODO: determine if confidence reading is separate from whether or not an object
                 // is detected.
@@ -234,7 +237,7 @@ pub struct DistanceObject {
     /// of salt.
     ///
     /// [`vex::sizeType`]: https://api.vex.com/v5/home/python/Enums.html#object-size-types
-    pub relative_size: u32,
+    pub relative_size: Option<u32>,
 
     /// Observed velocity of the object in m/s.
     pub velocity: f64,

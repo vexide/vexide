@@ -350,6 +350,7 @@ Before releasing:
 - `RadioLink::new` can now only fail on `NulError` and will not bail if a radio is disconnected. (#240) (**Breaking Change**)
 - `RadioLink::unread_bytes` can now return a `LinkError::ReadError`. (#243)
 - `RadioLink::is_linked` is now infallible. (#243) (**Breaking Change**)
+- `DistanceObject::relative_size` is now optional. (#402) (**Breaking Change**)
 
 ### Removed
 
