@@ -725,10 +725,11 @@ impl Display {
     ///
     /// # Safety
     ///
-    /// Creating new `display`s is inherently unsafe due to the possibility of constructing more
-    /// than one display at once allowing multiple mutable references to the same
-    /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register
-    /// devices if possible.
+    /// Creating new `display`s is unsafe due to the possibility of creating multiple mutable
+    /// references to the same underlying hardware resources. Prefer using [`Peripherals`] API to
+    /// register devices when possible.
+    ///
+    /// [`Peripherals`]: crate::peripherals::Peripherals
     #[must_use]
     pub unsafe fn new() -> Self {
         Self {
