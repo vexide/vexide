@@ -514,7 +514,7 @@ impl<'a> Text<'a> {
     /// # Panics
     ///
     /// This function panics if `text` contains a null character.
-    pub fn from_str(text: String, font: Font, position: impl Into<Point2<i16>>) -> Self {
+    pub fn from_str(text: &str, font: Font, position: impl Into<Point2<i16>>) -> Self {
         Self::from_str_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
 
@@ -541,7 +541,7 @@ impl<'a> Text<'a> {
     ///
     /// This function panics if `text` contains a null character.
     pub fn from_str_aligned(
-        text: String,
+        text: &str,
         font: Font,
         position: impl Into<Point2<i16>>,
         horizontal_align: HAlign,
