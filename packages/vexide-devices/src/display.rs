@@ -5,7 +5,7 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
-use alloc::{borrow::Cow, ffi::CString, string::String};
+use alloc::{borrow::Cow, ffi::CString};
 use core::{
     ffi::{CStr, c_char},
     time::Duration,
@@ -312,6 +312,7 @@ impl Font {
 pub struct FontSize {
     /// The numerator of the fractional font scale.
     pub numerator: u32,
+
     /// The denominator of the fractional font scale.
     pub denominator: u32,
 }
@@ -446,6 +447,7 @@ pub enum FontFamily {
     /// This font at full size is 49pt Noto Mono.
     #[default]
     Monospace,
+
     /// A proportional font which has a varying width for each character.
     ///
     /// This font at full size is 49pt Noto Sans.
@@ -480,8 +482,10 @@ pub enum VAlign {
     /// Input coordinate is at the top of the text box
     #[default]
     Top,
+
     /// Input coordinate is at the center of the text box
     Center,
+
     /// Input coordinate is at the bottom of the text box
     Bottom,
 }
@@ -491,12 +495,17 @@ pub enum VAlign {
 pub struct Text<'a> {
     /// Top left corner coordinates of text on the display
     position: Point2<i16>,
+
     /// C-String of the desired text to be displayed on the display
+    #[allow(clippy::struct_field_names)]
     text: Cow<'a, CStr>,
+
     /// The font that will be used when this text is displayed
     font: Font,
+
     /// Horizontal alignment of text displayed on the display
     horizontal_align: HAlign,
+
     /// Vertical alignment of text displayed on the display
     vertical_align: VAlign,
 }
