@@ -70,6 +70,7 @@ Before releasing:
 - Fixed `Display::erase` always using the display's default background color. (#350)
 - `AiVisionObject` and `VisionObject` now use the new `Angle` type for storing object angles. This fixes a bug with the legacy vision sensor using the wrong angle units. (#386) (**Breaking change**)
 - Fixed an off-by-one error in `Display::draw_buffer`'s buffer stride calculation causing slanted image rendering. (#397)
+- `Display` now uses half-open pixel coordinates for `Rect`, `Line` and `Display::draw_buffer`. (#395) (**Breaking Change**)
 
 ### Changed
 
@@ -81,6 +82,7 @@ Before releasing:
 - `{InertialSensor, GpsSensor}::{heading, rotation, angle, euler, set_heading, set_rotation}` now take and return instances of the `Angle` type rather than degrees. (#380) (#378) (**Breaking Change**)
 - `AdiGyroscope::yaw` now returns `Angle`. (#380) (**Breaking Change**)
 - Renamed the `vexide::devices::rgb` module to `vexide::color`. (#380) (**Breaking Change**)
+- Replaced `Rgb<u8>` with the `Color` type. (#395) (**Breaking Change**)
 - If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
 - The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
@@ -108,6 +110,10 @@ Before releasing:
 - `Motor::raw_position` no longer returns a timestamp along with the raw position. Use `Motor::timestamp` to access this data instead. (#386) (**Breaking change**)
 - `AdiPotentiomter::angle` now returns the `Angle` type. (#378) (**Breaking Change**)
 - Renamed `AdiGyroscopeCalibrationFuture` to `CalibrateFuture`. (#378) (**Breaking Change**)
+- `Text::new()` now takes a `CStr` to avoid allocation. Use `Text::from_string` to pass a regular string.
+- `FontSize::from_float` will now panic rather than returning an error when passed invalid values. (#395) (**Breaking Change**)
+- Renamed the `start` and `end` fields on `Rect` to `top_left` and `bottom_right`. (#395) (**Breaking Change**)
+- Renamed the `horizontal_align` and `vertical_align` fields on `Rect` to `horizontal_alignment` and `vertical_alignment`. (#395) (**Breaking Change**)
 
 ### Removed
 
@@ -129,6 +135,8 @@ Before releasing:
 - Removed `InertialSensor::MAX_HEADING` and `GpsSensor::MAX_HEADING`. Prefer `Angle::FULL_TURN` instead.
 - Removed `DeviceTimestamp` in favor of `LowResolutionTime`. (#386) (**Breaking change**)
 - Removed `Task` and `CompetitionRuntime` from `vexide::prelude`. (#393) (**Breaking Change**)
+- Removed `HAlign` and `VAlign`. Use `Alignment` instead. (#395) (**Breaking Change**)
+- Removed `InvalidFontSizeError`, as it's no longer returned by `FontSize::from_float`. (#395) (**Breaking Change**)
 
 ### Miscellaneous
 
