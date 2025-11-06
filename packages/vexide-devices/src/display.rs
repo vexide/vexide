@@ -387,46 +387,32 @@ impl FontSize {
     /// This function is lossy, but negligibly so.
     /// The highest the denominator can be is 10000.
     ///
-    /// # Errors
+    /// # Panics
     ///
-    /// - [`InvalidFontSizeError`] if the given size is negative.
-    pub fn from_float(size: f32) -> Result<Self, InvalidFontSizeError> {
-        ensure!(
+    /// This function panics if the provided `size` is negative or non-finite.
+    #[must_use]
+    pub fn from_float(size: f32) -> Self {
+        assert!(
             size.is_finite() && !size.is_sign_negative(),
-            InvalidFontSizeSnafu { value: size }
+            "`FontSize::from_float` requires a positive, finite floating-point value"
         );
+
         let (numerator, denominator) = approximate_fraction(size, 10_000);
         // Unwraps are safe because we guarantee a positive fraction earlier.
         let (numerator, denominator) = (
             numerator.try_into().unwrap(),
             denominator.try_into().unwrap(),
         );
-        Ok(Self {
+        Self {
             numerator,
             denominator,
-        })
+        }
     }
 }
 
 impl Default for FontSize {
     fn default() -> Self {
         Self::MEDIUM
-    }
-}
-
-impl TryFrom<f32> for FontSize {
-    type Error = InvalidFontSizeError;
-
-    fn try_from(value: f32) -> Result<Self, Self::Error> {
-        Self::from_float(value)
-    }
-}
-
-impl TryFrom<f64> for FontSize {
-    type Error = InvalidFontSizeError;
-
-    fn try_from(value: f64) -> Result<Self, Self::Error> {
-        Self::from_float(value as f32)
     }
 }
 
@@ -914,12 +900,4 @@ impl Display {
             release_count: touch_status.releaseCount,
         }
     }
-}
-
-/// An error that occurs when a negative or non-finite font size is attempted to be created.
-#[derive(Debug, Clone, Copy, PartialEq, Snafu)]
-#[snafu(display("Attempted to create a font size with a negative/non-finite value ({value})."))]
-pub struct InvalidFontSizeError {
-    /// The negative value that was attempted to be used as a font size.
-    pub value: f32,
 }
