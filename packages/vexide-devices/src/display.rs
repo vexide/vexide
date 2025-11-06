@@ -358,6 +358,19 @@ fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
 }
 
 impl FontSize {
+    /// An extra-small font size with a value of one-fifth.
+    pub const EXTRA_SMALL: Self = Self::new(1, 5);
+    /// A small font size with a value of one-fourth.
+    pub const SMALL: Self = Self::new(1, 4);
+    /// A medium font size with a value of one-third.
+    pub const MEDIUM: Self = Self::new(1, 3);
+    /// A large font size with a value of one-half.
+    pub const LARGE: Self = Self::new(1, 2);
+    /// An extra-large font size with a value of two-thirds.
+    pub const EXTRA_LARGE: Self = Self::new(2, 3);
+    /// The full size of the font.
+    pub const FULL: Self = Self::new(1, 1);
+
     /// Creates a custom fractional font size.
     ///
     /// If you wish to create a font size from a floating-point size, use [`FontSize::from_float`]
@@ -396,19 +409,6 @@ impl FontSize {
             denominator,
         })
     }
-
-    /// An extra-small font size with a value of one-fifth.
-    pub const EXTRA_SMALL: Self = Self::new(1, 5);
-    /// A small font size with a value of one-fourth.
-    pub const SMALL: Self = Self::new(1, 4);
-    /// A medium font size with a value of one-third.
-    pub const MEDIUM: Self = Self::new(1, 3);
-    /// A large font size with a value of one-half.
-    pub const LARGE: Self = Self::new(1, 2);
-    /// An extra-large font size with a value of two-thirds.
-    pub const EXTRA_LARGE: Self = Self::new(2, 3);
-    /// The full size of the font.
-    pub const FULL: Self = Self::new(1, 1);
 }
 
 impl Default for FontSize {
