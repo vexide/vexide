@@ -69,20 +69,28 @@ pub struct Display {
 impl core::fmt::Write for Display {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
         let mut writer_buffer = self.writer_buffer;
+
         writer_buffer.buffered(text, |line| {
-            let line = line.as_ptr().cast::<c_char>();
-            if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
-                self.scroll(0, Self::LINE_HEIGHT);
-            } else {
-                self.current_line += 1;
-            }
             Font::default().apply();
+
+            if self.current_line > (Self::MAX_VISIBLE_LINES - 1) {
+                self.scroll(0, Self::LINE_HEIGHT);
+            }
+            let line = line.as_ptr().cast::<c_char>();
             unsafe {
                 vexDisplayForegroundColor(0xff_ff_ff);
-                vexDisplayString(self.current_line as i32, c"%s".as_ptr(), line);
+                vexDisplayString(
+                    self.current_line.min(Self::MAX_VISIBLE_LINES - 1) as i32,
+                    c"%s".as_ptr(),
+                    line,
+                );
             }
+
+            self.current_line += 1;
         });
+
         self.writer_buffer = writer_buffer;
+
         Ok(())
     }
 }
@@ -689,7 +697,7 @@ impl Display {
     pub(crate) const LINE_HEIGHT: i16 = 20;
 
     /// The number of characters that fit in one line with the default font.
-    pub(crate) const LINE_LENGTH: usize = 20;
+    pub(crate) const LINE_LENGTH: usize = 48;
 
     /// Vertical height taken by the user program header when visible.
     pub const HEADER_HEIGHT: i16 = 32;
