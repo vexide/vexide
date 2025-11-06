@@ -20,10 +20,7 @@ use vex_sdk::{
     vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexDisplayTextSize, vexTouchDataGet,
 };
 
-use crate::{
-    color::Color,
-    math::Point2,
-};
+use crate::{color::Color, math::Point2};
 
 /// A struct that implements a fixed width line buffer with a length of
 /// 52 characters.
@@ -208,18 +205,18 @@ impl<T: Into<Point2<i16>> + Copy> Fill for T {
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
     /// Top left coordinate of the rectangle
-    pub start: Point2<i16>,
+    pub top_left: Point2<i16>,
 
     /// Bottom right coordinate of the rectangle
-    pub end: Point2<i16>,
+    pub bottom_right: Point2<i16>,
 }
 
 impl Rect {
     /// Create a new rectangle with the given coordinates.
-    pub fn new(start: impl Into<Point2<i16>>, end: impl Into<Point2<i16>>) -> Self {
+    pub fn new(top_left: impl Into<Point2<i16>>, bottom_right: impl Into<Point2<i16>>) -> Self {
         Self {
-            start: start.into(),
-            end: end.into(),
+            top_left: top_left.into(),
+            bottom_right: bottom_right.into(),
         }
     }
 
@@ -227,8 +224,8 @@ impl Rect {
     pub fn from_dimensions(origin: impl Into<Point2<i16>>, width: u16, height: u16) -> Self {
         let origin = origin.into();
         Self {
-            start: origin,
-            end: Point2 {
+            top_left: origin,
+            bottom_right: Point2 {
                 x: origin.x + (width as i16),
                 y: origin.y + (height as i16),
             },
@@ -259,10 +256,10 @@ impl Stroke for Rect {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectDraw(
-                i32::from(self.start.x),
-                i32::from(self.start.y + Display::HEADER_HEIGHT),
-                i32::from(self.end.x),
-                i32::from(self.end.y + Display::HEADER_HEIGHT),
+                i32::from(self.top_left.x),
+                i32::from(self.top_left.y + Display::HEADER_HEIGHT),
+                i32::from(self.bottom_right.x),
+                i32::from(self.bottom_right.y + Display::HEADER_HEIGHT),
             );
         }
     }
@@ -273,10 +270,10 @@ impl Fill for Rect {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectFill(
-                i32::from(self.start.x),
-                i32::from(self.start.y + Display::HEADER_HEIGHT),
-                i32::from(self.end.x),
-                i32::from(self.end.y + Display::HEADER_HEIGHT),
+                i32::from(self.top_left.x),
+                i32::from(self.top_left.y + Display::HEADER_HEIGHT),
+                i32::from(self.bottom_right.x),
+                i32::from(self.bottom_right.y + Display::HEADER_HEIGHT),
             );
         }
     }
@@ -491,18 +488,24 @@ pub struct Text<'a> {
     /// The font that will be used when this text is displayed
     pub font: Font,
 
-    /// Horizontal alignment of text displayed on the display
-    pub horizontal_align: Alignment,
+    /// Horizontal alignment of text's origin point the display
+    pub horizontal_alignment: Alignment,
 
-    /// Vertical alignment of text displayed on the display
-    pub vertical_align: Alignment,
+    /// Vertical alignment of text's origin point on the display
+    pub vertical_alignment: Alignment,
 }
 
 impl<'a> Text<'a> {
     /// Create a new text from a &CStr with a given position (defaults to top left corner alignment)
     /// and font
     pub fn new(text: &'a CStr, font: Font, position: impl Into<Point2<i16>>) -> Self {
-        Self::new_aligned(text, font, position, Alignment::default(), Alignment::default())
+        Self::new_aligned(
+            text,
+            font,
+            position,
+            Alignment::default(),
+            Alignment::default(),
+        )
     }
 
     /// Create a new text from a String with a given position (defaults to top left corner
@@ -511,8 +514,18 @@ impl<'a> Text<'a> {
     /// # Panics
     ///
     /// This function panics if `text` contains a null character.
-    pub fn from_string(text: impl Into<String>, font: Font, position: impl Into<Point2<i16>>) -> Self {
-        Self::from_string_aligned(text, font, position, Alignment::default(), Alignment::default())
+    pub fn from_string(
+        text: impl Into<String>,
+        font: Font,
+        position: impl Into<Point2<i16>>,
+    ) -> Self {
+        Self::from_string_aligned(
+            text,
+            font,
+            position,
+            Alignment::default(),
+            Alignment::default(),
+        )
     }
 
     /// Create a new text from a &CStr with a given position (based on alignment) and font
@@ -527,8 +540,8 @@ impl<'a> Text<'a> {
             text: text.into(),
             position: position.into(),
             font,
-            horizontal_align,
-            vertical_align,
+            horizontal_alignment: horizontal_align,
+            vertical_alignment: vertical_align,
         }
     }
 
@@ -550,15 +563,15 @@ impl<'a> Text<'a> {
                 .into(),
             position: position.into(),
             font,
-            horizontal_align,
-            vertical_align,
+            horizontal_alignment: horizontal_align,
+            vertical_alignment: vertical_align,
         }
     }
 
     /// Change text alignment
     pub const fn align(&mut self, horizontal: Alignment, vertical: Alignment) {
-        self.horizontal_align = horizontal;
-        self.vertical_align = vertical;
+        self.horizontal_alignment = horizontal;
+        self.vertical_alignment = vertical;
     }
 
     /// Returns the height of the text widget in pixels
@@ -585,21 +598,16 @@ impl Text<'_> {
     /// - `color` - The color of the text.
     /// - `bg_color` - The background color of the text. If `None`, the background will be
     ///   transparent.
-    pub fn draw(
-        &self,
-        _display: &mut Display,
-        color: impl Into<Color>,
-        bg_color: Option<Color>,
-    ) {
+    pub fn draw(&self, _display: &mut Display, color: impl Into<Color>, bg_color: Option<Color>) {
         // Horizontally align text
-        let x = match self.horizontal_align {
+        let x = match self.horizontal_alignment {
             Alignment::Start => self.position.x,
             Alignment::Center => self.position.x - (self.width() / 2) as i16,
             Alignment::End => self.position.x - self.width() as i16,
         };
 
         // Vertically align text
-        let y = match self.vertical_align {
+        let y = match self.vertical_alignment {
             Alignment::Start => self.position.y,
             Alignment::Center => self.position.y - (self.height() / 2) as i16,
             Alignment::End => self.position.y - self.height() as i16,
@@ -781,10 +789,10 @@ impl Display {
     pub fn scroll_region(&mut self, region: Rect, offset: i16) {
         unsafe {
             vexDisplayScrollRect(
-                i32::from(region.start.x),
-                i32::from(region.start.y + Self::HEADER_HEIGHT),
-                (region.end.x).into(),
-                i32::from(region.end.y + Self::HEADER_HEIGHT),
+                i32::from(region.top_left.x),
+                i32::from(region.top_left.y + Self::HEADER_HEIGHT),
+                (region.bottom_right.x).into(),
+                i32::from(region.bottom_right.y + Self::HEADER_HEIGHT),
                 i32::from(offset),
             );
         }
@@ -831,12 +839,7 @@ impl Display {
     /// // Write red text with a blue background to the display.
     /// display.draw_text(&text, Color::new(255, 0, 0), Some(Color::new(0, 0, 255)));
     /// ```
-    pub fn draw_text(
-        &mut self,
-        text: &Text<'_>,
-        color: impl Into<Color>,
-        bg_color: Option<Color>,
-    ) {
+    pub fn draw_text(&mut self, text: &Text<'_>, color: impl Into<Color>, bg_color: Option<Color>) {
         text.draw(self, color, bg_color);
     }
 
@@ -868,8 +871,9 @@ impl Display {
     pub fn draw_buffer(&mut self, region: Rect, buf: &[Color]) {
         let raw_buf: &[u32] = bytemuck::must_cast_slice(buf);
         // Convert the coordinates to u32 to avoid overflows when multiplying.
-        let expected_size = ((region.end.y - region.start.y) as u32
-            * (region.end.x - region.start.x) as u32) as usize;
+        let expected_size = ((region.bottom_right.y - region.top_left.y) as u32
+            * (region.bottom_right.x - region.top_left.x) as u32)
+            as usize;
         let buffer_size = raw_buf.len();
         assert_eq!(
             buffer_size, expected_size,
@@ -879,12 +883,12 @@ impl Display {
         // SAFETY: The buffer is guaranteed to be the correct size.
         unsafe {
             vexDisplayCopyRect(
-                i32::from(region.start.x),
-                i32::from(region.start.y + Self::HEADER_HEIGHT),
-                i32::from(region.end.x),
-                i32::from(region.end.y + Self::HEADER_HEIGHT),
+                i32::from(region.top_left.x),
+                i32::from(region.top_left.y + Self::HEADER_HEIGHT),
+                i32::from(region.bottom_right.x),
+                i32::from(region.bottom_right.y + Self::HEADER_HEIGHT),
                 raw_buf.as_ptr().cast_mut(),
-                i32::from(region.end.x - region.start.x),
+                i32::from(region.bottom_right.x - region.top_left.x),
             );
         }
     }

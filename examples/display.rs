@@ -25,7 +25,11 @@ async fn main(peripherals: Peripherals) {
     let text = Text::new(c"Nice to see you!", Font::default(), [80, 40]);
 
     // Draw the text on the display in cyan with a yellow background color.
-    display.draw_text(&text, Color::new(0, 255, 255), Some(Color::new(255, 255, 0)));
+    display.draw_text(
+        &text,
+        Color::new(0, 255, 255),
+        Some(Color::new(255, 255, 0)),
+    );
 
     // You can use varying text sizes and fonts.
     let text = Text::new(
