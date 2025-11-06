@@ -464,57 +464,45 @@ impl FontFamily {
     }
 }
 
-/// Horizontal alignment for text on the display
+/// Alignment for text on the display
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
-pub enum HAlign {
-    /// Input coordinate is at the left of the text box
+pub enum Alignment {
+    /// Input coordinate is at the start of the box's axis
     #[default]
-    Left,
-    /// Input coordinate is at the center of the text box
-    Center,
-    /// Input coordinate is at the right of the text box
-    Right,
-}
+    Start,
 
-/// Vertical alignment for text on the display
-#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
-pub enum VAlign {
-    /// Input coordinate is at the top of the text box
-    #[default]
-    Top,
-
-    /// Input coordinate is at the center of the text box
+    /// Input coordinate is at the center of the box's axis
     Center,
 
-    /// Input coordinate is at the bottom of the text box
-    Bottom,
+    /// Input coordinate is at the end of the box's axis
+    End,
 }
 
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Text<'a> {
-    /// Top left corner coordinates of text on the display
-    position: Point2<i16>,
-
     /// C-String of the desired text to be displayed on the display
     #[allow(clippy::struct_field_names)]
     text: Cow<'a, CStr>,
 
+    /// Top left corner coordinates of text on the display
+    pub position: Point2<i16>,
+
     /// The font that will be used when this text is displayed
-    font: Font,
+    pub font: Font,
 
     /// Horizontal alignment of text displayed on the display
-    horizontal_align: HAlign,
+    pub horizontal_align: Alignment,
 
     /// Vertical alignment of text displayed on the display
-    vertical_align: VAlign,
+    pub vertical_align: Alignment,
 }
 
 impl<'a> Text<'a> {
     /// Create a new text from a &CStr with a given position (defaults to top left corner alignment)
     /// and font
     pub fn new(text: &'a CStr, font: Font, position: impl Into<Point2<i16>>) -> Self {
-        Self::new_aligned(text, font, position, HAlign::default(), VAlign::default())
+        Self::new_aligned(text, font, position, Alignment::default(), Alignment::default())
     }
 
     /// Create a new text from a String with a given position (defaults to top left corner
@@ -524,7 +512,7 @@ impl<'a> Text<'a> {
     ///
     /// This function panics if `text` contains a null character.
     pub fn from_string(text: impl Into<String>, font: Font, position: impl Into<Point2<i16>>) -> Self {
-        Self::from_string_aligned(text, font, position, HAlign::default(), VAlign::default())
+        Self::from_string_aligned(text, font, position, Alignment::default(), Alignment::default())
     }
 
     /// Create a new text from a &CStr with a given position (based on alignment) and font
@@ -532,8 +520,8 @@ impl<'a> Text<'a> {
         text: &'a CStr,
         font: Font,
         position: impl Into<Point2<i16>>,
-        horizontal_align: HAlign,
-        vertical_align: VAlign,
+        horizontal_align: Alignment,
+        vertical_align: Alignment,
     ) -> Self {
         Self {
             text: text.into(),
@@ -553,8 +541,8 @@ impl<'a> Text<'a> {
         text: impl Into<String>,
         font: Font,
         position: impl Into<Point2<i16>>,
-        horizontal_align: HAlign,
-        vertical_align: VAlign,
+        horizontal_align: Alignment,
+        vertical_align: Alignment,
     ) -> Self {
         Self {
             text: CString::new(text.into())
@@ -568,9 +556,9 @@ impl<'a> Text<'a> {
     }
 
     /// Change text alignment
-    pub const fn align(&mut self, horizontal_align: HAlign, vertical_align: VAlign) {
-        self.horizontal_align = horizontal_align;
-        self.vertical_align = vertical_align;
+    pub const fn align(&mut self, horizontal: Alignment, vertical: Alignment) {
+        self.horizontal_align = horizontal;
+        self.vertical_align = vertical;
     }
 
     /// Returns the height of the text widget in pixels
@@ -605,16 +593,16 @@ impl Text<'_> {
     ) {
         // Horizontally align text
         let x = match self.horizontal_align {
-            HAlign::Left => self.position.x,
-            HAlign::Center => self.position.x - (self.width() / 2) as i16,
-            HAlign::Right => self.position.x - self.width() as i16,
+            Alignment::Start => self.position.x,
+            Alignment::Center => self.position.x - (self.width() / 2) as i16,
+            Alignment::End => self.position.x - self.width() as i16,
         };
 
         // Vertically align text
         let y = match self.vertical_align {
-            VAlign::Top => self.position.y,
-            VAlign::Center => self.position.y - (self.height() / 2) as i16,
-            VAlign::Bottom => self.position.y - self.height() as i16,
+            Alignment::Start => self.position.y,
+            Alignment::Center => self.position.y - (self.height() / 2) as i16,
+            Alignment::End => self.position.y - self.height() as i16,
         };
 
         unsafe {
@@ -656,8 +644,10 @@ pub struct TouchEvent {
 pub enum TouchState {
     /// The touch has been released.
     Released,
+
     /// The display has been touched.
     Pressed,
+
     /// The display has been touched and is still being held.
     Held,
 }
