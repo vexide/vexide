@@ -9,9 +9,8 @@ pub struct ErrorReport {
 }
 
 impl ErrorReport {
-    pub const HEADER_HEIGHT: i32 = 32;
     pub const DISPLAY_WIDTH: i32 = 480;
-    pub const DISPLAY_HEIGHT: i32 = 272;
+    pub const DISPLAY_HEIGHT: i32 = 240;
     pub const BOX_MARGIN: i32 = 16;
     pub const BOX_PADDING: i32 = 16;
     pub const LINE_HEIGHT: i32 = 20;
@@ -26,14 +25,14 @@ impl ErrorReport {
             vex_sdk::vexDisplayForegroundColor(Self::COLOR_RED);
             vex_sdk::vexDisplayRectFill(
                 Self::BOX_MARGIN,
-                Self::HEADER_HEIGHT + Self::BOX_MARGIN,
+                Self::BOX_MARGIN,
                 Self::DISPLAY_WIDTH - Self::BOX_MARGIN,
                 Self::DISPLAY_HEIGHT - Self::BOX_MARGIN,
             );
             vex_sdk::vexDisplayForegroundColor(Self::COLOR_WHITE);
             vex_sdk::vexDisplayRectDraw(
                 Self::BOX_MARGIN,
-                Self::HEADER_HEIGHT + Self::BOX_MARGIN,
+                Self::BOX_MARGIN,
                 Self::DISPLAY_WIDTH - Self::BOX_MARGIN,
                 Self::DISPLAY_HEIGHT - Self::BOX_MARGIN,
             );
@@ -43,7 +42,7 @@ impl ErrorReport {
         Self {
             buf: [0; 53],
             pos: 0,
-            y_offset: Self::HEADER_HEIGHT + Self::BOX_MARGIN + Self::BOX_PADDING,
+            y_offset: Self::BOX_MARGIN + Self::BOX_PADDING,
         }
     }
 

@@ -137,7 +137,7 @@ impl Fill for Circle {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleFill(
                 i32::from(self.center.x),
-                i32::from(self.center.y + Display::HEADER_HEIGHT),
+                i32::from(self.center.y),
                 i32::from(self.radius),
             );
         }
@@ -150,7 +150,7 @@ impl Stroke for Circle {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleDraw(
                 i32::from(self.center.x),
-                i32::from(self.center.y + Display::HEADER_HEIGHT),
+                i32::from(self.center.y),
                 i32::from(self.radius),
             );
         }
@@ -185,9 +185,9 @@ impl Fill for Line {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayLineDraw(
                 i32::from(self.start.x),
-                i32::from(self.start.y + Display::HEADER_HEIGHT),
+                i32::from(self.start.y),
                 i32::from(self.end.x - 1),
-                i32::from(self.end.y + Display::HEADER_HEIGHT - 1),
+                i32::from(self.end.y - 1),
             );
         }
     }
@@ -199,7 +199,7 @@ impl<T: Into<Point2<i16>> + Copy> Fill for T {
 
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
-            vexDisplayPixelSet(point.x as _, (point.y + Display::HEADER_HEIGHT) as _);
+            vexDisplayPixelSet(point.x as _, point.y as _);
         }
     }
 }
@@ -264,9 +264,9 @@ impl Stroke for Rect {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectDraw(
                 i32::from(self.top_left.x),
-                i32::from(self.top_left.y + Display::HEADER_HEIGHT),
+                i32::from(self.top_left.y),
                 i32::from(self.bottom_right.x - 1),
-                i32::from(self.bottom_right.y + Display::HEADER_HEIGHT - 1),
+                i32::from(self.bottom_right.y - 1),
             );
         }
     }
@@ -278,9 +278,9 @@ impl Fill for Rect {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectFill(
                 i32::from(self.top_left.x),
-                i32::from(self.top_left.y + Display::HEADER_HEIGHT),
+                i32::from(self.top_left.y),
                 i32::from(self.bottom_right.x - 1),
-                i32::from(self.bottom_right.y + Display::HEADER_HEIGHT - 1),
+                i32::from(self.bottom_right.y - 1),
             );
         }
     }
@@ -615,7 +615,7 @@ impl Text<'_> {
             self.font.apply();
             vexDisplayPrintf(
                 i32::from(x),
-                i32::from(y + Display::HEADER_HEIGHT),
+                i32::from(y),
                 i32::from(bg_is_some),
                 c"%s".as_ptr(),
                 self.text.as_ptr(),
@@ -783,9 +783,9 @@ impl Display {
         unsafe {
             vexDisplayScrollRect(
                 i32::from(region.top_left.x),
-                i32::from(region.top_left.y + Self::HEADER_HEIGHT),
+                i32::from(region.top_left.y),
                 (region.bottom_right.x - 1).into(),
-                i32::from(region.bottom_right.y + Self::HEADER_HEIGHT) - 1,
+                i32::from(region.bottom_right.y) - 1,
                 i32::from(offset),
             );
         }
@@ -877,9 +877,9 @@ impl Display {
         unsafe {
             vexDisplayCopyRect(
                 i32::from(region.top_left.x),
-                i32::from(region.top_left.y + Self::HEADER_HEIGHT),
+                i32::from(region.top_left.y),
                 i32::from(region.bottom_right.x - 1),
-                i32::from(region.bottom_right.y + Self::HEADER_HEIGHT - 1),
+                i32::from(region.bottom_right.y - 1),
                 raw_buf.as_ptr().cast_mut(),
                 i32::from(region.bottom_right.x - region.top_left.x),
             );

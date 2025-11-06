@@ -18,7 +18,7 @@ compress = true
 vexide = { path = "packages/vexide", features = [
     "full",
     "vex-sdk-mock",
-    "vex-sdk-jumptable",
+    "vex-sdk-pros",
 ] }
 
 [workspace]
@@ -36,8 +36,8 @@ vexide-core = { version = "0.8.0", path = "packages/vexide-core", default-featur
 vexide-devices = { version = "0.8.0", path = "packages/vexide-devices", default-features = false }
 vexide-startup = { version = "0.5.0", path = "packages/vexide-startup", default-features = false }
 vexide-macro = { version = "0.4.0", path = "packages/vexide-macro", default-features = false }
-vex-sdk = "0.27.1"
-vex-sdk-mock = "0.0.1"
+vex-sdk = "0.28.0"
+vex-sdk-mock = "0.1.0"
 vex-libunwind = { version = "0.3.0" }
 vex-libunwind-sys = { version = "0.1.1" }
 
