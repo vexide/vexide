@@ -260,28 +260,32 @@ impl Rect {
 
 impl Stroke for Rect {
     fn stroke(&self, _display: &mut Display, color: impl Into<Color>) {
-        unsafe {
-            vexDisplayForegroundColor(color.into().into_raw());
-            vexDisplayRectDraw(
-                i32::from(self.top_left.x),
-                i32::from(self.top_left.y),
-                i32::from(self.bottom_right.x - 1),
-                i32::from(self.bottom_right.y - 1),
-            );
+        if self.bottom_right.x != self.top_left.x && self.bottom_right.y != self.top_left.y {
+            unsafe {
+                vexDisplayForegroundColor(color.into().into_raw());
+                vexDisplayRectDraw(
+                    i32::from(self.top_left.x),
+                    i32::from(self.top_left.y),
+                    i32::from(self.bottom_right.x - 1),
+                    i32::from(self.bottom_right.y - 1),
+                );
+            }
         }
     }
 }
 
 impl Fill for Rect {
     fn fill(&self, _display: &mut Display, color: impl Into<Color>) {
-        unsafe {
-            vexDisplayForegroundColor(color.into().into_raw());
-            vexDisplayRectFill(
-                i32::from(self.top_left.x),
-                i32::from(self.top_left.y),
-                i32::from(self.bottom_right.x - 1),
-                i32::from(self.bottom_right.y - 1),
-            );
+        if self.bottom_right.x != self.top_left.x && self.bottom_right.y != self.top_left.y {
+            unsafe {
+                vexDisplayForegroundColor(color.into().into_raw());
+                vexDisplayRectFill(
+                    i32::from(self.top_left.x),
+                    i32::from(self.top_left.y),
+                    i32::from(self.bottom_right.x - 1),
+                    i32::from(self.bottom_right.y - 1),
+                );
+            }
         }
     }
 }
