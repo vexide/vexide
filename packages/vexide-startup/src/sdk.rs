@@ -20,7 +20,6 @@ const _: () = {
     }
 };
 
-
 // If an unsupported SDK is specified on a non-VEXos target and we aren't using vex-sdk-mock, throw
 // a compiler error.
 #[cfg(all(
