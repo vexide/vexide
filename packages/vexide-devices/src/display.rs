@@ -207,10 +207,10 @@ impl<T: Into<Point2<i16>> + Copy> Fill for T {
 /// pixels.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
-    /// First point (coordinate) of the rectangle
+    /// Top left coordinate of the rectangle
     pub start: Point2<i16>,
 
-    /// Second point (coordinate) of the rectangle
+    /// Bottom right coordinate of the rectangle
     pub end: Point2<i16>,
 }
 
@@ -523,8 +523,8 @@ impl<'a> Text<'a> {
     /// # Panics
     ///
     /// This function panics if `text` contains a null character.
-    pub fn from_str(text: &str, font: Font, position: impl Into<Point2<i16>>) -> Self {
-        Self::from_str_aligned(text, font, position, HAlign::default(), VAlign::default())
+    pub fn from_string(text: impl Into<String>, font: Font, position: impl Into<Point2<i16>>) -> Self {
+        Self::from_string_aligned(text, font, position, HAlign::default(), VAlign::default())
     }
 
     /// Create a new text from a &CStr with a given position (based on alignment) and font
@@ -549,15 +549,15 @@ impl<'a> Text<'a> {
     /// # Panics
     ///
     /// This function panics if `text` contains a null character.
-    pub fn from_str_aligned(
-        text: &str,
+    pub fn from_string_aligned(
+        text: impl Into<String>,
         font: Font,
         position: impl Into<Point2<i16>>,
         horizontal_align: HAlign,
         vertical_align: VAlign,
     ) -> Self {
         Self {
-            text: CString::new(text)
+            text: CString::new(text.into())
                 .expect("Null character in non-terminating position")
                 .into(),
             position: position.into(),
