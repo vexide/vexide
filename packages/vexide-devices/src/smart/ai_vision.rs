@@ -36,7 +36,6 @@ use core::{
 
 use bitflags::bitflags;
 use mint::Point2;
-use rgb::Rgb;
 use snafu::Snafu;
 use vex_sdk::{
     V5_DeviceAiVisionCode, V5_DeviceAiVisionColor, V5_DeviceAiVisionObject, V5_DeviceT,
@@ -47,7 +46,7 @@ use vex_sdk::{
 };
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
-use crate::math::Angle;
+use crate::{color::Color, math::Angle};
 
 #[repr(u8)]
 enum ObjectType {
@@ -197,9 +196,11 @@ impl From<AiVisionDetectionMode> for AiVisionFlags {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct AiVisionColor {
     /// The RGB color value.
-    pub rgb: Rgb<u8>,
+    pub rgb: Color,
+
     /// The accepted hue range of the color. VEXcode limits this value to [0, 20]
     pub hue_range: f32,
+
     /// The accepted saturation range of the color.
     pub saturation_range: f32,
 }
@@ -443,7 +444,7 @@ impl AiVisionSensor {
     ///
     /// ```no_run
     /// use vexide::{
-    ///     color::Rgb,
+    ///     color::Color,
     ///     prelude::*,
     ///     smart::ai_vision::{AiVisionColor, AiVisionColorCode},
     /// };
@@ -452,7 +453,7 @@ impl AiVisionSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
-    ///         rgb: Rgb::new(255, 0, 0),
+    ///         rgb: Color::new(255, 0, 0),
     ///         hue_range: 10.0,
     ///         saturation_range: 1.0,
     ///     };
@@ -616,13 +617,13 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
+    /// use vexide::{color::Color, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
-    ///         rgb: Rgb::new(255, 0, 0),
+    ///         rgb: Color::new(255, 0, 0),
     ///         hue_range: 10.0,
     ///         saturation_range: 1.0,
     ///     };
@@ -669,13 +670,13 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
+    /// use vexide::{color::Color, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
-    ///         rgb: Rgb::new(255, 0, 0),
+    ///         rgb: Color::new(255, 0, 0),
     ///         hue_range: 10.0,
     ///         saturation_range: 1.0,
     ///     };
@@ -704,7 +705,7 @@ impl AiVisionSensor {
         }
 
         Ok(Some(AiVisionColor {
-            rgb: Rgb::new(color.red, color.grn, color.blu),
+            rgb: Color::new(color.red, color.grn, color.blu),
             hue_range: color.hangle,
             saturation_range: color.hdsat,
         }))
@@ -721,13 +722,13 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{color::Rgb, prelude::*, smart::ai_vision::AiVisionColor};
+    /// use vexide::{color::Color, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
     ///     let color = AiVisionColor {
-    ///         rgb: Rgb::new(255, 0, 0),
+    ///         rgb: Color::new(255, 0, 0),
     ///         hue_range: 10.0,
     ///         saturation_range: 1.0,
     ///     };

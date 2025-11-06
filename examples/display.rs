@@ -41,9 +41,9 @@ async fn main(peripherals: Peripherals) {
     display.draw_text(&text, Color::new(255, 255, 255), None);
 
     // Font sizes can be created with a fraction or a float
-    let size = FontSize::from_float(0.333).unwrap();
+    let size = FontSize::from_float(0.333);
     println!("Font Size: {:?}", size);
-    let size = FontSize::try_from(1.4).unwrap();
+    let size = FontSize::from_float(1.4);
     println!("Font Size: {:?}", size);
 
     loop {
