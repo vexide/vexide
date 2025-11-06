@@ -11,7 +11,6 @@ use core::{
     time::Duration,
 };
 
-use snafu::{Snafu, ensure};
 use vex_sdk::{
     V5_TouchEvent, V5_TouchStatus, vexDisplayBackgroundColor, vexDisplayCircleDraw,
     vexDisplayCircleFill, vexDisplayCopyRect, vexDisplayFontNamedSet, vexDisplayForegroundColor,
