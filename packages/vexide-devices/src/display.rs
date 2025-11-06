@@ -178,8 +178,8 @@ impl Fill for Line {
             vexDisplayLineDraw(
                 i32::from(self.start.x),
                 i32::from(self.start.y + Display::HEADER_HEIGHT),
-                i32::from(self.end.x),
-                i32::from(self.end.y + Display::HEADER_HEIGHT),
+                i32::from(self.end.x - 1),
+                i32::from(self.end.y + Display::HEADER_HEIGHT - 1),
             );
         }
     }
@@ -257,8 +257,8 @@ impl Stroke for Rect {
             vexDisplayRectDraw(
                 i32::from(self.top_left.x),
                 i32::from(self.top_left.y + Display::HEADER_HEIGHT),
-                i32::from(self.bottom_right.x),
-                i32::from(self.bottom_right.y + Display::HEADER_HEIGHT),
+                i32::from(self.bottom_right.x - 1),
+                i32::from(self.bottom_right.y + Display::HEADER_HEIGHT - 1),
             );
         }
     }
@@ -271,8 +271,8 @@ impl Fill for Rect {
             vexDisplayRectFill(
                 i32::from(self.top_left.x),
                 i32::from(self.top_left.y + Display::HEADER_HEIGHT),
-                i32::from(self.bottom_right.x),
-                i32::from(self.bottom_right.y + Display::HEADER_HEIGHT),
+                i32::from(self.bottom_right.x - 1),
+                i32::from(self.bottom_right.y + Display::HEADER_HEIGHT - 1),
             );
         }
     }
@@ -776,8 +776,8 @@ impl Display {
             vexDisplayScrollRect(
                 i32::from(region.top_left.x),
                 i32::from(region.top_left.y + Self::HEADER_HEIGHT),
-                (region.bottom_right.x).into(),
-                i32::from(region.bottom_right.y + Self::HEADER_HEIGHT),
+                (region.bottom_right.x - 1).into(),
+                i32::from(region.bottom_right.y + Self::HEADER_HEIGHT) - 1,
                 i32::from(offset),
             );
         }
@@ -870,8 +870,8 @@ impl Display {
             vexDisplayCopyRect(
                 i32::from(region.top_left.x),
                 i32::from(region.top_left.y + Self::HEADER_HEIGHT),
-                i32::from(region.bottom_right.x),
-                i32::from(region.bottom_right.y + Self::HEADER_HEIGHT),
+                i32::from(region.bottom_right.x - 1),
+                i32::from(region.bottom_right.y + Self::HEADER_HEIGHT - 1),
                 raw_buf.as_ptr().cast_mut(),
                 i32::from(region.bottom_right.x - region.top_left.x),
             );
