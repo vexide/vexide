@@ -21,7 +21,7 @@ use vex_sdk::{
 };
 
 use crate::{
-    color::{Argb, Rgb, RgbExt},
+    color::Color,
     math::Point2,
 };
 
@@ -94,13 +94,13 @@ impl core::fmt::Write for Display {
 /// A type implementing this trait can draw a filled shape to the display.
 pub trait Fill {
     /// Draw a filled shape to the display.
-    fn fill(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
+    fn fill(&self, display: &mut Display, color: impl Into<Color>);
 }
 
 /// A type implementing this trait can draw an outlined shape to the display.
 pub trait Stroke {
     /// Draw an outlined shape to the display.
-    fn stroke(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
+    fn stroke(&self, display: &mut Display, color: impl Into<Color>);
 }
 
 /// A circle that can be drawn on the  display.
@@ -128,7 +128,7 @@ impl Circle {
 }
 
 impl Fill for Circle {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Color>) {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleFill(
@@ -141,7 +141,7 @@ impl Fill for Circle {
 }
 
 impl Stroke for Circle {
-    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn stroke(&self, _display: &mut Display, color: impl Into<Color>) {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleDraw(
@@ -176,7 +176,7 @@ impl Line {
 }
 
 impl Fill for Line {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Color>) {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayLineDraw(
@@ -190,7 +190,7 @@ impl Fill for Line {
 }
 
 impl<T: Into<Point2<i16>> + Copy> Fill for T {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Color>) {
         let point: Point2<i16> = (*self).into();
 
         unsafe {
@@ -255,7 +255,7 @@ impl Rect {
 }
 
 impl Stroke for Rect {
-    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn stroke(&self, _display: &mut Display, color: impl Into<Color>) {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectDraw(
@@ -269,7 +269,7 @@ impl Stroke for Rect {
 }
 
 impl Fill for Rect {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Color>) {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayRectFill(
@@ -600,8 +600,8 @@ impl Text<'_> {
     pub fn draw(
         &self,
         _display: &mut Display,
-        color: impl Into<Rgb<u8>>,
-        bg_color: Option<Rgb<u8>>,
+        color: impl Into<Color>,
+        bg_color: Option<Color>,
     ) {
         // Horizontally align text
         let x = match self.horizontal_align {
@@ -804,7 +804,7 @@ impl Display {
     ///
     /// Any type implementing the [`Fill`] trait (such as [`Rect`] or [`Circle`]) may be drawn using
     /// this method.
-    pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
+    pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Color>) {
         shape.fill(self, color);
     }
 
@@ -812,7 +812,7 @@ impl Display {
     ///
     /// Any type implementing the [`Stroke`] trait (such as [`Rect`] or [`Circle`]) may be drawn
     /// using this method.
-    pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Rgb<u8>>) {
+    pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Color>) {
         shape.stroke(self, color);
     }
 
@@ -822,7 +822,7 @@ impl Display {
     ///
     /// ```no_run
     /// use vexide::{
-    ///     color::Rgb,
+    ///     color::Color,
     ///     display::{Font, FontFamily, FontSize, Text},
     ///     math::Point2,
     ///     prelude::*,
@@ -839,19 +839,19 @@ impl Display {
     /// );
     ///
     /// // Write red text with a blue background to the display.
-    /// display.draw_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
+    /// display.draw_text(&text, Color::new(255, 0, 0), Some(Color::new(0, 0, 255)));
     /// ```
     pub fn draw_text(
         &mut self,
         text: &Text<'_>,
-        color: impl Into<Rgb<u8>>,
-        bg_color: Option<Rgb<u8>>,
+        color: impl Into<Color>,
+        bg_color: Option<Color>,
     ) {
         text.draw(self, color, bg_color);
     }
 
     /// Clears the entire display, filling it with the specified color.
-    pub fn erase(&mut self, color: impl Into<Rgb<u8>>) {
+    pub fn erase(&mut self, color: impl Into<Color>) {
         // We don't use `vexDisplayErase` here because it doesn't take a color
         // and we want to preserve the API.
         Rect::from_dimensions(
@@ -875,7 +875,7 @@ impl Display {
     ///
     /// This function panics if `buf` does not have the correct number of bytes to fill the
     /// specified region.
-    pub fn draw_buffer(&mut self, region: Rect, buf: &[Argb]) {
+    pub fn draw_buffer(&mut self, region: Rect, buf: &[Color]) {
         let raw_buf: &[u32] = bytemuck::must_cast_slice(buf);
         // Convert the coordinates to u32 to avoid overflows when multiplying.
         let expected_size = ((region.end.y - region.start.y) as u32

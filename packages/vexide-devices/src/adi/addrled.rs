@@ -42,7 +42,7 @@ use snafu::{Snafu, ensure};
 use vex_sdk::vexDeviceAdiAddrLedSet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError};
-use crate::color::{Rgb, RgbExt};
+use crate::color::Color;
 
 /// WS2812B Addressable LED Strip
 #[derive(Debug, Eq, PartialEq)]
@@ -87,7 +87,7 @@ impl AdiAddrLed {
     /// # Errors
     ///
     /// If the ADI device could not be accessed, [`AddrLedError::Port`] is returned.
-    pub fn set_all(&mut self, color: impl Into<Rgb<u8>>) -> Result<(), AddrLedError> {
+    pub fn set_all(&mut self, color: impl Into<Color>) -> Result<(), AddrLedError> {
         _ = self.set_buffer(vec![color.into(); self.buf.len()])?;
         Ok(())
     }
@@ -102,7 +102,7 @@ impl AdiAddrLed {
     pub fn set_pixel(
         &mut self,
         index: usize,
-        color: impl Into<Rgb<u8>>,
+        color: impl Into<Color>,
     ) -> Result<(), AddrLedError> {
         self.port.validate_expander()?;
 
@@ -128,7 +128,7 @@ impl AdiAddrLed {
     pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, AddrLedError>
     where
         T: IntoIterator<Item = I>,
-        I: Into<Rgb<u8>>,
+        I: Into<Color>,
     {
         self.port.validate_expander()?;
 
@@ -163,7 +163,7 @@ impl AdiDevice<1> for AdiAddrLed {
 
 impl smart_leds_trait::SmartLedsWrite for AdiAddrLed {
     type Error = AddrLedError;
-    type Color = Rgb<u8>;
+    type Color = Color;
 
     fn write<T, I>(&mut self, iterator: T) -> Result<(), Self::Error>
     where

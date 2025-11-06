@@ -39,7 +39,7 @@ use vex_sdk::{
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
-    color::Rgb,
+    color::Color,
     math::{Angle, Point2},
 };
 
@@ -478,11 +478,7 @@ impl VisionSensor {
                 V5VisionWBMode::kVisionWBManual => WhiteBalance::Manual({
                     let raw = unsafe { vexDeviceVisionWhiteBalanceGet(self.device) };
 
-                    Rgb {
-                        r: raw.red,
-                        g: raw.green,
-                        b: raw.blue,
-                    }
+                    Color::new(raw.red, raw.green, raw.blue)
                 }),
                 _ => unreachable!(),
             },
@@ -658,7 +654,7 @@ impl VisionSensor {
                 let led_color = unsafe { vexDeviceVisionLedColorGet(self.device) };
 
                 LedMode::Manual(
-                    Rgb::new(led_color.red, led_color.green, led_color.blue),
+                    Color::new(led_color.red, led_color.green, led_color.blue),
                     f64::from(led_color.brightness) / 100.0,
                 )
             }
@@ -1367,7 +1363,7 @@ pub enum WhiteBalance {
     /// Manual Mode
     ///
     /// Allows for manual control over white balance using an RGB color.
-    Manual(Rgb<u8>),
+    Manual(Color),
 }
 
 impl From<WhiteBalance> for V5VisionWBMode {
@@ -1396,7 +1392,7 @@ pub enum LedMode {
     ///
     /// When in manual mode, the integrated LED will display a user-set RGB color code and
     /// brightness percentage from 0.0-1.0.
-    Manual(Rgb<u8>, f64),
+    Manual(Color, f64),
 }
 
 impl From<LedMode> for V5VisionLedMode {
