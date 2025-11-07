@@ -39,7 +39,7 @@ use vex_sdk::{
 
 use super::{PortError, SmartDevice, SmartDeviceType, SmartPort};
 use crate::{
-    color::Rgb,
+    color::Color,
     math::{Angle, Point2},
 };
 
@@ -439,32 +439,21 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{color::Rgb, prelude::*, smart::vision::WhiteBalance};
+    /// use vexide::{color::Color, prelude::*, smart::vision::WhiteBalance};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Set white balance to manual.
-    ///     _ = sensor.set_white_balance(WhiteBalance::Manual(Rgb {
-    ///         r: 255,
-    ///         g: 255,
-    ///         b: 255,
-    ///     }));
+    ///     _ = sensor.set_white_balance(WhiteBalance::Manual(Color::WHITE));
     ///
     ///     // Give the sensor time to update.
     ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
     ///
     ///     // Read brightness. Should be 50%, since we just set it.
     ///     if let Ok(white_balance) = sensor.white_balance() {
-    ///         assert_eq!(
-    ///             white_balance,
-    ///             WhiteBalance::Manual(Rgb {
-    ///                 r: 255,
-    ///                 g: 255,
-    ///                 b: 255,
-    ///             })
-    ///         );
+    ///         assert_eq!(white_balance, WhiteBalance::Manual(Color::WHITE));
     ///     }
     /// }
     /// ```
@@ -478,11 +467,7 @@ impl VisionSensor {
                 V5VisionWBMode::kVisionWBManual => WhiteBalance::Manual({
                     let raw = unsafe { vexDeviceVisionWhiteBalanceGet(self.device) };
 
-                    Rgb {
-                        r: raw.red,
-                        g: raw.green,
-                        b: raw.blue,
-                    }
+                    Color::new(raw.red, raw.green, raw.blue)
                 }),
                 _ => unreachable!(),
             },
@@ -531,18 +516,14 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{color::Rgb, prelude::*, smart::vision::WhiteBalance};
+    /// use vexide::{color::Color, prelude::*, smart::vision::WhiteBalance};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Set white balance to manual.
-    ///     _ = sensor.set_white_balance(WhiteBalance::Manual(Rgb {
-    ///         r: 255,
-    ///         g: 255,
-    ///         b: 255,
-    ///     }));
+    ///     _ = sensor.set_white_balance(WhiteBalance::Manual(Color::WHITE));
     /// }
     /// ```
     pub fn set_white_balance(&mut self, white_balance: WhiteBalance) -> Result<(), PortError> {
@@ -588,14 +569,14 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{color::Rgb, prelude::*, smart::vision::LedMode};
+    /// use vexide::{color::Color, prelude::*, smart::vision::LedMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Set the LED to red at 100% brightness.
-    ///     _ = sensor.set_led_mode(LedMode::Manual(Rgb { r: 255, g: 0, b: 0 }, 1.0));
+    ///     _ = sensor.set_led_mode(LedMode::Manual(Color::RED, 1.0));
     /// }
     /// ```
     pub fn set_led_mode(&mut self, mode: LedMode) -> Result<(), PortError> {
@@ -631,21 +612,21 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{color::Rgb, prelude::*, smart::vision::LedMode};
+    /// use vexide::{color::Color, prelude::*, smart::vision::LedMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Set the LED to red at 100% brightness.
-    ///     _ = sensor.set_led_mode(LedMode::Manual(Rgb { r: 255, g: 0, b: 0 }, 1.0));
+    ///     _ = sensor.set_led_mode(LedMode::Manual(Color::RED, 1.0));
     ///
     ///     // Give the sensor time to update.
     ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
     ///
     ///     // Check the sensor's reported LED mode. Should be the same as what we just set
     ///     if let Ok(led_mode) = sensor.led_mode() {
-    ///         assert_eq!(led_mode, LedMode::Manual(Rgb { r: 255, g: 0, b: 0 }, 1.0));
+    ///         assert_eq!(led_mode, LedMode::Manual(Color::RED, 1.0));
     ///     }
     /// }
     /// ```
@@ -658,7 +639,7 @@ impl VisionSensor {
                 let led_color = unsafe { vexDeviceVisionLedColorGet(self.device) };
 
                 LedMode::Manual(
-                    Rgb::new(led_color.red, led_color.green, led_color.blue),
+                    Color::new(led_color.red, led_color.green, led_color.blue),
                     f64::from(led_color.brightness) / 100.0,
                 )
             }
@@ -1367,7 +1348,7 @@ pub enum WhiteBalance {
     /// Manual Mode
     ///
     /// Allows for manual control over white balance using an RGB color.
-    Manual(Rgb<u8>),
+    Manual(Color),
 }
 
 impl From<WhiteBalance> for V5VisionWBMode {
@@ -1396,7 +1377,7 @@ pub enum LedMode {
     ///
     /// When in manual mode, the integrated LED will display a user-set RGB color code and
     /// brightness percentage from 0.0-1.0.
-    Manual(Rgb<u8>, f64),
+    Manual(Color, f64),
 }
 
 impl From<LedMode> for V5VisionLedMode {

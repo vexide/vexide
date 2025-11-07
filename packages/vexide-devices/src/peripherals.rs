@@ -366,7 +366,7 @@ impl DynamicPeripherals {
         self.display.take()
     }
     /// Returns a [`Display`] to the dynamic peripherals.
-    pub fn return_display(&mut self, display: Display) {
+    pub const fn return_display(&mut self, display: Display) {
         self.display = Some(display);
     }
 

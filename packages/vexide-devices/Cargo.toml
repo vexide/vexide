@@ -26,6 +26,7 @@ bitflags = "2.4.2"
 libm = "0.2.15"
 embedded-io = { version = "0.6.1", optional = true }
 smart-leds-trait = "0.3.0"
+bytemuck = { version = "1.24.0", features = [ "derive", "must_cast" ] }
 
 [dev-dependencies]
 vexide-devices = {  workspace = true }

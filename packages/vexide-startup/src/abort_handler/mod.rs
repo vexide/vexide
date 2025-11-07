@@ -136,7 +136,7 @@ pub extern "aapcs" fn irq() -> ! {
         vmrs r1, FPEXC
         push {{r1}}
 
-        bl vexSystemIQRQnterrupt
+        bl vexSystemIRQInterrupt
 
         pop {{r1}}
         vmsr FPEXC, r1

@@ -1,7 +1,7 @@
 use std::{fmt::Write, time::Duration};
 
 use vexide::{
-    color::Rgb,
+    color::Color,
     display::{Font, FontFamily, FontSize, Rect, Text},
     prelude::*,
 };
@@ -17,29 +17,33 @@ async fn main(peripherals: Peripherals) {
     let rect = Rect::new([20, 20], [120, 120]);
 
     // Fill in the entire rectangle with some gray.
-    display.fill(&rect, Rgb::new(128, 128, 128));
+    display.fill(&rect, Color::new(128, 128, 128));
     // Draw a thin magenta border of the same dimensions.
     // This will appear on top of the gray fill because it is called later.
-    display.stroke(&rect, Rgb::new(255, 0, 255));
+    display.stroke(&rect, Color::new(255, 0, 255));
 
-    let text = Text::new("Nice to see you!", Font::default(), [80, 40]);
+    let text = Text::new(c"Nice to see you!", Font::default(), [80, 40]);
 
     // Draw the text on the display in cyan with a yellow background color.
-    display.draw_text(&text, Rgb::new(0, 255, 255), Some(Rgb::new(255, 255, 0)));
+    display.draw_text(
+        &text,
+        Color::new(0, 255, 255),
+        Some(Color::new(255, 255, 0)),
+    );
 
     // You can use varying text sizes and fonts.
     let text = Text::new(
-        "This is vexide.",
+        c"This is vexide.",
         Font::new(FontSize::new(2, 3), FontFamily::Proportional),
         [21, 84],
     );
     // Draw the text white, with a transparent background.
-    display.draw_text(&text, Rgb::new(255, 255, 255), None);
+    display.draw_text(&text, Color::new(255, 255, 255), None);
 
     // Font sizes can be created with a fraction or a float
-    let size = FontSize::from_float(0.333).unwrap();
+    let size = FontSize::from_float(0.333);
     println!("Font Size: {:?}", size);
-    let size = FontSize::try_from(1.4).unwrap();
+    let size = FontSize::from_float(1.4);
     println!("Font Size: {:?}", size);
 
     loop {

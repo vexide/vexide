@@ -5,10 +5,12 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
-use alloc::{ffi::CString, string::String, vec::Vec};
-use core::{ffi::CStr, mem, ptr::addr_of_mut, time::Duration};
+use alloc::{borrow::Cow, ffi::CString};
+use core::{
+    ffi::{CStr, c_char},
+    time::Duration,
+};
 
-use snafu::{Snafu, ensure};
 use vex_sdk::{
     V5_TouchEvent, V5_TouchStatus, vexDisplayBackgroundColor, vexDisplayCircleDraw,
     vexDisplayCircleFill, vexDisplayCopyRect, vexDisplayFontNamedSet, vexDisplayForegroundColor,
@@ -17,47 +19,77 @@ use vex_sdk::{
     vexDisplayStringHeightGet, vexDisplayStringWidthGet, vexDisplayTextSize, vexTouchDataGet,
 };
 
-use crate::{
-    color::{Rgb, RgbExt},
-    math::Point2,
-};
+use crate::{color::Color, math::Point2};
+
+/// A struct that implements a fixed width line buffer with a length of
+/// 52 characters.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct LineBuffer {
+    idx: usize,
+    // We add one to account for the null terminator.
+    buf: [u8; Display::LINE_LENGTH + 1],
+}
+
+impl Default for LineBuffer {
+    fn default() -> Self {
+        LineBuffer {
+            idx: 0,
+            buf: [0; Display::LINE_LENGTH + 1],
+        }
+    }
+}
+
+impl LineBuffer {
+    fn buffered(&mut self, s: &str, mut func: impl FnMut(&[u8])) {
+        let ascii_chars = s.chars().map(|c| match u32::from(c) {
+            1..=127 => c as _,
+            _ => b'?',
+        });
+        for char in ascii_chars {
+            if self.idx == Display::LINE_LENGTH || char == b'\n' {
+                func(&self.buf[0..=self.idx]);
+                *self = LineBuffer::default();
+            }
+            if char != b'\n' {
+                self.buf[self.idx] = char;
+                self.idx += 1;
+            }
+        }
+    }
+}
 
 /// The physical display and touchscreen on a VEX Brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Display {
-    writer_buffer: String,
+    writer_buffer: LineBuffer,
     render_mode: RenderMode,
     current_line: usize,
 }
 
 impl core::fmt::Write for Display {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
-        for character in text.chars() {
-            if character == '\n' {
-                if self.current_line > (Self::MAX_VISIBLE_LINES - 2) {
-                    self.scroll(0, Self::LINE_HEIGHT);
-                    self.flush_writer();
-                } else {
-                    self.flush_writer();
-                    self.current_line += 1;
-                }
-            } else {
-                self.writer_buffer.push(character);
-            }
-        }
+        let mut writer_buffer = self.writer_buffer;
 
-        unsafe {
-            vexDisplayForegroundColor(0xff_ff_ff);
-            vexDisplayString(
-                self.current_line as i32,
-                c"%s".as_ptr(),
-                CString::new(self.writer_buffer.clone())
-                    .expect(
-                        "CString::new encountered NUL (U+0000) byte in non-terminating position.",
-                    )
-                    .into_raw(),
-            );
-        }
+        writer_buffer.buffered(text, |line| {
+            Font::default().apply();
+
+            if self.current_line > (Self::MAX_VISIBLE_LINES - 1) {
+                self.scroll(0, Self::LINE_HEIGHT);
+            }
+            let line = line.as_ptr().cast::<c_char>();
+            unsafe {
+                vexDisplayForegroundColor(0xff_ff_ff);
+                vexDisplayString(
+                    self.current_line.min(Self::MAX_VISIBLE_LINES - 1) as i32,
+                    c"%s".as_ptr(),
+                    line,
+                );
+            }
+
+            self.current_line += 1;
+        });
+
+        self.writer_buffer = writer_buffer;
 
         Ok(())
     }
@@ -66,13 +98,13 @@ impl core::fmt::Write for Display {
 /// A type implementing this trait can draw a filled shape to the display.
 pub trait Fill {
     /// Draw a filled shape to the display.
-    fn fill(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
+    fn fill(&self, display: &mut Display, color: impl Into<Color>);
 }
 
 /// A type implementing this trait can draw an outlined shape to the display.
 pub trait Stroke {
     /// Draw an outlined shape to the display.
-    fn stroke(&self, display: &mut Display, color: impl Into<Rgb<u8>>);
+    fn stroke(&self, display: &mut Display, color: impl Into<Color>);
 }
 
 /// A circle that can be drawn on the  display.
@@ -100,12 +132,12 @@ impl Circle {
 }
 
 impl Fill for Circle {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Color>) {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleFill(
                 i32::from(self.center.x),
-                i32::from(self.center.y + Display::HEADER_HEIGHT),
+                i32::from(self.center.y),
                 i32::from(self.radius),
             );
         }
@@ -113,12 +145,12 @@ impl Fill for Circle {
 }
 
 impl Stroke for Circle {
-    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn stroke(&self, _display: &mut Display, color: impl Into<Color>) {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayCircleDraw(
                 i32::from(self.center.x),
-                i32::from(self.center.y + Display::HEADER_HEIGHT),
+                i32::from(self.center.y),
                 i32::from(self.radius),
             );
         }
@@ -148,26 +180,26 @@ impl Line {
 }
 
 impl Fill for Line {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Color>) {
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
             vexDisplayLineDraw(
                 i32::from(self.start.x),
-                i32::from(self.start.y + Display::HEADER_HEIGHT),
-                i32::from(self.end.x),
-                i32::from(self.end.y + Display::HEADER_HEIGHT),
+                i32::from(self.start.y),
+                i32::from(self.end.x - 1),
+                i32::from(self.end.y - 1),
             );
         }
     }
 }
 
 impl<T: Into<Point2<i16>> + Copy> Fill for T {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
+    fn fill(&self, _display: &mut Display, color: impl Into<Color>) {
         let point: Point2<i16> = (*self).into();
 
         unsafe {
             vexDisplayForegroundColor(color.into().into_raw());
-            vexDisplayPixelSet(point.x as _, (point.y + Display::HEADER_HEIGHT) as _);
+            vexDisplayPixelSet(point.x as _, point.y as _);
         }
     }
 }
@@ -179,19 +211,19 @@ impl<T: Into<Point2<i16>> + Copy> Fill for T {
 /// pixels.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
-    /// First point (coordinate) of the rectangle
-    pub start: Point2<i16>,
+    /// Top left coordinate of the rectangle
+    pub top_left: Point2<i16>,
 
-    /// Second point (coordinate) of the rectangle
-    pub end: Point2<i16>,
+    /// Bottom right coordinate of the rectangle
+    pub bottom_right: Point2<i16>,
 }
 
 impl Rect {
     /// Create a new rectangle with the given coordinates.
-    pub fn new(start: impl Into<Point2<i16>>, end: impl Into<Point2<i16>>) -> Self {
+    pub fn new(top_left: impl Into<Point2<i16>>, bottom_right: impl Into<Point2<i16>>) -> Self {
         Self {
-            start: start.into(),
-            end: end.into(),
+            top_left: top_left.into(),
+            bottom_right: bottom_right.into(),
         }
     }
 
@@ -199,8 +231,8 @@ impl Rect {
     pub fn from_dimensions(origin: impl Into<Point2<i16>>, width: u16, height: u16) -> Self {
         let origin = origin.into();
         Self {
-            start: origin,
-            end: Point2 {
+            top_left: origin,
+            bottom_right: Point2 {
                 x: origin.x + (width as i16),
                 y: origin.y + (height as i16),
             },
@@ -227,29 +259,33 @@ impl Rect {
 }
 
 impl Stroke for Rect {
-    fn stroke(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
-        unsafe {
-            vexDisplayForegroundColor(color.into().into_raw());
-            vexDisplayRectDraw(
-                i32::from(self.start.x),
-                i32::from(self.start.y + Display::HEADER_HEIGHT),
-                i32::from(self.end.x),
-                i32::from(self.end.y + Display::HEADER_HEIGHT),
-            );
+    fn stroke(&self, _display: &mut Display, color: impl Into<Color>) {
+        if self.bottom_right.x != self.top_left.x && self.bottom_right.y != self.top_left.y {
+            unsafe {
+                vexDisplayForegroundColor(color.into().into_raw());
+                vexDisplayRectDraw(
+                    i32::from(self.top_left.x),
+                    i32::from(self.top_left.y),
+                    i32::from(self.bottom_right.x - 1),
+                    i32::from(self.bottom_right.y - 1),
+                );
+            }
         }
     }
 }
 
 impl Fill for Rect {
-    fn fill(&self, _display: &mut Display, color: impl Into<Rgb<u8>>) {
-        unsafe {
-            vexDisplayForegroundColor(color.into().into_raw());
-            vexDisplayRectFill(
-                i32::from(self.start.x),
-                i32::from(self.start.y + Display::HEADER_HEIGHT),
-                i32::from(self.end.x),
-                i32::from(self.end.y + Display::HEADER_HEIGHT),
-            );
+    fn fill(&self, _display: &mut Display, color: impl Into<Color>) {
+        if self.bottom_right.x != self.top_left.x && self.bottom_right.y != self.top_left.y {
+            unsafe {
+                vexDisplayForegroundColor(color.into().into_raw());
+                vexDisplayRectFill(
+                    i32::from(self.top_left.x),
+                    i32::from(self.top_left.y),
+                    i32::from(self.bottom_right.x - 1),
+                    i32::from(self.bottom_right.y - 1),
+                );
+            }
         }
     }
 }
@@ -284,6 +320,7 @@ impl Font {
 pub struct FontSize {
     /// The numerator of the fractional font scale.
     pub numerator: u32,
+
     /// The denominator of the fractional font scale.
     pub denominator: u32,
 }
@@ -329,6 +366,19 @@ fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
 }
 
 impl FontSize {
+    /// An extra-small font size with a value of one-fifth.
+    pub const EXTRA_SMALL: Self = Self::new(1, 5);
+    /// A small font size with a value of one-fourth.
+    pub const SMALL: Self = Self::new(1, 4);
+    /// A medium font size with a value of one-third.
+    pub const MEDIUM: Self = Self::new(1, 3);
+    /// A large font size with a value of one-half.
+    pub const LARGE: Self = Self::new(1, 2);
+    /// An extra-large font size with a value of two-thirds.
+    pub const EXTRA_LARGE: Self = Self::new(2, 3);
+    /// The full size of the font.
+    pub const FULL: Self = Self::new(1, 1);
+
     /// Creates a custom fractional font size.
     ///
     /// If you wish to create a font size from a floating-point size, use [`FontSize::from_float`]
@@ -348,59 +398,32 @@ impl FontSize {
     /// This function is lossy, but negligibly so.
     /// The highest the denominator can be is 10000.
     ///
-    /// # Errors
+    /// # Panics
     ///
-    /// - [`InvalidFontSizeError`] if the given size is negative.
-    pub fn from_float(size: f32) -> Result<Self, InvalidFontSizeError> {
-        ensure!(
+    /// This function panics if the provided `size` is negative or non-finite.
+    #[must_use]
+    pub fn from_float(size: f32) -> Self {
+        assert!(
             size.is_finite() && !size.is_sign_negative(),
-            InvalidFontSizeSnafu { value: size }
+            "`FontSize::from_float` requires a positive, finite floating-point value"
         );
+
         let (numerator, denominator) = approximate_fraction(size, 10_000);
         // Unwraps are safe because we guarantee a positive fraction earlier.
         let (numerator, denominator) = (
             numerator.try_into().unwrap(),
             denominator.try_into().unwrap(),
         );
-        Ok(Self {
+        Self {
             numerator,
             denominator,
-        })
+        }
     }
-
-    /// An extra-small font size with a value of one-fifth.
-    pub const EXTRA_SMALL: Self = Self::new(1, 5);
-    /// A small font size with a value of one-fourth.
-    pub const SMALL: Self = Self::new(1, 4);
-    /// A medium font size with a value of one-third.
-    pub const MEDIUM: Self = Self::new(1, 3);
-    /// A large font size with a value of one-half.
-    pub const LARGE: Self = Self::new(1, 2);
-    /// An extra-large font size with a value of two-thirds.
-    pub const EXTRA_LARGE: Self = Self::new(2, 3);
-    /// The full size of the font.
-    pub const FULL: Self = Self::new(1, 1);
 }
 
 impl Default for FontSize {
     fn default() -> Self {
         Self::MEDIUM
-    }
-}
-
-impl TryFrom<f32> for FontSize {
-    type Error = InvalidFontSizeError;
-
-    fn try_from(value: f32) -> Result<Self, Self::Error> {
-        Self::from_float(value)
-    }
-}
-
-impl TryFrom<f64> for FontSize {
-    type Error = InvalidFontSizeError;
-
-    fn try_from(value: f64) -> Result<Self, Self::Error> {
-        Self::from_float(value as f32)
     }
 }
 
@@ -418,6 +441,7 @@ pub enum FontFamily {
     /// This font at full size is 49pt Noto Mono.
     #[default]
     Monospace,
+
     /// A proportional font which has a varying width for each character.
     ///
     /// This font at full size is 49pt Noto Sans.
@@ -434,95 +458,135 @@ impl FontFamily {
     }
 }
 
-/// Horizontal alignment for text on the display
+/// Alignment for text on the display
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
-pub enum HAlign {
-    /// Input coordinate is at the left of the text box
+pub enum Alignment {
+    /// Input coordinate is at the start of the box's axis
     #[default]
-    Left,
-    /// Input coordinate is at the center of the text box
-    Center,
-    /// Input coordinate is at the right of the text box
-    Right,
-}
+    Start,
 
-/// Vertical alignment for text on the display
-#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
-pub enum VAlign {
-    /// Input coordinate is at the top of the text box
-    #[default]
-    Top,
-    /// Input coordinate is at the center of the text box
+    /// Input coordinate is at the center of the box's axis
     Center,
-    /// Input coordinate is at the bottom of the text box
-    Bottom,
+
+    /// Input coordinate is at the end of the box's axis
+    End,
 }
 
 /// A piece of text that can be drawn on the display.
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Text {
+pub struct Text<'a> {
+    /// C-String of the desired text to be displayed on the display
+    #[allow(clippy::struct_field_names)]
+    text: Cow<'a, CStr>,
+
     /// Top left corner coordinates of text on the display
     pub position: Point2<i16>,
-    /// C-String of the desired text to be displayed on the display
-    pub text: CString,
+
     /// The font that will be used when this text is displayed
     pub font: Font,
-    /// Horizontal alignment of text displayed on the display
-    pub horizontal_align: HAlign,
-    /// Vertical alignment of text displayed on the display
-    pub vertical_align: VAlign,
+
+    /// Horizontal alignment of text's origin point the display
+    pub horizontal_alignment: Alignment,
+
+    /// Vertical alignment of text's origin point on the display
+    pub vertical_alignment: Alignment,
 }
 
-impl Text {
-    /// Create a new text with a given position (defaults to top left corner alignment) and font
-    pub fn new(text: &str, font: Font, position: impl Into<Point2<i16>>) -> Self {
-        Self::new_aligned(text, font, position, HAlign::default(), VAlign::default())
+impl<'a> Text<'a> {
+    /// Create a new text from a &CStr with a given position (defaults to top left corner alignment)
+    /// and font
+    pub fn new(text: &'a CStr, font: Font, position: impl Into<Point2<i16>>) -> Self {
+        Self::new_aligned(
+            text,
+            font,
+            position,
+            Alignment::default(),
+            Alignment::default(),
+        )
     }
 
-    /// Create a new text with a given position (based on alignment) and font
-    pub fn new_aligned(
-        text: &str,
+    /// Create a new text from a String with a given position (defaults to top left corner
+    /// alignment) and font
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `text` contains a null character.
+    pub fn from_string(
+        text: impl Into<String>,
         font: Font,
         position: impl Into<Point2<i16>>,
-        horizontal_align: HAlign,
-        vertical_align: VAlign,
+    ) -> Self {
+        Self::from_string_aligned(
+            text,
+            font,
+            position,
+            Alignment::default(),
+            Alignment::default(),
+        )
+    }
+
+    /// Create a new text from a &CStr with a given position (based on alignment) and font
+    pub fn new_aligned(
+        text: &'a CStr,
+        font: Font,
+        position: impl Into<Point2<i16>>,
+        horizontal_align: Alignment,
+        vertical_align: Alignment,
     ) -> Self {
         Self {
-            text: CString::new(text)
-                .expect("CString::new encountered NUL (U+0000) byte in non-terminating position."),
+            text: text.into(),
             position: position.into(),
             font,
-            horizontal_align,
-            vertical_align,
+            horizontal_alignment: horizontal_align,
+            vertical_alignment: vertical_align,
+        }
+    }
+
+    /// Create a new text from a String with a given position (based on alignment) and font
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `text` contains a null character.
+    pub fn from_string_aligned(
+        text: impl Into<String>,
+        font: Font,
+        position: impl Into<Point2<i16>>,
+        horizontal_align: Alignment,
+        vertical_align: Alignment,
+    ) -> Self {
+        Self {
+            text: CString::new(text.into())
+                .expect("Null character in non-terminating position")
+                .into(),
+            position: position.into(),
+            font,
+            horizontal_alignment: horizontal_align,
+            vertical_alignment: vertical_align,
         }
     }
 
     /// Change text alignment
-    pub const fn align(&mut self, horizontal_align: HAlign, vertical_align: VAlign) {
-        self.horizontal_align = horizontal_align;
-        self.vertical_align = vertical_align;
+    pub const fn align(&mut self, horizontal: Alignment, vertical: Alignment) {
+        self.horizontal_alignment = horizontal;
+        self.vertical_alignment = vertical;
     }
 
     /// Returns the height of the text widget in pixels
     #[must_use]
     pub fn height(&self) -> u16 {
-        unsafe {
-            self.font.apply();
-            vexDisplayStringHeightGet(self.text.as_ptr()) as _
-        }
+        self.font.apply();
+        unsafe { vexDisplayStringHeightGet(self.text.as_ptr()) as _ }
     }
 
     /// Returns the width of the text widget in pixels
     #[must_use]
     pub fn width(&self) -> u16 {
-        unsafe {
-            self.font.apply();
-            vexDisplayStringWidthGet(self.text.as_ptr()) as _
-        }
+        self.font.apply();
+        unsafe { vexDisplayStringWidthGet(self.text.as_ptr()) as _ }
     }
 }
 
-impl Text {
+impl Text<'_> {
     /// Write the text to the display.
     ///
     /// # Arguments
@@ -531,24 +595,19 @@ impl Text {
     /// - `color` - The color of the text.
     /// - `bg_color` - The background color of the text. If `None`, the background will be
     ///   transparent.
-    pub fn draw(
-        &self,
-        _display: &mut Display,
-        color: impl Into<Rgb<u8>>,
-        bg_color: Option<Rgb<u8>>,
-    ) {
+    pub fn draw(&self, _display: &mut Display, color: impl Into<Color>, bg_color: Option<Color>) {
         // Horizontally align text
-        let x = match self.horizontal_align {
-            HAlign::Left => self.position.x,
-            HAlign::Center => self.position.x - (self.width() / 2) as i16,
-            HAlign::Right => self.position.x - self.width() as i16,
+        let x = match self.horizontal_alignment {
+            Alignment::Start => self.position.x,
+            Alignment::Center => self.position.x - (self.width() / 2) as i16,
+            Alignment::End => self.position.x - self.width() as i16,
         };
 
         // Vertically align text
-        let y = match self.vertical_align {
-            VAlign::Top => self.position.y,
-            VAlign::Center => self.position.y - (self.height() / 2) as i16,
-            VAlign::Bottom => self.position.y - self.height() as i16,
+        let y = match self.vertical_alignment {
+            Alignment::Start => self.position.y,
+            Alignment::Center => self.position.y - (self.height() / 2) as i16,
+            Alignment::End => self.position.y - self.height() as i16,
         };
 
         unsafe {
@@ -560,7 +619,7 @@ impl Text {
             self.font.apply();
             vexDisplayPrintf(
                 i32::from(x),
-                i32::from(y + Display::HEADER_HEIGHT),
+                i32::from(y),
                 i32::from(bg_is_some),
                 c"%s".as_ptr(),
                 self.text.as_ptr(),
@@ -590,8 +649,10 @@ pub struct TouchEvent {
 pub enum TouchState {
     /// The touch has been released.
     Released,
+
     /// The display has been touched.
     Pressed,
+
     /// The display has been touched and is still being held.
     Held,
 }
@@ -639,6 +700,9 @@ impl Display {
     /// The height of a single line of text on the display.
     pub(crate) const LINE_HEIGHT: i16 = 20;
 
+    /// The number of characters that fit in one line with the default font.
+    pub(crate) const LINE_LENGTH: usize = 48;
+
     /// Vertical height taken by the user program header when visible.
     pub const HEADER_HEIGHT: i16 = 32;
 
@@ -656,34 +720,18 @@ impl Display {
     ///
     /// # Safety
     ///
-    /// Creating new `display`s is inherently unsafe due to the possibility of constructing more
-    /// than one display at once allowing multiple mutable references to the same
-    /// hardware device. Prefer using [`Peripherals`](crate::peripherals::Peripherals) to register
-    /// devices if possible.
+    /// Creating new `display`s is unsafe due to the possibility of creating multiple mutable
+    /// references to the same underlying hardware resources. Prefer using [`Peripherals`] API to
+    /// register devices when possible.
+    ///
+    /// [`Peripherals`]: crate::peripherals::Peripherals
     #[must_use]
     pub unsafe fn new() -> Self {
         Self {
             current_line: 0,
             render_mode: RenderMode::Immediate,
-            writer_buffer: String::default(),
+            writer_buffer: LineBuffer::default(),
         }
-    }
-
-    fn flush_writer(&mut self) {
-        unsafe {
-            vexDisplayForegroundColor(0xff_ff_ff);
-            vexDisplayString(
-                self.current_line as i32,
-                c"%s".as_ptr(),
-                CString::new(self.writer_buffer.clone())
-                    .expect(
-                        "CString::new encountered NUL (U+0000) byte in non-terminating position.",
-                    )
-                    .into_raw(),
-            );
-        }
-
-        self.writer_buffer.clear();
     }
 
     /// Set the render mode for the display.
@@ -738,10 +786,10 @@ impl Display {
     pub fn scroll_region(&mut self, region: Rect, offset: i16) {
         unsafe {
             vexDisplayScrollRect(
-                i32::from(region.start.x),
-                i32::from(region.start.y + Self::HEADER_HEIGHT),
-                (region.end.x).into(),
-                i32::from(region.end.y + Self::HEADER_HEIGHT),
+                i32::from(region.top_left.x),
+                i32::from(region.top_left.y),
+                (region.bottom_right.x - 1).into(),
+                i32::from(region.bottom_right.y) - 1,
                 i32::from(offset),
             );
         }
@@ -751,7 +799,7 @@ impl Display {
     ///
     /// Any type implementing the [`Fill`] trait (such as [`Rect`] or [`Circle`]) may be drawn using
     /// this method.
-    pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Rgb<u8>>) {
+    pub fn fill(&mut self, shape: &impl Fill, color: impl Into<Color>) {
         shape.fill(self, color);
     }
 
@@ -759,7 +807,7 @@ impl Display {
     ///
     /// Any type implementing the [`Stroke`] trait (such as [`Rect`] or [`Circle`]) may be drawn
     /// using this method.
-    pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Rgb<u8>>) {
+    pub fn stroke(&mut self, shape: &impl Stroke, color: impl Into<Color>) {
         shape.stroke(self, color);
     }
 
@@ -769,7 +817,7 @@ impl Display {
     ///
     /// ```no_run
     /// use vexide::{
-    ///     color::Rgb,
+    ///     color::Color,
     ///     display::{Font, FontFamily, FontSize, Text},
     ///     math::Point2,
     ///     prelude::*,
@@ -780,20 +828,20 @@ impl Display {
     ///
     /// // Create a new text widget.
     /// let text = Text::new(
-    ///     "Hello, World!",
+    ///     c"Hello, World!",
     ///     Font::new(FontSize::MEDIUM, FontFamily::Monospace),
     ///     Point2 { x: 10, y: 10 },
     /// );
     ///
     /// // Write red text with a blue background to the display.
-    /// display.draw_text(&text, Rgb::new(255, 0, 0), Some(Rgb::new(0, 0, 255)));
+    /// display.draw_text(&text, Color::new(255, 0, 0), Some(Color::new(0, 0, 255)));
     /// ```
-    pub fn draw_text(&mut self, text: &Text, color: impl Into<Rgb<u8>>, bg_color: Option<Rgb<u8>>) {
+    pub fn draw_text(&mut self, text: &Text<'_>, color: impl Into<Color>, bg_color: Option<Color>) {
         text.draw(self, color, bg_color);
     }
 
     /// Clears the entire display, filling it with the specified color.
-    pub fn erase(&mut self, color: impl Into<Rgb<u8>>) {
+    pub fn erase(&mut self, color: impl Into<Color>) {
         // We don't use `vexDisplayErase` here because it doesn't take a color
         // and we want to preserve the API.
         Rect::from_dimensions(
@@ -817,19 +865,12 @@ impl Display {
     ///
     /// This function panics if `buf` does not have the correct number of bytes to fill the
     /// specified region.
-    pub fn draw_buffer<T, I>(&mut self, region: Rect, buf: T)
-    where
-        T: IntoIterator<Item = I>,
-        I: Into<Rgb<u8>>,
-    {
-        let mut raw_buf = buf
-            .into_iter()
-            .map(|i| i.into().into_raw())
-            .collect::<Vec<_>>();
+    pub fn draw_buffer(&mut self, region: Rect, buf: &[Color]) {
+        let raw_buf: &[u32] = bytemuck::must_cast_slice(buf);
         // Convert the coordinates to u32 to avoid overflows when multiplying.
-        let expected_size = ((region.end.y - region.start.y) as u32
-            * (region.end.x - region.start.x) as u32) as usize;
-
+        let expected_size = ((region.bottom_right.y - region.top_left.y) as u32
+            * (region.bottom_right.x - region.top_left.x) as u32)
+            as usize;
         let buffer_size = raw_buf.len();
         assert_eq!(
             buffer_size, expected_size,
@@ -839,12 +880,12 @@ impl Display {
         // SAFETY: The buffer is guaranteed to be the correct size.
         unsafe {
             vexDisplayCopyRect(
-                i32::from(region.start.x),
-                i32::from(region.start.y + Self::HEADER_HEIGHT),
-                i32::from(region.end.x),
-                i32::from(region.end.y + Self::HEADER_HEIGHT),
-                raw_buf.as_mut_ptr(),
-                i32::from(region.end.x - region.start.x),
+                i32::from(region.top_left.x),
+                i32::from(region.top_left.y),
+                i32::from(region.bottom_right.x - 1),
+                i32::from(region.bottom_right.y - 1),
+                raw_buf.as_ptr().cast_mut(),
+                i32::from(region.bottom_right.x - region.top_left.x),
             );
         }
     }
@@ -854,11 +895,10 @@ impl Display {
     /// See [`TouchEvent`] for more information.
     #[must_use]
     pub fn touch_status(&self) -> TouchEvent {
-        // `vexTouchDataGet` (probably) doesn't read from the given status pointer, so this is fine.
-        let mut touch_status: V5_TouchStatus = unsafe { mem::zeroed() };
+        let mut touch_status = V5_TouchStatus::default();
 
         unsafe {
-            vexTouchDataGet(addr_of_mut!(touch_status));
+            vexTouchDataGet(&raw mut touch_status);
         }
 
         TouchEvent {
@@ -871,12 +911,4 @@ impl Display {
             release_count: touch_status.releaseCount,
         }
     }
-}
-
-/// An error that occurs when a negative or non-finite font size is attempted to be created.
-#[derive(Debug, Clone, Copy, PartialEq, Snafu)]
-#[snafu(display("Attempted to create a font size with a negative/non-finite value ({value})."))]
-pub struct InvalidFontSizeError {
-    /// The negative value that was attempted to be used as a font size.
-    pub value: f32,
 }

@@ -1,5 +1,5 @@
 use vexide::{
-    color::Rgb,
+    color::Color,
     prelude::*,
     smart::ai_vision::{AiVisionColor, AiVisionSensor},
 };
@@ -11,7 +11,7 @@ async fn main(peripherals: Peripherals) {
         .set_color(
             1,
             AiVisionColor {
-                rgb: Rgb::new(55, 125, 70),
+                rgb: Color::new(55, 125, 70),
                 hue_range: 10.0,
                 saturation_range: 0.2,
             },

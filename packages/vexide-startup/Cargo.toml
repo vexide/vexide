@@ -26,7 +26,7 @@ vex-sdk = { workspace = true }
 vex-sdk-mock = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "vexos")'.dependencies]
-vex-sdk-jumptable = { version = "0.0.2", optional = true }
+vex-sdk-jumptable = { version = "0.1.1", optional = true }
 vex-sdk-pros = { version = "0.0.1", optional = true }
 vex-libunwind = { workspace = true, optional = true }
 vex-libunwind-sys = { workspace = true, optional = true }
