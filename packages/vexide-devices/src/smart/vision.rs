@@ -401,21 +401,21 @@ impl VisionSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{color::Rgb, prelude::*, smart::vision::LedMode};
+    /// use vexide::{color::Color, prelude::*, smart::vision::LedMode};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let mut sensor = VisionSensor::new(peripherals.port_1);
     ///
     ///     // Set the LED to red at 100% brightness.
-    ///     _ = sensor.set_led_mode(LedMode::Manual(Rgb { r: 255, g: 0, b: 0 }, 1.0));
+    ///     _ = sensor.set_led_mode(LedMode::Manual(Color::RED, 1.0));
     ///
     ///     // Give the sensor time to update.
     ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
     ///
     ///     // Check the sensor's reported LED mode. Should be the same as what we just set
     ///     if let Ok(led_mode) = sensor.led_mode() {
-    ///         assert_eq!(led_mode, LedMode::Manual(Rgb { r: 255, g: 0, b: 0 }, 1.0));
+    ///         assert_eq!(led_mode, LedMode::Manual(Color::RED, 1.0));
     ///     }
     /// }
     /// ```

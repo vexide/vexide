@@ -14,7 +14,7 @@
 //!   multitasking*. This is a scheduling technique where the operating system allows each thread to
 //!   run for a period of time, and then forcibly preempts it, temporarily pausing that thread and
 //!   switching to another. Tasks, on the other hand, implement *cooperative multitasking*. In
-//!   cooperative multitasking, a task will run until it voluntarily yields using `await` point,
+//!   cooperative multitasking, a task will run until it voluntarily yields using an `await` point,
 //!   giving control back to the vexide runtime's scheduler. When a task yields by `await`ing
 //!   something, the vexide runtime switches to executing a different task.
 //!
@@ -30,7 +30,7 @@
 //!
 //! Perhaps the most important function in this module is [`spawn`]. This function can be thought of
 //! as an async equivalent to the standard library’s [`thread::spawn`](std::thread::spawn). It takes
-//! an `async` block or other [future](std::future), and creates a new task to run that works
+//! an `async` block or other [future](std::future), and creates a new task that runs it
 //! concurrently in the background:
 //!
 //! ```
@@ -90,9 +90,10 @@
 //! # }
 //! ```
 //!
-//! If a task is meant to run forever and must outlive the scope it was spawned in, you can
-//! [`detach`] it. This lets the task run in the background beyond its current scope. When we
-//! `detach` a task, we lose its [`Task`] handle and therefore have no way to `await` its output.
+//! If a task must outlive the scope it was spawned in, you can [`detach`] it. This lets the task
+//! run in the background beyond its current scope. When we `detach` a task, we lose its [`Task`]
+//! handle and therefore have no way to `await` its output. As a result, detached tasks may run
+//! forever with no way of being stopped.
 //!
 //! [`detach`]: Task::detach
 //!
