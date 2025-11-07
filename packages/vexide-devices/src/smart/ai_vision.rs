@@ -499,7 +499,7 @@ impl AiVisionSensor {
         }
 
         Ok(Some(AiVisionColor {
-            rgb: Rgb::new(color.red, color.grn, color.blu),
+            rgb: Color::new(color.red, color.grn, color.blu),
             hue_range: color.hangle,
             saturation_range: color.hdsat,
         }))
