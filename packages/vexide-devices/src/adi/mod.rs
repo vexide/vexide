@@ -273,7 +273,7 @@ pub trait AdiDevice<const N: usize> {
     fn device_type(&self) -> AdiDeviceType;
 }
 
-/// Represents a possible type of device that can be registered on a [`AdiPort`].
+/// Represents a possible type of device that can be configured on a [`AdiPort`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum AdiDeviceType {

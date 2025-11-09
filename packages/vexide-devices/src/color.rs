@@ -1,4 +1,4 @@
-//! Color type.
+//! Color type for devices and graphics.
 //!
 //! This module contains the [`Color`] type, which provides a zero-cost representation of RGB colors
 //! used in VEXos.
