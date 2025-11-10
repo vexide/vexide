@@ -1,3 +1,6 @@
+#![feature(linkage)]
+#![feature(optimize_attr)]
+
 use std::io::{Cursor, Read, Seek, SeekFrom};
 
 use varint_decode::VarIntReader;
@@ -109,6 +112,8 @@ enum PatcherState {
 ///
 /// The caller must ensure that the patch loaded at 0x07A00000 has been built using the currently
 /// running binary as the basis for the patch.
+#[linkage = "weak"]
+#[optimize(speed)]
 pub(crate) unsafe fn patch() {
     // The first four bytes after the patch magic have to match this version identifier for the
     // patch to be applied.
@@ -175,7 +180,7 @@ pub(crate) unsafe fn patch() {
 /// [bidiff]: https://github.com/divvun/bidiff
 ///
 /// This is essentially a port of <https://github.com/divvun/bidiff/blob/main/crates/bipatch/src/lib.rs>
-// NOTE: LLVM should always inline this function since it's only called once.
+#[inline(always)]
 fn bipatch<B: Read + Seek, P: Read>(mut old: B, mut patch: P, mut new: &mut [u8]) {
     let mut buf = [0u8; 4096];
     let mut state = PatcherState::Initial;

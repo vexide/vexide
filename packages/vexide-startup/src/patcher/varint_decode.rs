@@ -13,18 +13,21 @@ pub(crate) trait VarIntMaxSize {
 }
 
 impl<VI: VarInt> VarIntMaxSize for VI {
+    #[inline(always)]
     fn varint_max_size() -> usize {
         (size_of::<VI>() * 8 + 7) / 7
     }
 }
 
 impl VarIntProcessor {
+    #[inline(always)]
     fn new<VI: VarIntMaxSize>() -> VarIntProcessor {
         VarIntProcessor {
             maxsize: VI::varint_max_size(),
             ..VarIntProcessor::default()
         }
     }
+    #[inline(always)]
     fn push(&mut self, b: u8) -> io::Result<()> {
         if self.i >= self.maxsize {
             return Err(io::Error::new(
@@ -36,9 +39,11 @@ impl VarIntProcessor {
         self.i += 1;
         Ok(())
     }
+    #[inline(always)]
     const fn finished(&self) -> bool {
         self.i > 0 && (self.buf[self.i - 1] & MSB == 0)
     }
+    #[inline(always)]
     fn decode<VI: VarInt>(&self) -> Option<VI> {
         Some(VI::decode_var(&self.buf[0..self.i])?.0)
     }
@@ -61,6 +66,7 @@ pub trait VarIntReader {
 }
 
 impl<R: Read> VarIntReader for R {
+    #[inline(always)]
     fn read_varint<VI: VarInt>(&mut self) -> io::Result<VI> {
         let mut buf = [0_u8; 1];
         let mut p = VarIntProcessor::new::<VI>();
@@ -97,13 +103,13 @@ pub trait VarInt: Sized + Copy {
 
 // see: http://stackoverflow.com/a/2211086/56332
 // casting required because operations like unary negation cannot be performed on unsigned integers
-#[inline]
+#[inline(always)]
 const fn zigzag_decode(from: u64) -> i64 {
     ((from >> 1) ^ (-((from & 1) as i64)) as u64) as i64
 }
 
 impl VarInt for u64 {
-    #[inline]
+    #[inline(always)]
     fn decode_var(src: &[u8]) -> Option<(Self, usize)> {
         let mut result: u64 = 0;
         let mut shift = 0;
@@ -129,7 +135,7 @@ impl VarInt for u64 {
 }
 
 impl VarInt for i64 {
-    #[inline]
+    #[inline(always)]
     fn decode_var(src: &[u8]) -> Option<(Self, usize)> {
         if let Some((result, size)) = u64::decode_var(src) {
             Some((zigzag_decode(result) as Self, size))
@@ -139,31 +145,10 @@ impl VarInt for i64 {
     }
 }
 
-macro_rules! impl_varint {
-    ($t:ty, unsigned) => {
-        impl VarInt for $t {
-            fn decode_var(src: &[u8]) -> Option<(Self, usize)> {
-                let (n, s) = u64::decode_var(src)?;
-                Some((n as Self, s))
-            }
-        }
-    };
-    ($t:ty, signed) => {
-        impl VarInt for $t {
-            fn required_space(self) -> usize {
-                required_encoded_space_signed(self as i64)
-            }
-
-            fn decode_var(src: &[u8]) -> Option<(Self, usize)> {
-                let (n, s) = i64::decode_var(src)?;
-                Some((n as Self, s))
-            }
-
-            fn encode_var(self, dst: &mut [u8]) -> usize {
-                (self as i64).encode_var(dst)
-            }
-        }
-    };
+impl VarInt for usize {
+    #[inline(always)]
+    fn decode_var(src: &[u8]) -> Option<(Self, usize)> {
+        let (n, s) = u64::decode_var(src)?;
+        Some((n as Self, s))
+    }
 }
-
-impl_varint!(usize, unsigned);
