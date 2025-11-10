@@ -1,4 +1,4 @@
-//! VEXlink
+//! VEXlink Radio
 //!
 //! This module provides support for VEXlink, a point-to-point wireless communications protocol
 //! between two VEXnet radios.

@@ -1,4 +1,4 @@
-//! Math-related Container Types
+//! Math-related container types.
 //!
 //! This module re-exports several math-related types from the [`mint`] crate for usage in vexide's
 //! device APIs.
@@ -99,6 +99,16 @@ impl Angle {
     // MARK: Angle Conversion
 
     /// Creates an angle from a specified number of degrees.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::from_degrees(90.0);
+    ///
+    /// assert_eq!(angle, Angle::QUARTER_TURN);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn from_degrees(degrees: f64) -> Self {
@@ -108,6 +118,18 @@ impl Angle {
     }
 
     /// Creates an angle from a specified number of radians.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use core::f64::consts::PI;
+    ///
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::from_radians(PI);
+    ///
+    /// assert_eq!(angle, Angle::HALF_TURN);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn from_radians(radians: f64) -> Self {
@@ -115,6 +137,16 @@ impl Angle {
     }
 
     /// Creates an angle from a specified number of gradians.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::from_gradians(400.0);
+    ///
+    /// assert_eq!(angle.as_degrees().round() as u32, 360);
+    /// ```
     #[must_use]
     pub const fn from_gradians(gradians: f64) -> Self {
         Self {
@@ -123,6 +155,17 @@ impl Angle {
     }
 
     /// Creates an angle from a specified number of turns (revolutions).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::from_turns(1.0);
+    ///
+    /// assert_eq!(angle, Angle::FULL_TURN);
+    /// assert_eq!(angle.as_degrees(), 360.0);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn from_turns(turns: f64) -> Self {
@@ -141,6 +184,16 @@ impl Angle {
     // MARK: Angle Conversion
 
     /// Returns the number of degrees rotated in this angle.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::FULL_TURN;
+    ///
+    /// assert_eq!(angle.as_degrees(), 360.0);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn as_degrees(&self) -> f64 {
@@ -148,6 +201,18 @@ impl Angle {
     }
 
     /// Returns the number of radians rotated in this angle.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use core::f64::consts::PI;
+    ///
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::HALF_TURN;
+    ///
+    /// assert_eq!(angle.as_radians(), PI);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn as_radians(&self) -> f64 {
@@ -155,6 +220,16 @@ impl Angle {
     }
 
     /// Returns the number of gradians rotated in this angle.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::HALF_TURN;
+    ///
+    /// assert_eq!(angle.as_gradians(), 200.0);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn as_gradians(&self) -> f64 {
@@ -162,6 +237,16 @@ impl Angle {
     }
 
     /// Returns the number of turns (revolutions) rotated in this angle.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::FULL_TURN;
+    ///
+    /// assert_eq!(angle.as_turns(), 1.0);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn as_turns(&self) -> f64 {
@@ -180,6 +265,16 @@ impl Angle {
 // MARK: Angle Math
 impl Angle {
     /// Normalizes the angle to the bounds [0, 2pi).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::from_degrees(720.0);
+    ///
+    /// assert_eq!(angle.wrapped_full(), Angle::ZERO);
+    /// ```
     #[inline]
     #[must_use]
     pub fn wrapped_full(&self) -> Self {
@@ -195,6 +290,16 @@ impl Angle {
     }
 
     /// Normalizes the angle to the bounds [-pi, pi).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::math::Angle;
+    ///
+    /// let angle = Angle::from_degrees(190.0);
+    ///
+    /// assert_eq!(angle.wrapped_half(), Angle::from_degrees(170.0));
+    /// ```
     #[inline]
     #[must_use]
     pub fn wrapped_half(&self) -> Self {

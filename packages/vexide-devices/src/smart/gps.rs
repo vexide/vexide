@@ -306,77 +306,6 @@ impl GpsSensor {
         })
     }
 
-    /// Returns the RMS (Root Mean Squared) error for the sensor's [position reading] in meters.
-    ///
-    /// [position reading]: GpsSensor::position
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{math::Point2, prelude::*};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
-    ///
-    ///     // Check position accuracy
-    ///     if let Ok(error) = gps.error() {
-    ///         if error > 0.3 {
-    ///             println!("Warning: GPS position accuracy is low ({}m)", error);
-    ///         }
-    ///     }
-    /// }
-    /// ```
-    pub fn error(&self) -> Result<f64, PortError> {
-        self.validate_port()?;
-
-        Ok(unsafe { vexDeviceGpsErrorGet(self.device) })
-    }
-
-    /// Returns the internal status code of the sensor.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{math::Point2, prelude::*};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
-    ///
-    ///     if let Ok(status) = gps.status() {
-    ///         println!("Status: {:b}", status);
-    ///     }
-    /// }
-    /// ```
-    pub fn status(&self) -> Result<u32, PortError> {
-        self.validate_port()?;
-
-        Ok(unsafe { vexDeviceGpsStatusGet(self.device) })
-    }
-
     /// Returns the sensor's yaw angle bounded by [0.0, 360.0) degrees.
     ///
     /// Clockwise rotations are represented with positive degree values, while counterclockwise
@@ -421,6 +350,91 @@ impl GpsSensor {
             unsafe { vexDeviceGpsDegreesGet(self.device) } + self.heading_offset,
         )
         .wrapped_full())
+    }
+
+    /// Offsets the reading of [`GpsSensor::heading`] to a specified angle value.
+    ///
+    /// Target will default to `360.0` if above `360.0` and default to `0.0` if below `0.0`.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{
+    ///     math::{Angle, Point2},
+    ///     prelude::*,
+    /// };
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
+    ///     let mut gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
+    ///     );
+    ///
+    ///     // Set heading to 90 degrees clockwise.
+    ///     _ = gps.set_heading(Angle::from_degrees(90.0));
+    ///
+    ///     println!("Heading: {:?}", gps.heading());
+    /// }
+    /// ```
+    pub fn set_heading(&mut self, heading: Angle) -> Result<(), PortError> {
+        self.validate_port()?;
+
+        self.heading_offset = heading.as_degrees() - unsafe { vexDeviceGpsDegreesGet(self.device) };
+
+        Ok(())
+    }
+
+    /// Offsets the reading of [`GpsSensor::heading`] to zero.
+    ///
+    /// This method has no effect on the values returned by [`GpsSensor::position`].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
+    ///     let mut gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
+    ///     );
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     // Store heading before reset.
+    ///     let heading = gps.heading().unwrap_or_default();
+    ///
+    ///     // Reset heading back to zero.
+    ///     _ = gps.reset_heading();
+    /// }
+    /// ```
+    pub fn reset_heading(&mut self) -> Result<(), PortError> {
+        self.set_heading(Angle::ZERO)
     }
 
     /// Returns the total number of degrees the GPS has spun about the z-axis.
@@ -469,7 +483,95 @@ impl GpsSensor {
         ))
     }
 
+    /// Offsets the reading of [`GpsSensor::rotation`] to a specified angle value.
+    ///
+    /// This method has no effect on the values returned by [`GpsSensor::position`].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{
+    ///     math::{Angle, Point2},
+    ///     prelude::*,
+    /// };
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
+    ///     let mut gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
+    ///     );
+    ///
+    ///     // Set rotation to 90 degrees clockwise.
+    ///     _ = gps.set_rotation(Angle::from_degrees(90.0));
+    ///
+    ///     println!("Rotation: {:?}", gps.rotation());
+    /// }
+    /// ```
+    pub fn set_rotation(&mut self, rotation: Angle) -> Result<(), PortError> {
+        self.validate_port()?;
+
+        self.rotation_offset =
+            rotation.as_degrees() - unsafe { vexDeviceGpsHeadingGet(self.device) };
+
+        Ok(())
+    }
+
+    /// Offsets the reading of [`GpsSensor::rotation`] to zero.
+    ///
+    /// This method has no effect on the values returned by [`GpsSensor::position`].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::{math::Point2, prelude::*};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Assume we're starting in the middle of the field facing upwards, with the
+    ///     // sensor's mounting point being our reference for position.
+    ///     let mut gps = GpsSensor::new(
+    ///         peripherals.port_1,
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///         0.0,
+    ///     );
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     // Store rotation before reset.
+    ///     let rotation = gps.rotation().unwrap_or_default();
+    ///
+    ///     // Reset rotation back to zero.
+    ///     _ = gps.reset_rotation();
+    /// }
+    /// ```
+    pub fn reset_rotation(&mut self) -> Result<(), PortError> {
+        self.set_rotation(Angle::ZERO)
+    }
+
     /// Returns the Euler angles (pitch, yaw, roll) representing the GPS's orientation.
+    ///
+    /// Euler angles are normalized to [`Angle::HALF_TURN`], meaning they range from (-180°, 180°].
     ///
     /// # Errors
     ///
@@ -678,9 +780,9 @@ impl GpsSensor {
         })
     }
 
-    /// Offsets the reading of [`GpsSensor::heading`] to zero.
+    /// Returns the RMS (Root Mean Squared) error for the sensor's [position reading] in meters.
     ///
-    /// This method has no effect on the values returned by [`GpsSensor::position`].
+    /// [position reading]: GpsSensor::position
     ///
     /// # Errors
     ///
@@ -691,38 +793,32 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use std::time::Duration;
-    ///
     /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     // Assume we're starting in the middle of the field facing upwards, with the
-    ///     // sensor's mounting point being our reference for position.
-    ///     let mut gps = GpsSensor::new(
+    ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
     ///         Point2 { x: 0.0, y: 0.0 },
     ///         Point2 { x: 0.0, y: 0.0 },
     ///         0.0,
     ///     );
     ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     // Store heading before reset.
-    ///     let heading = gps.heading().unwrap_or_default();
-    ///
-    ///     // Reset heading back to zero.
-    ///     _ = gps.reset_heading();
+    ///     // Check position accuracy
+    ///     if let Ok(error) = gps.error() {
+    ///         if error > 0.3 {
+    ///             println!("Warning: GPS position accuracy is low ({}m)", error);
+    ///         }
+    ///     }
     /// }
     /// ```
-    pub fn reset_heading(&mut self) -> Result<(), PortError> {
-        self.set_heading(Angle::ZERO)
+    pub fn error(&self) -> Result<f64, PortError> {
+        self.validate_port()?;
+
+        Ok(unsafe { vexDeviceGpsErrorGet(self.device) })
     }
 
-    /// Offsets the reading of [`GpsSensor::rotation`] to zero.
-    ///
-    /// This method has no effect on the values returned by [`GpsSensor::position`].
+    /// Returns the internal status code of the sensor.
     ///
     /// # Errors
     ///
@@ -733,120 +829,26 @@ impl GpsSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use std::time::Duration;
-    ///
     /// use vexide::{math::Point2, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     // Assume we're starting in the middle of the field facing upwards, with the
-    ///     // sensor's mounting point being our reference for position.
-    ///     let mut gps = GpsSensor::new(
+    ///     let gps = GpsSensor::new(
     ///         peripherals.port_1,
     ///         Point2 { x: 0.0, y: 0.0 },
     ///         Point2 { x: 0.0, y: 0.0 },
     ///         0.0,
     ///     );
     ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     // Store rotation before reset.
-    ///     let rotation = gps.rotation().unwrap_or_default();
-    ///
-    ///     // Reset rotation back to zero.
-    ///     _ = gps.reset_rotation();
+    ///     if let Ok(status) = gps.status() {
+    ///         println!("Status: {:b}", status);
+    ///     }
     /// }
     /// ```
-    pub fn reset_rotation(&mut self) -> Result<(), PortError> {
-        self.set_rotation(Angle::ZERO)
-    }
-
-    /// Offsets the reading of [`GpsSensor::rotation`] to a specified angle value.
-    ///
-    /// This method has no effect on the values returned by [`GpsSensor::position`].
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{
-    ///     math::{Angle, Point2},
-    ///     prelude::*,
-    /// };
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     // Assume we're starting in the middle of the field facing upwards, with the
-    ///     // sensor's mounting point being our reference for position.
-    ///     let mut gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
-    ///
-    ///     // Set rotation to 90 degrees clockwise.
-    ///     _ = gps.set_rotation(Angle::from_degrees(90.0));
-    ///
-    ///     println!("Rotation: {:?}", gps.rotation());
-    /// }
-    /// ```
-    pub fn set_rotation(&mut self, rotation: Angle) -> Result<(), PortError> {
+    pub fn status(&self) -> Result<u32, PortError> {
         self.validate_port()?;
 
-        self.rotation_offset =
-            rotation.as_degrees() - unsafe { vexDeviceGpsHeadingGet(self.device) };
-
-        Ok(())
-    }
-
-    /// Offsets the reading of [`GpsSensor::heading`] to a specified angle value.
-    ///
-    /// Target will default to `360.0` if above `360.0` and default to `0.0` if below `0.0`.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{
-    ///     math::{Angle, Point2},
-    ///     prelude::*,
-    /// };
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     // Assume we're starting in the middle of the field facing upwards, with the
-    ///     // sensor's mounting point being our reference for position.
-    ///     let mut gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
-    ///
-    ///     // Set heading to 90 degrees clockwise.
-    ///     _ = gps.set_heading(Angle::from_degrees(90.0));
-    ///
-    ///     println!("Heading: {:?}", gps.heading());
-    /// }
-    /// ```
-    pub fn set_heading(&mut self, heading: Angle) -> Result<(), PortError> {
-        self.validate_port()?;
-
-        self.heading_offset = heading.as_degrees() - unsafe { vexDeviceGpsDegreesGet(self.device) };
-
-        Ok(())
+        Ok(unsafe { vexDeviceGpsStatusGet(self.device) })
     }
 
     /// Sets the internal computation speed of the sensor's internal IMU.

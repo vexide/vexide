@@ -396,7 +396,11 @@ impl AiVisionSensor {
         Self { port, device }
     }
 
-    /// Returns the current temperature of the sensor in degrees Celsius.
+    /// Sets a color signature for the AI Vision sensor.
+    ///
+    /// # Panics
+    ///
+    /// - Panics if the given ID is not in the range [1, 7].
     ///
     /// # Errors
     ///
@@ -407,20 +411,137 @@ impl AiVisionSensor {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::prelude::*;
+    /// use vexide::{color::Color, prelude::*, smart::ai_vision::AiVisionColor};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     loop {
-    ///         println!("{:?}", sensor.temperature());
-    ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     let color = AiVisionColor {
+    ///         rgb: Color::new(255, 0, 0),
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
+    ///     };
+    ///
+    ///     _ = sensor.set_color(1, color);
+    ///     _ = sensor.set_color(2, color);
+    /// }
+    /// ```
+    pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<(), PortError> {
+        assert!(
+            (1..=7).contains(&id),
+            "The given ID ({id}) is out of the interval [1, 7]."
+        );
+        self.validate_port()?;
+
+        let mut color = V5_DeviceAiVisionColor {
+            id,
+            red: color.rgb.r,
+            grn: color.rgb.g,
+            blu: color.rgb.b,
+            hangle: color.hue_range,
+            hdsat: color.saturation_range,
+            reserved: 0,
+        };
+
+        //TODO: Make sure that the color is not modified by this function
+        unsafe { vexDeviceAiVisionColorSet(self.device, core::ptr::from_mut(&mut color)) }
+
+        Ok(())
+    }
+
+    /// Returns the color signature set on the AI Vision sensor with the given ID if it exists.
+    ///
+    /// # Panics
+    ///
+    /// - Panics if the given ID is not in the interval [1, 7].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{color::Color, prelude::*, smart::ai_vision::AiVisionColor};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     let color = AiVisionColor {
+    ///         rgb: Color::new(255, 0, 0),
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
+    ///     };
+    ///     _ = sensor.set_color(1, color);
+    ///     if let Ok(Some(color)) = sensor.color(1) {
+    ///         println!("{:?}", color);
+    ///     } else {
+    ///         println!("Something went wrong!");
     ///     }
     /// }
     /// ```
-    pub fn temperature(&self) -> Result<f64, PortError> {
+    pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>, PortError> {
+        assert!(
+            (1..=7).contains(&id),
+            "The given ID ({id}) is out of the interval [1, 7]."
+        );
         self.validate_port()?;
-        Ok(unsafe { vexDeviceAiVisionTemperatureGet(self.device) })
+
+        let mut color: V5_DeviceAiVisionColor = unsafe { core::mem::zeroed() };
+
+        let read = unsafe {
+            vexDeviceAiVisionColorGet(self.device, u32::from(id), core::ptr::from_mut(&mut color))
+        };
+        if !read {
+            return Ok(None);
+        }
+
+        Ok(Some(AiVisionColor {
+            rgb: Color::new(color.red, color.grn, color.blu),
+            hue_range: color.hangle,
+            saturation_range: color.hdsat,
+        }))
+    }
+
+    /// Returns all color signatures set on the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{color::Color, prelude::*, smart::ai_vision::AiVisionColor};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     let color = AiVisionColor {
+    ///         rgb: Color::new(255, 0, 0),
+    ///         hue_range: 10.0,
+    ///         saturation_range: 1.0,
+    ///     };
+    ///     _ = sensor.set_color(1, color);
+    ///
+    ///     let colors = sensor.colors().unwrap();
+    ///     println!("{:?}", colors);
+    /// }
+    /// ```
+    pub fn colors(&self) -> Result<[Option<AiVisionColor>; 7], PortError> {
+        Ok([
+            self.color(1)?,
+            self.color(2)?,
+            self.color(3)?,
+            self.color(4)?,
+            self.color(5)?,
+            self.color(6)?,
+            self.color(7)?,
+        ])
     }
 
     /// Registers a color code association on the sensor.
@@ -602,326 +723,6 @@ impl AiVisionSensor {
         ])
     }
 
-    /// Sets a color signature for the AI Vision sensor.
-    ///
-    /// # Panics
-    ///
-    /// - Panics if the given ID is not in the range [1, 7].
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{color::Color, prelude::*, smart::ai_vision::AiVisionColor};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     let color = AiVisionColor {
-    ///         rgb: Color::new(255, 0, 0),
-    ///         hue_range: 10.0,
-    ///         saturation_range: 1.0,
-    ///     };
-    ///
-    ///     _ = sensor.set_color(1, color);
-    ///     _ = sensor.set_color(2, color);
-    /// }
-    /// ```
-    pub fn set_color(&mut self, id: u8, color: AiVisionColor) -> Result<(), PortError> {
-        assert!(
-            (1..=7).contains(&id),
-            "The given ID ({id}) is out of the interval [1, 7]."
-        );
-        self.validate_port()?;
-
-        let mut color = V5_DeviceAiVisionColor {
-            id,
-            red: color.rgb.r,
-            grn: color.rgb.g,
-            blu: color.rgb.b,
-            hangle: color.hue_range,
-            hdsat: color.saturation_range,
-            reserved: 0,
-        };
-
-        //TODO: Make sure that the color is not modified by this function
-        unsafe { vexDeviceAiVisionColorSet(self.device, core::ptr::from_mut(&mut color)) }
-
-        Ok(())
-    }
-
-    /// Returns the color signature set on the AI Vision sensor with the given ID if it exists.
-    ///
-    /// # Panics
-    ///
-    /// - Panics if the given ID is not in the interval [1, 7].
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{color::Color, prelude::*, smart::ai_vision::AiVisionColor};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     let color = AiVisionColor {
-    ///         rgb: Color::new(255, 0, 0),
-    ///         hue_range: 10.0,
-    ///         saturation_range: 1.0,
-    ///     };
-    ///     _ = sensor.set_color(1, color);
-    ///     if let Ok(Some(color)) = sensor.color(1) {
-    ///         println!("{:?}", color);
-    ///     } else {
-    ///         println!("Something went wrong!");
-    ///     }
-    /// }
-    /// ```
-    pub fn color(&self, id: u8) -> Result<Option<AiVisionColor>, PortError> {
-        assert!(
-            (1..=7).contains(&id),
-            "The given ID ({id}) is out of the interval [1, 7]."
-        );
-        self.validate_port()?;
-
-        let mut color: V5_DeviceAiVisionColor = unsafe { core::mem::zeroed() };
-
-        let read = unsafe {
-            vexDeviceAiVisionColorGet(self.device, u32::from(id), core::ptr::from_mut(&mut color))
-        };
-        if !read {
-            return Ok(None);
-        }
-
-        Ok(Some(AiVisionColor {
-            rgb: Color::new(color.red, color.grn, color.blu),
-            hue_range: color.hangle,
-            saturation_range: color.hdsat,
-        }))
-    }
-
-    /// Returns all color signatures set on the AI Vision sensor.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{color::Color, prelude::*, smart::ai_vision::AiVisionColor};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     let color = AiVisionColor {
-    ///         rgb: Color::new(255, 0, 0),
-    ///         hue_range: 10.0,
-    ///         saturation_range: 1.0,
-    ///     };
-    ///     _ = sensor.set_color(1, color);
-    ///
-    ///     let colors = sensor.colors().unwrap();
-    ///     println!("{:?}", colors);
-    /// }
-    /// ```
-    pub fn colors(&self) -> Result<[Option<AiVisionColor>; 7], PortError> {
-        Ok([
-            self.color(1)?,
-            self.color(2)?,
-            self.color(3)?,
-            self.color(4)?,
-            self.color(5)?,
-            self.color(6)?,
-            self.color(7)?,
-        ])
-    }
-
-    /// Sets the detection mode of the AI Vision sensor.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{prelude::*, smart::ai_vision::AiVisionDetectionMode};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = sensor
-    ///         .set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
-    /// }
-    /// ```
-    pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<(), PortError> {
-        let flags = (self.flags()?
-            & (AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_STATUS_OVERLAY))
-            | AiVisionFlags::from(mode);
-        self.set_flags(flags)
-    }
-
-    fn raw_status(&self) -> Result<u32, PortError> {
-        self.validate_port()?;
-        let status = unsafe { vexDeviceAiVisionStatusGet(self.device) };
-        Ok(status)
-    }
-
-    /// Returns the current flags of the AI Vision sensor including the detection mode flags set by
-    /// [`Self::set_detection_mode`].
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     println!("{:?}", sensor.flags());
-    /// }
-    /// ```
-    pub fn flags(&self) -> Result<AiVisionFlags, PortError> {
-        // Only care about the first byte of status.
-        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        Ok(AiVisionFlags::from_bits_retain(
-            (self.raw_status()? & 0xff) as u8,
-        ))
-    }
-
-    /// Set the full flags of the AI Vision sensor, including the detection mode.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{prelude::*, smart::ai_vision::AiVisionFlags};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     // Enable all detection modes except for custom model and disable USB overlay
-    ///     let flags = AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_MODEL;
-    ///     _ = sensor.set_flags(flags);
-    /// }
-    /// ```
-    pub fn set_flags(&mut self, mode: AiVisionFlags) -> Result<(), PortError> {
-        // Status is shifted to the right from mode. Least-significant byte is missing.
-        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        let mut new_mode = self.raw_status()? << 8;
-
-        new_mode &= !(0xff << 8); // Clear the mode bits.
-        // Set the mode bits and set the update flag in byte 4.
-        new_mode |= (u32::from(mode.bits()) << 8) | Self::MODE_SET_FLAG;
-
-        // Update mode
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
-
-        Ok(())
-    }
-
-    /// Restarts the automatic white balance process.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    pub fn start_awb(&mut self) -> Result<(), PortError> {
-        // Status is shifted to the right from mode. Least-significant byte is missing.
-        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        let mut new_mode = self.raw_status()? << 8;
-
-        new_mode &= !(0xff << 16); // Clear byte 3
-        new_mode |= (1 << 18) | Self::AWB_START_FLAG;
-
-        // Update mode
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
-
-        Ok(())
-    }
-
-    /// Unknown use.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    pub fn enable_test(&mut self, test: u8) -> Result<(), PortError> {
-        // Status is shifted to the right from mode. Least-significant byte is missing.
-        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        let mut new_mode = self.raw_status()? << 8;
-
-        new_mode &= !(0xff << 16); // Clear byte 3
-        new_mode |= (u32::from(test) << 16) | Self::TEST_MODE_FLAG;
-
-        // Update mode
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
-
-        Ok(())
-    }
-
-    /// Sets the AprilTag family that the sensor will try to detect.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{prelude::*, smart::ai_vision::AprilTagFamily};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
-    ///     _ = sensor.set_apriltag_family(AprilTagFamily::Tag16h5);
-    /// }
-    /// ```
-    pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<(), PortError> {
-        // Status is shifted to the right from mode. Least-significant byte is missing.
-        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
-        let mut new_mode = self.raw_status()? << 8;
-
-        new_mode &= !(0xff << 16); // Clear the existing apriltag family bits.
-        new_mode |= u32::from(family as u8) << 16 | Self::TAG_SET_FLAG; // Set family bits
-
-        // Update mode
-        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
-
-        Ok(())
-    }
-
     /// Returns all objects detected by the AI Vision sensor.
     ///
     /// # Errors
@@ -1058,6 +859,205 @@ impl AiVisionSensor {
     pub fn object_count(&self) -> Result<u32, PortError> {
         self.validate_port()?;
         Ok(unsafe { vexDeviceAiVisionObjectCountGet(self.device) as _ })
+    }
+
+    fn raw_status(&self) -> Result<u32, PortError> {
+        self.validate_port()?;
+        let status = unsafe { vexDeviceAiVisionStatusGet(self.device) };
+        Ok(status)
+    }
+
+    /// Sets the detection mode of the AI Vision sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionDetectionMode};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     _ = sensor
+    ///         .set_detection_mode(AiVisionDetectionMode::COLOR | AiVisionDetectionMode::COLOR_MERGE);
+    /// }
+    /// ```
+    pub fn set_detection_mode(&mut self, mode: AiVisionDetectionMode) -> Result<(), PortError> {
+        let flags = (self.flags()?
+            & (AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_STATUS_OVERLAY))
+            | AiVisionFlags::from(mode);
+        self.set_flags(flags)
+    }
+
+    /// Sets the AprilTag family that the sensor will try to detect.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::ai_vision::AprilTagFamily};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     _ = sensor.set_apriltag_family(AprilTagFamily::Tag16h5);
+    /// }
+    /// ```
+    pub fn set_apriltag_family(&mut self, family: AprilTagFamily) -> Result<(), PortError> {
+        // Status is shifted to the right from mode. Least-significant byte is missing.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        let mut new_mode = self.raw_status()? << 8;
+
+        new_mode &= !(0xff << 16); // Clear the existing apriltag family bits.
+        new_mode |= u32::from(family as u8) << 16 | Self::TAG_SET_FLAG; // Set family bits
+
+        // Update mode
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
+
+        Ok(())
+    }
+
+    /// Returns the current flags of the AI Vision sensor including the detection mode flags set by
+    /// [`Self::set_detection_mode`].
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     println!("{:?}", sensor.flags());
+    /// }
+    /// ```
+    pub fn flags(&self) -> Result<AiVisionFlags, PortError> {
+        // Only care about the first byte of status.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        Ok(AiVisionFlags::from_bits_retain(
+            (self.raw_status()? & 0xff) as u8,
+        ))
+    }
+
+    /// Set the full flags of the AI Vision sensor, including the detection mode.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::ai_vision::AiVisionFlags};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     // Enable all detection modes except for custom model and disable USB overlay
+    ///     let flags = AiVisionFlags::DISABLE_USB_OVERLAY | AiVisionFlags::DISABLE_MODEL;
+    ///     _ = sensor.set_flags(flags);
+    /// }
+    /// ```
+    pub fn set_flags(&mut self, mode: AiVisionFlags) -> Result<(), PortError> {
+        // Status is shifted to the right from mode. Least-significant byte is missing.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        let mut new_mode = self.raw_status()? << 8;
+
+        new_mode &= !(0xff << 8); // Clear the mode bits.
+        // Set the mode bits and set the update flag in byte 4.
+        new_mode |= (u32::from(mode.bits()) << 8) | Self::MODE_SET_FLAG;
+
+        // Update mode
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
+
+        Ok(())
+    }
+
+    /// Restarts the automatic white balance process.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    pub fn start_awb(&mut self) -> Result<(), PortError> {
+        // Status is shifted to the right from mode. Least-significant byte is missing.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        let mut new_mode = self.raw_status()? << 8;
+
+        new_mode &= !(0xff << 16); // Clear byte 3
+        new_mode |= (1 << 18) | Self::AWB_START_FLAG;
+
+        // Update mode
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
+
+        Ok(())
+    }
+
+    /// Unknown use.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    pub fn enable_test(&mut self, test: u8) -> Result<(), PortError> {
+        // Status is shifted to the right from mode. Least-significant byte is missing.
+        // See https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c988c99e1f9b3a6d3c3fd91591b6dac1
+        let mut new_mode = self.raw_status()? << 8;
+
+        new_mode &= !(0xff << 16); // Clear byte 3
+        new_mode |= (u32::from(test) << 16) | Self::TEST_MODE_FLAG;
+
+        // Update mode
+        unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
+
+        Ok(())
+    }
+
+    /// Returns the current temperature of the sensor in degrees Celsius.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = AiVisionSensor::new(peripherals.port_1);
+    ///     loop {
+    ///         println!("{:?}", sensor.temperature());
+    ///         sleep(AiVisionSensor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
+    pub fn temperature(&self) -> Result<f64, PortError> {
+        self.validate_port()?;
+        Ok(unsafe { vexDeviceAiVisionTemperatureGet(self.device) })
     }
 }
 
