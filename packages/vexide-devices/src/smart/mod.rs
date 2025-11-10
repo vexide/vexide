@@ -321,6 +321,7 @@ impl SmartPort {
 /// A possible type of device that can be plugged into a [`SmartPort`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[non_exhaustive]
 pub enum SmartDeviceType {
     /// Smart Motor
     ///

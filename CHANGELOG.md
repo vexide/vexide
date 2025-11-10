@@ -114,6 +114,7 @@ Before releasing:
 - `FontSize::from_float` will now panic rather than returning an error when passed invalid values. (#395) (**Breaking Change**)
 - Renamed the `start` and `end` fields on `Rect` to `top_left` and `bottom_right`. (#395) (**Breaking Change**)
 - Renamed the `horizontal_align` and `vertical_align` fields on `Rect` to `horizontal_alignment` and `vertical_alignment`. (#395) (**Breaking Change**)
+- `SmartDeviceType` and `AdiDeviceType` are now marked `#[non_exhaustive]`. (#405) (**Breaking Change**)
 
 ### Removed
 
