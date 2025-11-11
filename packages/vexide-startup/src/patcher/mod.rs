@@ -1,6 +1,3 @@
-#![feature(linkage)]
-#![feature(optimize_attr)]
-
 use std::io::{Cursor, Read, Seek, SeekFrom};
 
 use varint_decode::VarIntReader;
