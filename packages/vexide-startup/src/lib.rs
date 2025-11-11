@@ -1,3 +1,5 @@
+#![feature(linkage)]
+#![feature(optimize_attribute)]
 //! VEX user program startup and runtime support.
 //!
 //! This crate provides runtime infrastructure for booting vexide programs from Rust code. This
