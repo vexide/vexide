@@ -1,4 +1,8 @@
-use std::{collections::BinaryHeap, task::Waker, time::Instant};
+use std::{
+    collections::BinaryHeap,
+    task::Waker,
+    time::{Duration, Instant},
+};
 
 pub(crate) struct Sleeper {
     pub deadline: Instant,
@@ -36,9 +40,33 @@ impl Reactor {
         }
     }
 
-    pub fn tick(&mut self) {
-        if let Some(sleeper) = self.sleepers.pop() {
-            sleeper.waker.wake();
+    /// Queues any sleepers ready to wake. Returns the time until a sleeper will awaken, or zero if
+    /// one is ready.
+    pub fn tick(&mut self) -> Duration {
+        let now = Instant::now();
+        let mut min_ttw = Duration::MAX;
+
+        while let Some(next) = self.sleepers.peek() {
+            let time_to_wake = next.deadline.saturating_duration_since(now);
+
+            if time_to_wake < min_ttw {
+                min_ttw = time_to_wake;
+            }
+
+            if time_to_wake.is_zero() {
+                // We want to wake all of the expired sleepers, so don't stop early.
+
+                let sleeper = self.sleepers.pop().unwrap();
+                sleeper.waker.wake();
+            } else {
+                // Since we've popped all the expired sleepers, we now just care about how long we
+                // have to wait until the next one. The queue is drained in order,
+                // so we surely have encountered the smallest TTW in the list already.
+
+                break;
+            }
         }
+
+        min_ttw
     }
 }
