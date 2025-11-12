@@ -8,6 +8,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
     task::{Context, Poll},
+    time::Duration,
 };
 
 use waker_fn::waker_fn;
@@ -72,7 +73,17 @@ impl Executor {
     }
 
     pub(crate) fn tick(&self) -> bool {
-        self.reactor.borrow_mut().tick();
+        let next_wake = self.reactor.borrow_mut().tick();
+
+        // Yield to OS on desktop platforms to avoid high CPU usage while all tasks are sleeping.
+        // On VEXos, this behavior is disabled so that devices are updated as fast as possible.
+        if cfg!(not(target_os = "vexos")) && !next_wake.is_zero() {
+            // We should still be polling vexTasksRun fairly often.
+            const MAX_YIELD: Duration = Duration::from_millis(5);
+
+            let time_to_yield = Duration::min(MAX_YIELD, next_wake);
+            std::thread::sleep(time_to_yield);
+        }
 
         let runnable = {
             let mut queue = self.queue.borrow_mut();
