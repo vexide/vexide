@@ -114,6 +114,8 @@ impl Executor {
             }
 
             let next_wake = self.tick();
+            // This is updated only after the tick because another task could have woken up the
+            // future in that time.
             was_woken = woken.swap(false, Ordering::Relaxed);
 
             // Yield to OS on desktop platforms to avoid high CPU usage while all tasks are
