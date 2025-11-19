@@ -8,6 +8,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
     task::{Context, Poll},
+    time::Duration,
 };
 
 use waker_fn::waker_fn;
@@ -71,8 +72,10 @@ impl Executor {
         f(&mut self.reactor.borrow_mut());
     }
 
-    pub(crate) fn tick(&self) -> bool {
-        self.reactor.borrow_mut().tick();
+    /// Wakes any expired sleepers, then polls a single task. If all tasks were sleeping,
+    /// returns how long it will be until one is awake.
+    pub(crate) fn tick(&self) -> Option<Duration> {
+        let next_wake = self.reactor.borrow_mut().tick();
 
         let runnable = {
             let mut queue = self.queue.borrow_mut();
@@ -84,14 +87,14 @@ impl Executor {
                 runnable.run();
             });
 
-            true
+            None
         } else {
-            false
+            Some(next_wake)
         }
     }
 
     pub fn block_on<T>(&self, future: impl Future<Output = T>) -> T {
-        let woken = Arc::new(AtomicBool::new(true));
+        let woken = Arc::new(AtomicBool::new(false));
         let waker = waker_fn({
             let woken = woken.clone();
             move || woken.store(true, Ordering::Relaxed)
@@ -100,17 +103,37 @@ impl Executor {
 
         futures_util::pin_mut!(future);
 
+        let mut was_woken = true;
         loop {
-            if woken.swap(false, Ordering::Relaxed)
-                && let Poll::Ready(output) = future.as_mut().poll(&mut cx)
-            {
+            if was_woken && let Poll::Ready(output) = future.as_mut().poll(&mut cx) {
                 return output;
             }
 
             unsafe {
                 vex_sdk::vexTasksRun();
             }
-            self.tick();
+
+            let next_wake = self.tick();
+            // This is updated only after the tick because another task could have woken up the
+            // future in that time.
+            was_woken = woken.swap(false, Ordering::Relaxed);
+
+            // Yield to OS on desktop platforms to avoid high CPU usage while all tasks are
+            // sleeping. On VEXos, this behavior is disabled so that devices are updated
+            // as fast as possible.
+            if cfg!(not(target_os = "vexos"))
+                && let Some(next_wake) = next_wake
+                && !was_woken
+            {
+                // We should still be polling vexTasksRun fairly often.
+                const MAX_YIELD: Duration = Duration::from_millis(5);
+
+                // N.B. `next_wake` takes into account when the future passed into
+                // this function will wake, if it is sleeping.
+                let time_to_yield = Duration::min(MAX_YIELD, next_wake);
+
+                std::thread::sleep(time_to_yield);
+            }
         }
     }
 }
