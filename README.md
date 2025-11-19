@@ -58,7 +58,7 @@ When making changes to vexide, it's a good idea to test them. `vexide` supports 
 cargo test --all
 ```
 
-You can also run one of our [examples](./examples/).
+Unit & doc tests always run directly on your computer using an incomplete stubbed SDK, so they'll likely miss some types of logic errors. We also recommend running some of our [examples](./examples/) on real hardware.
 
 ```sh
 cargo v5 upload --example basic --release
