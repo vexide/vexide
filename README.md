@@ -27,7 +27,7 @@ rustup override set nightly
 rustup component add rust-src
 ```
 
-If you plan on targeting the V5 brain, you'll need our `cargo-v5` tool, which wraps the normal `cargo build` command allowing you to upload to a VEX brain over a USB connection.
+If you want to run your programs on the V5 brain, you'll additionally need to install our upload tool, `cargo-v5`. It extends the normal `cargo build` command, converting executables to a compatible format and sending them over a wired or wireless connection.
 
 You can install that tool with the following command:
 
