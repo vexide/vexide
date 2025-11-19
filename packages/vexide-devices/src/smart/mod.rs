@@ -1,38 +1,56 @@
-//! Smart Ports & Devices
+//! Smart ports and devices.
 //!
 //! This module provides abstractions for devices connected through VEX Smart Ports. This includes
-//! motors, many common sensors, vexlink, and raw serial access.
+//! motors, many common sensors, and raw serial access.
 //!
 //! # Overview
 //!
-//! The V5 Brain features 21 RJ9 4p4c connector ports (known as "Smart Ports") for communicating
-//! with newer V5 peripherals. Smart Port devices have a variable sample rate (unlike ADI, which is
-//! limited to 10ms), and can support basic data transfer over serial.
+//! The V5 Brain features 21 RJ9 ports known as "Smart Ports" for connecting newer V5 devices to the
+//! Brain. These ports use serial communication over a 4-wire RS-485 protocol to allow the device
+//! and the Brain to send commands to each other.
 //!
-//! # Devices
+//! # Ports
 //!
-//! Most devices can be created with a `new` function that generally takes a [`SmartPort`] instance
-//! from [`Peripherals`](crate::peripherals::Peripherals) along with other device-specific
-//! parameters. All devices are thread safe due to being singletons, however sensors can only be
-//! safely constructed using the [`peripherals`] API. The general device construction pattern looks
-//! like this:
+//! There are 21 instances of the [`SmartPort`] struct available to you through the [`Peripherals`]
+//! instance passed to your `main` function. Each [`SmartPort`] represents a physical port on the
+//! Brain.
 //!
-//! ```ignore
+//! Smart Ports are labeled 1 through 21 on the Brain and in the [`Peripherals`] API. If we wanted
+//! to do something with port 1, we can simply use `peripherals.port_1`:
+//!
+//! ```
 //! use vexide::prelude::*;
 //!
 //! #[vexide::main]
 //! async fn main(peripherals: Peripherals) {
-//!     // Create a new device on port 1.
-//!     let mut device = Device::new(peripherals.port_1 /* other parameters */);
-//!     // Use the device.
-//!     // Device errors are usually only returned by methods, and not the constructor.
-//!     _ = device.do_something();
+//!     let port_1 = peripherals.port_1;
 //! }
 //! ```
 //!
-//! More specific info for each device is available in their respective modules.
+//! # Devices
 //!
-//! [`peripherals`]: crate::peripherals
+//! Most devices are created using a `new` function that takes ownership of a [`SmartPort`], along
+//! with any other device-specific parameters. All devices are thread-safe due to being singletons,
+//! and can only be safely constructed using the [`Peripherals`] API. The general device creation
+//! process looks like this:
+//!
+//! [`Peripherals`]: crate::peripherals::Peripherals
+//!
+//! ```no_run
+//! use vexide::prelude::*;
+//!
+//! #[vexide::main]
+//! async fn main(peripherals: Peripherals) {
+//!     // Create two new motors on Smart Ports 1 and 10.
+//!     let mut left_motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+//!     let mut right_motor = Motor::new(peripherals.port_10, Gearset::Green, Direction::Forward);
+//!
+//!     // Create a new inertial sensor (IMU) on Smart Port 6.
+//!     let mut imu = InertialSensor::new(peripherals.port_6);
+//! }
+//! ```
+//!
+//! Specific info for using each device is available in their respective modules below.
 
 use vex_sdk::{
     V5_DeviceT, V5_DeviceType, V5_MAX_DEVICE_PORTS, vexDeviceGetByIndex, vexDeviceGetStatus,
@@ -184,7 +202,7 @@ pub(crate) fn validate_port(number: u8, device_type: SmartDeviceType) -> Result<
     Ok(())
 }
 
-/// Represents a Smart Port on a V5 Brain
+/// A Smart Port on a Brain.
 #[derive(Debug, Eq, PartialEq)]
 pub struct SmartPort {
     /// The number of the port (port number).

@@ -390,6 +390,199 @@ impl VisionSensor {
         Ok(())
     }
 
+    /// Returns the user-set behavior of the LED indicator on the sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{color::Color, prelude::*, smart::vision::LedMode};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set the LED to red at 100% brightness.
+    ///     _ = sensor.set_led_mode(LedMode::Manual(Color::RED, 1.0));
+    ///
+    ///     // Give the sensor time to update.
+    ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
+    ///
+    ///     // Check the sensor's reported LED mode. Should be the same as what we just set
+    ///     if let Ok(led_mode) = sensor.led_mode() {
+    ///         assert_eq!(led_mode, LedMode::Manual(Color::RED, 1.0));
+    ///     }
+    /// }
+    /// ```
+    pub fn led_mode(&self) -> Result<LedMode, PortError> {
+        self.validate_port()?;
+
+        Ok(match unsafe { vexDeviceVisionLedModeGet(self.device) } {
+            V5VisionLedMode::kVisionLedModeAuto => LedMode::Auto,
+            V5VisionLedMode::kVisionLedModeManual => {
+                let led_color = unsafe { vexDeviceVisionLedColorGet(self.device) };
+
+                LedMode::Manual(
+                    Color::new(led_color.red, led_color.green, led_color.blue),
+                    f64::from(led_color.brightness) / 100.0,
+                )
+            }
+            _ => unreachable!(),
+        })
+    }
+
+    /// Returns a [`Vec`] of objects detected by the sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionObjectError::Port`] error is returned if there was not a sensor connected to the
+    ///   port.
+    /// - A [`VisionObjectError::WifiMode`] error is returned if the sensor is in Wi-Fi mode.
+    /// - A [`VisionObjectError::InvalidObject`] error if the sensor failed to read an object.
+    ///
+    /// # Examples
+    ///
+    /// With one signature:
+    ///
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set a color signature on the sensor's first slot.
+    ///     _ = sensor.set_signature(
+    ///         1,
+    ///         VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1),
+    ///     );
+    ///
+    ///     // Scan for detected objects.
+    ///     if let Ok(objects) = sensor.objects() {
+    ///         for object in objects {
+    ///             println!("{:?}", object);
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// With multiple signatures:
+    ///
+    /// ```no_run
+    /// use vexide::{
+    ///     prelude::*,
+    ///     smart::vision::{DetectionSource, VisionSignature},
+    /// };
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Two color signatures.
+    ///     let sig_1 = VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1);
+    ///     let sig_2 = VisionSignature::new((8973, 11143, 10058), (-2119, -1053, -1586), 5.4);
+    ///
+    ///     // Store the signatures on the sensor.
+    ///     _ = sensor.set_signature(1, sig_1);
+    ///     _ = sensor.set_signature(2, sig_2);
+    ///
+    ///     // Scan for objects.
+    ///     if let Ok(objects) = sensor.objects() {
+    ///         for object in objects {
+    ///             // Identify which signature the detected object matches.
+    ///             match object.source {
+    ///                 DetectionSource::Signature(1) => {
+    ///                     println!("Detected object matching sig_1: {:?}", object)
+    ///                 }
+    ///                 DetectionSource::Signature(2) => {
+    ///                     println!("Detected object matching sig_2: {:?}", object)
+    ///                 }
+    ///                 _ => {}
+    ///             }
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    pub fn objects(&self) -> Result<Vec<VisionObject>, VisionObjectError> {
+        ensure!(self.mode()? != VisionMode::Wifi, WifiModeSnafu);
+
+        let object_count = unsafe { vexDeviceVisionObjectCountGet(self.device) } as usize;
+        let mut objects = Vec::with_capacity(object_count);
+
+        for i in 0..object_count {
+            let mut object = V5_DeviceVisionObject::default();
+
+            if unsafe { vexDeviceVisionObjectGet(self.device, i as u32, &raw mut object) } == 0 {
+                return InvalidObjectSnafu.fail();
+            }
+
+            let object: VisionObject = object.into();
+
+            match object.source {
+                DetectionSource::Signature(_) | DetectionSource::Line => {
+                    objects.push(object);
+                }
+                DetectionSource::Code(code) => {
+                    if self.codes.contains(&code) {
+                        objects.push(object);
+                    }
+                }
+            }
+        }
+
+        Ok(objects)
+    }
+
+    /// Returns the number of objects detected by the sensor.
+    ///
+    /// # Errors
+    ///
+    /// - A [`VisionObjectError::Port`] error is returned if there is not a sensor connected to the
+    ///   port.
+    /// - A [`VisionObjectError::WifiMode`] error is returned if the sensor is in Wi-Fi mode.
+    /// - A [`VisionObjectError::InvalidObject`] error if the sensor failed to read an object.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{prelude::*, smart::vision::VisionSignature};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
+    ///
+    ///     // Set a color signature on the sensor's first slot.
+    ///     _ = sensor.set_signature(
+    ///         1,
+    ///         VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1),
+    ///     );
+    ///
+    ///     loop {
+    ///         if let Ok(n) = sensor.object_count() {
+    ///             println!("Sensor is currently detecting {n} objects.");
+    ///         }
+    ///
+    ///         sleep(VisionSensor::UPDATE_INTERVAL).await;
+    ///     }
+    /// }
+    /// ```
+    pub fn object_count(&self) -> Result<usize, VisionObjectError> {
+        // NOTE: We actually can't rely on [`vexDeviceVisionObjectCountGet`], due to the way that
+        // vision codes are registered.
+        //
+        // When a code is registered, all this really does is set a bunch of normal signatures with
+        // an additional flag set (see: [`Self::set_code_signature`]). This means that if the user
+        // has multiple vision codes, we can't distinguish between which objects were detected by
+        // a certain code until AFTER we get the full objects list (where we can then distinguish)
+        // by [`VisionObject::source`].
+        Ok(self.objects()?.len())
+    }
+
     /// Returns the current brightness setting of the vision sensor as a percentage.
     ///
     /// The returned result should be from `0.0` (0%) to `1.0` (100%).
@@ -599,199 +792,6 @@ impl VisionSensor {
         }
 
         Ok(())
-    }
-
-    /// Returns the user-set behavior of the LED indicator on the sensor.
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{color::Color, prelude::*, smart::vision::LedMode};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
-    ///
-    ///     // Set the LED to red at 100% brightness.
-    ///     _ = sensor.set_led_mode(LedMode::Manual(Color::RED, 1.0));
-    ///
-    ///     // Give the sensor time to update.
-    ///     sleep(VisionSensor::UPDATE_INTERVAL).await;
-    ///
-    ///     // Check the sensor's reported LED mode. Should be the same as what we just set
-    ///     if let Ok(led_mode) = sensor.led_mode() {
-    ///         assert_eq!(led_mode, LedMode::Manual(Color::RED, 1.0));
-    ///     }
-    /// }
-    /// ```
-    pub fn led_mode(&self) -> Result<LedMode, PortError> {
-        self.validate_port()?;
-
-        Ok(match unsafe { vexDeviceVisionLedModeGet(self.device) } {
-            V5VisionLedMode::kVisionLedModeAuto => LedMode::Auto,
-            V5VisionLedMode::kVisionLedModeManual => {
-                let led_color = unsafe { vexDeviceVisionLedColorGet(self.device) };
-
-                LedMode::Manual(
-                    Color::new(led_color.red, led_color.green, led_color.blue),
-                    f64::from(led_color.brightness) / 100.0,
-                )
-            }
-            _ => unreachable!(),
-        })
-    }
-
-    /// Returns a [`Vec`] of objects detected by the sensor.
-    ///
-    /// # Errors
-    ///
-    /// - A [`VisionObjectError::Port`] error is returned if there was not a sensor connected to the
-    ///   port.
-    /// - A [`VisionObjectError::WifiMode`] error is returned if the sensor is in Wi-Fi mode.
-    /// - A [`VisionObjectError::InvalidObject`] error if the sensor failed to read an object.
-    ///
-    /// # Examples
-    ///
-    /// With one signature:
-    ///
-    /// ```no_run
-    /// use vexide::{prelude::*, smart::vision::VisionSignature};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
-    ///
-    ///     // Set a color signature on the sensor's first slot.
-    ///     _ = sensor.set_signature(
-    ///         1,
-    ///         VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1),
-    ///     );
-    ///
-    ///     // Scan for detected objects.
-    ///     if let Ok(objects) = sensor.objects() {
-    ///         for object in objects {
-    ///             println!("{:?}", object);
-    ///         }
-    ///     }
-    /// }
-    /// ```
-    ///
-    /// With multiple signatures:
-    ///
-    /// ```no_run
-    /// use vexide::{
-    ///     prelude::*,
-    ///     smart::vision::{DetectionSource, VisionSignature},
-    /// };
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
-    ///
-    ///     // Two color signatures.
-    ///     let sig_1 = VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1);
-    ///     let sig_2 = VisionSignature::new((8973, 11143, 10058), (-2119, -1053, -1586), 5.4);
-    ///
-    ///     // Store the signatures on the sensor.
-    ///     _ = sensor.set_signature(1, sig_1);
-    ///     _ = sensor.set_signature(2, sig_2);
-    ///
-    ///     // Scan for objects.
-    ///     if let Ok(objects) = sensor.objects() {
-    ///         for object in objects {
-    ///             // Identify which signature the detected object matches.
-    ///             match object.source {
-    ///                 DetectionSource::Signature(1) => {
-    ///                     println!("Detected object matching sig_1: {:?}", object)
-    ///                 }
-    ///                 DetectionSource::Signature(2) => {
-    ///                     println!("Detected object matching sig_2: {:?}", object)
-    ///                 }
-    ///                 _ => {}
-    ///             }
-    ///         }
-    ///     }
-    /// }
-    /// ```
-    pub fn objects(&self) -> Result<Vec<VisionObject>, VisionObjectError> {
-        ensure!(self.mode()? != VisionMode::Wifi, WifiModeSnafu);
-
-        let object_count = unsafe { vexDeviceVisionObjectCountGet(self.device) } as usize;
-        let mut objects = Vec::with_capacity(object_count);
-
-        for i in 0..object_count {
-            let mut object = V5_DeviceVisionObject::default();
-
-            if unsafe { vexDeviceVisionObjectGet(self.device, i as u32, &raw mut object) } == 0 {
-                return InvalidObjectSnafu.fail();
-            }
-
-            let object: VisionObject = object.into();
-
-            match object.source {
-                DetectionSource::Signature(_) | DetectionSource::Line => {
-                    objects.push(object);
-                }
-                DetectionSource::Code(code) => {
-                    if self.codes.contains(&code) {
-                        objects.push(object);
-                    }
-                }
-            }
-        }
-
-        Ok(objects)
-    }
-
-    /// Returns the number of objects detected by the sensor.
-    ///
-    /// # Errors
-    ///
-    /// - A [`VisionObjectError::Port`] error is returned if there is not a sensor connected to the
-    ///   port.
-    /// - A [`VisionObjectError::WifiMode`] error is returned if the sensor is in Wi-Fi mode.
-    /// - A [`VisionObjectError::InvalidObject`] error if the sensor failed to read an object.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{prelude::*, smart::vision::VisionSignature};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = VisionSensor::new(peripherals.port_1);
-    ///
-    ///     // Set a color signature on the sensor's first slot.
-    ///     _ = sensor.set_signature(
-    ///         1,
-    ///         VisionSignature::new((10049, 11513, 10781), (-425, 1, -212), 4.1),
-    ///     );
-    ///
-    ///     loop {
-    ///         if let Ok(n) = sensor.object_count() {
-    ///             println!("Sensor is currently detecting {n} objects.");
-    ///         }
-    ///
-    ///         sleep(VisionSensor::UPDATE_INTERVAL).await;
-    ///     }
-    /// }
-    /// ```
-    pub fn object_count(&self) -> Result<usize, VisionObjectError> {
-        // NOTE: We actually can't rely on [`vexDeviceVisionObjectCountGet`], due to the way that
-        // vision codes are registered.
-        //
-        // When a code is registered, all this really does is set a bunch of normal signatures with
-        // an additional flag set (see: [`Self::set_code_signature`]). This means that if the user
-        // has multiple vision codes, we can't distinguish between which objects were detected by
-        // a certain code until AFTER we get the full objects list (where we can then distinguish)
-        // by [`VisionObject::source`].
-        Ok(self.objects()?.len())
     }
 
     /// Sets the vision sensor's detection mode. See [`VisionMode`] for more information on what

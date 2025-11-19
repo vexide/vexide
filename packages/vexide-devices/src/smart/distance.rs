@@ -239,7 +239,10 @@ pub struct DistanceObject {
     /// [`vex::sizeType`]: https://api.vex.com/v5/home/python/Enums.html#object-size-types
     pub relative_size: Option<u32>,
 
-    /// Observed velocity of the object in m/s.
+    /// Approach velocity of the object in m/s.
+    ///
+    /// This value is calculated by the brain by differentiating [`DistanceObject::distance`] with
+    /// respect to time and applying a simple low-pass filter over the result.
     pub velocity: f64,
 
     /// Returns the confidence in the distance measurement from 0.0 to 1.0.

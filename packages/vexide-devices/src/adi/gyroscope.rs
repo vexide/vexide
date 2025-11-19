@@ -1,4 +1,4 @@
-//! ADI gyroscope device.
+//! ADI Gyroscope
 //!
 //! This module provides an interface for interacting with an ADI gyroscope device. The gyroscope
 //! can be used to measure the yaw rotation of your robot.

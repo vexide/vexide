@@ -1,29 +1,85 @@
-//! Analog/Digital Interface (ADI) Ports & Devices
+//! Analog/digital interface (ADI) ports and devices.
 //!
 //! This module provides abstractions for devices connected through VEX's Analog/Digital Interface
 //! (ADI) ports, also known as "three-wire ports" or "triports".
 //!
 //! # Overview
 //!
-//! The V5 Brain features 8 three-wire connector ports on its left side that allow connecting simple
-//! analog and digital devices to the brain. These commonly include VEX's legacy sensors and motors
-//! that plugged into the old [Cortex microcontroller].
+//! The V5 Brain features 8 three-wire connector ports on its left side for connecting simple
+//! analog and digital devices to the Brain. These include VEX's legacy sensors and motors used in
+//! the older [Cortex microcontroller].
 //!
-//! ADI ports can also be found on the [`AdiExpander`] device, which grants you eight additional
-//! ports at the cost of a Smart port.
+//! ADI ports can also be found on the [`AdiExpander`] device, which grants eight additional ADI
+//! ports at the cost of one Smart Port.
+//!
+//! # Hardware Capabilities
 //!
 //! ADI ports are capable of digital input (3.3V logic), 12-bit analog input, digital output, and
 //! 8-bit PWM output. Each port has a dedicated 12-bit Analog-to-Digital Converter (ADC) to allow
 //! for analog sensors to send a range of values to the port. There is no DAC, making equivalent
-//! analog output impossible. ADI has a max voltage of 5V.
-//!
-//! # Update Times
+//! analog output impossible. ADI has a max voltage of 5V per-port and a current limit of 2A per set
+//! of eight ports.
 //!
 //! All ADI devices are updated at a fixed interval of 10ms (100Hz), defined by
 //! [`ADI_UPDATE_INTERVAL`].
 //!
 //! [`AdiExpander`]: crate::smart::expander::AdiExpander
 //! [Cortex microcontroller]: <https://www.vexrobotics.com/276-2194.html>
+//!
+//! # Ports
+//!
+//! There are 8 instances of the [`AdiPort`] struct available to you through the [`Peripherals`]
+//! instance passed to your `main` function. Each [`AdiPort`] represents a physical port on the
+//! Brain.
+//!
+//! ADI ports are labeled "A" through "H" on the Brain and in the [`Peripherals`] API. If we wanted
+//! to do something with port A, we can simply use `peripherals.adi_a`:
+//!
+//! ```
+//! use vexide::prelude::*;
+//!
+//! #[vexide::main]
+//! async fn main(peripherals: Peripherals) {
+//!     let port_a = peripherals.adi_a;
+//! }
+//! ```
+//!
+//! We can also get ADI ports from an [`AdiExpander`] if one is available.
+//!
+//! ```
+//! use vexide::prelude::*;
+//!
+//! #[vexide::main]
+//! async fn main(peripherals: Peripherals) {
+//!     let expander = AdiExpander::new(peripherals.port_1);
+//!     let expander_port_a = expander.adi_a;
+//! }
+//! ```
+//!
+//! # Devices
+//!
+//! Most devices are created using a `new` function that takes ownership of an [`AdiPort`], along
+//! with any other device-specific parameters. All devices are thread-safe due to being singletons,
+//! and can only be safely constructed using the [`Peripherals`] API. The general device creation
+//! process looks like this:
+//!
+//! [`Peripherals`]: crate::peripherals::Peripherals
+//!
+//! ```no_run
+//! use vexide::prelude::*;
+//!
+//! #[vexide::main]
+//! async fn main(peripherals: Peripherals) {
+//!     // Create a light sensor on ADI port A.
+//!     let light_sensor = AdiLightSensor::new(peripherals.adi_a);
+//!
+//!     // Configure ADI port B for digital output. This can be used for controlling e.g. a
+//!     // pneumatic solenoid.
+//!     let solenoid = AdiDigitalOut::new(peripherals.adi_b);
+//! }
+//! ```
+//!
+//! Specific info for using each device is available in their respective modules below.
 
 use core::time::Duration;
 
@@ -56,7 +112,7 @@ use crate::smart::{SmartDeviceType, validate_port};
 /// Update rate for all ADI devices and ports.
 pub const ADI_UPDATE_INTERVAL: Duration = Duration::from_millis(10);
 
-/// Represents an ADI (three wire) port on a V5 Brain or V5 Three Wire Expander.
+/// An ADI (three wire) port on a Brain or Three Wire Expander.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiPort {
     /// The number of the port.
@@ -217,7 +273,7 @@ pub trait AdiDevice<const N: usize> {
     fn device_type(&self) -> AdiDeviceType;
 }
 
-/// Represents a possible type of device that can be registered on a [`AdiPort`].
+/// Represents a possible type of device that can be configured on a [`AdiPort`].
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum AdiDeviceType {
