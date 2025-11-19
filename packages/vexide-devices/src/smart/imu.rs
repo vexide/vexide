@@ -136,6 +136,537 @@ impl InertialSensor {
         Ok(())
     }
 
+    /// Calibrates the IMU.
+    ///
+    /// Returns an [`CalibrateFuture`] that resolves once the calibration operation has finished or
+    /// timed out.
+    ///
+    /// This method MUST be called for any meaningful gyroscope readings to be obtained. Calibration
+    /// requires the sensor to be sitting completely still. If the sensor is moving during the
+    /// calibration process, readings will drift from reality over time.
+    ///
+    /// # Errors
+    ///
+    /// - Calibration has a 1-second start timeout (when waiting for calibration to actually start
+    ///   on the sensor) and a 3-second end timeout (when waiting for calibration to complete after
+    ///   it has started) as a failsafe in the event that something goes wrong and the sensor gets
+    ///   stuck in a calibrating state. If either timeout is exceeded in its respective phase of
+    ///   calibration, [`CalibrateError::Timeout`] will be returned.
+    /// - A [`CalibrateError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    ///
+    /// # Examples
+    ///
+    /// Calibration process with error handling and a retry:
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     match sensor.calibrate().await {
+    ///         Ok(_) => println!("IMU calibrated successfully."),
+    ///         Err(err) => {
+    ///             println!("IMU failed to calibrate, retrying. Reason: {:?}", err);
+    ///
+    ///             // Since calibration failed, let's try one more time. If that fails,
+    ///             // we just ignore the error and go on with our lives.
+    ///             _ = sensor.calibrate().await;
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// Calibrating in a competition environment:
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// struct Robot {
+    ///     imu: InertialSensor,
+    /// }
+    ///
+    /// impl Compete for Robot {
+    ///     async fn autonomous(&mut self) {
+    ///         loop {
+    ///             if let Ok(heading) = self.imu.heading() {
+    ///                 println!("IMU Heading: {}°", heading.as_degrees());
+    ///             }
+    ///
+    ///             sleep(Duration::from_millis(10)).await;
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut imu = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     if let Err(err) = imu.calibrate().await {
+    ///         // Log out a warning to terminal if calibration failed. You can also retry by
+    ///         // calling it again, although this usually only happens if the sensor was unplugged.
+    ///         println!("WARNING: IMU failed to calibrate! Readings might be inaccurate!");
+    ///     }
+    ///
+    ///     Robot { imu }.compete().await;
+    /// }
+    /// ```
+    pub const fn calibrate(&mut self) -> CalibrateFuture<'_> {
+        CalibrateFuture {
+            state: CalibrateFutureState::Calibrate,
+            imu: self,
+        }
+    }
+
+    /// Returns the Inertial Sensor’s yaw angle bounded from [0.0, 360.0) degrees.
+    ///
+    /// Clockwise rotations are represented with positive degree values, while counterclockwise
+    /// rotations are represented with negative ones.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Calibrate sensor, panic if calibration fails.
+    ///     sensor.calibrate().await.unwrap();
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     if let Ok(heading) = sensor.heading() {
+    ///         println!("Heading is {} degrees.", heading.as_degrees());
+    ///     }
+    /// }
+    /// ```
+    pub fn heading(&self) -> Result<Angle, InertialError> {
+        self.validate_calibration()?;
+        // The result needs to be [0, 360). Adding a significantly negative offset could take us
+        // below 0. Adding a significantly positive offset could take us above 360.
+        Ok(Angle::from_degrees(
+            unsafe { vexDeviceImuDegreesGet(self.device) } + self.heading_offset,
+        )
+        .wrapped_full())
+    }
+
+    /// Sets the current reading of the sensor's heading to a given value.
+    ///
+    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect
+    /// [`InertialSensor::rotation`] or [`InertialSensor::euler`]/
+    /// [`InertialSensor::quaternion`].
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Set heading to 90 degrees clockwise.
+    ///     _ = sensor.set_heading(Angle::from_degrees(90.0));
+    /// }
+    /// ```
+    pub fn set_heading(&mut self, heading: Angle) -> Result<(), InertialError> {
+        self.validate_calibration()?;
+
+        self.heading_offset = heading.as_degrees() - unsafe { vexDeviceImuDegreesGet(self.device) };
+
+        Ok(())
+    }
+
+    /// Resets the current reading of the sensor's heading to zero.
+    ///
+    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect
+    /// [`InertialSensor::rotation`] or [`InertialSensor::euler`]/
+    /// [`InertialSensor::quaternion`].
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Calibrate sensor, panic if calibration fails.
+    ///     sensor.calibrate().await.unwrap();
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     // Store heading before reset.
+    ///     let heading = sensor.heading().unwrap_or_default();
+    ///
+    ///     // Reset heading back to zero.
+    ///     _ = sensor.reset_heading();
+    /// }
+    /// ```
+    pub fn reset_heading(&mut self) -> Result<(), InertialError> {
+        self.set_heading(Angle::ZERO)
+    }
+
+    /// Returns the total number of degrees the Inertial Sensor has spun about the z-axis.
+    ///
+    /// This value is theoretically unbounded. Clockwise rotations are represented with positive
+    /// degree values, while counterclockwise rotations are represented with negative ones.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Calibrate sensor, panic if calibration fails.
+    ///     sensor.calibrate().await.unwrap();
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     if let Ok(rotation) = sensor.rotation() {
+    ///         println!(
+    ///             "Robot has rotated {} degrees since calibration.",
+    ///             rotation.as_degrees()
+    ///         );
+    ///     }
+    /// }
+    /// ```
+    pub fn rotation(&self) -> Result<Angle, InertialError> {
+        self.validate_calibration()?;
+        Ok(Angle::from_degrees(
+            unsafe { vexDeviceImuHeadingGet(self.device) } + self.rotation_offset,
+        ))
+    }
+
+    /// Sets the current reading of the sensor's rotation to a given value.
+    ///
+    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect
+    /// [`InertialSensor::heading`] or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{math::Angle, prelude::*};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Set rotation to 90 degrees clockwise.
+    ///     _ = sensor.set_rotation(Angle::from_degrees(90.0));
+    /// }
+    /// ```
+    pub fn set_rotation(&mut self, rotation: Angle) -> Result<(), InertialError> {
+        self.validate_calibration()?;
+
+        self.rotation_offset =
+            rotation.as_degrees() - unsafe { vexDeviceImuHeadingGet(self.device) };
+
+        Ok(())
+    }
+
+    /// Resets the current reading of the sensor's rotation to zero.
+    ///
+    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect
+    /// [`InertialSensor::heading`] or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Calibrate sensor, panic if calibration fails.
+    ///     sensor.calibrate().await.unwrap();
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     // Store rotation before reset.
+    ///     let rotation = sensor.rotation().unwrap_or_default();
+    ///
+    ///     // Reset heading back to zero.
+    ///     _ = sensor.reset_rotation();
+    /// }
+    /// ```
+    pub fn reset_rotation(&mut self) -> Result<(), InertialError> {
+        self.set_rotation(Angle::ZERO)
+    }
+
+    /// Returns the Euler angles (pitch, yaw, roll) in radians representing the Inertial Sensor’s
+    /// orientation.
+    ///
+    /// Euler angles are normalized to [`Angle::HALF_TURN`], meaning they range from (-180°, 180°].
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Calibrate sensor, panic if calibration fails.
+    ///     sensor.calibrate().await.unwrap();
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     if let Ok(angles) = sensor.euler() {
+    ///         println!(
+    ///             "pitch: {}°, yaw: {}°, roll: {}°",
+    ///             angles.a.as_degrees(),
+    ///             angles.b.as_degrees(),
+    ///             angles.c.as_degrees(),
+    ///         );
+    ///     }
+    /// }
+    /// ```
+    pub fn euler(&self) -> Result<EulerAngles<Angle, IntraZYX>, InertialError> {
+        self.validate_calibration()?;
+
+        let mut data = V5_DeviceImuAttitude::default();
+        unsafe {
+            vexDeviceImuAttitudeGet(self.device, &raw mut data);
+        }
+
+        Ok(EulerAngles {
+            a: Angle::from_degrees(data.pitch).wrapped_half(),
+            b: Angle::from_degrees(data.yaw).wrapped_half(),
+            c: Angle::from_degrees(data.roll).wrapped_half(),
+            marker: PhantomData,
+        })
+    }
+
+    /// Returns a quaternion representing the Inertial Sensor’s current orientation.
+    ///
+    /// # Errors
+    ///
+    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
+    ///   to the port.
+    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
+    ///   calibrating and cannot yet be used.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Calibrate sensor, panic if calibration fails.
+    ///     sensor.calibrate().await.unwrap();
+    ///
+    ///     // Sleep for two seconds to allow the robot to be moved.
+    ///     sleep(Duration::from_secs(2)).await;
+    ///
+    ///     if let Ok(quaternion) = sensor.quaternion() {
+    ///         println!(
+    ///             "x: {}, y: {}, z: {}, scalar: {}",
+    ///             quaternion.v.x, quaternion.v.y, quaternion.v.z, quaternion.s,
+    ///         );
+    ///     }
+    /// }
+    /// ```
+    pub fn quaternion(&self) -> Result<Quaternion<f64>, InertialError> {
+        self.validate_calibration()?;
+
+        let mut data = V5_DeviceImuQuaternion::default();
+        unsafe {
+            vexDeviceImuQuaternionGet(self.device, &raw mut data);
+        }
+
+        Ok(Quaternion {
+            v: Vector3 {
+                x: data.a,
+                y: data.b,
+                z: data.c,
+            },
+            s: data.d,
+        })
+    }
+
+    /// Returns the Inertial Sensor’s raw gyroscope readings in dps (degrees per second).
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Calibrate sensor, panic if calibration fails.
+    ///     sensor.calibrate().await.unwrap();
+    ///
+    ///     // Read out angular velocity values every 10mS
+    ///     loop {
+    ///         if let Ok(rates) = sensor.gyro_rate() {
+    ///             println!("x: {}°/s, y: {}°/s, z: {}°/s", rates.x, rates.y, rates.z,);
+    ///         }
+    ///
+    ///         sleep(Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
+    pub fn gyro_rate(&self) -> Result<Vector3<f64>, PortError> {
+        self.validate_port()?;
+
+        let mut data = V5_DeviceImuRaw::default();
+        unsafe {
+            vexDeviceImuRawGyroGet(self.device, &raw mut data);
+        }
+
+        Ok(Vector3 {
+            x: data.x,
+            y: data.y,
+            z: data.z,
+            // NOTE: data.w is unused in the SDK.
+            // See: <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L239C63-L239C64>
+        })
+    }
+
+    /// Returns the sensor's raw acceleration readings in g (multiples of ~9.8 m/s/s).
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
+    ///
+    ///     // Calibrate sensor, panic if calibration fails.
+    ///     sensor.calibrate().await.unwrap();
+    ///
+    ///     // Read out acceleration values every 10mS
+    ///     loop {
+    ///         if let Ok(acceleration) = sensor.acceleration() {
+    ///             println!(
+    ///                 "x: {}G, y: {}G, z: {}G",
+    ///                 acceleration.x, acceleration.y, acceleration.z,
+    ///             );
+    ///         }
+    ///
+    ///         sleep(Duration::from_millis(10)).await;
+    ///     }
+    /// }
+    /// ```
+    pub fn acceleration(&self) -> Result<Vector3<f64>, PortError> {
+        self.validate_port()?;
+
+        let mut data = V5_DeviceImuRaw::default();
+        unsafe {
+            vexDeviceImuRawAccelGet(self.device, &raw mut data);
+        }
+
+        Ok(Vector3 {
+            x: data.x,
+            y: data.y,
+            z: data.z,
+            // NOTE: data.w is unused in the SDK.
+            // See: <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L239C63-L239C64>
+        })
+    }
+
     /// Returns the internal status code of the inertial sensor.
     ///
     /// # Errors
@@ -250,535 +781,6 @@ impl InertialSensor {
     /// ```
     pub fn physical_orientation(&self) -> Result<InertialOrientation, PortError> {
         Ok(self.status()?.physical_orientation())
-    }
-
-    /// Calibrates the IMU.
-    ///
-    /// Returns an [`CalibrateFuture`] that resolves once the calibration operation has finished or
-    /// timed out.
-    ///
-    /// This method MUST be called for any meaningful gyroscope readings to be obtained. Calibration
-    /// requires the sensor to be sitting completely still. If the sensor is moving during the
-    /// calibration process, readings will drift from reality over time.
-    ///
-    /// # Errors
-    ///
-    /// - Calibration has a 1-second start timeout (when waiting for calibration to actually start
-    ///   on the sensor) and a 3-second end timeout (when waiting for calibration to complete after
-    ///   it has started) as a failsafe in the event that something goes wrong and the sensor gets
-    ///   stuck in a calibrating state. If either timeout is exceeded in its respective phase of
-    ///   calibration, [`CalibrateError::Timeout`] will be returned.
-    /// - A [`CalibrateError::Port`] error is returned if there is not an Inertial Sensor connected
-    ///   to the port.
-    ///
-    /// # Examples
-    ///
-    /// Calibration process with error handling and a retry:
-    ///
-    /// ```no_run
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     match sensor.calibrate().await {
-    ///         Ok(_) => println!("IMU calibrated successfully."),
-    ///         Err(err) => {
-    ///             println!("IMU failed to calibrate, retrying. Reason: {:?}", err);
-    ///
-    ///             // Since calibration failed, let's try one more time. If that fails,
-    ///             // we just ignore the error and go on with our lives.
-    ///             _ = sensor.calibrate().await;
-    ///         }
-    ///     }
-    /// }
-    /// ```
-    ///
-    /// Calibrating in a competition environment:
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// struct Robot {
-    ///     imu: InertialSensor,
-    /// }
-    ///
-    /// impl Compete for Robot {
-    ///     async fn autonomous(&mut self) {
-    ///         loop {
-    ///             if let Ok(heading) = self.imu.heading() {
-    ///                 println!("IMU Heading: {}°", heading.as_degrees());
-    ///             }
-    ///
-    ///             sleep(Duration::from_millis(10)).await;
-    ///         }
-    ///     }
-    /// }
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut imu = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     if let Err(err) = imu.calibrate().await {
-    ///         // Log out a warning to terminal if calibration failed. You can also retry by
-    ///         // calling it again, although this usually only happens if the sensor was unplugged.
-    ///         println!("WARNING: IMU failed to calibrate! Readings might be inaccurate!");
-    ///     }
-    ///
-    ///     Robot { imu }.compete().await;
-    /// }
-    /// ```
-    pub const fn calibrate(&mut self) -> CalibrateFuture<'_> {
-        CalibrateFuture {
-            state: CalibrateFutureState::Calibrate,
-            imu: self,
-        }
-    }
-
-    /// Returns the total number of degrees the Inertial Sensor has spun about the z-axis.
-    ///
-    /// This value is theoretically unbounded. Clockwise rotations are represented with positive
-    /// degree values, while counterclockwise rotations are represented with negative ones.
-    ///
-    /// # Errors
-    ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
-    ///   to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
-    ///   calibrating and cannot yet be used.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Calibrate sensor, panic if calibration fails.
-    ///     sensor.calibrate().await.unwrap();
-    ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     if let Ok(rotation) = sensor.rotation() {
-    ///         println!(
-    ///             "Robot has rotated {} degrees since calibration.",
-    ///             rotation.as_degrees()
-    ///         );
-    ///     }
-    /// }
-    /// ```
-    pub fn rotation(&self) -> Result<Angle, InertialError> {
-        self.validate_calibration()?;
-        Ok(Angle::from_degrees(
-            unsafe { vexDeviceImuHeadingGet(self.device) } + self.rotation_offset,
-        ))
-    }
-
-    /// Returns the Inertial Sensor’s yaw angle bounded from [0.0, 360.0) degrees.
-    ///
-    /// Clockwise rotations are represented with positive degree values, while counterclockwise
-    /// rotations are represented with negative ones.
-    ///
-    /// # Errors
-    ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
-    ///   to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
-    ///   calibrating and cannot yet be used.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Calibrate sensor, panic if calibration fails.
-    ///     sensor.calibrate().await.unwrap();
-    ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     if let Ok(heading) = sensor.heading() {
-    ///         println!("Heading is {} degrees.", heading.as_degrees());
-    ///     }
-    /// }
-    /// ```
-    pub fn heading(&self) -> Result<Angle, InertialError> {
-        self.validate_calibration()?;
-        // The result needs to be [0, 360). Adding a significantly negative offset could take us
-        // below 0. Adding a significantly positive offset could take us above 360.
-        Ok(Angle::from_degrees(
-            unsafe { vexDeviceImuDegreesGet(self.device) } + self.heading_offset,
-        )
-        .wrapped_full())
-    }
-
-    /// Returns a quaternion representing the Inertial Sensor’s current orientation.
-    ///
-    /// # Errors
-    ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
-    ///   to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
-    ///   calibrating and cannot yet be used.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Calibrate sensor, panic if calibration fails.
-    ///     sensor.calibrate().await.unwrap();
-    ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     if let Ok(quaternion) = sensor.quaternion() {
-    ///         println!(
-    ///             "x: {}, y: {}, z: {}, scalar: {}",
-    ///             quaternion.v.x, quaternion.v.y, quaternion.v.z, quaternion.s,
-    ///         );
-    ///     }
-    /// }
-    /// ```
-    pub fn quaternion(&self) -> Result<Quaternion<f64>, InertialError> {
-        self.validate_calibration()?;
-
-        let mut data = V5_DeviceImuQuaternion::default();
-        unsafe {
-            vexDeviceImuQuaternionGet(self.device, &raw mut data);
-        }
-
-        Ok(Quaternion {
-            v: Vector3 {
-                x: data.a,
-                y: data.b,
-                z: data.c,
-            },
-            s: data.d,
-        })
-    }
-
-    /// Returns the Euler angles (pitch, yaw, roll) in radians representing the Inertial Sensor’s
-    /// orientation.
-    ///
-    /// # Errors
-    ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
-    ///   to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
-    ///   calibrating and cannot yet be used.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Calibrate sensor, panic if calibration fails.
-    ///     sensor.calibrate().await.unwrap();
-    ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     if let Ok(angles) = sensor.euler() {
-    ///         println!(
-    ///             "pitch: {}°, yaw: {}°, roll: {}°",
-    ///             angles.a.as_degrees(),
-    ///             angles.b.as_degrees(),
-    ///             angles.c.as_degrees(),
-    ///         );
-    ///     }
-    /// }
-    /// ```
-    pub fn euler(&self) -> Result<EulerAngles<Angle, IntraZYX>, InertialError> {
-        self.validate_calibration()?;
-
-        let mut data = V5_DeviceImuAttitude::default();
-        unsafe {
-            vexDeviceImuAttitudeGet(self.device, &raw mut data);
-        }
-
-        Ok(EulerAngles {
-            a: Angle::from_degrees(data.pitch).wrapped_half(),
-            b: Angle::from_degrees(data.yaw).wrapped_half(),
-            c: Angle::from_degrees(data.roll).wrapped_half(),
-            marker: PhantomData,
-        })
-    }
-
-    /// Returns the Inertial Sensor’s raw gyroscope readings in dps (degrees per second).
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Calibrate sensor, panic if calibration fails.
-    ///     sensor.calibrate().await.unwrap();
-    ///
-    ///     // Read out angular velocity values every 10mS
-    ///     loop {
-    ///         if let Ok(rates) = sensor.gyro_rate() {
-    ///             println!("x: {}°/s, y: {}°/s, z: {}°/s", rates.x, rates.y, rates.z,);
-    ///         }
-    ///
-    ///         sleep(Duration::from_millis(10)).await;
-    ///     }
-    /// }
-    /// ```
-    pub fn gyro_rate(&self) -> Result<Vector3<f64>, PortError> {
-        self.validate_port()?;
-
-        let mut data = V5_DeviceImuRaw::default();
-        unsafe {
-            vexDeviceImuRawGyroGet(self.device, &raw mut data);
-        }
-
-        Ok(Vector3 {
-            x: data.x,
-            y: data.y,
-            z: data.z,
-            // NOTE: data.w is unused in the SDK.
-            // See: <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L239C63-L239C64>
-        })
-    }
-
-    /// Returns the sensor's raw acceleration readings in g (multiples of ~9.8 m/s/s).
-    ///
-    /// # Errors
-    ///
-    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
-    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
-    ///   connected to the port.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Calibrate sensor, panic if calibration fails.
-    ///     sensor.calibrate().await.unwrap();
-    ///
-    ///     // Read out acceleration values every 10mS
-    ///     loop {
-    ///         if let Ok(acceleration) = sensor.acceleration() {
-    ///             println!(
-    ///                 "x: {}G, y: {}G, z: {}G",
-    ///                 acceleration.x, acceleration.y, acceleration.z,
-    ///             );
-    ///         }
-    ///
-    ///         sleep(Duration::from_millis(10)).await;
-    ///     }
-    /// }
-    /// ```
-    pub fn acceleration(&self) -> Result<Vector3<f64>, PortError> {
-        self.validate_port()?;
-
-        let mut data = V5_DeviceImuRaw::default();
-        unsafe {
-            vexDeviceImuRawAccelGet(self.device, &raw mut data);
-        }
-
-        Ok(Vector3 {
-            x: data.x,
-            y: data.y,
-            z: data.z,
-            // NOTE: data.w is unused in the SDK.
-            // See: <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_imu.c#L239C63-L239C64>
-        })
-    }
-
-    /// Resets the current reading of the sensor's heading to zero.
-    ///
-    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect
-    /// [`InertialSensor::rotation`] or [`InertialSensor::euler`]/
-    /// [`InertialSensor::quaternion`].
-    ///
-    /// # Errors
-    ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
-    ///   to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
-    ///   calibrating and cannot yet be used.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Calibrate sensor, panic if calibration fails.
-    ///     sensor.calibrate().await.unwrap();
-    ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     // Store heading before reset.
-    ///     let heading = sensor.heading().unwrap_or_default();
-    ///
-    ///     // Reset heading back to zero.
-    ///     _ = sensor.reset_heading();
-    /// }
-    /// ```
-    pub fn reset_heading(&mut self) -> Result<(), InertialError> {
-        self.set_heading(Angle::ZERO)
-    }
-
-    /// Resets the current reading of the sensor's rotation to zero.
-    ///
-    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect
-    /// [`InertialSensor::heading`] or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
-    ///
-    /// # Errors
-    ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
-    ///   to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
-    ///   calibrating and cannot yet be used.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use std::time::Duration;
-    ///
-    /// use vexide::prelude::*;
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Calibrate sensor, panic if calibration fails.
-    ///     sensor.calibrate().await.unwrap();
-    ///
-    ///     // Sleep for two seconds to allow the robot to be moved.
-    ///     sleep(Duration::from_secs(2)).await;
-    ///
-    ///     // Store rotation before reset.
-    ///     let rotation = sensor.rotation().unwrap_or_default();
-    ///
-    ///     // Reset heading back to zero.
-    ///     _ = sensor.reset_rotation();
-    /// }
-    /// ```
-    pub fn reset_rotation(&mut self) -> Result<(), InertialError> {
-        self.set_rotation(Angle::ZERO)
-    }
-
-    /// Sets the current reading of the sensor's rotation to a given value.
-    ///
-    /// This only affects the value returned by [`InertialSensor::rotation`] and does not effect
-    /// [`InertialSensor::heading`] or [`InertialSensor::euler`]/[`InertialSensor::quaternion`].
-    ///
-    /// # Errors
-    ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
-    ///   to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
-    ///   calibrating and cannot yet be used.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{math::Angle, prelude::*};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Set rotation to 90 degrees clockwise.
-    ///     _ = sensor.set_rotation(Angle::from_degrees(90.0));
-    /// }
-    /// ```
-    pub fn set_rotation(&mut self, rotation: Angle) -> Result<(), InertialError> {
-        self.validate_calibration()?;
-
-        self.rotation_offset =
-            rotation.as_degrees() - unsafe { vexDeviceImuHeadingGet(self.device) };
-
-        Ok(())
-    }
-
-    /// Sets the current reading of the sensor's heading to a given value.
-    ///
-    /// This only affects the value returned by [`InertialSensor::heading`] and does not effect
-    /// [`InertialSensor::rotation`] or [`InertialSensor::euler`]/
-    /// [`InertialSensor::quaternion`].
-    ///
-    /// # Errors
-    ///
-    /// - An [`InertialError::Port`] error is returned if there is not an Inertial Sensor connected
-    ///   to the port.
-    /// - An [`InertialError::Calibrating`] error is returned if the Inertial Sensor is currently
-    ///   calibrating and cannot yet be used.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{math::Angle, prelude::*};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let mut sensor = InertialSensor::new(peripherals.port_1);
-    ///
-    ///     // Set heading to 90 degrees clockwise.
-    ///     _ = sensor.set_heading(Angle::from_degrees(90.0));
-    /// }
-    /// ```
-    pub fn set_heading(&mut self, heading: Angle) -> Result<(), InertialError> {
-        self.validate_calibration()?;
-
-        self.heading_offset = heading.as_degrees() - unsafe { vexDeviceImuDegreesGet(self.device) };
-
-        Ok(())
     }
 
     /// Sets the internal computation speed of the IMU.
