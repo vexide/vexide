@@ -260,7 +260,7 @@ impl Peripherals {
 ///
 /// The system still ensures only one device can use a port at a time, but handles the bookkeeping
 /// at runtime rather than compile time. This trades a small performance cost for increased
-/// flexibility. It preferable to use the static [`Peripherals`] struct where possible.
+/// flexibility. It's preferable to use the static [`Peripherals`] struct where possible.
 #[derive(Debug)]
 pub struct DynamicPeripherals {
     display: Option<Display>,
