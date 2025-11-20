@@ -21,26 +21,31 @@ use crate::{executor::EXECUTOR, reactor::Sleeper};
 /// This type is returned by the [`sleep`] and [`sleep_until`] functions.
 #[derive(Debug)]
 #[must_use = "futures do nothing unless you `.await` or poll them"]
-pub struct Sleep(Instant);
+pub struct Sleep {
+    deadline: Instant,
+    registered: bool,
+}
 
 impl Future for Sleep {
     type Output = ();
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> core::task::Poll<Self::Output> {
-        if Instant::now() > self.0 {
-            Poll::Ready(())
-        } else {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> core::task::Poll<Self::Output> {
+        if Instant::now() > self.deadline {
+            return Poll::Ready(())
+        } else if !self.registered {
             EXECUTOR.with(|ex| {
                 ex.with_reactor(|reactor| {
                     reactor.sleepers.push(Sleeper {
-                        deadline: self.0,
+                        deadline: self.deadline,
                         waker: cx.waker().clone(),
                     });
                 });
             });
 
-            Poll::Pending
+            self.registered = true;
         }
+
+        Poll::Pending
     }
 }
 
@@ -66,7 +71,7 @@ impl Future for Sleep {
 /// }
 /// ```
 pub fn sleep(duration: Duration) -> Sleep {
-    Sleep(Instant::now() + duration)
+    Sleep { deadline: Instant::now() + duration, registered: false }
 }
 
 /// Waits until `deadline` is reached.
@@ -92,5 +97,5 @@ pub fn sleep(duration: Duration) -> Sleep {
 /// }
 /// ```
 pub const fn sleep_until(deadline: Instant) -> Sleep {
-    Sleep(deadline)
+    Sleep { deadline, registered: false }
 }
