@@ -1,6 +1,11 @@
+use std::time::{Duration, Instant};
+
 use vexide::prelude::*;
 
 #[vexide::main]
 async fn main(_peripherals: Peripherals) {
-    println!("Hello, world!");
+    loop {
+        sleep(Duration::from_millis(50)).await;
+        println!("{:?}", Instant::now());
+    }
 }
