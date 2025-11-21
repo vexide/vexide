@@ -393,3 +393,16 @@ impl From<Peripherals> for DynamicPeripherals {
         Self::new(peripherals)
     }
 }
+
+impl TryFrom<DynamicPeripherals> for Peripherals {
+    type Error = ();
+    fn try_from(peripherals: DynamicPeripherals) -> Result<Self, ()> {
+        peripherals.display.ok_or(())?;
+        peripherals.primary_controller.ok_or(())?;
+        peripherals.partner_controller.ok_or(())?;
+        if peripherals.smart_ports.iter().any(Option::is_none) || peripherals.adi_slots.iter().any(Option::is_none) {
+            return Err(());
+        }
+        unsafe { Self::new() }
+    }
+}
