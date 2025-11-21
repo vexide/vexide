@@ -400,7 +400,9 @@ impl TryFrom<DynamicPeripherals> for Peripherals {
         peripherals.display.ok_or(())?;
         peripherals.primary_controller.ok_or(())?;
         peripherals.partner_controller.ok_or(())?;
-        if peripherals.smart_ports.iter().any(Option::is_none) || peripherals.adi_slots.iter().any(Option::is_none) {
+        if peripherals.smart_ports.iter().any(Option::is_none)
+            || peripherals.adi_slots.iter().any(Option::is_none)
+        {
             return Err(());
         }
         Ok(unsafe { Self::new() })
