@@ -71,6 +71,7 @@ Before releasing:
 - `AiVisionObject` and `VisionObject` now use the new `Angle` type for storing object angles. This fixes a bug with the legacy vision sensor using the wrong angle units. (#386) (**Breaking change**)
 - Fixed an off-by-one error in `Display::draw_buffer`'s buffer stride calculation causing slanted image rendering. (#397)
 - `Display` now uses half-open pixel coordinates for `Rect`, `Line` and `Display::draw_buffer`. (#395) (**Breaking Change**)
+- `Controller::try_rumble` now doesn't unconditionally fail an assert. (#413)
 
 ### Changed
 
