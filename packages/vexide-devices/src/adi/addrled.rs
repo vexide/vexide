@@ -108,7 +108,7 @@ impl<const N: usize> AdiAddrLed<N> {
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
     /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
     ///   connected to the port.
-    pub fn set_pixel(&mut self, index: usize, color: impl Into<Rgb<u8>>) -> Result<(), PortError> {
+    pub fn set_pixel(&mut self, index: usize, color: impl Into<Color>) -> Result<(), PortError> {
         assert!(index < N, "pixel index was out of range for LED strip size");
 
         self.port.validate_expander()?;
