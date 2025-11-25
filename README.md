@@ -22,9 +22,11 @@ All of these crates are re-exported from the [`vexide`](https://github.com/vexid
 
 vexide relies on some features that are only available in Rust’s nightly release channel, so you’ll need to switch to using nightly to build it. We also use the `rust-src` component due to our target not shipping pre-built versions of the standard library in `rustup`.
 
-The override command needs to be ran in the project directory. Change date in override command to your vexide version's release date. The folling works for vexide 7.0.
+The override command needs to be ran in the project directory. Change date in override command to your vexide version's release date. The following works for vexide 7.0.
 ```sh
 rustup override set nightly-2025-03-06
+```
+```
 rustup component add rust-src
 ```
 
