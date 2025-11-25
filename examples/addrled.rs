@@ -1,25 +1,25 @@
-use vexide::{adi::ADI_UPDATE_INTERVAL, color::Rgb, prelude::*};
+use vexide::{adi::ADI_UPDATE_INTERVAL, color::Color, prelude::*};
 
 const NUM_PIXELS: usize = 64;
 
-fn wheel(mut wheel_pos: u8) -> Rgb<u8> {
+fn wheel(mut wheel_pos: u8) -> Color {
     wheel_pos = 255 - wheel_pos;
     if wheel_pos < 85 {
-        return Rgb::new(255 - wheel_pos * 3, 0, wheel_pos * 3);
+        return Color::new(255 - wheel_pos * 3, 0, wheel_pos * 3);
     }
     if wheel_pos < 170 {
         wheel_pos -= 85;
-        return Rgb::new(0, wheel_pos * 3, 255 - wheel_pos * 3);
+        return Color::new(0, wheel_pos * 3, 255 - wheel_pos * 3);
     }
     wheel_pos -= 170;
 
-    Rgb::new(wheel_pos * 3, 255 - wheel_pos * 3, 0)
+    Color::new(wheel_pos * 3, 255 - wheel_pos * 3, 0)
 }
 
 #[vexide::main]
 async fn main(peripherals: Peripherals) {
     let mut strip = AdiAddrLed::<NUM_PIXELS>::new(peripherals.adi_a);
-    let mut buffer: [Rgb<u8>; NUM_PIXELS] = [Rgb::new(0, 0, 0); _];
+    let mut buffer: [Color; NUM_PIXELS] = [Color::BLACK; _];
 
     loop {
         for j in 0..(256 * 5) {
