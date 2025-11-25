@@ -852,6 +852,51 @@ impl Controller {
         ControllerScreenWriteFuture::new(line, col, text.as_ref().to_string(), self, true)
     }
 
+    /// Set the text contents at a specific row/column offset, optionally
+    /// performing line bounds checking.
+    ///
+    /// Internal implementation of try_set_text and try_rumble.
+    fn try_set_text_impl(
+        &mut self,
+        text: impl AsRef<str>,
+        line: u8,
+        column: u8,
+        enforce_visible: bool,
+    ) -> Result<(), ControllerError> {
+        validate_connection(self.id)?;
+
+        assert!(
+            column <= Self::MAX_COLUMNS as u8 && column != 0,
+            "{column} is not a valid controller column number. Must be in the range [1, {}]",
+            Self::MAX_COLUMNS
+        );
+        if enforce_visible {
+            assert!(
+                line <= Self::MAX_LINES as u8 && line != 0,
+                "{line} is not a valid controller line number. Must be in the range [1, {}]",
+                Self::MAX_LINES
+            );
+        }
+
+        let id: V5_ControllerId = self.id.into();
+        let text = CString::new(text.as_ref())
+            .expect("A NUL (0x00) character was found in the text input string.");
+
+        if unsafe {
+            vexControllerTextSet(
+                u32::from(id.0),
+                u32::from(line),
+                u32::from(column),
+                text.as_ptr().cast(),
+            )
+        } != 1
+        {
+            return Err(ControllerError::WriteBusy);
+        }
+
+        Ok(())
+    }
+
     /// Set the text contents at a specific row/column offset.
     ///
     /// Both lines and columns are 1-indexed.
@@ -896,36 +941,7 @@ impl Controller {
         line: u8,
         column: u8,
     ) -> Result<(), ControllerError> {
-        validate_connection(self.id)?;
-
-        assert!(
-            column <= Self::MAX_COLUMNS as u8 && column != 0,
-            "{column} is not a valid controller column number. Must be in the range [1, {}]",
-            Self::MAX_COLUMNS
-        );
-        assert!(
-            line <= Self::MAX_LINES as u8 && line != 0,
-            "{line} is not a valid controller line number. Must be in the range [1, {}]",
-            Self::MAX_LINES
-        );
-
-        let id: V5_ControllerId = self.id.into();
-        let text = CString::new(text.as_ref())
-            .expect("A NUL (0x00) character was found in the text input string.");
-
-        if unsafe {
-            vexControllerTextSet(
-                u32::from(id.0),
-                u32::from(line),
-                u32::from(column),
-                text.as_ptr().cast(),
-            )
-        } != 1
-        {
-            return Err(ControllerError::WriteBusy);
-        }
-
-        Ok(())
+        self.try_set_text_impl(text, line, column, true)
     }
 
     /// Send a rumble pattern to the controller's vibration motor.
@@ -986,7 +1002,7 @@ impl Controller {
     /// }
     /// ```
     pub fn try_rumble(&mut self, pattern: impl AsRef<str>) -> Result<(), ControllerError> {
-        self.try_set_text(pattern, 4, 1)
+        self.try_set_text_impl(pattern, 4, 1, false)
     }
 }
 
