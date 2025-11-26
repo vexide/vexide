@@ -184,17 +184,17 @@ impl<const N: usize> AdiAddrLed<N> {
     ///     // List of colors that each LED pixel will be set to.
     ///     let colors = [
     ///         Color::RED,
-    ///         Color::ORANGE,
     ///         Color::YELLOW,
     ///         Color::GREEN,
     ///         Color::BLUE,
     ///         Color::PURPLE,
     ///         Color::RED,
-    ///         Color::ORANGE,
+    ///         Color::YELLOW,
+    ///         Color::GREEN,
     ///     ];
     ///
     ///     // Set the first pixel in the strip to white.
-    ///     _ = leds.set_buffer(0, &colors);
+    ///     _ = leds.set_buffer(colors);
     /// }
     /// ```
     pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, PortError>
