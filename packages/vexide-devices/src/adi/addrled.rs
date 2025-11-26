@@ -105,7 +105,7 @@ impl<const N: usize> AdiAddrLed<N> {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{prelude::*, color::Color};
+    /// use vexide::{color::Color, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -139,7 +139,7 @@ impl<const N: usize> AdiAddrLed<N> {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{prelude::*, color::Color};
+    /// use vexide::{color::Color, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -174,7 +174,7 @@ impl<const N: usize> AdiAddrLed<N> {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{prelude::*, color::Color};
+    /// use vexide::{color::Color, prelude::*};
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
@@ -190,7 +190,7 @@ impl<const N: usize> AdiAddrLed<N> {
     ///         Color::BLUE,
     ///         Color::PURPLE,
     ///         Color::RED,
-    ///         Color::ORANGE
+    ///         Color::ORANGE,
     ///     ];
     ///
     ///     // Set the first pixel in the strip to white.
