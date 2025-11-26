@@ -51,7 +51,19 @@ impl<const N: usize> AdiAddrLed<N> {
     /// The max number of LED diodes on one strip that a single ADI port can control.
     pub const MAX_LENGTH: usize = 64;
 
-    /// Initialize an LED strip with a given length on an ADI port.
+    /// Initializes an LED strip with a given length on an ADI port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new LED strip with 8 addressable pixels.
+    ///     let mut leds = AdiAddrLed::<8>::new(peripherals.adi_a);
+    /// }
+    /// ```
     #[must_use]
     pub fn new(port: AdiPort) -> Self {
         const {
@@ -89,6 +101,21 @@ impl<const N: usize> AdiAddrLed<N> {
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
     /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
     ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{prelude::*, color::Color};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new LED strip with 8 addressable pixels.
+    ///     let mut leds = AdiAddrLed::<8>::new(peripherals.adi_a);
+    ///
+    ///     // Set all pixels to white.
+    ///     _ = leds.set_all(Color::WHITE);
+    /// }
+    /// ```
     pub fn set_all(&mut self, color: impl Into<Color>) -> Result<(), PortError> {
         _ = self.set_buffer([color.into(); N])?;
         Ok(())
@@ -108,6 +135,21 @@ impl<const N: usize> AdiAddrLed<N> {
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
     /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
     ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{prelude::*, color::Color};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new LED strip with 8 addressable pixels.
+    ///     let mut leds = AdiAddrLed::<8>::new(peripherals.adi_a);
+    ///
+    ///     // Set the first pixel in the strip to white.
+    ///     _ = leds.set_pixel(0, Color::WHITE);
+    /// }
+    /// ```
     pub fn set_pixel(&mut self, index: usize, color: impl Into<Color>) -> Result<(), PortError> {
         assert!(index < N, "pixel index was out of range for LED strip size");
 
@@ -128,6 +170,33 @@ impl<const N: usize> AdiAddrLed<N> {
     /// - A [`PortError::Disconnected`] error is returned if no expander was connected to the port.
     /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
     ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{prelude::*, color::Color};
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a new LED strip with 8 addressable pixels.
+    ///     let mut leds = AdiAddrLed::<8>::new(peripherals.adi_a);
+    ///
+    ///     // List of colors that each LED pixel will be set to.
+    ///     let colors = [
+    ///         Color::RED,
+    ///         Color::ORANGE,
+    ///         Color::YELLOW,
+    ///         Color::GREEN,
+    ///         Color::BLUE,
+    ///         Color::PURPLE,
+    ///         Color::RED,
+    ///         Color::ORANGE
+    ///     ];
+    ///
+    ///     // Set the first pixel in the strip to white.
+    ///     _ = leds.set_buffer(0, &colors);
+    /// }
+    /// ```
     pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, PortError>
     where
         T: IntoIterator<Item = I>,
