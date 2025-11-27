@@ -34,6 +34,12 @@ impl Future for Sleep {
             return Poll::Ready(());
         }
 
+        // Register a waker on the reactor to only poll this future when the deadline passes.
+        //
+        // We should only push to the sleeper queue if we either haven't pushed
+        // (`self.registered.waker == None`) or if !w.will_wake(cx.waker()), meaning the already
+        // registered waker will not wake up the same task as the current waker indicating that the
+        // sleep has potentially been moved across executors.
         if self
             .registered_waker
             .as_ref()
