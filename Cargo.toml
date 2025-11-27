@@ -16,11 +16,7 @@ compress = true
 
 [dev-dependencies]
 vex-sdk = "0.28.0"
-vexide = { path = "packages/vexide", features = [
-    "full",
-    "vex-sdk-mock",
-    "vex-sdk-jumptable",
-] }
+vexide = { path = "packages/vexide", features = [ "full", "default-sdk" ] }
 
 [workspace]
 members = ["packages/*"]

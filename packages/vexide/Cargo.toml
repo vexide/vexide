@@ -44,6 +44,10 @@ full = [
     "panic-hook",
     "abort-handler",
 ]
+default-sdk = [
+    "vex-sdk-jumptable",
+    "vex-sdk-mock",
+]
 
 macros = ["dep:vexide-macro"]
 
