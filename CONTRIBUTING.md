@@ -175,6 +175,26 @@ If you're not quite done with the changes but are ready to start sharing them, y
 Once your pull request has been merged, congrats! Your changes will be mentioned
 in the next release's changelog.
 
+## Versioning
+
+This project's alphas, betas, and release candidates are kept on separate branches which diverge from `main` as needed. The project versions on the `main` branch are always kept on the **next** version of the library.
+
+For example, if `v0.8.0-alpha.1` is ready to be released, then the `alpha` branch will be rebased off `main`. Then, a commit will be made changing all the `0.8.0`s to `0.8.0-alpha.1`s. Finally, all crates will be published off that branch.
+
+This means that we can release many alphas or betas without clogging up the commit history of main.
+
+### Updating versions
+
+While crates like `vexide-startup` have their own version number, there is a concept of the current "flagship" vexide version which is stored in various places throughout the project.
+
+- The `vexide` crate's version is the canonical project flagship version, and must be updated if there is a breaking change to any vexide sub-crate.
+- In the changelog, the most recent version must be the flagship version.
+- The [VEXIDE_VERSION] constant in `vexide-startup` must be the flagship version.
+
+These must be updated before a pre-release is published or when `main` is updated to point to the next version after a full release.
+
+[VEXIDE_VERSION]: packages/vexide-startup/src/banner/mod.rs
+
 ## Acknowledgements
 
 This CONTRIBUTING.md file contains excerpts from and was inspired in part by the
