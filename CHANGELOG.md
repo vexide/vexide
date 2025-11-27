@@ -49,6 +49,7 @@ Before releasing:
 - Added the `vexide::test` attribute macro, used to implement unit tests which run on your host machine and have access to vexide's async runtime and peripherals. (#361)
 - Added support for using VEXcode's SDK via the `vex-sdk-vexcode` feature. (#361)
 - Added support for using the VEX partner SDK via the `vex-sdk-pros` feature. (#361)
+- Added the `default-sdk` feature for specifying the recommended defualt SDK features for projects. (#417)
 - Added support for using a no-op SDK (for testing code on desktop) via the `vex-sdk-mock` feature. (#361)
 - On vexide's error details screen, long error messages are now wrapped onto subsequent lines. (#368)
 - Added the new `LowResolutionTime` type to `vexide::time` for recording timestamps taken by the Brain's low resolution clock. (#386)
