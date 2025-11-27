@@ -12,7 +12,7 @@ use core::{
     task::{Context, Poll},
     time::Duration,
 };
-use std::time::Instant;
+use std::{task::Waker, time::Instant};
 
 use crate::{executor::EXECUTOR, reactor::Sleeper};
 
@@ -21,26 +21,45 @@ use crate::{executor::EXECUTOR, reactor::Sleeper};
 /// This type is returned by the [`sleep`] and [`sleep_until`] functions.
 #[derive(Debug)]
 #[must_use = "futures do nothing unless you `.await` or poll them"]
-pub struct Sleep(Instant);
+pub struct Sleep {
+    deadline: Instant,
+    registered_waker: Option<Waker>,
+}
 
 impl Future for Sleep {
     type Output = ();
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> core::task::Poll<Self::Output> {
-        if Instant::now() > self.0 {
-            Poll::Ready(())
-        } else {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        if Instant::now() >= self.deadline {
+            return Poll::Ready(());
+        }
+
+        // Register a waker on the reactor to only poll this future when the deadline passes.
+        //
+        // We should only push to the sleeper queue if we either haven't pushed
+        // (`self.registered.waker == None`) or if !w.will_wake(cx.waker()), meaning the already
+        // registered waker will not wake up the same task as the current waker indicating that the
+        // sleep has potentially been moved across executors.
+        if self
+            .registered_waker
+            .as_ref()
+            .map(|w| !w.will_wake(cx.waker()))
+            .unwrap_or(true)
+        {
+            let this = self.get_mut();
+            this.registered_waker = Some(cx.waker().clone());
+
             EXECUTOR.with(|ex| {
                 ex.with_reactor(|reactor| {
                     reactor.sleepers.push(Sleeper {
-                        deadline: self.0,
+                        deadline: this.deadline,
                         waker: cx.waker().clone(),
                     });
                 });
             });
-
-            Poll::Pending
         }
+
+        Poll::Pending
     }
 }
 
@@ -66,7 +85,10 @@ impl Future for Sleep {
 /// }
 /// ```
 pub fn sleep(duration: Duration) -> Sleep {
-    Sleep(Instant::now() + duration)
+    Sleep {
+        deadline: Instant::now() + duration,
+        registered_waker: None,
+    }
 }
 
 /// Waits until `deadline` is reached.
@@ -92,5 +114,8 @@ pub fn sleep(duration: Duration) -> Sleep {
 /// }
 /// ```
 pub const fn sleep_until(deadline: Instant) -> Sleep {
-    Sleep(deadline)
+    Sleep {
+        deadline,
+        registered_waker: None,
+    }
 }
