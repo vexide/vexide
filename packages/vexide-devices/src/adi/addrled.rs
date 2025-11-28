@@ -117,7 +117,7 @@ impl<const N: usize> AdiAddrLed<N> {
     /// }
     /// ```
     pub fn set_all(&mut self, color: impl Into<Color>) -> Result<(), PortError> {
-        _ = self.set_buffer([color.into(); N])?;
+        _ = self.set_buffer(&[color.into(); N])?;
         Ok(())
     }
 
@@ -197,24 +197,12 @@ impl<const N: usize> AdiAddrLed<N> {
     ///     _ = leds.set_buffer(colors);
     /// }
     /// ```
-    pub fn set_buffer<T, I>(&mut self, iter: T) -> Result<usize, PortError>
-    where
-        T: IntoIterator<Item = I>,
-        I: Into<Color>,
-    {
+    pub fn set_buffer(&mut self, buf: &[Color]) -> Result<usize, PortError> {
         self.port.validate_expander()?;
 
-        let mut buf = [0; N];
-        let mut len = 0;
+        self.update(bytemuck::cast_slice(buf), 0);
 
-        for (pixel, color) in buf.iter_mut().zip(iter.into_iter()) {
-            *pixel = color.into().into_raw();
-            len += 1;
-        }
-
-        self.update(&buf, 0);
-
-        Ok(len)
+        Ok(buf.len().min(N))
     }
 }
 
