@@ -117,6 +117,7 @@ Before releasing:
 - Renamed the `start` and `end` fields on `Rect` to `top_left` and `bottom_right`. (#395) (**Breaking Change**)
 - Renamed the `horizontal_align` and `vertical_align` fields on `Rect` to `horizontal_alignment` and `vertical_alignment`. (#395) (**Breaking Change**)
 - `SmartDeviceType` and `AdiDeviceType` are now marked `#[non_exhaustive]`. (#405) (**Breaking Change**)
+- Overhauled the `AdiAddrLed` API. This API no longer dynamically allocates, and should handle errors more sensibly. Strip length is now a const generic parameter (`AdiAddrled<N>` where `N` is the number of diodes on the LED strip). (#325) (**Breaking Change**)
 
 ### Removed
 
@@ -140,6 +141,7 @@ Before releasing:
 - Removed `Task` and `CompetitionRuntime` from `vexide::prelude`. (#393) (**Breaking Change**)
 - Removed `HAlign` and `VAlign`. Use `Alignment` instead. (#395) (**Breaking Change**)
 - Removed `InvalidFontSizeError`, as it's no longer returned by `FontSize::from_float`. (#395) (**Breaking Change**)
+- Removed `AddrLedError` error. This device now will just return `PortError`, since the other error states are now either unreachable or will panic at runtime. (#325) (**Breaking Change**)
 
 ### Miscellaneous
 
