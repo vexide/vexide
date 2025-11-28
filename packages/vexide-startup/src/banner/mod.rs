@@ -17,7 +17,7 @@ use vexide_core::{competition, os, time};
 /// This function is called by the `#[vexide::main]` macro if the startup banner is enabled.
 #[inline]
 pub fn print(theme: BannerTheme) {
-    const VEXIDE_VERSION: &str = "0.8.0";
+    const VEXIDE_VERSION: &str = "0.8.0-rc.1";
 
     println!(
         "

@@ -1,6 +1,6 @@
 [package]
 name = "vexide-async"
-version = "0.2.0"
+version = "0.2.0-rc.1"
 edition =  "2024"
 license = "MIT"
 description = "Tiny async executor for vexide."
