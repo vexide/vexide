@@ -27,7 +27,7 @@ async fn main(peripherals: Peripherals) {
                 *pixel = wheel((((i * 256) as u16 / 10 + j as u16) & 255) as u8);
             }
 
-            strip.set_buffer(buffer.as_slice()).unwrap();
+            strip.set_buffer(&buffer).unwrap();
 
             sleep(ADI_UPDATE_INTERVAL).await;
         }
