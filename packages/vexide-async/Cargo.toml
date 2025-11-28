@@ -28,7 +28,7 @@ vex-sdk = { workspace = true }
 
 [dev-dependencies]
 vex-sdk-mock = { workspace = true }
-vexide = { workspace = true, features = [
+vexide = { path = "../vexide", features = [
     "full",
     "vex-sdk-mock",
     "vex-sdk-jumptable",
