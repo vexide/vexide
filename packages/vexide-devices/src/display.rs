@@ -206,9 +206,8 @@ impl<T: Into<Point2<i16>> + Copy> Fill for T {
 
 /// A rectangular region of the display.
 ///
-/// When drawn to the display, both the start and the end points are included inside the drawn
-/// region. Thus, the area of the drawn rectangle is `(1 + end.x - start.x) * (1 + end.y - start.y)`
-/// pixels.
+/// The bottom right point is not included in the shape's bounds. Thus, the area of the drawn
+/// rectangle is `(bottom_right.x - top_left.x) * (bottom_right.y - top_left.y)` pixels.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Rect {
     /// Top left coordinate of the rectangle
@@ -220,6 +219,19 @@ pub struct Rect {
 
 impl Rect {
     /// Create a new rectangle with the given coordinates.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{color::Color, display::Rect, prelude::*};
+    ///
+    /// #[vexide::main]
+    /// async fn main(mut peripherals: Peripherals) {
+    ///     // Draw a 20x20 rectangle which has a top-left point at (30, 40).
+    ///     let rect = Rect::new([30, 40], [50, 60]);
+    ///     peripherals.display.fill(&rect, Color::WHITE);
+    /// }
+    /// ```
     pub fn new(top_left: impl Into<Point2<i16>>, bottom_right: impl Into<Point2<i16>>) -> Self {
         Self {
             top_left: top_left.into(),
@@ -228,6 +240,19 @@ impl Rect {
     }
 
     /// Create a new rectangle from a given origin point (top-left) and dimensions (width/height).
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{color::Color, display::Rect, prelude::*};
+    ///
+    /// #[vexide::main]
+    /// async fn main(mut peripherals: Peripherals) {
+    ///     // Draw a 20x20 rectangle which has a top-left point at (30, 40).
+    ///     let rect = Rect::from_dimensions([30, 40], 20, 20);
+    ///     peripherals.display.fill(&rect, Color::WHITE);
+    /// }
+    /// ```
     pub fn from_dimensions(origin: impl Into<Point2<i16>>, width: u16, height: u16) -> Self {
         let origin = origin.into();
         Self {
@@ -240,6 +265,19 @@ impl Rect {
     }
 
     /// Create a new rectangle from a given origin point (top-left) and dimensions (width/height).
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::{color::Color, display::Rect, prelude::*};
+    ///
+    /// #[vexide::main]
+    /// async fn main(mut peripherals: Peripherals) {
+    ///     // Draw a 20x20 rectangle centered at point (40, 50).
+    ///     let rect = Rect::from_dimensions_centered([40, 50], 20, 20);
+    ///     peripherals.display.fill(&rect, Color::WHITE);
+    /// }
+    /// ```
     pub fn from_dimensions_centered(
         center: impl Into<Point2<i16>>,
         width: u16,
@@ -910,5 +948,21 @@ impl Display {
             press_count: touch_status.pressCount,
             release_count: touch_status.releaseCount,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::display::Rect;
+
+    #[test]
+    fn rect_new_equivalency() {
+        let rect1 = Rect::new([30, 40], [50, 60]);
+        let rect2 = Rect::from_dimensions([30, 40], 20, 20);
+        let rect3 = Rect::from_dimensions_centered([40, 50], 20, 20);
+
+        assert_eq!(rect1, rect2);
+        assert_eq!(rect2, rect3);
+        assert_eq!(rect3, rect1);
     }
 }
