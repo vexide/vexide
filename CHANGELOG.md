@@ -85,7 +85,6 @@ Before releasing:
 - `AdiGyroscope::yaw` now returns `Angle`. (#380) (**Breaking Change**)
 - Renamed the `vexide::devices::rgb` module to `vexide::color`. (#380) (**Breaking Change**)
 - Replaced `Rgb<u8>` with the `Color` type. (#395) (**Breaking Change**)
-- The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 - Renamed `vexide::time::uptime` to `vexide::time::system_uptime`. (#373) (**Breaking Change**)
 - `TouchEvent` now stores the location of the press in a `point: Point2<i16>` field rather than separate `x` and `y` `i16` fields. (#375) (**Breaking Change**)
