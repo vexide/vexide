@@ -49,7 +49,7 @@ Before releasing:
 - Added the `vexide::test` attribute macro, used to implement unit tests which run on your host machine and have access to vexide's async runtime and peripherals. (#361)
 - Added support for using VEXcode's SDK via the `vex-sdk-vexcode` feature. (#361)
 - Added support for using the VEX partner SDK via the `vex-sdk-pros` feature. (#361)
-- Added the `default-sdk` feature for specifying the recommended defualt SDK features for projects. (#417)
+- Added the `default-sdk` feature for specifying the recommended default SDK features for projects. (#417)
 - Added support for using a no-op SDK (for testing code on desktop) via the `vex-sdk-mock` feature. (#361)
 - On vexide's error details screen, long error messages are now wrapped onto subsequent lines. (#368)
 - Added the new `LowResolutionTime` type to `vexide::time` for recording timestamps taken by the Brain's low resolution clock. (#386)
@@ -69,7 +69,7 @@ Before releasing:
 - Fixed `AdiDigital*::is_low` improperly returning `is_high` (#324)
 - Fixed an issue where writing to the controller screen would sometimes be unreliable in fast loops (#336)
 - Fixed `Display::erase` always using the display's default background color. (#350)
-- `AiVisionObject` and `VisionObject` now use the new `Angle` type for storing object angles. This fixes a bug with the legacy vision sensor using the wrong angle units. (#386) (**Breaking change**)
+- `AiVisionObject` and `VisionObject` now use the new `Angle` type for storing object angles. This fixes a bug with the legacy vision sensor using the wrong angle units. (#386) (**Breaking Change**)
 - Fixed an off-by-one error in `Display::draw_buffer`'s buffer stride calculation causing slanted image rendering. (#397)
 - `Display` now uses half-open pixel coordinates for `Rect`, `Line` and `Display::draw_buffer`. (#395) (**Breaking Change**)
 - `Controller::try_rumble` now doesn't unconditionally fail an assert. (#413)
@@ -85,7 +85,6 @@ Before releasing:
 - `AdiGyroscope::yaw` now returns `Angle`. (#380) (**Breaking Change**)
 - Renamed the `vexide::devices::rgb` module to `vexide::color`. (#380) (**Breaking Change**)
 - Replaced `Rgb<u8>` with the `Color` type. (#395) (**Breaking Change**)
-- If a custom panic hook causes a panic itself, its error message will now be reported using the default panic hook instead of causing the program to abort. (#346)
 - The `AdiGyro::yaw` returns an `f64` rather than a `Position` now to match the behavior of `InertialSensor` and friends. (#328) (**Breaking Change**)
 - Renamed `RotationSensor::set_computation_interval` to `RotationSensor::set_data_interval`. (#329) (**Breaking Change**)
 - Renamed `vexide::time::uptime` to `vexide::time::system_uptime`. (#373) (**Breaking Change**)
@@ -101,18 +100,18 @@ Before releasing:
 - `DistanceSensor::status` now returns the `PortError` when it fails (#376) (**Breaking Change**).
 - The `InertialSensor::{status, is_calibrating, is_auto_calibrated, physical_orientation, gyro_rate, acceleration, set_data_interval}` methods now return `PortError` when failing. (#376) (**Breaking Change**).
 - `InertialSensor::calibrate` now returns the new `CalibrateError` type rather than `InertialError` when it fails. (#376) (**Breaking Change**).
-- The `backtraces` Cargo feature is now named `backtrace`. (#361) (**Breaking change**)
-- The `dangerous_motor_tuning` Cargo feature is now named `dangerous-motor-tuning`. (#361) (**Breaking change**)
-- Frames of backtraces are now accessed through the `Backtrace::frames` function. (#368) (**Breaking change**)
-- The `ProgramFlags` struct has been renamed to `ProgramOptions`. (#361) (**Breaking change**)
-- The structs related to `CodeSignature`s have been moved into `vexide::program`. (#361) (**Breaking change**)
+- The `backtraces` Cargo feature is now named `backtrace`. (#361) (**Breaking Change**)
+- The `dangerous_motor_tuning` Cargo feature is now named `dangerous-motor-tuning`. (#361) (**Breaking Change**)
+- Frames of backtraces are now accessed through the `Backtrace::frames` function. (#368) (**Breaking Change**)
+- The `ProgramFlags` struct has been renamed to `ProgramOptions`. (#361) (**Breaking Change**)
+- The structs related to `CodeSignature`s have been moved into `vexide::program`. (#361) (**Breaking Change**)
 - Programs must now opt-in to vexide's custom memory layout by specifying the linker flag `-Tvexide.ld`. (#355) (**Breaking Change**)
-- Programs must now opt-in to using vexide's open source SDK via the `vex-sdk-jumptable` feature. (#361) (**Breaking change**)
-- All methods previously returning `DeviceTimestamp` now return `LowResolutionTime`. (#386) (**Breaking change**)
-- `Motor::raw_position` no longer returns a timestamp along with the raw position. Use `Motor::timestamp` to access this data instead. (#386) (**Breaking change**)
+- Programs must now opt-in to using vexide's open source SDK via the `vex-sdk-jumptable` feature. (#361) (**Breaking Change**)
+- All methods previously returning `DeviceTimestamp` now return `LowResolutionTime`. (#386) (**Breaking Change**)
+- `Motor::raw_position` no longer returns a timestamp along with the raw position. Use `Motor::timestamp` to access this data instead. (#386) (**Breaking Change**)
 - `AdiPotentiomter::angle` now returns the `Angle` type. (#378) (**Breaking Change**)
 - Renamed `AdiGyroscopeCalibrationFuture` to `CalibrateFuture`. (#378) (**Breaking Change**)
-- `Text::new()` now takes a `CStr` to avoid allocation. Use `Text::from_string` to pass a regular string.
+- `Text::new()` now takes a `CStr` to avoid allocation. Use `Text::from_string` to pass a regular string. (#395) (**Breaking Change**)
 - `FontSize::from_float` will now panic rather than returning an error when passed invalid values. (#395) (**Breaking Change**)
 - Renamed the `start` and `end` fields on `Rect` to `top_left` and `bottom_right`. (#395) (**Breaking Change**)
 - Renamed the `horizontal_align` and `vertical_align` fields on `Rect` to `horizontal_alignment` and `vertical_alignment`. (#395) (**Breaking Change**)
@@ -121,23 +120,23 @@ Before releasing:
 
 ### Removed
 
-- Removed `Angle`, `AiVisionColor`, `AiVisionColorCode`, `AiVisionObject`, `BrakeMode`, `LedMode`, `VisionCode`, `VisionMode`, `VisionObject`, `VisionSensor`, `VisionSignature`, `WhiteBalance`, `DynamicPeripherals`, `battery` and `Rgb` from `vexide::prelude`. (#380) (**Breaking Change**)
+- The vexide prelude no longer contains `Angle`, `AiVisionColor`, `AiVisionColorCode`, `AiVisionObject`, `BrakeMode`, `LedMode`, `VisionCode`, `VisionMode`, `VisionObject`, `VisionSensor`, `VisionSignature`, `WhiteBalance`, `DynamicPeripherals`, `battery` and `Rgb`. (#380) (**Breaking Change**)
 - The `Position::{from, as}_ticks` methods (now `Angle::{from, as}_ticks`) methods are now private. This may change in the future. (#383) (**Breaking Change**).
 - `vexide::startup::startup` no longer handles banner printing and no longer takes arguments. If you wish to print a banner without using `#[vexide::main]`, consider using `vexide::startup::banner::print` instead. (#313) (**Breaking Change**)
-- Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking change**)
+- Removed `stride` from `Display::draw_buffer`, fixing a buffer size validation error. If you wish to specify the stride, use `vex-sdk` directly instead. (#323) (**Breaking Change**)
 - `SmartPort` and `AdiPort` are no longer in `vexide::prelude`. (#376) (**Breaking Change**)
 - Removed `AiVisionCode::colors`. Prefer using `AiVisionCode::iter`/`AiVisionCode::into_iter` instead. (#376) (**Breaking Change**)
 - Removed `MotorError`. Motors now return `PortError` with the exception of `set_gearset`, which returns `SetGearsetError`. (#376) (**Breaking Change**)
-- Removed vexide's custom Rust target. Developers should now use the identically-named one built into Rust. (#361) (**Breaking change**)
-- Removed `vexide_core::float` and the `force_rust_libm` Cargo feature. Developers should now use the functions built into `std`. (#361) (**Breaking change**)
-- Removed the `exit` and `abort` functions. Developers should now use the functions built into `std`. (#361) (**Breaking change**)
-- Removed the filesystem access APIs. Developers should now use `std::fs`. (#361) (**Breaking change**)
-- Removed the I/O API. Developers should now use `std::io`. (#361) (**Breaking change**)
-- Removed certain time measurement APIs, including `Instant`. Developers should now use `std::time`. (#361) (**Breaking change**)
-- Removed the `vexide_panic` crate. Its functionality has been moved to `vexide_startup`. (#361) (**Breaking change**)
+- Removed vexide's custom Rust target. Developers should now use the identically-named one built into Rust. (#361) (**Breaking Change**)
+- Removed `vexide_core::float` and the `force_rust_libm` Cargo feature. Developers should now use the functions built into `std`. (#361) (**Breaking Change**)
+- Removed the `exit` and `abort` functions. Developers should now use the functions built into `std`. (#361) (**Breaking Change**)
+- Removed the filesystem access APIs. Developers should now use `std::fs`. (#361) (**Breaking Change**)
+- Removed the I/O API. Developers should now use `std::io`. (#361) (**Breaking Change**)
+- Removed certain time measurement APIs, including `Instant`. Developers should now use `std::time`. (#361) (**Breaking Change**)
+- Removed the `vexide_panic` crate. Its functionality has been moved to `vexide_startup`. (#361) (**Breaking Change**)
 - Removed `vexide_startup`'s copy of libm it previously linked to. Its functionality is now available from `std`. (#361)
 - Removed `InertialSensor::MAX_HEADING` and `GpsSensor::MAX_HEADING`. Prefer `Angle::FULL_TURN` instead.
-- Removed `DeviceTimestamp` in favor of `LowResolutionTime`. (#386) (**Breaking change**)
+- Removed `DeviceTimestamp` in favor of `LowResolutionTime`. (#386) (**Breaking Change**)
 - Removed `Task` and `CompetitionRuntime` from `vexide::prelude`. (#393) (**Breaking Change**)
 - Removed `HAlign` and `VAlign`. Use `Alignment` instead. (#395) (**Breaking Change**)
 - Removed `InvalidFontSizeError`, as it's no longer returned by `FontSize::from_float`. (#395) (**Breaking Change**)
@@ -146,9 +145,7 @@ Before releasing:
 ### Miscellaneous
 
 - The project's officially supported channel of Rust has been updated to `nightly-2025-09-26`.
-- Unit tests are now used to help verify the correctness of vexide's APIs. (#361)
 - Extended and improved the documentation for various APIs. (#361)
-- Moved the `_boot` routine to a `#[naked]` function. (#337)
 - Several of vexide's internal linker script symbols, such as `__program_ram_start`, have been renamed or removed. (#361)
 
 ### New Contributors
