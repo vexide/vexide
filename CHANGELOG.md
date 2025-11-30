@@ -150,6 +150,7 @@ Before releasing:
 ### New Contributors
 
 - GLS <<contact@glstudios.org>> made their first contribution in #314!
+- @slipperking made their first contribution in #317!
 - @fibonacci61 made their first contribution in #333!
 
 ## [0.7.0]
