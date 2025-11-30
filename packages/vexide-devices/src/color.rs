@@ -84,13 +84,13 @@ impl Color {
     /// Creates a new RGB color from a raw 0RGB representation.
     #[must_use]
     pub const fn from_raw(raw: u32) -> Self {
-        unsafe { std::mem::transmute(raw.to_le()) }
+        unsafe { core::mem::transmute(raw.to_le()) }
     }
 
     /// Converts this color to a raw 0RGB representation.
     #[must_use]
     pub const fn into_raw(self) -> u32 {
-        unsafe { std::mem::transmute::<Self, u32>(self).to_le() }
+        unsafe { core::mem::transmute::<Self, u32>(self).to_le() }
     }
 }
 
