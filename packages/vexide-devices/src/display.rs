@@ -5,7 +5,7 @@
 //! The [`Fill`] trait can be used to draw filled in shapes to the display and the [`Stroke`] trait
 //! can be used to draw the outlines of shapes.
 
-use alloc::{borrow::Cow, ffi::CString};
+use alloc::{borrow::Cow, ffi::CString, string::String};
 use core::{
     ffi::{CStr, c_char},
     time::Duration,

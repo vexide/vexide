@@ -200,7 +200,7 @@ impl<const N: usize> AdiAddrLed<N> {
     pub fn set_buffer(&mut self, buf: &[Color]) -> Result<usize, PortError> {
         self.port.validate_expander()?;
 
-        self.update(bytemuck::cast_slice(buf), 0);
+        self.update(bytemuck::must_cast_slice(buf), 0);
 
         Ok(buf.len().min(N))
     }
