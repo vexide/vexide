@@ -59,6 +59,8 @@ mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
 mod sdk;
+#[cfg(vexide_toolchain = "llvm")]
+mod sysrt;
 
 // Linkerscript Symbols
 //
@@ -188,6 +190,10 @@ pub unsafe fn startup() {
 
         #[cfg(feature = "abort-handler")]
         abort_handler::install_vector_table();
+
+        // Initialize C runtime.
+        #[cfg(vexide_toolchain = "llvm")]
+        sysrt::init();
     }
 
     // Register custom panic hook if needed.

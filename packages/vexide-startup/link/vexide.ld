@@ -108,7 +108,7 @@ SECTIONS {
  * Compiler-aware thread-local storage support.
  * This is used to support the thread_local keyword in C, for e.g. errno.
  * .tdata and .tbss are a template for a new TLS block, but since there's
- * only one thread we just use them the same way as data. The
+ * only one thread we just use them the same way as .data. The
  * _set_tls(void* tls) function is used to set the pointer to the current
  * TLS block.
  */
