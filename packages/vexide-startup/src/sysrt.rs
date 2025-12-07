@@ -148,3 +148,50 @@ extern "C" fn sbrk(incr: isize) -> *mut c_void {
     BRK.set(end);
     start.cast()
 }
+
+// Filesystem stubs. Not currently implemented, but it'd be possible in the future.
+
+#[unsafe(no_mangle)]
+extern "C" fn write(fd: c_int, buf: *const c_void, count: usize) -> c_int {
+    ERR
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn read(fd: c_int, buf: *mut c_void, count: usize) -> c_int {
+    ERR
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn close(fd: c_int) -> c_int {
+    ERR
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn open(path: *const c_char, flags: c_int) -> c_int {
+    ERR
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn gettimeofday(tp: *const c_void, tzp: *const c_void) -> c_int {
+    ERR
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn access(path: *const c_char, mode: c_int) -> c_int {
+    ERR
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn stat(path: *const c_char, buf: *mut c_void) -> c_int {
+    ERR
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn unlink(path: *const c_char) -> c_int {
+    ERR
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn lseek(fd: c_int, off: c_int, whence: c_int) -> c_int {
+    ERR
+}
