@@ -1,5 +1,5 @@
 [toolchain]
-channel = "nightly-2025-09-26"
+channel = "nightly-2025-12-08"
 components = ["rust-src"]
 # Rust doesn't have a prebuilt libstd for our target,
 # so we can't specify the target key here to download one.

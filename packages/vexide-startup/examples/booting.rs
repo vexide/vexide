@@ -33,7 +33,7 @@ fn main() {
     //
     // SAFETY: Called once at program startup.
     unsafe {
-        vexide_startup::startup();
+        vexide_startup::startup(true);
     }
 
     println!("Hey");
