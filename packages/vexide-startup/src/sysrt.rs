@@ -15,7 +15,6 @@
 
 use core::ffi::{c_char, c_int, c_void};
 use std::{
-    cell::Cell,
     io::{Read, Write, stdin, stdout},
     ptr,
 };
@@ -28,9 +27,6 @@ unsafe extern "C" {
 
     /// Set the current TLS block.
     unsafe fn _set_tls(tls: *mut c_void);
-
-    /// Set errno to ENOMEM.
-    safe fn vexide_set_enomem();
 
     static mut __tls_base: u32;
     static mut __tbss_start: u32;
@@ -116,37 +112,47 @@ extern "C" fn _exit(code: c_int) {
     std::process::exit(code);
 }
 
-const BRK_SIZE: usize = 0x40_0000; // 4 MiB
-thread_local! {
-    static BRK_BASE: Cell<*mut u8> = const { Cell::new(ptr::null_mut()) };
-    static BRK: Cell<*mut u8> = const { Cell::new(ptr::null_mut()) };
-}
+#[cfg(feature = "allocator")]
+mod alloc {
+    use std::{cell::Cell, ffi::c_void, ptr};
 
-/// Move the BRK pointer by a certain number of bytes and return its
-/// old value. Positive values claim memory, negative values return it.
-#[unsafe(no_mangle)]
-extern "C" fn sbrk(incr: isize) -> *mut c_void {
-    // On first call, allocate a buffer that C programs can use.
-    if BRK_BASE.get().is_null() {
-        let buffer = vec![0u8; BRK_SIZE].into_boxed_slice();
-        let ptr = Box::into_raw(buffer).cast();
-        BRK_BASE.set(ptr);
-        BRK.set(ptr);
+    unsafe extern "C" {
+        /// Set errno to ENOMEM.
+        safe fn vexide_set_enomem();
     }
 
-    let base = BRK_BASE.get();
-    let range = base..base.wrapping_add(BRK_SIZE);
-
-    let start = BRK.get();
-    let end = start.wrapping_offset(incr);
-
-    if !range.contains(&end) {
-        vexide_set_enomem();
-        return usize::MAX as *mut c_void;
+    const BRK_SIZE: usize = 0x40_0000; // 4 MiB
+    thread_local! {
+        static BRK_BASE: Cell<*mut u8> = const { Cell::new(ptr::null_mut()) };
+        static BRK: Cell<*mut u8> = const { Cell::new(ptr::null_mut()) };
     }
 
-    BRK.set(end);
-    start.cast()
+    /// Move the BRK pointer by a certain number of bytes and return its
+    /// old value. Positive values claim memory, negative values return it.
+    #[unsafe(no_mangle)]
+    extern "C" fn sbrk(incr: isize) -> *mut c_void {
+        // On first call, allocate a buffer that C programs can use.
+        if BRK_BASE.get().is_null() {
+            let buffer = vec![0u8; BRK_SIZE].into_boxed_slice();
+            let ptr = Box::into_raw(buffer).cast();
+            BRK_BASE.set(ptr);
+            BRK.set(ptr);
+        }
+
+        let base = BRK_BASE.get();
+        let range = base..base.wrapping_add(BRK_SIZE);
+
+        let start = BRK.get();
+        let end = start.wrapping_offset(incr);
+
+        if !range.contains(&end) {
+            vexide_set_enomem();
+            return usize::MAX as *mut c_void;
+        }
+
+        BRK.set(end);
+        start.cast()
+    }
 }
 
 // Filesystem stubs. Not currently implemented, but it'd be possible in the future.
