@@ -1,10 +1,15 @@
-use core::arch::{asm, global_asm, naked_asm};
+use core::{
+    arch::{asm, global_asm, naked_asm},
+    fmt::Write,
+};
 
 mod fault;
 mod report;
 
-use fault::{Fault, FaultException};
+use fault::{ExceptionContext, ExceptionType};
 use vex_sdk::{V5_TouchEvent, V5_TouchStatus, vexTasksRun, vexTouchDataGet};
+
+use crate::abort_handler::{fault::{Fault, FaultStatus, FaultDetails}, report::SerialWriter};
 
 // Custom ARM vector table. Pointing the VBAR coprocessor register at this will configure the CPU to
 // jump to these functions on an exception.
@@ -195,11 +200,15 @@ macro_rules! fault_exception_vector {
     };
 }
 
-fault_exception_vector!(undefined_instruction: lr_offset = 4, exception = FaultException::UndefinedInstruction);
-fault_exception_vector!(prefetch_abort: lr_offset = 4, exception = FaultException::PrefetchAbort);
-fault_exception_vector!(data_abort: lr_offset = 8, exception = FaultException::DataAbort);
+fault_exception_vector!(undefined_instruction: lr_offset = 4, exception = ExceptionType::UndefinedInstruction);
+fault_exception_vector!(prefetch_abort: lr_offset = 4, exception = ExceptionType::PrefetchAbort);
+fault_exception_vector!(data_abort: lr_offset = 8, exception = ExceptionType::DataAbort);
 
-pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
+pub unsafe extern "C" fn fault_exception_handler(fault: *const ExceptionContext) -> ! {
+    // Load the fault's details from the captured program state & by querying the CPU's fault status
+    // registers.
+    let fault = unsafe { Fault::from_ptr(fault) };
+
     unsafe {
         // Data abort and prefetch abort exceptions disable IRQs (source: ARMv7-A TRM page B1-1213).
         //
@@ -216,7 +225,11 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
         }
     }
 
-    let fault = unsafe { *fault };
+    if fault.is_breakpoint() {
+        let mut serial = SerialWriter::new();
+        _ = writeln!(serial, "[vexide_startup: hit breakpoint]");
+        serial.flush();
+    }
 
     report::report_fault(&fault);
 

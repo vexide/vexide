@@ -3,10 +3,9 @@ use std::fmt::{self, Write};
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind::UnwindCursor;
 
-use super::fault::Fault;
-use crate::error_report::ErrorReport;
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use crate::error_report::backtrace::BacktraceIter;
+use crate::{abort_handler::fault::Fault, error_report::ErrorReport};
 
 pub struct SerialWriter(());
 
@@ -56,14 +55,14 @@ pub fn report_fault(fault: &Fault) {
 
     let title = format_args!(
         "{} exception at 0x{:x}:",
-        fault.exception, fault.program_counter
+        fault.ctx.exception, fault.ctx.program_counter
     );
     _ = writeln!(serial, "\n{title}\n{fault}\n");
     _ = writeln!(dialog, "{title}\n{fault}");
 
     _ = writeln!(serial, "registers at time of fault:");
 
-    for (i, register) in fault.registers.iter().enumerate() {
+    for (i, register) in fault.ctx.registers.iter().enumerate() {
         if i < 10 {
             _ = write!(serial, " ");
         }
@@ -73,20 +72,20 @@ pub fn report_fault(fault: &Fault) {
     _ = writeln!(
         serial,
         " sp: 0x{:x}\n lr: 0x{:x}\n pc: 0x{:x}\n",
-        fault.stack_pointer, fault.link_register, fault.program_counter
+        fault.ctx.stack_pointer, fault.ctx.link_register, fault.ctx.program_counter
     );
 
     dialog.write_registers({
         let mut arr = [0u32; 16];
-        arr[..13].copy_from_slice(&fault.registers);
-        arr[13] = fault.stack_pointer;
-        arr[14] = fault.link_register;
-        arr[15] = fault.program_counter;
+        arr[..13].copy_from_slice(&fault.ctx.registers);
+        arr[13] = fault.ctx.stack_pointer;
+        arr[14] = fault.ctx.link_register;
+        arr[15] = fault.ctx.program_counter;
         arr
     });
 
     #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-    if let Ok(cursor) = UnwindCursor::new(&unsafe { fault.unwind_context() }) {
+    if let Ok(cursor) = UnwindCursor::new(&unsafe { fault.ctx.unwind_context() }) {
         _ = writeln!(dialog, "stack backtrace (check terminal):");
         dialog.write_backtrace(BacktraceIter::new(cursor.clone()));
 
@@ -113,7 +112,7 @@ pub fn report_fault(fault: &Fault) {
     _ = writeln!(
         &mut serial,
         "      (e.g. llvm-symbolizer -e ./target/armv7a-vex-v5/{profile}/program_name 0x{:x})",
-        fault.program_counter
+        fault.ctx.program_counter
     );
 
     unsafe {
