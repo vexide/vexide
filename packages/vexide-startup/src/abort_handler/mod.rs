@@ -8,7 +8,7 @@ pub(crate) mod report;
 use fault::{ExceptionContext, ExceptionType};
 use vex_sdk::{V5_TouchEvent, V5_TouchStatus, vexTasksRun, vexTouchDataGet};
 
-use crate::{abort_handler::fault::Fault, debug::bkpt::handle_breakpoint};
+use crate::{abort_handler::fault::Fault, debug::handle_breakpoint};
 
 // Custom ARM vector table. Pointing the VBAR coprocessor register at this will configure the CPU to
 // jump to these functions on an exception.

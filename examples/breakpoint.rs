@@ -1,15 +1,20 @@
 use std::arch::asm;
 
-use vexide::{prelude::*, startup::debug::bkpt::BREAKPOINTS};
+use vexide::{
+    prelude::*,
+    startup::debug::{self, DEBUGGER, debugger::VexideDebugger},
+};
 
 #[vexide::main(banner(enabled = false))]
 async fn main(_peripherals: Peripherals) {
+    debug::install(VexideDebugger::new());
+
     let addr: usize = vexide_breakpoint as usize;
     println!("Setting breakpoint at: {addr:x?}");
 
     unsafe {
-        let mut mgr = BREAKPOINTS.lock().unwrap();
-        mgr.register(addr, false).unwrap();
+        let mut debugger = DEBUGGER.get().unwrap().lock().unwrap();
+        debugger.register_breakpoint(addr, false).unwrap();
     }
 
     println!("Calling a function...");
