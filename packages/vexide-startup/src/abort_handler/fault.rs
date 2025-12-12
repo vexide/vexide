@@ -1,13 +1,30 @@
-use std::fmt::{Display, Formatter};
+//! APIs for inspecting caught CPU faults.
+
+use std::{
+    fmt::{Display, Formatter},
+    ptr,
+};
 
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind::UnwindContext;
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind_sys::unw_context_t;
 
+/// The captured details of a CPU fault.
 pub struct Fault<'a> {
+    /// The saved CPU state from before the exception.
+    ///
+    /// After the exception handling process is finished, this state will be restored to the CPU.
+    /// Modifying values in this struct may cause changes to the CPU's state post-exception.
     pub ctx: &'a mut ExceptionContext,
-    pub target: u32,
+    /// The value (pointer or instruction) that was being operated on when the fault occurred.
+    ///
+    /// For undefined instruction exceptions, this is the encoded instruction that couldn't be
+    /// interpreted by the CPU. For other types of exceptions, this is address whose dereference
+    /// lead to the abort. This value may be "0" if it is not applicable to the fault (for
+    /// instance, breakpoint faults do not have a target).
+    pub target: usize,
+    /// Additional information about the circumstances of the fault.
     pub status: FaultStatus,
 }
 
@@ -18,8 +35,12 @@ impl Fault<'_> {
     ///
     /// # Safety
     ///
-    /// This function accesses CPU state that's set post-exception. The caller must ensure that this
-    /// state has not been invalidated.
+    /// This function accesses CPU state that's captured post-exception. The caller must ensure that
+    /// this state has not been invalidated.
+    ///
+    /// The caller must not invalidate the given [`ExceptionContext`] while the exception is being
+    /// handled. The caller must also not assign it a lifetime longer than the exception handling
+    /// process.
     pub unsafe fn from_ptr(ptr: *mut ExceptionContext) -> Self {
         let ctx = unsafe { &mut *ptr };
 
@@ -30,6 +51,8 @@ impl Fault<'_> {
         }
     }
 
+    /// Returns whether this fault was caused by hitting a breakpoint.
+    #[must_use]
     pub fn is_breakpoint(&self) -> bool {
         self.ctx.exception == ExceptionType::PrefetchAbort
             && self.status.details == FaultDetails::DebugEvent
@@ -70,15 +93,18 @@ impl Display for Fault<'_> {
 
 /// The saved state of a program from before an exception.
 ///
-/// Note that changing these fields will actually have an effect on the program if the current
-/// exception handler returns!
+/// Note that updating these fields will cause the exception handler to apply the changes to the CPU
+/// if/when the current exception handler returns.
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ExceptionContext {
     /// The saved program status register (spsr) from before the exception.
     pub spsr: ProgramStatus,
-    pub stack_pointer: u32,
-    pub link_register: u32,
+    /// The stack pointer from before the exception.
+    pub stack_pointer: usize,
+    /// The link register from before the exception.
+    pub link_register: usize,
+    /// The type of the exception that is being handled.
     pub exception: ExceptionType,
     /// Registers r0 through r12
     pub registers: [u32; 13],
@@ -97,7 +123,7 @@ pub struct ExceptionContext {
     /// [da-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Data-Abort-exception
     /// [pf-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Prefetch-Abort-exception
     /// [svc-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Supervisor-Call--SVC--exception
-    pub program_counter: u32,
+    pub program_counter: usize,
 }
 
 impl ExceptionContext {
@@ -108,6 +134,7 @@ impl ExceptionContext {
     /// The caller must ensure the return address is valid for reads. This might not be the case if,
     /// for example, the exception was a prefetch abort caused by the instruction being
     /// inaccessible.
+    #[must_use]
     pub unsafe fn read_instr(&self) -> Instruction {
         if self.spsr.is_thumb() {
             let ptr = self.program_counter as *mut u16;
@@ -123,7 +150,12 @@ impl ExceptionContext {
     ///
     /// This is based on the ARM implementation of __unw_getcontext:
     /// <https://github.com/llvm/llvm-project/blob/6fc3b40b2cfc33550dd489072c01ffab16535840/libunwind/src/UnwindRegistersSave.S#L834>
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure this saved CPU state is valid for unwinding from.
     #[cfg(all(target_os = "vexos", feature = "backtrace"))]
+    #[must_use]
     pub unsafe fn unwind_context(&self) -> UnwindContext<'_> {
         #[repr(C)]
         struct RawUnwindContext {
@@ -143,9 +175,9 @@ impl ExceptionContext {
             UnwindContext::from_raw(core::mem::transmute::<RawUnwindContext, unw_context_t>(
                 RawUnwindContext {
                     r: self.registers,
-                    sp: self.stack_pointer,
-                    lr: self.link_register,
-                    pc: self.program_counter,
+                    sp: self.stack_pointer as u32,
+                    lr: self.link_register as u32,
+                    pc: self.program_counter as u32,
                     // This matches the behavior of __unw_getcontext, which leaves
                     // this data uninitialized.
                     data: [0; _],
@@ -159,8 +191,15 @@ impl ExceptionContext {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum ExceptionType {
+    /// An undefined instruction was executed.
     UndefinedInstruction = 0,
+    /// A memory abort occurred while attempting to fetch and execute an instruction.
+    ///
+    /// This type of abort can also be emitted when a breakpoint is triggered.
     PrefetchAbort = 1,
+    /// A data memory access failed.
+    ///
+    /// This type of abort can also be emitted when a watchpoint is triggered.
     DataAbort = 2,
 }
 
@@ -181,8 +220,9 @@ impl ExceptionContext {
     ///
     /// This function accesses CPU state that's set post-exception. The caller must ensure that this
     /// state has not been invalidated.
-    pub unsafe fn target(&self) -> u32 {
-        let target: u32;
+    #[must_use]
+    pub unsafe fn target(&self) -> usize {
+        let target: usize;
 
         match self.exception {
             ExceptionType::DataAbort => unsafe {
@@ -206,7 +246,8 @@ impl ExceptionContext {
             ExceptionType::UndefinedInstruction => unsafe {
                 // This was an undefined instruction, not a prefetch abort, so presumably
                 // the instruction is valid for access.
-                core::ptr::read_volatile(self.program_counter as *const u32)
+                Instruction::read(self.program_counter as *const u32, self.spsr.is_thumb())
+                    .as_usize()
             },
         }
     }
@@ -217,6 +258,7 @@ impl ExceptionContext {
     ///
     /// This function accesses CPU state that's set post-exception. The caller must ensure that this
     /// state has not been invalidated.
+    #[must_use]
     pub unsafe fn status(&self) -> FaultStatus {
         const DFSR_WRITE_NOT_READ_BIT: u32 = 1 << 11;
         let fsr: u32;
@@ -252,29 +294,54 @@ impl ExceptionContext {
     }
 }
 
+/// Additional information about the circumstances of a fault.
 pub struct FaultStatus {
+    /// The reason that the fault was emitted.
     pub details: FaultDetails,
+    /// Indicated whether a data abort was caused by a write operation rather than a read
+    /// operation.
     pub write_not_read: bool,
 }
 
+/// The reasons for which a fault could be emitted.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum FaultDetails {
+    /// Unknown exception cause
     Unknown,
+    /// Alignment fault (MMU exception)
     AlignmentFaultMMU,
+    /// A Breakpoint, Watchpoint, or Vector Catch debug event was triggered.
+    ///
+    /// Vector Catch is a mechanism for placing breakpoints on CPU exceptions. It's mostly useful
+    /// alongside a debug probe.
     DebugEvent,
+    /// Access flag fault (MMU exception)
     AccessFlagFaultMMU,
+    /// Instruction cache maintenance fault
     InstructionCacheMaintenanceFault,
+    /// Translation fault (MUU exception)
     TranslationFaultMMU,
+    /// Synchronous external abort
     SynchronousExternalAbort,
+    /// Domain fault (MMU exception)
     DomainFaultMMU,
+    /// Synchronous external abort during translation table walk
     TranslationTableWalkSynchronousExternalAbort,
+    /// Permission fault (MMU exception)
     PermissionFaultMMU,
+    /// Translation Lookaside Buffer conflict
     TLBConflictAbort,
+    /// \<Implementation defined\> (Lockdown)
     ImplementationDefinedLockdown,
+    /// Asynchronous external abort
     AsynchronousExternalAbort,
+    /// Asynchronous Parity Error during memory access
     MemoryAccessAsynchronousParityError,
+    /// Synchronous Parity Error during memory access
     MemoryAccessSynchronousParityError,
+    /// \<Implementation defined\> (Coprocessor abort)
     ImplementationDefinedCoprocessorAbort,
+    /// Synchronous parity error during translation table walk
     TranslationTableWalkSynchronousParityError,
 }
 
@@ -341,6 +408,7 @@ impl Display for FaultDetails {
 pub struct ProgramStatus(pub u32);
 
 impl ProgramStatus {
+    /// Returns whether the CPU state has a 16-bit instruction set enabled (Thumb or ThumbEE).
     #[must_use]
     pub const fn is_thumb(self) -> bool {
         const T_BIT: u32 = 1 << 5;
@@ -348,18 +416,70 @@ impl ProgramStatus {
     }
 }
 
+/// An instruction-set independent CPU instruction.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Instruction {
+    /// An instruction from the ARM32 instruction set.
     Arm(u32),
+    /// An instruction from the Thumb instruction set.
     Thumb(u16),
 }
 
 impl Instruction {
+    /// Returns whether this is a thumb instruction.
+    #[must_use]
+    pub const fn is_thumb(self) -> bool {
+        matches!(self, Self::Thumb(_))
+    }
+
+    /// Returns the size of the instruction in bytes.
     #[must_use]
     pub const fn size(self) -> usize {
         match self {
             Self::Arm(instr) => size_of_val(&instr),
             Self::Thumb(instr) => size_of_val(&instr),
+        }
+    }
+
+    /// Returns the integer representation of the instruction casted to a usize.
+    #[must_use]
+    pub const fn as_usize(self) -> usize {
+        match self {
+            Self::Arm(i) => i as usize,
+            Self::Thumb(i) => i as usize,
+        }
+    }
+
+    /// Reads either a thumb or ARM instruction from the given pointer.
+    ///
+    /// # Safety
+    ///
+    /// The address must be valid for reads.
+    #[must_use]
+    pub unsafe fn read(addr: *const u32, thumb: bool) -> Self {
+        debug_assert!(!addr.is_null());
+        if thumb {
+            Self::Thumb(unsafe { ptr::read_volatile(addr.cast()) })
+        } else {
+            Self::Arm(unsafe { ptr::read_volatile(addr) })
+        }
+    }
+
+    /// Writes this instruction to the given pointer.
+    ///
+    /// # Safety
+    ///
+    /// The address must be valid for writes. The caller must handle flushing the CPU instruction
+    /// cache after calling this method.
+    pub unsafe fn write_to(self, addr: *mut u32) {
+        debug_assert!(!addr.is_null());
+        match self {
+            Self::Arm(instr) => unsafe {
+                ptr::write_volatile(addr, instr);
+            },
+            Self::Thumb(instr) => unsafe {
+                ptr::write_volatile(addr.cast(), instr);
+            },
         }
     }
 }

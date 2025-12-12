@@ -52,13 +52,16 @@ pub mod allocator;
 pub mod banner;
 
 #[cfg(all(target_os = "vexos", feature = "abort-handler"))]
-mod abort_handler;
+pub mod abort_handler;
 mod error_report;
 #[cfg(feature = "panic-hook")]
 mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
 mod sdk;
+mod gdb;
+#[cfg(all(target_os = "vexos", feature = "abort-handler"))]
+pub mod debug;
 
 // Linkerscript Symbols
 //

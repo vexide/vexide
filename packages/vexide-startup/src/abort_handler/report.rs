@@ -78,9 +78,9 @@ pub fn report_fault(fault: &Fault<'_>) {
     dialog.write_registers({
         let mut arr = [0u32; 16];
         arr[..13].copy_from_slice(&fault.ctx.registers);
-        arr[13] = fault.ctx.stack_pointer;
-        arr[14] = fault.ctx.link_register;
-        arr[15] = fault.ctx.program_counter;
+        arr[13] = fault.ctx.stack_pointer as u32;
+        arr[14] = fault.ctx.link_register as u32;
+        arr[15] = fault.ctx.program_counter as u32;
         arr
     });
 

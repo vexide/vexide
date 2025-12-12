@@ -1,18 +1,14 @@
-use core::{
-    arch::{asm, global_asm, naked_asm},
-    fmt::Write,
-};
+//! APIs for catching and handling CPU faults.
 
-mod fault;
-mod report;
+use core::arch::{asm, global_asm, naked_asm};
+
+pub mod fault;
+pub(crate) mod report;
 
 use fault::{ExceptionContext, ExceptionType};
 use vex_sdk::{V5_TouchEvent, V5_TouchStatus, vexTasksRun, vexTouchDataGet};
 
-use crate::abort_handler::{
-    fault::{Fault, Instruction},
-    report::SerialWriter,
-};
+use crate::{abort_handler::fault::Fault, debug::bkpt::handle_breakpoint};
 
 // Custom ARM vector table. Pointing the VBAR coprocessor register at this will configure the CPU to
 // jump to these functions on an exception.
@@ -67,6 +63,9 @@ global_asm!(
 );
 
 /// Enable vexide's CPU exception handling logic by installing its custom vector table.
+///
+/// This automatically called when vexide starts, so this function is probably only useful if you
+/// aren't using vexide's startup routine.
 pub fn install_vector_table() {
     unsafe {
         asm!(
@@ -82,10 +81,16 @@ pub fn install_vector_table() {
     }
 }
 
+/// Handles a supervisor call exception.
+///
+/// # Safety
+///
+/// This function must only be invoked as an exception handler. Do not manually call this function
+/// from Rust code.
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
 #[instruction_set(arm::a32)]
-pub extern "aapcs" fn svc() -> ! {
+pub unsafe extern "C" fn svc() {
     core::arch::naked_asm!(
         "
         @ Save state and SPSR so we can restore it later. Saving SPSR matches
@@ -129,10 +134,16 @@ pub extern "aapcs" fn svc() -> ! {
     )
 }
 
+/// Handles an interrupt request exception.
+///
+/// # Safety
+///
+/// This function must only be invoked as an exception handler. Do not manually call this function
+/// from Rust code.
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
 #[instruction_set(arm::a32)]
-pub extern "aapcs" fn irq() -> ! {
+pub unsafe extern "C" fn irq() {
     core::arch::naked_asm!(
         "
         stmdb sp!,{{r0-r3,r12,lr}}
@@ -161,14 +172,16 @@ pub extern "aapcs" fn irq() -> ! {
 
 macro_rules! fault_exception_vector {
     (
+        $(#[$attrs:meta])*
         $name:ident:
         lr_offset = $lr_offset:expr,
         exception = $exception:expr$(,)?
     ) => {
+        $(#[$attrs])*
         #[unsafe(naked)]
         #[unsafe(no_mangle)]
         #[instruction_set(arm::a32)]
-        unsafe extern "C" fn $name() -> ! {
+        pub unsafe extern "C" fn $name() {
             naked_asm!("
                 dsb @ Workaround for Cortex-A9 erratum (id 775420)
 
@@ -221,11 +234,43 @@ macro_rules! fault_exception_vector {
     };
 }
 
-fault_exception_vector!(undefined_instruction: lr_offset = 4, exception = ExceptionType::UndefinedInstruction);
-fault_exception_vector!(prefetch_abort: lr_offset = 4, exception = ExceptionType::PrefetchAbort);
-fault_exception_vector!(data_abort: lr_offset = 8, exception = ExceptionType::DataAbort);
+fault_exception_vector!(
+    /// Handles an undefined instruction exception.
+    ///
+    /// # Safety
+    ///
+    /// This function must only be invoked as an exception handler. Do not manually call this function
+    /// from Rust code.
+    undefined_instruction:
+        lr_offset = 4,
+        exception = ExceptionType::UndefinedInstruction,
+);
 
-pub unsafe extern "C" fn fault_exception_handler(fault: *mut ExceptionContext) {
+fault_exception_vector!(
+    /// Handles an prefetch abort exception.
+    ///
+    /// # Safety
+    ///
+    /// This function must only be invoked as an exception handler. Do not manually call this function
+    /// from Rust code.
+    prefetch_abort:
+        lr_offset = 4,
+        exception = ExceptionType::PrefetchAbort,
+);
+
+fault_exception_vector!(
+    /// Handles a data abort exception.
+    ///
+    /// # Safety
+    ///
+    /// This function must only be invoked as an exception handler. Do not manually call this function
+    /// from Rust code.
+    data_abort:
+        lr_offset = 8,
+        exception = ExceptionType::DataAbort,
+);
+
+unsafe extern "C" fn fault_exception_handler(fault: *mut ExceptionContext) {
     // Load the fault's details from the captured program state & by querying the CPU's fault status
     // registers.
     let mut fault = unsafe { Fault::from_ptr(fault) };
@@ -274,32 +319,4 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *mut ExceptionContext) {
             vexTasksRun();
         }
     }
-}
-
-unsafe fn handle_breakpoint(fault: &mut Fault<'_>) {
-    /// Encoding of an ARM32 `bkpt` instruction.
-    const BKPT_32_INSTRUCTION: Instruction = Instruction::Arm(0xE120_0070);
-    /// Encoding of an Thumb `bkpt` instruction.
-    const BKPT_16_INSTRUCTION: Instruction = Instruction::Thumb(0xBE00);
-
-    debug_assert!(fault.is_breakpoint());
-
-    // If the breakpoint was caused by a `bkpt` instruction, then we don't actually want to return
-    // to it since it'd just cause another breakpoint as soon as we do. So, we need to advance by
-    // one instruction in that case.
-
-    // SAFETY: Since the address was able to be properly fetched, it implies it is valid for reads.
-    let instr = unsafe { fault.ctx.read_instr() };
-
-    let is_bkpt = instr == BKPT_32_INSTRUCTION || instr == BKPT_16_INSTRUCTION;
-    if is_bkpt {
-        fault.ctx.program_counter += instr.size() as u32;
-    }
-
-    let mut serial = SerialWriter::new();
-    _ = writeln!(serial, "[vexide_startup: hit breakpoint");
-    _ = writeln!(serial, " - instr: {instr:x?}");
-    _ = writeln!(serial, " - is bkpt: {is_bkpt:?}");
-    _ = writeln!(serial, " - return addr: 0x{:x}]", fault.ctx.program_counter);
-    serial.flush();
 }

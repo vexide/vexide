@@ -23,6 +23,7 @@ compile-time = "0.2.0"
 vex-sdk = { workspace = true }
 gdbstub = "0.7.8"
 gdbstub_arch = "0.3.2"
+snafu.workspace = true
 
 [target.'cfg(not(target_os = "vexos"))'.dependencies]
 vex-sdk-mock = { workspace = true, optional = true }
