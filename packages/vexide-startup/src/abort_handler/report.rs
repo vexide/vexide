@@ -48,7 +48,7 @@ impl Write for SerialWriter {
 }
 
 /// Prints the fault to the serial console.
-pub fn report_fault(fault: &Fault) {
+pub fn report_fault(fault: &Fault<'_>) {
     let mut dialog = ErrorReport::begin();
     let mut serial = SerialWriter::new();
     serial.flush();

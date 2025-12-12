@@ -5,13 +5,13 @@ use vex_libunwind::UnwindContext;
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind_sys::unw_context_t;
 
-pub struct Fault {
-    pub ctx: ExceptionContext,
+pub struct Fault<'a> {
+    pub ctx: &'a mut ExceptionContext,
     pub target: u32,
     pub status: FaultStatus,
 }
 
-impl Fault {
+impl Fault<'_> {
     /// Load a fault's details from an exception context pointer.
     ///
     /// This function is intended to be called early in the handling of an exception.
@@ -20,8 +20,8 @@ impl Fault {
     ///
     /// This function accesses CPU state that's set post-exception. The caller must ensure that this
     /// state has not been invalidated.
-    pub unsafe fn from_ptr(ctx: *const ExceptionContext) -> Self {
-        let ctx = unsafe { *ctx };
+    pub unsafe fn from_ptr(ptr: *mut ExceptionContext) -> Self {
+        let ctx = unsafe { &mut *ptr };
 
         Self {
             target: unsafe { ctx.target() },
@@ -36,7 +36,7 @@ impl Fault {
     }
 }
 
-impl Display for Fault {
+impl Display for Fault<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self.ctx.exception {
             ExceptionType::DataAbort => {
@@ -68,12 +68,20 @@ impl Display for Fault {
     }
 }
 
+/// The saved state of a program from before an exception.
+///
+/// Note that changing these fields will actually have an effect on the program if the current
+/// exception handler returns!
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ExceptionContext {
-    pub link_register: u32,
+    /// The saved program status register (spsr) from before the exception.
+    pub spsr: ProgramStatus,
     pub stack_pointer: u32,
+    pub link_register: u32,
     pub exception: ExceptionType,
+    /// Registers r0 through r12
+    pub registers: [u32; 13],
     /// The address at which the abort occurred.
     ///
     /// This is calculated using the Link Register (`lr`), which is set to this address plus an
@@ -90,11 +98,26 @@ pub struct ExceptionContext {
     /// [pf-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Prefetch-Abort-exception
     /// [svc-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Supervisor-Call--SVC--exception
     pub program_counter: u32,
-    /// Registers r0 through r12
-    pub registers: [u32; 13],
 }
 
 impl ExceptionContext {
+    /// Read the ARM instruction which the exception would return to.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the return address is valid for reads. This might not be the case if,
+    /// for example, the exception was a prefetch abort caused by the instruction being
+    /// inaccessible.
+    pub unsafe fn read_instr(&self) -> Instruction {
+        if self.spsr.is_thumb() {
+            let ptr = self.program_counter as *mut u16;
+            Instruction::Thumb(unsafe { ptr.read_volatile() })
+        } else {
+            let ptr = self.program_counter as *mut u32;
+            Instruction::Arm(unsafe { ptr.read_volatile() })
+        }
+    }
+
     /// Create an unwind context using custom registers instead of ones captured from the current
     /// processor state.
     ///
@@ -309,5 +332,34 @@ impl Display for FaultDetails {
             }
             Self::TLBConflictAbort => "TLB conflict abort",
         })
+    }
+}
+
+/// The status of an ARMv7 CPU.
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct ProgramStatus(pub u32);
+
+impl ProgramStatus {
+    #[must_use]
+    pub const fn is_thumb(self) -> bool {
+        const T_BIT: u32 = 1 << 5;
+        self.0 & T_BIT != 0
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Instruction {
+    Arm(u32),
+    Thumb(u16),
+}
+
+impl Instruction {
+    #[must_use]
+    pub const fn size(self) -> usize {
+        match self {
+            Self::Arm(instr) => size_of_val(&instr),
+            Self::Thumb(instr) => size_of_val(&instr),
+        }
     }
 }

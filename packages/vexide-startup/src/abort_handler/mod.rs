@@ -9,7 +9,10 @@ mod report;
 use fault::{ExceptionContext, ExceptionType};
 use vex_sdk::{V5_TouchEvent, V5_TouchStatus, vexTasksRun, vexTouchDataGet};
 
-use crate::abort_handler::{fault::{Fault, FaultStatus, FaultDetails}, report::SerialWriter};
+use crate::abort_handler::{
+    fault::{Fault, Instruction},
+    report::SerialWriter,
+};
 
 // Custom ARM vector table. Pointing the VBAR coprocessor register at this will configure the CPU to
 // jump to these functions on an exception.
@@ -166,31 +169,49 @@ macro_rules! fault_exception_vector {
         #[unsafe(no_mangle)]
         #[instruction_set(arm::a32)]
         unsafe extern "C" fn $name() -> ! {
-            naked_asm!(
-                "
+            naked_asm!("
                 dsb @ Workaround for Cortex-A9 erratum (id 775420)
 
-                sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
-                                            @ of return instruction (see Abort::program_counter docs).
+                @ Apply an offset to link register so that it points at address of return
+                @ instruction (see Abort::program_counter docs).
+                sub lr, lr, #{lr_offset}
 
-                sub sp, sp, #4 @ Ensure stack is aligned to 8 after we're done here.
+                @ -- Save --
+                @ Create a ExceptionContext struct on the stack.
+                @ 1. Save general purpose registers for debugging and exception return
+                push {{r0-r12, lr}}
 
-                @ Create a Fault struct on the stack:
-                push {{r0-r12}} @ Save general purpose registers for debugging
-                mov r0, {exception} @ We will push this later.
-                push {{r0, lr}} @ Keep building up our struct; add `cause` and I.P.
+                @ 2. Add secondary details: exception type and other debug info
+                mov r0, {exception}
+                push {{r0}}
 
-                @ Store original SYS-mode stack pointer
-                stmdb sp, {{sp}}^ @ Get the system mode's stack pointer
-                sub sp, sp, #4 @ Adjust our sp, since we can't use writeback on stmdb SYS
+                @ Store original SYS-mode stack pointer and link register for debug
+                stmdb sp, {{sp,lr}}^
+                @ Adjust our sp, since we can't use writeback on stmdb SYS
+                sub sp, sp, #8
 
-                @ Store original SYS-mode link register
-                stmdb sp, {{lr}}^ @ Get the system mode's link register
-                sub sp, sp, #4 @ Adjust our sp, since we can't use writeback on stmdb SYS
+                @ 3. Save the caller's prog. status reg. in case a recursive exception happens.
+                @ Note that this also helps align the stack to 8.
+                mrs r0, spsr
+                push {{r0}}
 
-                @ Pass it to our handler using the C ABI:
+                @ -- Handle exception --
+                @ Pass it to our handler using the C ABI, fn(*mut ExceptionContext) -> ():
                 mov r0, sp                     @ set param 0
                 blx {exception_handler}        @ Actually call the function now
+
+                @ -- Restore --
+                @ Restore spsr in case it was changed.
+                pop {{r0}}
+                msr spsr, r0
+
+                @ Our exception handler wouldn't have modified anything in SYS-mode,
+                @ so we can just discard that stuff. Also discard the exception type.
+                add sp, sp, #12
+
+                @ And... perform an exception return by loading the old LR into PC.
+                @ Note that we've already offset LR as required to point to the correct address.
+                ldm sp!, {{r0-r12, pc}}^
                 ",
                 exception_handler = sym fault_exception_handler,
                 lr_offset = const $lr_offset,
@@ -204,10 +225,10 @@ fault_exception_vector!(undefined_instruction: lr_offset = 4, exception = Except
 fault_exception_vector!(prefetch_abort: lr_offset = 4, exception = ExceptionType::PrefetchAbort);
 fault_exception_vector!(data_abort: lr_offset = 8, exception = ExceptionType::DataAbort);
 
-pub unsafe extern "C" fn fault_exception_handler(fault: *const ExceptionContext) -> ! {
+pub unsafe extern "C" fn fault_exception_handler(fault: *mut ExceptionContext) {
     // Load the fault's details from the captured program state & by querying the CPU's fault status
     // registers.
-    let fault = unsafe { Fault::from_ptr(fault) };
+    let mut fault = unsafe { Fault::from_ptr(fault) };
 
     unsafe {
         // Data abort and prefetch abort exceptions disable IRQs (source: ARMv7-A TRM page B1-1213).
@@ -226,9 +247,10 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *const ExceptionContext)
     }
 
     if fault.is_breakpoint() {
-        let mut serial = SerialWriter::new();
-        _ = writeln!(serial, "[vexide_startup: hit breakpoint]");
-        serial.flush();
+        unsafe {
+            handle_breakpoint(&mut fault);
+        }
+        return;
     }
 
     report::report_fault(&fault);
@@ -252,4 +274,32 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *const ExceptionContext)
             vexTasksRun();
         }
     }
+}
+
+unsafe fn handle_breakpoint(fault: &mut Fault<'_>) {
+    /// Encoding of an ARM32 `bkpt` instruction.
+    const BKPT_32_INSTRUCTION: Instruction = Instruction::Arm(0xE120_0070);
+    /// Encoding of an Thumb `bkpt` instruction.
+    const BKPT_16_INSTRUCTION: Instruction = Instruction::Thumb(0xBE00);
+
+    debug_assert!(fault.is_breakpoint());
+
+    // If the breakpoint was caused by a `bkpt` instruction, then we don't actually want to return
+    // to it since it'd just cause another breakpoint as soon as we do. So, we need to advance by
+    // one instruction in that case.
+
+    // SAFETY: Since the address was able to be properly fetched, it implies it is valid for reads.
+    let instr = unsafe { fault.ctx.read_instr() };
+
+    let is_bkpt = instr == BKPT_32_INSTRUCTION || instr == BKPT_16_INSTRUCTION;
+    if is_bkpt {
+        fault.ctx.program_counter += instr.size() as u32;
+    }
+
+    let mut serial = SerialWriter::new();
+    _ = writeln!(serial, "[vexide_startup: hit breakpoint");
+    _ = writeln!(serial, " - instr: {instr:x?}");
+    _ = writeln!(serial, " - is bkpt: {is_bkpt:?}");
+    _ = writeln!(serial, " - return addr: 0x{:x}]", fault.ctx.program_counter);
+    serial.flush();
 }
