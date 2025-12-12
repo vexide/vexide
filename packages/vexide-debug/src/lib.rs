@@ -5,7 +5,7 @@
 use std::{fmt::Debug, io::{self, Read, Stdin, Stdout, Write, stdin, stdout}};
 
 mod debugger;
-mod target;
+pub(crate) mod dbg_target;
 mod arch;
 
 pub use debugger::VexideDebugger;
