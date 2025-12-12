@@ -7,8 +7,6 @@ use snafu::Snafu;
 
 use crate::abort_handler::fault::Fault;
 
-pub mod debugger;
-
 pub static DEBUGGER: OnceLock<Mutex<&mut dyn Debugger>> = OnceLock::new();
 
 #[derive(Debug, Snafu)]
@@ -52,7 +50,7 @@ pub unsafe trait Debugger: Send {
     /// # Safety
     ///
     /// The given fault must represent valid, saved CPU state.
-    unsafe fn handle_breakpoint(&mut self, fault: &mut Fault<'_>);
+    unsafe fn handle_exception(&mut self, fault: &mut Fault<'_>);
 }
 
 /// Set the current debugger.
@@ -92,7 +90,7 @@ pub(crate) unsafe fn handle_breakpoint(fault: &mut Fault<'_>) {
         && let Ok(mut debugger) = debugger.try_lock()
     {
         unsafe {
-            debugger.handle_breakpoint(fault);
+            debugger.handle_exception(fault);
         }
     }
 }

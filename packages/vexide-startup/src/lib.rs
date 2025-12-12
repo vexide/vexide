@@ -59,9 +59,8 @@ mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
 mod sdk;
-mod gdb;
 #[cfg(all(target_os = "vexos", feature = "abort-handler"))]
-pub mod debug;
+pub mod debugger;
 
 // Linkerscript Symbols
 //

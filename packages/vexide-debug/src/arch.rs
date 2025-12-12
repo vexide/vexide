@@ -4,6 +4,7 @@ use gdbstub_arch::arm::{
     reg::{ArmCoreRegs, id::ArmCoreRegId},
 };
 
+/// The ARMv7 architecture.
 pub enum ARMv7 {}
 
 impl Arch for ARMv7 {

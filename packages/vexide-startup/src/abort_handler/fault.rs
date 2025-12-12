@@ -95,7 +95,7 @@ impl Display for Fault<'_> {
 ///
 /// Note that updating these fields will cause the exception handler to apply the changes to the CPU
 /// if/when the current exception handler returns.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(C)]
 pub struct ExceptionContext {
     /// The saved program status register (spsr) from before the exception.
@@ -188,10 +188,11 @@ impl ExceptionContext {
 }
 
 /// Type of exception causing a fault to be raised.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[repr(u32)]
 pub enum ExceptionType {
     /// An undefined instruction was executed.
+    #[default]
     UndefinedInstruction = 0,
     /// A memory abort occurred while attempting to fetch and execute an instruction.
     ///
@@ -403,7 +404,7 @@ impl Display for FaultDetails {
 }
 
 /// The status of an ARMv7 CPU.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[repr(transparent)]
 pub struct ProgramStatus(pub u32);
 

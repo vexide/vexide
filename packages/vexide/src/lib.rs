@@ -99,6 +99,9 @@ pub use vexide_startup as startup;
 #[doc(inline)]
 #[cfg(feature = "allocator")]
 pub use vexide_startup::allocator;
+#[doc(inline)]
+#[cfg(all(feature = "debug", target_os = "vexos"))]
+pub use vexide_debug as debug;
 
 /// Commonly used features of vexide.
 ///

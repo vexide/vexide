@@ -1,13 +1,15 @@
 use std::arch::asm;
 
 use vexide::{
+    debug::{StdioTransport, VexideDebugger},
     prelude::*,
-    startup::debug::{self, DEBUGGER, debugger::VexideDebugger},
+    startup::{self, debugger::DEBUGGER},
 };
 
 #[vexide::main(banner(enabled = false))]
 async fn main(_peripherals: Peripherals) {
-    debug::install(VexideDebugger::new());
+    let stdio = StdioTransport::new();
+    startup::debugger::install(VexideDebugger::new(stdio));
 
     let addr: usize = vexide_breakpoint as usize;
     println!("Setting breakpoint at: {addr:x?}");

@@ -1,0 +1,14 @@
+[package]
+name = "vexide-debug"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vexide-startup = { workspace = true, features = ["abort-handler"] }
+gdbstub = "0.7.8"
+gdbstub_arch = "0.3.2"
+vex-sdk.workspace = true
+snafu.workspace = true
+
+[lints]
+workspace = true

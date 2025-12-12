@@ -24,6 +24,7 @@ vexide-devices = { workspace = true, optional = true, features = ["std"] }
 vexide-core = { workspace = true, optional = true }
 vexide-startup = { workspace = true, optional = true }
 vexide-macro = { workspace = true, optional = true }
+vexide-debug = { workspace = true, optional = true }
 vex-sdk = { workspace = true }
 
 [features]
@@ -36,6 +37,7 @@ full = [
     "allocator",
     "panic-hook",
     "abort-handler",
+    "debug",
 ]
 default-sdk = [
     "vex-sdk-jumptable",
@@ -67,6 +69,8 @@ vex-sdk-mock = ["vexide-startup/vex-sdk-mock"]
 devices = ["dep:vexide-devices"]
 embedded-io = ["vexide-devices/embedded-io"]
 dangerous-motor-tuning = ["vexide-devices/dangerous-motor-tuning"]
+
+debug = ["dep:vexide-debug"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]

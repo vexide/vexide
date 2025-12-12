@@ -1,13 +1,17 @@
-use std::{fmt::Write, num::NonZeroUsize, sync::Mutex};
+use std::num::NonZeroUsize;
 
+use gdbstub::stub::{
+    GdbStubBuilder, GdbStubError, SingleThreadStopReason, state_machine::GdbStubStateMachine,
+};
 use snafu::Snafu;
+use vexide_startup::{
+    abort_handler::fault::{Fault, Instruction},
+    debugger::{BreakpointError, Debugger, invalidate_icache},
+};
 
 use crate::{
-    abort_handler::{
-        fault::{Fault, Instruction},
-        report::SerialWriter,
-    },
-    debug::{BreakpointError, Debugger, invalidate_icache},
+    DebugIO,
+    target::{VexideTarget, VexideTargetError},
 };
 
 /// Encoding of an ARM32 `bkpt` instruction.
@@ -15,24 +19,33 @@ const BKPT_32_INSTRUCTION: Instruction = Instruction::Arm(0xE120_0070);
 /// Encoding of an Thumb `bkpt` instruction.
 const BKPT_16_INSTRUCTION: Instruction = Instruction::Thumb(0xBE00);
 
-pub struct VexideDebugger {
+#[derive(Debug, Snafu)]
+pub enum DebuggerError {
+    #[snafu(context(false))]
+    Io { source: std::io::Error },
+    #[snafu(context(false))]
+    GdbStub {
+        source: GdbStubError<VexideTargetError, std::io::Error>,
+    },
+}
+
+/// Debugger state machine for vexide.
+pub struct VexideDebugger<S: DebugIO> {
     /// The list of breakpoints.
     ///
     /// Breakpoint idx 0 is the fixup breakpoint, if one exists.
     breaks: [Breakpoint; 10],
     fixup_idx: Option<NonZeroUsize>,
+    single_step: bool,
+    stream: S,
+    gdb_buffer: Option<&'static mut [u8]>,
+    gdb: Option<GdbStubStateMachine<'static, VexideTarget, S>>,
 }
 
-impl Default for VexideDebugger {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl VexideDebugger {
+impl<S: DebugIO> VexideDebugger<S> {
     /// Creates a new debugger.
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new(stream: S) -> Self {
         Self {
             breaks: [Breakpoint {
                 is_active: false,
@@ -40,6 +53,10 @@ impl VexideDebugger {
                 instr_backup: Instruction::Arm(0),
             }; _],
             fixup_idx: None,
+            single_step: false,
+            stream,
+            gdb_buffer: Some(Box::leak(vec![0; 0x2000].into_boxed_slice())),
+            gdb: None,
         }
     }
 
@@ -119,9 +136,37 @@ impl VexideDebugger {
         };
         self.fixup_idx = Some(idx);
     }
+
+    fn drive_state_machine<'a>(
+        &mut self,
+        gdb: GdbStubStateMachine<'a, VexideTarget, S>,
+        target: &mut VexideTarget,
+    ) -> Result<GdbStubStateMachine<'a, VexideTarget, S>, DebuggerError> {
+        match gdb {
+            GdbStubStateMachine::Idle(mut gdb) => {
+                let next_byte = gdb.borrow_conn().read()?;
+                Ok(gdb.incoming_data(target, next_byte)?)
+            }
+            GdbStubStateMachine::Running(gdb) => {
+                let stop_reason = if self.single_step {
+                    SingleThreadStopReason::DoneStep
+                } else {
+                    SingleThreadStopReason::SwBreak(())
+                };
+                self.single_step = false;
+
+                Ok(gdb.report_stop(target, stop_reason)?)
+            }
+            GdbStubStateMachine::CtrlCInterrupt(gdb) => {
+                let stop_reason: Option<SingleThreadStopReason<_>> = None;
+                Ok(gdb.interrupt_handled(target, stop_reason)?)
+            }
+            GdbStubStateMachine::Disconnected(gdb) => Ok(gdb.return_to_idle()),
+        }
+    }
 }
 
-unsafe impl Debugger for VexideDebugger {
+unsafe impl<S: DebugIO> Debugger for VexideDebugger<S> {
     fn initialize(&mut self) {}
 
     unsafe fn register_breakpoint(
@@ -160,7 +205,7 @@ unsafe impl Debugger for VexideDebugger {
         Ok(())
     }
 
-    unsafe fn handle_breakpoint(&mut self, fault: &mut Fault<'_>) {
+    unsafe fn handle_exception(&mut self, fault: &mut Fault<'_>) {
         // SAFETY: Since the address was able to be properly fetched, it implies it is valid for
         // reads.
         let instr = unsafe { fault.ctx.read_instr() };
@@ -175,6 +220,33 @@ unsafe impl Debugger for VexideDebugger {
             self.prepare_for_continue(idx);
         }
 
+        let mut target = VexideTarget::new(*fault.ctx);
+
+        // If this is the first time a breakpoint has happened, then we'll set up the state machine
+        // for GDB.
+        let mut state = self.gdb.take().unwrap_or_else(|| {
+            let buffer = self.gdb_buffer.take().unwrap();
+            let stub = GdbStubBuilder::new(self.stream.clone())
+                .with_packet_buffer(buffer)
+                .build()
+                .unwrap();
+
+            stub.run_state_machine(&mut target).unwrap()
+        });
+
+        // Enter debugging loop until it's time to resume.
+        while !target.resume {
+            state = self
+                .drive_state_machine(state, &mut target)
+                .expect("Error while processing debugger state");
+
+            unsafe {
+                vex_sdk::vexTasksRun();
+            }
+        }
+
+        self.gdb = Some(state);
+
         if is_explicit_bkpt {
             // If the breakpoint was caused by an explicit `bkpt` instruction, then we don't
             // actually want to directly return to it since it'd just cause another
@@ -182,13 +254,6 @@ unsafe impl Debugger for VexideDebugger {
             // skip past it.
             fault.ctx.program_counter += instr.size();
         }
-
-        let mut serial = SerialWriter::new();
-        _ = writeln!(serial, "[vexide_startup: hit breakpoint");
-        _ = writeln!(serial, " - instr: {instr:x?}");
-        _ = writeln!(serial, " - is explicit bkpt: {is_explicit_bkpt:?}");
-        _ = writeln!(serial, " - return addr: 0x{:x}]", fault.ctx.program_counter);
-        serial.flush();
     }
 }
 
