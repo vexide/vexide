@@ -50,12 +50,11 @@ impl<S: DebugIO> VexideDebugger<S> {
     ) -> Result<GdbStubStateMachine<'a, VexideTarget, S>, DebuggerError> {
         match gdb {
             GdbStubStateMachine::Idle(mut gdb) => {
-                if gdb.borrow_conn().peek()?.is_none() {
-                    return Ok(gdb.into());
+                if let Ok(byte) = gdb.borrow_conn().read() {
+                    Ok(gdb.incoming_data(target, byte)?)
+                } else {
+                    Ok(gdb.into())
                 }
-
-                let byte = gdb.borrow_conn().read()?;
-                Ok(gdb.incoming_data(target, byte)?)
             }
             GdbStubStateMachine::Running(gdb) => {
                 let stop_reason = if target.single_step {
@@ -125,12 +124,10 @@ unsafe impl<S: DebugIO> Debugger for VexideDebugger<S> {
 
         // Enter debugging loop until it's time to resume.
         while !self.target.resume {
+            std::thread::yield_now();
+
             gdb = Self::drive_state_machine(gdb, &mut self.target)
                 .expect("Error while processing debugger state");
-
-            unsafe {
-                vex_sdk::vexTasksRun();
-            }
         }
 
         self.gdb = Some(gdb);

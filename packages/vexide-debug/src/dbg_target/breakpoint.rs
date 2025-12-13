@@ -60,9 +60,8 @@ impl SwBreakpoint for VexideTarget {
         addr: u32,
         _kind: ArmBreakpointKind,
     ) -> TargetResult<bool, Self> {
-        let result = unsafe { self.remove_breakpoint(addr as usize) };
-
-        Ok(result.is_ok())
+        let changed = unsafe { self.remove_breakpoint(addr as usize) };
+        Ok(changed)
     }
 }
 
@@ -103,7 +102,7 @@ impl VexideTarget {
         Ok(())
     }
 
-    pub unsafe fn remove_breakpoint(&mut self, addr: usize) -> Result<bool, BreakpointError> {
+    pub unsafe fn remove_breakpoint(&mut self, addr: usize) -> bool {
         let mut changed = false;
         for bkpt in self.breaks.iter_mut().skip(1) {
             if bkpt.is_active && bkpt.instr_addr == addr {
@@ -122,6 +121,6 @@ impl VexideTarget {
             }
         }
 
-        Ok(changed)
+        changed
     }
 }
