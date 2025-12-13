@@ -1,4 +1,4 @@
-use gdbstub::arch::{Arch};
+use gdbstub::arch::Arch;
 use gdbstub_arch::arm::{
     ArmBreakpointKind,
     reg::{ArmCoreRegs, id::ArmCoreRegId},

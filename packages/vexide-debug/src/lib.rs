@@ -2,18 +2,20 @@
 
 #![cfg(target_os = "vexos")]
 
-use std::{fmt::Debug, io::{self, Read, Stdin, Stdout, Write, stdin, stdout}};
+use std::{
+    fmt::Debug,
+    io::{self, Read, Stdin, Stdout, Write, stdin, stdout},
+};
 
-mod debugger;
-pub(crate) mod dbg_target;
 mod arch;
+pub(crate) mod dbg_target;
+mod debugger;
 
 pub use debugger::VexideDebugger;
 use gdbstub::conn::{Connection, ConnectionExt};
 
 /// A means of communicating with a debug console.
-pub trait DebugIO: Connection<Error = io::Error> + ConnectionExt + Send + Clone {
-}
+pub trait DebugIO: Connection<Error = io::Error> + ConnectionExt + Send + Clone {}
 
 /// Debug logging via stdio.
 #[derive(Debug)]
@@ -45,8 +47,7 @@ impl Clone for StdioTransport {
     }
 }
 
-impl DebugIO for StdioTransport {
-}
+impl DebugIO for StdioTransport {}
 
 impl Connection for StdioTransport {
     type Error = std::io::Error;
@@ -69,9 +70,7 @@ impl ConnectionExt for StdioTransport {
     fn peek(&mut self) -> Result<Option<u8>, Self::Error> {
         let _lock = self.stdin.lock();
 
-        let char = unsafe {
-            vex_sdk::vexSerialPeekChar(1)
-        };
+        let char = unsafe { vex_sdk::vexSerialPeekChar(1) };
 
         if char == -1 {
             return Ok(None);

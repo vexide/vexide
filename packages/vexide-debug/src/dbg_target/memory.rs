@@ -45,10 +45,10 @@ pub unsafe fn write(address: usize, buffer: &[u8]) -> TargetResult<usize, Vexide
 /// 1. The instruction must be written to the data cache. (e.g. via [`std::ptr::write_volatile`])
 /// 2. The changes in the data cache must synced far enough that the i-cache sees it when it queries
 ///    main memory. (via [`cache::clean_dcache_to_unification`])
-/// 3. The instruction cache must read any changes from main memory.
-///    (via [`cache::invalidate_icache`])
-/// 4. Any branch predictions for the instruction must be cleared, since they're now invalid.
-///    (this is handled by the previous function).
+/// 3. The instruction cache must read any changes from main memory. (via
+///    [`cache::invalidate_icache`])
+/// 4. Any branch predictions for the instruction must be cleared, since they're now invalid. (this
+///    is handled by the previous function).
 pub mod cache {
     use std::arch::asm;
 
@@ -108,7 +108,7 @@ pub mod cache {
                         "isb", // ensure instruction fetch sees the change
                         mva = in(reg) base,
                         options(nostack, preserves_flags),
-                    )
+                    );
                 }
             }
         }

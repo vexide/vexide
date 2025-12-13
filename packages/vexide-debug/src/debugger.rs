@@ -1,8 +1,11 @@
 use std::num::NonZeroUsize;
 
-use gdbstub::{common::Signal, stub::{
-    GdbStubBuilder, GdbStubError, SingleThreadStopReason, state_machine::GdbStubStateMachine,
-}};
+use gdbstub::{
+    common::Signal,
+    stub::{
+        GdbStubBuilder, GdbStubError, SingleThreadStopReason, state_machine::GdbStubStateMachine,
+    },
+};
 use snafu::Snafu;
 use vexide_startup::{
     abort_handler::fault::{Fault, Instruction},
