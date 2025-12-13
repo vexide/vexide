@@ -12,10 +12,14 @@ use gdbstub::{
                 singlethread::{SingleThreadBase, SingleThreadResume, SingleThreadResumeOps},
             },
             breakpoints::{Breakpoints, BreakpointsOps, SwBreakpoint, SwBreakpointOps},
+            monitor_cmd::{ConsoleOutput, MonitorCmd, MonitorCmdOps},
         },
     },
 };
-use gdbstub_arch::arm::{ArmBreakpointKind, reg::{ArmCoreRegs, id::ArmCoreRegId}};
+use gdbstub_arch::arm::{
+    ArmBreakpointKind,
+    reg::{ArmCoreRegs, id::ArmCoreRegId},
+};
 use snafu::Snafu;
 use vexide_startup::{
     abort_handler::fault::{ExceptionContext, Instruction, ProgramStatus},
@@ -25,6 +29,7 @@ use vexide_startup::{
 use crate::{DebugIO, VexideDebugger, arch::ARMv7, dbg_target::breakpoint::Breakpoint};
 
 pub mod breakpoint;
+mod memory;
 
 #[derive(Debug, Snafu)]
 pub enum VexideTargetError {}
@@ -69,6 +74,7 @@ impl VexideTarget {
         self.breaks
             .iter()
             .enumerate()
+            .skip(1)
             .find(|(_, b)| b.is_active && b.instr_addr == addr)
             .map(|(i, _)| i)
     }
@@ -103,7 +109,9 @@ impl VexideTarget {
             }
         } else if let Some(fixup_idx) = self.fixup_idx.take() {
             // This is a fixup breakpoint, so it's our responsibility to re-enable whatever
-            // breakpoint got invalidated.
+            // breakpoint got invalidated, then get out of the way.
+
+            bkpt.is_active = false;
             let invalidated_bkpt = &mut self.breaks[fixup_idx.get()];
 
             unsafe {
@@ -152,6 +160,10 @@ impl Target for VexideTarget {
     fn support_breakpoints(&mut self) -> Option<BreakpointsOps<'_, Self>> {
         Some(self)
     }
+
+    fn support_monitor_cmd(&mut self) -> Option<MonitorCmdOps<'_, Self>> {
+        Some(self)
+    }
 }
 
 impl SingleThreadBase for VexideTarget {
@@ -188,12 +200,18 @@ impl SingleThreadBase for VexideTarget {
         Ok(())
     }
 
-    fn read_addrs(&mut self, _start_addr: u32, _data: &mut [u8]) -> TargetResult<usize, Self> {
-        Err(TargetError::NonFatal)
+    fn read_addrs(&mut self, start_addr: u32, data: &mut [u8]) -> TargetResult<usize, Self> {
+        let bytes_read = unsafe { memory::read(start_addr as usize, data)? };
+
+        Ok(bytes_read)
     }
 
-    fn write_addrs(&mut self, _start_addr: u32, _data: &[u8]) -> TargetResult<(), Self> {
-        Err(TargetError::NonFatal)
+    fn write_addrs(&mut self, start_addr: u32, data: &[u8]) -> TargetResult<(), Self> {
+        unsafe {
+            memory::write(start_addr as usize, data)?;
+        }
+
+        Ok(())
     }
 
     fn support_resume(&mut self) -> Option<SingleThreadResumeOps<'_, Self>> {
@@ -248,7 +266,8 @@ impl SingleRegisterAccess<()> for VexideTarget {
         val: &[u8],
     ) -> TargetResult<(), Self> {
         if let Some(ctx) = &mut self.exception_ctx
-        && let Ok(bytes) = val.try_into() {
+            && let Ok(bytes) = val.try_into()
+        {
             let val = u32::from_ne_bytes(bytes);
 
             match reg_id {
@@ -258,13 +277,13 @@ impl SingleRegisterAccess<()> for VexideTarget {
                     };
 
                     *storage = val;
-                },
+                }
                 ArmCoreRegId::Sp => ctx.stack_pointer = val as usize,
                 ArmCoreRegId::Lr => ctx.link_register = val as usize,
                 ArmCoreRegId::Pc => ctx.program_counter = val as usize,
                 ArmCoreRegId::Cpsr => ctx.spsr = ProgramStatus(val),
                 _ => return Err(TargetError::NonFatal),
-            };
+            }
 
             Ok(())
         } else {
@@ -273,8 +292,36 @@ impl SingleRegisterAccess<()> for VexideTarget {
     }
 }
 
-impl Display for VexideTarget {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[VexideTarget]")
+impl MonitorCmd for VexideTarget {
+    fn handle_monitor_cmd(
+        &mut self,
+        data: &[u8],
+        mut out: ConsoleOutput<'_>,
+    ) -> Result<(), Self::Error> {
+        let cmd_str = str::from_utf8(data).unwrap_or_default();
+
+        let mut parts = cmd_str.split(' ');
+        let cmd = parts.next().unwrap_or_default();
+
+        if cmd.starts_with("br") {
+            for (i, breakpt) in self.breaks.iter().enumerate() {
+                gdbstub::outputln!(out, "{i:>2}: {breakpt:x?}");
+            }
+        } else if cmd.starts_with("mk") {
+            if let Ok(addr) = usize::from_str_radix(parts.next().unwrap_or_default(), 16) {
+                let res = unsafe { self.register_breakpoint(addr, false) };
+
+                gdbstub::outputln!(out, "{res:x?}");
+            } else {
+                gdbstub::outputln!(out, "Invalid syntax.");
+            }
+        } else {
+            gdbstub::outputln!(out, "Unknown command.\n");
+            gdbstub::outputln!(out, "Commands:");
+            gdbstub::outputln!(out, " - monitor breaks         (View internal breakpoints)");
+            gdbstub::outputln!(out, " - monitor mkbreak <ADDR> (Create breakpoint)");
+        }
+
+        Ok(())
     }
 }

@@ -1,9 +1,9 @@
-use std::{arch::asm, io::stdin, time::Duration};
+use std::{arch::asm, io::stdin, thread, time::Duration};
 
 use vexide::{
     debug::{StdioTransport, VexideDebugger},
     prelude::*,
-    startup::{self, debugger::DEBUGGER},
+    startup::{self, debugger::{DEBUGGER, breakpoint}},
 };
 
 #[vexide::main(banner(enabled = false))]
@@ -14,7 +14,15 @@ async fn main(_peripherals: Peripherals) {
     let stdio = StdioTransport::new();
     startup::debugger::install(VexideDebugger::new(stdio));
 
-    let addr: usize = vexide_breakpoint as usize;
+    // std::panic::set_hook(Box::new(|_panic| {
+    //     breakpoint();
+
+    //     loop {
+    //         thread::yield_now();
+    //     }
+    // }));
+
+    let addr: usize = add_nums as usize;
     // println!("Setting breakpoint at: {addr:x?}");
 
     unsafe {
@@ -23,16 +31,14 @@ async fn main(_peripherals: Peripherals) {
     }
 
     // println!("Calling a function...");
-    vexide_breakpoint();
+    add_nums(32, 108);
     // println!("Back from that function!");
 }
 
 #[inline(never)]
 #[unsafe(no_mangle)]
-fn vexide_breakpoint() {
-    unsafe {
-        asm!("nop", "nop");
-    }
+fn add_nums(left: u32, right: u32) -> u32 {
+    left + right
 }
 
 
