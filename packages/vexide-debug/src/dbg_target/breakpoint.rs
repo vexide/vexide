@@ -1,11 +1,19 @@
+//! Software breakpoint management.
+
 use gdbstub::target::{TargetResult, ext::breakpoints::{Breakpoints, SwBreakpoint, SwBreakpointOps}};
 use gdbstub_arch::arm::ArmBreakpointKind;
 use vexide_startup::{abort_handler::fault::Instruction, debugger::{BreakpointError, invalidate_icache}};
 
 use crate::dbg_target::VexideTarget;
 
+/// A software breakpoint.
 #[derive(Debug, Clone, Copy)]
 pub struct Breakpoint {
+    /// Indicates whether this breakpoint is considered active.
+    ///
+    /// This is distinct from it being enabled, which indicates that the breakpoint is actially
+    /// written to system memory and is ready to interrupt program execution. After a breakpoint is
+    /// triggered, it must temporarily become disabled to resume execution.
     pub is_active: bool,
     pub instr_addr: usize,
     pub instr_backup: Instruction,
@@ -17,7 +25,12 @@ impl Breakpoint {
     /// Encoding of an Thumb `bkpt` instruction.
     pub const THUMB_INSTR: Instruction = Instruction::Thumb(0xBE00);
 
+    /// Enables the breakpoint by overwriting its instruction's memory with a `bkpt` call.
+    ///
+    /// Note that this does not handle backing up the old instruction.
     pub unsafe fn enable(&mut self) {
+        debug_assert!(self.is_active);
+
         // If the old instruction was Thumb, then our `bkpt` replacement needs to be Thumb too.
         let bkpt_instr = match self.instr_backup {
             Instruction::Arm(_) => Self::ARM_INSTR,
@@ -29,6 +42,8 @@ impl Breakpoint {
         }
     }
 
+    /// Disables the breakpoint by replacing its instruction's memory with the backed up, real
+    /// operation.
     pub unsafe fn disable(&mut self) {
         unsafe {
             self.instr_backup.write_to(self.instr_addr as *mut u32);

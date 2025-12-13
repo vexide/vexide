@@ -38,13 +38,13 @@ pub enum VexideTargetError {}
 pub struct VexideTarget {
     pub exception_ctx: Option<ExceptionContext>,
     pub resume: bool,
+    pub single_step: bool,
 
     /// The list of breakpoints.
     ///
     /// Breakpoint idx 0 is the fixup breakpoint, if one exists.
     pub breaks: [Breakpoint; 10],
-    pub fixup_idx: Option<NonZeroUsize>,
-    pub single_step: bool,
+    pub fixup_idx: usize,
 }
 
 impl Default for VexideTarget {
@@ -63,7 +63,7 @@ impl VexideTarget {
                 instr_addr: 0,
                 instr_backup: Instruction::Arm(0),
             }; _],
-            fixup_idx: None,
+            fixup_idx: 0,
             single_step: false,
         }
     }
@@ -83,54 +83,107 @@ impl VexideTarget {
     /// the current exception will continue execution.
     ///
     /// Since this process involves *temporarily disabling* the requested breakpoint, it will
-    /// also create a "fixup" breakpoint that isn't visible to users on the next instruction
-    /// that will be executed. This is a non-persistent breakpoint which solely exists to re-enable
-    /// the current breakpoint.
+    /// also create an internal "fixup" breakpoint to re-enable the given breakpoint. (See
+    /// [`Self::register_fixup`])
     pub fn prepare_for_continue(&mut self, idx: usize) {
+        assert!(idx != 0);
+
         let bkpt = &mut self.breaks[idx];
         if !bkpt.is_active {
             return;
         }
 
         unsafe {
+            // Disabling the current breakpoint allows us to continue execution without immediately
+            // triggering it again.
             bkpt.disable();
-        }
 
-        // Fixup handling.
-        if let Some(idx) = NonZeroUsize::new(idx) {
-            // A non-zero index means it's a normal, persistent breakpoint.
-            //
-            // We just disabled it, which is bad but necessary since we need the program to
-            // continue. Let's fix this by registering an ephemeral breakpoint that gets triggered
-            // right after this one with the sole purpose of re-enabling this one.
+            // This is supposed to be a persistent breakpoint, so we have to re-enable it at some
+            // point in the future. To enable this behavior, guess what the next instruction will
+            // be and put an internal breakpoint on it.
+            self.register_fixup(idx);
 
-            unsafe {
-                self.register_fixup(idx);
-            }
-        } else if let Some(fixup_idx) = self.fixup_idx.take() {
-            // This is a fixup breakpoint, so it's our responsibility to re-enable whatever
-            // breakpoint got invalidated, then get out of the way.
-
-            bkpt.is_active = false;
-            let invalidated_bkpt = &mut self.breaks[fixup_idx.get()];
-
-            unsafe {
-                invalidated_bkpt.enable();
-            }
-        }
-
-        unsafe {
+            // Flush changes.
             invalidate_icache();
         }
     }
 
-    unsafe fn register_fixup(&mut self, idx: NonZeroUsize) {
+    /// Applies any fixup operation that this breakpoint is responsible for.
+    ///
+    /// Returns whether a fixup breakpoint was inhabiting the given address.
+    pub unsafe fn apply_fixup(&mut self, addr: usize) -> bool {
+        let fixup = &mut self.breaks[0];
+
+        // Ensure this is an active fixup.
+        if !fixup.is_active || fixup.instr_addr != addr {
+            return false;
+        }
+
+        // This is a fixup breakpoint, so it's our responsibility to re-enable whatever
+        // breakpoint got invalidated, then get out of the way.
+
+        debug_assert!(self.fixup_idx != 0);
+
+        fixup.is_active = false;
+        unsafe {
+            fixup.disable();
+        }
+
+        let invalidated_bkpt = &mut self.breaks[self.fixup_idx];
+        unsafe {
+            invalidated_bkpt.enable();
+        }
+
+        true
+    }
+
+    /// Clears the resume flag.
+    pub const fn reset_resume(&mut self) {
+        self.resume = false;
+        self.single_step = false;
+    }
+
+    /// Marks the debugger as ready to resume.
+    pub const fn resume(&mut self) {
+        self.resume = true;
+    }
+
+    /// Marks the debugger as ready to resume for a single-step.
+    pub const fn step(&mut self) {
+        self.resume = true;
+        self.single_step = true;
+    }
+
+    /// Creates a fixup breakpoint responsible for enabling the given breakpoint.
+    ///
+    /// This function places a new breakpoint on the next instruction that will be evaluated after
+    /// the given breakpoint returns. The new fixup breakpoint will not enter debug mode like
+    /// standard persistent breakpoints, and will instead only enable the given breakpoint and
+    /// return.
+    ///
+    /// This functionality is used to support persistent breakpoints, since returning from a
+    /// breakpoint requires you to temporarily disable it (otherwise it would immediately trigger
+    /// again).
+    ///
+    /// # Safety
+    ///
+    /// Fixup breakpoints must not be registered for breakpoints on branching instructions. This
+    /// requirement may change in the future.
+    ///
+    /// # Panics
+    ///
+    /// A panic will be emitted if a fixup breakpoint already exists, or if the given breakpoint
+    /// is not active.
+    unsafe fn register_fixup(&mut self, idx: usize) {
+        assert!(!self.breaks[0].is_active, "Tried to create multiple fixups");
+
+        let bkpt = &mut self.breaks[idx];
         assert!(
-            !self.breaks[0].is_active,
-            "Tried to create multiple fixup breakpoints (is this possible)?"
+            bkpt.is_active,
+            "Can't create a fixup for an inactive breakpoint"
         );
 
-        let bkpt = &mut self.breaks[idx.get()];
+        println!("MKFIX");
 
         // Note: this is very temporary! In reality, this will have to decode the instruction
         // and do a better job at guessing where the next instruction is. Currently, breakpoints
@@ -140,12 +193,18 @@ impl VexideTarget {
         let instr_backup =
             unsafe { Instruction::read(next_addr as *mut u32, bkpt.instr_backup.is_thumb()) };
 
-        self.breaks[0] = Breakpoint {
+        let mut fixup = Breakpoint {
             is_active: true,
             instr_addr: next_addr,
             instr_backup,
         };
-        self.fixup_idx = Some(idx);
+
+        self.breaks[0] = fixup;
+        self.fixup_idx = idx;
+
+        unsafe {
+            fixup.enable();
+        }
     }
 }
 

@@ -1,3 +1,5 @@
+//! Functions to query system memory for display in the debugger.
+
 use std::ptr;
 
 use gdbstub::target::TargetResult;
