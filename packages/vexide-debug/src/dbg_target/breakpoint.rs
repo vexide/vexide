@@ -1,10 +1,16 @@
 //! Software breakpoint management.
 
-use gdbstub::target::{TargetResult, ext::breakpoints::{Breakpoints, SwBreakpoint, SwBreakpointOps}};
+use gdbstub::target::{
+    TargetResult,
+    ext::breakpoints::{Breakpoints, SwBreakpoint, SwBreakpointOps},
+};
 use gdbstub_arch::arm::ArmBreakpointKind;
-use vexide_startup::{abort_handler::fault::Instruction, debugger::{BreakpointError, invalidate_icache}};
+use vexide_startup::{abort_handler::fault::Instruction, debugger::BreakpointError};
 
-use crate::dbg_target::VexideTarget;
+use crate::dbg_target::{
+    VexideTarget,
+    memory::cache::{self, CacheTarget},
+};
 
 /// A software breakpoint.
 #[derive(Debug, Clone, Copy)]
@@ -48,6 +54,12 @@ impl Breakpoint {
         unsafe {
             self.instr_backup.write_to(self.instr_addr as *mut u32);
         }
+    }
+
+    /// Returns the cache target for this breakpoint's instruction.
+    #[must_use]
+    pub const fn cache_target(&self) -> CacheTarget {
+        CacheTarget::Address(self.instr_addr)
     }
 }
 
@@ -111,31 +123,29 @@ impl VexideTarget {
 
         unsafe {
             bkpt.enable();
-            invalidate_icache();
         }
+
+        cache::sync_instr_update(bkpt.cache_target());
 
         Ok(())
     }
 
     pub unsafe fn remove_breakpoint(&mut self, addr: usize) -> bool {
-        let mut changed = false;
-        for bkpt in self.breaks.iter_mut().skip(1) {
-            if bkpt.is_active && bkpt.instr_addr == addr {
+        let num_updated = self
+            .breaks
+            .iter_mut()
+            .skip(1)
+            .filter(|b| b.is_active && b.instr_addr == addr)
+            .map(|bkpt| {
                 unsafe {
                     bkpt.disable();
                 }
 
                 bkpt.is_active = false;
-                changed = true;
-            }
-        }
+                cache::sync_instr_update(bkpt.cache_target());
+            })
+            .count();
 
-        if changed {
-            unsafe {
-                invalidate_icache();
-            }
-        }
-
-        changed
+        num_updated > 0
     }
 }

@@ -6,7 +6,7 @@ use gdbstub::{common::Signal, stub::{
 use snafu::Snafu;
 use vexide_startup::{
     abort_handler::fault::{Fault, Instruction},
-    debugger::{BreakpointError, Debugger, invalidate_icache},
+    debugger::{BreakpointError, Debugger},
 };
 
 use crate::{

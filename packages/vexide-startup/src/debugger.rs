@@ -69,21 +69,6 @@ pub fn breakpoint() {
     }
 }
 
-/// Invalidates the CPU instruction cache, flushing any changes to instructions.
-///
-/// # Safety
-///
-/// The caller must ensure this operation is valid in the current context.
-pub unsafe fn invalidate_icache() {
-    unsafe {
-        asm!(
-            "mov r0, #0",
-            "mcr p15, 0, r0, c7, c1, 0", // ICIALLUIS
-            "dsb",                       // Wait until all cache operations complete
-        );
-    }
-}
-
 pub(crate) unsafe fn handle_breakpoint(fault: &mut Fault<'_>) {
     debug_assert!(fault.is_breakpoint());
     if let Some(debugger) = DEBUGGER.get()

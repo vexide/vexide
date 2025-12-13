@@ -9,7 +9,10 @@ use gdbstub::{
             base::{
                 BaseOps,
                 single_register_access::{SingleRegisterAccess, SingleRegisterAccessOps},
-                singlethread::{SingleThreadBase, SingleThreadResume, SingleThreadResumeOps},
+                singlethread::{
+                    SingleThreadBase, SingleThreadResume, SingleThreadResumeOps,
+                    SingleThreadSingleStepOps,
+                },
             },
             breakpoints::{Breakpoints, BreakpointsOps, SwBreakpoint, SwBreakpointOps},
             monitor_cmd::{ConsoleOutput, MonitorCmd, MonitorCmdOps},
@@ -21,12 +24,13 @@ use gdbstub_arch::arm::{
     reg::{ArmCoreRegs, id::ArmCoreRegId},
 };
 use snafu::Snafu;
-use vexide_startup::{
-    abort_handler::fault::{ExceptionContext, Instruction, ProgramStatus},
-    debugger::invalidate_icache,
-};
+use vexide_startup::abort_handler::fault::{ExceptionContext, Instruction, ProgramStatus};
 
-use crate::{DebugIO, VexideDebugger, arch::ARMv7, dbg_target::breakpoint::Breakpoint};
+use crate::{
+    DebugIO, VexideDebugger,
+    arch::ARMv7,
+    dbg_target::{breakpoint::Breakpoint, memory::cache},
+};
 
 pub mod breakpoint;
 mod memory;
@@ -93,18 +97,19 @@ impl VexideTarget {
             return;
         }
 
+        // Disabling the current breakpoint allows us to continue execution without immediately
+        // triggering it again.
         unsafe {
-            // Disabling the current breakpoint allows us to continue execution without immediately
-            // triggering it again.
             bkpt.disable();
+        }
 
-            // This is supposed to be a persistent breakpoint, so we have to re-enable it at some
-            // point in the future. To enable this behavior, guess what the next instruction will
-            // be and put an internal breakpoint on it.
+        cache::sync_instr_update(bkpt.cache_target());
+
+        // This is supposed to be a persistent breakpoint, so we have to re-enable it at some
+        // point in the future. To enable this behavior, guess what the next instruction will
+        // be and put an internal breakpoint on it.
+        unsafe {
             self.register_fixup(idx);
-
-            // Flush changes.
-            invalidate_icache();
         }
     }
 
@@ -205,6 +210,8 @@ impl VexideTarget {
         unsafe {
             fixup.enable();
         }
+
+        cache::sync_instr_update(fixup.cache_target());
     }
 }
 
