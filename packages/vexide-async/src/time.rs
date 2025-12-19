@@ -43,8 +43,7 @@ impl Future for Sleep {
         if self
             .registered_waker
             .as_ref()
-            .map(|w| !w.will_wake(cx.waker()))
-            .unwrap_or(true)
+            .is_none_or(|w| !w.will_wake(cx.waker()))
         {
             let this = self.get_mut();
             this.registered_waker = Some(cx.waker().clone());
