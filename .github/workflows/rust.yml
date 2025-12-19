@@ -3,8 +3,6 @@ name: Rust
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-    # Check and lint are separated because linting doesn't seem to fail
-    # if there are errors are outside of the PR's changes.
     check:
         name: Build/Test
         runs-on: ubuntu-latest
@@ -25,10 +23,10 @@ jobs:
               run: cargo check --target=armv7a-vex-v5 --bins --examples
 
             - name: Test (Desktop)
-              run: cargo test --all --lib --bins --examples
+              run: cargo test --workspace --all-targets
 
             - name: Doctest (Desktop)
-              run: cargo test --all --doc
+              run: cargo test --workspace --doc
     lint:
         name: Lint
         runs-on: ubuntu-latest
@@ -39,15 +37,16 @@ jobs:
             - name: Setup | Toolchain
               run: rustup toolchain install --profile minimal
 
+            - name: Setup | Install clippy
+              run: rustup component add clippy
+
             - name: Setup | Build cache
               uses: Swatinem/rust-cache@v2
 
-            - uses: giraffate/clippy-action@v1
-              with:
-                  reporter: 'github-check'
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
-                  clippy_flags: --all --lib --bins --examples --features "full vex-sdk-jumptable"
-                  reviewdog_flags: -fail-level=any
+            - name: Clippy
+              run: cargo clippy --workspace --all-targets --features "full default-sdk"
+              env:
+                RUSTFLAGS: "-Dwarnings"
     fmt:
         name: Rustfmt
         runs-on: ubuntu-latest
