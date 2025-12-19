@@ -6,7 +6,7 @@ jobs:
     # Check and lint are separated because linting doesn't seem to fail
     # if there are errors are outside of the PR's changes.
     check:
-        name: Check
+        name: Build/Test
         runs-on: ubuntu-latest
         steps:
             - name: Setup | Checkout
@@ -29,6 +29,18 @@ jobs:
               with:
                   command: check
                   args: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --bins --examples
+
+            - name: Test
+              uses: actions-rs/cargo@v1
+              with:
+                  command: test
+                  args: --all --lib --bins --examples
+
+            - name: Doctest
+              uses: actions-rs/cargo@v1
+              with:
+                  command: test
+                  args: --all --doc
     lint:
         name: Lint
         runs-on: ubuntu-latest
@@ -47,30 +59,6 @@ jobs:
                   reporter: "github-pr-check"
                   github_token: ${{ secrets.GITHUB_TOKEN }}
                   clippy_flags: --all --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --lib --bins --examples --features "full vex-sdk-jumptable"
-    test:
-        name: Test
-        runs-on: ubuntu-latest
-        steps:
-            - name: Setup | Checkout
-              uses: actions/checkout@v6
-
-            - name: Setup | Toolchain
-              run: rustup toolchain install --profile minimal
-
-            - name: Setup | Build cache
-              uses: Swatinem/rust-cache@v2
-
-            - name: Test
-              uses: actions-rs/cargo@v1
-              with:
-                  command: test
-                  args: --all --lib --bins --examples
-
-            - name: Doctest
-              uses: actions-rs/cargo@v1
-              with:
-                  command: test
-                  args: --all --doc
     fmt:
         name: Rustfmt
         runs-on: ubuntu-latest
