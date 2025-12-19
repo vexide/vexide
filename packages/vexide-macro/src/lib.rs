@@ -90,7 +90,7 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
     quote! {
         fn main() -> #ret_type {
             unsafe {
-                ::vexide::startup::startup();
+                ::vexide::startup::startup(true);
             }
 
             #banner_print
@@ -279,7 +279,7 @@ mod test {
             quote! {
                 fn main() -> () {
                     unsafe {
-                        ::vexide::startup::startup();
+                        ::vexide::startup::startup(true);
                     }
 
                     ::vexide::startup::banner::print(::vexide::startup::banner::themes::THEME_DEFAULT);

@@ -1,0 +1,27 @@
+# Everything here is automatically set by cargo-v5, but there's not a great way to generate
+# compile-commands.json files for things compiled by the `cc` crate. It's not super important
+# that this file is correct, it's just for IDE completions.
+
+CompileFlags:
+    Add:
+        [
+            "--target=arm-none-eabi",
+            "-std=gnu23",
+            "-mcpu=cortex-a9",
+            "-mfpu=neon",
+            "-mfloat-abi=hard",
+            "-fno-pic",
+            "-fno-exceptions",
+            "-fno-rtti",
+            "-funwind-tables",
+            "-isystem",
+
+            # Developers can symlink their toolchain into vexide-startup for better IDE completions.
+            # It's not necessary for building though, since cargo-v5 will handle putting it in PATH.
+            #
+            # $ ln -s "$(arm-toolchain locate)" toolchain
+
+            "../toolchain/lib/clang-runtimes/arm-none-eabi/armv7a_hard_vfpv3_d16_unaligned/include",
+            "-isystem",
+            "../toolchain/lib/clang-runtimes/arm-none-eabi/include",
+        ]

@@ -46,6 +46,7 @@ missing_docs = "warn"
 unsafe_op_in_unsafe_fn = "deny"
 unexpected_cfgs = { level = "warn", check-cfg = [
     'cfg(target_vendor, values("vex"))',
+    'cfg(vexide_toolchain, values("llvm"))'
 ] }
 
 [workspace.lints.clippy]
