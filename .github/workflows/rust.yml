@@ -10,14 +10,13 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Setup | Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v6
 
             - name: Setup | Toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  profile: minimal
-                  toolchain: nightly-2025-09-26
-                  override: true
+              run: rustup toolchain install --profile minimal
+
+            - name: Setup | Build cache
+              uses: Swatinem/rust-cache@v2
 
             - name: Check Crates
               uses: actions-rs/cargo@v1
@@ -34,10 +33,15 @@ jobs:
         name: Lint
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: dtolnay/rust-toolchain@nightly
-              with:
-                  components: clippy
+            - name: Setup | Checkout
+              uses: actions/checkout@v6
+
+            - name: Setup | Toolchain
+              run: rustup toolchain install --profile minimal
+
+            - name: Setup | Build cache
+              uses: Swatinem/rust-cache@v2
+
             - uses: giraffate/clippy-action@v1
               with:
                   reporter: "github-pr-check"
@@ -48,14 +52,13 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Setup | Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v6
 
             - name: Setup | Toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  profile: minimal
-                  toolchain: nightly-2025-09-26
-                  override: true
+              run: rustup toolchain install --profile minimal
+
+            - name: Setup | Build cache
+              uses: Swatinem/rust-cache@v2
 
             - name: Test
               uses: actions-rs/cargo@v1
@@ -73,14 +76,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Setup | Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v6
 
             - name: Setup | Toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  profile: minimal
-                  toolchain: nightly-2025-09-26
-                  override: true
+              run: rustup toolchain install --profile minimal
 
             - name: Setup | Install Rustfmt
               run: rustup component add rustfmt
