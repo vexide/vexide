@@ -51,6 +51,16 @@ impl LogicLevel {
     }
 }
 
+impl From<bool> for LogicLevel {
+    fn from(value: bool) -> Self {
+        if value {
+            Self::High
+        } else {
+            Self::Low
+        }
+    }
+}
+
 impl core::ops::Not for LogicLevel {
     type Output = Self;
 
