@@ -56,3 +56,5 @@ SECTIONS {
         __patcher_new_end = .;
     } > USER_RAM
 } INSERT AFTER .stack;
+
+INCLUDE "vexide-sysrt.ld"
