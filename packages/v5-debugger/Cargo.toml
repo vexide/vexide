@@ -1,0 +1,25 @@
+[package]
+name = "v5-debugger"
+version = "0.1.0"
+edition =  "2024"
+license = "MIT"
+description = "GDB remote stub for the VEX V5 Brain."
+keywords = ["Robotics", "vex", "v5"]
+authors = [
+    "vexide",
+    "Lewis McClelland <lewis@lewismcclelland.me>",
+    "Tropical",
+]
+repository = "https://github.com/vexide/vexide"
+
+[dependencies]
+gdbstub = "0.7.8"
+gdbstub_arch = "0.3.2"
+vex-sdk = { workspace = true }
+snafu = { workspace = true }
+vex-libunwind = { workspace = true }
+vex-libunwind-sys = { workspace = true }
+vexide-devices = { path = "../vexide-devices" }
+
+[lints]
+workspace = true

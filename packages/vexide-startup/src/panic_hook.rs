@@ -22,27 +22,27 @@ pub(crate) fn hook(info: &PanicHookInfo<'_>) {
     eprintln!("{info}");
     writeln!(dialog, "{info}").unwrap();
 
-    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-    {
-        _ = UnwindContext::capture(|context| {
-            let cursor = UnwindCursor::new(&context)?;
+    // #[cfg(all(target_os = "vexos", feature = "backtrace"))]
+    // {
+    //     _ = UnwindContext::capture(|context| {
+    //         let cursor = UnwindCursor::new(&context)?;
 
-            dialog
-                .write_str("stack backtrace (check terminal):\n")
-                .unwrap();
-            dialog.write_backtrace(BacktraceIter::new(cursor.clone()));
+    //         dialog
+    //             .write_str("stack backtrace (check terminal):\n")
+    //             .unwrap();
+    //         dialog.write_backtrace(BacktraceIter::new(cursor.clone()));
 
-            eprintln!("stack backtrace:");
-            for (i, frame) in BacktraceIter::new(cursor).enumerate() {
-                eprintln!("{i:>3}: 0x{frame:x}");
-            }
-            eprintln!(
-                "note: Use a symbolizer to convert stack frames to human-readable function names."
-            );
+    //         eprintln!("stack backtrace:");
+    //         for (i, frame) in BacktraceIter::new(cursor).enumerate() {
+    //             eprintln!("{i:>3}: 0x{frame:x}");
+    //         }
+    //         eprintln!(
+    //             "note: Use a symbolizer to convert stack frames to human-readable function names."
+    //         );
 
-            Ok(())
-        });
-    }
+    //         Ok(())
+    //     });
+    // }
 
     // Don't exit the program, since we want to be able to see the panic message on the screen.
     loop {
