@@ -4,22 +4,20 @@ use std::convert::Infallible;
 
 use gdbstub::{
     arch::Arch,
-    common::Signal,
     target::{
         Target, TargetError, TargetResult,
         ext::{
             base::{
                 BaseOps,
-                single_register_access::{SingleRegisterAccess, SingleRegisterAccessOps},
-                singlethread::{SingleThreadBase, SingleThreadResume, SingleThreadResumeOps},
+                single_register_access::{SingleRegisterAccessOps},
+                singlethread::{SingleThreadBase, SingleThreadResumeOps},
             },
             breakpoints::BreakpointsOps,
-            monitor_cmd::{ConsoleOutput, MonitorCmd, MonitorCmdOps},
+            monitor_cmd::{MonitorCmdOps},
         },
     },
 };
-use gdbstub_arch::arm::reg::{ArmCoreRegs, id::ArmCoreRegId};
-use snafu::Snafu;
+use gdbstub_arch::arm::reg::ArmCoreRegs;
 
 use crate::{
     cache,
@@ -30,6 +28,9 @@ use crate::{
 
 pub mod arch;
 pub mod breakpoint;
+pub mod monitor;
+pub mod resume;
+pub mod single_register_access;
 
 /// Debugger state storage.
 pub struct V5Target {
@@ -290,108 +291,5 @@ impl SingleThreadBase for V5Target {
 
     fn support_single_register_access(&mut self) -> Option<SingleRegisterAccessOps<'_, (), Self>> {
         Some(self)
-    }
-}
-
-impl SingleThreadResume for V5Target {
-    fn resume(&mut self, _signal: Option<Signal>) -> Result<(), Self::Error> {
-        self.resume = true;
-        Ok(())
-    }
-}
-
-impl SingleRegisterAccess<()> for V5Target {
-    fn read_register(
-        &mut self,
-        _tid: (),
-        reg_id: ArmCoreRegId,
-        buf: &mut [u8],
-    ) -> TargetResult<usize, Self> {
-        if let Some(ctx) = &mut self.exception_ctx {
-            let reg = match reg_id {
-                ArmCoreRegId::Gpr(rid) => ctx.registers.get(rid as usize).copied(),
-                ArmCoreRegId::Sp => Some(ctx.stack_pointer as u32),
-                ArmCoreRegId::Lr => Some(ctx.link_register as u32),
-                ArmCoreRegId::Pc => Some(ctx.program_counter as u32),
-                ArmCoreRegId::Cpsr => Some(ctx.spsr.0),
-                _ => None,
-            };
-
-            if let Some(reg) = reg {
-                let bytes = reg.to_ne_bytes();
-                buf.copy_from_slice(&bytes);
-                Ok(bytes.len())
-            } else {
-                Ok(0)
-            }
-        } else {
-            Err(TargetError::NonFatal)
-        }
-    }
-
-    fn write_register(
-        &mut self,
-        _tid: (),
-        reg_id: ArmCoreRegId,
-        val: &[u8],
-    ) -> TargetResult<(), Self> {
-        if let Some(ctx) = &mut self.exception_ctx
-            && let Ok(bytes) = val.try_into()
-        {
-            let val = u32::from_ne_bytes(bytes);
-
-            match reg_id {
-                ArmCoreRegId::Gpr(rid) => {
-                    let Some(storage) = ctx.registers.get_mut(rid as usize) else {
-                        return Err(TargetError::NonFatal);
-                    };
-
-                    *storage = val;
-                }
-                ArmCoreRegId::Sp => ctx.stack_pointer = val as usize,
-                ArmCoreRegId::Lr => ctx.link_register = val as usize,
-                ArmCoreRegId::Pc => ctx.program_counter = val as usize,
-                ArmCoreRegId::Cpsr => ctx.spsr = ProgramStatus(val),
-                _ => return Err(TargetError::NonFatal),
-            }
-
-            Ok(())
-        } else {
-            Err(TargetError::NonFatal)
-        }
-    }
-}
-
-impl MonitorCmd for V5Target {
-    fn handle_monitor_cmd(
-        &mut self,
-        data: &[u8],
-        mut out: ConsoleOutput<'_>,
-    ) -> Result<(), Self::Error> {
-        let cmd_str = str::from_utf8(data).unwrap_or_default();
-
-        let mut parts = cmd_str.split(' ');
-        let cmd = parts.next().unwrap_or_default();
-
-        if cmd.starts_with("br") {
-            for (i, breakpt) in self.breaks.iter().enumerate() {
-                gdbstub::outputln!(out, "{i:>2}: {breakpt:x?}");
-            }
-        } else if cmd.starts_with("mk") {
-            if let Ok(addr) = usize::from_str_radix(parts.next().unwrap_or_default(), 16) {
-                let res = unsafe { self.register_breakpoint(addr, false) };
-
-                gdbstub::outputln!(out, "{res:x?}");
-            } else {
-                gdbstub::outputln!(out, "Invalid syntax.");
-            }
-        } else {
-            gdbstub::outputln!(out, "Unknown command.\n");
-            gdbstub::outputln!(out, "Commands:");
-            gdbstub::outputln!(out, " - monitor breaks         (View internal breakpoints)");
-            gdbstub::outputln!(out, " - monitor mkbreak <ADDR> (Create breakpoint)");
-        }
-
-        Ok(())
     }
 }
