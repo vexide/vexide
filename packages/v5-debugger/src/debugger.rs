@@ -8,15 +8,13 @@ use gdbstub::{
 };
 use snafu::Snafu;
 
-use crate::{
-    Debugger, exception::DebugEventContext, gdb_target::{V5Target}, transport::Transport
-};
+use crate::{Debugger, exception::DebugEventContext, gdb_target::V5Target, transport::Transport};
 
 #[derive(Debug, Snafu)]
 pub enum DebuggerError {
-	#[snafu(context(false))]
+    #[snafu(context(false))]
     Io { source: std::io::Error },
-	#[snafu(context(false))]
+    #[snafu(context(false))]
     GdbStub {
         source: GdbStubError<Infallible, std::io::Error>,
     },
@@ -98,7 +96,8 @@ impl<S: Transport> V5Debugger<S> {
         while !self.target.resume {
             std::thread::yield_now();
 
-            gdb = Self::drive_state_machine(gdb, &mut self.target).expect("debugger encountered an error");
+            gdb = Self::drive_state_machine(gdb, &mut self.target)
+                .expect("debugger encountered an error");
         }
 
         self.target.resume = false;
@@ -107,13 +106,15 @@ impl<S: Transport> V5Debugger<S> {
 }
 
 unsafe impl<S: Transport> Debugger for V5Debugger<S> {
-    unsafe fn register_breakpoint(&mut self, addr: usize, thumb: bool) -> Result<(), crate::gdb_target::breakpoint::BreakpointError> {
-        unsafe {
-            self.target.register_breakpoint(addr, thumb)
-        }
+    unsafe fn register_breakpoint(
+        &mut self,
+        addr: usize,
+        thumb: bool,
+    ) -> Result<(), crate::gdb_target::breakpoint::BreakpointError> {
+        unsafe { self.target.register_breakpoint(addr, thumb) }
     }
 
-	unsafe fn handle_debug_event(&mut self, ctx: &mut DebugEventContext) {
+    unsafe fn handle_debug_event(&mut self, ctx: &mut DebugEventContext) {
         // Internal fixup breakpoints can skip all the normal debug loop logic once their side
         // effects are finished.
         let is_fixup = unsafe { self.target.apply_fixup(ctx.program_counter) };

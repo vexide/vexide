@@ -2,15 +2,19 @@
 
 use std::sync::{Mutex, Once, OnceLock};
 
-use crate::{exception::{DebugEventContext, install_vectors}, gdb_target::breakpoint::BreakpointError, transport::{StdioTransport, Transport}};
+use crate::{
+    exception::{DebugEventContext, install_vectors},
+    gdb_target::breakpoint::BreakpointError,
+    transport::{StdioTransport, Transport},
+};
 
-pub mod transport;
-pub mod debugger;
-pub mod gdb_target;
-pub mod exception;
 pub mod cache;
+pub mod debugger;
+pub mod exception;
+pub mod gdb_target;
 pub mod instruction;
 pub(crate) mod regs;
+pub mod transport;
 
 pub static DEBUGGER: OnceLock<Mutex<&mut dyn Debugger>> = OnceLock::new();
 
@@ -31,7 +35,11 @@ pub unsafe trait Debugger: Send {
     ///
     /// This function will return an error if there are no more free breakpoint slots or if
     /// the specified address already has a breakpoint on it.
-    unsafe fn register_breakpoint(&mut self, addr: usize, thumb: bool) -> Result<(), BreakpointError>;
+    unsafe fn register_breakpoint(
+        &mut self,
+        addr: usize,
+        thumb: bool,
+    ) -> Result<(), BreakpointError>;
 
     /// A callback function which is run whenever a breakpoint is triggered.
     ///

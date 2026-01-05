@@ -24,17 +24,17 @@ use std::arch::asm;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CacheTarget {
-	/// Performs an operation on the cache line containing the given address.
-	///
-	/// Since cache lines are 32 bytes wide, the CPU will ignore the lower 5 bits of the
-	/// address.
-	Address(usize),
+    /// Performs an operation on the cache line containing the given address.
+    ///
+    /// Since cache lines are 32 bytes wide, the CPU will ignore the lower 5 bits of the
+    /// address.
+    Address(usize),
 }
 
 /// Ensure the visibility of an instruction update for a uniprocessor.
 pub fn sync_instruction(target: CacheTarget) {
-	clean_dcache_to_unification(target);
-	invalidate_icache(target);
+    clean_dcache_to_unification(target);
+    invalidate_icache(target);
 }
 
 /// Syncs the given portion of data cache with main memory such that any changes made to this
@@ -45,19 +45,19 @@ pub fn sync_instruction(target: CacheTarget) {
 /// changes aren't guaranteed to be visible to external agents that can access the memory.
 #[inline]
 fn clean_dcache_to_unification(target: CacheTarget) {
-	unsafe {
-		match target {
-			CacheTarget::Address(addr) => {
-				// Perform a Data Cache Clean by MVA to PoU.
-				asm!(
-					"mcr p15, 0, {mva}, c7, c11, 1",
-					"dsb",
-					mva = in(reg) addr,
-					options(nostack, preserves_flags),
-				);
-			}
-		}
-	}
+    unsafe {
+        match target {
+            CacheTarget::Address(addr) => {
+                // Perform a Data Cache Clean by MVA to PoU.
+                asm!(
+                    "mcr p15, 0, {mva}, c7, c11, 1",
+                    "dsb",
+                    mva = in(reg) addr,
+                    options(nostack, preserves_flags),
+                );
+            }
+        }
+    }
 }
 
 /// Invalidates the CPU instruction cache, so that any changes from main memory are synced into
@@ -66,20 +66,20 @@ fn clean_dcache_to_unification(target: CacheTarget) {
 /// Branch predictors are also invalidated.
 #[inline]
 fn invalidate_icache(target: CacheTarget) {
-	unsafe {
-		match target {
-			CacheTarget::Address(base) => {
-				// Perform an Instruction Cache Invalidate by MVA to PoU.
-				// Then perform a Branch Predictor Invalidate by MVA.
-				asm!(
-					"mcr p15, 0, {mva}, c7, c5, 1", // ICIMVAU
-					"mcr p15, 0, {mva}, c7, c5, 7", // BPIMVA
-					"dsb", // ensure invalidation is completed
-					"isb", // ensure instruction fetch sees the change
-					mva = in(reg) base,
-					options(nostack, preserves_flags),
-				);
-			}
-		}
-	}
+    unsafe {
+        match target {
+            CacheTarget::Address(base) => {
+                // Perform an Instruction Cache Invalidate by MVA to PoU.
+                // Then perform a Branch Predictor Invalidate by MVA.
+                asm!(
+                    "mcr p15, 0, {mva}, c7, c5, 1", // ICIMVAU
+                    "mcr p15, 0, {mva}, c7, c5, 7", // BPIMVA
+                    "dsb", // ensure invalidation is completed
+                    "isb", // ensure instruction fetch sees the change
+                    mva = in(reg) base,
+                    options(nostack, preserves_flags),
+                );
+            }
+        }
+    }
 }

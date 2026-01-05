@@ -37,8 +37,8 @@ pub(crate) fn hook(info: &PanicHookInfo<'_>) {
     //             eprintln!("{i:>3}: 0x{frame:x}");
     //         }
     //         eprintln!(
-    //             "note: Use a symbolizer to convert stack frames to human-readable function names."
-    //         );
+    //             "note: Use a symbolizer to convert stack frames to human-readable function
+    // names."         );
 
     //         Ok(())
     //     });

@@ -9,11 +9,11 @@ use gdbstub::{
         ext::{
             base::{
                 BaseOps,
-                single_register_access::{SingleRegisterAccessOps},
+                single_register_access::SingleRegisterAccessOps,
                 singlethread::{SingleThreadBase, SingleThreadResumeOps},
             },
             breakpoints::BreakpointsOps,
-            monitor_cmd::{MonitorCmdOps},
+            monitor_cmd::MonitorCmdOps,
         },
     },
 };
@@ -22,8 +22,8 @@ use gdbstub_arch::arm::reg::ArmCoreRegs;
 use crate::{
     cache,
     exception::{DebugEventContext, ProgramStatus},
-    instruction::Instruction,
     gdb_target::breakpoint::Breakpoint,
+    instruction::Instruction,
 };
 
 pub mod arch;
