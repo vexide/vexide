@@ -19,11 +19,7 @@ use gdbstub::{
 };
 use gdbstub_arch::arm::reg::ArmCoreRegs;
 
-use crate::{
-    cache,
-    exception::{DebugEventContext, ProgramStatus},
-    gdb_target::breakpoint::Breakpoint,
-    instruction::Instruction,
+use crate::{cache, exception::{DebugEventContext, ProgramStatus}, gdb_target::{arch::ArmV7, breakpoint::Breakpoint}, instruction::Instruction
 };
 
 pub mod arch;
@@ -211,7 +207,7 @@ impl V5Target {
 }
 
 impl Target for V5Target {
-    type Arch = arch::ArmV7;
+    type Arch = ArmV7;
     type Error = Infallible;
 
     fn base_ops(&mut self) -> BaseOps<'_, Self::Arch, Self::Error> {
@@ -230,7 +226,7 @@ impl Target for V5Target {
 impl SingleThreadBase for V5Target {
     fn read_registers(
         &mut self,
-        regs: &mut <arch::ArmV7 as Arch>::Registers,
+        regs: &mut <ArmV7 as Arch>::Registers,
     ) -> TargetResult<(), Self> {
         if let Some(ctx) = &mut self.exception_ctx {
             *regs = ArmCoreRegs {
@@ -249,7 +245,7 @@ impl SingleThreadBase for V5Target {
 
     fn write_registers(
         &mut self,
-        regs: &<arch::ArmV7 as Arch>::Registers,
+        regs: &<ArmV7 as Arch>::Registers,
     ) -> TargetResult<(), Self> {
         if let Some(ctx) = &mut self.exception_ctx {
             *ctx = DebugEventContext {
