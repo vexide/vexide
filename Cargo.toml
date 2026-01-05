@@ -18,6 +18,7 @@ compress = true
 vex-sdk = "0.28.0"
 vexide = { path = "packages/vexide", features = [ "full", "default-sdk" ] }
 v5-debugger = { version = "0.1.0", path = "packages/v5-debugger", default-features = false }
+zynq7000 = "0.1.1"
 
 [workspace]
 members = ["packages/*"]

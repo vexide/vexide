@@ -1,8 +1,7 @@
 //! Software breakpoint management.
 
 use gdbstub::target::{
-    TargetResult,
-    ext::breakpoints::{Breakpoints, SwBreakpoint, SwBreakpointOps},
+    TargetError, TargetResult, ext::breakpoints::{Breakpoints, HwBreakpoint, HwBreakpointOps, SwBreakpoint, SwBreakpointOps}
 };
 use gdbstub_arch::arm::ArmBreakpointKind;
 use snafu::Snafu;
@@ -69,6 +68,10 @@ impl Breakpoints for V5Target {
     fn support_sw_breakpoint(&mut self) -> Option<SwBreakpointOps<'_, Self>> {
         Some(self)
     }
+
+    fn support_hw_breakpoint(&mut self) -> Option<HwBreakpointOps<'_, Self>> {
+        Some(self)
+    }
 }
 
 impl SwBreakpoint for V5Target {
@@ -91,6 +94,24 @@ impl SwBreakpoint for V5Target {
     ) -> TargetResult<bool, Self> {
         let changed = unsafe { self.remove_breakpoint(addr as usize) };
         Ok(changed)
+    }
+}
+
+impl HwBreakpoint for V5Target {
+    fn add_hw_breakpoint(
+            &mut self,
+            addr: u32,
+            kind: ArmBreakpointKind,
+        ) -> TargetResult<bool, Self> {
+        Err(TargetError::Errno(0x26))
+    }
+
+    fn remove_hw_breakpoint(
+            &mut self,
+            addr: u32,
+            kind: ArmBreakpointKind,
+        ) -> TargetResult<bool, Self> {
+        Err(TargetError::Errno(0x26))
     }
 }
 
