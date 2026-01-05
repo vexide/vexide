@@ -10,6 +10,7 @@ pub mod gdb_target;
 pub mod exception;
 pub mod cache;
 pub mod instruction;
+pub(crate) mod regs;
 
 pub static DEBUGGER: OnceLock<Mutex<&mut dyn Debugger>> = OnceLock::new();
 
