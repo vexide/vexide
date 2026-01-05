@@ -51,7 +51,7 @@ fn dbg_drar() -> u32 {
 )]
 async fn main(_peripherals: Peripherals) {
     let mut zp = zynq7000::Peripherals::take().unwrap();
-    configure_debug(&mut zp.devcfg);
+    configure_debug(&mut zp.devcfg).unwrap();
 
     // let n = fib(80);
     // println!("{n}");
