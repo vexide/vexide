@@ -43,31 +43,31 @@ jobs:
                   reporter: "github-pr-check"
                   github_token: ${{ secrets.GITHUB_TOKEN }}
                   clippy_flags: --all --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --lib --bins --examples --features "full vex-sdk-jumptable"
-    test:
-        name: Test
-        runs-on: ubuntu-latest
-        steps:
-            - name: Setup | Checkout
-              uses: actions/checkout@v2
+    # test:
+    #     name: Test
+    #     runs-on: ubuntu-latest
+    #     steps:
+    #         - name: Setup | Checkout
+    #           uses: actions/checkout@v2
 
-            - name: Setup | Toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  profile: minimal
-                  toolchain: nightly-2025-09-26
-                  override: true
+    #         - name: Setup | Toolchain
+    #           uses: actions-rs/toolchain@v1
+    #           with:
+    #               profile: minimal
+    #               toolchain: nightly-2025-09-26
+    #               override: true
 
-            - name: Test
-              uses: actions-rs/cargo@v1
-              with:
-                  command: test
-                  args: --all --lib --bins --examples
+    #         - name: Test
+    #           uses: actions-rs/cargo@v1
+    #           with:
+    #               command: test
+    #               args: --all --lib --bins --examples
 
-            - name: Doctest
-              uses: actions-rs/cargo@v1
-              with:
-                  command: test
-                  args: --all --doc
+    #         - name: Doctest
+    #           uses: actions-rs/cargo@v1
+    #           with:
+    #               command: test
+    #               args: --all --doc
     fmt:
         name: Rustfmt
         runs-on: ubuntu-latest

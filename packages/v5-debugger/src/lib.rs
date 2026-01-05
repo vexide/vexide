@@ -1,4 +1,5 @@
 #![allow(missing_docs)]
+#![cfg(target_arch = "arm")]
 
 use std::sync::{Mutex, Once, OnceLock};
 
