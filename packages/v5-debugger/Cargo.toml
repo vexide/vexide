@@ -20,6 +20,7 @@ snafu = { workspace = true }
 vex-libunwind = { workspace = true }
 vex-libunwind-sys = { workspace = true }
 vexide-devices = { path = "../vexide-devices" }
+zynq7000 = "0.1.1"
 
 [lints]
 workspace = true

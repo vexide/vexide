@@ -1,6 +1,6 @@
 use std::{convert::Infallible, time::Duration};
 
-use v5_debugger::{debugger::V5Debugger, transport::StdioTransport};
+use v5_debugger::{debugger::V5Debugger, gdb_target::arch::configure_debug, transport::StdioTransport};
 use vex_sdk::{vexSerialReadChar, vexTasksRun};
 use vexide::prelude::*;
 
@@ -50,11 +50,8 @@ fn dbg_drar() -> u32 {
     )
 )]
 async fn main(_peripherals: Peripherals) {
-    v5_debugger::install(V5Debugger::new(StdioTransport::new()));
-
-    unsafe {
-        core::arch::asm!("bkpt");
-    }
+    let mut zp = zynq7000::Peripherals::take().unwrap();
+    configure_debug(&mut zp.devcfg);
 
     // let n = fib(80);
     // println!("{n}");
