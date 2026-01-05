@@ -1,17 +1,17 @@
 //! Software breakpoint management.
 
 use gdbstub::target::{
-    TargetError, TargetResult, ext::breakpoints::{Breakpoints, HwBreakpoint, HwBreakpointOps, SwBreakpoint, SwBreakpointOps}
+    TargetError, TargetResult,
+    ext::breakpoints::{Breakpoints, HwBreakpoint, HwBreakpointOps, SwBreakpoint, SwBreakpointOps},
 };
 use gdbstub_arch::arm::ArmBreakpointKind;
 use snafu::Snafu;
-
-use crate::instruction::Instruction;
 
 use super::{
     V5Target,
     cache::{self, CacheTarget},
 };
+use crate::instruction::Instruction;
 
 /// A software breakpoint.
 #[derive(Debug, Clone, Copy)]
@@ -99,18 +99,18 @@ impl SwBreakpoint for V5Target {
 
 impl HwBreakpoint for V5Target {
     fn add_hw_breakpoint(
-            &mut self,
-            addr: u32,
-            kind: ArmBreakpointKind,
-        ) -> TargetResult<bool, Self> {
+        &mut self,
+        addr: u32,
+        kind: ArmBreakpointKind,
+    ) -> TargetResult<bool, Self> {
         Err(TargetError::Errno(0x26))
     }
 
     fn remove_hw_breakpoint(
-            &mut self,
-            addr: u32,
-            kind: ArmBreakpointKind,
-        ) -> TargetResult<bool, Self> {
+        &mut self,
+        addr: u32,
+        kind: ArmBreakpointKind,
+    ) -> TargetResult<bool, Self> {
         Err(TargetError::Errno(0x26))
     }
 }

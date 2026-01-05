@@ -88,7 +88,7 @@ pub unsafe extern "aapcs" fn handle_debug_event(ctx: *mut DebugEventContext) {
             .unwrap()
             .lock()
             .unwrap()
-            .handle_debug_event(&mut *ctx );
+            .handle_debug_event(&mut *ctx);
     }
 }
 

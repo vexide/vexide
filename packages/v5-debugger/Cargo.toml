@@ -17,8 +17,6 @@ gdbstub = "0.7.8"
 gdbstub_arch = "0.3.2"
 vex-sdk = { workspace = true }
 snafu.workspace = true
-vex-libunwind = { workspace = true }
-vex-libunwind-sys = { workspace = true }
 vexide-devices = { path = "../vexide-devices" }
 zynq7000 = "0.1.1"
 critical-section = "1.2.0"
