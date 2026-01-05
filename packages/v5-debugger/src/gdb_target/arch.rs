@@ -8,6 +8,8 @@ use gdbstub_arch::arm::{
 use snafu::Snafu;
 use zynq7000::devcfg::MmioDevCfg;
 
+use crate::regs::{DebugID, DebugStatusControl, SecureDebugEnable};
+
 /// The ARMv7 architecture.
 pub enum ArmV7 {}
 
@@ -24,11 +26,25 @@ impl Arch for ArmV7 {
 
 #[derive(Debug, Snafu)]
 pub enum ConfigureDebugError {
-    /// The operating system has disabled hardware breakpoints.
+    /// The operating system has disabled hardware debugging.
     DebugLocked,
 }
 
-pub fn configure_debug(devcfg: &mut MmioDevCfg<'_>) -> Result<(), ConfigureDebugError> {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HardwareCapabilities {
+    pub num_breakpoints: u8,
+    pub num_watchpoints: u8,
+}
+
+/// Enables hardware debugging and returns the capabilities of the processor for this task.
+///
+/// # Errors
+///
+/// [`ConfigureDebugError::DebugLocked`] is returned if hardware debugging is disabled by the OS.
+pub fn setup_hardware_debug(
+    devcfg: &mut MmioDevCfg<'_>,
+) -> Result<HardwareCapabilities, ConfigureDebugError> {
+    // Put CPU in hardware debugging mode.
     access_protected_mmio(|| {
         let lock = devcfg.read_lock();
         if lock.debug() {
@@ -48,24 +64,40 @@ pub fn configure_debug(devcfg: &mut MmioDevCfg<'_>) -> Result<(), ConfigureDebug
         Ok(())
     })?;
 
+    // Make sure we're compatible with this implementation of hardware debug.
+    let debug_id = DebugID::read();
 
-    // Pre-setup: collect environment details
-    // 1. Access debug ID
-    // -> Confirm v7 debug with all cp14 registers (debug mode)
-    // -> Store number of breaks and watches
+    let num_breakpoints = debug_id.brps().value() + 1;
+    let num_watchpoints = debug_id.wrps().value() + 1;
 
-    // 2. Access debug status/control
-    // -> Confirm not "Secure PL1 Invasive Debug Disabled"
+    let debug_status = DebugStatusControl::read_ext();
+    // When we put the CPU in debugging mode, we enabled Secure Invasive Debugging, so it should
+    // now read as enabled.
+    assert!(
+        !debug_status.secure_pl1_invasive_debug_disabled(),
+        "Secure PL1 Invasive Debug unexpectedly disabled"
+    );
 
-    // Setup
-    // 1. Configure monitor mode so debug exceptions are generated
-    // -> Access debug status/control, enable monitor debug MDBGen
+    // Route breakpoint/watchpoint debug events to debug exceptions. This allows us to catch them
+    // at runtime as prefetch/data aborts instead of halting the processor.
+    // (see Table C3-1 Processor behavior on debug events)
+    unsafe {
+        debug_status
+            .with_halting_debug_mode(false)
+            .with_monitor_debug_mode(true)
+            .write_ext();
+    }
 
-    // 2. Enable invasive debug by setting DBGEN to HIGH (C2.3)
-    // 3. Enable Secure PL0 debug by setting SDER.SUIDEN, Secure Debug Enable Register
-    // 4. Enable Secure PL1 debug by setting SPIDEN to HIGH
+    // Enable debugging in Secure PL0 processor modes.
+    let secure_debug = SecureDebugEnable::read();
+    unsafe {
+        secure_debug.with_secure_user_invasive_debug(true).write();
+    }
 
-    Ok(())
+    Ok(HardwareCapabilities {
+        num_breakpoints,
+        num_watchpoints,
+    })
 }
 
 fn access_protected_mmio<T>(inner: impl FnOnce() -> T) -> T {
