@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 #![cfg(target_arch = "arm")]
 
-use std::sync::{Mutex, Once, OnceLock};
+use std::{arch::asm, sync::{Mutex, Once, OnceLock}};
 
 use crate::{
     exception::{DebugEventContext, install_vectors},
@@ -60,4 +60,12 @@ pub fn install(debugger: impl Debugger + 'static) {
         .map_err(|_| ())
         .expect("A debugger is already installed.");
     install_vectors();
+}
+
+#[allow(clippy::inline_always)]
+#[inline(always)]
+pub fn breakpoint() {
+    unsafe {
+        asm!("bkpt", options(nostack, nomem, preserves_flags));
+    }
 }
