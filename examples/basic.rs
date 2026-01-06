@@ -51,8 +51,8 @@ async fn main(_peripherals: Peripherals) {
     println!("Hello, world");
 
     let mut zp = zynq7000::Peripherals::take().unwrap();
-    let manager = HwBreakpointManager::setup(&mut zp.devcfg).unwrap();
-    dbg!(manager.capabilities());
+    let manager = HwBreakpointManager::setup(&mut zp.devcfg);
+    dbg!(manager);
 
     // let n = fib(80);
     // println!("{n}");

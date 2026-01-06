@@ -22,6 +22,7 @@ zynq7000 = "0.1.1"
 critical-section = "1.2.0"
 bitbybit = "1.4.0"
 arbitrary-int = "2.0.0"
+derive-mmio = "0.6.1"
 
 [lints]
 workspace = true

@@ -4,7 +4,7 @@
 
 use std::arch::asm;
 
-use arbitrary_int::u4;
+use arbitrary_int::*;
 use bitbybit::{bitenum, bitfield};
 
 /// Returns the (CRn, CRm, opc2) arguments that would be required to access the given debug register
@@ -73,16 +73,22 @@ impl DebugRegister {
 
 /// The raw version of [`DebugID`].
 pub const DBGDIDR: DebugRegister = DebugRegister(0);
+/// The raw version of [`DebugStatusControl`] (internal view).
+pub const DBGDSCRint: DebugRegister = DebugRegister(1);
+/// The raw version of [`DebugStatusControl`] (external view).
+pub const DBGDSCRext: DebugRegister = DebugRegister(34);
+pub const DBGDRAR: DebugRegister = DebugRegister(128);
+pub const DBGDSAR: DebugRegister = DebugRegister(256);
 
 /// The DBGDIDR register.
 #[bitfield(u32, debug)]
 pub struct DebugID {
     #[bits(28..=31, r)]
-    pub wrps: u4,
+    wrps: u4,
     #[bits(24..=27, r)]
-    pub brps: u4,
+    brps: u4,
     #[bits(16..=19, r)]
-    pub version: Option<DebugVersion>,
+    version: Option<DebugVersion>,
 }
 
 impl DebugID {
@@ -103,20 +109,17 @@ pub enum DebugVersion {
     V7_1 = 0b0101,
 }
 
-/// The raw version of [`DebugStatusControl`] (external view).
-pub const DBGDSCRext: DebugRegister = DebugRegister(34);
-
 /// The DBGDSCR register.
 #[bitfield(u32, debug)]
 pub struct DebugStatusControl {
     #[bit(16, r)]
-    pub secure_pl1_invasive_debug_disabled: bool,
+    secure_pl1_invasive_debug_disabled: bool,
     #[bit(15, rw)]
-    pub monitor_debug_mode: bool,
+    monitor_debug_mode: bool,
     #[bit(14, rw)]
-    pub halting_debug_mode: bool,
+    halting_debug_mode: bool,
     #[bits(2..=5, r)]
-    pub method_of_entry: u4,
+    method_of_entry: u4,
 }
 
 impl DebugStatusControl {
@@ -133,13 +136,58 @@ impl DebugStatusControl {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+#[bitenum(u2, exhaustive = false)]
+pub enum DebugValid {
+    Invalid = 0b00,
+    Valid = 0b11,
+}
+
+#[bitfield(u32, debug)]
+pub struct DebugROMAddress {
+    #[bits(12..=31, r)]
+    romaddr: u20,
+    #[bits(0..=1, r)]
+    valid: Option<DebugValid>,
+}
+
+impl DebugROMAddress {
+    pub fn read() -> Self {
+        Self::new_with_raw_value(read_dbgreg!(DBGDRAR))
+    }
+
+    #[must_use]
+    pub const fn value(self) -> usize {
+        (self.romaddr().value() << 12) as usize
+    }
+}
+
+#[bitfield(u32, debug)]
+pub struct DebugSelfAddressOffset {
+    #[bits(12..=31, r)]
+    selfoffset: u20,
+    #[bits(0..=1, r)]
+    valid: Option<DebugValid>,
+}
+
+impl DebugSelfAddressOffset {
+    pub fn read() -> Self {
+        Self::new_with_raw_value(read_dbgreg!(DBGDSAR))
+    }
+
+    #[must_use]
+    pub const fn value(self) -> isize {
+        (self.selfoffset().value() << 12) as isize
+    }
+}
+
 /// The SDER register.
 #[bitfield(u32, debug)]
 pub struct SecureDebugEnable {
     #[bit(0, rw)]
-    pub secure_user_invasive_debug: bool,
+    secure_user_invasive_debug: bool,
     #[bit(1, rw)]
-    pub secure_user_noninvasive_debug: bool,
+    secure_user_noninvasive_debug: bool,
 }
 
 impl SecureDebugEnable {
@@ -166,4 +214,146 @@ impl SecureDebugEnable {
             );
         }
     }
+}
+
+#[derive(derive_mmio::Mmio)]
+#[repr(C)]
+pub struct DebugLogic {
+    // Fields prefixed with an underscore cannot be accessed via MMIO on our target device.
+    #[mmio(PureRead)]
+    id: DebugID,
+    _status_control_int: DebugStatusControl,
+    _reserved0: [u32; 3],
+    _data_transfer_int: u32,
+    /// Available, but deprecated. Instead, read LR_abt to determine the PC of the watchpoint hit.
+    _watchpoint_fault_addr: u32,
+    vector_catch: u32,
+    _reserved1: u32,
+    event_catch: u32,
+    debug_cache_ctrl: u32,
+    debug_mmu_ctrl: u32,
+    _reserved2: [u32; 20],
+    host_to_target_data_transfer_ext: u32,
+    #[mmio(Write)]
+    instr_tx: u32,
+    status_control_ext: DebugStatusControl,
+    target_to_host_data_transfer_ext: u32,
+    #[mmio(Write)]
+    run_ctrl: u32,
+    ext_auxiliary_ctrl: u32,
+    _reserved3: [u32; 2],
+    #[mmio(PureRead)]
+    pc_sample: u32,
+    #[mmio(PureRead)]
+    context_id_sample: u32,
+    _virt_id_sample: u32,
+    _reserved4: [u32; 21],
+    breakpoint_value: [u32; 16],
+    breakpoint_ctrl: [BreakpointControl; 16],
+    watchpoint_value: [u32; 16],
+    watchpoint_ctrl: [WatchpointControl; 16],
+    // The 2nd half of the debug logic MMIO is not accessed.
+}
+
+#[bitfield(u32, debug)]
+pub struct BreakpointControl {
+    // Set a breakpoint on a range of addresses by excluding some lower bits from the comparison.
+    #[bits(24..=28, rw)]
+    address_range_mask: u5,
+    #[bits(20..=23, rw)]
+    breakpoint_type: Option<BreakpointType>,
+    #[bits(16..=19, rw)]
+    linked_breakpoint_index: u4,
+    /// Controls which security states the breakpoint filters for.
+    #[bits(14..=15, rw)]
+    security_state_ctrl: Option<SecurityFilter>,
+    #[bits(5..=8, rw)]
+    byte_address_select: u4,
+    #[bits(1..=2, rw)]
+    privileged_mode_ctrl: PrivilegeModeFilter,
+    #[bit(0, rw)]
+    enable: bool,
+}
+
+#[bitenum(u4, exhaustive = false)]
+#[derive(Debug)]
+pub enum BreakpointType {
+    /// A breakpoint that triggers when the PC matches an address.
+    UnlinkedInstrAddressMatch = 0b0000,
+    /// The address part of a linked breakpoint that triggers on both an address match and a
+    /// context-id match.
+    LinkedInstrAddressMatch = 0b0001,
+    /// A breakpoint that triggers on context-id (CONTEXTIDR) match.
+    UnlinkedContextIDMatch = 0b0010,
+    /// The context-id part of a linked breakpoint that triggers on both an address (mis)match and a
+    /// context-id match.
+    LinkedContextIDMatch = 0b0011,
+    /// A breakpoint that triggers when the PC doesn't match an address.
+    UnlinkedInstrAddressAddressMismatch = 0b0100,
+    /// The address part of a linked breakpoint that triggers on both an address mismatch and a
+    /// context-id match.
+    LinkedInstrAddressAddressMismatch = 0b0101,
+}
+
+#[bitenum(u2, exhaustive = false)]
+#[derive(Debug)]
+enum SecurityFilter {
+    All = 0b00,
+    NotSecureOnly = 0b01,
+    SecureOnly = 0b10,
+}
+
+#[bitenum(u2, exhaustive = true)]
+#[derive(Debug)]
+enum PrivilegeModeFilter {
+    UserSystemSupervisorOnly = 0b00,
+    Level1Only = 0b01,
+    UserOnly = 0b10,
+    All = 0b11,
+}
+
+#[bitfield(u32, debug)]
+pub struct WatchpointControl {
+    #[bit(20, rw)]
+    watchpoint_type: WatchpointType,
+    #[bits(16..=19, rw)]
+    linked_breakpoint_index: u4,
+    /// Controls which security states the watchpoint filters for.
+    #[bits(14..=15, rw)]
+    security_state_ctrl: Option<SecurityFilter>,
+    /// Might be only 4 bits (implementation defined).
+    #[bits(5..=12, rw)]
+    byte_address_select: u8,
+    #[bits(3..=4, rw)]
+    load_store_ctrl: Option<LoadStoreFilter>,
+    #[bits(1..=2, rw)]
+    privileged_access_ctrl: Option<PrivilegedAccessFilter>,
+    #[bit(0, rw)]
+    enable: bool,
+}
+
+#[bitenum(u1, exhaustive = true)]
+#[derive(Debug)]
+pub enum WatchpointType {
+    /// A watchpoint that triggers when an address is accessed as data.
+    UnlinkedDataAddressMatch = 0,
+    /// The address part of a watchpoint that triggers on both an address match and a context-id
+    /// match. It is linked to a context-id breakpoint.
+    LinkedDataAddressMatch = 1,
+}
+
+#[bitenum(u2, exhaustive = false)]
+#[derive(Debug)]
+pub enum LoadStoreFilter {
+    LoadSwapOnly = 0b01,
+    StoreSwapOnly = 0b10,
+    All = 0b11,
+}
+
+#[bitenum(u2, exhaustive = false)]
+#[derive(Debug)]
+enum PrivilegedAccessFilter {
+    Level1Only = 0b01,
+    UserOnly = 0b10,
+    All = 0b11,
 }
