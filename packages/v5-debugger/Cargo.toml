@@ -23,6 +23,7 @@ critical-section = "1.2.0"
 bitbybit = "1.4.0"
 arbitrary-int = "2.0.0"
 derive-mmio = "0.6.1"
+cortex-ar = "0.3.0"
 
 [lints]
 workspace = true

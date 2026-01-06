@@ -11,7 +11,7 @@ use super::{
     V5Target,
     cache::{self, CacheTarget},
 };
-use crate::instruction::Instruction;
+use crate::{gdb_target::arch::hw::Specificity, instruction::Instruction};
 
 /// A software breakpoint.
 #[derive(Debug, Clone, Copy)]
@@ -103,7 +103,11 @@ impl HwBreakpoint for V5Target {
         addr: u32,
         kind: ArmBreakpointKind,
     ) -> TargetResult<bool, Self> {
-        Err(TargetError::Errno(0x26))
+        let result = self
+            .hw_manager
+            .add_breakpoint_at(addr, Specificity::Match, &kind);
+
+        Ok(result.is_ok())
     }
 
     fn remove_hw_breakpoint(
@@ -111,7 +115,11 @@ impl HwBreakpoint for V5Target {
         addr: u32,
         kind: ArmBreakpointKind,
     ) -> TargetResult<bool, Self> {
-        Err(TargetError::Errno(0x26))
+        let did_remove = self
+            .hw_manager
+            .remove_breakpoint_at(addr, Specificity::Match, &kind);
+
+        Ok(did_remove)
     }
 }
 

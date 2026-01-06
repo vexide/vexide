@@ -119,21 +119,20 @@ pub struct DebugStatusControl {
     #[bit(14, rw)]
     halting_debug_mode: bool,
     #[bits(2..=5, r)]
-    method_of_entry: u4,
+    method_of_entry: Option<DebugMethodOfEntry>,
 }
 
-impl DebugStatusControl {
-    /// Read the external view.
-    pub fn read_ext() -> Self {
-        Self::new_with_raw_value(read_dbgreg!(DBGDSCRext))
-    }
-
-    /// Write to the external view.
-    pub unsafe fn write_ext(self) {
-        unsafe {
-            write_dbgreg!(DBGDSCRext, self.raw_value());
-        }
-    }
+#[bitenum(u4, exhaustive = false)]
+#[derive(Debug, PartialEq, Eq)]
+pub enum DebugMethodOfEntry {
+    HaltReq = 0b0000,
+    Breakpoint = 0b0001,
+    AsyncWatchpoint = 0b0010,
+    BkptInstr = 0b0011,
+    ExtDebugReq = 0b0100,
+    VectorCatch = 0b0101,
+    OSUnlock = 0b1000,
+    SyncWatchpoint = 0b1010,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -248,8 +247,10 @@ pub struct DebugLogic {
     context_id_sample: u32,
     _virt_id_sample: u32,
     _reserved4: [u32; 21],
+    /// When matching instructions, value & 0b11 must be 0
     breakpoint_value: [u32; 16],
     breakpoint_ctrl: [BreakpointControl; 16],
+    /// `value` & 0b11 must be 0.
     watchpoint_value: [u32; 16],
     watchpoint_ctrl: [WatchpointControl; 16],
     // The 2nd half of the debug logic MMIO is not accessed.
@@ -267,16 +268,28 @@ pub struct BreakpointControl {
     /// Controls which security states the breakpoint filters for.
     #[bits(14..=15, rw)]
     security_state_ctrl: Option<SecurityFilter>,
+    /// A bitfield that controls which addresses inside the 4-byte breakpoint value will cause a
+    /// hit.
+    ///
+    /// Setting any number bit will enable hits on an addresses ending in that number. For instance,
+    /// setting bit zero (0bxxx1) will enable hits on addresses ending with 0 (i.e. 0bxx…xx00),
+    /// whereas setting bit three (0b1xxx) will enable hits on addresses ending with 3
+    /// (i.e. 0bxx…xx11).
+    ///
+    /// For the purposes of this field, instructions are considered to take up multiple addresses
+    /// at once depending on their size. It's not possible to set a breakpoint on half an
+    /// instruction, so, for instance, 0b0011 is invalid in ARM and 0b0001 is invalid in both
+    /// Thumb and ARM.
     #[bits(5..=8, rw)]
     byte_address_select: u4,
     #[bits(1..=2, rw)]
     privileged_mode_ctrl: PrivilegeModeFilter,
     #[bit(0, rw)]
-    enable: bool,
+    enabled: bool,
 }
 
 #[bitenum(u4, exhaustive = false)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum BreakpointType {
     /// A breakpoint that triggers when the PC matches an address.
     UnlinkedInstrAddressMatch = 0b0000,
@@ -289,23 +302,23 @@ pub enum BreakpointType {
     /// context-id match.
     LinkedContextIDMatch = 0b0011,
     /// A breakpoint that triggers when the PC doesn't match an address.
-    UnlinkedInstrAddressAddressMismatch = 0b0100,
+    UnlinkedInstrAddressMismatch = 0b0100,
     /// The address part of a linked breakpoint that triggers on both an address mismatch and a
     /// context-id match.
-    LinkedInstrAddressAddressMismatch = 0b0101,
+    LinkedInstrAddressMismatch = 0b0101,
 }
 
 #[bitenum(u2, exhaustive = false)]
-#[derive(Debug)]
-enum SecurityFilter {
+#[derive(Debug, PartialEq, Eq)]
+pub enum SecurityFilter {
     All = 0b00,
     NotSecureOnly = 0b01,
     SecureOnly = 0b10,
 }
 
 #[bitenum(u2, exhaustive = true)]
-#[derive(Debug)]
-enum PrivilegeModeFilter {
+#[derive(Debug, PartialEq, Eq)]
+pub enum PrivilegeModeFilter {
     UserSystemSupervisorOnly = 0b00,
     Level1Only = 0b01,
     UserOnly = 0b10,
@@ -321,19 +334,19 @@ pub struct WatchpointControl {
     /// Controls which security states the watchpoint filters for.
     #[bits(14..=15, rw)]
     security_state_ctrl: Option<SecurityFilter>,
-    /// Might be only 4 bits (implementation defined).
-    #[bits(5..=12, rw)]
-    byte_address_select: u8,
+    /// See [`BreakpointControl::byte_address_select`].
+    #[bits(5..=8, rw)]
+    byte_address_select: u4,
     #[bits(3..=4, rw)]
     load_store_ctrl: Option<LoadStoreFilter>,
     #[bits(1..=2, rw)]
     privileged_access_ctrl: Option<PrivilegedAccessFilter>,
     #[bit(0, rw)]
-    enable: bool,
+    enabled: bool,
 }
 
 #[bitenum(u1, exhaustive = true)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum WatchpointType {
     /// A watchpoint that triggers when an address is accessed as data.
     UnlinkedDataAddressMatch = 0,
@@ -343,7 +356,7 @@ pub enum WatchpointType {
 }
 
 #[bitenum(u2, exhaustive = false)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum LoadStoreFilter {
     LoadSwapOnly = 0b01,
     StoreSwapOnly = 0b10,
@@ -351,8 +364,8 @@ pub enum LoadStoreFilter {
 }
 
 #[bitenum(u2, exhaustive = false)]
-#[derive(Debug)]
-enum PrivilegedAccessFilter {
+#[derive(Debug, PartialEq, Eq)]
+pub enum PrivilegedAccessFilter {
     Level1Only = 0b01,
     UserOnly = 0b10,
     All = 0b11,

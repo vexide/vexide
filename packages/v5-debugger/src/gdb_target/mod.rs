@@ -18,8 +18,16 @@ use gdbstub::{
     },
 };
 use gdbstub_arch::arm::reg::ArmCoreRegs;
+use zynq7000::devcfg::{DevCfg, MmioDevCfg};
 
-use crate::{cache, exception::{DebugEventContext, ProgramStatus}, gdb_target::{arch::ArmV7, breakpoint::Breakpoint}, instruction::Instruction
+use crate::{
+    cache,
+    exception::{DebugEventContext, ProgramStatus},
+    gdb_target::{
+        arch::{ArmV7, hw::HwBreakpointManager},
+        breakpoint::Breakpoint,
+    },
+    instruction::Instruction,
 };
 
 pub mod arch;
@@ -39,6 +47,7 @@ pub struct V5Target {
     /// Breakpoint idx 0 is the fixup breakpoint, if one exists.
     pub breaks: [Breakpoint; 10],
     pub fixup_idx: usize,
+    pub hw_manager: HwBreakpointManager,
 }
 
 impl Default for V5Target {
@@ -49,7 +58,9 @@ impl Default for V5Target {
 
 impl V5Target {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
+        let mut devcfg = unsafe { DevCfg::new_mmio_fixed() };
+
         Self {
             exception_ctx: None,
             resume: false,
@@ -60,6 +71,7 @@ impl V5Target {
             }; _],
             fixup_idx: 0,
             single_step: false,
+            hw_manager: HwBreakpointManager::setup(&mut devcfg),
         }
     }
 
@@ -224,10 +236,7 @@ impl Target for V5Target {
 }
 
 impl SingleThreadBase for V5Target {
-    fn read_registers(
-        &mut self,
-        regs: &mut <ArmV7 as Arch>::Registers,
-    ) -> TargetResult<(), Self> {
+    fn read_registers(&mut self, regs: &mut <ArmV7 as Arch>::Registers) -> TargetResult<(), Self> {
         if let Some(ctx) = &mut self.exception_ctx {
             *regs = ArmCoreRegs {
                 r: ctx.registers,
@@ -243,10 +252,7 @@ impl SingleThreadBase for V5Target {
         Ok(())
     }
 
-    fn write_registers(
-        &mut self,
-        regs: &<ArmV7 as Arch>::Registers,
-    ) -> TargetResult<(), Self> {
+    fn write_registers(&mut self, regs: &<ArmV7 as Arch>::Registers) -> TargetResult<(), Self> {
         if let Some(ctx) = &mut self.exception_ctx {
             *ctx = DebugEventContext {
                 _pad: 0,
