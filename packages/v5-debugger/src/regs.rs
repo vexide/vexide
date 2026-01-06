@@ -119,12 +119,12 @@ pub struct DebugStatusControl {
     #[bit(14, rw)]
     halting_debug_mode: bool,
     #[bits(2..=5, r)]
-    method_of_entry: Option<DebugMethodOfEntry>,
+    method_of_entry: Option<DebugEventReason>,
 }
 
 #[bitenum(u4, exhaustive = false)]
 #[derive(Debug, PartialEq, Eq)]
-pub enum DebugMethodOfEntry {
+pub enum DebugEventReason {
     HaltReq = 0b0000,
     Breakpoint = 0b0001,
     AsyncWatchpoint = 0b0010,

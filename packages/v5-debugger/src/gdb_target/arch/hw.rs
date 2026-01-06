@@ -8,7 +8,7 @@ use zynq7000::devcfg::MmioDevCfg;
 use crate::{
     gdb_target::arch::access_protected_mmio,
     regs::{
-        BreakpointType, DebugID, DebugLogic, DebugMethodOfEntry, DebugROMAddress,
+        BreakpointType, DebugID, DebugLogic, DebugEventReason, DebugROMAddress,
         DebugSelfAddressOffset, DebugStatusControl, DebugValid, DebugVersion, MmioDebugLogic,
         PrivilegeModeFilter, SecureDebugEnable, SecurityFilter,
     },
@@ -257,7 +257,7 @@ impl HwBreakpointManager {
     }
 
     #[must_use]
-    pub fn last_break_reason(&self) -> Option<DebugMethodOfEntry> {
+    pub fn last_break_reason(&self) -> Option<DebugEventReason> {
         let status = self.mmio.read_status_control_ext();
         status.method_of_entry().ok()
     }

@@ -8,7 +8,7 @@ use gdbstub::{
 };
 use snafu::Snafu;
 
-use crate::{Debugger, exception::DebugEventContext, gdb_target::V5Target, transport::Transport};
+use crate::{Debugger, exception::DebugEventContext, gdb_target::V5Target, regs::DebugEventReason, transport::Transport};
 
 #[derive(Debug, Snafu)]
 pub enum DebuggerError {
@@ -53,8 +53,12 @@ impl<S: Transport> V5Debugger<S> {
                 }
             }
             GdbStubStateMachine::Running(gdb) => {
+                let reason = target.hw_manager.last_break_reason();
+
                 let stop_reason = if target.single_step {
                     SingleThreadStopReason::DoneStep
+                } else if reason == Some(DebugEventReason::Breakpoint) {
+                    SingleThreadStopReason::HwBreak(())
                 } else {
                     SingleThreadStopReason::Signal(Signal::SIGTRAP)
                 };
