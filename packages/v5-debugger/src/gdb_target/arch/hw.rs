@@ -8,7 +8,9 @@ use zynq7000::devcfg::MmioDevCfg;
 use crate::{
     gdb_target::arch::access_protected_mmio,
     regs::{
-        BreakpointType, DebugID, DebugLogic, DebugMethodOfEntry, DebugROMAddress, DebugSelfAddressOffset, DebugStatusControl, DebugValid, DebugVersion, MmioDebugLogic, PrivilegeModeFilter, SecureDebugEnable, SecurityFilter
+        BreakpointType, DebugID, DebugLogic, DebugMethodOfEntry, DebugROMAddress,
+        DebugSelfAddressOffset, DebugStatusControl, DebugValid, DebugVersion, MmioDebugLogic,
+        PrivilegeModeFilter, SecureDebugEnable, SecurityFilter,
     },
 };
 
@@ -283,9 +285,19 @@ pub enum BreakpointError {
 
 impl Debug for HwBreakpointManager {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let bkpt_values = (0..self.capabilities.num_breakpoints)
+            .map(|i| self.mmio.read_breakpoint_value(i as usize).unwrap())
+            .collect::<Vec<_>>();
+
+        let bkpt_ctrls = (0..self.capabilities.num_breakpoints)
+            .map(|i| self.mmio.read_breakpoint_ctrl(i as usize).unwrap())
+            .collect::<Vec<_>>();
+
         f.debug_struct("HwBreakpointManager")
             .field("capabilities", &self.capabilities)
-            .field("mmio", &unsafe { self.mmio.ptr() })
+            .field("mmio_ptr", &unsafe { self.mmio.ptr() })
+            .field("bkpt_values", &bkpt_values)
+            .field("bkpt_ctrls", &bkpt_ctrls)
             .finish_non_exhaustive()
     }
 }

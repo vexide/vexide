@@ -25,11 +25,14 @@ impl MonitorCmd for V5Target {
             } else {
                 gdbstub::outputln!(out, "Invalid syntax.");
             }
+        } else if cmd.starts_with("hw") {
+            gdbstub::outputln!(out, "{:#x?}", self.hw_manager);
         } else {
             gdbstub::outputln!(out, "Unknown command.\n");
             gdbstub::outputln!(out, "Commands:");
             gdbstub::outputln!(out, " - monitor breaks         (View internal breakpoints)");
             gdbstub::outputln!(out, " - monitor mkbreak <ADDR> (Create breakpoint)");
+            gdbstub::outputln!(out, " - monitor hwshow         (Show hardware break status)");
         }
 
         Ok(())
