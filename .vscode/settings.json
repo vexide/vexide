@@ -49,6 +49,11 @@
     "rust-analyzer.cargo.target": "armv7a-vex-v5",
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.showUnlinkedFileNotification": false,
+    "rust-analyzer.cargo.cfgs": [
+        "debug_assertions",
+        "miri",
+        "vexide_toolchain=llvm"
+    ],
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
     "files.insertFinalNewline": true,
