@@ -12,7 +12,7 @@
           inherit system;
           overlays = [ (import rust-overlay) ];
         };
-        cargo-v5' = cargo-v5.packages.${system}.cargo-v5-full;
+        cargo-v5' = cargo-v5.packages.${system}.default;
         rustToolchain =
           pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
       in {
