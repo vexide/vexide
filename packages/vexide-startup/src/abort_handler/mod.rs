@@ -62,6 +62,24 @@ global_asm!(
 pub fn install_vector_table() {
     unsafe {
         asm!(
+            "mrs r0, cpsr",
+
+            // abort
+            "bic r0, r0, #0b11111",
+            "orr r0, r0, #0b10111",
+            "msr cpsr_c, r0",
+            "ldr sp, =__abort_stack_top",
+
+            // undefined
+            "bic r0, r0, #0b11111",
+            "orr r0, r0, #0b11011",
+            "msr cpsr_c, r0",
+            "ldr sp, =__undefined_stack_top",
+
+            // back to sys
+            "orr r0, r0, #0b11111",
+            "msr cpsr_c, r0",
+
             // If vector_table is placed too far away, we'll need 2 instructions to load it.
             "movw r0, #:lower16:vector_table",
             "movt r0, #:upper16:vector_table",
