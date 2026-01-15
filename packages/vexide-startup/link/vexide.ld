@@ -6,6 +6,8 @@
  * <https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/armv7a_vex_v5_linker_script.ld>
  */
 
+ENTRY(_vexide_boot)
+
 __abort_stack_size = 1M;
 __undefined_stack_size = 1M;
 
