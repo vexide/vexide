@@ -216,10 +216,7 @@ pub mod backtrace {
         fn next(&mut self) -> Option<Self::Item> {
             let cursor = self.cursor.as_mut()?;
 
-            let mut instruction_pointer = cursor.register(registers::UNW_REG_IP).ok()?;
-            if !cursor.is_signal_frame().ok()? {
-                instruction_pointer -= 1;
-            }
+            let instruction_pointer = cursor.register(registers::UNW_REG_IP).ok()?;
 
             if !cursor.step().ok()? {
                 self.cursor = None;
