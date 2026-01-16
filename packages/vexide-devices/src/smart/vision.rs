@@ -152,11 +152,11 @@ impl VisionSensor {
         let mut signature = V5_DeviceVisionSignature {
             id,
             uMin: signature.u_threshold.0,
-            uMean: signature.u_threshold.1,
-            uMax: signature.u_threshold.2,
+            uMax: signature.u_threshold.1,
+            uMean: signature.u_threshold.2,
             vMin: signature.v_threshold.0,
-            vMean: signature.v_threshold.1,
-            vMax: signature.v_threshold.2,
+            vMax: signature.v_threshold.1,
+            vMean: signature.v_threshold.2,
             range: signature.range,
             mType: u32::from(
                 if self.codes.iter().any(|code| code.contains_signature(id)) {
