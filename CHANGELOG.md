@@ -30,6 +30,25 @@ Before releasing:
 - @new-contributor made their first contribution in #11!
 -->
 
+## [Unreleased]
+
+### Added
+
+- Implemented a conversion between `bool` and `LogicLevel`. (#428)
+
+### Fixed
+
+- Fixed an issue where `VisionSensor::signature` would return fields in the incorrect order. (#437)
+
+### Changed
+
+### Removed
+
+### New Contributors
+
+- @elijah629 made their first contribution in #428!
+- @speedskater1610 made their first contribution in #429!
+
 ## [0.8.0]
 
 ### Added
