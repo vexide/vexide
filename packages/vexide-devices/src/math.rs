@@ -298,19 +298,19 @@ impl Angle {
     ///
     /// let angle = Angle::from_degrees(190.0);
     ///
-    /// assert_eq!(angle.wrapped_half(), Angle::from_degrees(170.0));
+    /// assert_eq!(angle.wrapped_half(), Angle::from_degrees(-170.0));
     /// ```
     #[inline]
     #[must_use]
     pub fn wrapped_half(&self) -> Self {
         #[cfg(not(feature = "std"))]
         return Self {
-            radians: rem_euclid(-self.radians + PI, TAU) - PI,
+            radians: rem_euclid(self.radians + PI, TAU) - PI,
         };
 
         #[cfg(feature = "std")]
         Self {
-            radians: (-self.radians + PI).rem_euclid(TAU) - PI,
+            radians: (self.radians + PI).rem_euclid(TAU) - PI,
         }
     }
 
@@ -755,5 +755,41 @@ mod test {
         let b = Angle::from_degrees(360.0);
         assert_ne!(a, b);
         assert!(approx_eq(b.as_turns(), 1.0));
+    }
+
+    #[test]
+    fn wrapped_full() {
+        let a = Angle::from_degrees(361.0);
+        assert!(approx_eq(a.wrapped_full().as_degrees(), 1.0));
+
+        let a = Angle::from_degrees(720.0);
+        assert!(approx_eq(a.wrapped_full().as_degrees(), 0.0));
+
+        let a = Angle::from_degrees(-390.0);
+        assert!(approx_eq(a.wrapped_full().as_degrees(), 330.0));
+
+        let a = Angle::from_degrees(-1.048_596);
+        assert!(approx_eq(a.wrapped_full().as_degrees(), 358.951_404));
+    }
+
+    #[test]
+    fn wrapped_half() {
+        let a = Angle::from_degrees(181.0);
+        assert!(approx_eq(a.wrapped_half().as_degrees(), -179.0));
+
+        let a = Angle::from_degrees(-181.0);
+        assert!(approx_eq(a.wrapped_half().as_degrees(), 179.0));
+
+        let a = Angle::from_degrees(361.0);
+        assert!(approx_eq(a.wrapped_half().as_degrees(), 1.0));
+
+        let a = Angle::from_degrees(-361.0);
+        assert!(approx_eq(a.wrapped_half().as_degrees(), -1.0));
+
+        let a = Angle::from_degrees(324_810.6);
+        assert!(approx_eq(a.wrapped_half().as_degrees(), 90.6));
+
+        let a = Angle::from_degrees(-8613.0);
+        assert!(approx_eq(a.wrapped_half().as_degrees(), 27.0));
     }
 }
