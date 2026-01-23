@@ -54,7 +54,7 @@ backtrace = [
     "vexide-startup/backtrace",
 ]
 
-startup = ["dep:vexide-startup"]
+startup = ["dep:vexide-startup", "vexide-startup/differential-uploads"]
 panic-hook = ["vexide-startup/panic-hook"]
 abort-handler = ["vexide-startup/abort-handler"]
 

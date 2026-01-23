@@ -59,6 +59,8 @@ mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
 mod sdk;
+#[cfg(vexide_toolchain = "llvm")]
+mod sysrt;
 
 // Linkerscript Symbols
 //
@@ -114,19 +116,23 @@ unsafe extern "C" fn _vexide_boot() {
         // Check if a patch file is loaded into memory by reading the first four bytes at the
         // expected location (0x07A00000) and checking if they equal the magic header value of
         // 0xB1DF.
-        "ldr r0, =__patcher_patch_start",
-        "ldr r0, [r0]",
-        "ldr r1, ={patch_magic}",
-        "cmp r0, r1", // r0 == 0xB1DF?
-        // Prepare to memcpy binary to 0x07C00000
-        "ldr r0, =__patcher_base_start", // memcpy dest -> r0
-        "ldr r1, =__user_ram_start", // memcpy src -> r1
-        "ldr r2, =__patcher_patch_start+12", // Base binary len is stored as metadata in the patch.
-        "ldr r2, [r2]", // memcpy size -> r2
-        // Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
-        "bleq __overwriter_aeabi_memcpy",
+        #[cfg(feature = "differential-uploads")]
+        "ldr r0, =__patcher_patch_start
+         ldr r0, [r0]
+         ldr r1, ={patch_magic}
+         cmp r0, r1 // r0 == 0xB1DF?
+         // Prepare to memcpy binary to 0x07C00000
+         ldr r0, =__patcher_base_start // memcpy dest -> r0
+         ldr r1, =__user_ram_start // memcpy src -> r1
+         ldr r2, =__patcher_patch_start+12 // Base binary len is stored as metadata in the patch.
+         ldr r2, [r2] // memcpy size -> r2
+         // Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
+         bleq __overwriter_aeabi_memcpy",
+
         // Jump to the Rust entrypoint.
         "b _start",
+
+        #[cfg(feature = "differential-uploads")]
         patch_magic = const patcher::PATCH_MAGIC,
     )
 }
@@ -147,6 +153,7 @@ unsafe extern "C" fn _vexide_boot() {
 /// - Registers a custom [panic hook] to allow panic messages to be drawn to the screen and
 ///   backtrace to be collected. This can be enabled/disabled using the `panic-hook` and `backtrace`
 ///   features.
+/// - Initializes the C/C++ runtime, if vexide was built with a C/C++ toolchain enabled.
 ///
 /// [differential upload patches]: https://vexide.dev/docs/building-uploading/#uploading-strategies
 /// [panic hook]: https://doc.rust-lang.org/std/panic/fn.set_hook.html
@@ -168,8 +175,8 @@ unsafe extern "C" fn _vexide_boot() {
 ///
 /// Must be called *once and only once* at the start of program execution.
 #[inline]
-#[allow(clippy::needless_doctest_main)]
-pub unsafe fn startup() {
+#[allow(clippy::needless_doctest_main, unused)]
+pub unsafe fn startup(claim_linked_file: bool) {
     #[cfg(target_os = "vexos")]
     unsafe {
         // Initialize the heap allocator in our heap region defined in the linkerscript
@@ -178,16 +185,23 @@ pub unsafe fn startup() {
 
         // If this link address is 0x03800000, this implies we were uploaded using differential
         // uploads by cargo-v5 and may have a patch to apply.
+        #[cfg(feature = "differential-uploads")]
         if vexide_core::program::linked_file().addr() == (&raw const __user_ram_start).addr() {
             patcher::patch();
         }
 
         // Reclaim 6mb memory region occupied by patches and program copies as heap space.
         #[cfg(feature = "allocator")]
-        crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
+        if claim_linked_file {
+            crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
+        }
 
         #[cfg(feature = "abort-handler")]
         abort_handler::install_vector_table();
+
+        // Initialize C runtime.
+        #[cfg(vexide_toolchain = "llvm")]
+        sysrt::init();
     }
 
     // Register custom panic hook if needed.
