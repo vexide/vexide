@@ -1,92 +1,64 @@
 name: Rust
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
-    # Check and lint are separated because linting doesn't seem to fail
-    # if there are errors are outside of the PR's changes.
     check:
-        name: Check
+        name: Build/Test
         runs-on: ubuntu-latest
         steps:
             - name: Setup | Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v6
 
             - name: Setup | Toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  profile: minimal
-                  toolchain: nightly-2025-09-26
-                  override: true
+              run: rustup toolchain install --profile minimal
 
-            - name: Check Crates
-              uses: actions-rs/cargo@v1
-              with:
-                  command: check
-                  args: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem -p vexide --features "full vex-sdk-jumptable"
+            - name: Setup | Build cache
+              uses: Swatinem/rust-cache@v2
 
-            - name: Check Examples
-              uses: actions-rs/cargo@v1
-              with:
-                  command: check
-                  args: --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --bins --examples
+            - name: Check Crates (VEXos)
+              run: cargo check --target=armv7a-vex-v5 -p vexide --features "full default-sdk"
+
+            - name: Check Examples (VEXos)
+              run: cargo check --target=armv7a-vex-v5 --bins --examples
+
+            - name: Test (Desktop)
+              run: cargo test --workspace --all-targets
+
+            - name: Doctest (Desktop)
+              run: cargo test --workspace --doc
     lint:
         name: Lint
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: dtolnay/rust-toolchain@nightly
-              with:
-                  components: clippy
-            - uses: giraffate/clippy-action@v1
-              with:
-                  reporter: "github-pr-check"
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
-                  clippy_flags: --all --target=armv7a-vex-v5 -Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem --lib --bins --examples --features "full vex-sdk-jumptable"
-    test:
-        name: Test
-        runs-on: ubuntu-latest
-        steps:
             - name: Setup | Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v6
 
             - name: Setup | Toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  profile: minimal
-                  toolchain: nightly-2025-09-26
-                  override: true
+              run: rustup toolchain install --profile minimal
 
-            - name: Test
-              uses: actions-rs/cargo@v1
-              with:
-                  command: test
-                  args: --all --lib --bins --examples
+            - name: Setup | Install clippy
+              run: rustup component add clippy
 
-            - name: Doctest
-              uses: actions-rs/cargo@v1
-              with:
-                  command: test
-                  args: --all --doc
+            - name: Setup | Build cache
+              uses: Swatinem/rust-cache@v2
+
+            - name: Clippy
+              run: cargo clippy --workspace --all-targets --features "full default-sdk"
+              env:
+                RUSTFLAGS: "-Dwarnings"
     fmt:
         name: Rustfmt
         runs-on: ubuntu-latest
         steps:
             - name: Setup | Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v6
 
             - name: Setup | Toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  profile: minimal
-                  toolchain: nightly-2025-09-26
-                  override: true
+              run: rustup toolchain install --profile minimal
 
             - name: Setup | Install Rustfmt
               run: rustup component add rustfmt
 
-            - name: Format
-              uses: actions-rs/cargo@v1
-              with:
-                  command: fmt
-                  args: --all -- --check
+            - name: Check formatting
+              run: cargo fmt --all --check
