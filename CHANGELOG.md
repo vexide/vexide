@@ -39,6 +39,7 @@ Before releasing:
 ### Fixed
 
 - Fixed an issue where `VisionSensor::signature` would return fields in the incorrect order. (#437)
+- Fixed `Angle::wrapped_half` returning a negated value from what's expected. (#438) (**Breaking Change**)
 
 ### Changed
 
