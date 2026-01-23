@@ -298,7 +298,7 @@ impl Angle {
     ///
     /// let angle = Angle::from_degrees(190.0);
     ///
-    /// assert_eq!(angle.wrapped_half(), Angle::from_degrees(170.0));
+    /// assert_eq!(angle.wrapped_half(), Angle::from_degrees(-170.0));
     /// ```
     #[inline]
     #[must_use]
