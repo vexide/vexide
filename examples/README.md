@@ -67,7 +67,7 @@ Examples showcasing vexide's async capabilities
 
 ### [`competition`](./competition.rs)
 
-Demonstrates how the [`Compete`](https://docs.rs/vexide/latest/vexide/core/competition/trait.Compete.html) trait can be used to run code during specific competition states.
+Demonstrates how the [`Compete`](https://docs.rs/vexide/latest/vexide/prelude/trait.Compete.html) trait can be used to run code during specific competition states.
 
 ### [`async`](./async.rs)
 
