@@ -23,15 +23,16 @@ compile-time = "0.2.0"
 vex-sdk = { workspace = true }
 
 [target.'cfg(not(target_os = "vexos"))'.dependencies]
-vex-sdk-mock = { workspace = true, optional = true }
+vex-sdk-mock = { git = "https://github.com/vexide/vex-sdk.git", branch = "feat/rust-1.94", optional = true }
 
 [target.'cfg(target_os = "vexos")'.dependencies]
-vex-sdk-jumptable = { version = "0.1.1", optional = true }
+vex-sdk-jumptable = { git = "https://github.com/vexide/vex-sdk.git", branch = "feat/rust-1.94", optional = true }
 vex-sdk-pros = { version = "0.0.1", optional = true }
 vex-libunwind = { workspace = true, optional = true }
 vex-libunwind-sys = { workspace = true, optional = true }
 
 [build-dependencies]
+cc = "1.2.49"
 vex-sdk-vexcode = { version = "0.0.1", optional = true }
 
 [dev-dependencies]
@@ -46,6 +47,8 @@ vexide = { path = "../vexide", features = [
 workspace = true
 
 [features]
+default = ["differential-uploads"]
+differential-uploads = []
 allocator = ["dep:talc"]
 panic-hook = []
 abort-handler = []
