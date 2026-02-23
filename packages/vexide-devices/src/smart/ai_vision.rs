@@ -340,14 +340,6 @@ pub struct AiVisionSensor {
     device: V5_DeviceT,
 }
 
-/// Represents the region (of what?) for a given sensor mode
-/// As of AI Vision vexOS 1.0.0.16 this is a hardcoded property
-/// 1 -> col_bounds, 4 -> obj_bounds, 8 -> tag_bounds
-pub struct AiVisionDetectionBound {
-    pub x: u16,
-    pub y: u16,
-}
-
 // SAFETY: Required because we store a raw pointer to the device handle to avoid it getting from the
 // SDK each device function. Simply sharing a raw pointer across threads is not inherently unsafe.
 unsafe impl Send for AiVisionSensor {}
@@ -371,13 +363,6 @@ impl AiVisionSensor {
 
     /// The diagonal FOV of the vision sensor in degrees.
     pub const DIAGONAL_FOV: f32 = 87.0;
-
-    /// Hardcoded detection bounds for the April Tag mode
-    pub const TAG_DETECT_BOUNDS: AiVisionDetectionBound = AiVisionDetectionBound{x: 0x280, y: 0x1e0};
-    /// Hardcoded detection bounds for the AI Object mode
-    pub const OBJ_DETECT_BOUNDS: AiVisionDetectionBound = AiVisionDetectionBound{x: 0x140, y: 0x140};
-    /// Hardcoded detection bounds for the Color Blob mode
-    pub const COL_DETECT_BOUNDS: AiVisionDetectionBound = AiVisionDetectionBound{x: 0x140, y: 0xf0};
 
     //const UNK_SENSOR_PARAMETER_SET: u32 = (1 << 31) //it is unclear to me what purpose this serves
     const RESET_FLAG: u32 = (1 << 30);
