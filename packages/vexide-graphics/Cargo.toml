@@ -1,6 +1,6 @@
 [package]
 name = "vexide-graphics"
-version = "0.1.9"
+version = "0.1.10"
 edition = "2021"
 license = "MIT"
 description = "Graphics driver implementations for vexide"
@@ -38,3 +38,6 @@ slint = ["dep:slint"]
 [package.metadata.docs.rs]
 all-features = true # Otherwise the crate is completely empty.
 targets = ["armv7a-none-eabi"] # Not actually, but this is at least close.
+
+[badges]
+maintenance.status = "deprecated"
