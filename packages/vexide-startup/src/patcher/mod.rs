@@ -120,10 +120,10 @@ pub(crate) unsafe fn patch() {
     unsafe {
         // First few bytes contain some important metadata we'll need to setup the patch.
         let patch_magic = PATCH.read(); // Should be 0xB1DF if the patch needs to be applied.
-        let patch_version = PATCH.offset(1).read(); // Shoud be 0x1000
-        let patch_len = PATCH.offset(2).read(); // length of the patch buffer
-        let base_binary_len = PATCH.offset(3).read(); // length of the currently running binary
-        let new_binary_len = PATCH.offset(4).read(); // length of the new binary after the patch
+        let patch_version = PATCH.add(1).read(); // Shoud be 0x1000
+        let patch_len = PATCH.add(2).read(); // length of the patch buffer
+        let base_binary_len = PATCH.add(3).read(); // length of the currently running binary
+        let new_binary_len = PATCH.add(4).read(); // length of the new binary after the patch
 
         // Do not proceed with  patch if:
         // - We have an unexpected PATCH_MAGIC (We later change this magic to 0xB2DF to
@@ -148,7 +148,7 @@ pub(crate) unsafe fn patch() {
         // Slice of our patch contents. We offset by 20 bytes to skip the metadata inserted by
         // cargo-v5 and bidiff.
         let patch = core::slice::from_raw_parts(
-            PATCH.offset(5).cast(),
+            PATCH.add(5).cast(),
             patch_len as usize - (size_of::<u32>() * 5),
         );
 

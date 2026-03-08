@@ -444,6 +444,7 @@ impl Angle {
     /// will be heavily dependant on designing algorithms with specific target hardware in mind.
     #[inline]
     #[must_use = "this returns the result of the operation, without modifying the original"]
+    #[allow(clippy::missing_const_for_fn, reason = "libm::fma branch is not const")]
     pub fn mul_add(self, a: f64, b: Self) -> Self {
         #[cfg(not(feature = "std"))]
         return Self {
