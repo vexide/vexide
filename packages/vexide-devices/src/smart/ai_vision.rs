@@ -364,11 +364,14 @@ impl AiVisionSensor {
     /// The diagonal FOV of the vision sensor in degrees.
     pub const DIAGONAL_FOV: f32 = 87.0;
 
+    //const UNK_SENSOR_PARAMETER_SET: u32 = (1 << 31) //it is unclear to me what purpose this serves
     const RESET_FLAG: u32 = (1 << 30);
     const TAG_SET_FLAG: u32 = (1 << 29);
-    const MODE_SET_FLAG: u32 = (1 << 25);
+    const MODEL_CTL_FLAG: u32 = (1 << 28); //as of AIV vexOS 1.0.0.16 this might be a no-op field?
+    const SENSOR_CTL_FLAG: u32 = (1 << 27);
     const TEST_MODE_FLAG: u32 = (1 << 26);
-    const AWB_START_FLAG: u32 = (1 << 27);
+    const ENABLE_SET_FLAG: u32 = (1 << 25); //basically a mode, but the sensor has a separate concept of "mode"
+    const MODE_SET_FLAG: u32 = (1 << 24);
 
     // const AWB_START_VALUE: u32 = 4;
 
@@ -983,7 +986,7 @@ impl AiVisionSensor {
 
         new_mode &= !(0xff << 8); // Clear the mode bits.
         // Set the mode bits and set the update flag in byte 4.
-        new_mode |= (u32::from(mode.bits()) << 8) | Self::MODE_SET_FLAG;
+        new_mode |= (u32::from(mode.bits()) << 8) | Self::ENABLE_SET_FLAG;
 
         // Update mode
         unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
@@ -1004,7 +1007,7 @@ impl AiVisionSensor {
         let mut new_mode = self.raw_status()? << 8;
 
         new_mode &= !(0xff << 16); // Clear byte 3
-        new_mode |= (1 << 18) | Self::AWB_START_FLAG;
+        new_mode |= (1 << 18) | Self::SENSOR_CTL_FLAG;
 
         // Update mode
         unsafe { vexDeviceAiVisionModeSet(self.device, new_mode) }
