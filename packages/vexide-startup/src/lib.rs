@@ -24,7 +24,7 @@
 //! This is an example of a minimal user program that boots without using the main vexide runtime or
 //! the `#[vexide::main]` macro.
 //!
-//! ```
+//! ```no_run
 //! use vexide_core::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
 //!
 //! // SAFETY: This symbol is unique and is being used to start the runtime.
