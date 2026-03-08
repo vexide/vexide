@@ -103,6 +103,7 @@ pub use vexide_startup::allocator;
 /// Commonly used features of vexide.
 ///
 /// This module is meant to be glob imported.
+#[cfg(not(feature = "no_prelude"))]
 pub mod prelude {
     #[cfg(feature = "core")]
     pub use crate::competition::{Compete, CompeteExt};
