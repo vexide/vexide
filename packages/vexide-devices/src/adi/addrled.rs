@@ -233,7 +233,7 @@ impl<const N: usize> smart_leds_trait::SmartLedsWrite for AdiAddrLed<N> {
 
         let mut buf = [0; N];
 
-        for (pixel, color) in buf.iter_mut().zip(iterator.into_iter()) {
+        for (pixel, color) in buf.iter_mut().zip(iterator) {
             *pixel = color.into().into_raw();
         }
 
