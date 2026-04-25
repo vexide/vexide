@@ -244,7 +244,7 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut gps = GpsSensor::new(
+    ///     let mut gps = GpsSensor::new_without_initial_position(
     ///         peripherals.port_1,
     ///
     ///         // Initial offset value is configured here!
