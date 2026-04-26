@@ -1236,7 +1236,9 @@ impl Motor {
         self.motor_type.max_voltage()
     }
 
-    /// Returns the internal temperature recorded by the motor in increments of 5 °C.
+    /// Returns the internal temperature recorded by the motor in degrees Celsius.
+    ///
+    /// The returned temperature has a resolution of 5°C.
     ///
     /// # Errors
     ///
@@ -1256,11 +1258,13 @@ impl Motor {
     ///     let mut motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
     ///     _ = motor.set_voltage(12.0);
     ///     loop {
+    ///         // Stop the motor if it gets too hot (over 30°C).
     ///         if motor.temperature().unwrap() > 30.0 {
     ///             _ = motor.brake(BrakeMode::Coast);
     ///         } else {
     ///             _ = motor.set_voltage(12.0);
     ///         }
+    ///
     ///         sleep(Motor::UPDATE_INTERVAL).await;
     ///     }
     /// }
