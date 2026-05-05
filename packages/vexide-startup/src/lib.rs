@@ -169,7 +169,7 @@ unsafe extern "C" fn _vexide_boot() {
 /// Must be called *once and only once* at the start of program execution.
 #[inline]
 #[allow(clippy::needless_doctest_main)]
-pub unsafe fn startup() {
+pub unsafe fn startup(main: impl FnOnce() + Send + 'static) {
     #[cfg(target_os = "vexos")]
     unsafe {
         // Initialize the heap allocator in our heap region defined in the linkerscript
@@ -193,4 +193,9 @@ pub unsafe fn startup() {
     // Register custom panic hook if needed.
     #[cfg(feature = "panic-hook")]
     std::panic::set_hook(Box::new(panic_hook::hook));
+
+    #[cfg(all(not(target_os = "vexos"), feature = "vex-sdk-desktop"))]
+    vex_sdk_desktop::run_simulator(main);
+    #[cfg(target_os = "vexos")]
+    main();
 }

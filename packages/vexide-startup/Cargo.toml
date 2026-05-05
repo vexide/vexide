@@ -24,6 +24,7 @@ vex-sdk = { workspace = true }
 
 [target.'cfg(not(target_os = "vexos"))'.dependencies]
 vex-sdk-mock = { workspace = true, optional = true }
+vex-sdk-desktop = { path = "../../../vex-simulation/simulator", optional = true}
 
 [target.'cfg(target_os = "vexos")'.dependencies]
 vex-sdk-jumptable = { version = "0.2.0-rc.1", git = "https://github.com/vexide/vex-sdk", branch = "rc", optional = true }
@@ -55,6 +56,7 @@ vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
 vex-sdk-vexcode = ["dep:vex-sdk-vexcode"]
 vex-sdk-pros = ["dep:vex-sdk-pros"]
 vex-sdk-mock = ["dep:vex-sdk-mock"]
+vex-sdk-desktop = ["dep:vex-sdk-desktop"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]

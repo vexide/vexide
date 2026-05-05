@@ -33,16 +33,16 @@ fn main() {
     //
     // SAFETY: Called once at program startup.
     unsafe {
-        vexide_startup::startup();
+        vexide_startup::startup(|| {
+            println!("Hey");
+
+            // Try to spin a motor.
+            let peripherals = Peripherals::take().unwrap();
+            let mut m = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+            _ = m.set_voltage(12.0);
+
+            // Wait 5 seconds then exit.
+            std::thread::sleep(Duration::from_secs(5));
+        });
     }
-
-    println!("Hey");
-
-    // Try to spin a motor.
-    let peripherals = Peripherals::take().unwrap();
-    let mut m = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
-    _ = m.set_voltage(12.0);
-
-    // Wait 5 seconds then exit.
-    std::thread::sleep(Duration::from_secs(5));
 }

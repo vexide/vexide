@@ -88,17 +88,17 @@ fn make_entrypoint(inner: &ItemFn, opts: MacroOpts) -> proc_macro2::TokenStream 
     };
 
     quote! {
-        fn main() -> #ret_type {
+        fn main() {
             unsafe {
-                ::vexide::startup::startup();
+                ::vexide::startup::startup(|| {
+                    #banner_print
+                    #inner
+
+                    _ = ::vexide::runtime::block_on( // FIXME
+                        #inner_ident(::vexide::peripherals::Peripherals::take().unwrap())
+                    );
+                });
             }
-
-            #banner_print
-            #inner
-
-            ::vexide::runtime::block_on(
-                #inner_ident(::vexide::peripherals::Peripherals::take().unwrap())
-            )
         }
     }
 }

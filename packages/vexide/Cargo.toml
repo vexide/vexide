@@ -39,7 +39,7 @@ full = [
 ]
 default-sdk = [
     "vex-sdk-jumptable",
-    "vex-sdk-mock",
+    "vex-sdk-desktop",
 ]
 
 macros = ["dep:vexide-macro"]
@@ -63,6 +63,7 @@ vex-sdk-jumptable = ["vexide-startup/vex-sdk-jumptable"]
 vex-sdk-vexcode = ["vexide-startup/vex-sdk-vexcode"]
 vex-sdk-pros = ["vexide-startup/vex-sdk-pros"]
 vex-sdk-mock = ["vexide-startup/vex-sdk-mock"]
+vex-sdk-desktop = ["vexide-startup/vex-sdk-desktop"]
 
 devices = ["dep:vexide-devices"]
 embedded-io = ["vexide-devices/embedded-io"]
