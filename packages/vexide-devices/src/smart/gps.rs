@@ -99,8 +99,8 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     // Create a GPS sensor mounted 2 inches forward and 1 inch right of center
-    ///     // Starting at position (0, 0) with 90 degree heading
+    ///     // Create a GPS sensor mounted 0.225 m west and 0.225 m north of the
+    ///     // tracking origin, starting at position (0, 0) with a 90 degree heading
     ///     let gps = GpsSensor::new(
     ///         // Port 1
     ///         peripherals.port_1,
