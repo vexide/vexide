@@ -41,6 +41,7 @@ Before releasing:
 - Fixed an issue where `VisionSensor::signature` would return fields in the incorrect order. (#437)
 - Fixed `Angle::wrapped_half` returning a negated value from what's expected. (#438) (**Breaking Change**)
 - Fixed a stack overflow in the abort handler that was causing recursive CPU aborts. (#450)
+- Fixed an issue where the future returned from `SmartPort::open` could be polled after completion, effectively duplicating SmartPorts. (#452)
 
 ### Changed
 
