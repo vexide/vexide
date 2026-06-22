@@ -14,7 +14,6 @@
 //! automatically flushed by VEXos as fast as possible (down to ~10µs or so).
 
 use core::{
-    mem::ManuallyDrop,
     pin::Pin,
     task::{Context, Poll},
 };
