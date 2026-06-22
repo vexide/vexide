@@ -77,7 +77,7 @@ impl SerialPort {
     pub fn open(port: SmartPort, baud_rate: u32) -> SerialPortOpenFuture {
         SerialPortOpenFuture {
             state: SerialPortOpenState::Configure { baud_rate },
-            serial: ManuallyDrop::new(Self {
+            serial: Some(Self {
                 device: unsafe { port.device_handle() },
                 port,
             }),
@@ -385,7 +385,7 @@ enum SerialPortOpenState {
 #[derive(Debug)]
 pub struct SerialPortOpenFuture {
     state: SerialPortOpenState,
-    serial: ManuallyDrop<SerialPort>,
+    serial: Option<SerialPort>,
 }
 
 impl core::future::Future for SerialPortOpenFuture {
@@ -393,19 +393,22 @@ impl core::future::Future for SerialPortOpenFuture {
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
+        // According to the `Future` docs, "Once a future has finished, clients
+        // should not poll it again."
+        // Therefore, it is okay to panic here since it is not our problem.
+        let serial = this.serial.as_ref().unwrap();
 
         if let SerialPortOpenState::Configure { baud_rate } = this.state {
             unsafe {
-                vexDeviceGenericSerialEnable(this.serial.device, 0);
-                vexDeviceGenericSerialBaudrate(this.serial.device, baud_rate as i32);
+                vexDeviceGenericSerialEnable(serial.device, 0);
+                vexDeviceGenericSerialBaudrate(serial.device, baud_rate as i32);
             }
 
             this.state = SerialPortOpenState::Waiting;
         }
 
-        if this.serial.validate_port().is_ok() {
-            // SAFETY: Device is not accessed from self.serial after `Poll::Ready` return.
-            Poll::Ready(unsafe { ManuallyDrop::take(&mut this.serial) })
+        if serial.validate_port().is_ok() {
+            Poll::Ready(this.serial.take().unwrap())
         } else {
             cx.waker().wake_by_ref();
             Poll::Pending
