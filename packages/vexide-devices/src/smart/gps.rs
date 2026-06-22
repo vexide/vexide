@@ -286,7 +286,7 @@ impl GpsSensor {
     ///         0.0,
     ///     );
     ///
-    ///     // Get current position and heading
+    ///     // Get current position
     ///     if let Ok(position) = gps.position() {
     ///         println!("Robot is at x={}, y={}", position.x, position.y,);
     ///     }
