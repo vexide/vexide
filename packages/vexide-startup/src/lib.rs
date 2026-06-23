@@ -92,6 +92,7 @@ unsafe extern "C" {
 #[unsafe(no_mangle)]
 #[unsafe(naked)]
 #[cfg(target_os = "vexos")]
+#[instruction_set(arm::a32)] // VEX program entry begins in ARM mode
 unsafe extern "C" fn _vexide_boot() {
     core::arch::naked_asm!(
         // Load the stack pointer to point to our stack section.
@@ -124,9 +125,9 @@ unsafe extern "C" fn _vexide_boot() {
         "ldr r2, =__patcher_patch_start+12", // Base binary len is stored as metadata in the patch.
         "ldr r2, [r2]", // memcpy size -> r2
         // Do the memcpy if patch magic is present (we checked this in our `cmp` instruction).
-        "bleq __overwriter_aeabi_memcpy",
+        "blxeq __overwriter_aeabi_memcpy",
         // Jump to the Rust entrypoint.
-        "b _start",
+        "blx _start",
         patch_magic = const patcher::PATCH_MAGIC,
     )
 }

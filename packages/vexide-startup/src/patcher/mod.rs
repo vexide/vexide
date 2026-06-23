@@ -25,6 +25,9 @@ unsafe extern "C" {
     static mut __patcher_patch_start: u32;
     static mut __patcher_base_start: u32;
     static mut __patcher_new_start: u32;
+
+    #[link_name = "__patcher_overwrite"]
+    unsafe fn patcher_overwrite() -> !;
 }
 
 /// Internal patcher state representing what the patcher is attempting to do.
@@ -163,7 +166,7 @@ pub(crate) unsafe fn patch() {
         bipatch(base, patch, new);
 
         // Jump to the stage 2 overwriter routine to handle the rest.
-        core::arch::asm!("b __patcher_overwrite", options(noreturn));
+        patcher_overwrite();
     }
 }
 
