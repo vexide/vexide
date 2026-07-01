@@ -40,8 +40,12 @@ Before releasing:
 
 - Fixed an issue where `VisionSensor::signature` would return fields in the incorrect order. (#437)
 - Fixed `Angle::wrapped_half` returning a negated value from what's expected. (#438) (**Breaking Change**)
+- Fixed a stack overflow in the abort handler that was causing recursive CPU aborts. (#450)
+- Fixed an issue where the future returned from `SmartPort::open` could be polled after completion, effectively duplicating SmartPorts. (#452)
 
 ### Changed
+
+- Corrected some minor doc comments and updated the Nix flake. (#451)
 
 ### Removed
 
@@ -249,7 +253,7 @@ Before releasing:
 - Fixed an internal issue regarding units with `Motor::set_position`.
 - Fixed `File::seek` seeking to the wrong position when using `SeekFrom::End` with a negative offset. (#267)
 - Fixed a rare issue with IMU calibration timing out at the start of some programs. (#275, #279)
-- Recursive panics (panics that occur *within* `vexide_panic`'s handler) will now immediately abort rather than potentially causing a stack overflow. (#275)
+- Recursive panics (panics that occur _within_ `vexide_panic`'s handler) will now immediately abort rather than potentially causing a stack overflow. (#275)
 
 ### Changed
 
@@ -473,8 +477,8 @@ Before releasing:
 ### Added
 
 - The startup banner and code signature may now be configured using parameters passed to `vexide::main`. (#102)
-- Added the ``ProgramOwner``, ``ProgramType``, and ``ProgramFlags`` types for code signature configuration. (#76)
-- Created new ``force_rust_libm`` feature to force the use of a slower, 100% Rust, libm implementation. This is useful for building on WASM. (#106)
+- Added the `ProgramOwner`, `ProgramType`, and `ProgramFlags` types for code signature configuration. (#76)
+- Created new `force_rust_libm` feature to force the use of a slower, 100% Rust, libm implementation. This is useful for building on WASM. (#106)
 - Optimized floating point math operations available through the `Float` extension trait. (#77)
 - Added text metrics getters to the `Text` widget. (#83)
 - Added alignment support for the `Text` widget. (#85)
@@ -489,11 +493,11 @@ Before releasing:
 
 ### Changed
 
-- Updated ``vex-sdk`` to version 0.17.0. (#76)
-- Renamed ``ColdHeader`` to ``CodeSignature``. (#76) (**Breaking Change**)
-- Renamed the entrypoint symbol from ``_entry`` to ``_start``. (#76) (**Breaking Change**)
-- Renamed ``__stack_start`` and ``__stack_end`` symbols to ``__stack_top`` and ``__stack_bottom`` respectively. (#76) (**Breaking Change**)
-- Renamed the ``.cold_magic`` section to ``.code_signature``. (#76) (**Breaking Change**)
+- Updated `vex-sdk` to version 0.17.0. (#76)
+- Renamed `ColdHeader` to `CodeSignature`. (#76) (**Breaking Change**)
+- Renamed the entrypoint symbol from `_entry` to `_start`. (#76) (**Breaking Change**)
+- Renamed `__stack_start` and `__stack_end` symbols to `__stack_top` and `__stack_bottom` respectively. (#76) (**Breaking Change**)
+- Renamed the `.cold_magic` section to `.code_signature`. (#76) (**Breaking Change**)
 - Made fields on screen widgets public. (#81)
 - Renamed `Competition` to `CompetitionRuntime`, `CompetitionRobotExt` to `CompetitionExt`, and `CompetitionRobot` to `Competition`. (#87) (**Breaking Change**)
 - Removed the `Error` associated type from the `Competition` trait and made all methods infallible. (#87) (**Breaking Change**)
@@ -501,7 +505,7 @@ Before releasing:
 ### Removed
 
 - The `no-banner` feature has been removed from `vexide-startup` and must now be toggled through the `vexide:main` attribute. (#102) (**Breaking Change**)
-- Removed the useless ``__rodata_start`` and ``__rodata_end`` symbols.
+- Removed the useless `__rodata_start` and `__rodata_end` symbols.
 - Support for `vexide-math` has been dropped. (#78) (**Breaking Change**)
 - Removed the `vexide-graphics` crate and associated features (containing embedded-graphics and slint drivers) from the main vexide crate due to licensing concerns. These drivers will be available as crates licensed separately from the main `vexide` project. (#297) (**Breaking Change**)
 
