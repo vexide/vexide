@@ -38,6 +38,21 @@ OVERWRITE_SECTIONS {
     }
 }
 
+__abort_stack_length = 16K;
+
+SECTIONS {
+    /*
+     * Dedicated stack for the CPU fault exception handler.
+     *
+     * VEXos provides a 1KiB builtin abort stack, but our stack unwinding code easily overflows it.
+     */
+    .abort_stack (NOLOAD) : ALIGN(8) {
+        __abort_stack_bottom = .;
+        . += __abort_stack_length;
+        __abort_stack_top = .;
+    } > USER_RAM
+} INSERT AFTER .bss;
+
 SECTIONS {
     /* Patcher Memory */
     .patcher_patch (NOLOAD) : {
