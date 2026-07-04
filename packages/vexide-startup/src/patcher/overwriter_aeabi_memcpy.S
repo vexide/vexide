@@ -27,6 +27,7 @@
  */
 
 .section .overwriter, "ax"
+.thumb
 
 .global __overwriter_aeabi_memcpy
 .type   __overwriter_aeabi_memcpy, %function

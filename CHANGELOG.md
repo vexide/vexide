@@ -48,6 +48,8 @@ Before releasing:
 
 - Corrected some minor doc comments and updated the Nix flake. (#451)
 
+- Programs now execute in Thumb mode instead of ARM mode, reducing code size. (#454)
+
 ### Removed
 
 ### New Contributors

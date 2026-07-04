@@ -1,6 +1,8 @@
 .section .overwriter, "ax"
+.thumb
 
 .global __patcher_overwrite
+.type __patcher_overwrite, %function
 
 __patcher_overwrite:
     cpsid i @ Mask interrupts
@@ -10,7 +12,7 @@ __patcher_overwrite:
     ldr r1, =__patcher_new_start      @ memcpy src -> r1
     ldr r2, =__patcher_patch_start+16 @ New binary len is stored as metadata in the patch
     ldr r2, [r2]                      @ memcpy size -> r2
-    bl __overwriter_aeabi_memcpy
+    blx __overwriter_aeabi_memcpy
 
     @ Clean L1 data cache in the user memory range
     @ NOTE: 0x03800000 is already aligned to cache line size (32), so no work there.
@@ -29,5 +31,5 @@ dcache_clean_range:
 
     cpsie i @ Unmask interrupts
 
-    @ Jump to modified code
-    b _vexide_boot
+    @ Return to modified entrypoint
+    blx _vexide_boot
