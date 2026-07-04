@@ -1465,7 +1465,7 @@ impl Motor {
     /// }
     /// ```
     pub fn is_driver_over_current(&self) -> Result<bool, PortError> {
-        Ok(self.faults()?.contains(MotorFaults::OVER_CURRENT))
+        Ok(self.faults()?.contains(MotorFaults::DRIVER_OVER_CURRENT))
     }
 
     /// Adjusts the internal tuning constants of the motor when using velocity control.
