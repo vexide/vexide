@@ -100,7 +100,7 @@ pub enum MotorControl {
     /// The motor brakes using a specified [`BrakeMode`].
     Brake(BrakeMode),
 
-    /// The motor outputs a raw voltage (specified in RPM).
+    /// The motor outputs a raw voltage (specified in volts).
     ///
     /// # Fields
     ///

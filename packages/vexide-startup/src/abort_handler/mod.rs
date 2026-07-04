@@ -151,6 +151,11 @@ pub extern "aapcs" fn irq() -> ! {
     )
 }
 
+unsafe extern "C" {
+    /// Base of the dedicated CPU fault stack, defined in `vexide.ld`.
+    unsafe static __abort_stack_top: u8;
+}
+
 macro_rules! fault_exception_vector {
     (
         $name:ident:
@@ -167,6 +172,11 @@ macro_rules! fault_exception_vector {
 
                 sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
                                             @ of return instruction (see Abort::program_counter docs).
+
+                @ Reset stack to the base of our custom abort stack (this is valid because we never
+                @ return from this function or access stack data from a previous abort handler).
+                movw sp, #:lower16:{abort_stack_top}
+                movt sp, #:upper16:{abort_stack_top}
 
                 sub sp, sp, #4 @ Ensure stack is aligned to 8 after we're done here.
 
@@ -188,6 +198,7 @@ macro_rules! fault_exception_vector {
                 blx {exception_handler}        @ Actually call the function now
                 ",
                 exception_handler = sym fault_exception_handler,
+                abort_stack_top = sym __abort_stack_top,
                 lr_offset = const $lr_offset,
                 exception = const $exception as u32,
             );
