@@ -1,6 +1,11 @@
 [target.'cfg(target_os = "vexos")']
 runner = "cargo v5 run --file"
-rustflags = ["-Clink-arg=-Tvexide.ld", "-Ctarget-feature=+thumb-mode"]
+rustflags = [
+    "-Clink-arg=-Tvexide.ld",
+    "-Ctarget-feature=+thumb-mode",
+    "-Cforce-unwind-tables=no",
+    "-Cforce-frame-pointers=yes",
+]
 
 [unstable]
 build-std = ["std", "panic_abort"]

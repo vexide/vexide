@@ -31,15 +31,8 @@ vexide = { path = "../vexide", features = [
     "vex-sdk-jumptable",
 ] }
 
-[target.'cfg(target_vendor = "vex")'.dependencies]
-vex-libunwind = { workspace = true, optional = true }
-
 [lints]
 workspace = true
-
-[features]
-default = ["backtrace"]
-backtrace = ["dep:vex-libunwind"]
 
 [package.metadata.docs.rs]
 targets = ["armv7a-vex-v5"]

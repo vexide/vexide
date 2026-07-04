@@ -35,6 +35,11 @@ OVERWRITE_SECTIONS {
     /DISCARD/ : {
         /* Strip out libstd's _boot routine (replaced with .vexide_boot section). */
         *(.boot)
+        /* Strip unwind info since we use frame pointers for backtraces. */
+        *(.ARM.exidx)
+        *(.ARM.extab*)
+        *(.eh_frame_hdr)
+        *(.eh_frame)
     }
 }
 
@@ -44,7 +49,7 @@ SECTIONS {
     /*
      * Dedicated stack for the CPU fault exception handler.
      *
-     * VEXos provides a 1KiB builtin abort stack, but our stack unwinding code easily overflows it.
+     * VEXos provides a 1KiB builtin abort stack, but our fault reporting easily overflows it.
      */
     .abort_stack (NOLOAD) : ALIGN(8) {
         __abort_stack_bottom = .;
