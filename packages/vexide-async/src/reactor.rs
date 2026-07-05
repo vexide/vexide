@@ -11,7 +11,7 @@ pub(crate) struct Sleeper {
 
 impl PartialEq for Sleeper {
     fn eq(&self, other: &Self) -> bool {
-        other.deadline.eq(&other.deadline)
+        self.deadline.eq(&other.deadline)
     }
 }
 impl PartialOrd for Sleeper {
