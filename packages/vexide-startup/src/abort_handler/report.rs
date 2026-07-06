@@ -3,7 +3,7 @@ use std::fmt::{self, Write};
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use vex_libunwind::UnwindCursor;
 
-use super::fault::Fault;
+use super::Fault;
 use crate::error_report::ErrorReport;
 #[cfg(all(target_os = "vexos", feature = "backtrace"))]
 use crate::error_report::backtrace::BacktraceIter;
