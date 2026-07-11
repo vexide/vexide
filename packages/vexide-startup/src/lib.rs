@@ -97,6 +97,9 @@ unsafe extern "C" {
 #[instruction_set(arm::a32)] // VEX program entry begins in ARM mode
 unsafe extern "C" fn _vexide_boot() {
     core::arch::naked_asm!(
+        // Cap off the frame pointer registers so the backtrace routine knows to terminate here.
+        "mov fp, #0",
+        "mov r7, #0",
         // Load the stack pointer to point to our stack section.
         //
         // This technically isn't required, as VEXos already sets up a stack for CPU1, but that

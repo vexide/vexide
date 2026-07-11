@@ -30,8 +30,6 @@ vex-sdk-mock = { workspace = true, optional = true }
 [target.'cfg(target_os = "vexos")'.dependencies]
 vex-sdk-jumptable = { version = "0.2.0-rc.1", git = "https://github.com/vexide/vex-sdk", branch = "rc", optional = true }
 vex-sdk-pros = { version = "0.0.1", optional = true }
-vex-libunwind = { workspace = true, optional = true }
-vex-libunwind-sys = { workspace = true, optional = true }
 
 [build-dependencies]
 vex-sdk-vexcode = { version = "0.0.1", optional = true }
@@ -51,7 +49,6 @@ workspace = true
 allocator = ["dep:talc"]
 panic-hook = []
 abort-handler = ["dep:bitbybit", "dep:arbitrary-int"]
-backtrace = ["dep:vex-libunwind", "dep:vex-libunwind-sys"]
 
 vex-sdk-jumptable = ["dep:vex-sdk-jumptable"]
 vex-sdk-vexcode = ["dep:vex-sdk-vexcode"]

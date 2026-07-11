@@ -96,37 +96,33 @@ impl ErrorReport {
         self.y_offset += 10;
     }
 
-    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-    pub fn write_backtrace(&mut self, trace: impl Iterator<Item = u32>) {
+    pub fn write_backtrace(&mut self, i: i32, frame: u32) {
         unsafe {
             vex_sdk::vexDisplayTextSize(1, 5);
         }
-        let mut i = 0;
-        for frame in trace {
-            let format = c"  %d: 0x%08x";
+        let format = c"  %d: 0x%08x";
 
-            unsafe {
-                vex_sdk::vexDisplayPrintf(
-                    50 + (i % 4) * 95,
-                    self.y_offset,
-                    0,
-                    if i < 10 {
-                        format.as_ptr()
-                    } else {
-                        format[1..].as_ptr()
-                    },
-                    i,
-                    frame,
-                );
-            }
-
-            if i % 4 == 3 {
-                self.y_offset += 10;
-            }
-
-            i += 1;
+        unsafe {
+            vex_sdk::vexDisplayPrintf(
+                50 + (i % 4) * 95,
+                self.y_offset,
+                0,
+                if i < 10 {
+                    format.as_ptr()
+                } else {
+                    format[1..].as_ptr()
+                },
+                i,
+                frame,
+            );
         }
 
+        if i % 4 == 3 {
+            self.y_offset += 10;
+        }
+    }
+
+    pub const fn finish_backtrace(&mut self, i: i32) {
         if i % 4 != 0 {
             self.y_offset += 20;
         } else {
@@ -190,42 +186,5 @@ impl Write for ErrorReport {
         }
 
         Ok(())
-    }
-}
-
-#[cfg(all(target_os = "vexos", feature = "backtrace"))]
-pub mod backtrace {
-    use vex_libunwind::{UnwindCursor, registers};
-
-    /// An iterator that lazily walks up the stack, yielding frames in a backtrace.
-    pub struct BacktraceIter<'a> {
-        pub cursor: Option<UnwindCursor<'a>>,
-    }
-
-    impl<'a> BacktraceIter<'a> {
-        pub const fn new(cursor: UnwindCursor<'a>) -> Self {
-            Self {
-                cursor: Some(cursor),
-            }
-        }
-    }
-
-    impl Iterator for BacktraceIter<'_> {
-        type Item = u32;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            let cursor = self.cursor.as_mut()?;
-
-            let mut instruction_pointer = cursor.register(registers::UNW_REG_IP).ok()?;
-            if !cursor.is_signal_frame().ok()? {
-                instruction_pointer -= 1;
-            }
-
-            if !cursor.step().ok()? {
-                self.cursor = None;
-            }
-
-            Some(instruction_pointer as u32)
-        }
     }
 }

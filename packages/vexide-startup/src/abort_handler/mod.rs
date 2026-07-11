@@ -1,10 +1,6 @@
 use core::fmt::Display;
 
 use arbitrary_int::prelude::*;
-#[cfg(all(target_os = "vexos", feature = "backtrace"))]
-use vex_libunwind::UnwindContext;
-#[cfg(all(target_os = "vexos", feature = "backtrace"))]
-use vex_libunwind_sys::unw_context_t;
 use vex_sdk::{V5_TouchEvent, V5_TouchStatus, vexTasksRun, vexTouchDataGet};
 
 mod report;
@@ -86,42 +82,6 @@ pub struct Fault {
 }
 
 impl Fault {
-    /// Create an unwind context using custom registers instead of ones captured from the current
-    /// processor state.
-    ///
-    /// This is based on the ARM implementation of __unw_getcontext:
-    /// <https://github.com/llvm/llvm-project/blob/6fc3b40b2cfc33550dd489072c01ffab16535840/libunwind/src/UnwindRegistersSave.S#L834>
-    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-    pub unsafe fn unwind_context(&self) -> UnwindContext<'_> {
-        #[repr(C)]
-        struct RawUnwindContext {
-            // Value of each general-purpose register in the order of r0-r12, sp, lr, pc.
-            r: [u32; 13],
-            sp: u32,
-            lr: u32,
-            pc: u32,
-
-            /// Padding (unused on ARM).
-            data: [u8; const { size_of::<unw_context_t>() - size_of::<u32>() * 16 }],
-        }
-
-        // SAFETY: `context` is a valid `unw_context_t` because it has its general-purpose registers
-        // field set.
-        unsafe {
-            UnwindContext::from_raw(core::mem::transmute::<RawUnwindContext, unw_context_t>(
-                RawUnwindContext {
-                    r: self.registers,
-                    sp: self.stack_pointer,
-                    lr: self.link_register,
-                    pc: self.program_counter,
-                    // This matches the behavior of __unw_getcontext, which leaves
-                    // this data uninitialized.
-                    data: [0; _],
-                },
-            ))
-        }
-    }
-
     /// Read the faulting instruction.
     ///
     /// # Safety
