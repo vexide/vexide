@@ -60,7 +60,7 @@ mod panic_hook;
 mod patcher;
 mod sdk;
 #[cfg(all(target_os = "vexos", feature = "abort-handler"))]
-mod vtable;
+mod vectors;
 
 // Linkerscript Symbols
 //
@@ -192,7 +192,7 @@ pub unsafe fn startup() {
         crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
 
         #[cfg(feature = "abort-handler")]
-        vtable::install_vector_table();
+        vectors::install_vector_table();
     }
 
     // Register custom panic hook if needed.
