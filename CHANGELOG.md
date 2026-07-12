@@ -39,6 +39,7 @@ Before releasing:
 
 ### Fixed
 
+- Built executables now have the correct entry point symbol specified. (#436)
 - Fixed an issue where `VisionSensor::signature` would return fields in the incorrect order. (#437)
 - Fixed `Angle::wrapped_half` returning a negated value from what's expected. (#438) (**Breaking Change**)
 - Fixed `Motor::is_driver_over_current` incorrectly checking for the motor's `OVER_CURRENT` fault instead of `DRIVER_OVER_CURRENT`. (#447)
