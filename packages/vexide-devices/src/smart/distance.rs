@@ -59,11 +59,12 @@ impl DistanceSensor {
         }
     }
 
-    /// Validates that the sensor is currently connected to its port, and that its status code is
-    /// either 0x82 or 0x86.
+    /// Validates that the sensor is currently connected to its port, and that
+    /// its status code is either 0x82 or 0x86.
     ///
-    /// It's unknown what these status codes indicate (likely related to port status), but PROS
-    /// performs this check in their API, so we will too.
+    /// It's unknown what these status codes indicate (see [this discussion with
+    /// jpearman](https://www.vexforum.com/t/v5-distance-sensor-status-code-difference/147191/2)),
+    /// but PROS performs this check in their API, so we will too.
     ///
     /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_distance.c#L20>
     fn validate(&self) -> Result<(), DistanceObjectError> {
