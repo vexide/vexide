@@ -32,7 +32,6 @@ full = [
     "default",
     "macros",
     "startup",
-    "backtrace",
     "allocator",
     "panic-hook",
     "abort-handler",
@@ -48,11 +47,6 @@ async = ["dep:vexide-async"]
 sync = ["dep:vexide-async", "vexide-async/sync"]
 
 core = ["dep:vexide-core"]
-backtrace = [
-    "dep:vexide-core",
-    "vexide-core/backtrace",
-    "vexide-startup/backtrace",
-]
 
 startup = ["dep:vexide-startup"]
 panic-hook = ["vexide-startup/panic-hook"]

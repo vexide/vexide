@@ -35,10 +35,12 @@ Before releasing:
 ### Added
 
 - Implemented a conversion between `bool` and `LogicLevel`. (#428)
+- Added support for capturing backtraces without heap allocations via the `BacktraceIter` struct. (#456)
 - Added `DistanceSensor::ready` which returns a future resolving when the sensor is ready to be used. (#462)
 
 ### Fixed
 
+- Built executables now have the correct entry point symbol specified. (#436)
 - Fixed an issue where `VisionSensor::signature` would return fields in the incorrect order. (#437)
 - Fixed `Angle::wrapped_half` returning a negated value from what's expected. (#438) (**Breaking Change**)
 - Fixed `Motor::is_driver_over_current` incorrectly checking for the motor's `OVER_CURRENT` fault instead of `DRIVER_OVER_CURRENT`. (#447)
@@ -48,10 +50,13 @@ Before releasing:
 ### Changed
 
 - Corrected some minor doc comments and updated the Nix flake. (#451)
-
 - Programs now execute in Thumb mode instead of ARM mode, reducing code size. (#454)
+- Backtraces are now captured using the frame pointer instead of through unwind tables. (#456) (**Breaking Change**)
 
 ### Removed
+
+- The vexide linker script now removes unwind tables from the executable. (#456) (**Breaking Change**)
+- The `backtrace` Cargo feature has been removed; the `vexide::backtrace` module is now available unconditionally. (#456) (**Breaking Change**)
 
 ### New Contributors
 

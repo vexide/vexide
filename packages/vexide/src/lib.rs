@@ -66,11 +66,8 @@ pub mod time {
 }
 
 #[doc(inline)]
-#[cfg(feature = "backtrace")]
-pub use vexide_core::backtrace;
-#[doc(inline)]
 #[cfg(feature = "core")]
-pub use vexide_core::{competition, os, program};
+pub use vexide_core::{backtrace, competition, os, program};
 #[doc(inline)]
 #[cfg(feature = "devices")]
 pub use vexide_devices::{adi, battery, color, controller, display, math, peripherals, smart};

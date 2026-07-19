@@ -5,12 +5,9 @@
 
 use std::{fmt::Write, panic::PanicHookInfo};
 
-#[cfg(all(target_os = "vexos", feature = "backtrace"))]
-use vex_libunwind::{UnwindContext, UnwindCursor};
+use vexide_core::backtrace::BacktraceIter;
 
 use crate::error_report::ErrorReport;
-#[cfg(all(target_os = "vexos", feature = "backtrace"))]
-use crate::error_report::backtrace::BacktraceIter;
 
 /// Panic hook for vexide programs.
 ///
@@ -22,26 +19,24 @@ pub(crate) fn hook(info: &PanicHookInfo<'_>) {
     eprintln!("{info}");
     writeln!(dialog, "{info}").unwrap();
 
-    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-    {
-        _ = UnwindContext::capture(|context| {
-            let cursor = UnwindCursor::new(&context)?;
+    if cfg!(target_os = "vexos") {
+        let mut i = 0;
+        eprintln!("stack backtrace:");
+        _ = writeln!(dialog, "stack backtrace (check terminal):");
 
-            dialog
-                .write_str("stack backtrace (check terminal):\n")
-                .unwrap();
-            dialog.write_backtrace(BacktraceIter::new(cursor.clone()));
-
-            eprintln!("stack backtrace:");
-            for (i, frame) in BacktraceIter::new(cursor).enumerate() {
-                eprintln!("{i:>3}: 0x{frame:x}");
+        BacktraceIter::capture(|backtrace| {
+            for addr in backtrace {
+                dialog.write_backtrace(i, addr as u32);
+                eprintln!("{i:>3}: 0x{:x}", addr as u32);
+                i += 1;
             }
-            eprintln!(
-                "note: Use a symbolizer to convert stack frames to human-readable function names."
-            );
-
-            Ok(())
         });
+
+        dialog.finish_backtrace(i);
+
+        eprintln!(
+            "note: Use a symbolizer to convert stack frames to human-readable function names."
+        );
     }
 
     // Don't exit the program, since we want to be able to see the panic message on the screen.

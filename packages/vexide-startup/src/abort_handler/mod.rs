@@ -1,216 +1,16 @@
-use core::arch::{asm, global_asm, naked_asm};
+use core::fmt::Display;
 
-mod fault;
-mod report;
-
-use fault::{Fault, FaultException};
+use arbitrary_int::prelude::*;
 use vex_sdk::{V5_TouchEvent, V5_TouchStatus, vexTasksRun, vexTouchDataGet};
 
-// Custom ARM vector table. Pointing the VBAR coprocessor register at this will configure the CPU to
-// jump to these functions on an exception.
-global_asm!(
-    r#"
-    .text
-    .arm
-    .align 5
-    .global vector_table
+mod report;
 
-    vector_table:
-        b vexSystemBoot
-        b {undefined_instruction}
-        b {svc}
-        b {prefetch_abort}
-        b {data_abort}
-        nop @ Placeholder for address exception vector
-        b {irq}
-    @ Place the FIQ exception vector directly on the last entry of the vector table to
-    @ avoid an unnecessary branch.
-    @
-    @ See: https://developer.arm.com/documentation/dui0056/d/handling-processor-exceptions/interrupt-handlers?lang=en#:~:text=The%20FIQ%20vector,increasing%20execution%20speed.
-    fiq:
-        @ NOTE: In FIQ mode r12 is banked, so saving it to the stack here is unnecessary,
-        @       but we still do it anyways to maintain stack alignment.
-        stmdb sp!,{{r0-r3,r12,lr}}
-
-        vpush {{d0-d7}}
-        vpush {{d16-d31}}
-        vmrs r1, FPSCR
-        push {{r1}}
-        vmrs r1, FPEXC
-        push {{r1}}
-
-        bl vexSystemFIQInterrupt
-
-        pop {{r1}}
-        vmsr FPEXC, r1
-        pop {{r1}}
-        vmsr FPSCR, r1
-        vpop {{d16-d31}}
-        vpop {{d0-d7}}
-
-        ldmia sp!,{{r0-r3,r12,lr}}
-        subs pc, lr, #4
-    "#,
-    undefined_instruction = sym undefined_instruction,
-    svc = sym svc,
-    prefetch_abort = sym prefetch_abort,
-    data_abort = sym data_abort,
-    irq = sym irq,
-);
-
-/// Enable vexide's CPU exception handling logic by installing its custom vector table.
-pub fn install_vector_table() {
-    unsafe {
-        asm!(
-            // If vector_table is placed too far away, we'll need 2 instructions to load it.
-            "movw r0, #:lower16:vector_table",
-            "movt r0, #:upper16:vector_table",
-
-            // Set VBAR; see <https://developer.arm.com/documentation/ddi0601/2025-06/AArch32-Registers/VBAR--Vector-Base-Address-Register>
-            "mcr p15, 0, r0, c12, c0, 0",
-            out("r0") _,
-            options(nostack, preserves_flags)
-        );
-    }
-}
-
-#[unsafe(naked)]
-#[unsafe(no_mangle)]
-#[instruction_set(arm::a32)]
-pub extern "aapcs" fn svc() -> ! {
-    core::arch::naked_asm!(
-        "
-        @ Save state and SPSR so we can restore it later. Saving SPSR matches
-        @ the behavior of the ARM sample SVC handler:
-        @ https://developer.arm.com/documentation/dui0203/j/handling-processor-exceptions/armv6-and-earlier--armv7-a-and-armv7-r-profiles/svc-handlers?lang=en
-        @ This is intended to prevent modification inside vexSystemSWInterrupt from
-        @ corrupting the register.
-
-        push {{r0-r3,r12,lr}}
-        mrs r0, spsr
-        push {{r0,r3}} @ r3 is a random register to maintain alignment
-
-        @ Extract the SVC immediate number from the instruction and place it into r0.
-        @ This is intended to match the behavior of Xilinx's embeddedsw SVC handler.
-        @
-        @ The way we do this depends on whether or not user code was running in ARM
-        @ or Thumb mode at the time of this exception, so we check the T-bit in SPSR
-        @ to determine this.
-
-        @ T-bit check (spsr was placed into r0 a few lines above)
-        tst	r0, #0x20
-
-        @ Thumb mode
-        ldrhne r0, [lr,#-2]
-        bicne r0, r0, #0xff00
-
-        @ ARM mode
-        ldreq r0, [lr,#-4]
-        biceq r0, r0, #0xff000000
-
-        @ Call VEXos interrupt handler as fn(svc_comment) -> ()
-        bl vexSystemSWInterrupt
-
-        @ Restore spsr, other registers. Then return.
-        pop {{r0,r3}}
-            @ Only the cxsf groups are restored because writing to the entire thing could cause issues.
-            @ These bits restore things like interrupt state, condition flags, etc.
-        msr spsr_cxsf, r0
-        ldmia sp!, {{r0-r3,r12,pc}}^
-        ",
-    )
-}
-
-#[unsafe(naked)]
-#[unsafe(no_mangle)]
-#[instruction_set(arm::a32)]
-pub extern "aapcs" fn irq() -> ! {
-    core::arch::naked_asm!(
-        "
-        stmdb sp!,{{r0-r3,r12,lr}}
-
-        vpush {{d0-d7}}
-        vpush {{d16-d31}}
-        vmrs r1, FPSCR
-        push {{r1}}
-        vmrs r1, FPEXC
-        push {{r1}}
-
-        bl vexSystemIRQInterrupt
-
-        pop {{r1}}
-        vmsr FPEXC, r1
-        pop {{r1}}
-        vmsr FPSCR, r1
-        vpop {{d16-d31}}
-        vpop {{d0-d7}}
-
-        ldmia sp!,{{r0-r3,r12,lr}}
-        subs pc, lr, #4
-        ",
-    )
-}
-
-unsafe extern "C" {
-    /// Base of the dedicated CPU fault stack, defined in `vexide.ld`.
-    unsafe static __abort_stack_top: u8;
-}
-
-macro_rules! fault_exception_vector {
-    (
-        $name:ident:
-        lr_offset = $lr_offset:expr,
-        exception = $exception:expr$(,)?
-    ) => {
-        #[unsafe(naked)]
-        #[unsafe(no_mangle)]
-        #[instruction_set(arm::a32)]
-        unsafe extern "C" fn $name() -> ! {
-            naked_asm!(
-                "
-                dsb @ Workaround for Cortex-A9 erratum (id 775420)
-
-                sub lr, lr, #{lr_offset}    @ Apply an offset to link register so that it points at address
-                                            @ of return instruction (see Abort::program_counter docs).
-
-                @ Reset stack to the base of our custom abort stack (this is valid because we never
-                @ return from this function or access stack data from a previous abort handler).
-                movw sp, #:lower16:{abort_stack_top}
-                movt sp, #:upper16:{abort_stack_top}
-
-                sub sp, sp, #4 @ Ensure stack is aligned to 8 after we're done here.
-
-                @ Create a Fault struct on the stack:
-                push {{r0-r12}} @ Save general purpose registers for debugging
-                mov r0, {exception} @ We will push this later.
-                push {{r0, lr}} @ Keep building up our struct; add `cause` and I.P.
-
-                @ Store original SYS-mode stack pointer
-                stmdb sp, {{sp}}^ @ Get the system mode's stack pointer
-                sub sp, sp, #4 @ Adjust our sp, since we can't use writeback on stmdb SYS
-
-                @ Store original SYS-mode link register
-                stmdb sp, {{lr}}^ @ Get the system mode's link register
-                sub sp, sp, #4 @ Adjust our sp, since we can't use writeback on stmdb SYS
-
-                @ Pass it to our handler using the C ABI:
-                mov r0, sp                     @ set param 0
-                blx {exception_handler}        @ Actually call the function now
-                ",
-                exception_handler = sym fault_exception_handler,
-                abort_stack_top = sym __abort_stack_top,
-                lr_offset = const $lr_offset,
-                exception = const $exception as u32,
-            );
-        }
-    };
-}
-
-fault_exception_vector!(undefined_instruction: lr_offset = 4, exception = FaultException::UndefinedInstruction);
-fault_exception_vector!(prefetch_abort: lr_offset = 4, exception = FaultException::PrefetchAbort);
-fault_exception_vector!(data_abort: lr_offset = 8, exception = FaultException::DataAbort);
-
-pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
+/// Handle a fault.
+///
+/// # Safety
+///
+/// `fault` must be valid for reads and writes for the duration of the function call.
+pub unsafe extern "C" fn fault_exception_handler(fault: *mut Fault) -> ! {
     unsafe {
         // Data abort and prefetch abort exceptions disable IRQs (source: ARMv7-A TRM page B1-1213).
         //
@@ -227,9 +27,10 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
         }
     }
 
-    let fault = unsafe { *fault };
+    // SAFETY: Caller guarantees fault is valid for reads and writes.
+    let fault = unsafe { fault.as_mut_unchecked() };
 
-    report::report_fault(&fault);
+    report::report_fault(fault);
 
     let mut prev_touch_event = V5_TouchEvent::kTouchEventRelease;
     loop {
@@ -241,7 +42,7 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
         if status.lastEvent == V5_TouchEvent::kTouchEventRelease
             && prev_touch_event != V5_TouchEvent::kTouchEventRelease
         {
-            report::report_fault(&fault);
+            report::report_fault(fault);
         }
 
         prev_touch_event = status.lastEvent;
@@ -250,4 +51,221 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *const Fault) -> ! {
             vexTasksRun();
         }
     }
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct Fault {
+    pub link_register: u32,
+    pub stack_pointer: u32,
+    pub exception: FaultException,
+    /// The current program status register at the time of the fault.
+    pub cpsr: ProgramStatus,
+    /// The address at which the abort occurred.
+    ///
+    /// This is calculated using the Link Register (`lr`), which is set to this address plus an
+    /// offset when an exception occurs.
+    ///
+    /// Offsets:
+    ///
+    /// * [plus 8 bytes][da-exception] for data aborts.
+    /// * [plus 4 bytes][pf-exception] for prefetch aborts.
+    /// * [plus the minimum size of an instruction][svc-exception] for SVCs and undefined
+    ///   instruction aborts (this is different in thumb mode).
+    ///
+    /// [da-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Data-Abort-exception
+    /// [pf-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Prefetch-Abort-exception
+    /// [svc-exception]: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Supervisor-Call--SVC--exception
+    pub program_counter: u32,
+    /// Registers r0 through r12
+    pub registers: [u32; 13],
+}
+
+impl Fault {
+    /// Read the faulting instruction.
+    ///
+    /// # Safety
+    ///
+    /// The PC field must point to an instruction that's valid for a volatile read.
+    unsafe fn faulting_instruction(&self) -> Instruction {
+        if self.cpsr.thumb() {
+            let ptr = self.program_counter as *const u16;
+            unsafe {
+                let first = ptr.read_volatile();
+
+                // See the Armv7-A reference, A6.1 Thumb instruction set encoding
+                let is_32bit = (first >> 11) > 0b11100;
+                if is_32bit {
+                    let second = ptr.add(1).read_volatile();
+                    Instruction::Thumb32([first, second])
+                } else {
+                    Instruction::Thumb16(first)
+                }
+            }
+        } else {
+            let ptr = self.program_counter as *const u32;
+            Instruction::Arm32(unsafe { ptr.read_volatile() })
+        }
+    }
+}
+
+/// Type of exception causing a fault to be raised.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum FaultException {
+    UndefinedInstruction = 0,
+    PrefetchAbort = 1,
+    DataAbort = 2,
+}
+
+impl Display for FaultException {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            FaultException::DataAbort => "Data Abort",
+            FaultException::UndefinedInstruction => "Undefined Instruction",
+            FaultException::PrefetchAbort => "Prefetch Abort",
+        })
+    }
+}
+
+impl Fault {
+    pub fn address(&self) -> u32 {
+        let address: u32;
+
+        match self.exception {
+            FaultException::DataAbort => unsafe {
+                core::arch::asm!(
+                    "mrc p15, 0, {dfar}, c6, c0, 0",
+                    dfar = out(reg) address,
+                );
+
+                address
+            },
+            FaultException::PrefetchAbort => unsafe {
+                core::arch::asm!(
+                    "mrc p15, 0, {ifar}, c6, c0, 1",
+                    ifar = out(reg) address,
+                );
+
+                address
+            },
+            FaultException::UndefinedInstruction => self.program_counter,
+        }
+    }
+}
+
+impl Display for Fault {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let addr = self.address();
+
+        match self.exception {
+            FaultException::DataAbort => {
+                let dfsr: u32;
+                unsafe {
+                    core::arch::asm!(
+                        "mrc p15, 0, {dfsr}, c5, c0, 0",
+                        dfsr = out(reg) dfsr,
+                    );
+                }
+
+                let status = FaultStatus::new_with_raw_value(dfsr);
+
+                f.write_str(match status.reason().value() {
+                    0b00001 => "Alignment fault	(MMU)",
+                    0b00100 => "Instruction cache maintenance fault",
+                    0b01100 | 0b01110 => "Translation table walk synchronous external abort",
+                    0b11100 | 0b11110 => "Translation table walk synchronous parity error",
+                    0b00101 | 0b00111 => "Translation fault (MMU)",
+                    0b00011 | 0b00110 => "Access Flag fault (MMU)",
+                    0b01001 | 0b01011 => "Domain fault (MMU)",
+                    0b01101 | 0b01111 => "Permission fault (MMU)",
+                    0b00010 => "Debug event",
+                    0b01000 => "Synchronous external abort",
+                    0b10100 => "implementation defined (Lockdown)",
+                    0b11010 => "implementation defined (Coprocessor abort)",
+                    0b11001 => "Memory access synchronous parity error",
+                    0b10110 => "Asynchronous external abort",
+                    0b11000 => {
+                        "Memory access asynchronous parity error (Including on translation table walk)"
+                    }
+                    _ => "<unknown>",
+                })?;
+                f.write_str(" while ")?;
+
+                f.write_str(if status.write_not_read() {
+                    "writing to "
+                } else {
+                    "reading from "
+                })?;
+
+                write!(f, "0x{addr:x}")?;
+            }
+            FaultException::PrefetchAbort => {
+                let ifsr: u32;
+                unsafe {
+                    core::arch::asm!(
+                        "mrc p15, 0, {ifsr}, c5, c0, 1",
+                        ifsr = out(reg) ifsr,
+                    );
+                }
+
+                let status = FaultStatus::new_with_raw_value(ifsr);
+
+                f.write_str(match status.reason().value() {
+                    0b01100 | 0b01110 => "Translation table walk synchronous external abort",
+                    0b11100 | 0b11110 => "Translation table walk synchronous parity error",
+                    0b00101 | 0b00111 => "Translation fault (MMU)",
+                    0b00011 | 0b00110 => "Access Flag fault (MMU)",
+                    0b01001 | 0b01011 => "Domain fault (MMU)",
+                    0b01101 | 0b01111 => "Permission fault (MMU)",
+                    0b00010 => "Debug event",
+                    0b01000 => "Synchronous external abort",
+                    0b10100 => "implementation defined (Lockdown)",
+                    0b11010 => "implementation defined (Coprocessor abort)",
+                    0b11001 => "Memory access synchronous parity error",
+                    _ => "<unknown>",
+                })?;
+
+                write!(f, " while fetching address 0x{addr:x}")?;
+            }
+            FaultException::UndefinedInstruction => {
+                // SAFETY: Since the abort was a undefined instruction, not a prefetch abort, it
+                // implies that reading the instruction won't cause another fault.
+                write!(f, "Failed to decode instruction {:x?}", unsafe {
+                    self.faulting_instruction()
+                })?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+#[bitbybit::bitfield(u32)]
+pub struct ProgramStatus {
+    /// Indicates that the program was running in Thumb mode.
+    #[bit(5, rw)]
+    thumb: bool,
+}
+
+#[bitbybit::bitfield(u32)]
+pub struct FaultStatus {
+    /// Indicates that the fault was caused by a write operation.
+    #[bit(11, r)]
+    write_not_read: bool,
+    /// Indicates the encoded reason of the fault.
+    #[bits([0..=3, 10], r)]
+    reason: u5,
+}
+
+/// Holds either an ARM or Thumb instruction.
+///
+/// All ARM instructions are 32-bit, but as Thumb is a variable-length instruction set,
+/// some Thumb instructions are only 16-bit.
+#[derive(Debug)]
+#[allow(dead_code)] // Only read via Debug
+enum Instruction {
+    Arm32(u32),
+    Thumb32([u16; 2]),
+    Thumb16(u16),
 }

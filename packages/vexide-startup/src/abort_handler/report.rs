@@ -1,12 +1,12 @@
-use std::fmt::{self, Write};
+use std::{
+    fmt::{self, Write},
+    iter,
+};
 
-#[cfg(all(target_os = "vexos", feature = "backtrace"))]
-use vex_libunwind::UnwindCursor;
+use vexide_core::backtrace::BacktraceIter;
 
-use super::fault::Fault;
+use super::Fault;
 use crate::error_report::ErrorReport;
-#[cfg(all(target_os = "vexos", feature = "backtrace"))]
-use crate::error_report::backtrace::BacktraceIter;
 
 pub struct SerialWriter(());
 
@@ -85,15 +85,28 @@ pub fn report_fault(fault: &Fault) {
         arr
     });
 
-    #[cfg(all(target_os = "vexos", feature = "backtrace"))]
-    if let Ok(cursor) = UnwindCursor::new(&unsafe { fault.unwind_context() }) {
-        _ = writeln!(dialog, "stack backtrace (check terminal):");
-        dialog.write_backtrace(BacktraceIter::new(cursor.clone()));
-
+    if cfg!(target_os = "vexos") {
+        let mut i = 0;
         _ = writeln!(serial, "stack backtrace:");
-        for (i, frame) in BacktraceIter::new(cursor).enumerate() {
-            _ = writeln!(serial, "{i:>3}: 0x{frame:x}");
+        _ = writeln!(dialog, "stack backtrace (check terminal):");
+
+        let fault_location = fault.program_counter as *const ();
+        let frame_ptr = cfg_select! {
+            target_feature = "thumb-mode" => fault.registers[7],
+            _ => fault.registers[11],
+        } as *const ();
+
+        // SAFETY: By convention, r7 is the Thumb frame pointer and r11 (fp) is the ARM frame
+        // pointer. We're accessing an outer call frame, so the frame record should still be valid.
+        let backtrace = unsafe { BacktraceIter::from_frame_ptr(frame_ptr) };
+
+        for addr in iter::once(fault_location).chain(backtrace) {
+            dialog.write_backtrace(i, addr as u32);
+            _ = writeln!(serial, "{i:>3}: 0x{:x}", addr as u32);
+            i += 1;
         }
+
+        dialog.finish_backtrace(i);
     }
 
     _ = writeln!(

@@ -59,6 +59,8 @@ mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
 mod sdk;
+#[cfg(all(target_os = "vexos", feature = "abort-handler"))]
+mod vectors;
 
 // Linkerscript Symbols
 //
@@ -95,6 +97,9 @@ unsafe extern "C" {
 #[instruction_set(arm::a32)] // VEX program entry begins in ARM mode
 unsafe extern "C" fn _vexide_boot() {
     core::arch::naked_asm!(
+        // Cap off the frame pointer registers so the backtrace routine knows to terminate here.
+        "mov fp, #0",
+        "mov r7, #0",
         // Load the stack pointer to point to our stack section.
         //
         // This technically isn't required, as VEXos already sets up a stack for CPU1, but that
@@ -190,7 +195,7 @@ pub unsafe fn startup() {
         crate::allocator::claim(&raw mut __linked_file_start, &raw mut __linked_file_end);
 
         #[cfg(feature = "abort-handler")]
-        abort_handler::install_vector_table();
+        vectors::install_vector_table();
     }
 
     // Register custom panic hook if needed.
