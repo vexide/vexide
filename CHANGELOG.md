@@ -35,6 +35,7 @@ Before releasing:
 ### Added
 
 - Implemented a conversion between `bool` and `LogicLevel`. (#428)
+- Added `DistanceSensor::ready` which returns a future resolving when the sensor is ready to be used. (#462)
 
 ### Fixed
 
