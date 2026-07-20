@@ -6,7 +6,7 @@ async fn main(peripherals: Peripherals) {
 
     let start = std::time::Instant::now();
     sensor
-        .ready()
+        .wait_ready()
         .await
         .expect("Failed to initialize distance sensor.");
     println!("Distance sensor initialized in {:?}", start.elapsed());

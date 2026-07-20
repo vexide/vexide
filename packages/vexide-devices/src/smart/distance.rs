@@ -5,7 +5,7 @@
 //! single object.
 //!
 //! To wait for the sensor to become ready after it's connected or the program begins, you can use
-//! [`DistanceSensor::status`] or `await` the [`DistanceSensor::ready`] future.
+//! [`DistanceSensor::status`] or `await` the [`DistanceSensor::wait_ready`] future.
 //!
 //! # Hardware Overview
 //!
@@ -46,7 +46,7 @@ unsafe impl Sync for DistanceSensor {}
 impl DistanceSensor {
     /// Creates a new distance sensor from a [`SmartPort`]. Once plugged in,
     /// distance sensors require anywhere between 10 and 100 ms to initialize,
-    /// so you may wish to utilize the [`DistanceSensor::ready`] future to wait
+    /// so you may wish to utilize the [`DistanceSensor::wait_ready`] future to wait
     /// for the sensor to be ready before attempting to read from it.
     ///
     /// # Examples
@@ -94,12 +94,12 @@ impl DistanceSensor {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     let sensor = DistanceSensor::new(peripherals.port_1);
-    ///     sensor.ready().await;
+    ///     sensor.wait_ready().await;
     ///     // The sensor is fully initialized now.
     /// }
     /// ```
     #[must_use = "futures do nothing unless awaited"]
-    pub const fn ready(&self) -> DistanceSensorReadyFuture<'_> {
+    pub const fn wait_ready(&self) -> DistanceSensorReadyFuture<'_> {
         DistanceSensorReadyFuture { sensor: self }
     }
 
