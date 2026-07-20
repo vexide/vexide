@@ -4,6 +4,13 @@ use vexide::prelude::*;
 async fn main(peripherals: Peripherals) {
     let sensor = DistanceSensor::new(peripherals.port_1);
 
+    let start = std::time::Instant::now();
+    sensor
+        .wait_ready()
+        .await
+        .expect("Failed to initialize distance sensor.");
+    println!("Distance sensor initialized in {:?}", start.elapsed());
+
     match sensor.object() {
         Ok(object) => match object {
             Some(data) => println!("Found an object! {data:?}"),

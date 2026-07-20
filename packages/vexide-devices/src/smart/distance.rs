@@ -4,6 +4,9 @@
 //! Class 1 laser to measure the distance, object size classification, and relative velocity of a
 //! single object.
 //!
+//! To wait for the sensor to become ready after it's connected or the program begins, you can use
+//! [`DistanceSensor::status`] or `await` the [`DistanceSensor::wait_ready`] future.
+//!
 //! # Hardware Overview
 //!
 //! The sensor uses a narrow-beam Class 1 laser (similar to phone proximity sensors) for precise
@@ -17,6 +20,8 @@
 //! objects will only be detected when they are directly in front of the sensor's field of view.
 //!
 //! Like all other Smart devices, VEXos will process sensor updates every 10mS.
+//! However, after being connected or at the beginning of the program, the sensor may require
+//! up to 100ms to initialize before valid readings can be obtained.
 
 use snafu::Snafu;
 use vex_sdk::{
@@ -39,7 +44,10 @@ unsafe impl Send for DistanceSensor {}
 unsafe impl Sync for DistanceSensor {}
 
 impl DistanceSensor {
-    /// Creates a new distance sensor from a [`SmartPort`].
+    /// Creates a new distance sensor from a [`SmartPort`]. Once plugged in,
+    /// distance sensors require anywhere between 10 and 100 ms to initialize,
+    /// so you may wish to utilize the [`DistanceSensor::wait_ready`] future to wait
+    /// for the sensor to be ready before attempting to read from it.
     ///
     /// # Examples
     ///
@@ -59,11 +67,12 @@ impl DistanceSensor {
         }
     }
 
-    /// Validates that the sensor is currently connected to its port, and that its status code is
-    /// either 0x82 or 0x86.
+    /// Validates that the sensor is currently connected to its port, and that
+    /// its status code is either 0x82 or 0x86.
     ///
-    /// It's unknown what these status codes indicate (likely related to port status), but PROS
-    /// performs this check in their API, so we will too.
+    /// It's unknown what these status codes indicate (see [this discussion with
+    /// jpearman](https://www.vexforum.com/t/v5-distance-sensor-status-code-difference/147191/2)),
+    /// but PROS performs this check in their API, so we will too.
     ///
     /// <https://github.com/purduesigbots/pros/blob/master/src/devices/vdml_distance.c#L20>
     fn validate(&self) -> Result<(), DistanceObjectError> {
@@ -72,6 +81,26 @@ impl DistanceSensor {
             0x82 | 0x86 => Ok(()),
             code => BadStatusCodeSnafu { code }.fail(),
         }
+    }
+
+    /// Waits until the distance sensor is ready to be used, which may take up
+    /// to 100ms from when it is connected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let sensor = DistanceSensor::new(peripherals.port_1);
+    ///     sensor.wait_ready().await;
+    ///     // The sensor is fully initialized now.
+    /// }
+    /// ```
+    #[must_use = "futures do nothing unless awaited"]
+    pub const fn wait_ready(&self) -> DistanceSensorReadyFuture<'_> {
+        DistanceSensorReadyFuture { sensor: self }
     }
 
     /// Attempts to detect an object, returning `None` if no object could be found.
@@ -270,4 +299,45 @@ pub enum DistanceObjectError {
         /// The source of the error.
         source: PortError,
     },
+}
+
+/// Errors that can occur when waiting for a distance sensor to become ready.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Snafu)]
+pub enum DistanceReadyError {
+    /// The sensor has an unknown status code.
+    #[snafu(display("The sensor has an unknown status code (0x{code:x?})."))]
+    UnknownStatusCode {
+        /// The status code returned by the sensor.
+        code: u32,
+    },
+
+    /// Generic port related error.
+    #[snafu(transparent)]
+    Port {
+        /// The source of the error.
+        source: PortError,
+    },
+}
+
+/// A future that resolves when the distance sensor is ready to be used.
+pub struct DistanceSensorReadyFuture<'a> {
+    sensor: &'a DistanceSensor,
+}
+
+impl core::future::Future for DistanceSensorReadyFuture<'_> {
+    type Output = Result<(), DistanceReadyError>;
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        match self.sensor.status()? {
+            0x82 | 0x86 => core::task::Poll::Ready(Ok(())),
+            0x00 => {
+                cx.waker().wake_by_ref();
+                core::task::Poll::Pending
+            }
+            code => core::task::Poll::Ready(UnknownStatusCodeSnafu { code }.fail()),
+        }
+    }
 }
