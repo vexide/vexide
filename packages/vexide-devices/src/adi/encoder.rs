@@ -161,9 +161,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
         }
     }
 
-    /// Returns the distance reading of the encoder sensor in centimeters.
-    ///
-    /// Round and/or fluffy objects can cause inaccurate values to be returned.
+    /// Returns the angular position of the encoder sensor.
     ///
     /// # Errors
     ///
@@ -250,10 +248,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
         Ok(())
     }
 
-    /// Sets the current encoder position to zero.
-    ///
-    /// Analogous to taring or resetting the encoder so that the new position is equal to the given
-    /// position.
+    /// Sets the current encoder position to zero without any actual movement.
     ///
     /// # Errors
     ///
