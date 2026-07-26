@@ -202,9 +202,9 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
         ))
     }
 
-    /// Sets the current encoder position to the given position without any actual movement.
+    /// Resets the current encoder position so that it reads as the given position.
     ///
-    /// Analogous to taring or resetting the encoder so that the new position is equal to the given
+    /// Analogous to taring the encoder so that the new position is equal to the given
     /// position. This can be useful if you want to reset the encoder position to a known value
     /// at a certain point.
     ///
@@ -248,7 +248,7 @@ impl<const TICKS_PER_REVOLUTION: u32> AdiEncoder<TICKS_PER_REVOLUTION> {
         Ok(())
     }
 
-    /// Sets the current encoder position to zero without any actual movement.
+    /// Tares the current encoder position so that it reads as zero.
     ///
     /// # Errors
     ///
