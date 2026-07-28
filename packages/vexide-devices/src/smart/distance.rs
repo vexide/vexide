@@ -44,10 +44,12 @@ unsafe impl Send for DistanceSensor {}
 unsafe impl Sync for DistanceSensor {}
 
 impl DistanceSensor {
-    /// Creates a new distance sensor from a [`SmartPort`]. Once plugged in,
-    /// distance sensors require anywhere between 10 and 100 ms to initialize,
-    /// so you may wish to utilize the [`DistanceSensor::wait_ready`] future to wait
-    /// for the sensor to be ready before attempting to read from it.
+    /// Creates a new distance sensor from a [`SmartPort`].
+    ///
+    /// Once plugged in, distance sensors require anywhere between 10 and 100 ms
+    /// to initialize, so you may wish to utilize the
+    /// [`DistanceSensor::wait_ready`] future to wait for the sensor to be ready
+    /// before attempting to read from it.
     ///
     /// # Examples
     ///
