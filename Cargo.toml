@@ -15,7 +15,7 @@ icon = "cool-x"
 compress = true
 
 [dev-dependencies]
-vex-sdk = "0.28.0"
+vex-sdk = "0.29.0-rc.1"
 vexide = { path = "packages/vexide", features = [ "full", "default-sdk" ] }
 
 [workspace]
@@ -26,14 +26,14 @@ resolver = "2"
 snafu = { version = "0.9.0", default-features = false, features = [
     "rust_1_81",
 ] }
-vexide = { version = "0.8.0", path = "packages/vexide", default-features = false }
-vexide-async = { version = "0.2.0", path = "packages/vexide-async", default-features = false }
-vexide-core = { version = "0.8.0", path = "packages/vexide-core", default-features = false }
-vexide-devices = { version = "0.8.0", path = "packages/vexide-devices", default-features = false }
-vexide-startup = { version = "0.5.0", path = "packages/vexide-startup", default-features = false }
+vexide = { version = "0.9.0", path = "packages/vexide", default-features = false }
+vexide-async = { version = "0.2.1", path = "packages/vexide-async", default-features = false }
+vexide-core = { version = "0.9.0", path = "packages/vexide-core", default-features = false }
+vexide-devices = { version = "0.9.0", path = "packages/vexide-devices", default-features = false }
+vexide-startup = { version = "0.6.0", path = "packages/vexide-startup", default-features = false }
 vexide-macro = { version = "0.4.0", path = "packages/vexide-macro", default-features = false }
-vex-sdk = "0.28.0"
-vex-sdk-mock = { version = "0.2.0-rc.1", git = "https://github.com/vexide/vex-sdk", branch = "rc" }
+vex-sdk = "0.29.0-rc.1"
+vex-sdk-mock = "0.2.0-rc.1"
 
 [workspace.lints.rust]
 rust_2018_idioms = { level = "warn", priority = -1 }
