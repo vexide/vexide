@@ -53,8 +53,10 @@ impl GpsSensor {
     ///
     /// # Sensor Configuration
     ///
-    /// The sensor requires three measurements to be made at the start of a match, passed as
-    /// arguments to this function:
+    /// The sensor requires one measurement to be made at the start of a match, passed as
+    /// an argument to this function, with two optional measurements to further improve accuracy:
+    /// (Use GpsSensor::new_without_initial_position if you don't want to provide an initial
+    /// position and heading estimate).
     ///
     /// ## Sensor Offset
     ///
@@ -143,6 +145,152 @@ impl GpsSensor {
             rotation_offset: Default::default(),
             heading_offset: Default::default(),
         }
+    }
+
+    /// Creates a new GPS sensor from a [`SmartPort`].
+    ///
+    /// # Sensor Configuration
+    ///
+    /// The sensor requires one measurement to be made at the start of a match, passed as
+    /// an argument to this function:
+    ///
+    /// ## Sensor Offset
+    ///
+    /// `offset` is the physical offset of the sensor's mounting location from a reference point on
+    /// the robot.
+    ///
+    /// Offset defines the exact point on the robot that is considered a "source of truth" for the
+    /// robot's position. For example, if you considered the center of your robot to be the
+    /// reference point for coordinates, then this value would be the signed 4-quadrant x and y
+    /// offset from that point on your robot in meters. Similarly, if you considered the sensor
+    /// itself to be the robot's origin of tracking, then this value would simply be `Point2 { x:
+    /// 0.0, y: 0.0 }`.
+    ///
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    /// use vexide::math::Point2;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Create a GPS sensor mounted 2 inches forward and 1 inch right of center
+    ///     let gps = GpsSensor::new_without_initial_position(
+    ///         // Port 1
+    ///         peripherals.port_1,
+    ///
+    ///         // Sensor is mounted 0.225 meters to the left and 0.225 meters above the robot's tracking origin.
+    ///         Point2 { x: -0.225, y: 0.225 },
+    ///
+    ///     );
+    /// }
+    /// ```
+    pub fn new_without_initial_position(port: SmartPort, offset: impl Into<Point2<f64>>) -> Self {
+        let device = unsafe { port.device_handle() };
+
+        let offset = offset.into();
+
+        unsafe {
+            vexDeviceGpsOriginSet(device, offset.x, offset.y);
+        }
+
+        Self {
+            device,
+            port,
+            rotation_offset: Default::default(),
+            heading_offset: Default::default(),
+        }
+    }
+
+    /// Updates the sensor's position estimate.
+    ///
+    /// This value is also configured initially through [`GpsSensor::new`].
+    ///
+    /// ## Initial Robot Position
+    ///
+    /// `initial_position` is an estimate of the robot's initial cartesian coordinates on the field
+    /// in meters. This value helpful for cases when the robot's starting point is near a field
+    /// wall.
+    ///
+    /// When the GPS Sensor is too close to a field wall to properly read the GPS strips, the sensor
+    /// will be unable to localize the robot's position due the wall's proximity limiting the view
+    /// of the camera. This can cause the sensor inaccurate results at the start of a match, where
+    /// robots often start directly near a wall.
+    ///
+    /// By providing an estimate of the robot's initial position on the field, this problem is
+    /// partially mitigated by giving the sensor an initial frame of reference to use.
+    ///
+    /// # Initial Robot Heading
+    ///
+    /// `initial_heading` is a value between 0 and 360 degrees that informs the GPS of its heading
+    /// at the start of the match. Similar to `initial_position`, this is useful for improving
+    /// accuracy when the sensor is in close proximity to a field wall, as the sensor's rotation
+    /// values are continuously checked against the GPS field strips to prevent drift over time. If
+    /// the sensor starts too close to a field wall, providing an `initial_heading` can help prevent
+    /// this drift at the start of the match.
+    ///
+    /// # Errors
+    ///
+    /// - A [`PortError::Disconnected`] error is returned if no device was connected to the port.
+    /// - A [`PortError::IncorrectDevice`] error is returned if the wrong type of device was
+    ///   connected to the port.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    /// use vexide::math::Point2;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     let mut gps = GpsSensor::new_without_initial_position(
+    ///         peripherals.port_1,
+    ///
+    ///         // Initial offset value is configured here!
+    ///         //
+    ///         // Let's assume that the sensor is mounted 0.225 meters to the left and 0.225 meters above
+    ///         // our desired tracking origin.
+    ///         Point2 { x: -0.225, y: 0.225 }, // Configure offset value
+    ///     );
+    ///
+    ///     // Get the configured offset of the sensor
+    ///     if let Ok(offset) = gps.offset() {
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is mounted at x=-0.225, y=0.225"
+    ///     }
+    ///
+    ///     // Change the offset to something new
+    ///     _ = gps.set_position(
+    ///     ///         // Robot's starting point is at the center of the field.
+    ///         Point2 { x: 0.0, y: 0.0 },
+    ///
+    ///         // Robot is facing to the right initially.
+    ///         90.0,
+    ///     );
+    ///
+    ///     // Get the measured of the sensor again
+    ///     if let Ok(position) = gps.position() {
+    ///         println!("GPS sensor position is at x={}, y={}", position.x, position.y); // "Sensor is positioned at x=0.0, y=0.0"
+    ///     }
+    /// }
+    /// ```
+    pub fn set_position(
+        &mut self,
+        initial_position: impl Into<Point2<f64>>,
+        initial_heading: f64,
+    ) -> Result<(), PortError> {
+        self.validate_port()?;
+        let initial_position = initial_position.into();
+
+        unsafe {
+            vexDeviceGpsInitialPositionSet(
+                self.device,
+                initial_position.x,
+                initial_position.y,
+                initial_heading,
+            );
+        }
+        Ok(())
     }
 
     /// Returns the user-configured offset from a reference point on the robot.
