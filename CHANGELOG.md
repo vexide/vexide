@@ -50,6 +50,8 @@ Before releasing:
 ### Changed
 
 - Corrected some minor doc comments and updated the Nix flake. (#451)
+- Upgraded to SNAFU 0.9. (#442)
+- Updated to `vex-sdk` 0.29.0-rc.1.
 - Programs now execute in Thumb mode instead of ARM mode, reducing code size. (#454)
 - Backtraces are now captured using the frame pointer instead of through unwind tables. (#456) (**Breaking Change**)
 
@@ -62,6 +64,7 @@ Before releasing:
 
 - @elijah629 made their first contribution in #428!
 - @speedskater1610 made their first contribution in #429!
+- @shepmaster made their first contribution in #442!
 
 ## [0.8.0]
 
@@ -552,7 +555,7 @@ Before releasing:
 
 ### New Contributors
 
-[unreleased]: https://github.com/vexide/vexide/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/vexide/vexide/compare/v0.8.0...HEAD
 [0.2.0]: https://github.com/vexide/vexide/compare/v0.1.0...v0.2.0
 [0.2.1]: https://github.com/vexide/vexide/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/vexide/vexide/compare/v0.2.1...v0.3.0
