@@ -1,4 +1,8 @@
 {
+    "rust-analyzer.linkedProjects": [
+        "Cargo.toml",
+        "self-tests/Cargo.toml",
+    ],
     "cSpell.words": [
         "armv7a",
         "baudrate",

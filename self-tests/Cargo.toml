@@ -1,0 +1,26 @@
+[package]
+name = "vexide-self-tests"
+description = "On-device self-tests for the vexide runtime"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata.v5]
+slot = 8
+
+[profile.release]
+debug = true
+
+[profile.dev]
+opt-level = "s"
+
+[dev-dependencies]
+libtest-mimic = "0.8.2"
+
+[dev-dependencies.vexide]
+path = "../packages/vexide"
+features = ["full", "default-sdk"]
+
+[[test]]
+name = "suite"
+harness = false
