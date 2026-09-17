@@ -17,10 +17,10 @@ jobs:
               uses: Swatinem/rust-cache@v2
 
             - name: Check Crates (VEXos)
-              run: cargo check --target=armv7a-vex-v5 -p vexide --features "full default-sdk"
+              run: cargo check --target=thumbv7a-vex-v5 -p vexide --features "full default-sdk"
 
             - name: Check Examples (VEXos)
-              run: cargo check --target=armv7a-vex-v5 --bins --examples
+              run: cargo check --target=thumbv7a-vex-v5 --bins --examples
 
             - name: Test (Desktop)
               run: cargo test --workspace --all-targets

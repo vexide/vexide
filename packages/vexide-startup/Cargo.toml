@@ -56,7 +56,7 @@ vex-sdk-pros = ["dep:vex-sdk-pros"]
 vex-sdk-mock = ["dep:vex-sdk-mock"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-vex-v5"]
+targets = ["thumbv7a-vex-v5"]
 cargo-args = [
     "-Zbuild-std=std,panic_abort",
     "-Zbuild-std-features=compiler-builtins-mem",
