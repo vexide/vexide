@@ -64,7 +64,7 @@ mod vectors;
 
 // Linkerscript Symbols
 //
-// All of these external symbols are defined by either Rust's armv7a-vex-v5 linkerscript, our ours
+// All of these external symbols are defined by either Rust's thumbv7a-vex-v5 linkerscript, our ours
 // (see link/vexide.ld). These symbols don't have real types or values, but a pointer to them points
 // to the address of their location defined in the linkerscript.
 #[cfg(target_os = "vexos")]

@@ -57,7 +57,7 @@
 //! ```
 //!
 //! ```terminal
-//! $ llvm-symbolizer -p -e ./target/armv7a-vex-v5/debug/program_name 0x380217b 0x380209b
+//! $ llvm-symbolizer -p -e ./target/thumbv7a-vex-v5/debug/program_name 0x380217b 0x380209b
 //! my_function at src/main.rs:30:14
 //!
 //! main at src/main.rs:21:9
