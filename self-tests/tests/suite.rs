@@ -40,6 +40,17 @@ async fn main(peripherals: Peripherals) {
         test!(adi::motor_set_output_reads_back).with_ignored_flag(true),
         test!(adi::gyroscope_reports_calibration_state),
         test!(adi::expander_ports_report_expander_state),
+        test!(std_sync::test_call_once),
+        test!(std_sync::test_mutex_lock),
+        test!(std_sync::test_oncelock_lazylock),
+        test!(std_sync::test_rwlock_lock),
+        test!(std_sync::test_stdio_lock),
+        test!(std_sync::test_condvar_timeout),
+        test!(std_sync::test_park_timeout),
+        test!(std_sync::test_duration_zero_no_yield),
+        test!(isr::test_irqs_received),
+        test!(isr::test_irq_mutex_try_lock),
+        test!(isr::test_irq_thread_unpark),
     ];
     let num_tests = tests.len();
     let result = libtest_mimic::run(&args, tests);
