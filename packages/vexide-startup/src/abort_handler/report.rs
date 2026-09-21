@@ -125,7 +125,7 @@ pub fn report_fault(fault: &Fault) {
     };
     _ = writeln!(
         &mut serial,
-        "      (e.g. llvm-symbolizer -e ./target/armv7a-vex-v5/{profile}/program_name 0x{:x})",
+        "      (e.g. llvm-symbolizer -e ./target/thumbv7a-vex-v5/{profile}/program_name 0x{:x})",
         fault.program_counter
     );
 

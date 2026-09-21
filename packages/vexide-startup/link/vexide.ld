@@ -2,8 +2,8 @@
  * This file contains vexide-specific memory layout options.
  *
  * This file is designed to augment the builtin linkerscript for
- * the `armv7a-vex-v5` target in rustc, which may be found here:
- * <https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/armv7a_vex_v5_linker_script.ld>
+ * the `thumbv7a-vex-v5` target in rustc, which may be found here:
+ * <https://github.com/rust-lang/rust/blob/main/compiler/rustc_target/src/spec/targets/thumbv7a_vex_v5_linker_script.ld>
  */
 
 ENTRY(_vexide_boot)
