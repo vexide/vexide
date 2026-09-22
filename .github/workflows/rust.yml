@@ -22,6 +22,10 @@ jobs:
             - name: Check Examples (VEXos)
               run: cargo check --target=armv7a-vex-v5 --bins --examples
 
+            - name: Check Self-Tests (VEXos)
+              working-directory: self-tests
+              run: cargo check --all-targets
+
             - name: Test (Desktop)
               run: cargo test --workspace --all-targets
 
@@ -47,6 +51,12 @@ jobs:
               run: cargo clippy --workspace --all-targets --features "full default-sdk"
               env:
                 RUSTFLAGS: "-Dwarnings"
+
+            - name: Clippy (Self-Tests)
+              working-directory: self-tests
+              run: cargo clippy --all-targets
+              env:
+                RUSTFLAGS: "-Dwarnings"
     fmt:
         name: Rustfmt
         runs-on: ubuntu-latest
@@ -61,4 +71,7 @@ jobs:
               run: rustup component add rustfmt
 
             - name: Check formatting
+              run: cargo fmt --all --check
+
+            - name: Check formatting (Self-Tests)
               run: cargo fmt --all --check

@@ -20,6 +20,9 @@ vexide = { path = "packages/vexide", features = [ "full", "default-sdk" ] }
 
 [workspace]
 members = ["packages/*"]
+# Hardware self-tests are a separate workspace so that `cargo test --workspace` doesn't run
+# anything that needs a connected VEX V5 Brain.
+exclude = ["self-tests"]
 resolver = "2"
 
 [workspace.dependencies]

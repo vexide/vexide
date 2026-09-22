@@ -1,0 +1,2 @@
+build.target = "armv7a-vex-v5"
+target.armv7a-vex-v5.runner = "cargo v5 run --file"
