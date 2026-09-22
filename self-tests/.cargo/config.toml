@@ -1,0 +1,2 @@
+build.target = "thumbv7a-vex-v5"
+target.thumbv7a-vex-v5.runner = "cargo v5 run --file"
