@@ -1,16 +1,13 @@
 //! Interrupt service routine tests.
 //!
 //! These check that a user-installed Armv7-A IRQ handler can run alongside the main execution
-//! context and synchronize with it using `std::sync`, as described in the `thumbv7a-vex-v5`
-//! platform support docs.
+//! context and synchronize with it using atomics. The `thumbv7a-vex-v5` platform support docs
+//! treat exception handlers like UNIX signal handlers, so they must not use `std::sync`,
+//! `thread_local!`, or `thread::current`.
 
 use std::{
-    hint::spin_loop,
-    sync::{
-        Mutex,
-        atomic::{AtomicU32, AtomicU64, Ordering},
-    },
-    thread::{self, Thread},
+    sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering},
+    thread,
     time::Duration,
 };
 
@@ -100,77 +97,51 @@ pub async fn test_irqs_received(_peripherals: Peripherals) -> Result<(), Failed>
     Ok(())
 }
 
-/// A `Mutex` shared with an ISR should hand out the lock to one side at a time, and `try_lock`
-/// should back off rather than deadlock when the main context already holds it.
-pub async fn test_irq_mutex_try_lock(_peripherals: Peripherals) -> Result<(), Failed> {
-    static DATA: Mutex<u64> = Mutex::new(0);
-
-    let mut data_last = 0;
-
-    vectors::with_irq(
-        || {
-            if let Ok(mut data) = DATA.try_lock() {
-                *data += 1;
-            }
-        },
-        || {
-            // Spin long enough to be sure several interrupts arrive. Interrupts increment `DATA`,
-            // so it must never be seen going backwards or torn.
-            let deadline = unsafe { vexSystemTimeGet() } + 50;
-            while unsafe { vexSystemTimeGet() } < deadline {
-                spin_loop();
-                let data = *DATA.lock().unwrap();
-                assert!(data >= data_last);
-                data_last = data;
-            }
-        },
-    );
-
-    assert_ne!(data_last, 0);
-
-    Ok(())
-}
-
-/// Unparking the main thread from an ISR should wake it back up.
-pub async fn test_irq_thread_unpark(_peripherals: Peripherals) -> Result<(), Failed> {
-    /// How long the ISR waits before it starts unparking.
+/// An ISR should be able to wake the main context by setting an atomic flag that the main context
+/// polls while yielding to VEXos.
+pub async fn test_irq_atomic_flag_wakes_main(_peripherals: Peripherals) -> Result<(), Failed> {
+    /// How long the ISR waits before it sets the flag.
     const DELAY: u32 = 50;
-    /// Bails out if the ISR never manages to unpark us.
-    const TIMEOUT: Duration = Duration::from_millis(500);
+    /// Bails out if the ISR never sets the flag.
+    const TIMEOUT: u32 = 500;
 
-    static THREAD: Mutex<Option<Thread>> = Mutex::new(None);
     static WAKEUP_TIME: AtomicU32 = AtomicU32::new(0);
+    static FLAG: AtomicBool = AtomicBool::new(false);
 
+    FLAG.store(false, Ordering::SeqCst);
     let begin = unsafe { vexSystemTimeGet() };
     WAKEUP_TIME.store(begin + DELAY, Ordering::SeqCst);
-    *THREAD.lock().unwrap() = Some(thread::current());
 
-    vectors::with_irq(
+    let success = vectors::with_irq(
         || {
-            // Start spamming unpark once the delay has elapsed.
-            if unsafe { vexSystemTimeGet() } < WAKEUP_TIME.load(Ordering::SeqCst) {
-                return;
-            }
-
-            if let Ok(thrd) = THREAD.try_lock()
-                && let Some(thrd) = &*thrd
-            {
-                thrd.unpark();
+            // This ISR might set the flag multiple times, but it shouldn't be an issue since we
+            // always assign the same value - we just need to know that it ran at least once.
+            if unsafe { vexSystemTimeGet() } >= WAKEUP_TIME.load(Ordering::SeqCst) {
+                FLAG.store(true, Ordering::Release);
             }
         },
-        || thread::park_timeout(TIMEOUT),
+        || {
+            loop {
+                if FLAG.load(Ordering::Acquire) {
+                    return true;
+                }
+                if unsafe { vexSystemTimeGet() } - begin >= TIMEOUT {
+                    return false;
+                }
+                thread::yield_now();
+            }
+        },
     );
 
     let elapsed = unsafe { vexSystemTimeGet() } - begin;
-    *THREAD.lock().unwrap() = None;
 
     assert!(
         elapsed >= DELAY,
-        "woke up after {elapsed}ms, before the ISR started unparking"
+        "woke up after {elapsed}ms, before the ISR set the flag"
     );
     assert!(
-        Duration::from_millis(u64::from(elapsed)) < TIMEOUT,
-        "timed out after {elapsed}ms without being unparked"
+        success,
+        "timed out after {elapsed}ms without the flag being set"
     );
 
     Ok(())
