@@ -1,11 +1,11 @@
 //! `std::sync` and `std::thread` blocking primitive tests.
 //!
-//! On this target these are all built on spinlocks that tick the VEXos scheduler through
-//! `thread::yield_now`.
+//! On this target these use std's single-threaded (`no_threads`) implementations, since the main
+//! thread is the only context allowed to use them.
 
 use std::{
     hint::spin_loop,
-    sync::{Condvar, LazyLock, Mutex, Once, OnceLock, RwLock},
+    sync::{Condvar, LazyLock, Mutex, Once, OnceLock, RwLock, TryLockError},
     thread,
     time::{Duration, Instant},
 };
@@ -31,6 +31,19 @@ pub async fn test_mutex_lock(_peripherals: Peripherals) -> Result<(), Failed> {
     for _ in 0..10_000 {
         drop(m.lock()?);
     }
+
+    Ok(())
+}
+
+/// Tests that `Mutex::try_lock` fails while the lock is held instead of blocking.
+pub async fn test_mutex_try_lock_held(_peripherals: Peripherals) -> Result<(), Failed> {
+    let m = Mutex::new(());
+
+    let guard = m.lock()?;
+    assert!(matches!(m.try_lock(), Err(TryLockError::WouldBlock)));
+    drop(guard);
+
+    assert!(m.try_lock().is_ok());
 
     Ok(())
 }
@@ -72,8 +85,8 @@ pub async fn test_call_once(_peripherals: Peripherals) -> Result<(), Failed> {
     Ok(())
 }
 
-// Rust std allows Condvars and thread parking to wake spuriously, but under VEX V5 this should not
-// be the case as of the Rust version vexide is pinned to. This is not stable behavior but we can
+// Rust std allows Condvars to wake spuriously, but under VEX V5 `wait_timeout` sleeps for the
+// full duration as of the Rust version vexide is pinned to. This is not stable behavior but we can
 // still use it to try to ensure things are mostly working properly.
 
 /// Tests that Condvars under thumbv7a-vex-v5 time out properly when there are no events.
@@ -90,17 +103,6 @@ pub async fn test_condvar_timeout(_peripherals: Peripherals) -> Result<(), Faile
     let after = Instant::now();
 
     assert!(result.timed_out());
-    assert!((after - now) >= Duration::from_millis(500));
-
-    Ok(())
-}
-
-/// Tests that `thread::park_timeout` unparks after the timeout.
-pub async fn test_park_timeout(_peripherals: Peripherals) -> Result<(), Failed> {
-    let now = Instant::now();
-    thread::park_timeout(Duration::from_millis(500));
-    let after = Instant::now();
-
     assert!((after - now) >= Duration::from_millis(500));
 
     Ok(())
