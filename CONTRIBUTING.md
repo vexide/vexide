@@ -39,7 +39,7 @@ The simplest ways to start contributing code to vexide are by finding an unresol
 or by asking on our [Discord server][discord-server]. Issues with the [good first issue][first-issue-search]
 label are good candidates for your first contribution.
 
-Some specific aspects of vexide's internals are documented on our [internal docs page][https://internals.vexide.dev/].
+Some specific aspects of vexide's internals are documented on our [internal docs page][internal-docs].
 
 ### Use of AI/LLMs
 
@@ -176,4 +176,4 @@ out.][atom-contributing]
 [about-draft-prs]:
     https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests
 [atom-contributing]: https://github.com/atom/atom/blob/master/CONTRIBUTING.md
-[internal-docs]: (https://internals.vexide.dev/)
+[internal-docs]: https://internals.vexide.dev/
