@@ -24,6 +24,7 @@ For some general guidelines on issue reporting:
 - Provide your Rust version, vexide version, and operating system.
 - If you have screenshots, photos, or videos, attach them to the GitHub issue.
 - Explain when the problem started happening. Was it after a recent update? Or has it always been a problem?
+- *Do not use AI to summarize or write issues for you. If you do this, your issue will be closed.*
 
 If you're reporting a typo or a simple mistake, submit an issue using the **Small issue** template, which requires less details than a full bug report.
 
@@ -48,7 +49,7 @@ Contributions are expected to be *written*, *understood*, *reviewed*, and *maint
 1. Do not submit changes that you do not understand and/or could not write yourself.
 
     > **Rationale:** Contributors are expected to both fully understand the code that they write **and** have the necessary skills to *maintain it*. Opening PRs containing code that you did not write more often than not fails to meet either of these expectations and wastes the time of reviewers.
-2. Code should not be recognizably "vibe-coded" or AI-written. This includes excessive overuse of comments, throwaway utility functions, and documentation clearly written in "LLM-prose".
+2. Code should not be recognizably "vibe-coded" or AI-written. This includes excessive overuse of comments, throwaway utility functions, and documentation/PR descriptions clearly written in "LLM-prose".
 
     > **Rationale:** LLM-assisted contributions are held to the same quality as any other PR. If we can tell that a human didn't write it, then it has failed to meet our expectation of code quality.
 3. Don't add "Assisted-by: [some LLM]" tags to your commits. Pull requests that do this will be closed.
