@@ -61,8 +61,6 @@ All Rust source code should be formatted with Rustfmt, by running `cargo fmt` af
 
 Use Clippy to lint your changes: `cargo clippy`.
 
-#### Non-rust files
-
 In files not formatted by Rustfmt, there should be no trailing whitespace, the end of line
 sequence should be LF (line feed), and the file should end with one trailing newline.
 
