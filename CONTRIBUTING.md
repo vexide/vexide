@@ -48,10 +48,10 @@ Contributions are expected to be *written*, *understood*, *reviewed*, and *maint
 1. Do not submit changes that you do not understand and/or could not write yourself.
 
     > **Rationale:** Contributors are expected to both fully understand the code that they write **and** have the necessary skills to *maintain it*. Opening PRs containing code that you did not write more often than not fails to meet either of these expectations and wastes the time of reviewers.
-3. Code should not be recognizably "vibe-coded" or AI-written. This includes excessive overuse of comments, throwaway utility functions, and documentation clearly written in "LLM-prose".
+2. Code should not be recognizably "vibe-coded" or AI-written. This includes excessive overuse of comments, throwaway utility functions, and documentation clearly written in "LLM-prose".
 
     > **Rationale:** LLM-assisted contributions are held to the same quality as any other PR. If we can tell that a human didn't write it, then it has failed to meet our expectation of code quality.
-4. Don't add "Assisted-by: [some LLM]" tags to your commits. Pull requests that do this will be closed.
+3. Don't add "Assisted-by: [some LLM]" tags to your commits. Pull requests that do this will be closed.
 
     > **Rationale:** Refer to points 1 and 2. Doing this is just free advertising for the LLM's provider.
 
