@@ -39,7 +39,7 @@ The simplest ways to start contributing code to vexide are by finding an unresol
 or by asking on our [Discord server][discord-server]. Issues with the [good first issue][first-issue-search]
 label are good candidates for your first contribution.
 
-Some specific aspects of vexide's internals are documented on our [internal docs page][internal-docs].
+Some specific aspects of vexide's internals are documented on our [internal docs page][https://internals.vexide.dev/].
 
 ### Use of AI/LLMs
 
