@@ -56,6 +56,8 @@ Contributions are expected to be *written*, *understood*, *reviewed*, and *maint
 
     > **Rationale:** Refer to points 1 and 2. Doing this is just free advertising for the LLM's provider.
 
+4. If portions of your PR were not written by you, please disclose this in your PR's description for the sake of transparency.
+
 ### Code Style & Formatting
 
 All Rust source code should be formatted with Rustfmt, by running `cargo fmt` after making changes. vexide loosely follows the [Rust styleguide](https://doc.rust-lang.org/style-guide/) as a standard of code quality.
