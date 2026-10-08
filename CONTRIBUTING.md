@@ -74,7 +74,7 @@ Pull requests should ideally do one thing in one place. Avoiding opening massive
 
 Please run and test your changes on real hardware or in an [emulator](https://github.com/vexide/vex-v5-qemu) if possible. If you are unable to do so, please mention it in your pull request's description so that a reviewer can test your changes.
 
-vexide is tested through a series of both unit tests (which run on the host in a mock environment) and integration tests (which run on a real brain in bulk). Details on how to run these can be found in the project's [README](https://github.com/vexide/vexide/#testing).
+vexide is tested through a series of both on-device and off-device unit tests. Details on how to run these can be found in the project's [README](https://github.com/vexide/vexide/#testing).
 
 ### Try to fix the cause, not the effect.
 
@@ -98,12 +98,6 @@ Here is an example of a conforming commit message:
 ```
 docs(contributing): add Acknowledgements section
 ```
-
-<!--
-#### Unit tests
-
-TODO
--->
 
 ### Changelog
 
