@@ -1,97 +1,89 @@
 # Contributing to vexide
 
-Thanks for taking the time to help this project improve! Your contributions are
-helpful and welcome.
+Thanks for taking the time to help this project improve! Your contributions are helpful and welcome.
+
+Before you start contributing, please take a moment to review the guidelines outlined here. This ensures a smooth collaboration and helps maintain the project's quality.
 
 ## I have a question!
 
 If you simply have a question about vexide or need help using it, the best way you can
-get support is by asking in our active [Discord Server][discord-server].
+get support is by asking in our active [Discord Server][discord-server]. Several core maintainers are active in there and happy to help!
 
-## Ways to contribute
+## Using the Issue Tracker
 
-### Reporting a problem
+The [issues page][issues-page] is used to report bugs and request new features. Before opening an issue, please use the search bar to make sure that the problem or feature hasn't already been opened.
 
-If something is not working as expected, you can use the repository's
-[Issues][issues-page] page to report it. Before
-creating a bug report, use the search bar to make sure that what you're
-experiencing isn't already a known issue.
+### Reporting a Problem
 
-#### If you find an issue that describes the same problem
+If something is not working as expected, you can use the **Bug report** template.
 
-If the issue you found is closed, feel free to make a new one, but it helps
-to link the one you found under the **Additional information** header.
-
-If the issue you found is open, the best way to help is by leaving a
-comment on it describing your experience, or by joining our
-[Discord server][discord-server] and telling us about it.
-
-#### Reporting a small problem
-
-If you're reporting a typo or a simple mistake, submit an issue using the
-**Small issue** template, which requires less details than a full bug report.
-
-#### Writing and submitting your report
-
-When creating your report, you should use the **Bug report** issue template to
-be provided with a list of questions that will help describe the problem you are
-having.
-
-Additionally, try to do the following:
-
-- Give the issue a **clear and concise** title.
-- Fill out **as many of the template's headers as possible**.
-- Provide a **code sample** to help readers reproduce the issue.
+For some general guidelines on issue reporting:
+- Give the issue a clear and concise title.
+- Fill out as many of the template's fields as possible.
+- Provide a code sample to help readers reproduce the issue.
 - Provide your Rust version, vexide version, and operating system.
-- If you have **screenshots, photos, or videos**, attach them to the GitHub issue.
-- Explain **when the problem started happening**. Was it after a recent update?
-  Or has it always been an issue?
+- If you have screenshots, photos, or videos, attach them to the GitHub issue.
+- Explain when the problem started happening. Was it after a recent update? Or has it always been a problem?
+- *Do not use AI to summarize or write issues for you. If you do this, your issue will be closed.*
 
-### Suggesting features
+If you're reporting a typo or a simple mistake, submit an issue using the **Small issue** template, which requires less details than a full bug report.
 
-Thanks for sharing your idea! Before submitting your suggestion, please:
+### Suggesting a Feature
 
-- Check if your idea is already being discussed by using the [Issues][issues-page]
-  search bar to search for similar suggestions.
-- Ensure your idea is within the project's scope: to provide an opinionated Rust
-  framework for developing VEX V5 robots.
-  * If your idea is about motion control (PID, motion profiles, etc), then you might
-    be interested in [`evian`][evian].
-  * If you're interested in robot simulation support, check out vexide's [simulator].
-  * If you want to contribute to our low-level bindings to the VEX SDK, check out\
-    [`vex-sdk`][vex-sdk].
+If you have an idea on a new feature or improvement to vexide, you can use the **Feature request** template.
 
-#### Writing and submitting your suggestion
+> In some cases, your request may be denied if it is deemed *out of scope*, meaning the feature belongs elsewhere. The `vexide` organization maintains several sister projects that exist outside of the main repository for this (like [evian](https://github.com/vexide/evian/) for motion control).
 
-When creating your report, you should use the **Feature request** issue template
-to be provided with a list of questions that will help describe the suggestion
-you are submitting.
-
-Additionally, try to do the following:
-
-- Give the issue a **clear and concise** title.
-- Fill out **as many of the template's headers as possible**.
-- Provide **code samples, photos, or videos** to help readers understand what
-  you're saying.
-- Explain **how the suggestion would be implemented**.
-
-
-### Contributing code
+## Contributing code
 
 The simplest ways to start contributing code to vexide are by finding an unresolved [Issue][issues-page]
 or by asking on our [Discord server][discord-server]. Issues with the [good first issue][first-issue-search]
 label are good candidates for your first contribution.
 
-#### Code styleguide
+Some specific aspects of vexide's internals are documented on our [internal docs page][internal-docs].
 
-All Rust source code should be formatted with Rustfmt, by running `cargo fmt` after making changes.
+### Use of AI/LLMs
+
+Contributions are expected to be *written*, *understood*, *reviewed*, and *maintained* by humans. vexide does not explicitly forbid the use of LLMs for assisting development, but contributors that use these tools will be held to high standards:
+
+1. Do not submit changes that you do not understand and/or could not write yourself.
+
+    > **Rationale:** Contributors are expected to both fully understand the code that they write **and** have the necessary skills to *maintain it*. Opening PRs containing code that you did not write more often than not fails to meet either of these expectations and wastes the time of reviewers.
+2. Code should not be recognizably "vibe-coded" or AI-written. This includes excessive overuse of comments, throwaway utility functions, and documentation/PR descriptions clearly written in "LLM-prose".
+
+    > **Rationale:** LLM-assisted contributions are held to the same quality as any other PR. If we can tell that a human didn't write it, then it has failed to meet our expectation of code quality.
+3. Don't add "Assisted-by: [some LLM]" tags to your commits. Pull requests that do this will be closed.
+
+    > **Rationale:** Refer to points 1 and 2. Doing this is just free advertising for the LLM's provider.
+
+4. If portions of your PR were not written by you, please disclose this in your PR's description for the sake of transparency.
+
+### Code Style & Formatting
+
+All Rust source code should be formatted with Rustfmt, by running `cargo fmt` after making changes. vexide loosely follows the [Rust styleguide](https://doc.rust-lang.org/style-guide/) as a standard of code quality.
 
 Use Clippy to lint your changes: `cargo clippy`.
 
 In files not formatted by Rustfmt, there should be no trailing whitespace, the end of line
 sequence should be LF (line feed), and the file should end with one trailing newline.
 
-#### Committing & commit messages
+ARM assembly language files should prefer at-sign (`@`) comment syntax over double slash (`//`) comment syntax.
+
+### Keep scope to a minimum.
+
+Pull requests should ideally do one thing in one place. Avoiding opening massive pull requests that change multiple unrelated modules. These types of pull requests are often not reviewable and result in unmanageable conflicts with other active PRs.
+
+### Test your changes.
+
+Please run and test your changes on real hardware or in an [emulator](https://github.com/vexide/vex-v5-qemu) if possible. If you are unable to do so, please mention it in your pull request's description so that a reviewer can test your changes.
+
+vexide is tested through a series of both on-device and off-device unit tests. Details on how to run these can be found in the project's [README](https://github.com/vexide/vexide/#testing).
+
+### Try to fix the cause, not the effect.
+
+If you are fixing a bug, avoid submitting "hacks" that attempt to patch the effects of the bug rather than the root cause.
+
+### Committing & commit messages
 
 All vexide projects use [Conventional Commits][conventional-commits-website]
 to ensure commit messages are useful. Conventional commits have the following form:
@@ -110,35 +102,9 @@ Here is an example of a conforming commit message:
 docs(contributing): add Acknowledgements section
 ```
 
-From this commit, you can easily see that the commit altered **docs** in the
-**contributing** guidelines file by **add**ing an **Acknowledgements section**.
-When writing the commit description, make sure to use the present imperative
-tense ("add ABC" instead of "added ABC" or "adds ABC"). It might help to imagine
-you're telling someone to do something ("go add ABC").
+### Changelog
 
-Here is a list of common commit types:
-
-| Type | Description |
-|------|------------|
-| chore | Changes to workspace & configuration files |
-| feat | New features |
-| fix | Bug fixes |
-| refactor | Changes to internal features but not the external interface |
-| revert | Reversion of a previous change |
-| style | Changes to code style and formatting |
-| test | Changes or additions to unit tests |
-| types | Changes to type definitions |
-| docs | Changes to documentation files |
-
-<!--
-#### Unit tests
-
-TODO
--->
-
-#### Changelog
-
-After making changes to your code, update the Unreleased section of the changelog with what you changed. Breaking changes should be [painfully clear][ignoring-deprecations], so list all deprecations, removals, and generic breaking changes. Include your pull request's number. See the example below for the recommended format.
+After making changes to your code, update the Unreleased section of the [changelog](./CHANGELOG.md) with what you changed. Breaking changes should be [painfully clear][ignoring-deprecations], so list all deprecations, removals, and generic breaking changes. Include your pull request's number. See the example below for the recommended format.
 
 ```diff
   ## [Unreleased]
@@ -162,7 +128,7 @@ After making changes to your code, update the Unreleased section of the changelo
 + * The `Baz` struct is now deprecated. (#28)
 ```
 
-#### Pull requests
+### Pull requests
 
 When you're ready for your changes to be merged, head over to the [Pull
 Requests][pr-page] page and create a new pull request. Include a description of
@@ -213,3 +179,4 @@ out.][atom-contributing]
 [about-draft-prs]:
     https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests
 [atom-contributing]: https://github.com/atom/atom/blob/master/CONTRIBUTING.md
+[internal-docs]: https://internals.vexide.dev/
