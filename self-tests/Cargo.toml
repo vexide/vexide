@@ -16,10 +16,19 @@ opt-level = "s"
 
 [dev-dependencies]
 libtest-mimic = "0.8.2"
+vex-sdk = "0.29.0-rc.1"
 
 [dev-dependencies.vexide]
 path = "../packages/vexide"
-features = ["full", "default-sdk"]
+# FIXME(#469): vexide's allocator is currently incompatible with `thread::current()`.
+features = [
+    "default",
+    "macros",
+    "startup",
+    "panic-hook",
+    "abort-handler",
+    "default-sdk",
+]
 
 [[test]]
 name = "suite"
