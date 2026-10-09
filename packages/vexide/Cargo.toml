@@ -63,7 +63,7 @@ embedded-io = ["vexide-devices/embedded-io"]
 dangerous-motor-tuning = ["vexide-devices/dangerous-motor-tuning"]
 
 [package.metadata.docs.rs]
-targets = ["armv7a-vex-v5"]
+targets = ["thumbv7a-vex-v5"]
 cargo-args = [
     "-Zbuild-std=std,panic_abort",
     "-Zbuild-std-features=compiler-builtins-mem",

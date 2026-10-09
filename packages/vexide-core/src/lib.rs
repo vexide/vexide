@@ -15,7 +15,6 @@
 //! - Extended system time APIs ([`time`]).
 
 #![no_std]
-#![feature(never_type)]
 
 extern crate alloc;
 

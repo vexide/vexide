@@ -45,8 +45,8 @@ embedded-io = ["dep:embedded-io"]
 
 [package.metadata.docs.rs]
 all-features = true # Show optional APIs
-targets = ["armv7a-vex-v5"]
-cargo-args=[
-    "-Zbuild-std=core,alloc,compiler_builtins",
-    "-Zbuild-std-features=compiler-builtins-mem"
+targets = ["thumbv7a-vex-v5"]
+cargo-args = [
+    "-Zbuild-std=std,panic_abort",
+    "-Zbuild-std-features=compiler-builtins-mem",
 ]
