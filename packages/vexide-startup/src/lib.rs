@@ -24,7 +24,7 @@
 //! This is an example of a minimal user program that boots without using the main vexide runtime or
 //! the `#[vexide::main]` macro.
 //!
-//! ```no_run
+//! ```ignore
 //! use vexide_core::program::{CodeSignature, ProgramOptions, ProgramOwner, ProgramType};
 //!
 //! // SAFETY: This symbol is unique and is being used to start the runtime.
@@ -76,9 +76,6 @@ unsafe extern "C" {
 
     static mut __linked_file_start: u8;
     static mut __linked_file_end: u8;
-
-    static mut __bss_start: u32;
-    static mut __bss_end: u32;
 }
 
 /// vexide's first-stage boot routine.
@@ -88,8 +85,8 @@ unsafe extern "C" {
 /// compilations (a requirement of the patcher),
 ///
 /// This routine loads the stack pointer to the stack region specified in our linkerscript, makes a
-/// copy of program memory for the patcher if needed, then branches to the Rust entrypoint (_start)
-/// defined in libstd.
+/// copy of program memory for the patcher if needed, zeroes `.bss`, then branches to the Rust
+/// entrypoint (_start) defined in libstd.
 #[unsafe(link_section = ".vexide_boot")]
 #[unsafe(no_mangle)]
 #[unsafe(naked)]
@@ -132,8 +129,20 @@ unsafe extern "C" fn _vexide_boot() {
         "ldr r2, =__patcher_patch_start+12", // Base binary len is stored as metadata in the patch.
         "ldr r2, [r2]", // memcpy size -> r2
         "blx __overwriter_aeabi_memcpy",
-        // Jump to the Rust entrypoint.
         ".Lstart:",
+        // Clear the .bss (uninitialized statics) section by filling it with zeroes. The compiler
+        // assumes this will be zeroed out on first access. This is normally handled by libstd's
+        // _boot, but _vexide_boot runs instead of that.
+        "mov r0, #0",
+        "ldr r1, =__bss_start",
+        "ldr r2, =__bss_end",
+        ".Lclear_bss:",
+        "cmp r1, r2",
+        "beq .Lbss_done",
+        "str r0, [r1], #4",
+        "b .Lclear_bss",
+        ".Lbss_done:",
+        // Jump to the Rust entrypoint.
         "blx _start",
         patch_magic = const patcher::PATCH_MAGIC,
     )

@@ -187,20 +187,15 @@ impl BacktraceIter<'_> {
     /// The iterator yields no frames when compiling to a non-VEXos platform.
     pub fn capture<R>(handler: impl FnOnce(BacktraceIter<'_>) -> R) -> R {
         cfg_select! {
-            all(
-                target_arch = "arm",
-                target_os = "vexos",
-            ) => {
-                arm::capture_frame(|frame| {
-                    handler(BacktraceIter {
-                        lifetime: PhantomData,
-                        frame: Some(frame),
-                    })
+            all(target_arch = "arm", target_os = "vexos",) => arm::capture_frame(|frame| {
+                handler(BacktraceIter {
+                    lifetime: PhantomData,
+                    frame: Some(frame),
                 })
-            }
+            }),
             _ => handler(BacktraceIter {
                 lifetime: PhantomData,
-            })
+            }),
         }
     }
 
