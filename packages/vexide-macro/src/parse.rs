@@ -243,7 +243,7 @@ mod test {
             banner(enabled = true, theme = THEME)
         };
         let input = syn::parse2::<Banner>(source).unwrap();
-        assert!(input.attrs.len() == 2);
+        assert_eq!(input.attrs.len(), 2);
         assert!(matches!(
             input.attrs[0],
             BannerAttribute::Enabled(BannerEnabled {

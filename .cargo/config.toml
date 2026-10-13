@@ -1,12 +1,10 @@
 [target.'cfg(target_os = "vexos")']
 runner = "cargo v5 run --file"
-rustflags = [
-    "-Clink-arg=-Tvexide.ld",
-    "-Ctarget-feature=+thumb-mode",
-    "-Cforce-unwind-tables=no",
-    "-Cforce-frame-pointers=yes",
-]
+rustflags = ["-Clink-arg=-Tvexide.ld"]
 
 [unstable]
+# Several other crates, including panic_unwind, are implicitly specified because we have std listed.
 build-std = ["std", "panic_abort"]
-build-std-features = ["compiler-builtins-mem"]
+# std needs to depend on panic_unwind so it can build for the host when -Cpanic=unwind. On VEXos
+# panic_unwind is built as well but not used by std because we have -Cpanic=abort.
+build-std-features = ["compiler-builtins-mem", "panic-unwind"]

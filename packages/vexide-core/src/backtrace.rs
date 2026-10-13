@@ -57,7 +57,7 @@
 //! ```
 //!
 //! ```terminal
-//! $ llvm-symbolizer -p -e ./target/armv7a-vex-v5/debug/program_name 0x380217b 0x380209b
+//! $ llvm-symbolizer -p -e ./target/thumbv7a-vex-v5/debug/program_name 0x380217b 0x380209b
 //! my_function at src/main.rs:30:14
 //!
 //! main at src/main.rs:21:9
@@ -187,20 +187,15 @@ impl BacktraceIter<'_> {
     /// The iterator yields no frames when compiling to a non-VEXos platform.
     pub fn capture<R>(handler: impl FnOnce(BacktraceIter<'_>) -> R) -> R {
         cfg_select! {
-            all(
-                target_arch = "arm",
-                target_os = "vexos",
-            ) => {
-                arm::capture_frame(|frame| {
-                    handler(BacktraceIter {
-                        lifetime: PhantomData,
-                        frame: Some(frame),
-                    })
+            all(target_arch = "arm", target_os = "vexos",) => arm::capture_frame(|frame| {
+                handler(BacktraceIter {
+                    lifetime: PhantomData,
+                    frame: Some(frame),
                 })
-            }
+            }),
             _ => handler(BacktraceIter {
                 lifetime: PhantomData,
-            })
+            }),
         }
     }
 
