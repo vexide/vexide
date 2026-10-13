@@ -38,5 +38,5 @@ workspace = true
 targets = ["thumbv7a-vex-v5"]
 cargo-args=[
     "-Zbuild-std=core,alloc,compiler_builtins",
-    "-Zbuild-std-features=compiler-builtins-mem"
+    "-Zbuild-std-features=compiler-builtins-mem,panic-unwind",
 ]
