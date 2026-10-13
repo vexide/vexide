@@ -48,5 +48,5 @@ all-features = true # Show optional APIs
 targets = ["thumbv7a-vex-v5"]
 cargo-args = [
     "-Zbuild-std=std,panic_abort",
-    "-Zbuild-std-features=compiler-builtins-mem",
+    "-Zbuild-std-features=compiler-builtins-mem,panic-unwind",
 ]
