@@ -18,8 +18,8 @@
 //!
 //! Communication between a Smart motor and the V5 Brain occur at two different intervals. While
 //! the motor communicates with the Brain every 5 milliseconds (and commands can be written to the
-//! motor every 5mS), the Brain only reads data from the motor every 10mS. This effectively places
-//! the date *write* interval at 5mS and the data *read* interval at 10mS.
+//! motor every 5ms), the Brain only reads data from the motor every 10ms. This effectively places
+//! the date *write* interval at 5ms and the data *read* interval at 10ms.
 //!
 //! More in-depth specs for the 11W motor can be found [here](https://kb.vex.com/hc/en-us/articles/360060929971-Understanding-V5-Smart-Motors).
 //!

@@ -701,7 +701,7 @@ impl GpsSensor {
     ///         0.0,
     ///     );
     ///
-    ///     // Read out acceleration values every 10mS
+    ///     // Read out acceleration values every 10ms
     ///     loop {
     ///         if let Ok(acceleration) = gps.acceleration() {
     ///             println!(
@@ -755,7 +755,7 @@ impl GpsSensor {
     ///         0.0,
     ///     );
     ///
-    ///     // Read out angular velocity values every 10mS
+    ///     // Read out angular velocity values every 10ms
     ///     loop {
     ///         if let Ok(rates) = gps.gyro_rate() {
     ///             println!("x: {}°/s, y: {}°/s, z: {}°/s", rates.x, rates.y, rates.z,);
@@ -854,7 +854,7 @@ impl GpsSensor {
     /// Sets the internal computation speed of the sensor's internal IMU.
     ///
     /// This method does NOT change the rate at which user code can read data off the GPS, as the
-    /// brain will only talk to the device every 10mS regardless of how fast data is being sent or
+    /// brain will only talk to the device every 10ms regardless of how fast data is being sent or
     /// computed. This also has no effect on the speed of methods such as `GpsSensor::position`, as
     /// it only changes the *internal* computation speed of the sensor's internal IMU.
     ///

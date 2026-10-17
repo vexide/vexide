@@ -46,7 +46,7 @@
 //! | Port                | Two [`AdiPort`]s | One [`SmartPort`]                  |
 //! | Resolution          | 360 Ticks/Rev    | 4090 Ticks/Rev                     |
 //! | Measurements        | Position         | Position, Absolute Angle, Velocity |
-//! | Update Rate         | 10mS             | 10mS                               |
+//! | Update Rate         | 10ms             | 10ms                               |
 //! | Shaft Compatibility | Low Strength     | Low Strength, High Strength        |
 //!
 //! [`RotationSensor`]: crate::smart::rotation::RotationSensor

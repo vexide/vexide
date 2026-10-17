@@ -8,7 +8,7 @@
 //! # Hardware Overview
 //!
 //! The Ultrasonic Rangefinder uses sound pulses to measure distance, in a similar way to how bats
-//! or submarines find their way around. By emitting an 40KHz ultrasonic pulse for 250mS and timing
+//! or submarines find their way around. By emitting an 40KHz ultrasonic pulse for 250ms and timing
 //! how long it takes to hear an echo, the Ultrasonic Rangefinder can accurately estimate how far
 //! away an object in front of it is.
 //!

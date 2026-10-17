@@ -19,7 +19,7 @@
 //! - Pitch: Rotation around Y-axis
 //! - Yaw: Rotation around Z-axis
 //!
-//! Like all other Smart devices, VEXos will process sensor updates every 10mS.
+//! Like all other Smart devices, VEXos will process sensor updates every 10ms.
 //!
 //! # Coordinate System
 //!
@@ -588,7 +588,7 @@ impl InertialSensor {
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
     ///
-    ///     // Read out angular velocity values every 10mS
+    ///     // Read out angular velocity values every 10ms
     ///     loop {
     ///         if let Ok(rates) = sensor.gyro_rate() {
     ///             println!("x: {}°/s, y: {}°/s, z: {}°/s", rates.x, rates.y, rates.z,);
@@ -637,7 +637,7 @@ impl InertialSensor {
     ///     // Calibrate sensor, panic if calibration fails.
     ///     sensor.calibrate().await.unwrap();
     ///
-    ///     // Read out acceleration values every 10mS
+    ///     // Read out acceleration values every 10ms
     ///     loop {
     ///         if let Ok(acceleration) = sensor.acceleration() {
     ///             println!(
@@ -786,7 +786,7 @@ impl InertialSensor {
     /// Sets the internal computation speed of the IMU.
     ///
     /// This method does NOT change the rate at which user code can read data off the IMU, as the
-    /// brain will only talk to the device every 10mS regardless of how fast data is being sent
+    /// brain will only talk to the device every 10ms regardless of how fast data is being sent
     /// or computed. See [`InertialSensor::UPDATE_INTERVAL`].
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).
