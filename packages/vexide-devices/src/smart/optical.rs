@@ -435,7 +435,7 @@ impl OpticalSensor {
     /// Returns integration time of the optical sensor in milliseconds, with minimum time being 3ms
     /// and the maximum time being 712ms.
     ///
-    /// The default integration time for the sensor is 103mS, unless otherwise set with
+    /// The default integration time for the sensor is 103ms, unless otherwise set with
     /// [`OpticalSensor::set_integration_time`].
     ///
     /// # Errors
@@ -481,7 +481,7 @@ impl OpticalSensor {
     /// time is out of this range, it will be clamped to fit inside it. See
     /// <https://www.vexforum.com/t/v5-optical-sensor-refresh-rate/109632/9> for more information.
     ///
-    /// The default integration time for the sensor is 103mS, unless otherwise set.
+    /// The default integration time for the sensor is 103ms, unless otherwise set.
     ///
     /// # Errors
     ///

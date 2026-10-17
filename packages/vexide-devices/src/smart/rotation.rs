@@ -18,7 +18,7 @@
 //! start, however the *position* reading will be reset if the sensor loses power. Angular velocity
 //! is measured in degrees per second.
 //!
-//! Like all other Smart devices, VEXos will process sensor updates every 10mS.
+//! Like all other Smart devices, VEXos will process sensor updates every 10ms.
 //!
 //! [Hall Effect]: https://en.wikipedia.org/wiki/Hall_effect_sensor
 
@@ -357,7 +357,7 @@ impl RotationSensor {
     /// Sets the internal computation speed of the rotation sensor.
     ///
     /// This method does NOT change the rate at which user code can read data off the sensor, as the
-    /// brain will only talk to the device every 10mS regardless of how fast data is being sent or
+    /// brain will only talk to the device every 10ms regardless of how fast data is being sent or
     /// computed. See [`RotationSensor::UPDATE_INTERVAL`].
     ///
     /// This duration should be above [`Self::MIN_DATA_INTERVAL`] (5 milliseconds).

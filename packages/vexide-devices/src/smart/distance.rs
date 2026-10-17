@@ -19,7 +19,7 @@
 //! Due to the use of a laser, measurements are single-point and highly directional, meaning that
 //! objects will only be detected when they are directly in front of the sensor's field of view.
 //!
-//! Like all other Smart devices, VEXos will process sensor updates every 10mS.
+//! Like all other Smart devices, VEXos will process sensor updates every 10ms.
 //! However, after being connected or at the beginning of the program, the sensor may require
 //! up to 100ms to initialize before valid readings can be obtained.
 
