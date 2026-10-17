@@ -69,10 +69,13 @@ mod vectors;
 // to the address of their location defined in the linkerscript.
 #[cfg(target_os = "vexos")]
 unsafe extern "C" {
-    static mut __heap_start: u8;
-    static mut __heap_end: u8;
-
     static mut __user_ram_start: u8;
+}
+#[cfg(all(target_os = "vexos", feature = "allocator"))]
+#[cfg(feature = "allocator")]
+unsafe extern "C" {
+    static mut __talc_heap_start: u8;
+    static mut __talc_heap_end: u8;
 
     static mut __linked_file_start: u8;
     static mut __linked_file_end: u8;
@@ -191,7 +194,7 @@ pub unsafe fn startup() {
     unsafe {
         // Initialize the heap allocator in our heap region defined in the linkerscript
         #[cfg(feature = "allocator")]
-        crate::allocator::claim(&raw mut __heap_start, &raw mut __heap_end);
+        crate::allocator::claim(&raw mut __talc_heap_start, &raw mut __talc_heap_end);
 
         // If this link address is 0x03800000, this implies we were uploaded using differential
         // uploads by cargo-v5 and may have a patch to apply.
