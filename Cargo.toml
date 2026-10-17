@@ -15,7 +15,7 @@ icon = "cool-x"
 compress = true
 
 [dev-dependencies]
-vex-sdk = "0.29.0-rc.1"
+vex-sdk = "0.29.0"
 vexide = { path = "packages/vexide", features = [ "full", "default-sdk" ] }
 
 [workspace]
@@ -34,8 +34,8 @@ vexide-core = { version = "0.9.0", path = "packages/vexide-core", default-featur
 vexide-devices = { version = "0.9.0", path = "packages/vexide-devices", default-features = false }
 vexide-startup = { version = "0.6.0", path = "packages/vexide-startup", default-features = false }
 vexide-macro = { version = "0.4.0", path = "packages/vexide-macro", default-features = false }
-vex-sdk = "0.29.0-rc.1"
-vex-sdk-mock = "0.2.0-rc.1"
+vex-sdk = "0.29.0"
+vex-sdk-mock = "0.2.0"
 
 [lints]
 
