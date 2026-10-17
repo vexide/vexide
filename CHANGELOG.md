@@ -51,7 +51,7 @@ Before releasing:
 
 - Corrected some minor doc comments and updated the Nix flake. (#451)
 - Upgraded to SNAFU 0.9. (#442)
-- Updated to `vex-sdk` 0.29.0-rc.1.
+- Updated to `vex-sdk` 0.29.0.
 - Programs now execute in Thumb mode instead of ARM mode, reducing code size. (#454)
 - Backtraces are now captured using the frame pointer instead of through unwind tables. (#456) (**Breaking Change**)
 
