@@ -2,7 +2,12 @@
 
 fn main() {
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    println!("cargo:rustc-link-search=native={manifest_dir}/link");
+
+    if std::env::var("CARGO_FEATURE_ALLOCATOR").is_ok() {
+        println!("cargo:rustc-link-search=native={manifest_dir}/link+talc");
+    } else {
+        println!("cargo:rustc-link-search=native={manifest_dir}/link");
+    }
 
     #[cfg(feature = "vex-sdk-vexcode")]
     {
