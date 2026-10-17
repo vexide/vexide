@@ -46,6 +46,7 @@ Before releasing:
 - Fixed `Motor::is_driver_over_current` incorrectly checking for the motor's `OVER_CURRENT` fault instead of `DRIVER_OVER_CURRENT`. (#447)
 - Fixed a stack overflow in the abort handler that was causing recursive CPU aborts. (#450)
 - Fixed an issue where the future returned from `SerialPort::open` could be polled after completion, effectively duplicating SmartPorts. (#452)
+- Fixed an issue where usage of `std::alloc::System` (for example, calling `std::thread::current()`) would cause undefined behavior when the `allocator` feature was in use. (#469)
 
 ### Changed
 
