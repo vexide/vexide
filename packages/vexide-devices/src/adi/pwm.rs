@@ -16,10 +16,10 @@
 //! information for commands to devices:
 //!
 //! ```text
-//!             |<-->| pulse width (0.94-2.03mS)
+//!             |<-->| pulse width (0.94-2.03ms)
 //! 3.3V  ┐     ┌────┐     ┌──┐       ┌──────┐
 //! 0V    └─────┘    └─────┘  └───────┘      └────
-//!             |<-------->| period (16mS)
+//!             |<-------->| period (16ms)
 //! ```
 //!
 //! [`LogicLevel::Low`]: super::digital::LogicLevel
@@ -58,8 +58,8 @@ impl AdiPwmOut {
 
     /// Sets the PWM output width.
     ///
-    /// This value is sent over 16ms periods with pulse widths ranging from roughly 0.94mS to
-    /// 2.03mS.
+    /// This value is sent over 16ms periods with pulse widths ranging from roughly 0.94ms to
+    /// 2.03ms.
     ///
     /// # Errors
     ///
