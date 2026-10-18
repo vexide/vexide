@@ -158,10 +158,18 @@ impl AdiDevice<1> for AdiDigitalIn {
 #[derive(Debug, Eq, PartialEq)]
 pub struct AdiDigitalOut {
     port: AdiPort,
+
+    // NOTE: While [`vexDeviceAdiValueGet`] DOES work for digital output, the value only updates
+    // every 10 milliseconds when the ADI device's update is proceesed by the SDK, so we store
+    // this internally so that level() and toggle() are immediately consistent with the actual
+    // hardware state, and require the user to explicitly pass an initial level to new.
+    //
+    // See <https://github.com/vexide/vexide/issues/464> for more info.
+    level: LogicLevel,
 }
 
 impl AdiDigitalOut {
-    /// Create a digital output from an [`AdiPort`].
+    /// Create a digital output from an [`AdiPort`] with an initial [`LogicLevel`].
     ///
     /// # Examples
     ///
@@ -172,7 +180,8 @@ impl AdiDigitalOut {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     // Start with the pin low
+    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a, LogicLevel::Low);
     ///
     ///     // Toggle the digital output every second
     ///     loop {
@@ -182,32 +191,7 @@ impl AdiDigitalOut {
     /// }
     /// ```
     #[must_use]
-    pub fn new(port: AdiPort) -> Self {
-        port.configure(AdiDeviceType::DigitalOut);
-
-        Self { port }
-    }
-
-    /// Create a digital output from an [`AdiPort`] with an initial logic level.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use vexide::{adi::digital::LogicLevel, prelude::*};
-    ///
-    /// #[vexide::main]
-    /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::with_initial_level(peripherals.adi_a, LogicLevel::High);
-    ///
-    ///     // The digital output is now set to high
-    ///     assert_eq!(
-    ///         digital_out.level().expect("couldn't get level"),
-    ///         LogicLevel::High
-    ///     );
-    /// }
-    /// ```
-    #[must_use]
-    pub fn with_initial_level(port: AdiPort, initial_level: LogicLevel) -> Self {
+    pub fn new(port: AdiPort, initial_level: LogicLevel) -> Self {
         port.configure(AdiDeviceType::DigitalOut);
 
         unsafe {
@@ -218,7 +202,17 @@ impl AdiDigitalOut {
             );
         }
 
-        Self { port }
+        Self { port, level: initial_level }
+    }
+
+    #[must_use]
+    pub fn new_high(port: AdiPort) -> Self {
+        Self::new(port, LogicLevel::High)
+    }
+
+    #[must_use]
+    pub fn new_low(port: AdiPort) -> Self {
+        Self::new(port, LogicLevel::Low)
     }
 
     /// Sets the digital logic level (high or low) of a pin.
@@ -262,6 +256,8 @@ impl AdiDigitalOut {
             );
         }
 
+        self.level = level;
+
         Ok(())
     }
 
@@ -293,14 +289,7 @@ impl AdiDigitalOut {
     /// ```
     pub fn level(&self) -> Result<LogicLevel, PortError> {
         self.port.validate_expander()?;
-
-        let value =
-            unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } != 0;
-
-        Ok(match value {
-            true => LogicLevel::High,
-            false => LogicLevel::Low,
-        })
+        Ok(self.level)
     }
 
     /// Returns `true` if the port's logic level is set to [`LogicLevel::High`].
