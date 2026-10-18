@@ -110,7 +110,7 @@ pub mod prelude {
             accelerometer::{AdiAccelerometer, Sensitivity},
             addrled::AdiAddrLed,
             analog::AdiAnalogIn,
-            digital::{AdiDigitalIn, AdiDigitalOut},
+            digital::{AdiDigitalIn, AdiDigitalOut, LogicLevel},
             encoder::{AdiEncoder, AdiOpticalEncoder},
             gyroscope::AdiGyroscope,
             light_sensor::AdiLightSensor,

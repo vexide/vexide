@@ -37,6 +37,8 @@ Before releasing:
 - Implemented a conversion between `bool` and `LogicLevel`. (#428)
 - Added support for capturing backtraces without heap allocations via the `BacktraceIter` struct. (#456)
 - Added `DistanceSensor::wait_ready` which returns a future resolving when the sensor is ready to be used. (#462)
+- Added `AdiDigitalOut::new_high` and `AdiDigitalOut::new_low` as shorthand for creating a new digital out port with an initial logic level. (#480)
+- `vexide::adi::digital::LogicLevel` is now exported by `vexide::prelude`. (#480)
 
 ### Fixed
 
@@ -46,6 +48,7 @@ Before releasing:
 - Fixed `Motor::is_driver_over_current` incorrectly checking for the motor's `OVER_CURRENT` fault instead of `DRIVER_OVER_CURRENT`. (#447)
 - Fixed a stack overflow in the abort handler that was causing recursive CPU aborts. (#450)
 - Fixed an issue where the future returned from `SerialPort::open` could be polled after completion, effectively duplicating SmartPorts. (#452)
+- `AdiDigialOut::level` will now immediately update upon changing the level rather than requiring up to 10ms to update. (#480)
 - Fixed an issue where usage of `std::alloc::System` (for example, calling `std::thread::current()`) would cause undefined behavior when the `allocator` feature was in use. (#469)
 
 ### Changed
@@ -55,11 +58,13 @@ Before releasing:
 - Updated to `vex-sdk` 0.29.0.
 - Programs now execute in Thumb mode instead of ARM mode, reducing code size. (#454)
 - Backtraces are now captured using the frame pointer instead of through unwind tables. (#456) (**Breaking Change**)
+- `AdiDigialOut::new` now takes an initial `LogicLevel`. (#480) (**Breaking Change**)
 
 ### Removed
 
 - The vexide linker script now removes unwind tables from the executable. (#456) (**Breaking Change**)
 - The `backtrace` Cargo feature has been removed; the `vexide::backtrace` module is now available unconditionally. (#456) (**Breaking Change**)
+- `AdiDigialOut::with_initial_level` has been removed in favor of the `AdiDigitalOut::new` changes. (#480) (**Breaking Change**)
 
 ### New Contributors
 

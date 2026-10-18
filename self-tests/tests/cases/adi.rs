@@ -5,7 +5,7 @@
 use libtest_mimic::Failed;
 use vexide::{
     adi::{
-        ADI_UPDATE_INTERVAL, AdiDeviceType, AdiPort, analog::ADC_MAX_VALUE, digital::LogicLevel,
+        ADI_UPDATE_INTERVAL, AdiDeviceType, AdiPort, analog::ADC_MAX_VALUE,
     },
     color::Color,
     math::Angle,
@@ -56,7 +56,7 @@ pub async fn can_access_internal_adi(peripherals: Peripherals) -> Result<(), Fai
         assert_eq!(digi_in.device_type(), AdiDeviceType::DigitalIn);
         digi_in.level()?;
 
-        let mut digi_out = AdiDigitalOut::new(digi_in.into());
+        let mut digi_out = AdiDigitalOut::new(digi_in.into(), LogicLevel::Low);
         assert_eq!(digi_out.port_numbers(), [port_num]);
         assert_eq!(digi_out.expander_port_number(), None);
         assert_eq!(digi_out.device_type(), AdiDeviceType::DigitalOut);
@@ -76,11 +76,11 @@ pub async fn can_access_internal_adi(peripherals: Peripherals) -> Result<(), Fai
 
 /// ADI ports should report their current level as whatever was last commanded.
 pub async fn outputs_report_requested_level(peripherals: Peripherals) -> Result<(), Failed> {
-    let port = AdiDigitalOut::with_initial_level(peripherals.adi_a, LogicLevel::Low);
+    let port = AdiDigitalOut::new(peripherals.adi_a, LogicLevel::Low);
     assert_eq!(port.level()?, LogicLevel::Low);
 
     let port = AdiPort::from(port);
-    let mut port = AdiDigitalOut::with_initial_level(port, LogicLevel::High);
+    let mut port = AdiDigitalOut::new(port, LogicLevel::High);
     assert_eq!(port.level()?, LogicLevel::High);
 
     port.set_high()?;
@@ -126,7 +126,7 @@ pub async fn port_configuration_round_trips(peripherals: Peripherals) -> Result<
     for _ in 0..2 {
         port = assert_configured(AdiAnalogIn::new(port))?;
         port = assert_configured(AdiDigitalIn::new(port))?;
-        port = assert_configured(AdiDigitalOut::new(port))?;
+        port = assert_configured(AdiDigitalOut::new(port, LogicLevel::Low))?;
         port = assert_configured(AdiAddrLed::<8>::new(port))?;
         port = assert_configured(AdiPwmOut::new(port))?;
         port = assert_configured(AdiServo::new(port))?;
