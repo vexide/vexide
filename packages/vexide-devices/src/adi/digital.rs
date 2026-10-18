@@ -202,14 +202,45 @@ impl AdiDigitalOut {
             );
         }
 
-        Self { port, level: initial_level }
+        Self {
+            port,
+            level: initial_level,
+        }
     }
 
+    /// Create a digital output from an [`AdiPort`] that is initially pulled low.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Start with the pin low
+    ///     let digital_out = AdiDigitalOut::new_low(peripherals.adi_a);
+    ///     assert_eq!(digital_out.level().unwrap(), LogicLevel::Low);
+    /// }
+    /// ```
     #[must_use]
     pub fn new_high(port: AdiPort) -> Self {
         Self::new(port, LogicLevel::High)
     }
 
+    /// Create a digital output from an [`AdiPort`] that is initially raised high.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use vexide::prelude::*;
+    ///
+    /// #[vexide::main]
+    /// async fn main(peripherals: Peripherals) {
+    ///     // Start with the pin low
+    ///     let digital_out = AdiDigitalOut::new_high(peripherals.adi_a);
+    ///     assert_eq!(digital_out.level().unwrap(), LogicLevel::High);
+    /// }
+    /// ```
     #[must_use]
     pub fn new_low(port: AdiPort) -> Self {
         Self::new(port, LogicLevel::Low)
@@ -229,11 +260,11 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{adi::digital::LogicLevel, prelude::*};
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new_low(peripherals.adi_a);
     ///
     ///     // Set the digital output to high
     ///     _ = digital_out.set_level(LogicLevel::High);
@@ -275,11 +306,11 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{adi::digital::LogicLevel, prelude::*};
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let digital_out = AdiDigitalOut::new_low(peripherals.adi_a);
     ///
     ///     assert_eq!(
     ///         digital_out.level().expect("couldn't get level"),
@@ -335,11 +366,11 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{adi::digital::LogicLevel, prelude::*};
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new_low(peripherals.adi_a);
     ///
     ///     // Set the digital output to high
     ///     _ = digital_out.set_high();
@@ -370,11 +401,11 @@ impl AdiDigitalOut {
     /// # Examples
     ///
     /// ```no_run
-    /// use vexide::{adi::digital::LogicLevel, prelude::*};
+    /// use vexide::prelude::*;
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new_low(peripherals.adi_a);
     ///
     ///     // Set the digital output to low
     ///     _ = digital_out.set_low();
@@ -416,7 +447,7 @@ impl AdiDigitalOut {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut digital_out = AdiDigitalOut::new(peripherals.adi_a);
+    ///     let mut digital_out = AdiDigitalOut::new_low(peripherals.adi_a);
     ///
     ///     // Toggle the digital output every second
     ///     loop {
