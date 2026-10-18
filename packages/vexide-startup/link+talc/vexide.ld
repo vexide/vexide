@@ -15,7 +15,7 @@ INCLUDE ../link/vexide.ld
 
 INCLUDE ../link/vexide.ld
 
-PROVIDE(__dlmalloc_heap_length = 128K);
+PROVIDE(__dlmalloc_heap_length = 32K);
 
 SECTIONS {
     .talc_heap (NOLOAD) : ALIGN(8) {
