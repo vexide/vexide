@@ -103,7 +103,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Create a GPS sensor mounted 2 inches forward and 1 inch right of center
     ///     // Starting at position (0, 0) with 90 degree heading
-    ///     let gps = GpsSensor::new(
+    ///     let gps = GpsSensor::new_with_pos(
     ///         // Port 1
     ///         peripherals.port_1,
     ///
@@ -118,7 +118,7 @@ impl GpsSensor {
     ///     );
     /// }
     /// ```
-    pub fn new(
+    pub fn new_with_pos(
         port: SmartPort,
         offset: impl Into<Point2<f64>>,
         initial_position: impl Into<Point2<f64>>,
@@ -176,7 +176,7 @@ impl GpsSensor {
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
     ///     // Create a GPS sensor mounted 2 inches forward and 1 inch right of center
-    ///     let gps = GpsSensor::new_without_initial_position(
+    ///     let gps = GpsSensor::new(
     ///         // Port 1
     ///         peripherals.port_1,
     ///
@@ -186,7 +186,7 @@ impl GpsSensor {
     ///     );
     /// }
     /// ```
-    pub fn new_without_initial_position(port: SmartPort, offset: impl Into<Point2<f64>>) -> Self {
+    pub fn new(port: SmartPort, offset: impl Into<Point2<f64>>) -> Self {
         let device = unsafe { port.device_handle() };
 
         let offset = offset.into();
@@ -205,7 +205,7 @@ impl GpsSensor {
 
     /// Updates the sensor's position estimate.
     ///
-    /// This value is also configured initially through [`GpsSensor::new`].
+    /// This value is also configured initially through [`GpsSensor::new_with_pos`].
     ///
     /// ## Initial Robot Position
     ///
@@ -244,7 +244,7 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut gps = GpsSensor::new_without_initial_position(
+    ///     let mut gps = GpsSensor::new(
     ///         peripherals.port_1,
     ///
     ///         // Initial offset value is configured here!
@@ -320,8 +320,6 @@ impl GpsSensor {
     ///         // Let's assume that the sensor is mounted 0.225 meters to the left and 0.225 meters above
     ///         // our desired tracking origin.
     ///         Point2 { x: -0.225, y: 0.225 }, // Configure offset value
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         90.0,
     ///     );
     ///
     ///     // Get the configured offset of the sensor
@@ -380,22 +378,20 @@ impl GpsSensor {
     ///         // Let's assume that the sensor is mounted 0.225 meters to the left and 0.225 meters above
     ///         // our desired tracking origin.
     ///         Point2 { x: -0.225, y: 0.225 }, // Configure offset value
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         90.0,
     ///     );
     ///
     ///     // Get the configured offset of the sensor
     ///     if let Ok(offset) = gps.offset() {
-    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is mounted at x=-0.225, y=0.225"
-    ///     }
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is
+    /// mounted at x=-0.225, y=0.225"     }
     ///
     ///     // Change the offset to something new
     ///     _ = gps.set_offset(Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Get the configured offset of the sensor again
     ///     if let Ok(offset) = gps.offset() {
-    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is mounted at x=0.0, y=0.0"
-    ///     }
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is
+    /// mounted at x=0.0, y=0.0"     }
     /// }
     /// ```
     pub fn set_offset(&mut self, offset: Point2<f64>) -> Result<(), PortError> {
@@ -427,12 +423,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Get current position and heading
     ///     if let Ok(position) = gps.position() {
@@ -477,12 +468,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     if let Ok(heading) = gps.heading() {
     ///         println!("Heading is {} degrees.", heading.as_degrees());
@@ -522,12 +508,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let mut gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let mut gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Set heading to 90 degrees clockwise.
     ///     _ = gps.set_heading(Angle::from_degrees(90.0));
@@ -564,12 +545,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let mut gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let mut gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
     ///     sleep(Duration::from_secs(2)).await;
@@ -609,12 +585,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     if let Ok(rotation) = gps.rotation() {
     ///         println!(
@@ -653,12 +624,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let mut gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let mut gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Set rotation to 90 degrees clockwise.
     ///     _ = gps.set_rotation(Angle::from_degrees(90.0));
@@ -696,12 +662,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let mut gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let mut gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Sleep for two seconds to allow the robot to be moved.
     ///     sleep(Duration::from_secs(2)).await;
@@ -738,12 +699,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     if let Ok(angles) = gps.euler() {
     ///         println!(
@@ -790,12 +746,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     if let Ok(quaternion) = gps.quaternion() {
     ///         println!(
@@ -842,12 +793,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Read out acceleration values every 10mS
     ///     loop {
@@ -896,12 +842,7 @@ impl GpsSensor {
     /// async fn main(peripherals: Peripherals) {
     ///     // Assume we're starting in the middle of the field facing upwards, with the
     ///     // sensor's mounting point being our reference for position.
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Read out angular velocity values every 10mS
     ///     loop {
@@ -945,12 +886,7 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Check position accuracy
     ///     if let Ok(error) = gps.error() {
@@ -981,12 +917,7 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     if let Ok(status) = gps.status() {
     ///         println!("Status: {:b}", status);
@@ -1021,12 +952,7 @@ impl GpsSensor {
     ///
     /// #[vexide::main]
     /// async fn main(peripherals: Peripherals) {
-    ///     let mut gps = GpsSensor::new(
-    ///         peripherals.port_1,
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         Point2 { x: 0.0, y: 0.0 },
-    ///         0.0,
-    ///     );
+    ///     let mut gps = GpsSensor::new(peripherals.port_1, Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Set to minimum interval.
     ///     _ = gps.set_data_interval(Duration::from_millis(5));
