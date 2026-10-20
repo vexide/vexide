@@ -53,7 +53,7 @@ pub fn report_fault(fault: &Fault) {
     let mut dialog = ErrorReport::begin();
     let mut serial = SerialWriter::new();
     let mut ram_crash_dump =
-        unsafe { CrashDump::new(core::ptr::without_provenance_mut::<u8>(0x7800_0000)) };
+        unsafe { CrashDump::new(core::ptr::with_exposed_provenance_mut::<u8>(0x7800_0000)) };
     serial.flush();
 
     let _ = write!(ram_crash_dump, "{{{{{{module:0::elf:");
