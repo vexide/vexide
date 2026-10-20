@@ -6,7 +6,7 @@ use std::{
 use vexide_core::backtrace::BacktraceIter;
 
 use super::Fault;
-use crate::error_report::ErrorReport;
+use crate::{__gnu_build_id_start, error_report::ErrorReport, persist_dump::CrashDump};
 
 pub struct SerialWriter(());
 
@@ -52,7 +52,18 @@ impl Write for SerialWriter {
 pub fn report_fault(fault: &Fault) {
     let mut dialog = ErrorReport::begin();
     let mut serial = SerialWriter::new();
+    let mut ram_crash_dump =
+        unsafe { CrashDump::new(core::ptr::without_provenance_mut::<u8>(0x7800_0000)) };
     serial.flush();
+
+    let _ = write!(ram_crash_dump, "{{{{{{module:0::elf:");
+    // See <https://interrupt.memfault.com/blog/gnu-build-id-for-firmware> for offset explanation
+    let build_id: &[u8] =
+        unsafe { core::slice::from_raw_parts((&raw mut __gnu_build_id_start).add(16), 20) };
+    for byte in build_id {
+        let _ = write!(ram_crash_dump, "{byte:x}");
+    }
+    let _ = write!(ram_crash_dump, "}}}}}}\n");
 
     let title = format_args!(
         "{} exception at 0x{:x}:",
@@ -60,19 +71,31 @@ pub fn report_fault(fault: &Fault) {
     );
     _ = writeln!(serial, "\n{title}\n{fault}\n");
     _ = writeln!(dialog, "{title}\n{fault}");
+    _ = writeln!(
+        ram_crash_dump,
+        "{} exception at {{{{{{pc:0x{:x}:pc}}}}}}\n{fault}\n",
+        fault.exception, fault.program_counter
+    );
 
     _ = writeln!(serial, "registers at time of fault:");
 
     for (i, register) in fault.registers.iter().enumerate() {
         if i < 10 {
             _ = write!(serial, " ");
+            _ = write!(ram_crash_dump, " ");
         }
 
         _ = writeln!(serial, "r{i}: 0x{register:x}");
+        _ = writeln!(ram_crash_dump, "r{i}: 0x{register:x}");
     }
     _ = writeln!(
         serial,
         " sp: 0x{:x}\n lr: 0x{:x}\n pc: 0x{:x}\n",
+        fault.stack_pointer, fault.link_register, fault.program_counter
+    );
+    _ = writeln!(
+        ram_crash_dump,
+        " sp: 0x{:x}\n lr: {{{{{{pc:0x{:x}:ra}}}}}}\n pc: {{{{{{pc:0x{:x}:pc}}}}}}\n",
         fault.stack_pointer, fault.link_register, fault.program_counter
     );
 
@@ -88,6 +111,7 @@ pub fn report_fault(fault: &Fault) {
     if cfg!(target_os = "vexos") {
         let mut i = 0;
         _ = writeln!(serial, "stack backtrace:");
+        _ = writeln!(ram_crash_dump, "stack backtrace:");
         _ = writeln!(dialog, "stack backtrace (check terminal):");
 
         let fault_location = fault.program_counter as *const ();
@@ -103,6 +127,7 @@ pub fn report_fault(fault: &Fault) {
         for addr in iter::once(fault_location).chain(backtrace) {
             dialog.write_backtrace(i, addr as u32);
             _ = writeln!(serial, "{i:>3}: 0x{:x}", addr as u32);
+            _ = writeln!(ram_crash_dump, "{{{{{{bt:{i}:0x{:x}}}}}}}", addr as u32);
             i += 1;
         }
 

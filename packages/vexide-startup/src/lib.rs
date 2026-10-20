@@ -58,6 +58,7 @@ mod error_report;
 mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
+mod persist_dump;
 mod sdk;
 #[cfg(all(target_os = "vexos", feature = "abort-handler"))]
 mod vectors;
@@ -70,6 +71,7 @@ mod vectors;
 #[cfg(target_os = "vexos")]
 unsafe extern "C" {
     static mut __user_ram_start: u8;
+    static mut __gnu_build_id_start: u8;
 }
 #[cfg(all(target_os = "vexos", feature = "allocator"))]
 #[cfg(feature = "allocator")]
