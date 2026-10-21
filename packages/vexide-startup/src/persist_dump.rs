@@ -1,7 +1,9 @@
 use crc::{CRC_32_ISO_HDLC, Crc, Digest};
 
 use crate::{
-    __gnu_build_id_start, abort_handler::{Fault, FaultExceptionData}};
+    __gnu_build_id_start,
+    abort_handler::{Fault, FaultExceptionData},
+};
 
 static CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
@@ -35,8 +37,8 @@ pub enum CrashDumpData {
         fault_data: FaultExceptionData,
     },
     Panic {
-        message: tinyvec::ArrayVec<[u8; 256]>,
-    }
+        message: tinyvec::ArrayVec<[u8; 82]>,
+    },
 }
 
 #[repr(C)]
@@ -51,7 +53,37 @@ impl CrashDump {
         Self {
             header: CrashDumpHeader::new(),
             data: data,
-            backtrace: Default::default()
+            backtrace: Default::default(),
         }
+    }
+    pub fn set_crc(&mut self) {
+        let mut digest = CRC.digest();
+        unsafe {
+            // TODO: this might be ub b/c padding?
+            digest.update(core::slice::from_raw_parts(
+                (&raw const self.data).cast::<u8>(),
+                core::mem::size_of_val(&self.data),
+            ));
+            digest.update(core::slice::from_raw_parts(
+                (&raw const self.backtrace).cast::<u8>(),
+                core::mem::size_of_val(&self.backtrace),
+            ));
+        }
+        self.header.crc = digest.finalize();
+    }
+    pub fn check_crc(&self) -> bool {
+        let mut digest = CRC.digest();
+        unsafe {
+            // TODO: this might be ub b/c padding?
+            digest.update(core::slice::from_raw_parts(
+                (&raw const self.data).cast::<u8>(),
+                core::mem::size_of_val(&self.data),
+            ));
+            digest.update(core::slice::from_raw_parts(
+                (&raw const self.backtrace).cast::<u8>(),
+                core::mem::size_of_val(&self.backtrace),
+            ));
+        };
+        digest.finalize() == self.header.crc
     }
 }

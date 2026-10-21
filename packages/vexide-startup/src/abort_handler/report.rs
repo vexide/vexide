@@ -54,9 +54,10 @@ impl Write for SerialWriter {
 }
 
 pub fn serialize_fault(fault: &Fault) {
-    let crash_dump: *mut MaybeUninit<CrashDump> =
-        core::ptr::with_exposed_provenance_mut(0x7800_0000);
     unsafe {
+        let crash_dump: *mut MaybeUninit<CrashDump> =
+            core::ptr::with_exposed_provenance_mut(0x7800_0000);
+
         let crash_dump = (*crash_dump).write(CrashDump::new(CrashDumpData::Fault {
             fault: *fault,
             fault_data: fault.fault_data(),
@@ -71,6 +72,8 @@ pub fn serialize_fault(fault: &Fault) {
         for addr in iter::once(fault_location).chain(BacktraceIter::from_frame_ptr(frame_ptr)) {
             crash_dump.backtrace.try_push(addr as u32);
         }
+
+        crash_dump.set_crc();
     }
 }
 
