@@ -58,6 +58,7 @@ mod error_report;
 mod panic_hook;
 #[cfg(target_os = "vexos")]
 mod patcher;
+#[cfg(all(target_os = "vexos", feature = "abort-handler"))]
 mod persist_dump;
 mod sdk;
 #[cfg(all(target_os = "vexos", feature = "abort-handler"))]

@@ -24,6 +24,7 @@ compile-time = "0.2.0"
 
 vex-sdk = { workspace = true }
 crc = "3.4.0"
+tinyvec = "1.13.3"
 
 [target.'cfg(not(target_os = "vexos"))'.dependencies]
 vex-sdk-mock = { workspace = true, optional = true }

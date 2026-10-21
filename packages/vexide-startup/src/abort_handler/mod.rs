@@ -30,6 +30,7 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *mut Fault) -> ! {
     // SAFETY: Caller guarantees fault is valid for reads and writes.
     let fault = unsafe { fault.as_mut_unchecked() };
 
+    report::serialize_fault(fault);
     report::report_fault(fault);
 
     let mut prev_touch_event = V5_TouchEvent::kTouchEventRelease;
@@ -152,12 +153,8 @@ impl Fault {
             FaultException::UndefinedInstruction => self.program_counter,
         }
     }
-}
-
-impl Display for Fault {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    pub fn fault_data(&self) -> FaultExceptionData {
         let addr = self.address();
-
         match self.exception {
             FaultException::DataAbort => {
                 let dfsr: u32;
@@ -166,8 +163,44 @@ impl Display for Fault {
                         "mrc p15, 0, {dfsr}, c5, c0, 0",
                         dfsr = out(reg) dfsr,
                     );
+                };
+                FaultExceptionData::DataAbort { addr, dfsr }
+            }
+            FaultException::PrefetchAbort => {
+                let ifsr: u32;
+                unsafe {
+                    core::arch::asm!(
+                        "mrc p15, 0, {ifsr}, c5, c0, 1",
+                        ifsr = out(reg) ifsr,
+                    );
                 }
+                FaultExceptionData::PrefetchAbort { addr, ifsr }
+            }
+            FaultException::UndefinedInstruction => {
+                FaultExceptionData::UndefinedInstruction {
+                    instr: unsafe {
+                        // SAFETY: Since the abort was a undefined instruction, not a prefetch
+                        // abort, it implies that reading the instruction
+                        // won't cause another fault.
+                        self.faulting_instruction()
+                    },
+                }
+            }
+        }
+    }
+}
 
+#[repr(C)]
+pub enum FaultExceptionData {
+    DataAbort { addr: u32, dfsr: u32 },
+    PrefetchAbort { addr: u32, ifsr: u32 },
+    UndefinedInstruction { instr: Instruction },
+}
+
+impl Display for FaultExceptionData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            FaultExceptionData::DataAbort { addr, dfsr } => {
                 let status = FaultStatus::new_with_raw_value(dfsr);
 
                 f.write_str(match status.reason().value() {
@@ -200,15 +233,7 @@ impl Display for Fault {
 
                 write!(f, "0x{addr:x}")?;
             }
-            FaultException::PrefetchAbort => {
-                let ifsr: u32;
-                unsafe {
-                    core::arch::asm!(
-                        "mrc p15, 0, {ifsr}, c5, c0, 1",
-                        ifsr = out(reg) ifsr,
-                    );
-                }
-
+            FaultExceptionData::PrefetchAbort { addr, ifsr } => {
                 let status = FaultStatus::new_with_raw_value(ifsr);
 
                 f.write_str(match status.reason().value() {
@@ -228,16 +253,20 @@ impl Display for Fault {
 
                 write!(f, " while fetching address 0x{addr:x}")?;
             }
-            FaultException::UndefinedInstruction => {
+            FaultExceptionData::UndefinedInstruction { instr } => {
                 // SAFETY: Since the abort was a undefined instruction, not a prefetch abort, it
                 // implies that reading the instruction won't cause another fault.
-                write!(f, "Failed to decode instruction {:x?}", unsafe {
-                    self.faulting_instruction()
-                })?;
+                write!(f, "Failed to decode instruction {instr:x?}")?;
             }
         }
 
         Ok(())
+    }
+}
+
+impl Display for Fault {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.fault_data().fmt(f)
     }
 }
 
@@ -262,9 +291,10 @@ pub struct FaultStatus {
 ///
 /// All ARM instructions are 32-bit, but as Thumb is a variable-length instruction set,
 /// some Thumb instructions are only 16-bit.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
+#[repr(C)]
 #[allow(dead_code)] // Only read via Debug
-enum Instruction {
+pub enum Instruction {
     Arm32(u32),
     Thumb32([u16; 2]),
     Thumb16(u16),

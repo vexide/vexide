@@ -1,55 +1,57 @@
-use std::fmt::Write;
-
 use crc::{CRC_32_ISO_HDLC, Crc, Digest};
+
+use crate::{
+    __gnu_build_id_start, abort_handler::{Fault, FaultExceptionData}};
 
 static CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
-pub(crate) struct CrashDump {
-    len: usize,
-    base: *mut u8,
-    crc_digest: Digest<'static, u32>,
+const CRASH_DUMP_MAGIC: u32 = 0xDEADC0DE;
+
+#[repr(C)]
+pub struct CrashDumpHeader {
+    /// This field must be CRASH_DUMP_MAGIC
+    magic: u32,
+    /// SHA-1 build id, from .note.gnu.build-id
+    build_id: [u8; 20],
+    /// CRC-32 of data and backtrace fields
+    pub crc: u32,
+}
+
+impl CrashDumpHeader {
+    pub fn new() -> Self {
+        CrashDumpHeader {
+            magic: CRASH_DUMP_MAGIC,
+            // See <https://interrupt.memfault.com/blog/gnu-build-id-for-firmware> for offset explanation
+            build_id: unsafe { *(&raw mut __gnu_build_id_start).add(16).cast::<[u8; 20]>() },
+            crc: 0,
+        }
+    }
+}
+
+#[repr(C)]
+pub enum CrashDumpData {
+    Fault {
+        fault: Fault,
+        fault_data: FaultExceptionData,
+    },
+    Panic {
+        message: tinyvec::ArrayVec<[u8; 256]>,
+    }
+}
+
+#[repr(C)]
+pub struct CrashDump {
+    pub header: CrashDumpHeader,
+    pub data: CrashDumpData,
+    pub backtrace: tinyvec::ArrayVec<[u32; 128]>,
 }
 
 impl CrashDump {
-    pub(crate) unsafe fn new(location: *mut u8) -> Self {
-        let mut crash_dump = Self {
-            len: 0,
-            base: location,
-            crc_digest: CRC.digest(),
-        };
-        unsafe {
-            let base = crash_dump.base.cast::<u32>();
-            // Magic value for identifying later
-            *base.add(0) = 0xDEADC0DEu32;
-            crash_dump.write_header_length(0);
-            crash_dump.write_header_crc(0);
+    pub fn new(data: CrashDumpData) -> Self {
+        Self {
+            header: CrashDumpHeader::new(),
+            data: data,
+            backtrace: Default::default()
         }
-        crash_dump
-    }
-    fn write_header_length(&mut self, len: usize) {
-        unsafe {
-            *self.base.cast::<u32>().add(1) = len as u32;
-        }
-    }
-    fn write_header_crc(&mut self, crc: u32) {
-        unsafe {
-            *self.base.cast::<u32>().add(2) = crc;
-        }
-    }
-}
-
-impl Write for CrashDump {
-    fn write_str(&mut self, string: &str) -> Result<(), std::fmt::Error> {
-        let buffer = string.as_bytes();
-        unsafe {
-            buffer
-                .as_ptr()
-                .copy_to(self.base.add(self.len + 12), buffer.len());
-        }
-        self.crc_digest.update(buffer);
-        self.len += buffer.len();
-        self.write_header_length(self.len);
-        self.write_header_crc(self.crc_digest.clone().finalize());
-        Ok(())
     }
 }
