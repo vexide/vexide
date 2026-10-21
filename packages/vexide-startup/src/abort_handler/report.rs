@@ -4,13 +4,12 @@ use std::{
     mem::MaybeUninit,
 };
 
-use tinyvec::ArrayVec;
 use vexide_core::backtrace::BacktraceIter;
 
 use super::Fault;
 use crate::{
     error_report::ErrorReport,
-    persist_dump::{CrashDump, CrashDumpData, CrashDumpHeader},
+    persist_dump::{CrashDump, CrashDumpData},
 };
 
 pub struct SerialWriter(());

@@ -1,4 +1,4 @@
-use crc::{CRC_32_ISO_HDLC, Crc, Digest};
+use crc::{CRC_32_ISO_HDLC, Crc};
 
 use crate::{
     __gnu_build_id_start,
@@ -71,6 +71,7 @@ impl CrashDump {
         }
         self.header.crc = digest.finalize();
     }
+
     pub fn check_crc(&self) -> bool {
         let mut digest = CRC.digest();
         unsafe {
