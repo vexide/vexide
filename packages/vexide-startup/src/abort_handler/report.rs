@@ -1,12 +1,16 @@
 use std::{
     fmt::{self, Write},
     iter,
+    mem::MaybeUninit,
 };
 
 use vexide_core::backtrace::BacktraceIter;
 
 use super::Fault;
-use crate::error_report::ErrorReport;
+use crate::{
+    error_report::ErrorReport,
+    persist_dump::{CrashDump, CrashDumpData},
+};
 
 pub struct SerialWriter(());
 
@@ -45,6 +49,30 @@ impl Write for SerialWriter {
         }
 
         Ok(())
+    }
+}
+
+pub fn serialize_fault(fault: &Fault) {
+    unsafe {
+        let crash_dump: *mut MaybeUninit<CrashDump> =
+            core::ptr::with_exposed_provenance_mut(0x7800_0000);
+
+        let crash_dump = (*crash_dump).write(CrashDump::new(CrashDumpData::Fault {
+            fault: *fault,
+            fault_data: fault.fault_data(),
+        }));
+
+        let fault_location = fault.program_counter as *const ();
+        let frame_ptr = cfg_select! {
+            target_feature = "thumb-mode" => fault.registers[7],
+            _ => fault.registers[11],
+        } as *const ();
+
+        for addr in iter::once(fault_location).chain(BacktraceIter::from_frame_ptr(frame_ptr)) {
+            crash_dump.backtrace.try_push(addr as u32);
+        }
+
+        crash_dump.set_crc();
     }
 }
 
