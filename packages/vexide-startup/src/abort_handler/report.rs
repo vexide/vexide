@@ -52,6 +52,7 @@ impl Write for SerialWriter {
     }
 }
 
+// TODO: use linkerscript to place this at a high address
 static mut CRASH_DUMP: CrashDump = unsafe { MaybeUninit::zeroed().assume_init() };
 
 pub fn serialize_fault(fault: &Fault) {
