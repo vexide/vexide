@@ -75,7 +75,7 @@
 //!
 //!     // Configure ADI port B for digital output. This can be used for controlling e.g. a
 //!     // pneumatic solenoid.
-//!     let solenoid = AdiDigitalOut::new(peripherals.adi_b);
+//!     let solenoid = AdiDigitalOut::new_low(peripherals.adi_b);
 //! }
 //! ```
 //!

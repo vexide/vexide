@@ -24,7 +24,7 @@ impl Compete for Robot {
 async fn main(peripherals: Peripherals) {
     Robot {
         controller: peripherals.primary_controller,
-        solenoid: AdiDigitalOut::new(peripherals.adi_a),
+        solenoid: AdiDigitalOut::new_low(peripherals.adi_a),
     }
     .compete()
     .await;
