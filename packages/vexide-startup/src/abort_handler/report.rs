@@ -9,7 +9,7 @@ use vexide_core::backtrace::BacktraceIter;
 use super::Fault;
 use crate::{
     error_report::ErrorReport,
-    persist_dump::{CrashDump, CrashDumpData},
+    persist_dump::{CrashDump, CrashDumpData2},
 };
 
 pub struct SerialWriter(());
@@ -52,27 +52,31 @@ impl Write for SerialWriter {
     }
 }
 
+static mut CRASH_DUMP: CrashDump = unsafe { MaybeUninit::zeroed().assume_init() };
+
 pub fn serialize_fault(fault: &Fault) {
     unsafe {
-        let crash_dump: *mut MaybeUninit<CrashDump> =
-            core::ptr::with_exposed_provenance_mut(0x7800_0000);
-
-        let crash_dump = (*crash_dump).write(CrashDump::new(CrashDumpData::Fault {
+        let crash_dump = &raw mut CRASH_DUMP;
+        crash_dump.write_volatile(CrashDump::new(CrashDumpData2 {
             fault: *fault,
-            fault_data: fault.fault_data(),
+            fault_exception_data: fault.fault_data().into(),
+            data_type: 1,
+            ..bytemuck::Zeroable::zeroed()
         }));
 
         let fault_location = fault.program_counter as *const ();
+        // TODO: should this be a runtime check?
+        // See documentation for BacktraceIter::from_frame_ptr for explanation of registers.
         let frame_ptr = cfg_select! {
             target_feature = "thumb-mode" => fault.registers[7],
             _ => fault.registers[11],
         } as *const ();
 
-        for addr in iter::once(fault_location).chain(BacktraceIter::from_frame_ptr(frame_ptr)) {
-            crash_dump.backtrace.try_push(addr as u32);
+        for (i, addr) in iter::once(fault_location).chain(BacktraceIter::from_frame_ptr(frame_ptr)).take(27).enumerate() {
+            (*crash_dump).data.backtrace[i] = addr as u32;
+            (*crash_dump).data.backtrace_length = i as u8;
         }
 
-        crash_dump.set_crc();
     }
 }
 

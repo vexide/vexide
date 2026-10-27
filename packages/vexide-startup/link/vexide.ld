@@ -28,13 +28,18 @@ OVERWRITE_SECTIONS {
         /* Patch overwriter routine. */
         *(.overwriter)
 
+        /* The rest of the program. */
+        *(.text .text.*)
+    } > USER_RAM
+
+     .rodata : {
         . = ALIGN(4);
         PROVIDE(__gnu_build_id_start = .);
         KEEP(*(.note.gnu.build-id))
         PROVIDE(__gnu_build_id_end = .);
-
-        /* The rest of the program. */
-        *(.text .text.*)
+        
+        *(.rodata .rodata1 .rodata.*)
+        *(.srodata .srodata.*)
     } > USER_RAM
 
     /DISCARD/ : {
