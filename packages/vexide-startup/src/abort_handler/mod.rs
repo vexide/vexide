@@ -155,7 +155,7 @@ impl Fault {
             },
             FaultExceptionType::UNDEFINED_INSTRUCTION => self.program_counter,
             // TODO: handle better?
-            _ => loop {}
+            _ => loop {},
         }
     }
     pub fn fault_data(&self) -> FaultException {
@@ -169,7 +169,10 @@ impl Fault {
                         dfsr = out(reg) dfsr,
                     );
                 };
-                FaultException::DataAbort { addr, dfsr: FaultStatus::new_with_raw_value(dfsr) }
+                FaultException::DataAbort {
+                    addr,
+                    dfsr: FaultStatus::new_with_raw_value(dfsr),
+                }
             }
             FaultExceptionType::PREFETCH_ABORT => {
                 let ifsr: u32;
@@ -179,7 +182,10 @@ impl Fault {
                         ifsr = out(reg) ifsr,
                     );
                 }
-                FaultException::PrefetchAbort { addr, ifsr: FaultStatus::new_with_raw_value(ifsr) }
+                FaultException::PrefetchAbort {
+                    addr,
+                    ifsr: FaultStatus::new_with_raw_value(ifsr),
+                }
             }
             FaultExceptionType::UNDEFINED_INSTRUCTION => {
                 FaultException::UndefinedInstruction {
@@ -190,9 +196,9 @@ impl Fault {
                         self.faulting_instruction()
                     },
                 }
-            },
+            }
             // TODO: handle better?
-            _ => loop {}
+            _ => loop {},
         }
     }
 }
@@ -212,25 +218,25 @@ impl Into<u128> for FaultException {
                 bytes[4..8].copy_from_slice(&dfsr.raw_value().to_le_bytes());
                 bytes[15] = 3;
                 u128::from_le_bytes(bytes)
-            },
+            }
             Self::PrefetchAbort { addr, ifsr } => {
                 let mut bytes = [0u8; 16];
                 bytes[0..4].copy_from_slice(&addr.to_le_bytes());
                 bytes[4..8].copy_from_slice(&ifsr.raw_value().to_le_bytes());
                 bytes[15] = 2;
                 u128::from_le_bytes(bytes)
-            },
+            }
             Self::UndefinedInstruction { instr } => {
                 let mut bytes = [0u8; 16];
                 match instr {
                     Instruction::Arm32(val) => {
                         bytes[0..4].copy_from_slice(&val.to_le_bytes());
                         bytes[5] = 0;
-                    },
+                    }
                     Instruction::Thumb16(val) => {
                         bytes[0..2].copy_from_slice(&val.to_le_bytes());
                         bytes[5] = 1;
-                    },
+                    }
                     Instruction::Thumb32([val_1, val_2]) => {
                         bytes[0..2].copy_from_slice(&val_1.to_le_bytes());
                         bytes[2..4].copy_from_slice(&val_2.to_le_bytes());
