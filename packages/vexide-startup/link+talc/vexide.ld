@@ -13,8 +13,6 @@ INCLUDE ../link/vexide.ld
  * memory.
  */
 
-INCLUDE ../link/vexide.ld
-
 PROVIDE(__dlmalloc_heap_length = 32K);
 
 SECTIONS {

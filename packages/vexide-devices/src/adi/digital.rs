@@ -205,14 +205,20 @@ impl AdiDigitalOut {
         Self { port, level: initial_level }
     }
 
-    #[must_use]
-    pub fn new_high(port: AdiPort) -> Self {
-        Self::new(port, LogicLevel::High)
-    }
-
+    /// Create a digital output from an [`AdiPort`] with an initial level of [`LogicLevel::Low`].
+    ///
+    /// This is functionally equivalent to `AdiDigitalOut::new(..., LogicLevel::Low)`.
     #[must_use]
     pub fn new_low(port: AdiPort) -> Self {
         Self::new(port, LogicLevel::Low)
+    }
+
+    /// Create a digital output from an [`AdiPort`] with an initial level of [`LogicLevel::High`].
+    ///
+    /// This is functionally equivalent to `AdiDigitalOut::new(..., LogicLevel::High)`.
+    #[must_use]
+    pub fn new_high(port: AdiPort) -> Self {
+        Self::new(port, LogicLevel::High)
     }
 
     /// Sets the digital logic level (high or low) of a pin.
