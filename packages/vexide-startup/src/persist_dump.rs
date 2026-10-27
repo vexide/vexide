@@ -2,10 +2,7 @@ use core::hint::unreachable_unchecked;
 
 use crc::{CRC_32_ISO_HDLC, Crc};
 
-use crate::{
-    __gnu_build_id_start,
-    abort_handler::Fault,
-};
+use crate::{__gnu_build_id_start, abort_handler::Fault};
 
 static CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 

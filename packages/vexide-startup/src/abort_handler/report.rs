@@ -72,11 +72,14 @@ pub fn serialize_fault(fault: &Fault) {
             _ => fault.registers[11],
         } as *const ();
 
-        for (i, addr) in iter::once(fault_location).chain(BacktraceIter::from_frame_ptr(frame_ptr)).take(27).enumerate() {
+        for (i, addr) in iter::once(fault_location)
+            .chain(BacktraceIter::from_frame_ptr(frame_ptr))
+            .take(27)
+            .enumerate()
+        {
             (*crash_dump).data.backtrace[i] = addr as u32;
             (*crash_dump).data.backtrace_length = i as u8;
         }
-
     }
 }
 
