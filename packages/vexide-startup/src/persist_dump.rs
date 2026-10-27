@@ -9,13 +9,13 @@ static CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 const CRASH_DUMP_MAGIC: u32 = 0xDEADC0DE;
 
 #[repr(C)]
-pub struct CrashDumpHeader {
+struct CrashDumpHeader {
     /// This field must be CRASH_DUMP_MAGIC
     magic: u32,
     /// SHA-1 build id, from .note.gnu.build-id
     build_id: [u8; 20],
     /// CRC-32 of data and backtrace fields
-    pub crc: u32,
+    crc: u32,
 }
 
 impl CrashDumpHeader {
@@ -29,6 +29,7 @@ impl CrashDumpHeader {
     }
 }
 
+/// This struct stores the actual data of the crash dump.
 #[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
 #[repr(C)]
 pub struct CrashDumpData {
@@ -74,10 +75,11 @@ impl CrashDumpData {
     }
 }
 
+/// The representation of a crash dump in memory including the header.
 #[repr(C)]
 pub struct CrashDump {
     /// The header of the crash dump
-    pub header: CrashDumpHeader,
+    header: CrashDumpHeader,
     /// The data of the crash dump
     pub data: CrashDumpData,
 }
@@ -90,6 +92,7 @@ impl CrashDump {
             data,
         }
     }
+    /// Checks whether the crc of this crash dump matches the stored data.
     pub fn check_crc(&self) -> bool {
         self.header.crc == self.data.crc()
     }
