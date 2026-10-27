@@ -59,7 +59,7 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *mut Fault) -> ! {
 pub struct Fault {
     pub link_register: u32,
     pub stack_pointer: u32,
-    pub exception: FaultException2,
+    pub exception: FaultExceptionType,
     /// The current program status register at the time of the fault.
     pub cpsr: ProgramStatus,
     /// The address at which the abort occurred.
@@ -111,26 +111,17 @@ impl Fault {
 }
 
 /// Type of exception causing a fault to be raised.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum _FaultException {
-    UndefinedInstruction = 0,
-    PrefetchAbort = 1,
-    DataAbort = 2,
-}
-
-/// Type of exception causing a fault to be raised.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, bytemuck::Zeroable, bytemuck::Pod)]
 #[repr(transparent)]
-pub struct FaultException2(pub u32);
+pub struct FaultExceptionType(pub u32);
 
-impl FaultException2 {
+impl FaultExceptionType {
     pub const UNDEFINED_INSTRUCTION: Self = Self(0);
     pub const PREFETCH_ABORT: Self = Self(1);
     pub const DATA_ABORT: Self = Self(2);
 }
 
-impl Display for FaultException2 {
+impl Display for FaultExceptionType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match *self {
             Self::DATA_ABORT => "Data Abort",
@@ -141,22 +132,12 @@ impl Display for FaultException2 {
     }
 }
 
-impl Display for _FaultException {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            Self::DataAbort => "Data Abort",
-            Self::UndefinedInstruction => "Undefined Instruction",
-            Self::PrefetchAbort => "Prefetch Abort",
-        })
-    }
-}
-
 impl Fault {
     pub fn address(&self) -> u32 {
         let address: u32;
 
         match self.exception {
-            FaultException2::DATA_ABORT => unsafe {
+            FaultExceptionType::DATA_ABORT => unsafe {
                 core::arch::asm!(
                     "mrc p15, 0, {dfar}, c6, c0, 0",
                     dfar = out(reg) address,
@@ -164,7 +145,7 @@ impl Fault {
 
                 address
             },
-            FaultException2::PREFETCH_ABORT => unsafe {
+            FaultExceptionType::PREFETCH_ABORT => unsafe {
                 core::arch::asm!(
                     "mrc p15, 0, {ifar}, c6, c0, 1",
                     ifar = out(reg) address,
@@ -172,7 +153,7 @@ impl Fault {
 
                 address
             },
-            FaultException2::UNDEFINED_INSTRUCTION => self.program_counter,
+            FaultExceptionType::UNDEFINED_INSTRUCTION => self.program_counter,
             // TODO: handle better?
             _ => loop {}
         }
@@ -180,7 +161,7 @@ impl Fault {
     pub fn fault_data(&self) -> FaultException {
         let addr = self.address();
         match self.exception {
-            FaultException2::DATA_ABORT => {
+            FaultExceptionType::DATA_ABORT => {
                 let dfsr: u32;
                 unsafe {
                     core::arch::asm!(
@@ -190,7 +171,7 @@ impl Fault {
                 };
                 FaultException::DataAbort { addr, dfsr: FaultStatus::new_with_raw_value(dfsr) }
             }
-            FaultException2::PREFETCH_ABORT => {
+            FaultExceptionType::PREFETCH_ABORT => {
                 let ifsr: u32;
                 unsafe {
                     core::arch::asm!(
@@ -200,7 +181,7 @@ impl Fault {
                 }
                 FaultException::PrefetchAbort { addr, ifsr: FaultStatus::new_with_raw_value(ifsr) }
             }
-            FaultException2::UNDEFINED_INSTRUCTION => {
+            FaultExceptionType::UNDEFINED_INSTRUCTION => {
                 FaultException::UndefinedInstruction {
                     instr: unsafe {
                         // SAFETY: Since the abort was a undefined instruction, not a prefetch

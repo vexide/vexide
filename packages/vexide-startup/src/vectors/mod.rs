@@ -1,6 +1,6 @@
 use core::arch::{asm, global_asm, naked_asm};
 
-use crate::abort_handler::FaultException2;
+use crate::abort_handler::FaultExceptionType;
 
 global_asm!(
     include_str!("vectors.s"),
@@ -52,15 +52,15 @@ macro_rules! fault_exception_vector {
 fault_exception_vector!(
     vexide_undefined_instruction:
         lr_offset = LR_OFFSET_INSTR_SIZE,
-        exception = FaultException2::UNDEFINED_INSTRUCTION,
+        exception = FaultExceptionType::UNDEFINED_INSTRUCTION,
 );
 fault_exception_vector!(
     vexide_prefetch_abort:
         lr_offset = 4,
-        exception = FaultException2::PREFETCH_ABORT,
+        exception = FaultExceptionType::PREFETCH_ABORT,
 );
 fault_exception_vector!(
     vexide_data_abort:
         lr_offset = 8,
-        exception = FaultException2::DATA_ABORT,
+        exception = FaultExceptionType::DATA_ABORT,
 );

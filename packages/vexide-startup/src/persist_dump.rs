@@ -22,7 +22,7 @@ pub struct CrashDumpHeader {
 }
 
 impl CrashDumpHeader {
-    fn new(data: &CrashDumpData2) -> Self {
+    fn new(data: &CrashDumpData) -> Self {
         CrashDumpHeader {
             magic: CRASH_DUMP_MAGIC,
             // See <https://interrupt.memfault.com/blog/gnu-build-id-for-firmware> for offset explanation
@@ -34,7 +34,7 @@ impl CrashDumpHeader {
 
 #[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
 #[repr(C)]
-pub struct CrashDumpData2 {
+pub struct CrashDumpData {
     /// The fault data, if there is one (see `data_type` field).
     pub fault: Fault,
     /// Data specific to a fault type, if there is one (see `data_type` field).
@@ -62,15 +62,7 @@ pub struct CrashDumpData2 {
     pub _pad2: [u8; 7],
 }
 
-impl Default for CrashDumpData2 {
-    fn default() -> Self {
-        Self {
-            ..bytemuck::Zeroable::zeroed()
-        }
-    }
-}
-
-impl CrashDumpData2 {
+impl CrashDumpData {
     fn crc(&self) -> u32 {
         let bytes = bytemuck::try_cast_slice(core::slice::from_ref(self));
         match bytes {
@@ -90,12 +82,12 @@ pub struct CrashDump {
     /// The header of the crash dump
     pub header: CrashDumpHeader,
     /// The data of the crash dump
-    pub data: CrashDumpData2,
+    pub data: CrashDumpData,
 }
 
 impl CrashDump {
     /// Construct a [`CrashDump`] from the given crash dump data.
-    pub fn new(data: CrashDumpData2) -> Self {
+    pub fn new(data: CrashDumpData) -> Self {
         Self {
             header: CrashDumpHeader::new(&data),
             data,

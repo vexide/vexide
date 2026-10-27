@@ -9,7 +9,7 @@ use vexide_core::backtrace::BacktraceIter;
 use super::Fault;
 use crate::{
     error_report::ErrorReport,
-    persist_dump::{CrashDump, CrashDumpData2},
+    persist_dump::{CrashDump, CrashDumpData},
 };
 
 pub struct SerialWriter(());
@@ -57,7 +57,7 @@ static mut CRASH_DUMP: CrashDump = unsafe { MaybeUninit::zeroed().assume_init() 
 pub fn serialize_fault(fault: &Fault) {
     unsafe {
         let crash_dump = &raw mut CRASH_DUMP;
-        crash_dump.write_volatile(CrashDump::new(CrashDumpData2 {
+        crash_dump.write_volatile(CrashDump::new(CrashDumpData {
             fault: *fault,
             fault_exception_data: fault.fault_data().into(),
             data_type: 1,
