@@ -163,7 +163,7 @@ pub(crate) unsafe fn patch() {
         bipatch(base, patch, new);
 
         // Jump to the stage 2 overwriter routine to handle the rest.
-        core::arch::asm!("b __patcher_overwrite", options(noreturn));
+        core::arch::asm!("blx __patcher_overwrite", options(noreturn));
     }
 }
 
