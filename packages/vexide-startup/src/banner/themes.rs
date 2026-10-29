@@ -34,7 +34,7 @@
 //!         "\u{1b}[1;38;2;136;192;208m",
 //!     ],
 //!     logo_secondary: "\x1B[38;5;254m",
-//!     crate_version: "[1;33m",
+//!     crate_version: "[1;31m",
 //!     metadata_key: "[1;33m",
 //! };
 //!
@@ -75,7 +75,7 @@ pub const THEME_DEFAULT: BannerTheme = BannerTheme {
         ansi_rgb_bold!(114, 135, 253),
     ],
     logo_secondary: "\x1B[38;5;254m",
-    crate_version: "[1;33m",
+    crate_version: "[1;31m",
     metadata_key: "[1;33m",
 };
 
@@ -92,7 +92,7 @@ pub const THEME_OFFICIAL_LOGO: BannerTheme = BannerTheme {
         ansi_rgb_bold!(230, 200, 92),
     ],
     logo_secondary: ansi_rgb_bold!(216, 219, 233),
-    crate_version: "[1;33m",
+    crate_version: "[1;31m",
     metadata_key: "[1;33m",
 };
 
@@ -160,7 +160,7 @@ pub const THEME_TRANS: BannerTheme = BannerTheme {
         ansi_rgb_bold!(115, 207, 244),
     ],
     logo_secondary: "\x1B[38;5;254m",
-    crate_version: "[1;33m",
+    crate_version: "[1;31m",
     metadata_key: "[1;33m",
 };
 
@@ -177,7 +177,7 @@ pub const THEME_ARO_ACE: BannerTheme = BannerTheme {
         ansi_rgb_bold!(32, 56, 87),
     ],
     logo_secondary: "\x1B[38;5;254m",
-    crate_version: "[1;33m",
+    crate_version: "[1;31m",
     metadata_key: "[1;33m",
 };
 
@@ -194,7 +194,7 @@ pub const THEME_NONBINARY: BannerTheme = BannerTheme {
         ansi_rgb_bold!(0, 0, 0),
     ],
     logo_secondary: "\x1B[38;5;254m",
-    crate_version: "[1;33m",
+    crate_version: "[1;31m",
     metadata_key: "[1;33m",
 };
 
@@ -211,7 +211,7 @@ pub const THEME_BISEXUAL: BannerTheme = BannerTheme {
         ansi_rgb_bold!(0, 56, 168),
     ],
     logo_secondary: "\x1B[38;5;254m",
-    crate_version: "[1;33m",
+    crate_version: "[1;31m",
     metadata_key: "[1;33m",
 };
 
