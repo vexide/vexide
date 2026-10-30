@@ -319,7 +319,6 @@ impl Display for Fault {
     }
 }
 
-
 #[bitbybit::bitfield(u32)]
 #[derive(bytemuck::Zeroable, bytemuck::Pod)]
 pub struct ProgramStatus {
