@@ -319,17 +319,14 @@ impl Display for Fault {
     }
 }
 
+
 #[bitbybit::bitfield(u32)]
+#[derive(bytemuck::Zeroable, bytemuck::Pod)]
 pub struct ProgramStatus {
     /// Indicates that the program was running in Thumb mode.
     #[bit(5, rw)]
     thumb: bool,
 }
-
-// Safety: ProgramStatus is a repr(C) struct with a single u32 member
-unsafe impl bytemuck::Zeroable for ProgramStatus {}
-// Safety: ProgramStatus is a repr(C) struct with a single u32 member
-unsafe impl bytemuck::Pod for ProgramStatus {}
 
 #[bitbybit::bitfield(u32)]
 pub struct FaultStatus {

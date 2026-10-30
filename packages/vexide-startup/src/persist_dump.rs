@@ -1,10 +1,8 @@
-use core::hint::unreachable_unchecked;
-
-use crc::{CRC_32_ISO_HDLC, Crc};
+use crc::{CRC_32_ISO_HDLC, Crc, NoTable};
 
 use crate::{__gnu_build_id_start, abort_handler::Fault};
 
-static CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
+static CRC: Crc<u32, NoTable> = Crc::<u32, _>::new(&CRC_32_ISO_HDLC);
 
 const CRASH_DUMP_MAGIC: u32 = 0xDEADC0DE;
 
@@ -62,16 +60,7 @@ pub struct CrashDumpData {
 
 impl CrashDumpData {
     fn crc(&self) -> u32 {
-        let bytes = bytemuck::try_cast_slice(core::slice::from_ref(self));
-        match bytes {
-            Ok(bytes) => CRC.checksum(bytes),
-            Err(
-                bytemuck::PodCastError::AlignmentMismatch
-                | bytemuck::PodCastError::OutputSliceWouldHaveSlop
-                | bytemuck::PodCastError::SizeMismatch
-                | bytemuck::PodCastError::TargetAlignmentGreaterAndInputNotAligned,
-            ) => unsafe { unreachable_unchecked() },
-        }
+        CRC.checksum(bytemuck::bytes_of(self))
     }
 }
 
