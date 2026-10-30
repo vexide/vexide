@@ -30,6 +30,7 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *mut Fault) -> ! {
     // SAFETY: Caller guarantees fault is valid for reads and writes.
     let fault = unsafe { fault.as_mut_unchecked() };
 
+    report::serialize_fault(fault);
     report::report_fault(fault);
 
     let mut prev_touch_event = V5_TouchEvent::kTouchEventRelease;
@@ -53,12 +54,12 @@ pub unsafe extern "C" fn fault_exception_handler(fault: *mut Fault) -> ! {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
 #[repr(C)]
 pub struct Fault {
     pub link_register: u32,
     pub stack_pointer: u32,
-    pub exception: FaultException,
+    pub exception: FaultExceptionType,
     /// The current program status register at the time of the fault.
     pub cpsr: ProgramStatus,
     /// The address at which the abort occurred.
@@ -110,20 +111,23 @@ impl Fault {
 }
 
 /// Type of exception causing a fault to be raised.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum FaultException {
-    UndefinedInstruction = 0,
-    PrefetchAbort = 1,
-    DataAbort = 2,
+#[derive(Debug, Clone, Copy, PartialEq, Eq, bytemuck::Zeroable, bytemuck::Pod)]
+#[repr(transparent)]
+pub struct FaultExceptionType(pub u32);
+
+impl FaultExceptionType {
+    pub const UNDEFINED_INSTRUCTION: Self = Self(0);
+    pub const PREFETCH_ABORT: Self = Self(1);
+    pub const DATA_ABORT: Self = Self(2);
 }
 
-impl Display for FaultException {
+impl Display for FaultExceptionType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            FaultException::DataAbort => "Data Abort",
-            FaultException::UndefinedInstruction => "Undefined Instruction",
-            FaultException::PrefetchAbort => "Prefetch Abort",
+        f.write_str(match *self {
+            Self::DATA_ABORT => "Data Abort",
+            Self::UNDEFINED_INSTRUCTION => "Undefined Instruction",
+            Self::PREFETCH_ABORT => "Prefetch Abort",
+            _ => "[invalid value]",
         })
     }
 }
@@ -133,7 +137,7 @@ impl Fault {
         let address: u32;
 
         match self.exception {
-            FaultException::DataAbort => unsafe {
+            FaultExceptionType::DATA_ABORT => unsafe {
                 core::arch::asm!(
                     "mrc p15, 0, {dfar}, c6, c0, 0",
                     dfar = out(reg) address,
@@ -141,7 +145,7 @@ impl Fault {
 
                 address
             },
-            FaultException::PrefetchAbort => unsafe {
+            FaultExceptionType::PREFETCH_ABORT => unsafe {
                 core::arch::asm!(
                     "mrc p15, 0, {ifar}, c6, c0, 1",
                     ifar = out(reg) address,
@@ -149,28 +153,108 @@ impl Fault {
 
                 address
             },
-            FaultException::UndefinedInstruction => self.program_counter,
+            FaultExceptionType::UNDEFINED_INSTRUCTION => self.program_counter,
+            // TODO: handle better?
+            _ => loop {},
         }
     }
-}
-
-impl Display for Fault {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    pub fn fault_data(&self) -> FaultException {
         let addr = self.address();
-
         match self.exception {
-            FaultException::DataAbort => {
+            FaultExceptionType::DATA_ABORT => {
                 let dfsr: u32;
                 unsafe {
                     core::arch::asm!(
                         "mrc p15, 0, {dfsr}, c5, c0, 0",
                         dfsr = out(reg) dfsr,
                     );
+                };
+                FaultException::DataAbort {
+                    addr,
+                    dfsr: FaultStatus::new_with_raw_value(dfsr),
                 }
+            }
+            FaultExceptionType::PREFETCH_ABORT => {
+                let ifsr: u32;
+                unsafe {
+                    core::arch::asm!(
+                        "mrc p15, 0, {ifsr}, c5, c0, 1",
+                        ifsr = out(reg) ifsr,
+                    );
+                }
+                FaultException::PrefetchAbort {
+                    addr,
+                    ifsr: FaultStatus::new_with_raw_value(ifsr),
+                }
+            }
+            FaultExceptionType::UNDEFINED_INSTRUCTION => {
+                FaultException::UndefinedInstruction {
+                    instr: unsafe {
+                        // SAFETY: Since the abort was a undefined instruction, not a prefetch
+                        // abort, it implies that reading the instruction
+                        // won't cause another fault.
+                        self.faulting_instruction()
+                    },
+                }
+            }
+            // TODO: handle better?
+            _ => loop {},
+        }
+    }
+}
 
-                let status = FaultStatus::new_with_raw_value(dfsr);
+pub enum FaultException {
+    DataAbort { addr: u32, dfsr: FaultStatus },
+    PrefetchAbort { addr: u32, ifsr: FaultStatus },
+    UndefinedInstruction { instr: Instruction },
+}
 
-                f.write_str(match status.reason().value() {
+impl Into<u128> for FaultException {
+    fn into(self) -> u128 {
+        match self {
+            Self::DataAbort { addr, dfsr } => {
+                let mut bytes = [0u8; 16];
+                bytes[0..4].copy_from_slice(&addr.to_le_bytes());
+                bytes[4..8].copy_from_slice(&dfsr.raw_value().to_le_bytes());
+                bytes[15] = 3;
+                u128::from_le_bytes(bytes)
+            }
+            Self::PrefetchAbort { addr, ifsr } => {
+                let mut bytes = [0u8; 16];
+                bytes[0..4].copy_from_slice(&addr.to_le_bytes());
+                bytes[4..8].copy_from_slice(&ifsr.raw_value().to_le_bytes());
+                bytes[15] = 2;
+                u128::from_le_bytes(bytes)
+            }
+            Self::UndefinedInstruction { instr } => {
+                let mut bytes = [0u8; 16];
+                match instr {
+                    Instruction::Arm32(val) => {
+                        bytes[0..4].copy_from_slice(&val.to_le_bytes());
+                        bytes[5] = 0;
+                    }
+                    Instruction::Thumb16(val) => {
+                        bytes[0..2].copy_from_slice(&val.to_le_bytes());
+                        bytes[5] = 1;
+                    }
+                    Instruction::Thumb32([val_1, val_2]) => {
+                        bytes[0..2].copy_from_slice(&val_1.to_le_bytes());
+                        bytes[2..4].copy_from_slice(&val_2.to_le_bytes());
+                        bytes[5] = 2;
+                    }
+                }
+                bytes[15] = 1;
+                u128::from_le_bytes(bytes)
+            }
+        }
+    }
+}
+
+impl Display for FaultException {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            FaultException::DataAbort { addr, dfsr } => {
+                f.write_str(match dfsr.reason().value() {
                     0b00001 => "Alignment fault	(MMU)",
                     0b00100 => "Instruction cache maintenance fault",
                     0b01100 | 0b01110 => "Translation table walk synchronous external abort",
@@ -192,7 +276,7 @@ impl Display for Fault {
                 })?;
                 f.write_str(" while ")?;
 
-                f.write_str(if status.write_not_read() {
+                f.write_str(if dfsr.write_not_read() {
                     "writing to "
                 } else {
                     "reading from "
@@ -200,18 +284,8 @@ impl Display for Fault {
 
                 write!(f, "0x{addr:x}")?;
             }
-            FaultException::PrefetchAbort => {
-                let ifsr: u32;
-                unsafe {
-                    core::arch::asm!(
-                        "mrc p15, 0, {ifsr}, c5, c0, 1",
-                        ifsr = out(reg) ifsr,
-                    );
-                }
-
-                let status = FaultStatus::new_with_raw_value(ifsr);
-
-                f.write_str(match status.reason().value() {
+            FaultException::PrefetchAbort { addr, ifsr } => {
+                f.write_str(match ifsr.reason().value() {
                     0b01100 | 0b01110 => "Translation table walk synchronous external abort",
                     0b11100 | 0b11110 => "Translation table walk synchronous parity error",
                     0b00101 | 0b00111 => "Translation fault (MMU)",
@@ -228,12 +302,10 @@ impl Display for Fault {
 
                 write!(f, " while fetching address 0x{addr:x}")?;
             }
-            FaultException::UndefinedInstruction => {
+            FaultException::UndefinedInstruction { instr } => {
                 // SAFETY: Since the abort was a undefined instruction, not a prefetch abort, it
                 // implies that reading the instruction won't cause another fault.
-                write!(f, "Failed to decode instruction {:x?}", unsafe {
-                    self.faulting_instruction()
-                })?;
+                write!(f, "Failed to decode instruction {instr:x?}")?;
             }
         }
 
@@ -241,7 +313,14 @@ impl Display for Fault {
     }
 }
 
+impl Display for Fault {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.fault_data().fmt(f)
+    }
+}
+
 #[bitbybit::bitfield(u32)]
+#[derive(bytemuck::Zeroable, bytemuck::Pod)]
 pub struct ProgramStatus {
     /// Indicates that the program was running in Thumb mode.
     #[bit(5, rw)]
@@ -262,9 +341,9 @@ pub struct FaultStatus {
 ///
 /// All ARM instructions are 32-bit, but as Thumb is a variable-length instruction set,
 /// some Thumb instructions are only 16-bit.
-#[derive(Debug)]
-#[allow(dead_code)] // Only read via Debug
-enum Instruction {
+#[derive(Clone, Copy, Debug)]
+#[repr(C)]
+pub enum Instruction {
     Arm32(u32),
     Thumb32([u16; 2]),
     Thumb16(u16),
