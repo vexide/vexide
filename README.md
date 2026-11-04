@@ -1,67 +1,69 @@
-# vexide
+<h1 align="center">
 
-Open-source Rust runtime for VEX robots. vexide provides a safe and efficient set of APIs and tools for programming VEX robots in Rust!
+<img src="https://vexide.dev/images/logo.svg" height="40" align="absmiddle" alt=""> &nbsp;vexide
+
+[![Website][webimg]][weblink] [![docs.rs][blogimg]][bloglink] [![docs.rs][docsimg]][docslink] [![docs.rs][discordimg]][discordlink]
+
+[webimg]: https://img.shields.io/badge/Website-gray
+[weblink]: https://vexide.dev
+[blogimg]: https://img.shields.io/badge/Blog-gray
+[bloglink]: https://vexide.dev/blog/
+[docsimg]: https://img.shields.io/badge/API%20Documentation-gray
+[docslink]: https://docs.rs/vexide
+[discordimg]: https://img.shields.io/discord/1191121307199352923?logo=discord&logoColor=white
+[discordlink]: https://discord.gg/d4uazRf2Nh
+</h1>
+
+Open-source Rust runtime for VEX V5 robots. vexide provides a safe and efficient set of APIs and tools for programming VEX robots in Rust!
+
+```rust
+use vexide::prelude::*;
+
+#[vexide::main]
+async fn main(peripherals: Peripherals) {
+    // Create a green motor on port 1.
+    let mut my_motor = Motor::new(peripherals.port_1, Gearset::Green, Direction::Forward);
+
+    // Spin the motor at 10 volts!
+    _ = my_motor.set_voltage(10.0);
+}
+```
+
+## What is vexide?
+
+vexide is an independent, community-maintained library for programming VEX robots. It's alternative to [VEXcode](https://www.vexrobotics.com/vexcode) and [PROS](https://pros.cs.purdue.edu/) for students who want to write their VEX V5 robot code in Rust instead of C or C++.
+
+Since vexide handles low-level features like task scheduling, memory allocation, and competition state, you can focus on writing competitive, performant, and reliable code!
+
+### Features
+
+- **Reliability:** Rust catches whole classes of bugs at compile time, and vexide's APIs are designed around explicit error handling. Safe Rust code should never be able to cause a memory error on the Brain; if it does, that's a bug in vexide.
+- **Async multitasking:** Instead of an RTOS, vexide uses Rust's `async`/`await`. Spawning async tasks is cheap and there are no data races between them.
+- **Fast program uploads:** Differential uploads only transmit the parts of your program that have changed, so wireless uploads are nearly instant even for large projects.
+- **Standard Rust tooling:** A vexide project is a normal Cargo project. You can use the standard library, add crates from [crates.io](https://crates.io/), organize code into modules and workspaces, and use standard IDE tooling.
+- **Testing without a robot:** vexide programs can be compiled and run on your computer against a mocked SDK, and you can unit test your robot logic with `cargo test`.
+- **Useful crash reports:** If a program panics or the CPU faults, vexide shows detailed info about the error, a backtrace, and register state at the time of the crash.
+- **Fully open source:** vexide is free and open source under the permissive MIT license with no proprietary code by default. It's maintained by current and former competitors around the world, and we've documented [how it works](https://internals.vexide.dev/).
+
+vexide isn't aimed at people who are new to programming. If you haven't used Rust before, we recommend working through at least the first half of [the Rust Book](https://doc.rust-lang.org/book/) first.
 
 ## Getting Started
 
-To start using vexide, we recommend going through our [docs](https://vexide.dev/docs/), which contain step-by-step instructions for setting up a development environment using [vexide-template](https://github.com/vexide/vexide-template) and tutorials for many of vexide's common features. You can also use our [examples](./examples/) as a reference for your own projects.
+To start using vexide, we recommend going through our [documentation](https://vexide.dev/docs/), which includes step-by-step instructions for setting up a development environment and guides for some of vexide's commonly-used features.
 
-## Project Structure
+Other resources:
 
-vexide's codebase is a fairly standard rust workspace split into 5 crates:
+- The [API reference](https://docs.rs/vexide) documents all functions and types.
+- vexide's [examples](./examples/) show complete programs you can use as a starting point.
 
-- [`vexide-core`](https://crates.io/crates/vexide_core) implements common low-level system APIs, including competition control, OS facilities, and backtrace collection.
-- [`vexide-devices`](https://crates.io/crates/vexide_devices) contains APIs for VEX peripherals and hardware, allowing you to control motors and sensors from Rust code.
-- [`vexide-async`](https://crates.io/crates/vexide_async) implements vexide's async executor and runtime, as well as a few common futures and synchronization primitives.
-- [`vexide-startup`](https://crates.io/crates/vexide_startup) contains bare-metal runtime initialization code for booting a freestanding vexide program on a V5 brain.
-- [`vexide-macro`](https://crates.io/crates/vexide_macro) implements vexide's proc-macros, including the `#[vexide::main]` attribute.
+## Help
 
-All of these crates are re-exported from the [`vexide`](https://github.com/vexide/vexide/blob/main/packages/vexide/src/lib.rs) crate to be used as a single package.
+If you have questions, come ask in our [Discord server][discordlink]!
 
-## Building
+## License
 
-vexide relies on some features that are only available in Rust’s nightly release channel, so you’ll need to switch to using nightly to build it. We also use the `rust-src` component due to our target not shipping pre-built versions of the standard library in `rustup`.
+vexide is distributed under the terms of the MIT license ([LICENSE](LICENSE) or <http://opensource.org/licenses/MIT>).
 
-```sh
-rustup override set nightly
-rustup component add rust-src
-```
+## Contributing
 
-If you want to run your programs on the V5 brain, you'll additionally need to install our upload tool, `cargo-v5`. It extends the normal `cargo build` command, converting executables to a compatible format and sending them over a wired or wireless connection.
-
-You can install that tool with the following command:
-
-```sh
-cargo install cargo-v5
-```
-
-From there, the project can be built like any other Rust library using `cargo v5`:
-
-```sh
-cargo v5 build -p vexide
-```
-
-Examples can similarly be built this way:
-
-```sh
-cargo v5 build --example basic --release
-```
-
-> [!NOTE]
-> Installing `cargo-v5` isn't needed if you just want to test if your changes compile. `vexide` supports compiling to host targets using a mocked version of the VEX SDK for testing changes without a Brain. If you want to upload programs/examples or build a program for the Brain, you will need `cargo-v5`.
-
-## Testing
-
-When making changes to vexide, it's a good idea to test them. `vexide` supports Rust's [testing features](https://doc.rust-lang.org/book/ch11-01-writing-tests.html) for verifying that code behaves how it should. You can test vexide using `cargo test`, like any other Rust project:
-
-```sh
-cargo test --all
-```
-
-Unit & doc tests always run directly on your computer using an incomplete stubbed SDK, so they'll likely miss some types of logic errors. We also recommend running some of our [examples](./examples/) on real hardware.
-
-```sh
-cargo v5 upload --example basic --release
-```
-
-Depending on what you have changed, the basic example may not be the best example to test. We have many examples covering different parts of vexide, so choose the one that applies to your changes. If there isn't one, feel free to add it!
+For guidelines for contributors, please see [CONTRIBUTING.md](CONTRIBUTING.md).
