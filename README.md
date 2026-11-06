@@ -2,7 +2,7 @@
 
 <img src="https://vexide.dev/images/logo.svg" height="40" align="absmiddle" alt=""> &nbsp;vexide
 
-[![Website][webimg]][weblink] [![docs.rs][blogimg]][bloglink] [![docs.rs][docsimg]][docslink] [![docs.rs][discordimg]][discordlink]
+[![Website][webimg]][weblink] [![Blog][blogimg]][bloglink] [![docs.rs][docsimg]][docslink] [![Discord][discordimg]][discordlink]
 
 [webimg]: https://img.shields.io/badge/Website-gray
 [weblink]: https://vexide.dev
@@ -31,7 +31,7 @@ async fn main(peripherals: Peripherals) {
 
 ## What is vexide?
 
-vexide is an independent, community-maintained library for programming VEX robots. It's alternative to [VEXcode](https://www.vexrobotics.com/vexcode) and [PROS](https://pros.cs.purdue.edu/) for students who want to write their VEX V5 robot code in Rust instead of C or C++.
+vexide is an independent, community-maintained library for programming VEX robots. It's an alternative to [VEXcode](https://www.vexrobotics.com/vexcode) and [PROS](https://pros.cs.purdue.edu/) for students who want to write their VEX V5 robot code in Rust instead of C or C++.
 
 Since vexide handles low-level features like task scheduling, memory allocation, and competition state, you can focus on writing competitive, performant, and reliable code!
 
