@@ -1,6 +1,10 @@
 <h1 align="center">
 
-<img src="https://vexide.dev/images/logo.svg" height="40" align="absmiddle" alt=""> &nbsp;vexide
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset=".github/assets/logo-light.svg">
+  <img src=".github/assets/logo-dark.svg" height="40" align="absmiddle" alt="">
+</picture> &nbsp;vexide
 
 [![Website][webimg]][weblink] [![docs.rs][blogimg]][bloglink] [![docs.rs][docsimg]][docslink] [![docs.rs][discordimg]][discordlink]
 
