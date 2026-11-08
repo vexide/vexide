@@ -46,25 +46,26 @@ Before releasing:
 - Fixed an issue where `VisionSensor::signature` would return fields in the incorrect order. (#437)
 - Fixed `Angle::wrapped_half` returning a negated value from what's expected. (#438) (**Breaking Change**)
 - Fixed `Motor::is_driver_over_current` incorrectly checking for the motor's `OVER_CURRENT` fault instead of `DRIVER_OVER_CURRENT`. (#447)
-- Fixed a stack overflow in the abort handler that was causing recursive CPU aborts. (#450)
+- Fixed a stack overflow in the abort handler that was causing recursive CPU aborts. (#453)
 - Fixed an issue where the future returned from `SerialPort::open` could be polled after completion, effectively duplicating SmartPorts. (#452)
-- `AdiDigialOut::level` will now immediately update upon changing the level rather than requiring up to 10ms to update. (#480)
-- Fixed an issue where usage of `std::alloc::System` (for example, calling `std::thread::current()`) would cause undefined behavior when the `allocator` feature was in use. (#469)
+- `AdiDigitalOut::level` will now immediately update upon changing the level rather than requiring up to 10ms to update. (#480)
+- Fixed an issue where usage of `std::alloc::System` (for example, calling `std::thread::current()`) would cause undefined behavior when the `allocator` feature was in use. (#478)
 
 ### Changed
 
 - Corrected some minor doc comments and updated the Nix flake. (#451)
 - Upgraded to SNAFU 0.9. (#442)
+- Updated to Rust 1.101. (#471) (**Breaking Change**)
 - Updated to `vex-sdk` 0.29.0.
 - Programs now execute in Thumb mode instead of ARM mode, reducing code size. (#454)
 - Backtraces are now captured using the frame pointer instead of through unwind tables. (#456) (**Breaking Change**)
-- `AdiDigialOut::new` now takes an initial `LogicLevel`. (#480) (**Breaking Change**)
+- `AdiDigitalOut::new` now takes an initial `LogicLevel`. (#480) (**Breaking Change**)
 
 ### Removed
 
 - The vexide linker script now removes unwind tables from the executable. (#456) (**Breaking Change**)
 - The `backtrace` Cargo feature has been removed; the `vexide::backtrace` module is now available unconditionally. (#456) (**Breaking Change**)
-- `AdiDigialOut::with_initial_level` has been removed in favor of the `AdiDigitalOut::new` changes. (#480) (**Breaking Change**)
+- `AdiDigitalOut::with_initial_level` has been removed in favor of the `AdiDigitalOut::new` changes. (#480) (**Breaking Change**)
 
 ### New Contributors
 
@@ -574,3 +575,4 @@ Before releasing:
 [0.6.1]: https://github.com/vexide/vexide/compare/v0.6.0...v0.6.1
 [0.7.0]: https://github.com/vexide/vexide/compare/v0.6.1...v0.7.0
 [0.8.0]: https://github.com/vexide/vexide/compare/v0.7.0...v0.8.0
+[0.9.0-beta.1]: https://github.com/vexide/vexide/compare/v0.8.0...v0.9.0-beta.1
