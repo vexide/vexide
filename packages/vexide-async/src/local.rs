@@ -156,6 +156,7 @@ impl<T: 'static> LocalKey<T> {
 
 impl<T: 'static> LocalKey<Cell<T>> {
     /// Returns a copy of the contained value.
+    #[must_use]
     pub fn get(&'static self) -> T
     where
         T: Copy,

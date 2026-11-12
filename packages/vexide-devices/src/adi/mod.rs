@@ -261,15 +261,18 @@ pub trait AdiDevice<const N: usize> {
     /// Returns the port numbers of the [`AdiPort`]s that this device is registered to.
     ///
     /// Ports are numbered starting from 1.
+    #[must_use]
     fn port_numbers(&self) -> [u8; N];
 
     /// Returns the port number of the [`SmartPort`](crate::smart::SmartPort) this device's expander
     /// is connected to, or [`None`] if the device is plugged into an onboard ADI port.
     ///
     /// Ports are numbered starting from 1.
+    #[must_use]
     fn expander_port_number(&self) -> Option<u8>;
 
     /// Returns the variant of [`AdiDeviceType`] that this device is associated with.
+    #[must_use]
     fn device_type(&self) -> AdiDeviceType;
 }
 

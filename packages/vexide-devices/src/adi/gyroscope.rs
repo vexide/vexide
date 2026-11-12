@@ -34,6 +34,7 @@ enum AdiGyroscopeCalibrationFutureState {
 }
 
 /// A future that calibrates an [`AdiGyroscope`] for a given duration.
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub struct CalibrateFuture<'a> {
     gyro: &'a mut AdiGyroscope,
     state: AdiGyroscopeCalibrationFutureState,
