@@ -7,7 +7,7 @@ use alloc::{
     ffi::{CString, NulError},
     string::{String, ToString},
 };
-use core::{cell::RefCell, future::Future, task::Poll, time::Duration};
+use core::{cell::RefCell, ffi::CStr, future::Future, task::Poll, time::Duration};
 
 use snafu::{Snafu, ensure};
 use vex_sdk::{
@@ -160,17 +160,53 @@ fn validate_connection(id: ControllerId) -> Result<(), ControllerError> {
     Ok(())
 }
 
+/// Requests a write to the controller screen, returning `false` if a previous write is still
+/// pending.
+///
+/// `line` and `column` are both 1-indexed. A `line` of 0 clears the screen and a `line` of 4 sends
+/// a rumble pattern.
+fn write_text(id: ControllerId, line: u8, column: u8, text: &CStr) -> bool {
+    let id = V5_ControllerId::from(id);
+
+    // Lines are 1-indexed, columns are 0-indexed.
+    unsafe {
+        vexControllerTextSet(
+            u32::from(id.0),
+            u32::from(line),
+            u32::from(column - 1),
+            text.as_ptr().cast(),
+        ) == 1
+    }
+}
+
+/// Panics if `column` is outside `[1, MAX_COLUMNS]`, or if `enforce_visible` is set and `line`
+/// is outside `[1, MAX_LINES]`.
+fn validate_position(line: u8, column: u8, enforce_visible: bool) {
+    assert!(
+        column != 0 && column <= Controller::MAX_COLUMNS as u8,
+        "{column} is not a valid controller column number. Must be in the range [1, {}]",
+        Controller::MAX_COLUMNS
+    );
+    if enforce_visible {
+        assert!(
+            line != 0 && line <= Controller::MAX_LINES as u8,
+            "{line} is not a valid controller line number. Must be in the range [1, {}]",
+            Controller::MAX_LINES
+        );
+    }
+}
+
 enum ControllerScreenWriteFutureState<'a> {
     /// Waiting for the controller to be ready to accept a new write.
     WaitingForIdle {
         /// The line to write to.
         ///
-        /// This is indexed like the SDK, with the first onscreen line being 1.
+        /// This is 1-indexed, like the SDK.
         line: u8,
 
         /// The column to write to.
         ///
-        /// This **NOT** is indexed like the SDK. The first onscreen column is 1.
+        /// This is 1-indexed, unlike the SDK, which is 0-indexed. See [`write_text`].
         column: u8,
 
         /// The text to write.
@@ -235,19 +271,7 @@ impl Future for ControllerScreenWriteFuture<'_> {
             enforce_visible,
         } = state
         {
-            if *enforce_visible {
-                assert!(
-                    *line != 0 && *line <= Controller::MAX_LINES as u8,
-                    "Invalid line number ({line}) is greater than the maximum number of lines ({})",
-                    Controller::MAX_LINES
-                );
-            }
-
-            assert!(
-                *column != 0 && *column <= Controller::MAX_COLUMNS as u8,
-                "Invalid column number ({column}) is greater than the maximum number of columns ({})",
-                Controller::MAX_COLUMNS
-            );
+            validate_position(*line, *column, *enforce_visible);
 
             let text = text
                 .as_deref()
@@ -256,18 +280,7 @@ impl Future for ControllerScreenWriteFuture<'_> {
 
             match validate_connection(controller.id) {
                 Ok(()) => {
-                    let id = V5_ControllerId::from(controller.id);
-
-                    let result = unsafe {
-                        vexControllerTextSet(
-                            u32::from(id.0),
-                            u32::from(*line),
-                            u32::from(*column - 1),
-                            text.as_ptr().cast(),
-                        )
-                    };
-
-                    if result == 1 {
+                    if write_text(controller.id, *line, *column, text) {
                         *state = ControllerScreenWriteFutureState::Complete { result: Ok(()) }
                     }
 
@@ -799,9 +812,7 @@ impl Controller {
     pub fn try_clear_screen(&mut self) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
 
-        let id: V5_ControllerId = self.id.into();
-
-        if unsafe { vexControllerTextSet(u32::from(id.0), 0, 0, c"".as_ptr().cast()) } != 1 {
+        if !write_text(self.id, 0, 1, c"") {
             return Err(ControllerError::WriteBusy);
         }
 
@@ -822,8 +833,8 @@ impl Controller {
     ///
     /// # Panics
     ///
-    /// - Panics if `line` is greater than or equal to [`Self::MAX_LINES`].
-    /// - Panics if `col` is greater than or equal to [`Self::MAX_COLUMNS`].
+    /// - Panics if `line` is not in the range `1..=`[`Self::MAX_LINES`].
+    /// - Panics if `col` is not in the range `1..=`[`Self::MAX_COLUMNS`].
     /// - Panics if a NUL (0x00) character was found anywhere in the specified text.
     ///
     /// # Errors
@@ -864,33 +875,12 @@ impl Controller {
         enforce_visible: bool,
     ) -> Result<(), ControllerError> {
         validate_connection(self.id)?;
+        validate_position(line, column, enforce_visible);
 
-        assert!(
-            column <= Self::MAX_COLUMNS as u8 && column != 0,
-            "{column} is not a valid controller column number. Must be in the range [1, {}]",
-            Self::MAX_COLUMNS
-        );
-        if enforce_visible {
-            assert!(
-                line <= Self::MAX_LINES as u8 && line != 0,
-                "{line} is not a valid controller line number. Must be in the range [1, {}]",
-                Self::MAX_LINES
-            );
-        }
-
-        let id: V5_ControllerId = self.id.into();
         let text = CString::new(text.as_ref())
             .expect("A NUL (0x00) character was found in the text input string.");
 
-        if unsafe {
-            vexControllerTextSet(
-                u32::from(id.0),
-                u32::from(line),
-                u32::from(column),
-                text.as_ptr().cast(),
-            )
-        } != 1
-        {
+        if !write_text(self.id, line, column, &text) {
             return Err(ControllerError::WriteBusy);
         }
 
@@ -913,8 +903,8 @@ impl Controller {
     ///
     /// # Panics
     ///
-    /// - Panics if `line` is greater than or equal to [`Self::MAX_LINES`].
-    /// - Panics if `col` is greater than or equal to [`Self::MAX_COLUMNS`].
+    /// - Panics if `line` is not in the range `1..=`[`Self::MAX_LINES`].
+    /// - Panics if `column` is not in the range `1..=`[`Self::MAX_COLUMNS`].
     /// - Panics if a NUL (0x00) character was found anywhere in the specified text.
     ///
     /// # Errors
