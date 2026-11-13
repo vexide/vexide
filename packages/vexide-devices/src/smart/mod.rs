@@ -95,6 +95,7 @@ pub trait SmartDevice {
     ///     assert_eq!(sensor.port_number(), 1);
     /// }
     /// ```
+    #[must_use]
     fn port_number(&self) -> u8;
 
     /// Returns the variant of [`SmartDeviceType`] that this device is associated with.
@@ -110,6 +111,7 @@ pub trait SmartDevice {
     ///     assert_eq!(sensor.device_type(), SmartDeviceType::Imu);
     /// }
     /// ```
+    #[must_use]
     fn device_type(&self) -> SmartDeviceType;
 
     /// Determines if this device type is currently plugged into its [`SmartPort`].
@@ -130,6 +132,7 @@ pub trait SmartDevice {
     ///     }
     /// }
     /// ```
+    #[must_use]
     fn is_connected(&self) -> bool {
         let mut device_types: [V5_DeviceType; V5_MAX_DEVICE_PORTS] = unsafe { core::mem::zeroed() };
         unsafe {

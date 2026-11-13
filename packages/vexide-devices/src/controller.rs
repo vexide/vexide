@@ -230,6 +230,7 @@ enum ControllerScreenWriteFutureState<'a> {
 ///
 /// This future waits until the controller is able to accept a new write and fails if the controller
 /// is disconnected or if the requested write is bad.
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub struct ControllerScreenWriteFuture<'a> {
     state: ControllerScreenWriteFutureState<'a>,
 }
@@ -693,7 +694,6 @@ impl Controller {
     ///     _ = controller.clear_line(1).await;
     /// }
     /// ```
-    #[must_use]
     pub fn clear_line(&mut self, line: u8) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::new(line, 1, String::new(), self, true)
     }
@@ -773,7 +773,6 @@ impl Controller {
     ///     _ = controller.clear_screen().await;
     /// }
     /// ```
-    #[must_use]
     pub fn clear_screen(&mut self) -> ControllerScreenWriteFuture<'_> {
         ControllerScreenWriteFuture::new(0, 1, String::new(), self, false)
     }
@@ -853,7 +852,6 @@ impl Controller {
     ///     _ = controller.set_text("Hello, world!", 2, 1).await;
     /// }
     /// ```
-    #[must_use]
     pub fn set_text(
         &mut self,
         text: impl AsRef<str>,

@@ -129,6 +129,7 @@ impl Display for FaultException {
 }
 
 impl Fault {
+    #[must_use]
     pub fn address(&self) -> u32 {
         let address: u32;
 

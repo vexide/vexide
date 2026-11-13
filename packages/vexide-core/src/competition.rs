@@ -272,6 +272,7 @@ pub fn mode() -> CompetitionMode {
 /// A stream of updates to the competition status.
 ///
 /// See [`updates`] for more information.
+#[must_use = "streams do nothing unless polled"]
 pub struct CompetitionUpdates {
     last_status: Option<CompetitionStatus>,
 }
@@ -299,6 +300,7 @@ impl CompetitionUpdates {
     ///
     /// This is slightly more efficient than calling [`status`] as it does not require another poll,
     /// however, it can be out of date if the stream has not been polled recently.
+    #[must_use]
     pub fn last(&self) -> CompetitionStatus {
         self.last_status.unwrap_or_else(status)
     }
@@ -307,7 +309,6 @@ impl CompetitionUpdates {
 /// Returns an async stream of updates to the competition status.
 ///
 /// Yields the current status when first polled, and thereafter whenever the status changes.
-#[must_use]
 pub const fn updates() -> CompetitionUpdates {
     CompetitionUpdates { last_status: None }
 }
@@ -318,6 +319,7 @@ pub const fn updates() -> CompetitionUpdates {
 /// This runtime provides the internal implementation behind the [`Compete`] trait and the
 /// [`CompetitionBuilder`] struct.
 #[pin_project]
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub struct CompetitionRuntime<
     Shared: 'static,
     Return,
@@ -529,6 +531,7 @@ type DefaultMk<Shared, Return> =
     for<'t> fn(&'t mut Shared) -> Pin<Box<dyn Future<Output = ControlFlow<Return>> + 't>>;
 
 /// A typed builder for [`CompetitionRuntime`] instances.
+#[must_use = "CompetitionBuilder does nothing unless you call `finish` or `.await` it"]
 pub struct CompetitionBuilder<
     Shared,
     Return,

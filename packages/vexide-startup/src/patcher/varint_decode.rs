@@ -92,6 +92,7 @@ pub trait VarInt: Sized + Copy {
     /// Decode a value from the slice. Returns the value and the number of bytes read from the slice
     /// (can be used to read several consecutive values from a big slice) return None if all bytes
     /// has MSB set.
+    #[must_use]
     fn decode_var(src: &[u8]) -> Option<(Self, usize)>;
 }
 

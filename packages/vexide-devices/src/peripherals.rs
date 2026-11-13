@@ -219,6 +219,7 @@ impl Peripherals {
     /// created.
     ///
     /// After calling this function, future calls to [`Peripherals::take`] will return `None`.
+    #[must_use = "`Peripherals` can only be taken once; dropping it loses access to the peripherals"]
     pub fn take() -> Option<Self> {
         if PERIPHERALS_TAKEN.swap(true, core::sync::atomic::Ordering::AcqRel) {
             None
@@ -238,6 +239,7 @@ impl Peripherals {
     ///
     /// The caller must ensure that a given peripheral is not mutated concurrently as a result of
     /// more than one instance existing.
+    #[must_use]
     pub unsafe fn steal() -> Self {
         PERIPHERALS_TAKEN.store(true, core::sync::atomic::Ordering::Release);
         // SAFETY: caller must ensure that this call is safe
@@ -327,6 +329,7 @@ impl DynamicPeripherals {
     ///
     /// This function panics if the provided port is outside the range 1-21.  Ports outside of this
     /// range are invalid and cannot be created.
+    #[must_use = "dropping the result loses access to the peripheral"]
     pub const fn take_smart_port(&mut self, port_number: u8) -> Option<SmartPort> {
         let port_index = port_number as usize - 1;
         self.smart_ports[port_index].take()
@@ -347,6 +350,7 @@ impl DynamicPeripherals {
     ///
     /// This function panics if the provided port is outside the range 1-8. Slots outside of this
     /// range are invalid and cannot be created.
+    #[must_use = "dropping the result loses access to the peripheral"]
     pub const fn take_adi_port(&mut self, port_number: u8) -> Option<AdiPort> {
         let port_number = port_number as usize - 1;
         self.adi_slots[port_number].take()
@@ -362,6 +366,7 @@ impl DynamicPeripherals {
     }
 
     /// Creates a [`Display`] only if one has not been created before.
+    #[must_use = "dropping the result loses access to the peripheral"]
     pub const fn take_display(&mut self) -> Option<Display> {
         self.display.take()
     }
@@ -371,6 +376,7 @@ impl DynamicPeripherals {
     }
 
     /// Creates a primary controller only if one has not been created before.
+    #[must_use = "dropping the result loses access to the peripheral"]
     pub const fn take_primary_controller(&mut self) -> Option<Controller> {
         self.primary_controller.take()
     }
@@ -380,6 +386,7 @@ impl DynamicPeripherals {
     }
 
     /// Creates a partner controller only if one has not been created before.
+    #[must_use = "dropping the result loses access to the peripheral"]
     pub const fn take_partner_controller(&mut self) -> Option<Controller> {
         self.partner_controller.take()
     }
