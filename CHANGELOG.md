@@ -50,6 +50,7 @@ Before releasing:
 - Fixed an issue where the future returned from `SerialPort::open` could be polled after completion, effectively duplicating SmartPorts. (#452)
 - `AdiDigitalOut::level` will now immediately update upon changing the level rather than requiring up to 10ms to update. (#480)
 - Fixed an issue where usage of `std::alloc::System` (for example, calling `std::thread::current()`) would cause undefined behavior when the `allocator` feature was in use. (#478)
+- Fixed `Controller::try_set_text`, `Controller::try_clear_line`, and `Controller::try_rumble` writing one column to the right of the position requested, which was inconsistent with their non-`try` counterparts. (#483)
 
 ### Changed
 
