@@ -116,6 +116,7 @@ impl GpsSensor {
     ///     );
     /// }
     /// ```
+    #[must_use]
     pub fn new(
         port: SmartPort,
         offset: impl Into<Point2<f64>>,

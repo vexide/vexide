@@ -123,6 +123,7 @@ impl Circle {
     /// Create a circle with the given coordinates and radius.
     ///
     /// The coordinates are the center of the circle.
+    #[must_use]
     pub fn new(center: impl Into<Point2<i16>>, radius: u16) -> Self {
         Self {
             center: center.into(),
@@ -171,6 +172,7 @@ pub struct Line {
 
 impl Line {
     /// Creates a new line with the given start and endpoints.
+    #[must_use]
     pub fn new(start: impl Into<Point2<i16>>, end: impl Into<Point2<i16>>) -> Self {
         Self {
             start: start.into(),
@@ -232,6 +234,7 @@ impl Rect {
     ///     peripherals.display.fill(&rect, Color::WHITE);
     /// }
     /// ```
+    #[must_use]
     pub fn new(top_left: impl Into<Point2<i16>>, bottom_right: impl Into<Point2<i16>>) -> Self {
         Self {
             top_left: top_left.into(),
@@ -253,6 +256,7 @@ impl Rect {
     ///     peripherals.display.fill(&rect, Color::WHITE);
     /// }
     /// ```
+    #[must_use]
     pub fn from_dimensions(origin: impl Into<Point2<i16>>, width: u16, height: u16) -> Self {
         let origin = origin.into();
         Self {
@@ -278,6 +282,7 @@ impl Rect {
     ///     peripherals.display.fill(&rect, Color::WHITE);
     /// }
     /// ```
+    #[must_use]
     pub fn from_dimensions_centered(
         center: impl Into<Point2<i16>>,
         width: u16,
@@ -533,6 +538,7 @@ pub struct Text<'a> {
 impl<'a> Text<'a> {
     /// Create a new text from a &CStr with a given position (defaults to top left corner alignment)
     /// and font
+    #[must_use]
     pub fn new(text: &'a CStr, font: Font, position: impl Into<Point2<i16>>) -> Self {
         Self::new_aligned(
             text,
@@ -549,6 +555,7 @@ impl<'a> Text<'a> {
     /// # Panics
     ///
     /// This function panics if `text` contains a null character.
+    #[must_use]
     pub fn from_string(
         text: impl Into<String>,
         font: Font,
@@ -564,6 +571,7 @@ impl<'a> Text<'a> {
     }
 
     /// Create a new text from a &CStr with a given position (based on alignment) and font
+    #[must_use]
     pub fn new_aligned(
         text: &'a CStr,
         font: Font,
@@ -585,6 +593,7 @@ impl<'a> Text<'a> {
     /// # Panics
     ///
     /// This function panics if `text` contains a null character.
+    #[must_use]
     pub fn from_string_aligned(
         text: impl Into<String>,
         font: Font,

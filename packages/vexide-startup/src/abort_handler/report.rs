@@ -12,6 +12,7 @@ pub struct SerialWriter(());
 
 impl SerialWriter {
     pub const BUFFER_SIZE: usize = 2048;
+    #[must_use]
     pub const fn new() -> Self {
         Self(())
     }

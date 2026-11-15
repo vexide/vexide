@@ -157,6 +157,7 @@ impl Parse for BannerEnabled {
 }
 
 impl BannerEnabled {
+    #[must_use]
     pub const fn as_bool(&self) -> bool {
         self.value.value
     }
@@ -187,6 +188,7 @@ impl Parse for BannerTheme {
 }
 
 impl BannerTheme {
+    #[must_use]
     pub fn into_ident(self) -> Ident {
         self.ident
     }
@@ -207,6 +209,7 @@ pub struct CodeSig {
 }
 
 impl CodeSig {
+    #[must_use]
     pub fn into_ident(self) -> Ident {
         self.ident
     }

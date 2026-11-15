@@ -322,6 +322,7 @@ pub enum DistanceReadyError {
 }
 
 /// A future that resolves when the distance sensor is ready to be used.
+#[must_use = "futures do nothing unless you `.await` or poll them"]
 pub struct DistanceSensorReadyFuture<'a> {
     sensor: &'a DistanceSensor,
 }
