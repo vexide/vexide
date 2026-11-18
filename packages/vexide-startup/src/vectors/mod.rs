@@ -1,6 +1,6 @@
 use core::arch::{asm, global_asm, naked_asm};
 
-use crate::abort_handler::FaultException;
+use crate::abort_handler::FaultExceptionType;
 
 global_asm!(
     include_str!("vectors.s"),
@@ -43,7 +43,7 @@ macro_rules! fault_exception_vector {
                 LR_OFFSET_INSTR_SIZE = const LR_OFFSET_INSTR_SIZE,
                 exception_handler = sym crate::abort_handler::fault_exception_handler,
                 lr_offset = const $lr_offset,
-                exception = const $exception as u32,
+                exception = const ($exception).0 as u32,
             );
         }
     };
@@ -52,15 +52,15 @@ macro_rules! fault_exception_vector {
 fault_exception_vector!(
     vexide_undefined_instruction:
         lr_offset = LR_OFFSET_INSTR_SIZE,
-        exception = FaultException::UndefinedInstruction,
+        exception = FaultExceptionType::UNDEFINED_INSTRUCTION,
 );
 fault_exception_vector!(
     vexide_prefetch_abort:
         lr_offset = 4,
-        exception = FaultException::PrefetchAbort,
+        exception = FaultExceptionType::PREFETCH_ABORT,
 );
 fault_exception_vector!(
     vexide_data_abort:
         lr_offset = 8,
-        exception = FaultException::DataAbort,
+        exception = FaultExceptionType::DATA_ABORT,
 );
