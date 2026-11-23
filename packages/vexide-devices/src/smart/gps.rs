@@ -54,9 +54,9 @@ impl GpsSensor {
     /// # Sensor Configuration
     ///
     /// The sensor requires one measurement to be made at the start of a match, passed as
-    /// an argument to this function, with two optional measurements to further improve accuracy:
-    /// (Use GpsSensor::new_without_initial_position if you don't want to provide an initial
-    /// position and heading estimate).
+    /// an argument to this function with two extra measurements to further improve accuracy.
+    /// Use [`GpsSensor::new`] if you don't want to provide an initial
+    /// position and heading estimate.
     ///
     /// ## Sensor Offset
     ///
@@ -118,6 +118,7 @@ impl GpsSensor {
     ///     );
     /// }
     /// ```
+    #[must_use]
     pub fn new_with_pos(
         port: SmartPort,
         offset: impl Into<Point2<f64>>,
@@ -152,7 +153,8 @@ impl GpsSensor {
     /// # Sensor Configuration
     ///
     /// The sensor requires one measurement to be made at the start of a match, passed as
-    /// an argument to this function:
+    /// an argument to this function. See [`GpsSensor::new_with_pos`] for improving accuracy
+    /// by providing an initial position.
     ///
     /// ## Sensor Offset
     ///
@@ -182,10 +184,10 @@ impl GpsSensor {
     ///
     ///         // Sensor is mounted 0.225 meters to the left and 0.225 meters above the robot's tracking origin.
     ///         Point2 { x: -0.225, y: 0.225 },
-    ///
     ///     );
     /// }
     /// ```
+    #[must_use]
     pub fn new(port: SmartPort, offset: impl Into<Point2<f64>>) -> Self {
         let device = unsafe { port.device_handle() };
 
@@ -261,7 +263,7 @@ impl GpsSensor {
     ///
     ///     // Change the offset to something new
     ///     _ = gps.set_position(
-    ///     ///         // Robot's starting point is at the center of the field.
+    ///         // Robot's starting point is at the center of the field.
     ///         Point2 { x: 0.0, y: 0.0 },
     ///
     ///         // Robot is facing to the right initially.
@@ -382,16 +384,16 @@ impl GpsSensor {
     ///
     ///     // Get the configured offset of the sensor
     ///     if let Ok(offset) = gps.offset() {
-    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is
-    /// mounted at x=-0.225, y=0.225"     }
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is mounted at x=-0.225, y=0.225"
+    ///     }
     ///
     ///     // Change the offset to something new
     ///     _ = gps.set_offset(Point2 { x: 0.0, y: 0.0 });
     ///
     ///     // Get the configured offset of the sensor again
     ///     if let Ok(offset) = gps.offset() {
-    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is
-    /// mounted at x=0.0, y=0.0"     }
+    ///         println!("GPS sensor is mounted at x={}, y={}", offset.x, offset.y); // "Sensor is mounted at x=0.0, y=0.0"
+    ///     }
     /// }
     /// ```
     pub fn set_offset(&mut self, offset: Point2<f64>) -> Result<(), PortError> {
