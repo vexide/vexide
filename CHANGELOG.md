@@ -51,6 +51,13 @@ Before releasing:
 - `AdiDigitalOut::level` will now immediately update upon changing the level rather than requiring up to 10ms to update. (#480)
 - Fixed an issue where usage of `std::alloc::System` (for example, calling `std::thread::current()`) would cause undefined behavior when the `allocator` feature was in use. (#478)
 - Fixed `Controller::try_set_text`, `Controller::try_clear_line`, and `Controller::try_rumble` writing one column to the right of the position requested, which was inconsistent with their non-`try` counterparts. (#483)
+- Fixed a memory corruption bug in the implementation of `AiVisionSensor::object` when reading the class name of model-detected objects. (#493)
+- `AiVisionSensor::set_color_code` no longer panics when passed valid signature IDs. (#493)
+- Fixed mislabeled fields in `InertialSensor::quaternion`. Every field of this struct was mislabeled.  (#493) (**Breaking Change**)
+- `InertialSensor::euler` and `GpsSensor::euler` now return Euler angles in the correct (yaw, pitch, roll) instead of (pitch, yaw, roll). (#493) (**Breaking Change**)
+- Fixed port validation not happening for EXP motors on some methods of `Motor` (`gearset`, `set_target`, `position`, and `set_position`). (#493)
+- Fixed `RadioLink` reads requesting a truncated length when given a buffer of 65,536 bytes or more. (#???)
+- Fixed `VisionCode::id` and `VisionCode::from_id` encoding and decoding color codes with fewer than five signatures incorrectly, which prevented detected codes from matching the registered ones. (#???)
 
 ### Changed
 
@@ -61,6 +68,7 @@ Before releasing:
 - Programs now execute in Thumb mode instead of ARM mode, reducing code size. (#454)
 - Backtraces are now captured using the frame pointer instead of through unwind tables. (#456) (**Breaking Change**)
 - `AdiDigitalOut::new` now takes an initial `LogicLevel`. (#480) (**Breaking Change**)
+- The `AiVisionObjectError::InvalidClassName` variant has been split into `InvalidClassNameRepr` and `InvalidClassNameTerminator`. (#493) (**Breaking Change**)
 
 ### Removed
 
