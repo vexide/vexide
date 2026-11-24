@@ -1087,6 +1087,13 @@ impl VisionCode {
     pub const fn from_id(id: u16) -> Self {
         const MASK: u16 = (1 << 3) - 1;
 
+        const fn sig(id: u16, len: u32, idx: u32) -> Option<u8> {
+            if idx < len {
+                return Some(((id >> (3 * (len - idx - 1))) & MASK) as u8);
+            }
+            None
+        }
+
         // Find how many signature slots are filled
         let mut len: u32 = 0;
         let mut i: u32 = 0;
@@ -1095,14 +1102,6 @@ impl VisionCode {
                 len = i + 1;
             }
             i += 1;
-        }
-
-        const fn sig(id: u16, len: u32, idx: u32) -> Option<u8> {
-            if idx < len {
-                Some(((id >> (3 * (len - idx - 1))) & MASK) as u8)
-            } else {
-                None
-            }
         }
 
         Self(
