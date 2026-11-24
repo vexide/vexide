@@ -32,6 +32,16 @@ OVERWRITE_SECTIONS {
         *(.text .text.*)
     } > USER_RAM
 
+     .rodata : {
+        . = ALIGN(4);
+        PROVIDE(__gnu_build_id_start = .);
+        KEEP(*(.note.gnu.build-id))
+        PROVIDE(__gnu_build_id_end = .);
+        
+        *(.rodata .rodata1 .rodata.*)
+        *(.srodata .srodata.*)
+    } > USER_RAM
+
     /DISCARD/ : {
         /* Strip out libstd's _boot routine (replaced with .vexide_boot section). */
         *(.boot)
