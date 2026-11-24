@@ -570,7 +570,7 @@ impl GpsSensor {
         self.set_rotation(Angle::ZERO)
     }
 
-    /// Returns the Euler angles (pitch, yaw, roll) representing the GPS's orientation.
+    /// Returns the Euler angles (yaw, pitch, roll) representing the GPS's orientation.
     ///
     /// Euler angles are normalized to [`Angle::HALF_TURN`], meaning they range from (-180°, 180°].
     ///
@@ -617,8 +617,8 @@ impl GpsSensor {
         }
 
         Ok(EulerAngles {
-            a: Angle::from_degrees(data.pitch).wrapped_half(),
-            b: Angle::from_degrees(data.yaw).wrapped_half(),
+            a: Angle::from_degrees(data.yaw).wrapped_half(),
+            b: Angle::from_degrees(data.pitch).wrapped_half(),
             c: Angle::from_degrees(data.roll).wrapped_half(),
             marker: PhantomData,
         })

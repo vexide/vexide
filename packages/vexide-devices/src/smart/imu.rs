@@ -459,7 +459,7 @@ impl InertialSensor {
         self.set_rotation(Angle::ZERO)
     }
 
-    /// Returns the Euler angles (pitch, yaw, roll) in radians representing the Inertial Sensor’s
+    /// Returns the Euler angles (yaw, pitch, roll) in radians representing the Inertial Sensor’s
     /// orientation.
     ///
     /// Euler angles are normalized to [`Angle::HALF_TURN`], meaning they range from (-180°, 180°].
@@ -490,7 +490,7 @@ impl InertialSensor {
     ///
     ///     if let Ok(angles) = sensor.euler() {
     ///         println!(
-    ///             "pitch: {}°, yaw: {}°, roll: {}°",
+    ///             "yaw: {}°, pitch: {}°, roll: {}°",
     ///             angles.a.as_degrees(),
     ///             angles.b.as_degrees(),
     ///             angles.c.as_degrees(),
@@ -507,8 +507,8 @@ impl InertialSensor {
         }
 
         Ok(EulerAngles {
-            a: Angle::from_degrees(data.pitch).wrapped_half(),
-            b: Angle::from_degrees(data.yaw).wrapped_half(),
+            a: Angle::from_degrees(data.yaw).wrapped_half(),
+            b: Angle::from_degrees(data.pitch).wrapped_half(),
             c: Angle::from_degrees(data.roll).wrapped_half(),
             marker: PhantomData,
         })
@@ -557,12 +557,12 @@ impl InertialSensor {
         }
 
         Ok(Quaternion {
+            s: data.a,
             v: Vector3 {
-                x: data.a,
-                y: data.b,
-                z: data.c,
+                x: data.b,
+                y: data.c,
+                z: data.d,
             },
-            s: data.d,
         })
     }
 

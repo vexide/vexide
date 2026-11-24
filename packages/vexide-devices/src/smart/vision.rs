@@ -1087,21 +1087,35 @@ impl VisionCode {
     pub const fn from_id(id: u16) -> Self {
         const MASK: u16 = (1 << 3) - 1;
 
+        const fn sig(id: u16, len: u32, idx: u32) -> Option<u8> {
+            if idx < len {
+                return Some(((id >> (3 * (len - idx - 1))) & MASK) as u8);
+            }
+            None
+        }
+
+        // Find how many signature slots are filled
+        let mut len: u32 = 0;
+        let mut i: u32 = 0;
+        while i < 5 {
+            if (id >> (3 * i)) & MASK != 0 {
+                len = i + 1;
+            }
+            i += 1;
+        }
+
         Self(
-            ((id >> 12) & MASK) as u8,
-            ((id >> 9) & MASK) as u8,
-            match ((id >> 6) & MASK) as u8 {
-                0 => None,
-                sig => Some(sig),
+            match sig(id, len, 0) {
+                Some(sig) => sig,
+                None => 0,
             },
-            match ((id >> 3) & MASK) as u8 {
-                0 => None,
-                sig => Some(sig),
+            match sig(id, len, 1) {
+                Some(sig) => sig,
+                None => 0,
             },
-            match (id & MASK) as u8 {
-                0 => None,
-                sig => Some(sig),
-            },
+            sig(id, len, 2),
+            sig(id, len, 3),
+            sig(id, len, 4),
         )
     }
 
@@ -1171,11 +1185,14 @@ impl VisionCode {
     pub fn id(&self) -> u16 {
         let mut id: u16 = 0;
 
-        id = (id << 3) | u16::from(self.0);
-        id = (id << 3) | u16::from(self.1);
-        id = (id << 3) | u16::from(self.2.unwrap_or_default());
-        id = (id << 3) | u16::from(self.3.unwrap_or_default());
-        id = (id << 3) | u16::from(self.4.unwrap_or_default());
+        // All of the present signatures without gaps
+        let signatures = [Some(self.0), Some(self.1), self.2, self.3, self.4]
+            .into_iter()
+            .flatten();
+
+        for sig in signatures {
+            id = (id << 3) | u16::from(sig);
+        }
 
         id
     }
