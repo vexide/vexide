@@ -34,15 +34,19 @@
 //! wire is for +5 volts. The sensor's mounting holes are electrically isolated from the circuit,
 //! meaning it is safe to mount the device using screws on a robot.
 
+use core::{task::Poll, time::Duration};
+
 use vex_sdk::vexDeviceAdiValueGet;
 
 use super::{AdiDevice, AdiDeviceType, AdiPort, PortError, analog};
+use crate::adi::ADI_UPDATE_INTERVAL;
 
 /// A single axis connection to the 3-axis analog accelerometer.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct AdiAccelerometer {
     sensitivity: Sensitivity,
     port: AdiPort,
+    zero_g_accel: f64,
 }
 
 impl AdiAccelerometer {
@@ -51,7 +55,14 @@ impl AdiAccelerometer {
     pub fn new(port: AdiPort, sensitivity: Sensitivity) -> Self {
         port.configure(AdiDeviceType::Accelerometer);
 
-        Self { sensitivity, port }
+        //TODO: Find a good default!
+        let zero_g_accel = 0.0;
+
+        Self {
+            sensitivity,
+            port,
+            zero_g_accel,
+        }
     }
 
     /// Returns the configured sensitivity of the ADI accelerometer device.
@@ -78,11 +89,13 @@ impl AdiAccelerometer {
     /// - A [`PortError::IncorrectDevice`] error is returned if a device other than an expander was
     ///   connected to the port.
     pub fn acceleration(&self) -> Result<f64, PortError> {
-        Ok(
-            // Convert 0-4095 to 0-1, then scale to max accel.
-            f64::from(self.raw_acceleration()?) / f64::from(analog::ADC_MAX_VALUE)
-                * self.sensitivity.max_acceleration(),
-        )
+        // Convert 0-4095 to Voltage, then scale to max accel.
+        let voltage =
+            (f64::from(self.raw_acceleration()?) / f64::from(analog::ADC_MAX_VALUE)) * 5.0;
+
+        let accel = (voltage - self.zero_g_accel) / self.sensitivity().voltage_per_g();
+
+        Ok(accel)
     }
 
     /// Returns the raw acceleration reading from [0, 4096]. This represents an ADC-converted
@@ -104,6 +117,31 @@ impl AdiAccelerometer {
         self.port.validate_expander()?;
 
         Ok(unsafe { vexDeviceAdiValueGet(self.port.device_handle(), self.port.index()) } as u16)
+    }
+
+    /// Calibrates the sensor's zero-g offset.
+    ///
+    /// When the [`AdiAccelerometer`] is created, a default value is used as the zero-g voltage
+    /// offset. This value should be similar between different LIS344ALH, but most sensors will have
+    /// a slight variance. Calibration is recommended if you are experiencing a constant
+    /// acceleration reading with the sensor still.
+    //TODO: should we use calibrate and calibrate_for in order to be more similar to the Smart IMU
+    // api?
+    // This method takes an the average of samples taken over the span of 1 second.
+    // For more control over the calibration duration, see [`Self::calibrate_for`].
+    ///
+    /// # Errors
+    ///
+    /// This future will resolve to an error if any of the calibration samples it takes return an
+    /// error. See [`Self::raw_acceleration`] for more details.
+    pub fn calibrate(&mut self, duration: Duration) -> CalibrateFuture<'_> {
+        CalibrateFuture {
+            device: self,
+            sample_due: Instant::now(),
+            calibration_due: Instant::now() + duration,
+            raw_sum: 0,
+            samples_taken: 0,
+        }
     }
 }
 
@@ -132,6 +170,15 @@ impl Sensitivity {
             Self::High => Self::HIGH_MAX_ACCELERATION,
         }
     }
+
+    /// Returns the Voltage difference per g.
+    #[must_use]
+    pub const fn voltage_per_g(&self) -> f64 {
+        match self {
+            Self::Low => 5.0 / Self::LOW_MAX_ACCELERATION,
+            Self::High => 5.0 / Self::HIGH_MAX_ACCELERATION,
+        }
+    }
 }
 
 impl AdiDevice<1> for AdiAccelerometer {
@@ -145,5 +192,53 @@ impl AdiDevice<1> for AdiAccelerometer {
 
     fn device_type(&self) -> AdiDeviceType {
         AdiDeviceType::Accelerometer
+    }
+}
+
+/// A future that calibrates an [`AdiAccelerometer`].
+/// Created by [`AdiAccelerometer::calibrate`].
+#[must_use = "futures do nothing unless you `.await` or poll them"]
+#[derive(Debug)]
+pub struct CalibrateFuture<'a> {
+    device: &'a mut AdiAccelerometer,
+    sample_due: Instant,
+    calibration_due: Instant,
+    raw_sum: u32,
+    samples_taken: u32,
+}
+impl<'a> Future for CalibrateFuture<'a> {
+    type Output = Result<(), PortError>;
+
+    fn poll(
+        mut self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        let now = Instant::now();
+
+        if now >= self.calibration_due {
+            let average = self.raw_sum / self.samples_taken;
+            // Convert to voltage
+            let voltage = (f64::from(average) / f64::from(analog::ADC_MAX_VALUE)) * 5.0;
+
+            self.device.zero_g_accel = voltage;
+
+            return Poll::Ready(Ok(()));
+        }
+
+        if now >= self.sample_due {
+            self.sample_due = now + ADI_UPDATE_INTERVAL;
+
+            let sample;
+            match self.device.raw_acceleration() {
+                Ok(raw) => sample = raw,
+                Err(e) => return Poll::Ready(Err(e)),
+            }
+
+            self.samples_taken += 1;
+            self.raw_sum += sample as u32;
+        }
+
+        cx.waker().wake_by_ref();
+        Poll::Pending
     }
 }
