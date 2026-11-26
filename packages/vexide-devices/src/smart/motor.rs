@@ -535,10 +535,10 @@ impl Motor {
     /// }
     /// ```
     pub fn gearset(&self) -> Result<Gearset, PortError> {
+        self.validate_port()?;
         if self.motor_type.is_exp() {
             return Ok(Gearset::Green);
         }
-        self.validate_port()?;
         Ok(unsafe { vexDeviceMotorGearingGet(self.device) }.into())
     }
 

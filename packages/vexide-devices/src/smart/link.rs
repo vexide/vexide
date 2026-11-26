@@ -195,9 +195,12 @@ impl std::io::Read for RadioLink {
             ));
         }
 
-        match unsafe {
-            vexDeviceGenericRadioReceive(self.device, buf.as_mut_ptr(), buf.len() as u16)
-        } {
+        // Casting usize to u16 truncates instead of saturating.
+        // A buffer of size u16::MAX + 1 would attempt to read 0 bytes,
+        // so we need to clamp to the max read size before casting.
+        let clamped_size = buf.len().min(u16::MAX as _) as u16;
+
+        match unsafe { vexDeviceGenericRadioReceive(self.device, buf.as_mut_ptr(), clamped_size) } {
             -1 => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 "Internal read error occurred.",
@@ -217,8 +220,9 @@ impl std::io::Write for RadioLink {
             ));
         }
 
-        match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), buf.len() as u16) }
-        {
+        let clamped_size = buf.len().min(u16::MAX as _) as u16;
+
+        match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), clamped_size) } {
             -1 => Err(std::io::Error::other("Internal write error occurred.")),
             written => Ok(written as usize),
         }
@@ -248,9 +252,9 @@ impl embedded_io::Read for RadioLink {
             return Err(LinkError::NotLinked);
         }
 
-        match unsafe {
-            vexDeviceGenericRadioReceive(self.device, buf.as_mut_ptr(), buf.len() as u16)
-        } {
+        let clamped_size = buf.len().min(u16::MAX as _) as u16;
+
+        match unsafe { vexDeviceGenericRadioReceive(self.device, buf.as_mut_ptr(), clamped_size) } {
             -1 => Err(LinkError::ReadFailed),
             received => Ok(received as usize),
         }
@@ -264,8 +268,9 @@ impl embedded_io::Write for RadioLink {
             return Err(LinkError::NotLinked);
         }
 
-        match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), buf.len() as u16) }
-        {
+        let clamped_size = buf.len().min(u16::MAX as _) as u16;
+
+        match unsafe { vexDeviceGenericRadioTransmit(self.device, buf.as_ptr(), clamped_size) } {
             -1 => Err(LinkError::WriteFailed),
             written => Ok(written as usize),
         }

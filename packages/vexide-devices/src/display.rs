@@ -188,8 +188,8 @@ impl Fill for Line {
             vexDisplayLineDraw(
                 i32::from(self.start.x),
                 i32::from(self.start.y),
-                i32::from(self.end.x - 1),
-                i32::from(self.end.y - 1),
+                i32::from(self.end.x),
+                i32::from(self.end.y),
             );
         }
     }
@@ -370,36 +370,34 @@ pub struct FontSize {
 
 /// Calculates the greatest common divisor of two values using the Euclidean algorithm.
 const fn gcd(mut a: i32, mut b: i32) -> i32 {
-    while a != b {
-        if a > b {
-            a -= b;
-        } else {
-            b -= a;
-        }
+    while b != 0 {
+        let temp = b;
+        b = a % b;
+        a = temp;
     }
     a
 }
 
 #[allow(clippy::cast_precision_loss)]
 fn approximate_fraction(input: f32, precision: u32) -> (i32, i32) {
+    assert_ne!(precision, 0, "Precision must be a nonzero integer.");
+
     // Separate the integral and fractional parts of the input.
     let integral_part = crate::math::floorf(input);
     let fractional_part = input - crate::math::truncf(input);
 
-    // If the fractional part is 0, return the integral part.
-    if fractional_part == 0.0 {
+    let precision = precision as f32;
+    let fractional_part = crate::math::roundf(fractional_part * precision) as _;
+
+    // If the fractional part rounds to 0, return the integral part.
+    if fractional_part == 0 {
         return (integral_part as i32, 1);
     }
 
-    let precision = precision as f32;
-
-    let gcd = gcd(
-        crate::math::roundf(fractional_part * precision) as _,
-        precision as _,
-    );
+    let gcd = gcd(fractional_part, precision as _);
 
     let denominator = precision as i32 / gcd;
-    let numerator = crate::math::roundf(fractional_part * precision) as i32 / gcd;
+    let numerator = fractional_part / gcd;
 
     (
         // Add back the integral part to the numerator.

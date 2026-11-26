@@ -24,14 +24,12 @@
 //! may be created without the AI Vision utility, though uploading color signatures with VEX's AI
 //! Vision Utility over USB is still an option.
 
-use alloc::{
-    ffi::{CString, IntoStringError},
-    string::String,
-    vec::Vec,
-};
+use alloc::{string::String, vec::Vec};
 use core::{
+    ffi::{CStr, FromBytesUntilNulError},
     iter::{Copied, Flatten},
     slice,
+    str::Utf8Error,
 };
 
 use bitflags::bitflags;
@@ -594,7 +592,7 @@ impl AiVisionSensor {
         let mut ids = [0u8; 7];
         for (i, id) in code.0.iter().flatten().enumerate() {
             assert!(
-                !(1..=7).contains(id),
+                (1..=7).contains(id),
                 "The given color code contains an ID ({id}) that is out of the interval [1, 7]."
             );
             ids[i] = *id;
@@ -784,15 +782,16 @@ impl AiVisionSensor {
                     ObjectType::Model => AiVisionObject::Model {
                         id: raw.id,
                         classification: {
-                            let ptr = CString::default().into_raw();
+                            // VEXos can write up to 17 bytes for the class name.
+                            let mut buf = [0u8; 17];
 
                             vexDeviceAiVisionClassNameGet(
                                 self.device,
                                 i32::from(raw.id),
-                                ptr.cast(),
+                                buf.as_mut_ptr(),
                             );
 
-                            CString::from_raw(ptr).into_string()?
+                            CStr::from_bytes_until_nul(&buf)?.to_str()?.to_owned()
                         },
                         position: Point2 {
                             x: raw.object.model.xoffset,
@@ -1085,9 +1084,15 @@ pub enum AiVisionObjectError {
     /// Failed to fetch the class name of a model-detected object due it having a invalid string
     /// representation.
     #[snafu(transparent)]
-    InvalidClassName {
+    InvalidClassNameRepr {
         /// The source of the error.
-        source: IntoStringError,
+        source: Utf8Error,
+    },
+    /// Failed to fetch the class name of a model-detected object due to it having no terminator.
+    #[snafu(transparent)]
+    InvalidClassNameTerminator {
+        /// The source of the error.
+        source: FromBytesUntilNulError,
     },
 
     /// Generic port related error.
